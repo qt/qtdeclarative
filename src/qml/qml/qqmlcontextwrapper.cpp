@@ -53,6 +53,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qjsvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -427,8 +428,9 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(const StringRef &name)
     QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
     siinfo->init(e);
 
-    QObject *qobjectSingleton = siinfo->qobjectApi(e);
-    return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
+    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
+        return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
+    return QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine());
 }
 
 DEFINE_MANAGED_VTABLE(QQmlIdObjectsArray);

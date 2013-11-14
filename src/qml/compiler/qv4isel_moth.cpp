@@ -526,14 +526,22 @@ void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *ta
     addInstruction(store);
 }
 
-void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target)
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, V4IR::Temp *target)
 {
-    Instruction::LoadQObjectProperty load;
-    load.base = getParam(base);
-    load.propertyIndex = propertyIndex;
-    load.result = getResultParam(target);
-    load.captureRequired = captureRequired;
-    addInstruction(load);
+    if (attachedPropertiesId != 0) {
+        Instruction::LoadAttachedQObjectProperty load;
+        load.propertyIndex = propertyIndex;
+        load.result = getResultParam(target);
+        load.attachedPropertiesId = attachedPropertiesId;
+        addInstruction(load);
+    } else {
+        Instruction::LoadQObjectProperty load;
+        load.base = getParam(base);
+        load.propertyIndex = propertyIndex;
+        load.result = getResultParam(target);
+        load.captureRequired = captureRequired;
+        addInstruction(load);
+    }
 }
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)

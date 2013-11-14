@@ -53,6 +53,7 @@
 #include "qv4scopedvalue_p.h"
 #include <private/qqmlcontextwrapper_p.h>
 #include "qv4qobjectwrapper_p.h"
+#include <private/qv8engine_p.h>
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -1268,7 +1269,19 @@ ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef
         ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
-    return wrapper->getProperty(ctx, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(wrapper->object(), ctx, propertyIndex, captureRequired);
+}
+
+QV4::ReturnedValue __qmljs_get_attached_property(ExecutionContext *ctx, int attachedPropertiesId, int propertyIndex)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QObject *scopeObject = c->getScopeObject();
+    QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
+
+    QQmlEngine *qmlEngine = ctx->engine->v8Engine->engine();
+    QQmlData::ensurePropertyCache(qmlEngine, attachedObject);
+    return QV4::QObjectWrapper::getProperty(attachedObject, ctx, propertyIndex, /*captureRequired*/true);
 }
 
 void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value)

@@ -278,7 +278,7 @@ static QString dumpStart(const Expr *e) {
 
     QString result = typeName(e->type);
     const Temp *temp = const_cast<Expr*>(e)->asTemp();
-    if (e->type == QObjectType && temp && temp->memberResolver.data) {
+    if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
         result += QLatin1Char('<');
         result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
         result += QLatin1Char('>');
@@ -554,7 +554,10 @@ void Subscript::dump(QTextStream &out) const
 
 void Member::dump(QTextStream &out) const
 {
-    base->dump(out);
+    if (attachedPropertiesId != 0 && !base->asTemp())
+        out << "[[attached property from " << attachedPropertiesId << "]]";
+    else
+        base->dump(out);
     out << '.' << *name;
     if (property)
         out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
@@ -840,10 +843,17 @@ Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property)
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property, int attachedPropertiesId)
 {
     Member*e = function->New<Member>();
-    e->init(base, name, property);
+    e->init(base, name, property, attachedPropertiesId);
+    return e;
+}
+
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name, int enumValue)
+{
+    Member*e = function->New<Member>();
+    e->init(base, name, enumValue);
     return e;
 }
 
@@ -1033,7 +1043,11 @@ void CloneExpr::visitSubscript(Subscript *e)
 
 void CloneExpr::visitMember(Member *e)
 {
-    cloned = block->MEMBER(clone(e->base), e->name, e->property);
+    Expr *clonedBase = clone(e->base);
+    if (e->memberIsEnum)
+        cloned = block->MEMBER(clonedBase, e->name, e->enumValue);
+    else
+        cloned = block->MEMBER(clonedBase, e->name, e->property, e->attachedPropertiesId);
 }
 
 } // end of namespace IR

@@ -1734,6 +1734,16 @@ void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
     QQmlData_setBit(this, obj, coreIndex * 2 + 1);
 }
 
+void QQmlData::ensurePropertyCache(QQmlEngine *engine, QObject *object)
+{
+    Q_ASSERT(engine);
+    QQmlData *ddata = QQmlData::get(object, /*create*/true);
+    if (ddata->propertyCache)
+        return;
+    ddata->propertyCache = QQmlEnginePrivate::get(engine)->cache(object);
+    if (ddata->propertyCache) ddata->propertyCache->addref();
+}
+
 void QQmlEnginePrivate::sendQuit()
 {
     Q_Q(QQmlEngine);

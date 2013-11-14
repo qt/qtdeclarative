@@ -94,17 +94,17 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     using Object::get;
 
-    ReturnedValue getProperty(ExecutionContext *ctx, int propertyIndex, bool captureRequired);
+    static ReturnedValue getProperty(QObject *object, ExecutionContext *ctx, int propertyIndex, bool captureRequired);
     void setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value);
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
 
 private:
-    ReturnedValue getProperty(ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired = true);
+    static ReturnedValue getProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired = true);
     static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value);
 
-    static ReturnedValue create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
+    static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
 

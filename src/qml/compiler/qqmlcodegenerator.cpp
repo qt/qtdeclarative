@@ -1332,6 +1332,97 @@ enum MetaObjectResolverFlags {
     LookupsExcludeProperties = 0x4
 };
 
+static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+
+static V4IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpressionResolver *resolver, V4IR::Member *member)
+{
+    V4IR::Type result = V4IR::VarType;
+
+    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    if (type->isSingleton()) {
+        if (type->isCompositeSingleton()) {
+            QQmlTypeData *tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+            Q_ASSERT(tdata);
+            Q_ASSERT(tdata->isComplete());
+            initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+            resolver->flags |= AllPropertiesAreFinal;
+        } else {
+            const QMetaObject *singletonMo = type->singletonInstanceInfo()->instanceMetaObject;
+            if (!singletonMo) { // We can only accelerate C++ singletons that were registered with their meta-type
+                resolver->clear();
+                return result;
+            }
+            initMetaObjectResolver(resolver, qmlEngine->cache(singletonMo));
+            resolver->flags |= LookupsIncludeEnums;
+        }
+        return resolver->resolveMember(qmlEngine, resolver, member);
+    } else {
+        if (member->name->constData()->isUpper()) {
+            bool ok = false;
+            int value = type->enumValue(*member->name, &ok);
+            if (ok) {
+                member->memberIsEnum = true;
+                member->enumValue = value;
+                resolver->clear();
+                return V4IR::SInt32Type;
+            }
+        } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
+            QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
+            initMetaObjectResolver(resolver, cache);
+            member->attachedPropertiesId = type->attachedPropertiesId();
+            return resolver->resolveMember(qmlEngine, resolver, member);
+        }
+    }
+
+    resolver->clear();
+    return result;
+}
+
+static void initQmlTypeResolver(V4IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
+{
+    resolver->resolveMember = &resolveQmlType;
+    resolver->data = qmlType;
+    resolver->extraData = 0;
+    resolver->flags = 0;
+}
+
+static V4IR::Type resolveImportNamespace(QQmlEnginePrivate *, V4IR::MemberExpressionResolver *resolver, V4IR::Member *member)
+{
+    V4IR::Type result = V4IR::VarType;
+    QQmlTypeNameCache *typeNamespace = static_cast<QQmlTypeNameCache*>(resolver->extraData);
+    void *importNamespace = resolver->data;
+
+    QQmlTypeNameCache::Result r = typeNamespace->query(*member->name, importNamespace);
+    if (r.isValid()) {
+        member->freeOfSideEffects = true;
+        if (r.scriptIndex != -1) {
+            // TODO: remember the index and replace with subscript later.
+            result = V4IR::VarType;
+        } else if (r.type) {
+            // TODO: Propagate singleton information, so that it is loaded
+            // through the singleton getter in the run-time. Until then we
+            // can't accelerate access :(
+            if (!r.type->isSingleton()) {
+                initQmlTypeResolver(resolver, r.type);
+                return V4IR::QObjectType;
+            }
+        } else {
+            Q_ASSERT(false); // How can this happen?
+        }
+    }
+
+    resolver->clear();
+    return result;
+}
+
+static void initImportNamespaceResolver(V4IR::MemberExpressionResolver *resolver, QQmlTypeNameCache *imports, const void *importNamespace)
+{
+    resolver->resolveMember = &resolveImportNamespace;
+    resolver->data = const_cast<void*>(importNamespace);
+    resolver->extraData = imports;
+    resolver->flags = 0;
+}
+
 static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpressionResolver *resolver, V4IR::Member *member)
 {
     V4IR::Type result = V4IR::VarType;
@@ -1397,6 +1488,7 @@ static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQm
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
     resolver->flags = 0;
+    resolver->isQObjectResolver = true;
 }
 
 void JSCodeGen::beginFunctionBodyHook()
@@ -1453,35 +1545,24 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
                 return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(V4IR::SInt32Type, r.scriptIndex));
             } else if (r.type) {
                 V4IR::Name *typeName = _block->NAME(name, line, col);
-                V4IR::Temp *result = _block->TEMP(_block->newTemp());
-
-                if (r.type->isSingleton()) {
-                    if (r.type->isCompositeSingleton()) {
-                        QQmlTypeData *tdata = engine->typeLoader.getType(r.type->singletonInstanceInfo()->url);
-                        Q_ASSERT(tdata);
-                        Q_ASSERT(tdata->isComplete());
-                        initMetaObjectResolver(&result->memberResolver, engine->propertyCacheForType(tdata->compiledData()->metaTypeId));
-                        result->memberResolver.flags |= AllPropertiesAreFinal;
-                    } else {
-                        const QMetaObject *singletonMo = r.type->singletonInstanceInfo()->instanceMetaObject;
-                        if (!singletonMo) // We can only accelerate C++ singletons that were registered with their meta-type
-                            return 0;
-                        initMetaObjectResolver(&result->memberResolver, engine->cache(singletonMo));
-                    }
-
-                    // Instruct the isel to not load this as activation property but through the
-                    // run-time's singleton getter.
-                    typeName->qmlSingleton = true;
-                } else {
-                    initMetaObjectResolver(&result->memberResolver,engine->cache(r.type->metaObject()));
-                    result->memberResolver.flags |= LookupsExcludeProperties;
-                }
+                // Make sure the run-time loads this through the more efficient singleton getter.
+                typeName->qmlSingleton = r.type->isSingleton();
                 typeName->freeOfSideEffects = true;
-                result->memberResolver.flags |= LookupsIncludeEnums;
+
+                V4IR::Temp *result = _block->TEMP(_block->newTemp());
+                initQmlTypeResolver(&result->memberResolver, r.type);
+
                 _block->MOVE(result, typeName);
                 return _block->TEMP(result->index);
             } else {
-                return 0; // TODO: We can't do fast lookup for these yet.
+                Q_ASSERT(r.importNamespace);
+                V4IR::Name *namespaceName = _block->NAME(name, line, col);
+                namespaceName->freeOfSideEffects = true;
+                V4IR::Temp *result = _block->TEMP(_block->newTemp());
+                initImportNamespaceResolver(&result->memberResolver, imports, r.importNamespace);
+
+                _block->MOVE(result, namespaceName);
+                return _block->TEMP(result->index);
             }
         }
     }

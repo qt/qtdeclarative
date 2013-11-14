@@ -67,6 +67,7 @@ QT_BEGIN_NAMESPACE
     F(SetLookup, setLookup) \
     F(StoreQObjectProperty, storeQObjectProperty) \
     F(LoadQObjectProperty, loadQObjectProperty) \
+    F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
@@ -288,7 +289,14 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
+        int attachedPropertiesId;
         bool captureRequired;
+    };
+    struct instr_loadAttachedQObjectProperty {
+        MOTH_INSTR_HEADER
+        int propertyIndex;
+        Param result;
+        int attachedPropertiesId;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
@@ -692,6 +700,7 @@ union Instr
     instr_loadProperty loadProperty;
     instr_getLookup getLookup;
     instr_loadQObjectProperty loadQObjectProperty;
+    instr_loadAttachedQObjectProperty loadAttachedQObjectProperty;
     instr_storeProperty storeProperty;
     instr_setLookup setLookup;
     instr_storeQObjectProperty storeQObjectProperty;

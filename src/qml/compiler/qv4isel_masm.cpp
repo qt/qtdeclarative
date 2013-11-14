@@ -983,10 +983,13 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
     }
 }
 
-void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target)
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, V4IR::Temp *target)
 {
-    generateFunctionCall(target, __qmljs_get_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
-                         Assembler::TrustedImm32(captureRequired));
+    if (attachedPropertiesId != 0)
+        generateFunctionCall(target, __qmljs_get_attached_property, Assembler::ContextRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
+    else
+        generateFunctionCall(target, __qmljs_get_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
+                             Assembler::TrustedImm32(captureRequired));
 }
 
 void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBase,

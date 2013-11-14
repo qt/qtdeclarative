@@ -61,6 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 template <class Key, class T> class QHash;
+class QQmlEngine;
 class QQmlGuardImpl;
 class QQmlCompiledData;
 class QQmlAbstractBinding;
@@ -221,6 +222,8 @@ public:
     static void setQueuedForDeletion(QObject *);
 
     static inline void flushPendingBinding(QObject *, int coreIndex);
+
+    static void ensurePropertyCache(QQmlEngine *engine, QObject *object);
 
 private:
     // For attachedProperties
