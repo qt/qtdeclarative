@@ -181,9 +181,9 @@ private:
     // requires lock to be held
     void setTemporaryBreakPointOnNextLine();
     // requires lock to be held
-    void clearTemporaryBreakPoint();
+    void clearTemporaryBreakPoints();
     // requires lock to be held
-    bool temporaryBreakPointInFunction() const;
+    bool temporaryBreakPointInFunction(ExecutionContext *context) const;
 
     void applyPendingBreakPoints();
     static void setBreakOnInstruction(Function *function, qptrdiff codeOffset, bool onoff);
@@ -220,11 +220,14 @@ private:
 
     struct TemporaryBreakPoint {
         Function *function;
-        qptrdiff codeOffset;
-        TemporaryBreakPoint(Function *function = 0, qptrdiff codeOffset = 0)
-            : function(function), codeOffset(codeOffset)
+        QVector<qptrdiff> codeOffsets;
+        ExecutionContext *context;
+        TemporaryBreakPoint(): function(0), context(0) {}
+        TemporaryBreakPoint(Function *function, ExecutionContext *context)
+            : function(function)
+            , context(context)
         {}
-    } m_temporaryBreakPoint;
+    } m_temporaryBreakPoints;
 
     bool m_breakOnThrow;
 
