@@ -619,7 +619,7 @@ public:
         addRunning();
         QJsonObject body;
         body.insert(QStringLiteral("V8Version"),
-                    QStringLiteral("this is not V8, this is V4 in Qt %1").arg(QLatin1String(QT_VERSION_STR)));
+                    QLatin1String("this is not V8, this is V4 in Qt " QT_VERSION_STR));
         addBody(body);
     }
 };
