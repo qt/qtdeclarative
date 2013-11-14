@@ -110,6 +110,7 @@ private slots:
     void anchorBug();
     void pathAnimationInOutBackBug();
     void scriptActionBug();
+    void groupAnimationNullChildBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1449,6 +1450,31 @@ void tst_qquickanimations::scriptActionBug()
     QCOMPARE(obj->property("actionTriggered").toBool(), true);
     QCOMPARE(obj->property("actionTriggered").toBool(), true);
 }
+
+//QTBUG-34851
+void tst_qquickanimations::groupAnimationNullChildBug()
+{
+    {
+        QQmlEngine engine;
+
+        QQmlComponent c(&engine, testFileUrl("sequentialAnimationNullChildBug.qml"));
+        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(root);
+
+        delete root;
+    }
+
+    {
+        QQmlEngine engine;
+
+        QQmlComponent c(&engine, testFileUrl("parallelAnimationNullChildBug.qml"));
+        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(root);
+
+        delete root;
+    }
+}
+
 
 QTEST_MAIN(tst_qquickanimations)
 
