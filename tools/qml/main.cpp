@@ -267,7 +267,6 @@ void printUsage()
     printf("\t-- ........................... Arguments after this one are ignored by the launcher, but may be used within the QML application.\n");
     printf("\tDebugging options:\n");
     printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
-    printf("\t-enable-debugger ............. Allow the QML debugger to connect to the application (also requires debugger arguments).\n");
     printf("\t-translation [file] .......... Load the given file as the translations file.\n");
     printf("\t-dummy-data [directory] ...... Load QML files from the given directory as context properties.\n");
     printf("\t-slow-animations ............. Run all animations in slow motion.\n");
@@ -278,15 +277,9 @@ void printUsage()
 //Called before application initialization, removes arguments it uses
 void getAppFlags(int &argc, char **argv)
 {
-    for (int i=0; i<argc; i++) {
-        if (!strcmp(argv[i], "-enable-debugger")) { // Normally done via a define in the include, so expects to be before application (and must be before engine)
-            static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
-            for (int j=i; j<argc-1; j++)
-                argv[j] = argv[j+1];
-            argc --;
-        }
 #ifdef QT_GUI_LIB
-        else if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
+    for (int i=0; i<argc; i++) {
+        if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
             applicationType = QmlApplicationTypeUnknown;
             if (i+1 < argc) {
                 if (!strcmp(argv[i+1], "core"))
@@ -311,8 +304,8 @@ void getAppFlags(int &argc, char **argv)
                 argv[j] = argv[j+2];
             argc -= 2;
         }
-#endif // QT_GUI_LIB
     }
+#endif // QT_GUI_LIB
 }
 
 bool getFileSansBangLine(const QString &path, QByteArray &output)
