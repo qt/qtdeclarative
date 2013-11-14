@@ -214,7 +214,6 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 
 MemoryManager::MemoryManager()
     : m_d(new Data(true))
-    , m_contextList(0)
     , m_persistentValues(0)
     , m_weakValues(0)
 {
@@ -482,20 +481,6 @@ void MemoryManager::sweep(bool lastSweep)
         *last = i->next;
         free(i);
         i = *last;
-    }
-
-    ExecutionContext *ctx = m_contextList;
-    ExecutionContext **n = &m_contextList;
-    while (ctx) {
-        ExecutionContext *next = ctx->next;
-        if (!ctx->marked) {
-            free(ctx);
-            *n = next;
-        } else {
-            ctx->marked = false;
-            n = &ctx->next;
-        }
-        ctx = next;
     }
 
     deletable = *firstDeletable;

@@ -388,6 +388,7 @@ struct ExecutionContextSaver
 inline
 void Managed::mark(QV4::ExecutionEngine *engine)
 {
+    Q_ASSERT(inUse);
     if (markBit)
         return;
     markBit = 1;

@@ -240,7 +240,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 void ArgumentsObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
-    o->context->mark();
+    o->context->mark(e);
     for (int i = 0; i < o->mappedArguments.size(); ++i)
         o->mappedArguments.at(i).mark(e);
 

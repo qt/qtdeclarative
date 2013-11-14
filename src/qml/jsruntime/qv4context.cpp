@@ -51,9 +51,33 @@
 
 using namespace QV4;
 
+const ManagedVTable ExecutionContext::static_vtbl =
+{
+    call,
+    construct,
+    markObjects,
+    destroy,
+    0 /*collectDeletables*/,
+    hasInstance,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    isEqualTo,
+    0,
+    "ExecutionContext",
+};
+
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, callData->argc)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
+    c->init();
 
     engine->current = c;
 
@@ -63,7 +87,6 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode;
-    c->marked = false;
     c->outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(c->outer->next != (ExecutionContext *)0x1);
@@ -92,7 +115,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
 WithContext *ExecutionContext::newWithContext(ObjectRef with)
 {
-    WithContext *w = static_cast<WithContext *>(engine->memoryManager->allocContext(sizeof(WithContext)));
+    WithContext *w = new (engine->memoryManager) WithContext;
     engine->current = w;
     w->initWithContext(this, with);
     return w;
@@ -100,7 +123,7 @@ WithContext *ExecutionContext::newWithContext(ObjectRef with)
 
 CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
-    CatchContext *c = static_cast<CatchContext *>(engine->memoryManager->allocContext(sizeof(CatchContext)));
+    CatchContext *c = new (engine->memoryManager) CatchContext;
     engine->current = c;
     c->initCatchContext(this, exceptionVarName, exceptionValue);
     return c;
@@ -108,7 +131,8 @@ CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName
 
 CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
+    c->init();
 
     engine->current = c;
     c->initQmlContext(this, qml, f);
@@ -184,6 +208,7 @@ void GlobalContext::initGlobalContext(ExecutionEngine *eng)
     callData->tag = QV4::Value::_Integer_Type;
     callData->argc = 0;
     callData->thisObject = eng->globalObject;
+    callData->args[0] = Encode::undefined();
     global = 0;
 }
 
@@ -222,7 +247,6 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml,
     this->callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
-    marked = false;
     this->outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(outer->next != (ExecutionContext *)0x1);
@@ -285,36 +309,34 @@ bool CallContext::needsOwnArguments() const
     return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount);
 }
 
-void ExecutionContext::mark()
+void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
 {
-    if (marked)
-        return;
-    marked = true;
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(m);
 
-    if (outer)
-        outer->mark();
+    if (ctx->outer)
+        ctx->outer->mark(engine);
 
     // ### shouldn't need these 3 lines
-    callData->thisObject.mark(engine);
-    for (int arg = 0; arg < callData->argc; ++arg)
-        callData->args[arg].mark(engine);
+    ctx->callData->thisObject.mark(engine);
+    for (int arg = 0; arg < ctx->callData->argc; ++arg)
+        ctx->callData->args[arg].mark(engine);
 
-    if (type >= Type_CallContext) {
-        QV4::CallContext *c = static_cast<CallContext *>(this);
+    if (ctx->type >= Type_CallContext) {
+        QV4::CallContext *c = static_cast<CallContext *>(ctx);
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
             c->locals[local].mark(engine);
         if (c->activation)
             c->activation->mark(engine);
         c->function->mark(engine);
-    } else if (type == Type_WithContext) {
-        WithContext *w = static_cast<WithContext *>(this);
+    } else if (ctx->type == Type_WithContext) {
+        WithContext *w = static_cast<WithContext *>(ctx);
         w->withObject->mark(engine);
-    } else if (type == Type_CatchContext) {
-        CatchContext *c = static_cast<CatchContext *>(this);
+    } else if (ctx->type == Type_CatchContext) {
+        CatchContext *c = static_cast<CatchContext *>(ctx);
         c->exceptionVarName->mark(engine);
         c->exceptionValue.mark(engine);
-    } else if (type == Type_GlobalContext) {
-        GlobalContext *g = static_cast<GlobalContext *>(this);
+    } else if (ctx->type == Type_GlobalContext) {
+        GlobalContext *g = static_cast<GlobalContext *>(ctx);
         g->global->mark(engine);
     }
 }

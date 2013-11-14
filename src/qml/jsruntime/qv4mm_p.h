@@ -103,8 +103,6 @@ public:
         return o;
     }
 
-    ExecutionContext *allocContext(uint size);
-
     bool isGCBlocked() const;
     void setGCBlocked(bool blockGC);
     void runGC();
@@ -134,20 +132,10 @@ private:
 
 protected:
     QScopedPointer<Data> m_d;
-    ExecutionContext *m_contextList;
 public:
     PersistentValuePrivate *m_persistentValues;
     PersistentValuePrivate *m_weakValues;
 };
-
-inline ExecutionContext *MemoryManager::allocContext(uint size)
-{
-    ExecutionContext *newContext = (ExecutionContext *)malloc(size);
-    newContext->next = m_contextList;
-    m_contextList = newContext;
-    return newContext;
-}
-
 
 }
 

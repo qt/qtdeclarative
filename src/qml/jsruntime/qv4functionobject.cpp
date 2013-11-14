@@ -213,7 +213,7 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 //        formalParameterList[i]->mark();
 //    for (uint i = 0; i < varCount; ++i)
 //        varList[i]->mark();
-    o->scope->mark();
+    o->scope->mark(e);
     if (o->function)
         o->function->mark(e);
 

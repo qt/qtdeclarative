@@ -66,8 +66,21 @@ struct CallContext;
 struct CatchContext;
 struct WithContext;
 
-struct Q_QML_EXPORT ExecutionContext
+struct Q_QML_EXPORT ExecutionContext : public Managed
 {
+    Q_MANAGED
+    ExecutionContext()
+        : Managed(0) {
+        vtbl = &static_vtbl;
+    }
+    void init() {
+        _data = 0;
+        internalClass = 0;
+        inUse = 1;
+        extensible = 1;
+        vtbl = &static_vtbl;
+    }
+
     enum Type {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -79,7 +92,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     Type type;
     bool strictMode;
-    bool marked;
 
     CallData *callData;
 
@@ -104,7 +116,6 @@ struct Q_QML_EXPORT ExecutionContext
     {
         this->type = type;
         strictMode = false;
-        marked = false;
         this->engine = engine;
         parent = parentContext;
         outer = 0;
@@ -148,10 +159,10 @@ struct Q_QML_EXPORT ExecutionContext
     // Can only be called from within catch(...), rethrows if no JS exception.
     ReturnedValue catchException(StackTrace *trace = 0);
 
-    void mark();
-
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+
+    static void markObjects(Managed *m, ExecutionEngine *e);
 };
 
 struct CallContext : public ExecutionContext

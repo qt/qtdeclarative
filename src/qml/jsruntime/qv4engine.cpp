@@ -382,7 +382,8 @@ void ExecutionEngine::enableDebugger()
 
 void ExecutionEngine::initRootContext()
 {
-    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext) + sizeof(CallData)));
+    rootContext = static_cast<GlobalContext *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
+    rootContext->init();
     current = rootContext;
     current->parent = 0;
     rootContext->initGlobalContext(this);
@@ -395,9 +396,9 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext *g = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
+    GlobalContext *g = new (memoryManager) GlobalContext;
     ExecutionContext *oldNext = g->next;
-    *g = *rootContext;
+    memcpy(g, rootContext, sizeof(GlobalContext));
     g->next = oldNext;
     g->parent = current;
     current = g;
@@ -747,7 +748,7 @@ void ExecutionEngine::markObjects()
 
     ExecutionContext *c = current;
     while (c) {
-        c->mark();
+        c->mark(this);
         c = c->parent;
     }
 
