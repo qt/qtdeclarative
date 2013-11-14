@@ -108,7 +108,6 @@ const ManagedVTable String::static_vtbl =
     markObjects,
     destroy,
     0 /*collectDeletables*/,
-    hasInstance,
     get,
     getIndexed,
     put,

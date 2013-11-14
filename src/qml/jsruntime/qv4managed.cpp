@@ -52,7 +52,6 @@ const ManagedVTable Managed::static_vtbl =
     0 /*markObjects*/,
     destroy,
     0 /*collectDeletables*/,
-    hasInstance,
     0,
     0,
     0,
@@ -178,11 +177,6 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::hasInstance(Managed *m, const ValueRef)
-{
-    return m->engine()->current->throwTypeError();
-}
-
 ReturnedValue Managed::construct(Managed *m, CallData *)
 {
     return m->engine()->current->throwTypeError();
@@ -206,11 +200,6 @@ void Managed::setLookup(Managed *m, Lookup *, const ValueRef)
 bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;
-}
-
-bool Managed::hasInstance(const ValueRef v)
-{
-    return vtbl->hasInstance(this, v);
 }
 
 ReturnedValue Managed::get(const StringRef name, bool *hasProperty)

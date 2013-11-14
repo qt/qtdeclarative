@@ -58,7 +58,6 @@ const ManagedVTable ExecutionContext::static_vtbl =
     markObjects,
     destroy,
     0 /*collectDeletables*/,
-    hasInstance,
     0,
     0,
     0,

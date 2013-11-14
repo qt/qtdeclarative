@@ -97,7 +97,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     // Used with Managed::subType
     enum FunctionType {
         RegularFunction = 0,
-        WrappedQtMethod = 1
+        WrappedQtMethod = 1,
+        BoundFunction
     };
 
     enum {
@@ -112,6 +113,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount;
     unsigned int varCount;
     Function *function;
+    InternalClass *protoCacheClass;
+    uint protoCacheIndex;
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
@@ -136,11 +139,12 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
 
+    ReturnedValue protoProperty();
+
 protected:
     FunctionObject(InternalClass *ic);
 
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static bool hasInstance(Managed *that, const ValueRef value);
     static void destroy(Managed *that)
     { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
@@ -235,7 +239,6 @@ struct BoundFunction: FunctionObject {
 
     static void destroy(Managed *);
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static bool hasInstance(Managed *that, const ValueRef value);
 };
 
 }

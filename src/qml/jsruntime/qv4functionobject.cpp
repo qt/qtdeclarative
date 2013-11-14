@@ -81,6 +81,8 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bo
     , formalParameterCount(0)
     , varCount(0)
     , function(0)
+    , protoCacheClass(0)
+    , protoCacheIndex(UINT_MAX)
 {
      init(name, createProto);
 }
@@ -93,6 +95,8 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
     , formalParameterCount(0)
     , varCount(0)
     , function(0)
+    , protoCacheClass(0)
+    , protoCacheIndex(UINT_MAX)
 {
     // set the name to something here, so that a gc run a few lines below doesn't crash on it
     this->name = scope->engine->id_undefined;
@@ -158,33 +162,6 @@ ReturnedValue FunctionObject::newInstance()
     return construct(callData);
 }
 
-bool FunctionObject::hasInstance(Managed *that, const ValueRef value)
-{
-    Scope scope(that->internalClass->engine);
-    ScopedFunctionObject f(scope, static_cast<FunctionObject *>(that));
-
-    ScopedObject v(scope, value);
-    if (!v)
-        return false;
-
-    Scoped<Object> o(scope, f->get(scope.engine->id_prototype));
-    if (!o) {
-        scope.engine->current->throwTypeError();
-        return false;
-    }
-
-    while (v) {
-        v = v->prototype();
-
-        if (! v)
-            break;
-        else if (o.getPointer() == v)
-            return true;
-    }
-
-    return false;
-}
-
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
     ExecutionEngine *v4 = that->internalClass->engine;
@@ -229,6 +206,19 @@ FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Fun
         function->isNamedExpression())
         return new (scope->engine->memoryManager) ScriptFunction(scope, function);
     return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function);
+}
+
+ReturnedValue FunctionObject::protoProperty()
+{
+    if (protoCacheClass != internalClass) {
+        protoCacheClass = internalClass;
+        protoCacheIndex = internalClass->find(internalClass->engine->id_prototype);
+    }
+    if (protoCacheIndex < UINT_MAX) {
+        if (internalClass->propertyData.at(protoCacheIndex).isData())
+            return memberData[protoCacheIndex].value.asReturnedValue();
+    }
+    return get(internalClass->engine->id_prototype);
 }
 
 
@@ -667,6 +657,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
+    subtype = FunctionObject::BoundFunction;
     this->boundThis = boundThis;
 
     Scope s(scope);
@@ -716,12 +707,6 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
     return f->target->construct(callData);
-}
-
-bool BoundFunction::hasInstance(Managed *that, const ValueRef value)
-{
-    BoundFunction *f = static_cast<BoundFunction *>(that);
-    return FunctionObject::hasInstance(f->target, value);
 }
 
 void BoundFunction::markObjects(Managed *that, ExecutionEngine *e)

@@ -84,7 +84,6 @@ struct ManagedVTable
     void (*markObjects)(Managed *, ExecutionEngine *e);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
-    bool (*hasInstance)(Managed *, const ValueRef value);
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, const StringRef name, const ValueRef value);
@@ -108,7 +107,6 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     markObjects,                                \
     destroy,                                    \
     0,                                          \
-    hasInstance,                                \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
@@ -132,7 +130,6 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     markObjects,                                \
     destroy,                                    \
     collectDeletables,                          \
-    hasInstance,                                \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
@@ -240,7 +237,6 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
-    bool hasInstance(const ValueRef v);
     ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
     ReturnedValue get(const StringRef name, bool *hasProperty = 0);
@@ -263,7 +259,6 @@ public:
     Property *advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
-    static bool hasInstance(Managed *that, const ValueRef value);
     static ReturnedValue construct(Managed *m, CallData *d);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue getLookup(Managed *m, Lookup *);
