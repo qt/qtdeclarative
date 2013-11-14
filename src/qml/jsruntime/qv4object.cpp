@@ -1133,7 +1133,7 @@ ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endInd
     Scope scope(engine());
     ScopedValue value(scope);
 
-    if (!(flags & SimpleArray) || o->protoHasArray() || o->arrayAttributes) {
+    if (!(o->flags & SimpleArray) || o->protoHasArray()) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;

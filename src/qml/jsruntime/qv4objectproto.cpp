@@ -41,6 +41,7 @@
 
 
 #include "qv4objectproto_p.h"
+#include "qv4argumentsobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
@@ -155,6 +156,9 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     Scoped<Object> O(scope, ctx->argument(0));
     if (!O)
         return ctx->throwTypeError();
+
+    if (O->isNonStrictArgumentsObject)
+        Scoped<ArgumentsObject>(scope, O)->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
     Scoped<String> name(scope, v->toString(ctx));
@@ -282,6 +286,9 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
         return ctx->throwTypeError();
+
+    if (o->isNonStrictArgumentsObject)
+        Scoped<ArgumentsObject>(scope, o)->fullyCreate();
 
     o->extensible = false;
 

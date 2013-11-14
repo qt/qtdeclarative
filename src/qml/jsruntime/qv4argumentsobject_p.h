@@ -74,9 +74,11 @@ struct ArgumentsSetterFunction: FunctionObject
 struct ArgumentsObject: Object {
     Q_MANAGED
     CallContext *context;
+    bool fullyCreated;
     QVector<SafeValue> mappedArguments;
     ArgumentsObject(CallContext *context);
     ~ArgumentsObject() {}
+
 
     enum {
         LengthPropertyIndex = 0,
@@ -84,10 +86,14 @@ struct ArgumentsObject: Object {
         CallerPropertyIndex = 2
     };
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
-
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static void putIndexed(Managed *m, uint index, const ValueRef value);
+    static bool deleteIndexedProperty(Managed *m, uint index);
+    static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static void markObjects(Managed *that, ExecutionEngine *e);
-protected:
     static void destroy(Managed *);
+
+    void fullyCreate();
 };
 
 }

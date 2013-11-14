@@ -348,7 +348,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->protoHasArray() || arr->hasAccessorProperty) {
+        if (!(arr->flags & SimpleArray) || arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {

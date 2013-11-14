@@ -42,6 +42,7 @@
 #include "qv4object_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4identifier_p.h"
+#include "qv4argumentsobject_p.h"
 
 using namespace QV4;
 
@@ -56,6 +57,11 @@ ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const
     object = o;
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
+
+    if (object && object->isNonStrictArgumentsObject) {
+        Scope scope(object->engine());
+        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
+    }
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
@@ -69,6 +75,11 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     object = o;
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
+
+    if (object && object->isNonStrictArgumentsObject) {
+        Scope scope(object->engine());
+        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
+    }
 }
 
 Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *attrs)
