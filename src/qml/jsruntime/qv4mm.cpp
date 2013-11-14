@@ -155,6 +155,19 @@ struct MemoryManager::Data
 
     QVector<Chunk> heapChunks;
 
+
+    struct LargeItem {
+        LargeItem *next;
+        void *data;
+
+        Managed *managed() {
+            return reinterpret_cast<Managed *>(&data);
+        }
+    };
+
+    LargeItem *largeItems;
+
+
     // statistics:
 #ifdef DETAILED_MM_STATS
     QVector<unsigned> allocSizeCounters;
@@ -167,6 +180,7 @@ struct MemoryManager::Data
         , stackTop(0)
         , totalItems(0)
         , totalAlloc(0)
+        , largeItems(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
@@ -258,8 +272,14 @@ Managed *MemoryManager::alloc(std::size_t size)
 
     size_t pos = size >> 4;
 
-    // fits into a small bucket
-    Q_ASSERT(size < MemoryManager::Data::MaxItemSize);
+    // doesn't fit into a small bucket
+    if (size >= MemoryManager::Data::MaxItemSize) {
+        // we use malloc for this
+        MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(malloc(size + sizeof(MemoryManager::Data::LargeItem)));
+        item->next = m_d->largeItems;
+        m_d->largeItems = item;
+        return item->managed();
+    }
 
     Managed *m = m_d->smallItems[pos];
     if (m)
@@ -446,6 +466,23 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
         sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
+
+    Data::LargeItem *i = m_d->largeItems;
+    Data::LargeItem **last = &m_d->largeItems;
+    while (i) {
+        Managed *m = i->managed();
+        Q_ASSERT(m->inUse);
+        if (m->markBit) {
+            m->markBit = 0;
+            last = &i->next;
+            i = i->next;
+            continue;
+        }
+
+        *last = i->next;
+        free(i);
+        i = *last;
+    }
 
     ExecutionContext *ctx = m_contextList;
     ExecutionContext **n = &m_contextList;
