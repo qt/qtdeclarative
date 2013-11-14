@@ -787,8 +787,22 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
 {
     QSG_GUI_DEBUG(window, "show()");
 
-    if (windowFor(m_windows, window))
+    if (Window *w = windowFor(m_windows, window)) {
+        /* Safeguard ourselves against misbehaving platform plugins.
+         *
+         * When being shown, the window should not be exposed as the
+         * platform plugin is only told to show after we send the show
+         * event. If we are already shown at this time and we don't have
+         * an active rendering thread we don't trust the plugin to send
+         * us another expose event, so make this explicit call to
+         * handleExposure.
+         *
+         * REF: QTCREATORBUG-10699
+         */
+        if (window->isExposed() && (!w->thread || !w->thread->isRunning()))
+            handleExposure(w);
         return;
+    }
 
     QSG_GUI_DEBUG(window, " - now tracking new window");
 
