@@ -817,13 +817,13 @@ namespace {
     {
         bool operator()(Function *function, quintptr pc)
         {
-            return reinterpret_cast<quintptr>(function->codePtr) < pc
-                   && (reinterpret_cast<quintptr>(function->codePtr) + function->codeSize) < pc;
+            return reinterpret_cast<quintptr>(function->code) < pc
+                   && (reinterpret_cast<quintptr>(function->code) + function->codeSize) < pc;
         }
 
         bool operator()(quintptr pc, Function *function)
         {
-            return pc < reinterpret_cast<quintptr>(function->codePtr);
+            return pc < reinterpret_cast<quintptr>(function->code);
         }
     };
 }

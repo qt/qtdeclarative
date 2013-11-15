@@ -85,11 +85,8 @@ struct Function {
 
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
-    inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
-        return codePtr(ctx, data);
-    }
 
-    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *);
+    ReturnedValue (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     quint32 codeSize;
 

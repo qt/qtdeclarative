@@ -54,7 +54,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
         : compiledFunction(function)
         , compilationUnit(unit)
-        , codePtr(codePtr)
+        , code(codePtr)
         , codeData(0)
         , codeSize(_codeSize)
 {

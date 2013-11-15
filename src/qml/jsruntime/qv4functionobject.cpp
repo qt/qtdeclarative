@@ -400,7 +400,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     this->function = function;
     this->function->compilationUnit->ref();
     Q_ASSERT(function);
-    Q_ASSERT(function->codePtr);
+    Q_ASSERT(function->code);
 
     // global function
     if (!scope)
@@ -487,7 +487,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     this->function = function;
     this->function->compilationUnit->ref();
     Q_ASSERT(function);
-    Q_ASSERT(function->codePtr);
+    Q_ASSERT(function->code);
 
     // global function
     if (!scope)
