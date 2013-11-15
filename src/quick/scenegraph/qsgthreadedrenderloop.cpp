@@ -381,10 +381,13 @@ bool QSGRenderThread::event(QEvent *e)
 
         Q_ASSERT(!window || window == static_cast<WMWindowEvent *>(e)->window);
 
+        mutex.lock();
         if (window) {
             QSG_RT_DEBUG(" - removed one...");
             window = 0;
         }
+        waitCondition.wakeOne();
+        mutex.unlock();
 
         return true; }
 
@@ -799,7 +802,7 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
          *
          * REF: QTCREATORBUG-10699
          */
-        if (window->isExposed() && (!w->thread || !w->thread->isRunning()))
+        if (window->isExposed() && (!w->thread || !w->thread->window))
             handleExposure(w);
         return;
     }
@@ -942,8 +945,12 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
 void QSGThreadedRenderLoop::handleObscurity(Window *w)
 {
     QSG_GUI_DEBUG(w->window, "handleObscurity");
-    if (w->thread->isRunning())
+    if (w->thread->isRunning()) {
+        w->thread->mutex.lock();
         w->thread->postEvent(new WMWindowEvent(w->window, WM_Obscure));
+        w->thread->waitCondition.wait(&w->thread->mutex);
+        w->thread->mutex.unlock();
+    }
 
     startOrStopAnimationTimer();
 }
