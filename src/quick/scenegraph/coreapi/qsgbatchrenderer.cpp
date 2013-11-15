@@ -1572,6 +1572,13 @@ void Renderer::prepareAlphaBatches()
                     ej->batch = batch;
                     next->nextInBatch = ej;
                     next = ej;
+                } else {
+                    /* When we come across a compatible element which hits an overlap, we
+                     * need to stop the batch right away. We cannot add more elements
+                     * to the current batch as they will be rendered before the batch that the
+                     * current 'ej' will be added to.
+                     */
+                    break;
                 }
             } else {
                 overlapBounds |= ej->bounds;
