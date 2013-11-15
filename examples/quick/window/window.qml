@@ -140,6 +140,7 @@ QtObject {
         height: 240
         color: "#215400"
         title: "Test Window with color " + color
+        flags: Qt.Window | Qt.WindowFullscreenButtonHint
         Rectangle {
             anchors.fill: parent
             anchors.margins: defaultSpacing
