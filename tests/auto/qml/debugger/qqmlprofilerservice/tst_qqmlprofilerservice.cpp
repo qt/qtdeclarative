@@ -450,8 +450,9 @@ void tst_QQmlProfilerService::scenegraphData()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
-    QVERIFY(m_process->output().indexOf(QLatin1String("tick")) != -1);
+
+    while (!m_process->output().contains(QLatin1String("tick")))
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
     m_client->setTraceState(false);
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
