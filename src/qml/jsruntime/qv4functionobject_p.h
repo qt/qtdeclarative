@@ -108,8 +108,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ExecutionContext *scope;
     SafeString name;
-    String * const *formalParameterList;
-    String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
     Function *function;

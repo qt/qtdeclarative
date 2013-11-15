@@ -172,7 +172,7 @@ String * const *ExecutionContext::formals() const
     if (type < Type_SimpleCallContext)
         return 0;
     QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->formalParameterList : 0;
+    return (f && f->function) ? f->function->internalClass->nameMap.constData() : 0;
 }
 
 unsigned int ExecutionContext::formalCount() const
@@ -188,7 +188,7 @@ String * const *ExecutionContext::variables() const
     if (type < Type_SimpleCallContext)
         return 0;
     QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->varList : 0;
+    return (f && f->function) ? f->function->internalClass->nameMap.constData() + f->function->nArguments : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
@@ -282,12 +282,10 @@ bool ExecutionContext::deleteProperty(const StringRef name)
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith) {
-                for (unsigned int i = 0; i < f->varCount; ++i)
-                    if (f->varList[i]->isEqualTo(name))
-                        return false;
-                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
-                    if (f->formalParameterList[i]->isEqualTo(name))
-                        return false;
+                uint index = f->function->internalClass->find(name);
+                if (index < UINT_MAX)
+                    // ### throw in strict mode?
+                    return false;
             }
             if (c->activation && c->activation->__hasProperty__(name))
                 return c->activation->deleteProperty(name);
@@ -357,16 +355,18 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             ScopedObject activation(scope, (Object *)0);
             if (ctx->type >= Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
-                for (unsigned int i = 0; i < c->function->varCount; ++i)
-                    if (c->function->varList[i]->isEqualTo(name)) {
-                        c->locals[i] = *value;
+                if (c->function->function) {
+                    uint index = c->function->function->internalClass->find(name);
+                    if (index < UINT_MAX) {
+                        if (index < c->function->formalParameterCount) {
+                            c->callData->args[c->function->formalParameterCount - index - 1] = *value;
+                        } else {
+                            index -= c->function->formalParameterCount;
+                            c->locals[index] = *value;
+                        }
                         return;
                     }
-                for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
-                    if (c->function->formalParameterList[i]->isEqualTo(name)) {
-                        c->callData->args[i] = *value;
-                        return;
-                    }
+                }
                 activation = c->activation;
             } else if (ctx->type == Type_GlobalContext) {
                 activation = static_cast<GlobalContext *>(ctx)->global;
@@ -419,13 +419,13 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             ScopedFunctionObject f(scope, c->function);
-            if (f->needsActivation || hasWith || hasCatchScope) {
-                for (unsigned int i = 0; i < f->varCount; ++i)
-                    if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i].asReturnedValue();
-                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
-                    if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->callData->args[i].asReturnedValue();
+            if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
+                uint index = f->function->internalClass->find(name);
+                if (index < UINT_MAX) {
+                    if (index < c->function->formalParameterCount)
+                        return c->callData->args[c->function->formalParameterCount - index - 1].asReturnedValue();
+                    return c->locals[index - c->function->formalParameterCount].asReturnedValue();
+                }
             }
             if (c->activation) {
                 bool hasProperty = false;
@@ -485,13 +485,13 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
-            if (f->needsActivation || hasWith || hasCatchScope) {
-                for (unsigned int i = 0; i < f->varCount; ++i)
-                    if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i].asReturnedValue();
-                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
-                    if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->callData->args[i].asReturnedValue();
+            if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
+                uint index = f->function->internalClass->find(name);
+                if (index < UINT_MAX) {
+                    if (index < c->function->formalParameterCount)
+                        return c->callData->args[c->function->formalParameterCount - index - 1].asReturnedValue();
+                    return c->locals[index - c->function->formalParameterCount].asReturnedValue();
+                }
             }
             if (c->activation) {
                 bool hasProperty = false;

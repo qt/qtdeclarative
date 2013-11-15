@@ -299,9 +299,10 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
 
             Scope scope(engine);
             ScopedValue v(scope);
-            for (unsigned i = 0, ei = ctxt->formalCount(); i != ei; ++i) {
+            int nFormals = ctxt->formalCount();
+            for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
                 QString qName;
-                if (String *name = ctxt->formals()[i])
+                if (String *name = ctxt->formals()[nFormals - i - 1])
                     qName = name->toQString();
                 v = ctxt->argument(i);
                 collector->collect(qName, v);

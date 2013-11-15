@@ -131,6 +131,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
 
+    // formals are in reverse order
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
