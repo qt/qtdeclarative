@@ -45,6 +45,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmlcompiler_p.h>
+#include <private/qqmlglobal_p.h>
 #include <QCoreApplication>
 
 #ifdef CONST
@@ -52,6 +53,8 @@
 #endif
 
 QT_USE_NAMESPACE
+
+DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
 
 using namespace QtQml;
 
@@ -1450,6 +1453,15 @@ static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::
             if (QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0)) {
                 const bool isFinalProperty = (candidate->isFinal() || (resolver->flags & AllPropertiesAreFinal))
                                              && !candidate->isFunction();
+
+                if (lookupHints()
+                    && !(resolver->flags & AllPropertiesAreFinal)
+                    && !candidate->isFinal()
+                    && !candidate->isFunction()
+                    && candidate->isDirect()) {
+                    qWarning() << "Hint: Access to property" << *member->name << "of" << metaObject->className() << "could be accelerated if it was marked as FINAL";
+                }
+
                 if (isFinalProperty && metaObject->isAllowedInRevision(candidate)) {
                     property = candidate;
                     member->property = candidate; // Cache for next iteration and isel needs it.
