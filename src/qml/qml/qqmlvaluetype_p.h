@@ -169,8 +169,8 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueTypeBase<QPointF>
 {
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_OBJECT
 public:
     QQmlPointFValueType(QObject *parent = 0);
@@ -185,8 +185,8 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlPointValueType : public QQmlValueTypeBase<QPoint>
 {
-    Q_PROPERTY(int x READ x WRITE setX)
-    Q_PROPERTY(int y READ y WRITE setY)
+    Q_PROPERTY(int x READ x WRITE setX FINAL)
+    Q_PROPERTY(int y READ y WRITE setY FINAL)
     Q_OBJECT
 public:
     QQmlPointValueType(QObject *parent = 0);
@@ -201,8 +201,8 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlSizeFValueType : public QQmlValueTypeBase<QSizeF>
 {
-    Q_PROPERTY(qreal width READ width WRITE setWidth)
-    Q_PROPERTY(qreal height READ height WRITE setHeight)
+    Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight FINAL)
     Q_OBJECT
 public:
     QQmlSizeFValueType(QObject *parent = 0);
@@ -217,8 +217,8 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlSizeValueType : public QQmlValueTypeBase<QSize>
 {
-    Q_PROPERTY(int width READ width WRITE setWidth)
-    Q_PROPERTY(int height READ height WRITE setHeight)
+    Q_PROPERTY(int width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(int height READ height WRITE setHeight FINAL)
     Q_OBJECT
 public:
     QQmlSizeValueType(QObject *parent = 0);
@@ -233,10 +233,10 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlRectFValueType : public QQmlValueTypeBase<QRectF>
 {
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal width READ width WRITE setWidth)
-    Q_PROPERTY(qreal height READ height WRITE setHeight)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
+    Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight FINAL)
     Q_OBJECT
 public:
     QQmlRectFValueType(QObject *parent = 0);
@@ -256,10 +256,10 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlRectValueType : public QQmlValueTypeBase<QRect>
 {
-    Q_PROPERTY(int x READ x WRITE setX)
-    Q_PROPERTY(int y READ y WRITE setY)
-    Q_PROPERTY(int width READ width WRITE setWidth)
-    Q_PROPERTY(int height READ height WRITE setHeight)
+    Q_PROPERTY(int x READ x WRITE setX FINAL)
+    Q_PROPERTY(int y READ y WRITE setY FINAL)
+    Q_PROPERTY(int width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(int height READ height WRITE setHeight FINAL)
     Q_OBJECT
 public:
     QQmlRectValueType(QObject *parent = 0);
@@ -282,11 +282,11 @@ class Q_QML_PRIVATE_EXPORT QQmlEasingValueType : public QQmlValueTypeBase<QEasin
     Q_OBJECT
     Q_ENUMS(Type)
 
-    Q_PROPERTY(QQmlEasingValueType::Type type READ type WRITE setType)
-    Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude)
-    Q_PROPERTY(qreal overshoot READ overshoot WRITE setOvershoot)
-    Q_PROPERTY(qreal period READ period WRITE setPeriod)
-    Q_PROPERTY(QVariantList bezierCurve READ bezierCurve WRITE setBezierCurve)
+    Q_PROPERTY(QQmlEasingValueType::Type type READ type WRITE setType FINAL)
+    Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude FINAL)
+    Q_PROPERTY(qreal overshoot READ overshoot WRITE setOvershoot FINAL)
+    Q_PROPERTY(qreal period READ period WRITE setPeriod FINAL)
+    Q_PROPERTY(QVariantList bezierCurve READ bezierCurve WRITE setBezierCurve FINAL)
 public:
     enum Type {
         Linear = QEasingCurve::Linear,

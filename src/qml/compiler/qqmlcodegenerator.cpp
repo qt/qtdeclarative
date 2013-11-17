@@ -1330,9 +1330,10 @@ QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache
 static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
 enum MetaObjectResolverFlags {
-    AllPropertiesAreFinal    = 0x1,
-    LookupsIncludeEnums      = 0x2,
-    LookupsExcludeProperties = 0x4
+    AllPropertiesAreFinal      = 0x1,
+    LookupsIncludeEnums        = 0x2,
+    LookupsExcludeProperties   = 0x4,
+    ResolveTypeInformationOnly = 0x8
 };
 
 static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
@@ -1464,7 +1465,9 @@ static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::
 
                 if (isFinalProperty && metaObject->isAllowedInRevision(candidate)) {
                     property = candidate;
-                    member->property = candidate; // Cache for next iteration and isel needs it.
+                    member->inhibitTypeConversionOnWrite = true;
+                    if (!(resolver->flags & ResolveTypeInformationOnly))
+                        member->property = candidate; // Cache for next iteration and isel needs it.
                 }
             }
         }
@@ -1484,6 +1487,12 @@ static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::
                 if (property->isQObject()) {
                     if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
                         initMetaObjectResolver(resolver, cache);
+                        return V4IR::QObjectType;
+                    }
+                } else if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType)) {
+                    if (QQmlPropertyCache *cache = qmlEngine->cache(valueType->metaObject())) {
+                        initMetaObjectResolver(resolver, cache);
+                        resolver->flags |= ResolveTypeInformationOnly;
                         return V4IR::QObjectType;
                     }
                 }

@@ -1906,12 +1906,8 @@ protected:
             }
         }
 
-        // Don't convert when writing to QObject properties. All sorts of extra behavior
-        // is defined when writing to them, for example resettable properties are reset
-        // when writing undefined to them, and an exception is thrown when they're missing
-        // a reset function.
         const Member *targetMember = s->target->asMember();
-        const bool inhibitConversion = targetMember && targetMember->property;
+        const bool inhibitConversion = targetMember && targetMember->inhibitTypeConversionOnWrite;
 
         run(s->source, s->target->type, !inhibitConversion);
     }

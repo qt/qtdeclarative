@@ -562,6 +562,12 @@ struct Member: Expr {
     bool memberIsEnum : 1;
     bool freeOfSideEffects : 1;
 
+    // This is set for example for for QObject properties. All sorts of extra behavior
+    // is defined when writing to them, for example resettable properties are reset
+    // when writing undefined to them, and an exception is thrown when they're missing
+    // a reset function. And then there's also Qt.binding().
+    bool inhibitTypeConversionOnWrite: 1;
+
     void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, int attachedPropertiesId = 0)
     {
         this->base = base;
@@ -571,6 +577,7 @@ struct Member: Expr {
         this->enumValue = 0;
         this->memberIsEnum = false;
         this->freeOfSideEffects = false;
+        this->inhibitTypeConversionOnWrite = property != 0;
     }
 
     void init(Expr *base, const QString *name, int enumValue)
@@ -582,6 +589,7 @@ struct Member: Expr {
         this->enumValue = enumValue;
         this->memberIsEnum = true;
         this->freeOfSideEffects = false;
+        this->inhibitTypeConversionOnWrite = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
