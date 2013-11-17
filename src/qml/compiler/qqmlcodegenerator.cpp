@@ -1552,9 +1552,10 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             _function->idObjectDependencies.insert(mapping.idIndex);
             V4IR::Expr *s = subscript(_block->TEMP(_idArrayTemp), _block->CONST(V4IR::SInt32Type, mapping.idIndex));
             V4IR::Temp *result = _block->TEMP(_block->newTemp());
-            initMetaObjectResolver(&result->memberResolver, mapping.type);
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);
+            initMetaObjectResolver(&result->memberResolver, mapping.type);
+            result->memberResolver.flags |= AllPropertiesAreFinal;
             result->isReadOnly = true; // don't allow use as lvalue
             return result;
         }
