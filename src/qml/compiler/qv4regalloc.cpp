@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4regalloc_p.h"
+#include <private/qv4value_p.h>
 
 #include <algorithm>
 

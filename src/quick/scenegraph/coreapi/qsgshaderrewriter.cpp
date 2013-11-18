@@ -183,7 +183,7 @@ QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat
     Tokenizer::Token t = tok.next();
 
     // First find "void main() { ... "
-    const char* voidPos;
+    const char* voidPos = input;
     while (t != Tokenizer::Token_EOF) {
         if (lt == Tokenizer::Token_Void && t == Tokenizer::Token_Identifier) {
             if (qstrncmp("main", tok.identifier, 4) == 0)
