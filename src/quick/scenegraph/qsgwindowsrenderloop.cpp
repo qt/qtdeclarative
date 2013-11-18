@@ -241,6 +241,7 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
     if (m_windows.size() == 0) {
         if (!cd->persistentSceneGraph) {
             QQuickWindowPrivate::get(window)->context->invalidate();
+            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
             if (!cd->persistentGLContext) {
                 delete m_gl;
                 m_gl = 0;
@@ -257,6 +258,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     // If this is the last tracked window, clean up SG and GL.
     if (m_windows.size() == 0) {
         QQuickWindowPrivate::get(window)->context->invalidate();
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete m_gl;
         m_gl = 0;
     }

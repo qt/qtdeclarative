@@ -242,6 +242,7 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
     if (m_windows.size() == 0) {
         if (!cd->persistentSceneGraph) {
             rc->invalidate();
+            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
             if (!cd->persistentGLContext) {
                 delete gl;
                 gl = 0;
@@ -255,6 +256,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     hide(window);
     if (m_windows.size() == 0) {
         rc->invalidate();
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete gl;
         gl = 0;
     }
