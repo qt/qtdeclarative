@@ -317,6 +317,7 @@ private slots:
     void setPropertyOnInvalid();
     void miscTypeTest();
     void stackLimits();
+    void idsAsLValues();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7464,6 +7465,16 @@ void tst_qqmlecmascript::stackLimits()
 {
     QJSEngine engine;
     engine.evaluate(QStringLiteral("function foo() {foo();} try {foo()} catch(e) { }"));
+}
+
+void tst_qqmlecmascript::idsAsLValues()
+{
+    QString err = QString(QLatin1String("%1:5 left-hand side of assignment operator is not an lvalue\n")).arg(testFileUrl("idAsLValue.qml").toString());
+    QQmlComponent component(&engine, testFileUrl("idAsLValue.qml"));
+    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+    QVERIFY(!object);
+    QCOMPARE(component.errorString(), err);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

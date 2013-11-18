@@ -460,6 +460,7 @@ protected:
     QStack<V4IR::BasicBlock *> _exceptionHandlers;
     bool _strictMode;
 
+    bool _fileNameIsUrl;
     bool hasError;
     QList<QQmlError> _errors;
 

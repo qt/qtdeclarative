@@ -1211,6 +1211,7 @@ JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, 
 {
     _module = jsModule;
     _module->setFileName(fileName);
+    _fileNameIsUrl = true;
 }
 
 void JSCodeGen::beginContextScope(const JSCodeGen::ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject)

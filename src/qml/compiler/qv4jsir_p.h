@@ -558,7 +558,7 @@ struct Member: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
-    virtual bool isLValue() { return true; }
+    virtual bool isLValue() { return type != MemberOfQmlContext; }
     virtual Member *asMember() { return this; }
 
     virtual void dump(QTextStream &out) const;

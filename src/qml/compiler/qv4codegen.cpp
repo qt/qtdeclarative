@@ -418,6 +418,7 @@ Codegen::Codegen(bool strict)
     , _labelledStatement(0)
     , _scopeAndFinally(0)
     , _strictMode(strict)
+    , _fileNameIsUrl(false)
     , hasError(false)
 {
 }
@@ -1182,7 +1183,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
         V4IR::Expr* right = *expression(ast->right);
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
+        if (!left->isLValue()) {
             throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
         }
@@ -2850,7 +2851,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 
     hasError = true;
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_module->fileName));
+    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
@@ -2864,7 +2865,7 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
 
     hasError = true;
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_module->fileName));
+    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
