@@ -318,6 +318,7 @@ private slots:
     void miscTypeTest();
     void stackLimits();
     void idsAsLValues();
+    void qtbug_34792();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7475,6 +7476,17 @@ void tst_qqmlecmascript::idsAsLValues()
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(!object);
     QCOMPARE(component.errorString(), err);
+}
+
+void tst_qqmlecmascript::qtbug_34792()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug34792.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

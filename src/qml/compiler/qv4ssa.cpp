@@ -323,9 +323,9 @@ class DominatorTree {
             link(p, n);
             foreach (BasicBlock *v, bucket[p]) {
                 BasicBlock *y = ancestorWithLowestSemi(v);
-                Q_ASSERT(semi[y] == p);
-                if (semi[y] == semi[v])
-                    idom[v] = p;
+                BasicBlock *semi_v = semi[v];
+                if (semi[y] == semi_v)
+                    idom[v] = semi_v;
                 else
                     samedom[v] = y;
             }
