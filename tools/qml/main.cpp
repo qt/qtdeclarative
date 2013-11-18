@@ -72,8 +72,11 @@
 #define VERSION_MIN 0
 #define VERSION_STR "1.0"
 
+#define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
+
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
+static int exitTimerId = -1;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -138,6 +141,8 @@ void contain(QObject *o, const QUrl &containPath)
 
 #ifdef QT_GUI_LIB
 
+void noFilesGiven();
+
 // Loads qml after receiving a QFileOpenEvent
 class LoaderApplication : public QGuiApplication
 {
@@ -146,11 +151,20 @@ public:
 
     bool event(QEvent *ev)
     {
-        if (ev->type() == QEvent::FileOpen)
+        if (ev->type() == QEvent::FileOpen) {
+            if (exitTimerId >= 0) {
+                killTimer(exitTimerId);
+                exitTimerId = -1;
+            }
             qae->load(static_cast<QFileOpenEvent *>(ev)->url());
+        }
         else
             return QGuiApplication::event(ev);
         return true;
+    }
+
+    void timerEvent(QTimerEvent *) {
+        noFilesGiven();
     }
 };
 
@@ -272,6 +286,13 @@ void printUsage()
     printf("\t-slow-animations ............. Run all animations in slow motion.\n");
     printf("\t-fixed-animations ............ Run animations off animation tick rather than wall time.\n");
     exit(0);
+}
+
+void noFilesGiven()
+{
+    if (!quietMode)
+        printf("qml: No files specified. Terminating.\n");
+    exit(1);
 }
 
 //Called before application initialization, removes arguments it uses
@@ -462,9 +483,12 @@ int main(int argc, char *argv[])
         qInstallMessageHandler(quietMessageHandler);
 
     if (files.count() <= 0) {
-        if (!quietMode)
-            printf("qml: No files specified. Terminating.\n");
-        exit(1);
+#if defined(Q_OS_MAC)
+        if (applicationType == QmlApplicationTypeGui)
+            exitTimerId = static_cast<LoaderApplication *>(app)->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
+        else
+#endif
+        noFilesGiven();
     }
 
     qae = &e;
