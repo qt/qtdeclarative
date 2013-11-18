@@ -304,6 +304,7 @@ private slots:
     void propertyOverride();
     void concatenatedStringPropertyAccess();
     void jsOwnedObjectsDeletedOnEngineDestroy();
+    void updateCall();
     void numberParsing();
     void stringParsing();
     void qtbug_32801();
@@ -7276,6 +7277,17 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     QCOMPARE(spy2.count(), 1);
 
     delete object;
+}
+
+void tst_qqmlecmascript::updateCall()
+{
+    // update is a slot on QQuickItem. Even though it's not
+    // documented it can be called from within QML. Make sure
+    // we don't crash when calling it.
+    QString file("updateCall.qml");
+    QQmlComponent component(&engine, testFileUrl(file));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
 }
 
 void tst_qqmlecmascript::numberParsing()
