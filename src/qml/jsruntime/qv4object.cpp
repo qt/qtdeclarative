@@ -1319,19 +1319,17 @@ void Object::arrayReserve(uint n)
             off = arrayOffset;
         }
         arrayAlloc = qMax(n, 2*arrayAlloc);
-        Property *newArrayData = new Property[arrayAlloc];
+        Property *newArrayData = new Property[arrayAlloc + off];
         if (arrayData) {
-            memcpy(newArrayData, arrayData, sizeof(Property)*arrayDataLen);
+            memcpy(newArrayData + off, arrayData, sizeof(Property)*arrayDataLen);
             delete [] (arrayData - off);
         }
-        arrayData = newArrayData;
+        arrayData = newArrayData + off;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
                 arrayData[i].value = Primitive::emptyValue();
                 arrayData[i].value = Primitive::fromInt32(i + 1);
             }
-        } else {
-            arrayOffset = 0;
         }
 
         if (arrayAttributes) {
@@ -1354,7 +1352,9 @@ void Object::ensureArrayAttributes()
         return;
 
     flags &= ~SimpleArray;
-    arrayAttributes = new PropertyAttributes[arrayAlloc];
+    uint off = sparseArray ? 0 : arrayOffset;
+    arrayAttributes = new PropertyAttributes[arrayAlloc + off];
+    arrayAttributes += off;
     for (uint i = 0; i < arrayDataLen; ++i)
         arrayAttributes[i] = Attr_Data;
     for (uint i = arrayDataLen; i < arrayAlloc; ++i)

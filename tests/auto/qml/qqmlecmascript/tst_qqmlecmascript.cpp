@@ -307,6 +307,7 @@ private slots:
     void updateCall();
     void numberParsing();
     void stringParsing();
+    void push_and_shift();
     void qtbug_32801();
     void thisObject();
     void qtbug_33754();
@@ -7316,6 +7317,18 @@ void tst_qqmlecmascript::stringParsing()
         QObject *object = component.create();
         QVERIFY(object == 0);
     }
+}
+
+void tst_qqmlecmascript::push_and_shift()
+{
+    QJSEngine e;
+    const QString program =
+            "var array = []; "
+            "for (var i = 0; i < 10000; i++) {"
+            "    array.push(5); array.unshift(5); array.push(5);"
+            "}"
+            "array.length;";
+    QVERIFY(e.evaluate(program).toNumber() == 30000);
 }
 
 void tst_qqmlecmascript::qtbug_32801()
