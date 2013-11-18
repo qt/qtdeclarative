@@ -240,7 +240,11 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
     if (window->isExposed())
         handleObscurity();
 
+    if (!m_gl)
+        return;
+
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    m_gl->makeCurrent(window);
     cd->cleanupNodesOnShutdown();
 
     // If this is the last tracked window, check for persistent SG and GL and

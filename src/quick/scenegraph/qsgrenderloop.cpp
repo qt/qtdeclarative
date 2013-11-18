@@ -238,6 +238,8 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 
     m_windows.remove(window);
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (gl)
+        gl->makeCurrent(window);
     cd->cleanupNodesOnShutdown();
 
     if (m_windows.size() == 0) {
