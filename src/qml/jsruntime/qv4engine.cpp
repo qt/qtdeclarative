@@ -90,7 +90,7 @@ static ReturnedValue throwTypeError(CallContext *ctx)
 quintptr getStackLimit()
 {
     quintptr stackLimit;
-#if USE(PTHREADS)
+#if USE(PTHREADS) && !OS(QNX)
 #  if OS(DARWIN)
     pthread_t thread_self = pthread_self();
     void *stackTop = pthread_get_stackaddr_np(thread_self);
