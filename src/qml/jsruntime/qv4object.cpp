@@ -918,7 +918,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
         Property *lp = memberData + ArrayObject::LengthPropertyIndex;
-        cattrs = internalClass->propertyData.data() + ArrayObject::LengthPropertyIndex;
+        cattrs = internalClass->propertyData.constData() + ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
         if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
@@ -947,7 +947,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     {
         uint member = internalClass->find(name.getPointer());
         current = (member < UINT_MAX) ? memberData + member : 0;
-        cattrs = internalClass->propertyData.data() + member;
+        cattrs = internalClass->propertyData.constData() + member;
     }
 
     if (!current) {
