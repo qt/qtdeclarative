@@ -132,6 +132,7 @@ protected:
     QSet<QFontEngine *> m_fontEnginesToClean;
 
     bool m_brokenIBOs;
+    bool m_serializedRender;
 };
 
 
