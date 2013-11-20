@@ -242,6 +242,9 @@ qreal QSmoothedAnimation::easeFollow(qreal time_seconds)
 
 void QSmoothedAnimation::updateCurrentTime(int t)
 {
+    if (!isRunning() && !isPaused()) // This can happen if init() stops the animation in some cases
+        return;
+
     qreal time_seconds = useDelta ? qreal(QQmlAnimationTimer::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
     if (useDelta)
         useDelta = false;
