@@ -7,6 +7,9 @@ win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
+MODULE_PLUGIN_TYPES = \
+  qmltooling
+
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS += -lgcov
