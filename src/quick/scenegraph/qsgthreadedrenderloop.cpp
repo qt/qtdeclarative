@@ -506,7 +506,10 @@ void QSGRenderThread::sync()
 
     Q_ASSERT_X(wm->m_locked, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
-    if (windowSize.width() > 0 && windowSize.height() > 0) {
+    bool current = false;
+    if (windowSize.width() > 0 && windowSize.height() > 0)
+        current = gl->makeCurrent(window);
+    if (current) {
         gl->makeCurrent(window);
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
@@ -578,8 +581,10 @@ void QSGRenderThread::syncAndRender()
         d->animationController->unlock();
     }
 
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
-        gl->makeCurrent(window);
+    bool current = false;
+    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0)
+        current = gl->makeCurrent(window);
+    if (current) {
         d->renderSceneGraph(windowSize);
 #ifndef QSG_NO_RENDER_TIMING
         if (profileFrames)
@@ -654,10 +659,8 @@ void QSGRenderThread::run()
     while (active) {
 
         if (window) {
-            if (!sgrc->openglContext()) {
-                gl->makeCurrent(window);
+            if (!sgrc->openglContext() && windowSize.width() > 0 && windowSize.height() > 0 && gl->makeCurrent(window))
                 sgrc->initialize(gl);
-            }
             syncAndRender();
         }
 
