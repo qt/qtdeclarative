@@ -61,7 +61,7 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
-#include "qqmlabstracturlinterceptor.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include "qqmlcodegenerator_p.h"
 
 #include <QDebug>
@@ -3682,6 +3682,11 @@ bool QQmlCompiler::completeComponentBuild()
             jsCodeGen.beginObjectScope(scopeObject->metatype);
 
             cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile, expressionNames);
+            QList<QQmlError> errors = jsCodeGen.errors();
+            if (!errors.isEmpty()) {
+                exceptions << errors;
+                return false;
+            }
 
             foreach (const QQmlCompilerTypes::ComponentCompileState::CompiledMetaMethod &cmm, cd->compiledMetaMethods) {
                 typedef QQmlVMEMetaData VMD;

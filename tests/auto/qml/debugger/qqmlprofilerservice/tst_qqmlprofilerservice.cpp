@@ -300,8 +300,6 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
     // ### Still using qmlscene due to QTBUG-33377
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
-    arguments << QLatin1String("-enable-debugger");
-
     if (block)
         arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block");
     else
@@ -450,8 +448,9 @@ void tst_QQmlProfilerService::scenegraphData()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
-    QVERIFY(m_process->output().indexOf(QLatin1String("tick")) != -1);
+
+    while (!m_process->output().contains(QLatin1String("tick")))
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
     m_client->setTraceState(false);
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");

@@ -72,4 +72,17 @@ Item {
         if (!verifyExpected(msco.intListProperty, 4))
             success = false;
     }
+
+    function indexOf() {
+        if (msco.qstringListProperty.length != 4)
+            success = false;
+        if (msco.qstringListProperty.indexOf("first") != 0)
+            success = false;
+        if (msco.qstringListProperty.indexOf("second") != 1)
+            success = false;
+        if (msco.qstringListProperty.indexOf("third") != 2)
+            success = false;
+        if (msco.qstringListProperty.indexOf("fourth") != 3)
+            success = false;
+    }
 }

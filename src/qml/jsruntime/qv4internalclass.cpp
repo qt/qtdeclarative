@@ -69,10 +69,10 @@ static inline int primeForNumBits(int numBits)
 }
 
 PropertyHashData::PropertyHashData(int numBits)
-    : size(0)
+    : refCount(1)
+    , size(0)
     , numBits(numBits)
 {
-    refCount.store(1);
     alloc = primeForNumBits(numBits);
     entries = (PropertyHash::Entry *)malloc(alloc*sizeof(PropertyHash::Entry));
     memset(entries, 0, alloc*sizeof(PropertyHash::Entry));
@@ -97,8 +97,8 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
             dd->entries[idx] = e;
         }
         dd->size = classSize;
-        assert(d->refCount.load() > 1);
-        d->refCount.deref();
+        Q_ASSERT(d->refCount > 1);
+        --d->refCount;
         d = dd;
     }
 
@@ -113,7 +113,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
 
 uint PropertyHash::lookup(const Identifier *identifier) const
 {
-    assert(d->entries);
+    Q_ASSERT(d->entries);
 
     uint idx = identifier->hashValue % d->alloc;
     while (1) {
@@ -149,9 +149,9 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     if (index)
         *index = idx;
 
-    assert(idx != UINT_MAX);
+    Q_ASSERT(idx != UINT_MAX);
 
-    if (data == propertyData[idx])
+    if (data == propertyData.at(idx))
         return this;
 
 
@@ -162,7 +162,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
-    newClass->propertyData[idx] = data;
+    newClass->propertyData.set(idx, data);
 
     transitions.insert(t, newClass);
     return newClass;
@@ -189,7 +189,7 @@ InternalClass *InternalClass::changePrototype(Object *proto)
         newClass->prototype = proto;
     } else {
         newClass = engine->emptyClass->changePrototype(proto);
-        for (int i = 0; i < nameMap.size(); ++i)
+        for (uint i = 0; i < size; ++i)
             newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
     }
 
@@ -228,9 +228,9 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     // store a string in the nameMap that's guaranteed to get
     // marked properly during GC.
     String *name = engine->newIdentifier(string->toQString());
-    newClass->nameMap.append(name);
+    newClass->nameMap.add(size, name);
 
-    newClass->propertyData.append(data);
+    newClass->propertyData.add(size, data);
     ++newClass->size;
     transitions.insert(t, newClass);
     return newClass;
@@ -238,8 +238,8 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
 void InternalClass::removeMember(Object *object, Identifier *id)
 {
-    int propIdx = propertyTable.lookup(id);
-    assert(propIdx < static_cast<int>(size));
+    uint propIdx = propertyTable.lookup(id);
+    Q_ASSERT(propIdx < size);
 
     Transition t = { { id } , -1 };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
@@ -251,7 +251,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
 
     // create a new class and add it to the tree
     object->internalClass = engine->emptyClass->changePrototype(prototype);
-    for (int i = 0; i < nameMap.size(); ++i) {
+    for (uint i = 0; i < size; ++i) {
         if (i == propIdx)
             continue;
         object->internalClass = object->internalClass->addMember(nameMap.at(i), propertyData.at(i));
@@ -284,7 +284,7 @@ InternalClass *InternalClass::sealed()
 
     m_sealed = engine->emptyClass;
     m_sealed = m_sealed->changePrototype(prototype);
-    for (int i = 0; i < nameMap.size(); ++i) {
+    for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         attrs.setConfigurable(false);
         m_sealed = m_sealed->addMember(nameMap.at(i), attrs);
@@ -301,7 +301,7 @@ InternalClass *InternalClass::frozen()
 
     m_frozen = engine->emptyClass;
     m_frozen = m_frozen->changePrototype(prototype);
-    for (int i = 0; i < nameMap.size(); ++i) {
+    for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         attrs.setWritable(false);
         attrs.setConfigurable(false);
@@ -319,12 +319,9 @@ void InternalClass::destroy()
         return;
     engine = 0;
 
-    // Free the memory of the hashes/vectors by calling clear(), which
-    // re-assigns them to the shared null instance. Therefore Internalclass
-    // doesn't need a destructor to be called.
     propertyTable.~PropertyHash();
-    nameMap.clear();
-    propertyData.clear();
+    nameMap.~SharedInternalClassData<String *>();
+    propertyData.~SharedInternalClassData<PropertyAttributes>();
 
     if (m_sealed)
         m_sealed->destroy();

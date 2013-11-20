@@ -558,7 +558,7 @@ struct Member: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
-    virtual bool isLValue() { return true; }
+    virtual bool isLValue() { return type != MemberOfQmlContext; }
     virtual Member *asMember() { return this; }
 
     virtual void dump(QTextStream &out) const;
@@ -739,12 +739,18 @@ struct Function {
     uint isNamedExpression : 1;
     uint hasTry: 1;
     uint hasWith: 1;
-    uint hasQmlDependencies : 1;
-    uint unused : 24;
+    uint unused : 25;
 
     // Location of declaration in source code (-1 if not specified)
     int line;
     int column;
+
+    // Qml extension:
+    QSet<int> idObjectDependencies;
+    QSet<QQmlPropertyData*> contextObjectDependencies;
+    QSet<QQmlPropertyData*> scopeObjectDependencies;
+
+    bool hasQmlDependencies() const { return !idObjectDependencies.isEmpty() || !contextObjectDependencies.isEmpty() || !scopeObjectDependencies.isEmpty(); }
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -761,7 +767,6 @@ struct Function {
         , isNamedExpression(false)
         , hasTry(false)
         , hasWith(false)
-        , hasQmlDependencies(false)
         , unused(0)
         , line(-1)
         , column(-1)
@@ -955,76 +960,6 @@ protected:
 private:
     V4IR::BasicBlock *block;
     V4IR::Expr *cloned;
-};
-
-struct QmlDependenciesCollector : public V4IR::StmtVisitor, V4IR::ExprVisitor
-{
-    void run(Function *function, QSet<int> *idObjectDependencies, QSet<QQmlPropertyData*> *contextPropertyDependencies, QSet<QQmlPropertyData*> *scopePropertyDependencies)
-    {
-        QSet<int> idProperties;
-        QSet<QQmlPropertyData*> contextProperties;
-        QSet<QQmlPropertyData*> scopeProperties;
-        qSwap(_usedIdObjects, idProperties);
-        qSwap(_usedContextProperties, contextProperties);
-        qSwap(_usedScopeProperties, scopeProperties);
-        for (int i = 0; i < function->basicBlocks.count(); ++i) {
-            BasicBlock *bb = function->basicBlocks.at(i);
-            for (int j = 0; j < bb->statements.count(); ++j) {
-                Stmt *s = bb->statements.at(j);
-                s->accept(this);
-            }
-        }
-        qSwap(_usedScopeProperties, scopeProperties);
-        qSwap(_usedContextProperties, contextProperties);
-        qSwap(_usedIdObjects, idProperties);
-
-        *idObjectDependencies = idProperties;
-        *contextPropertyDependencies = contextProperties;
-        *scopePropertyDependencies = scopeProperties;
-    }
-
-protected:
-    QSet<int> _usedIdObjects;
-    QSet<QQmlPropertyData*> _usedContextProperties;
-    QSet<QQmlPropertyData*> _usedScopeProperties;
-
-    virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitSubscript(Subscript *e) {
-        e->base->accept(this);
-        e->index->accept(this);
-    }
-
-    virtual void visitMember(Member *e);
-
-    virtual void visitExp(Exp *s) {s->expr->accept(this);}
-    virtual void visitMove(Move *s) {
-        s->source->accept(this);
-        s->target->accept(this);
-    }
-
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(Phi *s);
 };
 
 } // end of namespace IR

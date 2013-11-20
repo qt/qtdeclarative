@@ -1454,9 +1454,9 @@ void tst_QQmlDebugJS::getScripts()
 
     QVERIFY(init());
 
+    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QString(TEST_QMLFILE), 48, -1, true);
     client->connect();
-    client->interrupt();
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(interruptRequested())));
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->scripts();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(scriptsResult())));

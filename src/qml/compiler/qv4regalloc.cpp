@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4regalloc_p.h"
+#include <private/qv4value_p.h>
 
 #include <algorithm>
 
@@ -427,7 +428,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, V4IR::Temp *target)
+    virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, V4IR::Temp *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -644,7 +645,9 @@ namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QVector<LifeTimeInterval> _intervals;
     Function *_function;
+#if !defined(QT_NO_DEBUG)
     RegAllocInfo *_info;
+#endif
     const QHash<V4IR::Temp, int> &_assignedSpillSlots;
     QHash<V4IR::Temp, LifeTimeInterval> _intervalForTemp;
     const QVector<int> &_intRegs;
@@ -663,11 +666,16 @@ public:
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
         , _function(function)
+#if !defined(QT_NO_DEBUG)
         , _info(info)
+#endif
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
     {
+#if defined(QT_NO_DEBUG)
+        Q_UNUSED(info)
+#endif
     }
 
     void run() {
@@ -886,8 +894,28 @@ private:
 #if !defined(QT_NO_DEBUG)
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
-                    foreach (const Use &use, _info->uses(it.temp()))
-                        Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) || use.pos > static_cast<unsigned>(successorEnd));
+                    const int idx = successor->in.indexOf(predecessor);
+                    foreach (const Use &use, _info->uses(it.temp())) {
+                        if (use.pos == static_cast<unsigned>(successorStart)) {
+                            // only check the current edge, not all other possible ones. This is
+                            // important for phi nodes: they have uses that are only valid when
+                            // coming in over a specific edge.
+                            foreach (Stmt *s, successor->statements) {
+                                if (Phi *phi = s->asPhi()) {
+                                    Q_ASSERT(it.temp().index != phi->targetTemp->index);
+                                    Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0
+                                             || it.temp().index != phi->d->incoming[idx]->asTemp()->index);
+                                } else {
+                                    // TODO: check that the first non-phi statement does not use
+                                    // the temp.
+                                    break;
+                                }
+                            }
+                        } else {
+                            Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) ||
+                                     use.pos > static_cast<unsigned>(successorEnd));
+                        }
+                    }
                 }
 #endif
 

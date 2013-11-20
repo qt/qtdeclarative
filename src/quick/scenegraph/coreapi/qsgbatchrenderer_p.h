@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenGLVertexArrayObject;
+
 namespace QSGBatchRenderer
 {
 
@@ -119,14 +121,7 @@ struct Rect {
         Q_ASSERT(tl.y <= br.y);
     }
 
-    void map(const QMatrix4x4 &m) {
-        tl.map(m);
-        br.map(m);
-        if (br.x < tl.x)
-            qSwap(br.x, tl.x);
-        if (br.y < tl.y)
-            qSwap(br.y, tl.y);
-    }
+    void map(const QMatrix4x4 &m);
 
     void set(float left, float top, float right, float bottom) {
         tl.set(left, top);
@@ -405,6 +400,7 @@ public:
 
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+    void preprocess() Q_DECL_OVERRIDE;
     void render();
 
 private:
@@ -488,6 +484,9 @@ private:
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
     const QSGClipNode *m_currentClip;
+
+    // For minimal OpenGL core profile support
+    QOpenGLVertexArrayObject *m_vao;
 };
 
 Batch *Renderer::newBatch()

@@ -46,12 +46,23 @@ Third party components
    the engine now truncates instead of rounding. This is consistent with the
    ECMAScript specification's way of converting doubles to ints.
 
+ - Comparing value based types with the JS strictly equal operator will
+   now behave similar to the corresponding C++ == operator. Ie. two
+   QPoints exposed on the JS side will be strictly equal if their values
+   are equal. This brings the behavior of value based types in JS closer
+   to what one would expect and more inline with primitive values in 
+   Javascript.
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************
 
 QtQml
 ------
+
+- New class QQmlFileSelectors allows applying a QFileSelector to QML assets
+  and types. One is automatically set on QQmlApplicationEngines from now on,
+  plain QQmlEngines must set their own in order to be affected.
 
 QtQuick
 ------

@@ -439,8 +439,8 @@ public:
                 continue;
 
             QJsonObject scope;
-            scope["index"] = i;
-            scope["type"] = type;
+            scope[QLatin1String("index")] = i;
+            scope[QLatin1String("type")] = type;
             scopes.push_back(scope);
         }
         frame[QLatin1String("scopes")] = scopes;
@@ -619,7 +619,7 @@ public:
         addRunning();
         QJsonObject body;
         body.insert(QStringLiteral("V8Version"),
-                    QStringLiteral("this is not V8, this is V4 in Qt %1").arg(QT_VERSION_STR));
+                    QStringLiteral("this is not V8, this is V4 in Qt %1").arg(QLatin1String(QT_VERSION_STR)));
         addBody(body);
     }
 };

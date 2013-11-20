@@ -59,14 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_OPENGL_ES_2
-#define SHADER_DEFINES "#version 120\n"
-#else
-#define SHADER_DEFINES ""
-#endif
-
 #if defined(Q_OS_BLACKBERRY)
-#define SHADER_PLATFORM_DEFINES "#define Q_OS_BLACKBERRY\n"
+#define SHADER_PLATFORM_DEFINES "Q_OS_BLACKBERRY\n"
 #else
 #define SHADER_PLATFORM_DEFINES
 #endif
@@ -107,15 +101,26 @@ public:
     {
         QSGShaderSourceBuilder builder;
 
-        builder.appendSource(QByteArray(SHADER_DEFINES) + QByteArray(SHADER_PLATFORM_DEFINES));
-        builder.appendSource(QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+
         m_vertex_code = builder.source();
         builder.clear();
 
-        builder.appendSource(QByteArray(SHADER_DEFINES));
-        builder.appendSource(QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -174,15 +179,23 @@ public:
     {
         QSGShaderSourceBuilder builder;
 
-        builder.appendSource(QByteArray(SHADER_DEFINES) + QByteArray(SHADER_PLATFORM_DEFINES));
-        builder.appendSource(QByteArray("#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_vertex_code = builder.source();
         builder.clear();
 
-        builder.appendSource(QByteArray(SHADER_DEFINES));
-        builder.appendSource(QByteArray("#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -230,15 +243,27 @@ public:
     {
         QSGShaderSourceBuilder builder;
 
-        builder.appendSource(QByteArray(SHADER_DEFINES) + QByteArray(SHADER_PLATFORM_DEFINES));
-        builder.appendSource(QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("SPRITE"));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_vertex_code = builder.source();
         builder.clear();
 
-        builder.appendSource(QByteArray(SHADER_DEFINES));
-        builder.appendSource(QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("SPRITE"));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -299,15 +324,21 @@ public:
     {
         QSGShaderSourceBuilder builder;
 
-        builder.appendSource(QByteArray(SHADER_DEFINES) + QByteArray(SHADER_PLATFORM_DEFINES));
-        builder.appendSource(QByteArray("#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_vertex_code = builder.source();
         builder.clear();
 
-        builder.appendSource(QByteArray(SHADER_DEFINES));
-        builder.appendSource(QByteArray("#define COLOR\n"));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -370,13 +401,19 @@ public:
     {
         QSGShaderSourceBuilder builder;
 
-        builder.appendSource(QByteArray(SHADER_DEFINES) + QByteArray(SHADER_PLATFORM_DEFINES));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_vertex_code = builder.source();
         builder.clear();
 
-        builder.appendSource(QByteArray(SHADER_DEFINES));
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());

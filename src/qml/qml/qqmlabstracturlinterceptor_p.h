@@ -43,11 +43,11 @@
 #define QQMLABSTRACTURLINTERCEPTOR_H
 
 #include <QtCore/qurl.h>
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QQmlAbstractUrlInterceptor
+class Q_QML_PRIVATE_EXPORT QQmlAbstractUrlInterceptor
 {
     Q_FLAGS(InterceptionPoint)
 public:

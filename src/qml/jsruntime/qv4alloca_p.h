@@ -45,10 +45,12 @@
 #include <qglobal.h>
 
 #if defined(Q_OS_WIN)
-#include <malloc.h>
-#define alloca _alloca
+#  include <malloc.h>
+#  ifndef __GNUC__
+#    define alloca _alloca
+#  endif
 #else
-#include <alloca.h>
+#  include <alloca.h>
 #endif
 
 #endif

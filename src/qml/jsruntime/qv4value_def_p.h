@@ -243,7 +243,7 @@ struct Q_QML_EXPORT Value
     void setDouble(double d) { dbl = d; }
     bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
-    bool isString() const;
+    inline bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
         if (tag == _Integer_Type)
@@ -286,15 +286,15 @@ struct Q_QML_EXPORT Value
         return val;
     }
 
-    static Value fromManaged(Managed *o);
+    static inline Value fromManaged(Managed *o);
 
     int toUInt16() const;
-    int toInt32() const;
-    unsigned int toUInt32() const;
+    inline int toInt32() const;
+    inline unsigned int toUInt32() const;
 
-    bool toBoolean() const;
+    inline bool toBoolean() const;
     double toInteger() const;
-    double toNumber() const;
+    inline double toNumber() const;
     double toNumberImpl() const;
     QString toQStringNoThrow() const;
     QString toQString() const;
@@ -309,20 +309,20 @@ struct Q_QML_EXPORT Value
         return b;
     }
 
-    String *asString() const;
-    Managed *asManaged() const;
-    Object *asObject() const;
-    FunctionObject *asFunctionObject() const;
-    NumberObject *asNumberObject() const;
-    StringObject *asStringObject() const;
-    DateObject *asDateObject() const;
-    ArrayObject *asArrayObject() const;
-    ErrorObject *asErrorObject() const;
+    inline String *asString() const;
+    inline Managed *asManaged() const;
+    inline Object *asObject() const;
+    inline FunctionObject *asFunctionObject() const;
+    inline NumberObject *asNumberObject() const;
+    inline StringObject *asStringObject() const;
+    inline DateObject *asDateObject() const;
+    inline ArrayObject *asArrayObject() const;
+    inline ErrorObject *asErrorObject() const;
 
     template<typename T> inline T *as() const;
 
-    uint asArrayIndex() const;
-    uint asArrayLength(bool *ok) const;
+    inline uint asArrayIndex() const;
+    inline uint asArrayLength(bool *ok) const;
 
     inline ExecutionEngine *engine() const;
 
@@ -354,13 +354,13 @@ inline String *Value::asString() const
 
 struct Q_QML_EXPORT Primitive : public Value
 {
-    static Primitive emptyValue();
-    static Primitive fromBoolean(bool b);
-    static Primitive fromInt32(int i);
-    static Primitive undefinedValue();
-    static Primitive nullValue();
-    static Primitive fromDouble(double d);
-    static Primitive fromUInt32(uint i);
+    inline static Primitive emptyValue();
+    static inline Primitive fromBoolean(bool b);
+    static inline Primitive fromInt32(int i);
+    inline static Primitive undefinedValue();
+    static inline Primitive nullValue();
+    static inline Primitive fromDouble(double d);
+    static inline Primitive fromUInt32(uint i);
 
     static double toInteger(double fromNumber);
     static int toInt32(double value);

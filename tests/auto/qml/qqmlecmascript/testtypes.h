@@ -291,6 +291,34 @@ Q_DECLARE_METATYPE(QQmlListProperty<MyQmlObject>)
 
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
 
+class MyInheritedQmlObject : public MyQmlObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyInheritedQmlObject *myInheritedQmlObjectProperty READ myInheritedQmlObject WRITE setMyInheritedQmlObject)
+    Q_PROPERTY(MyQmlObject *myQmlObjectProperty READ myQmlObject WRITE setMyQmlObject)
+    Q_PROPERTY(QObject *qobjectProperty READ qobject WRITE setQObject)
+public:
+    MyInheritedQmlObject() : m_myInheritedQmlObject(0), m_myQmlObject(0), m_qobject(0) {}
+
+    MyInheritedQmlObject *myInheritedQmlObject() const { return m_myInheritedQmlObject; }
+    void setMyInheritedQmlObject(MyInheritedQmlObject * o) { m_myInheritedQmlObject = o; }
+
+    MyQmlObject *myQmlObject() const { return m_myQmlObject; }
+    void setMyQmlObject(MyQmlObject * o) { m_myQmlObject = o; }
+
+    QObject *qobject() const { return m_qobject; }
+    void setQObject(QObject * o) { m_qobject = o; }
+
+    Q_INVOKABLE bool isItYouQObject(QObject *o);
+    Q_INVOKABLE bool isItYouMyQmlObject(MyQmlObject *o);
+    Q_INVOKABLE bool isItYouMyInheritedQmlObject(MyInheritedQmlObject *o);
+private:
+    MyInheritedQmlObject *m_myInheritedQmlObject;
+    MyQmlObject *m_myQmlObject;
+    QObject *m_qobject;
+};
+QML_DECLARE_TYPE(MyInheritedQmlObject)
+
 class MyQmlContainer : public QObject
 {
     Q_OBJECT

@@ -579,6 +579,13 @@ ReturnedValue ExecutionContext::throwRangeError(const ValueRef value)
     return throwError(error);
 }
 
+ReturnedValue ExecutionContext::throwRangeError(const QString &message)
+{
+    Scope scope(this);
+    ScopedObject error(scope, engine->newRangeErrorObject(message));
+    return throwError(error);
+}
+
 ReturnedValue ExecutionContext::throwURIError(const ValueRef msg)
 {
     Scope scope(this);

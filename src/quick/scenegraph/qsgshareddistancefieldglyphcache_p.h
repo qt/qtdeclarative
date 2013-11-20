@@ -55,6 +55,7 @@ public:
     explicit QSGSharedDistanceFieldGlyphCache(const QByteArray &cacheId,
                                               QPlatformSharedGraphicsCache *sharedGraphicsCache,
                                               QSGDistanceFieldGlyphCacheManager *man,
+                                              QOpenGLContext *c,
                                               const QRawFont &font);
     ~QSGSharedDistanceFieldGlyphCache();
 

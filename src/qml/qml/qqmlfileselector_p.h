@@ -54,19 +54,33 @@
 //
 
 #include "qqmlfileselector.h"
+#include "qqmlabstracturlinterceptor_p.h"
+#include <QSet>
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QFileSelector;
+class QQmlFileSelectorInterceptor;
 class Q_QML_PRIVATE_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlFileSelector)
 public:
     QQmlFileSelectorPrivate();
     QFileSelector* selector;
+    QPointer<QQmlEngine> engine;
     bool ownSelector;
+    QQmlFileSelectorInterceptor* myInstance;
+};
+
+class Q_QML_PRIVATE_EXPORT QQmlFileSelectorInterceptor : public QQmlAbstractUrlInterceptor
+{
+public:
+    QQmlFileSelectorInterceptor(QQmlFileSelectorPrivate* pd);
+    QQmlFileSelectorPrivate* d;
+protected:
+    virtual QUrl intercept(const QUrl &path, DataType type);
 };
 
 QT_END_NAMESPACE

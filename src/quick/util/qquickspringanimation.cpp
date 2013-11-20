@@ -308,7 +308,8 @@ void QSpringAnimation::updateCurrentTime(int time)
                                        QQmlPropertyPrivate::DontRemoveBinding);
 
     if (stopped && old_to == to) { // do not stop if we got restarted
-        stopTime = animationTemplate->elapsed.elapsed();
+        if (animationTemplate)
+            stopTime = animationTemplate->elapsed.elapsed();
         stop();
     }
 }

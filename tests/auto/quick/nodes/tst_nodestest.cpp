@@ -48,6 +48,8 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>
+#include <QtQuick/private/qsgrenderloop_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtQuick/qsgsimplerectnode.h>
 
@@ -75,16 +77,22 @@ private Q_SLOTS:
 private:
     QOffscreenSurface *surface;
     QOpenGLContext *context;
+    QSGRenderContext *renderContext;
 };
 
 void NodesTest::initTestCase()
 {
+    QSGRenderLoop *renderLoop = QSGRenderLoop::instance();
+
     surface = new QOffscreenSurface;
     surface->create();
 
     context = new QOpenGLContext();
     context->create();
     context->makeCurrent(surface);
+
+    renderContext = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
+    renderContext->initialize(context);
 }
 
 void NodesTest::cleanupTestCase()
@@ -97,8 +105,8 @@ void NodesTest::cleanupTestCase()
 class DummyRenderer : public QSGBatchRenderer::Renderer
 {
 public:
-    DummyRenderer(QSGRootNode *root)
-        : QSGBatchRenderer::Renderer(new QSGRenderContext(0))
+    DummyRenderer(QSGRootNode *root, QSGRenderContext *renderContext)
+        : QSGBatchRenderer::Renderer(renderContext)
         , changedNode(0)
         , changedState(0)
         , renderCount(0)
@@ -138,7 +146,7 @@ void NodesTest::propegate()
     QSGNode child; child.setFlag(QSGNode::OwnedByParent, false);
     root.appendChildNode(&child);
 
-    DummyRenderer renderer(&root);
+    DummyRenderer renderer(&root, renderContext);
 
     child.markDirty(QSGNode::DirtyGeometry);
 
@@ -158,8 +166,8 @@ void NodesTest::propegateWithMultipleRoots()
     child2.appendChildNode(&root3);
     root3.appendChildNode(&child4);
 
-    DummyRenderer ren1(&root1);
-    DummyRenderer ren2(&root3);
+    DummyRenderer ren1(&root1, renderContext);
+    DummyRenderer ren2(&root3, renderContext);
 
     child4.markDirty(QSGNode::DirtyGeometry);
 
@@ -195,7 +203,7 @@ void NodesTest::opacityPropegation()
     QSGSimpleRectNode *geometry = new QSGSimpleRectNode;
     geometry->setRect(0, 0, 100, 100);
 
-    DummyRenderer renderer(&root);
+    DummyRenderer renderer(&root, renderContext);
 
     root.appendChildNode(a);
     a->appendChildNode(b);

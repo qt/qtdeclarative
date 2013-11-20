@@ -1023,7 +1023,8 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
         dir.chop(1);
 
     QStringList paths = database->fileImportPath;
-    std::sort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
+    if (!paths.isEmpty())
+        std::sort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
 
     QString stableRelativePath = dir;
     foreach(const QString &path, paths) {

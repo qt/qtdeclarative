@@ -44,23 +44,23 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
-#include <QtQml/QQmlAbstractUrlInterceptor>
+#include <QtQml/QQmlEngine>
 #include <QtQml/qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 
 class QFileSelector;
 class QQmlFileSelectorPrivate;
-class Q_QML_EXPORT QQmlFileSelector : public QObject, public QQmlAbstractUrlInterceptor
+class Q_QML_EXPORT QQmlFileSelector : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlFileSelector)
 public:
-    QQmlFileSelector(QObject* parent=0);
+    QQmlFileSelector(QQmlEngine* engine, QObject* parent=0);
+    ~QQmlFileSelector();
     void setSelector(QFileSelector *selector);
-
-protected:
-    virtual QUrl intercept(const QUrl &path, DataType type);
+    void setExtraSelectors(QStringList &strings);
+    static QQmlFileSelector* get(QQmlEngine*);
 
 private:
     Q_DISABLE_COPY(QQmlFileSelector)

@@ -66,6 +66,7 @@ class QImage;
 class TextureReference;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
+class QOpenGLContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGGeometryNode
 {
@@ -149,7 +150,7 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -246,6 +247,8 @@ protected:
 
     GlyphData &glyphData(glyph_t glyph);
 
+    inline bool isCoreProfile() const { return m_coreProfile; }
+
 private:
     QSGDistanceFieldGlyphCacheManager *m_manager;
 
@@ -253,6 +256,7 @@ private:
     int m_glyphCount;
 
     bool m_doubleGlyphResolution;
+    bool m_coreProfile;
 
     QList<Texture> m_textures;
     QHash<glyph_t, GlyphData> m_glyphsData;

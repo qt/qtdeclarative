@@ -51,10 +51,14 @@
 QT_BEGIN_NAMESPACE
 
 class QOpenGLSharedResourceGuard;
+#if !defined(QT_OPENGL_ES_2)
+class QOpenGLFunctions_3_2_Core;
+#endif
+
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font);
+    QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
     virtual ~QSGDefaultDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs);
@@ -133,6 +137,9 @@ private:
     GLfloat m_blitTextureCoordinateArray[8];
 
     QOpenGLSharedResourceGuard *m_fboGuard;
+#if !defined(QT_OPENGL_ES_2)
+    QOpenGLFunctions_3_2_Core *m_funcs;
+#endif
 };
 
 QT_END_NAMESPACE

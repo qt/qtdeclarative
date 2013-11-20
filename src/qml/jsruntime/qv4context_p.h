@@ -136,6 +136,7 @@ struct Q_QML_EXPORT ExecutionContext
     ReturnedValue throwReferenceError(const ValueRef value);
     ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int line, int column);
     ReturnedValue throwRangeError(const ValueRef value);
+    ReturnedValue throwRangeError(const QString &message);
     ReturnedValue throwURIError(const ValueRef msg);
     ReturnedValue throwUnimplemented(const QString &message);
 

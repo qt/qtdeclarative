@@ -3827,7 +3827,12 @@ void QQuickItem::setBaselineOffset(qreal offset)
 void QQuickItem::update()
 {
     Q_D(QQuickItem);
-    Q_ASSERT(flags() & ItemHasContents);
+    if (!(flags() & ItemHasContents)) {
+#ifndef QT_NO_DEBUG
+        qWarning() << metaObject()->className() << ": Update called for a item without content";
+#endif
+        return;
+    }
     d->dirty(QQuickItemPrivate::Content);
 }
 

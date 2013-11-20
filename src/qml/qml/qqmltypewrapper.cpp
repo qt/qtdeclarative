@@ -69,6 +69,11 @@ QmlTypeWrapper::~QmlTypeWrapper()
         typeNamespace->release();
 }
 
+bool QmlTypeWrapper::isSingleton() const
+{
+    return type && type->isSingleton();
+}
+
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (type && type->isSingleton()) {
@@ -279,6 +284,17 @@ PropertyAttributes QmlTypeWrapper::query(const Managed *m, StringRef name)
 void QmlTypeWrapper::destroy(Managed *that)
 {
     static_cast<QmlTypeWrapper *>(that)->~QmlTypeWrapper();
+}
+
+bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    QV4::QmlTypeWrapper *qmlTypeWrapperA = a->asObject()->as<QV4::QmlTypeWrapper>();
+    if (QV4::QmlTypeWrapper *qmlTypeWrapperB = b->asObject()->as<QV4::QmlTypeWrapper>())
+        return qmlTypeWrapperA->toVariant() == qmlTypeWrapperB->toVariant();
+    else if (QV4::QObjectWrapper *qobjectWrapper = b->as<QV4::QObjectWrapper>())
+        return qmlTypeWrapperA->toVariant().value<QObject*>() == qobjectWrapper->object();
+
+    return false;
 }
 
 QT_END_NAMESPACE

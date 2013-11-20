@@ -391,12 +391,13 @@ QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRaw
                     cache = new QSGSharedDistanceFieldGlyphCache(keyName,
                                                                  sharedGraphicsCache,
                                                                  m_distanceFieldCacheManager,
+                                                                 openglContext(),
                                                                  font);
                 }
             }
         }
         if (!cache)
-            cache = new QSGDefaultDistanceFieldGlyphCache(m_distanceFieldCacheManager, font);
+            cache = new QSGDefaultDistanceFieldGlyphCache(m_distanceFieldCacheManager, openglContext(), font);
         m_distanceFieldCacheManager->insertCache(font, cache);
     }
 

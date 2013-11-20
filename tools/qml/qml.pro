@@ -12,4 +12,6 @@ mac {
     ICON = qml.icns
 }
 
+DEFINES += QT_QML_DEBUG_NO_WARNING
+
 load(qt_tool)

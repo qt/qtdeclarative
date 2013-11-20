@@ -572,6 +572,7 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
                 --instance->arrayOffset;
                 --instance->arrayData;
                 ++instance->arrayDataLen;
+                ++instance->arrayAlloc;
                 if (instance->arrayAttributes) {
                     --instance->arrayAttributes;
                     *instance->arrayAttributes = Attr_Data;

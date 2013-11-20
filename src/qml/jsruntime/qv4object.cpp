@@ -918,7 +918,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
         Property *lp = memberData + ArrayObject::LengthPropertyIndex;
-        cattrs = internalClass->propertyData.data() + ArrayObject::LengthPropertyIndex;
+        cattrs = internalClass->propertyData.constData() + ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
         if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
@@ -947,7 +947,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     {
         uint member = internalClass->find(name.getPointer());
         current = (member < UINT_MAX) ? memberData + member : 0;
-        cattrs = internalClass->propertyData.data() + member;
+        cattrs = internalClass->propertyData.constData() + member;
     }
 
     if (!current) {
@@ -1133,7 +1133,7 @@ ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endInd
     Scope scope(engine());
     ScopedValue value(scope);
 
-    if (o->protoHasArray() || o->arrayAttributes) {
+    if (!(flags & SimpleArray) || o->protoHasArray() || o->arrayAttributes) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
@@ -1319,19 +1319,17 @@ void Object::arrayReserve(uint n)
             off = arrayOffset;
         }
         arrayAlloc = qMax(n, 2*arrayAlloc);
-        Property *newArrayData = new Property[arrayAlloc];
+        Property *newArrayData = new Property[arrayAlloc + off];
         if (arrayData) {
-            memcpy(newArrayData, arrayData, sizeof(Property)*arrayDataLen);
+            memcpy(newArrayData + off, arrayData, sizeof(Property)*arrayDataLen);
             delete [] (arrayData - off);
         }
-        arrayData = newArrayData;
+        arrayData = newArrayData + off;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
                 arrayData[i].value = Primitive::emptyValue();
                 arrayData[i].value = Primitive::fromInt32(i + 1);
             }
-        } else {
-            arrayOffset = 0;
         }
 
         if (arrayAttributes) {
@@ -1354,7 +1352,9 @@ void Object::ensureArrayAttributes()
         return;
 
     flags &= ~SimpleArray;
-    arrayAttributes = new PropertyAttributes[arrayAlloc];
+    uint off = sparseArray ? 0 : arrayOffset;
+    arrayAttributes = new PropertyAttributes[arrayAlloc + off];
+    arrayAttributes += off;
     for (uint i = 0; i < arrayDataLen; ++i)
         arrayAttributes[i] = Attr_Data;
     for (uint i = arrayDataLen; i < arrayAlloc; ++i)

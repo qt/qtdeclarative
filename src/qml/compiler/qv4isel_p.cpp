@@ -151,7 +151,12 @@ void IRDecoder::visitMove(V4IR::Move *s)
                     return;
                 }
             } else if (m->type == V4IR::Member::MemberOfQObject) {
-                getQObjectProperty(m->base, m->property->coreIndex, t);
+                bool captureRequired = true;
+                if (_function) {
+                    captureRequired = !_function->contextObjectDependencies.contains(m->property)
+                                      && !_function->scopeObjectDependencies.contains(m->property);
+                }
+                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, t);
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);

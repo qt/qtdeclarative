@@ -1660,7 +1660,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (ctx->callData->argc == 6) {
+    if (ctx->callData->argc == 3) {
         qreal x = ctx->callData->args[0].toNumber();
         qreal y = ctx->callData->args[1].toNumber();
         qreal angle = DEGREES(ctx->callData->args[2].toNumber());
@@ -2981,7 +2981,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
     } else if (arg->isObject()) {
         if (QV4::Referenced<QV4::QObjectWrapper> qobjectWrapper = arg->asRef<QV4::QObjectWrapper>()) {
             if (QQuickImage *imageItem = qobject_cast<QQuickImage*>(qobjectWrapper->object())) {
-                pixmap.take(r->context->createPixmap(imageItem->source()));
+                pixmap = r->context->createPixmap(imageItem->source());
             } else if (QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object())) {
                 QImage img = canvas->toImage();
                 if (!img.isNull())

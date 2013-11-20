@@ -57,9 +57,9 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
 {
     Scope scope(m_context);
 
-    if (p1.value.isUndefined())
+    if (p1.value.isUndefined() || p1.value.isEmpty())
         return false;
-    if (p2.value.isUndefined())
+    if (p2.value.isUndefined() || p2.value.isEmpty())
         return true;
     ScopedObject o(scope, m_comparefn);
     if (o) {
@@ -71,7 +71,7 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
         callData->args[1] = p2.value;
         result = __qmljs_call_value(m_context, m_comparefn, callData);
 
-        return result->toNumber() <= 0;
+        return result->toNumber() < 0;
     }
     ScopedString p1s(scope, p1.value.toString(m_context));
     ScopedString p2s(scope, p2.value.toString(m_context));

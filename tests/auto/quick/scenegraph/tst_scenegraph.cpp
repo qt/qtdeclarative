@@ -323,6 +323,7 @@ void tst_SceneGraph::render_data()
           << "data/render_MovingOverlap.qml"
           << "data/render_BreakOpacityBatch.qml"
           << "data/render_OutOfFloatRange.qml"
+          << "data/render_StackingOrder.qml"
         ;
 
     QRegExp sampleCount("#samples: *(\\d+)");

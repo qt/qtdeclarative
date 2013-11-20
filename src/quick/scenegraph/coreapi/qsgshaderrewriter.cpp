@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include <QtCore>
+#include <QtGui/QSurfaceFormat>
 
 // Duct Tape tokenizer for the purpose of parsing and rewriting
 // shader source code
@@ -173,7 +174,7 @@ Tokenizer::Token Tokenizer::next()
 
 using namespace QSGShaderRewriter;
 
-QByteArray qsgShaderRewriter_insertZAttributes(const char *input)
+QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat::OpenGLContextProfile profile)
 {
     Tokenizer tok;
     tok.initialize(input);
@@ -182,13 +183,31 @@ QByteArray qsgShaderRewriter_insertZAttributes(const char *input)
     Tokenizer::Token t = tok.next();
 
     // First find "void main() { ... "
+    const char* voidPos = input;
     while (t != Tokenizer::Token_EOF) {
         if (lt == Tokenizer::Token_Void && t == Tokenizer::Token_Identifier) {
             if (qstrncmp("main", tok.identifier, 4) == 0)
                 break;
         }
+        voidPos = tok.pos - 4;
         lt = t;
         t = tok.next();
+    }
+
+    QByteArray result;
+    result.reserve(1024);
+    result += QByteArray::fromRawData(input, voidPos - input);
+    switch (profile) {
+    case QSurfaceFormat::NoProfile:
+    case QSurfaceFormat::CompatibilityProfile:
+        result += QByteArrayLiteral("attribute highp float _qt_order;\n");
+        result += QByteArrayLiteral("uniform highp float _qt_zRange;\n");
+        break;
+
+    case QSurfaceFormat::CoreProfile:
+        result += QByteArrayLiteral("in float _qt_order;\n");
+        result += QByteArrayLiteral("uniform float _qt_zRange;\n");
+        break;
     }
 
     // Find first brace '{'
@@ -202,12 +221,8 @@ QByteArray qsgShaderRewriter_insertZAttributes(const char *input)
         case Tokenizer::Token_CloseBrace:
             braceDepth--;
             if (braceDepth == 0) {
-                QByteArray result;
-                result.reserve(1024);
-                result += "attribute highp float _qt_order;\n";
-                result += "uniform highp float _qt_zRange;\n";
-                result += QByteArray::fromRawData(input, tok.pos - 1 - input);
-                result += "    gl_Position.z = gl_Position.z * _qt_zRange + _qt_order;\n";
+                result += QByteArray::fromRawData(voidPos, tok.pos - 1 - voidPos);
+                result += QByteArrayLiteral("    gl_Position.z = gl_Position.z * _qt_zRange + _qt_order;\n");
                 result += QByteArray(tok.pos - 1);
                 return result;
             }

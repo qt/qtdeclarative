@@ -44,6 +44,7 @@
 
 #include <private/qtquickglobal_p.h>
 
+#include <QtGui/qsurfaceformat.h>
 #include <QtCore/qbytearray.h>
 
 QT_BEGIN_NAMESPACE
@@ -64,11 +65,15 @@ public:
 
     void appendSource(const QByteArray &source);
     void appendSourceFile(const QString &fileName);
+    void addDefinition(const QByteArray &definition);
+    void removeVersion();
 
 protected:
     virtual QString resolveShaderPath(const QString &path) const;
 
 private:
+    QSurfaceFormat::OpenGLContextProfile contextProfile() const;
+
     QByteArray m_source;
 };
 

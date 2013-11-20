@@ -40,26 +40,30 @@
 ****************************************************************************/
 
 #include <QtCore/QFileSelector>
+#include <qobjectdefs.h>
 #include "qqmlfileselector.h"
 #include "qqmlfileselector_p.h"
+#include "qqmlabstracturlinterceptor_p.h"
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
+typedef QHash<QQmlAbstractUrlInterceptor*, QQmlFileSelector*> interceptorSelectorMap;
+Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
 /*!
    \class QQmlFileSelector
    \since 5.2
    \inmodule QtQml
-   \brief A convenience class for applying a QFileSelector to QML file loading
+   \brief A class for applying a QFileSelector to QML file loading
 
-  QQmlFileSelector is a QQmlAbstractUrlInterceptor which will automatically apply a QFileSelector to
+  QQmlFileSelector will automatically apply a QFileSelector to
   qml file and asset paths.
 
   It is used as follows:
 
   \code
   QQmlEngine engine;
-  QQmlFileSelector selector;
-  engine.setUrlInterceptor(&selector);
+  QQmlFileSelector* selector = new QQmlFileSelector(&engine);
   \endcode
 
   Then you can swap out files like so:
@@ -86,15 +90,34 @@ QT_BEGIN_NAMESPACE
   Your platform may also provide additional selectors for you to use. As specified by QFileSelector,
   directories used for selection must start with a '+' character, so you will not accidentally
   trigger this feature unless you have directories with such names inside your project.
+
+  If a new QQmlFileSelector is set on the engine, the old one will be replaced. Use
+  \l QQmlFileSelector::get to query or use the existing instance.
  */
 
 /*!
   Creates a new QQmlFileSelector, which includes its own QFileSelector.
+  \a engine is the QQmlEngine you wish to apply file selectors too. It will
+  also take ownership of the QQmlFileSelector.
 */
 
-QQmlFileSelector::QQmlFileSelector(QObject* parent)
+QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
     : QObject(*(new QQmlFileSelectorPrivate), parent)
 {
+    Q_D(QQmlFileSelector);
+    d->engine = engine;
+    interceptorInstances()->insert(d->myInstance, this);
+    d->engine->setUrlInterceptor(d->myInstance);
+}
+
+QQmlFileSelector::~QQmlFileSelector()
+{
+    Q_D(QQmlFileSelector);
+    if (d->engine && QQmlFileSelector::get(d->engine) == this) {
+        d->engine->setUrlInterceptor(0);
+        d->engine = 0;
+    }
+    interceptorInstances()->remove(d->myInstance);
 }
 
 QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
@@ -102,6 +125,7 @@ QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
     Q_Q(QQmlFileSelector);
     ownSelector = true;
     selector = new QFileSelector(q);
+    myInstance = new QQmlFileSelectorInterceptor(this);
 }
 
 /*!
@@ -127,9 +151,42 @@ void QQmlFileSelector::setSelector(QFileSelector *selector)
     }
 }
 
-QUrl QQmlFileSelector::intercept(const QUrl &path, DataType type)
+/*!
+  Adds extra selectors to the current QFileSelector being used. Use this when
+  extra selectors are all you need to avoid having to create your own
+  QFileSelector instance.
+*/
+void QQmlFileSelector::setExtraSelectors(QStringList &strings)
 {
     Q_D(QQmlFileSelector);
+    d->selector->setExtraSelectors(strings);
+}
+
+/*!
+  Gets the QQmlFileSelector currently active on the target engine.
+*/
+QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
+{
+    //Since I think we still can't use dynamic_cast inside Qt...
+    QQmlAbstractUrlInterceptor* current = engine->urlInterceptor();
+    if (current && interceptorInstances()->contains(current))
+        return interceptorInstances()->value(current);
+    return 0;
+}
+
+/*!
+  \internal
+*/
+QQmlFileSelectorInterceptor::QQmlFileSelectorInterceptor(QQmlFileSelectorPrivate* pd)
+    : d(pd)
+{
+}
+
+/*!
+  \internal
+*/
+QUrl QQmlFileSelectorInterceptor::intercept(const QUrl &path, DataType type)
+{
     if ( type ==  QQmlAbstractUrlInterceptor::QmldirFile ) //Don't intercept qmldir files, to prevent double interception
         return path;
     return d->selector->select(path);

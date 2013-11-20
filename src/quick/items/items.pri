@@ -145,7 +145,13 @@ OTHER_FILES += \
     $$PWD/shaders/shadereffect.vert \
     $$PWD/shaders/shadereffect.frag \
     $$PWD/shaders/shadereffectfallback.vert \
-    $$PWD/shaders/shadereffectfallback.frag
+    $$PWD/shaders/shadereffectfallback.frag \
+    $$PWD/shaders/sprite_core.vert \
+    $$PWD/shaders/sprite_core.frag \
+    $$PWD/shaders/shadereffect_core.vert \
+    $$PWD/shaders/shadereffect_core.frag \
+    $$PWD/shaders/shadereffectfallback_core.vert \
+    $$PWD/shaders/shadereffectfallback_core.frag
 
 RESOURCES += \
     $$PWD/items.qrc

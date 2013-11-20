@@ -1,3 +1,5 @@
+#version 120
+
 #if defined(DEFORM)
 attribute highp vec4 vPosTex;
 #else

@@ -304,10 +304,21 @@ private slots:
     void propertyOverride();
     void concatenatedStringPropertyAccess();
     void jsOwnedObjectsDeletedOnEngineDestroy();
+    void updateCall();
     void numberParsing();
     void stringParsing();
+    void push_and_shift();
     void qtbug_32801();
     void thisObject();
+    void qtbug_33754();
+    void qtbug_34493();
+    void singletonFromQMLToCpp();
+    void singletonFromQMLAndBackAndCompare();
+    void setPropertyOnInvalid();
+    void miscTypeTest();
+    void stackLimits();
+    void idsAsLValues();
+    void qtbug_34792();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5422,6 +5433,8 @@ void tst_qqmlecmascript::sequenceConversionIndexes()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
     QMetaObject::invokeMethod(object, "indexedAccess");
     QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "indexOf");
+    QVERIFY(object->property("success").toBool());
     delete object;
 }
 
@@ -7272,6 +7285,17 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     delete object;
 }
 
+void tst_qqmlecmascript::updateCall()
+{
+    // update is a slot on QQuickItem. Even though it's not
+    // documented it can be called from within QML. Make sure
+    // we don't crash when calling it.
+    QString file("updateCall.qml");
+    QQmlComponent component(&engine, testFileUrl(file));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
 void tst_qqmlecmascript::numberParsing()
 {
     for (int i = 1; i < 8; ++i) {
@@ -7300,6 +7324,18 @@ void tst_qqmlecmascript::stringParsing()
     }
 }
 
+void tst_qqmlecmascript::push_and_shift()
+{
+    QJSEngine e;
+    const QString program =
+            "var array = []; "
+            "for (var i = 0; i < 10000; i++) {"
+            "    array.push(5); array.unshift(5); array.push(5);"
+            "}"
+            "array.length;";
+    QVERIFY(e.evaluate(program).toNumber() == 30000);
+}
+
 void tst_qqmlecmascript::qtbug_32801()
 {
     QQmlComponent component(&engine, testFileUrl("qtbug_32801.qml"));
@@ -7318,6 +7354,140 @@ void tst_qqmlecmascript::thisObject()
     QObject *object = component.create();
     QVERIFY(object);
     QCOMPARE(qvariant_cast<QObject*>(object->property("subObject"))->property("test").toInt(), 2);
+    delete object;
+}
+
+void tst_qqmlecmascript::qtbug_33754()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_33754.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+}
+
+void tst_qqmlecmascript::qtbug_34493()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_34493.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(obj != 0);
+    QVERIFY(QMetaObject::invokeMethod(obj.data(), "doIt"));
+    QTRY_VERIFY(obj->property("prop").toString() == QLatin1String("Hello World!"));
+}
+
+// Check that a Singleton can be passed from QML to C++
+// as its type*, it's parent type* and as QObject*
+void tst_qqmlecmascript::singletonFromQMLToCpp()
+{
+    QQmlComponent component(&engine, testFile("singletonTest.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(obj != 0);
+
+    QCOMPARE(obj->property("qobjectTest"), QVariant(true));
+    QCOMPARE(obj->property("myQmlObjectTest"), QVariant(true));
+    QCOMPARE(obj->property("myInheritedQmlObjectTest"), QVariant(true));
+}
+
+// Check that a Singleton can be passed from QML to C++
+// as its type*, it's parent type* and as QObject*
+// and correctly compares to itself
+void tst_qqmlecmascript::singletonFromQMLAndBackAndCompare()
+{
+    QQmlComponent component(&engine, testFile("singletonTest2.qml"));
+    QScopedPointer<QObject> o(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("myInheritedQmlObjectTest1"), QVariant(true));
+    QCOMPARE(o->property("myInheritedQmlObjectTest2"), QVariant(true));
+    QCOMPARE(o->property("myInheritedQmlObjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("myQmlObjectTest1"), QVariant(true));
+    QCOMPARE(o->property("myQmlObjectTest2"), QVariant(true));
+    QCOMPARE(o->property("myQmlObjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("qobjectTest1"), QVariant(true));
+    QCOMPARE(o->property("qobjectTest2"), QVariant(true));
+    QCOMPARE(o->property("qobjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("singletonEqualToItself"), QVariant(true));
+}
+
+void tst_qqmlecmascript::setPropertyOnInvalid()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("setPropertyOnNull.qml"));
+        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+        QObject *object = component.create();
+        QVERIFY(object);
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("setPropertyOnUndefined.qml"));
+        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+        QObject *object = component.create();
+        QVERIFY(object);
+        delete object;
+    }
+}
+
+void tst_qqmlecmascript::miscTypeTest()
+{
+    QQmlComponent component(&engine, testFileUrl("misctypetest.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, "test_invalid_url_equal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_invalid_url_strictequal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_valid_url_equal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_valid_url_strictequal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+    delete object;
+}
+
+void tst_qqmlecmascript::stackLimits()
+{
+    QJSEngine engine;
+    engine.evaluate(QStringLiteral("function foo() {foo();} try {foo()} catch(e) { }"));
+}
+
+void tst_qqmlecmascript::idsAsLValues()
+{
+    QString err = QString(QLatin1String("%1:5 left-hand side of assignment operator is not an lvalue\n")).arg(testFileUrl("idAsLValue.qml").toString());
+    QQmlComponent component(&engine, testFileUrl("idAsLValue.qml"));
+    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+    QVERIFY(!object);
+    QCOMPARE(component.errorString(), err);
+}
+
+void tst_qqmlecmascript::qtbug_34792()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug34792.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
     delete object;
 }
 

@@ -54,8 +54,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Moth {
 
-class StackSlotAllocator;
-
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
@@ -64,7 +62,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QVector<QByteArray> codeRefs;
 
 };
-
 
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::IRDecoder,
@@ -128,7 +125,7 @@ protected:
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
     virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex);
-    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target);
+    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target);
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
@@ -171,7 +168,6 @@ private:
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
 
-    V4IR::Function *_function;
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_nextBlock;
 
@@ -182,7 +178,6 @@ private:
     uchar *_codeNext;
     uchar *_codeEnd;
 
-    StackSlotAllocator *_stackSlotAllocator;
     QSet<V4IR::Jump *> _removableJumps;
     V4IR::Stmt *_currentStatement;
 

@@ -418,6 +418,7 @@ Codegen::Codegen(bool strict)
     , _labelledStatement(0)
     , _scopeAndFinally(0)
     , _strictMode(strict)
+    , _fileNameIsUrl(false)
     , hasError(false)
 {
 }
@@ -1182,7 +1183,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
         V4IR::Expr* right = *expression(ast->right);
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
+        if (!left->isLValue()) {
             throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
         }
@@ -2291,10 +2292,10 @@ bool Codegen::visit(ForStatement *ast)
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, forcond, forend, forstep);
-
     statement(ast->initialiser);
     _block->JUMP(forcond);
+
+    enterLoop(ast, forcond, forend, forstep);
 
     _block = forcond;
     if (ast->condition)
@@ -2431,10 +2432,10 @@ bool Codegen::visit(LocalForStatement *ast)
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, forcond, forend, forstep);
-
     variableDeclarationList(ast->declarations);
     _block->JUMP(forcond);
+
+    enterLoop(ast, forcond, forend, forstep);
 
     _block = forcond;
     if (ast->condition)
@@ -2850,7 +2851,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 
     hasError = true;
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_module->fileName));
+    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
@@ -2864,7 +2865,7 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
 
     hasError = true;
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_module->fileName));
+    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);

@@ -334,7 +334,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     return getProperty(ctx, result);
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyData *property)
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired)
 {
     QV4::Scope scope(ctx);
 
@@ -371,17 +371,19 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyDat
 
         QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *property, nptr));
 
-        if (property->accessors->notifier) {
-            if (n)
-                ep->captureProperty(n);
-        } else {
-            ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
+        if (captureRequired) {
+            if (property->accessors->notifier) {
+                if (n)
+                    ep->captureProperty(n);
+            } else {
+                ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
+            }
         }
 
         return rv.asReturnedValue();
     }
 
-    if (ep && !property->isConstant())
+    if (captureRequired && ep && !property->isConstant())
         ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
 
     if (property->isVarProperty()) {
@@ -614,7 +616,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     }
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyIndex)
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyIndex, bool captureRequired)
 {
     if (QQmlData::wasDeleted(m_object))
         return QV4::Encode::null();
@@ -626,7 +628,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyInd
     Q_ASSERT(cache);
     QQmlPropertyData *property = cache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
-    return getProperty(ctx, property);
+    return getProperty(ctx, property, captureRequired);
 }
 
 void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value)
@@ -642,6 +644,15 @@ void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const
     QQmlPropertyData *property = cache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
     return setProperty(m_object, ctx, property, value);
+}
+
+bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    QV4::QObjectWrapper *qobjectWrapper = a->as<QV4::QObjectWrapper>();
+    if (QV4::QmlTypeWrapper *qmlTypeWrapper = b->asObject()->as<QV4::QmlTypeWrapper>())
+        return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
+
+    return false;
 }
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
@@ -1537,6 +1548,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
 
     QV4::Scope scope(QV8Engine::getV4(engine));
 
+    bool queryEngine = false;
     if (callType == qMetaTypeId<QJSValue>()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(v4, value));
@@ -1566,6 +1578,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         qobjectPtr = 0;
         if (QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
+        else if (QV4::QmlTypeWrapper *qmlTypeWrapper = value->as<QV4::QmlTypeWrapper>())
+            queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
@@ -1608,6 +1622,10 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
     } else {
+        queryEngine = true;
+    }
+
+    if (queryEngine) {
         qvariantPtr = new (&allocData) QVariant();
         type = -1;
 

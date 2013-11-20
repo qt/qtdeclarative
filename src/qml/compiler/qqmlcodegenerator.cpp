@@ -1211,6 +1211,7 @@ JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, 
 {
     _module = jsModule;
     _module->setFileName(fileName);
+    _fileNameIsUrl = true;
 }
 
 void JSCodeGen::beginContextScope(const JSCodeGen::ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject)
@@ -1236,7 +1237,11 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
         Q_ASSERT(node != qmlRoot);
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
-        scan.enterEnvironment(node, function ? FunctionCode : QmlBinding);
+        if (function)
+            scan.enterQmlFunction(function);
+        else
+            scan.enterEnvironment(node, QmlBinding);
+
         scan(function ? function->body : node);
         scan.leaveEnvironment();
     }
@@ -1351,7 +1356,6 @@ V4IR::Expr *JSCodeGen::member(V4IR::Expr *base, const QString *name)
 
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 {
-    V4IR::Expr *result = 0;
     // Implement QML lookup semantics in the current file context.
     //
     // Note: We do not check if properties of the qml scope object or context object
@@ -1366,51 +1370,47 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
     // Look for IDs first.
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
-            result = _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_id_scope, line, col),
-                                                   _function->newString(mapping.name), mapping.idIndex);
-            break;
+            _function->idObjectDependencies.insert(mapping.idIndex);
+            return _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_id_scope, line, col),
+                                              _function->newString(mapping.name), mapping.idIndex);
         }
 
-    if (!result) {
+    {
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
-            if (r.scriptIndex != -1) {
-                result = subscript(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, line, col), _block->CONST(V4IR::NumberType, r.scriptIndex));
-            } else {
+            if (r.scriptIndex != -1)
+                return subscript(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, line, col), _block->CONST(V4IR::NumberType, r.scriptIndex));
+            else
                 return 0; // TODO: We can't do fast lookup for these yet.
-            }
         }
     }
 
-    if (!result && _scopeObject) {
+    if (_scopeObject) {
         bool propertyExistsButForceNameLookup = false;
         QQmlPropertyData *pd = lookupQmlCompliantProperty(_scopeObject, name, &propertyExistsButForceNameLookup);
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
+            if (!pd->isConstant())
+                _function->scopeObjectDependencies.insert(pd);
             int base = _block->newTemp();
             move(_block->TEMP(base), _block->NAME(V4IR::Name::builtin_qml_scope_object, line, col));
-            result = _block->QML_QOBJECT_PROPERTY(_block->TEMP(base),
-                                                  _function->newString(name), pd);
+            return  _block->QML_QOBJECT_PROPERTY(_block->TEMP(base), _function->newString(name), pd);
         }
     }
 
-    if (!result && _contextObject) {
+    if (_contextObject) {
         bool propertyExistsButForceNameLookup = false;
         QQmlPropertyData *pd = lookupQmlCompliantProperty(_contextObject, name, &propertyExistsButForceNameLookup);
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
+            if (!pd->isConstant())
+                _function->contextObjectDependencies.insert(pd);
             int base = _block->newTemp();
             move(_block->TEMP(base), _block->NAME(V4IR::Name::builtin_qml_context_object, line, col));
-            result = _block->QML_QOBJECT_PROPERTY(_block->TEMP(base),
-                                                  _function->newString(name), pd);
+            return _block->QML_QOBJECT_PROPERTY(_block->TEMP(base), _function->newString(name), pd);
         }
-    }
-
-    if (result) {
-        _function->hasQmlDependencies = true;
-        return result;
     }
 
     // fall back to name lookup at run-time.

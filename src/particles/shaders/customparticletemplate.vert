@@ -1,3 +1,5 @@
+#version 120
+
 attribute highp vec2 qt_ParticlePos;
 attribute highp vec2 qt_ParticleTex;
 attribute highp vec4 qt_ParticleData; // x = time, y = lifeSpan, z = size, w = endSize

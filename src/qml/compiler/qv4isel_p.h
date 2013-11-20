@@ -100,6 +100,7 @@ namespace V4IR {
 class Q_QML_EXPORT IRDecoder: protected V4IR::StmtVisitor
 {
 public:
+    IRDecoder() : _function(0) {}
     virtual ~IRDecoder() = 0;
 
     virtual void visitPhi(V4IR::Phi *) {}
@@ -152,7 +153,7 @@ public: // to implement by subclasses:
     virtual void setActivationProperty(V4IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target) = 0;
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target) = 0;
-    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *targetTemp) = 0;
+    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *targetTemp) = 0;
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName) = 0;
     virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex) = 0;
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target) = 0;
@@ -164,6 +165,8 @@ public: // to implement by subclasses:
 
 protected:
     virtual void callBuiltin(V4IR::Call *c, V4IR::Temp *result);
+
+    V4IR::Function *_function; // subclass needs to set
 };
 } // namespace IR
 

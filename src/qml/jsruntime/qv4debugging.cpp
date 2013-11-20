@@ -181,11 +181,11 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue = Primitive::undefinedValue();
 
-    clearTemporaryBreakPoint();
+    clearTemporaryBreakPoints();
     if (speed == StepOver)
         setTemporaryBreakPointOnNextLine();
     if (speed == StepOut)
-        m_temporaryBreakPoint.function = getFunction();
+        m_temporaryBreakPoints = TemporaryBreakPoint(getFunction(), m_engine->current);
 
     m_stepping = speed;
     m_runningCondition.wakeAll();
@@ -491,7 +491,7 @@ void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
     }
 
     if (m_stopForStepping) {
-        clearTemporaryBreakPoint();
+        clearTemporaryBreakPoints();
         m_stopForStepping = false;
         m_pauseRequested = false;
         pauseAndWait(Step);
@@ -499,7 +499,7 @@ void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
         m_pauseRequested = false;
         pauseAndWait(PauseRequest);
     } else if (breakPointHit) {
-        if (m_stepping == StepOver)
+        if (m_stepping == StepOver && m_temporaryBreakPoints.context == m_engine->current)
             pauseAndWait(Step);
         else if (reallyHitTheBreakPoint(state.fileName, state.lineNumber))
             pauseAndWait(BreakPoint);
@@ -526,8 +526,9 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping == StepOut && temporaryBreakPointInFunction()) {
-        clearTemporaryBreakPoint();
+    if ((m_stepping == StepOut || m_stepping == StepOver)
+            && temporaryBreakPointInFunction(m_engine->current)) {
+        clearTemporaryBreakPoints();
         m_stepping = NotStepping;
         m_stopForStepping = true;
         m_pauseRequested = true;
@@ -544,7 +545,7 @@ void Debugger::aboutToThrow()
         return;
 
     QMutexLocker locker(&m_lock);
-    clearTemporaryBreakPoint();
+    clearTemporaryBreakPoints();
     pauseAndWait(Throwing);
 }
 
@@ -589,28 +590,38 @@ void Debugger::setTemporaryBreakPointOnNextLine()
     if (!function)
         return;
 
-    qptrdiff offset = function->programCounterForLine(state.lineNumber + 1);
-    if (offset < 0)
+    QList<qptrdiff> pcs = function->programCountersForAllLines();
+    if (pcs.isEmpty())
         return;
 
-    if (hasBreakOnInstruction(function, offset))
-        return;
+    m_temporaryBreakPoints = TemporaryBreakPoint(function, m_engine->current);
+    m_temporaryBreakPoints.codeOffsets.reserve(pcs.size());
+    for (QList<qptrdiff>::const_iterator i = pcs.begin(), ei = pcs.end(); i != ei; ++i) {
+        // note: we do set a breakpoint on the current line, because there could be a loop where
+        // a step-over would be jump back to the first instruction making up the current line.
+        qptrdiff offset = *i;
 
-    setBreakOnInstruction(function, offset, true);
-    m_temporaryBreakPoint = TemporaryBreakPoint(function, offset);
-}
+        if (hasBreakOnInstruction(function, offset))
+            continue; // do not set a temporary breakpoint if there already is a breakpoint set by the user
 
-void Debugger::clearTemporaryBreakPoint()
-{
-    if (m_temporaryBreakPoint.function && m_temporaryBreakPoint.codeOffset) {
-        setBreakOnInstruction(m_temporaryBreakPoint.function, m_temporaryBreakPoint.codeOffset, false);
-        m_temporaryBreakPoint = TemporaryBreakPoint();
+        setBreakOnInstruction(function, offset, true);
+        m_temporaryBreakPoints.codeOffsets.append(offset);
     }
 }
 
-bool Debugger::temporaryBreakPointInFunction() const
+void Debugger::clearTemporaryBreakPoints()
 {
-    return m_temporaryBreakPoint.function == getFunction();
+    if (m_temporaryBreakPoints.function) {
+        foreach (quintptr offset, m_temporaryBreakPoints.codeOffsets)
+            setBreakOnInstruction(m_temporaryBreakPoints.function, offset, false);
+        m_temporaryBreakPoints = TemporaryBreakPoint();
+    }
+}
+
+bool Debugger::temporaryBreakPointInFunction(ExecutionContext *context) const
+{
+    return m_temporaryBreakPoints.function == getFunction()
+            && m_temporaryBreakPoints.context == context;
 }
 
 void Debugger::applyPendingBreakPoints()

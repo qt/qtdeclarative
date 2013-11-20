@@ -32,7 +32,7 @@
 \brief the animation system in Qt Quick
 
 \section1 Animation and Transitions Types
-\generatelist{related}
+
 \list
 \li \l {Transition} - Animates transitions during state changes
 \li \l {SequentialAnimation} - Runs animations sequentially
@@ -47,15 +47,6 @@
 
 Types that animate properties based on data types
 \annotatedlist qtquick-animation-properties
-\list
-\li \l {PropertyAnimation} - Animates property changes
-\li \l {NumberAnimation} - Animates properties of type qreal
-\li \l {Vector3dAnimation} - Animates properties of type QVector3d
-\li \l {ColorAnimation} - Animates color changes
-\li \l {RotationAnimation} - Animates rotations
-\li \l {ParentAnimation} - Animates parent changes
-\li \l {AnchorAnimation} - Animates anchor changes
-\endlist
 
 Animations are created by applying animation types to property
 values. Animation types will interpolate property values to create smooth

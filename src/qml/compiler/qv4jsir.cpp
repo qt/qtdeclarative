@@ -1042,31 +1042,6 @@ void CloneExpr::visitMember(Member *e)
         Q_ASSERT(!"Unimplemented!");
 }
 
-void QmlDependenciesCollector::visitMember(Member *e) {
-    e->base->accept(this);
-    if (e->type == Member::MemberOfQmlContext) {
-        V4IR::Name *base = e->base->asName();
-        Q_ASSERT(base);
-        if (base->builtin == V4IR::Name::builtin_qml_id_scope)
-            _usedIdObjects.insert(e->memberIndex);
-    } else if (e->type == Member::MemberOfQObject
-             && !e->property->isFunction()) { // only non-functions have notifyIndex
-
-        if (Name *base = e->base->asName()) {
-            if (base->builtin == Name::builtin_qml_context_object)
-                _usedContextProperties.insert(e->property);
-            else if (base->builtin == Name::builtin_qml_scope_object)
-                _usedScopeProperties.insert(e->property);
-        }
-    }
-}
-
-void QmlDependenciesCollector::visitPhi(Phi *s) {
-    s->targetTemp->accept(this);
-    foreach (Expr *e, s->d->incoming)
-        e->accept(this);
-}
-
 } // end of namespace IR
 } // end of namespace QQmlJS
 

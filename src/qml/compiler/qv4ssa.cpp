@@ -224,26 +224,65 @@ class DominatorTree {
     QHash<BasicBlock *, BasicBlock *> samedom;
     QHash<BasicBlock *, QSet<BasicBlock *> > bucket;
 
-    void DFS(BasicBlock *p, BasicBlock *n) {
-        if (dfnum[n] == 0) {
-            dfnum[n] = N;
-            vertex[N] = n;
-            parent[n] = p;
-            ++N;
-            foreach (BasicBlock *w, n->out)
-                DFS(n, w);
+    struct DFSTodo {
+        BasicBlock *node, *parent;
+
+        DFSTodo():node(0),parent(0){}
+        DFSTodo(BasicBlock *node, BasicBlock *parent):node(node),parent(parent){}
+    };
+
+    void DFS(BasicBlock *node) {
+        QVector<DFSTodo> worklist;
+        worklist.reserve(vertex.capacity());
+        DFSTodo todo(node, 0);
+
+        while (true) {
+            BasicBlock *n = todo.node;
+
+            if (dfnum[n] == 0) {
+                dfnum[n] = N;
+                vertex[N] = n;
+                parent[n] = todo.parent;
+                ++N;
+                for (int i = n->out.size() - 1; i > 0; --i)
+                    worklist.append(DFSTodo(n->out[i], n));
+
+                if (n->out.size() > 0) {
+                    todo.node = n->out.first();
+                    todo.parent = n;
+                    continue;
+                }
+            }
+
+            if (worklist.isEmpty())
+                break;
+
+            todo = worklist.last();
+            worklist.removeLast();
         }
     }
 
     BasicBlock *ancestorWithLowestSemi(BasicBlock *v) {
-        BasicBlock *a = ancestor[v];
-        if (ancestor[a]) {
-            BasicBlock *b = ancestorWithLowestSemi(a);
-            ancestor[v] = ancestor[a];
-            if (dfnum[semi[b]] < dfnum[semi[best[v]]])
-                best[v] = b;
+        QVector<BasicBlock *> worklist;
+        worklist.reserve(vertex.capacity());
+        for (BasicBlock *it = v; it; it = ancestor[it])
+            worklist.append(it);
+
+        if (worklist.size() < 2)
+            return best[v];
+
+        BasicBlock *b = 0;
+        BasicBlock *last = worklist.last();
+        for (int it = worklist.size() - 2; it >= 0; --it) {
+            BasicBlock *bbIt = worklist[it];
+            ancestor[bbIt] = last;
+            BasicBlock *&best_it = best[bbIt];
+            if (b && dfnum[semi[b]] < dfnum[semi[best_it]])
+                best_it = b;
+            else
+                b = best_it;
         }
-        return best[v];
+        return b;
     }
 
     void link(BasicBlock *p, BasicBlock *n) {
@@ -262,8 +301,8 @@ class DominatorTree {
             samedom[n] = 0;
         }
 
-        DFS(0, nodes.first());
-        Q_ASSERT(N == nodes.size()); // fails with unreachable nodes...
+        DFS(nodes.first());
+        Q_ASSERT(N == nodes.size()); // fails with unreachable nodes, but those should have been removed before.
 
         for (int i = N - 1; i > 0; --i) {
             BasicBlock *n = vertex[i];
@@ -284,9 +323,9 @@ class DominatorTree {
             link(p, n);
             foreach (BasicBlock *v, bucket[p]) {
                 BasicBlock *y = ancestorWithLowestSemi(v);
-                Q_ASSERT(semi[y] == p);
-                if (semi[y] == semi[v])
-                    idom[v] = p;
+                BasicBlock *semi_v = semi[v];
+                if (semi[y] == semi_v)
+                    idom[v] = semi_v;
                 else
                     samedom[v] = y;
             }
@@ -322,52 +361,88 @@ class DominatorTree {
         return false;
     }
 
-    void computeDF(BasicBlock *n) {
-        if (DF.contains(n))
-            return; // TODO: verify this!
+    struct NodeProgress {
+        QSet<BasicBlock *> children;
+        QSet<BasicBlock *> todo;
+    };
 
-        QSet<BasicBlock *> S;
-        foreach (BasicBlock *y, n->out)
-            if (idom[y] != n)
-                S.insert(y);
-
-        /*
-         * foreach child c of n in the dominator tree
-         *   computeDF[c]
-         *   foreach element w of DF[c]
-         *     if n does not dominate w or if n = w
-         *       S.insert(w)
-         * DF[n] = S;
-         */
-        foreach (BasicBlock *c, children[n]) {
-            computeDF(c);
-            foreach (BasicBlock *w, DF[c])
-                if (!dominates(n, w) || n == w)
-                    S.insert(w);
+    void computeDF(const QVector<BasicBlock *> &nodes) {
+        QHash<BasicBlock *, NodeProgress> nodeStatus;
+        nodeStatus.reserve(nodes.size());
+        QVector<BasicBlock *> worklist;
+        worklist.reserve(nodes.size() * 2);
+        for (int i = 0, ei = nodes.size(); i != ei; ++i) {
+            BasicBlock *node = nodes[i];
+            worklist.append(node);
+            NodeProgress &np = nodeStatus[node];
+            np.children = children[node];
+            np.todo = children[node];
         }
-        DF[n] = S;
 
-#ifdef SHOW_SSA
-        qout << "\tDF[" << n->index << "]: {";
-        QList<BasicBlock *> SList = S.values();
-        for (int i = 0; i < SList.size(); ++i) {
-            if (i > 0)
-                qout << ", ";
-            qout << SList[i]->index;
-        }
-        qout << "}" << endl;
-#endif // SHOW_SSA
-#ifndef QT_NO_DEBUG
-        foreach (BasicBlock *fBlock, S) {
-            Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
-            bool hasDominatedSucc = false;
-            foreach (BasicBlock *succ, fBlock->in)
-                if (dominates(n, succ))
-                    hasDominatedSucc = true;
-            if (!hasDominatedSucc) {
-                qout << fBlock->index << " in DF[" << n->index << "] has no dominated predecessors" << endl;
+        while (!worklist.isEmpty()) {
+            BasicBlock *node = worklist.last();
+
+            if (DF.contains(node)) {
+                worklist.removeLast();
+                continue;
             }
-            Q_ASSERT(hasDominatedSucc);
+
+            NodeProgress &np = nodeStatus[node];
+            QSet<BasicBlock *>::iterator it = np.todo.begin();
+            while (it != np.todo.end()) {
+                if (DF.contains(*it)) {
+                    it = np.todo.erase(it);
+                } else {
+                    worklist.append(*it);
+                    break;
+                }
+            }
+
+            if (np.todo.isEmpty()) {
+                QSet<BasicBlock *> S;
+                foreach (BasicBlock *y, node->out)
+                    if (idom[y] != node)
+                        if (!S.contains(y))
+                            S.insert(y);
+                foreach (BasicBlock *child, np.children)
+                    foreach (BasicBlock *w, DF[child])
+                        if (!dominates(node, w) || node == w)
+                            if (!S.contains(w))
+                                S.insert(w);
+                DF.insert(node, S);
+                worklist.removeLast();
+            }
+        }
+
+#if defined(SHOW_SSA)
+        qout << "Dominator Frontiers:" << endl;
+        foreach (BasicBlock *n, nodes) {
+            qout << "\tDF[" << n->index << "]: {";
+            QList<BasicBlock *> SList = DF[n].values();
+            for (int i = 0; i < SList.size(); ++i) {
+                if (i > 0)
+                    qout << ", ";
+                qout << SList[i]->index;
+            }
+            qout << "}" << endl;
+        }
+#endif // SHOW_SSA
+#if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
+        foreach (BasicBlock *n, nodes) {
+            foreach (BasicBlock *fBlock, DF[n]) {
+                Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
+                bool hasDominatedSucc = false;
+                foreach (BasicBlock *succ, fBlock->in) {
+                    if (dominates(n, succ)) {
+                        hasDominatedSucc = true;
+                        break;
+                    }
+                }
+                if (!hasDominatedSucc) {
+                    qout << fBlock->index << " in DF[" << n->index << "] has no dominated predecessors" << endl;
+                }
+                Q_ASSERT(hasDominatedSucc);
+            }
         }
 #endif // !QT_NO_DEBUG
     }
@@ -382,14 +457,13 @@ public:
         calculateIDoms(nodes);
 
         // compute children of n
-        foreach (BasicBlock *n, nodes)
-            children[idom[n]].insert(n);
+        foreach (BasicBlock *n, nodes) {
+            QSet<BasicBlock *> &c = children[idom[n]];
+            if (!c.contains(n))
+                c.insert(n);
+        }
 
-#ifdef SHOW_SSA
-        qout << "Dominator Frontiers:" << endl;
-#endif // SHOW_SSA
-        foreach (BasicBlock *n, nodes)
-            computeDF(n);
+        computeDF(nodes);
     }
 
     QSet<BasicBlock *> operator[](BasicBlock *n) const {
@@ -1977,33 +2051,59 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 }
 #endif
 
-void cleanupBasicBlocks(Function *function)
+void cleanupBasicBlocks(Function *function, bool renumber)
 {
-//        showMeTheCode(function);
+    showMeTheCode(function);
 
-    // remove all basic blocks that have no incoming edges, but skip the entry block
-    QVector<BasicBlock *> W = function->basicBlocks;
-    W.removeFirst();
+    // Algorithm: this is the iterative version of a depth-first search for all blocks that are
+    // reachable through outgoing edges, starting with the start block and all exception handler
+    // blocks.
+    QSet<BasicBlock *> postponed, done;
     QSet<BasicBlock *> toRemove;
-
-    while (!W.isEmpty()) {
-        BasicBlock *bb = W.first();
-        W.removeFirst();
-        if (toRemove.contains(bb))
-            continue;
-        if (bb->in.isEmpty() && !bb->isExceptionHandler) {
-            foreach (BasicBlock *outBB, bb->out) {
-                int idx = outBB->in.indexOf(bb);
-                if (idx != -1) {
-                    outBB->in.remove(idx);
-                    W.append(outBB);
-                }
-            }
+    toRemove.reserve(function->basicBlocks.size());
+    done.reserve(function->basicBlocks.size());
+    postponed.reserve(8);
+    for (int i = 0, ei = function->basicBlocks.size(); i != ei; ++i) {
+        BasicBlock *bb = function->basicBlocks[i];
+        if (i == 0 || bb->isExceptionHandler)
+            postponed.insert(bb);
+        else
             toRemove.insert(bb);
+    }
+
+    while (!postponed.isEmpty()) {
+        QSet<BasicBlock *>::iterator it = postponed.begin();
+        BasicBlock *bb = *it;
+        postponed.erase(it);
+        done.insert(bb);
+
+        foreach (BasicBlock *outBB, bb->out) {
+            if (!done.contains(outBB)) {
+                postponed.insert(outBB);
+                toRemove.remove(outBB);
+            }
         }
     }
 
     foreach (BasicBlock *bb, toRemove) {
+        foreach (BasicBlock *outBB, bb->out) {
+            if (toRemove.contains(outBB))
+                continue; // We do not need to unlink from blocks that are scheduled to be removed.
+                          // Actually, it is potentially dangerous: if that block was already
+                          // destroyed, this could result in a use-after-free.
+
+            int idx = outBB->in.indexOf(bb);
+            if (idx != -1) {
+                outBB->in.remove(idx);
+                foreach (Stmt *s, outBB->statements) {
+                    if (Phi *phi = s->asPhi())
+                        phi->d->incoming.remove(idx);
+                    else
+                        break;
+                }
+            }
+        }
+
         foreach (Stmt *s, bb->statements)
             s->destroyData();
         int idx = function->basicBlocks.indexOf(bb);
@@ -2012,9 +2112,11 @@ void cleanupBasicBlocks(Function *function)
         delete bb;
     }
 
-    // re-number all basic blocks:
-    for (int i = 0; i < function->basicBlocks.size(); ++i)
-        function->basicBlocks[i]->index = i;
+    if (renumber)
+        for (int i = 0; i < function->basicBlocks.size(); ++i)
+            function->basicBlocks[i]->index = i;
+
+    showMeTheCode(function);
 }
 
 inline Const *isConstPhi(Phi *phi)
@@ -2867,7 +2969,7 @@ void Optimizer::run()
         function->basicBlocks[i]->index = i;
 //    showMeTheCode(function);
 
-    cleanupBasicBlocks(function);
+    cleanupBasicBlocks(function, true);
 
     function->removeSharedExpressions();
 
@@ -2912,6 +3014,13 @@ void Optimizer::run()
 
 //        qout << "Doing block merging..." << endl;
 //        mergeBasicBlocks(function);
+//        showMeTheCode(function);
+
+        // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
+        // condition is calculated to be always false) are not yet removed. This will choke the
+        // block scheduling, so remove those now.
+//        qout << "Cleaning up unreachable basic blocks..." << endl;
+        cleanupBasicBlocks(function, false);
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;

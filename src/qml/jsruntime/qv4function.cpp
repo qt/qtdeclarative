@@ -103,7 +103,7 @@ struct LineNumberMappingHelper
         while (n > 0) {
             half = n >> 1;
             middle = begin + half;
-            if (table[middle * 2 + field] < value) {
+            if (table[middle * 2 + field] < static_cast<quint32>(value)) {
                 begin = middle + 1;
                 n -= half + 1;
             } else {
@@ -147,19 +147,22 @@ int Function::lineNumberForProgramCounter(qptrdiff offset) const
     return helper.table[pos * 2 + 1];
 }
 
-qptrdiff Function::programCounterForLine(quint32 line) const
+QList<qptrdiff> Function::programCountersForAllLines() const
 {
-    // Access the second field, the line number
-    LineNumberMappingHelper<1, quint32> helper;
-    helper.table = compiledFunction->lineNumberMapping();
-    const int count = static_cast<int>(compiledFunction->nLineNumberMappingEntries);
+    // Only store 1 breakpoint per line...
+    QHash<quint32, qptrdiff> offsetsPerLine;
+    const quint32 *mapping = compiledFunction->lineNumberMapping();
 
-    int pos = helper.upperBound(0, count, line);
-    if (pos != 0 && count > 0)
-        --pos;
-    if (pos == count)
-        return -1;
-    return helper.table[pos * 2];
+    // ... and make it the first instruction by walking backwards over the line mapping table
+    // and inserting all entries keyed on line.
+    for (quint32 i = compiledFunction->nLineNumberMappingEntries; i > 0; ) {
+        --i; // the loop is written this way, because starting at endIndex-1 and checking for i>=0 will never end: i>=0 is always true for unsigned.
+        quint32 offset = mapping[i * 2];
+        quint32 line = mapping[i * 2 + 1];
+        offsetsPerLine.insert(line, offset);
+    }
+
+    return offsetsPerLine.values();
 }
 
 QT_END_NAMESPACE

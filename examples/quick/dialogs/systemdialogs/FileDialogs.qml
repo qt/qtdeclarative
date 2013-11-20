@@ -175,16 +175,6 @@ Rectangle {
                 // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
                 onClicked: fileDialog.folder = "/tmp" // file:///tmp would also be OK
             }
-            Button {
-                text: "set geometry"
-                anchors.verticalCenter: parent.verticalCenter
-                onClicked: {
-                    fileDialog.width = Math.min(512, Screen.width * 0.9)
-                    fileDialog.height = Math.min(340, Screen.height * 0.9)
-                    fileDialog.x = (Screen.width - fileDialog.width) / 2
-                    fileDialog.y = (Screen.height - fileDialog.height) / 2
-                }
-            }
         }
     }
 }
