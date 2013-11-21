@@ -664,14 +664,18 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
-    if (item == contentItem || (scopePrivate->activeFocus && item->isEnabled())) {
+    if (item == contentItem || scopePrivate->activeFocus) {
         QQuickItem *oldActiveFocusItem = 0;
         oldActiveFocusItem = activeFocusItem;
-        newActiveFocusItem = item;
-        while (newActiveFocusItem->isFocusScope()
-               && newActiveFocusItem->scopedFocusItem()
-               && newActiveFocusItem->scopedFocusItem()->isEnabled()) {
-            newActiveFocusItem = newActiveFocusItem->scopedFocusItem();
+        if (item->isEnabled()) {
+            newActiveFocusItem = item;
+            while (newActiveFocusItem->isFocusScope()
+                   && newActiveFocusItem->scopedFocusItem()
+                   && newActiveFocusItem->scopedFocusItem()->isEnabled()) {
+                newActiveFocusItem = newActiveFocusItem->scopedFocusItem();
+            }
+        } else {
+            newActiveFocusItem = scope;
         }
 
         if (oldActiveFocusItem) {
