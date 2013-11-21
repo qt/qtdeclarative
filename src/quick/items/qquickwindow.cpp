@@ -216,6 +216,7 @@ void QQuickWindow::exposeEvent(QExposeEvent *)
 /*! \reimp */
 void QQuickWindow::resizeEvent(QResizeEvent *)
 {
+    d_func()->windowManager->resize(this);
 }
 
 /*! \reimp */

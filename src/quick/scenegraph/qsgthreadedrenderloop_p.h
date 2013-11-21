@@ -60,6 +60,7 @@ public:
 
     void show(QQuickWindow *window);
     void hide(QQuickWindow *window);
+    void resize(QQuickWindow *window);
 
     void windowDestroyed(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
@@ -89,6 +90,7 @@ private:
         QSGRenderThread *thread;
         int timerId;
         uint updateDuringSync : 1;
+        uint gotBrokenExposeFromPlatformPlugin : 1;
     };
 
     friend class QSGRenderThread;

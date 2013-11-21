@@ -817,6 +817,7 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
     win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
     win.timerId = 0;
     win.updateDuringSync = false;
+    win.gotBrokenExposeFromPlatformPlugin = false;
     m_windows << win;
 }
 
@@ -882,6 +883,17 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
     }
 }
 
+void QSGThreadedRenderLoop::resize(QQuickWindow *window)
+{
+    Window *w = windowFor(m_windows, window);
+    if (w->gotBrokenExposeFromPlatformPlugin
+            && window->width() > 0 && window->height() > 0
+            && w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+        w->gotBrokenExposeFromPlatformPlugin = false;
+        handleExposure(w);
+    }
+}
+
 
 /*!
     Will post an event to the render thread that this window should
@@ -890,6 +902,15 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
 void QSGThreadedRenderLoop::handleExposure(Window *w)
 {
     QSG_GUI_DEBUG(w->window, "handleExposure");
+
+    if (w->window->width() <= 0 || w->window->height() <= 0
+            || !w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+#ifndef QT_NO_DEBUG
+        qWarning("QSGThreadedRenderLoop: expose event received for window with invalid geometry.");
+#endif
+        w->gotBrokenExposeFromPlatformPlugin = true;
+        return;
+    }
 
     // Because we are going to bind a GL context to it, make sure it
     // is created.
