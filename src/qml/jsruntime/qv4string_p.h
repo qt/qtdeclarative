@@ -140,6 +140,8 @@ struct Q_QML_EXPORT String : public Managed {
         return len;
     }
 
+    static uint toArrayIndex(const QString &str);
+
     union {
         mutable QStringData *_text;
         mutable String *left;

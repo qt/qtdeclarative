@@ -359,7 +359,7 @@ void String::createHashValue() const
 
     // array indices get their number as hash value
     bool ok;
-    stringHash = toArrayIndex(ch, end, &ok);
+    stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok) {
         subtype = (stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex;
         return;
@@ -381,7 +381,7 @@ uint String::createHashValue(const QChar *ch, int length)
 
     // array indices get their number as hash value
     bool ok;
-    uint stringHash = toArrayIndex(ch, end, &ok);
+    uint stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok)
         return stringHash;
 
@@ -400,7 +400,7 @@ uint String::createHashValue(const char *ch, int length)
 
     // array indices get their number as hash value
     bool ok;
-    uint stringHash = toArrayIndex(ch, end, &ok);
+    uint stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok)
         return stringHash;
 
@@ -413,4 +413,10 @@ uint String::createHashValue(const char *ch, int length)
     }
 
     return h;
+}
+
+uint String::toArrayIndex(const QString &str)
+{
+    bool ok;
+    return ::toArrayIndex(str.constData(), str.constData() + str.length(), &ok);
 }
