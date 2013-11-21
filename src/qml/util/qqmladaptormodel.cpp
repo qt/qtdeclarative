@@ -902,7 +902,7 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm,
 
     list.setList(variant, engine);
 
-    if (QObject *object = qvariant_cast<QObject *>(variant)) {
+    if (QObject *object = qvariant_cast<QObject *>(list.list())) {
         setObject(object);
         if (QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(object)) {
             accessors = new VDMAbstractItemModelDataType(this);
@@ -927,8 +927,8 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm,
     } else if (list.type() == QQmlListAccessor::ListProperty) {
         setObject(static_cast<const QQmlListReference *>(variant.constData())->object());
         accessors = new VDMObjectDelegateDataType;
-    } else if (list.type() != QQmlListAccessor::Invalid) {
-        Q_ASSERT(list.type() != QQmlListAccessor::Instance);  // Should have cast to QObject.
+    } else if (list.type() != QQmlListAccessor::Invalid
+            && list.type() != QQmlListAccessor::Instance) { // Null QObject
         setObject(0);
         accessors = &qt_vdm_list_accessors;
     } else {
