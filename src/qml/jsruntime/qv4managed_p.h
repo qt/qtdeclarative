@@ -158,7 +158,7 @@ protected:
     Managed(InternalClass *internal)
         : _data(0), internalClass(internal)
     {
-        Q_ASSERT(internalClass->vtable);
+        Q_ASSERT(!internalClass || internalClass->vtable);
         inUse = 1; extensible = 1;
     }
 

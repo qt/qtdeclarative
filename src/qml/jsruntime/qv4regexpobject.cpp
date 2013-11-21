@@ -242,7 +242,7 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
 {
-    ExecutionContext *ctx = m->engine()->current;
+    ExecutionContext *ctx = m->engine()->currentContext();
     Scope scope(ctx);
 
     ScopedValue r(scope, callData->argument(0));

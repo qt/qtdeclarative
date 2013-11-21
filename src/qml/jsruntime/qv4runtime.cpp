@@ -314,7 +314,7 @@ QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left
 
     Scoped<Object> o(scope, f->protoProperty());
     if (!o) {
-        scope.engine->current->throwTypeError();
+        scope.engine->currentContext()->throwTypeError();
         return Encode(false);
     }
 
@@ -389,7 +389,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    ExecutionContext *ctx = engine->current;
+    ExecutionContext *ctx = engine->currentContext();
     Scope scope(ctx);
     ScopedCallData callData(scope, 0);
     callData->thisObject = object;

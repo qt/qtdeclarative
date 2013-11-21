@@ -76,9 +76,7 @@ const ManagedVTable ExecutionContext::static_vtbl =
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
-    new (c) CallContext(engine, this, Type_CallContext);
-
-    engine->current = c;
+    new (c) CallContext(engine, Type_CallContext);
 
     c->function = function;
     c->realArgumentCount = callData->argc;
@@ -112,22 +110,20 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
 WithContext *ExecutionContext::newWithContext(ObjectRef with)
 {
-    WithContext *w = new (engine->memoryManager) WithContext(this, with);
-    engine->current = w;
+    WithContext *w = new (engine->memoryManager) WithContext(engine, with);
     return w;
 }
 
 CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
-    CatchContext *c = new (engine->memoryManager) CatchContext(this, exceptionVarName, exceptionValue);
-    engine->current = c;
+    CatchContext *c = new (engine->memoryManager) CatchContext(engine, exceptionVarName, exceptionValue);
     return c;
 }
 
 CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
-    new (c) CallContext(this, qml, f);
+    new (c) CallContext(engine, qml, f);
     return c;
 }
 
@@ -192,45 +188,38 @@ unsigned int ExecutionContext::variableCount() const
 }
 
 
-GlobalContext::GlobalContext(ExecutionEngine *eng, ExecutionContext *parent)
-    : ExecutionContext(eng, Type_GlobalContext, parent)
+GlobalContext::GlobalContext(ExecutionEngine *eng)
+    : ExecutionContext(eng, Type_GlobalContext)
 {
-    if (!parent) {
-        callData = reinterpret_cast<CallData *>(this + 1);
-        callData->tag = QV4::Value::_Integer_Type;
-        callData->argc = 0;
-        callData->thisObject = eng->globalObject;
-        callData->args[0] = Encode::undefined();
-    }
-    global = 0;
+    global = eng->globalObject;
 }
 
-WithContext::WithContext(ExecutionContext *p, ObjectRef with)
-    : ExecutionContext(p->engine, Type_WithContext, p)
+WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
+    : ExecutionContext(engine, Type_WithContext)
 {
-    callData = p->callData;
-    outer = p;
-    lookups = p->lookups;
-    compilationUnit = p->compilationUnit;
+    callData = parent->callData;
+    outer = parent;
+    lookups = parent->lookups;
+    compilationUnit = parent->compilationUnit;
 
     withObject = with.getPointer();
 }
 
-CatchContext::CatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue)
-    : ExecutionContext(p->engine, Type_CatchContext, p)
+CatchContext::CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue)
+    : ExecutionContext(engine, Type_CatchContext)
 {
-    strictMode = p->strictMode;
-    callData = p->callData;
-    outer = p;
-    lookups = p->lookups;
-    compilationUnit = p->compilationUnit;
+    strictMode = parent->strictMode;
+    callData = parent->callData;
+    outer = parent;
+    lookups = parent->lookups;
+    compilationUnit = parent->compilationUnit;
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
 }
 
-CallContext::CallContext(ExecutionContext *parentContext, ObjectRef qml, FunctionObject *function)
-    : ExecutionContext(parentContext->engine, Type_QmlContext, parentContext)
+CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject *function)
+    : ExecutionContext(engine, Type_QmlContext)
 {
     this->function = function;
     callData = reinterpret_cast<CallData *>(this + 1);

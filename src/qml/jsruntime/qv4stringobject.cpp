@@ -125,13 +125,13 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Scope scope(v4);
     Scoped<StringObject> o(scope, m->asStringObject());
     if (!o) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return false;
     }
 
     if (index < static_cast<uint>(o->value.stringValue()->toQString().length())) {
-        if (v4->current->strictMode)
-            v4->current->throwTypeError();
+        if (v4->currentContext()->strictMode)
+            v4->currentContext()->throwTypeError();
         return false;
     }
     return true;
@@ -181,7 +181,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = callData->args[0].toString(v4->current);
+        value = callData->args[0].toString(v4->currentContext());
     else
         value = v4->newString(QString());
     return Encode(v4->newStringObject(value));
@@ -193,7 +193,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = callData->args[0].toString(v4->current);
+        value = callData->args[0].toString(v4->currentContext());
     else
         value = v4->newString(QString());
     return value.asReturnedValue();

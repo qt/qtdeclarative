@@ -279,7 +279,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             s = properties->getIndexed(ii);
             serialize(data, s, engine);
 
-            QV4::ExecutionContext *ctx = v4->current;
+            QV4::ExecutionContext *ctx = v4->currentContext();
             str = s;
             val = o->get(str);
             if (scope.hasException())

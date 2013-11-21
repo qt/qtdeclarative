@@ -297,7 +297,8 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     // create a new class and add it to the tree
-    object->internalClass = engine->emptyClass->changePrototype(prototype);
+    object->internalClass = engine->emptyClass->changeVTable(vtable);
+    object->internalClass = object->internalClass->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         if (i == propIdx)
             continue;
@@ -330,6 +331,7 @@ InternalClass *InternalClass::sealed()
         return m_sealed;
 
     m_sealed = engine->emptyClass;
+    m_sealed = m_sealed->changeVTable(vtable);
     m_sealed = m_sealed->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
@@ -347,6 +349,7 @@ InternalClass *InternalClass::frozen()
         return m_frozen;
 
     m_frozen = engine->emptyClass;
+    m_frozen = m_frozen->changeVTable(vtable);
     m_frozen = m_frozen->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);

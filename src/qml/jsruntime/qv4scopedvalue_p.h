@@ -231,7 +231,7 @@ struct Scoped
     Scoped(const Scope &scope, const Value &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine->current, v);
+        ptr->val = value_convert<T>(scope.engine->currentContext(), v);
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -278,7 +278,7 @@ struct Scoped
     Scoped(const Scope &scope, const ReturnedValue &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine->current, QV4::Value::fromReturnedValue(v));
+        ptr->val = value_convert<T>(scope.engine->currentContext(), QV4::Value::fromReturnedValue(v));
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif

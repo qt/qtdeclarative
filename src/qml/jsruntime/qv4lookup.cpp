@@ -87,7 +87,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     switch (object->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        return engine->current->throwTypeError();
+        return engine->currentContext()->throwTypeError();
     case Value::Boolean_Type:
         proto = engine->booleanClass->prototype;
         break;
@@ -446,7 +446,7 @@ void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef valu
     Scope scope(l->name->engine());
     ScopedObject o(scope, object);
     if (!o) {
-        o = __qmljs_convert_to_object(scope.engine->current, object);
+        o = __qmljs_convert_to_object(scope.engine->currentContext(), object);
         if (!o) // type error
             return;
         ScopedString s(scope, l->name);

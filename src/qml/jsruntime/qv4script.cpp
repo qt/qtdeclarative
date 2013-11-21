@@ -77,7 +77,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
-    qmlContext = scope->engine->current->newQmlContext(this, qml);
+    qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
     scope->engine->popContext();
 }
 
@@ -97,7 +97,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
-    qmlContext = scope->engine->current->newQmlContext(this, qml);
+    qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
     scope->engine->popContext();
 }
 
@@ -242,7 +242,7 @@ void Script::parse()
     if (!vmFunction) {
         // ### FIX file/line number
         Scoped<Object> error(valueScope, v4->newSyntaxErrorObject(QStringLiteral("Syntax error")));
-        v4->current->throwError(error);
+        v4->currentContext()->throwError(error);
     }
 }
 
@@ -377,7 +377,7 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
     QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     qmlScript.parse();
     QV4::ScopedValue result(scope);
     if (!scope.engine->hasException)

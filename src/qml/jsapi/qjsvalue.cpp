@@ -383,7 +383,7 @@ double QJSValue::toNumber() const
     if (d->value.isEmpty())
         return __qmljs_string_to_number(d->string);
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -409,7 +409,7 @@ bool QJSValue::toBool() const
     if (d->value.isEmpty())
         return d->string.length() > 0;
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     bool b = d->value.toBoolean();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -435,7 +435,7 @@ qint32 QJSValue::toInt() const
     if (d->value.isEmpty())
         return QV4::Primitive::toInt32(__qmljs_string_to_number(d->string));
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -461,7 +461,7 @@ quint32 QJSValue::toUInt() const
     if (d->value.isEmpty())
         return QV4::Primitive::toUInt32(__qmljs_string_to_number(d->string));
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -536,7 +536,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->call(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -590,7 +590,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->call(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -636,7 +636,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->construct(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -859,7 +859,7 @@ QJSValue QJSValue::property(const QString& name) const
         return property(idx);
 
     s->makeIdentifier();
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
     result = o->get(s);
     if (scope.hasException())
@@ -891,7 +891,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
     result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
     if (scope.hasException())
@@ -933,7 +933,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     s->makeIdentifier();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     o->put(s, v);
@@ -964,7 +964,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     if (arrayIndex != UINT_MAX)
         o->putIndexed(arrayIndex, v);
@@ -997,7 +997,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 bool QJSValue::deleteProperty(const QString &name)
 {
     ExecutionEngine *engine = d->engine;
-    ExecutionContext *ctx = engine->current;
+    ExecutionContext *ctx = engine->currentContext();
     Scope scope(engine);
     ScopedObject o(scope, d->value.asObject());
     if (!o)

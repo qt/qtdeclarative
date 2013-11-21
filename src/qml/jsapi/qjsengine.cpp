@@ -261,7 +261,7 @@ void QJSEngine::collectGarbage()
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
     QV4::Scope scope(d->m_v4Engine);
-    QV4::ExecutionContext *ctx = d->m_v4Engine->current;
+    QV4::ExecutionContext *ctx = d->m_v4Engine->currentContext();
     QV4::ScopedValue result(scope);
 
     QV4::Script script(ctx, program, fileName, lineNumber);

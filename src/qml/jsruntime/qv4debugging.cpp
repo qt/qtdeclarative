@@ -185,7 +185,7 @@ void Debugger::resume(Speed speed)
     if (speed == StepOver)
         setTemporaryBreakPointOnNextLine();
     if (speed == StepOut)
-        m_temporaryBreakPoints = TemporaryBreakPoint(getFunction(), m_engine->current);
+        m_temporaryBreakPoints = TemporaryBreakPoint(getFunction(), m_engine->currentContext());
 
     m_stepping = speed;
     m_runningCondition.wakeAll();
@@ -293,7 +293,7 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
             if (frameNr < 0)
                 return;
 
-            CallContext *ctxt = findScope(findContext(engine->current, frameNr), scopeNr);
+            CallContext *ctxt = findScope(findContext(engine->currentContext(), frameNr), scopeNr);
             if (!ctxt)
                 return;
 
@@ -340,7 +340,7 @@ void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int sco
             if (frameNr < 0)
                 return;
 
-            CallContext *ctxt = findScope(findContext(engine->current, frameNr), scopeNr);
+            CallContext *ctxt = findScope(findContext(engine->currentContext(), frameNr), scopeNr);
             if (!ctxt)
                 return;
 
@@ -387,7 +387,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
 
         bool myRun()
         {
-            ExecutionContext *ctxt = findContext(engine->current, frameNr);
+            ExecutionContext *ctxt = findContext(engine->currentContext(), frameNr);
             while (ctxt) {
                 if (CallContext *cCtxt = ctxt->asCallContext())
                     if (cCtxt->activation)
@@ -456,7 +456,7 @@ QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
     if (state() != Paused)
         return types;
 
-    CallContext *sctxt = findContext(m_engine->current, frame);
+    CallContext *sctxt = findContext(m_engine->currentContext(), frame);
     if (!sctxt || sctxt->type < ExecutionContext::Type_SimpleCallContext)
         return types;
     CallContext *ctxt = static_cast<CallContext *>(sctxt);
@@ -500,7 +500,7 @@ void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
         m_pauseRequested = false;
         pauseAndWait(PauseRequest);
     } else if (breakPointHit) {
-        if (m_stepping == StepOver && m_temporaryBreakPoints.context == m_engine->current)
+        if (m_stepping == StepOver && m_temporaryBreakPoints.context == m_engine->currentContext())
             pauseAndWait(Step);
         else if (reallyHitTheBreakPoint(state.fileName, state.lineNumber))
             pauseAndWait(BreakPoint);
@@ -528,7 +528,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     if ((m_stepping == StepOut || m_stepping == StepOver)
-            && temporaryBreakPointInFunction(m_engine->current)) {
+            && temporaryBreakPointInFunction(m_engine->currentContext())) {
         clearTemporaryBreakPoints();
         m_stepping = NotStepping;
         m_stopForStepping = true;
@@ -552,7 +552,7 @@ void Debugger::aboutToThrow()
 
 Function *Debugger::getFunction() const
 {
-    ExecutionContext *context = m_engine->current;
+    ExecutionContext *context = m_engine->currentContext();
     if (CallContext *callCtx = context->asCallContext())
         return callCtx->function->function;
     else {
@@ -595,7 +595,7 @@ void Debugger::setTemporaryBreakPointOnNextLine()
     if (pcs.isEmpty())
         return;
 
-    m_temporaryBreakPoints = TemporaryBreakPoint(function, m_engine->current);
+    m_temporaryBreakPoints = TemporaryBreakPoint(function, m_engine->currentContext());
     m_temporaryBreakPoints.codeOffsets.reserve(pcs.size());
     for (QList<qptrdiff>::const_iterator i = pcs.begin(), ei = pcs.end(); i != ei; ++i) {
         // note: we do set a breakpoint on the current line, because there could be a loop where

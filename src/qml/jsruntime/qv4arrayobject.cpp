@@ -65,7 +65,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
         len = callData->args[0].asArrayLength(&ok);
 
         if (!ok)
-            return v4->current->throwRangeError(callData->args[0]);
+            return v4->currentContext()->throwRangeError(callData->args[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);

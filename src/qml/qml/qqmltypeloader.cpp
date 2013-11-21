@@ -2806,7 +2806,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->currentContext();
     m_program->qml = qmlglobal;
     m_program->run();
     if (scope.engine->hasException) {

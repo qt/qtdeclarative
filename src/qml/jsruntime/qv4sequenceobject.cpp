@@ -206,7 +206,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
             return Encode::undefined();
@@ -237,7 +237,7 @@ public:
 
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed set"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed set"));
             return;
         }
 
@@ -275,7 +275,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed query"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
         }
         if (m_isReference) {

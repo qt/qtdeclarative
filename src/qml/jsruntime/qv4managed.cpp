@@ -184,22 +184,22 @@ void Managed::setVTable(const ManagedVTable *vt)
 
 ReturnedValue Managed::construct(Managed *m, CallData *)
 {
-    return m->engine()->current->throwTypeError();
+    return m->engine()->currentContext()->throwTypeError();
 }
 
 ReturnedValue Managed::call(Managed *m, CallData *)
 {
-    return m->engine()->current->throwTypeError();
+    return m->engine()->currentContext()->throwTypeError();
 }
 
 ReturnedValue Managed::getLookup(Managed *m, Lookup *)
 {
-    return m->engine()->current->throwTypeError();
+    return m->engine()->currentContext()->throwTypeError();
 }
 
 void Managed::setLookup(Managed *m, Lookup *, const ValueRef)
 {
-    m->engine()->current->throwTypeError();
+    m->engine()->currentContext()->throwTypeError();
 }
 
 bool Managed::isEqualTo(Managed *, Managed *)

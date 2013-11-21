@@ -380,7 +380,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
-    ExecutionContext *parentContext = v4->current;
+    ExecutionContext *parentContext = v4->currentContext();
     ExecutionContextSaver ctxSaver(parentContext);
 
     ExecutionContext *ctx = parentContext;

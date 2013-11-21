@@ -136,6 +136,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     : memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
+    , current(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)
@@ -405,8 +406,11 @@ void ExecutionEngine::initRootContext()
 {
     rootContext = static_cast<GlobalContext *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
     new (rootContext) GlobalContext(this);
-    current = rootContext;
-    current->parent = 0;
+    rootContext->callData = reinterpret_cast<CallData *>(rootContext + 1);
+    rootContext->callData->tag = QV4::Value::_Integer_Type;
+    rootContext->callData->argc = 0;
+    rootContext->callData->thisObject = globalObject;
+    rootContext->callData->args[0] = Encode::undefined();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -416,13 +420,11 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext *g = new (memoryManager) GlobalContext(this, current);
-    ExecutionContext *oldNext = g->next;
-    memcpy(g, rootContext, sizeof(GlobalContext));
-    g->next = oldNext;
-    current = g;
+    GlobalContext *g = new (memoryManager) GlobalContext(this);
+    g->callData = rootContext->callData;
 
-    return current;
+    Q_ASSERT(currentContext() == g);
+    return g;
 }
 
 Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
@@ -610,7 +612,7 @@ Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ct
 
 Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
-    ExecutionContext *ctx = current;
+    ExecutionContext *ctx = currentContext();
 
     if (ctx->type == QV4::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
         ctx = ctx->parent;
@@ -656,7 +658,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 
     QVector<StackFrame> stack;
 
-    QV4::ExecutionContext *c = current;
+    QV4::ExecutionContext *c = currentContext();
     while (c && frameLimit) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->function) {
@@ -710,7 +712,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    QV4::ExecutionContext *c = current;
+    QV4::ExecutionContext *c = currentContext();
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->function) {
@@ -766,7 +768,7 @@ void ExecutionEngine::markObjects()
             setter->mark(this);
     }
 
-    ExecutionContext *c = current;
+    ExecutionContext *c = currentContext();
     while (c) {
         c->mark(this);
         c = c->parent;
@@ -902,8 +904,8 @@ ReturnedValue ExecutionEngine::throwException(const ValueRef value)
 ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
 {
     Q_ASSERT(hasException);
-    while (current != catchingContext)
-        popContext();
+    Q_UNUSED(catchingContext);
+    Q_ASSERT(currentContext() == catchingContext);
     if (trace)
         *trace = exceptionStackTrace;
     exceptionStackTrace.clear();

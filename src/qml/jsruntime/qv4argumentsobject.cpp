@@ -215,7 +215,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     Q_ASSERT(g->index < static_cast<unsigned>(o->context->callData->argc));
     return o->context->argument(g->index);
@@ -230,7 +230,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     Q_ASSERT(s->index < static_cast<unsigned>(o->context->callData->argc));
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();

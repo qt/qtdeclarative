@@ -1546,7 +1546,7 @@ void QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 
     QV4::ScopedFunctionObject f(scope, m_statusChanged);
     if (f) {
-        QV4::ExecutionContext *ctx = scope.engine->current;
+        QV4::ExecutionContext *ctx = scope.engine->currentContext();
         QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = this;
         callData->args[0] = QV4::Primitive::fromUInt32(s);

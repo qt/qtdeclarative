@@ -3165,7 +3165,7 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint 
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!m)
-        return m->engine()->current->throwTypeError();
+        return m->engine()->currentContext()->throwTypeError();
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
         if (hasProperty)
@@ -3200,7 +3200,7 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
 
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!r) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return;
     }
 

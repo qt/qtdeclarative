@@ -111,11 +111,12 @@ class RegExp;
 class RegExpCache;
 struct QmlExtensions;
 struct Exception;
+struct ExecutionContextSaver;
 
 #define CHECK_STACK_LIMITS(v4) \
     if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
     else \
-        return v4->current->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
+        return v4->currentContext()->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
 
 
 struct Q_QML_EXPORT ExecutionEngine
@@ -125,7 +126,13 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
 
+private:
+    friend struct ExecutionContextSaver;
+    friend struct ExecutionContext;
     ExecutionContext *current;
+public:
+    ExecutionContext *currentContext() const { return current; }
+
     GlobalContext *rootContext;
 
     SafeValue *jsStackTop;

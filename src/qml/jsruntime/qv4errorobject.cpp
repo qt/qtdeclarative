@@ -77,7 +77,6 @@ ErrorObject::ErrorObject(InternalClass *ic)
     , stack(0)
 {
     type = Type_ErrorObject;
-    setVTable(&static_vtbl);
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
@@ -91,7 +90,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     , stack(0)
 {
     type = Type_ErrorObject;
-    setVTable(&static_vtbl);
     subtype = t;
 
     Scope scope(engine());
@@ -116,7 +114,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
     , stack(0)
 {
     type = Type_ErrorObject;
-    setVTable(&static_vtbl);
     subtype = t;
 
     Scope scope(engine());
@@ -141,7 +138,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     , stack(0)
 {
     type = Type_ErrorObject;
-    setVTable(&static_vtbl);
     subtype = t;
 
     Scope scope(engine());
@@ -207,13 +203,11 @@ DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg)
     : ErrorObject(engine->syntaxErrorClass, msg, SyntaxError)
 {
-    setVTable(&static_vtbl);
 }
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
     : ErrorObject(engine->syntaxErrorClass, msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
-    setVTable(&static_vtbl);
 }
 
 EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const ValueRef message)

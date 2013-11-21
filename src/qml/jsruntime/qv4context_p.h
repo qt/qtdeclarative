@@ -80,19 +80,20 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         Type_QmlContext = 0x6
     };
 
-    ExecutionContext(ExecutionEngine *engine, ContextType t, ExecutionContext *parent)
+    ExecutionContext(ExecutionEngine *engine, ContextType t)
         : Managed(engine->executionContextClass)
     {
         this->type = t;
         strictMode = false;
         this->engine = engine;
-        this->parent = parent;
+        this->parent = engine->currentContext();
         outer = 0;
         lookups = 0;
         compilationUnit = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
         lineNumber = -1;
+        engine->current = this;
     }
 
     ContextType type;
@@ -159,21 +160,19 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
 struct CallContext : public ExecutionContext
 {
-    CallContext(ExecutionEngine *engine, ExecutionContext *parent, ContextType t = Type_SimpleCallContext)
-        : ExecutionContext(engine, t, parent)
+    CallContext(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
+        : ExecutionContext(engine, t)
     {
         function = 0;
         locals = 0;
         activation = 0;
     }
-    CallContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
+    CallContext(ExecutionEngine *engine, ObjectRef qml, QV4::FunctionObject *function);
 
     FunctionObject *function;
     int realArgumentCount;
     SafeValue *locals;
     Object *activation;
-
-    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
 
     inline ReturnedValue argument(int i);
     bool needsOwnArguments() const;
@@ -181,14 +180,14 @@ struct CallContext : public ExecutionContext
 
 struct GlobalContext : public ExecutionContext
 {
-    GlobalContext(ExecutionEngine *engine, ExecutionContext *parent = 0);
+    GlobalContext(ExecutionEngine *engine);
 
     Object *global;
 };
 
 struct CatchContext : public ExecutionContext
 {
-    CatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue);
+    CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
 
     SafeString exceptionVarName;
     SafeValue exceptionValue;
@@ -196,7 +195,7 @@ struct CatchContext : public ExecutionContext
 
 struct WithContext : public ExecutionContext
 {
-    WithContext(ExecutionContext *p, ObjectRef with);
+    WithContext(ExecutionEngine *engine, ObjectRef with);
     Object *withObject;
 };
 
@@ -220,6 +219,7 @@ inline void ExecutionEngine::pushContext(CallContext *context)
 
 inline ExecutionContext *ExecutionEngine::popContext()
 {
+    Q_ASSERT(current->parent);
     current = current->parent;
     return current;
 }
