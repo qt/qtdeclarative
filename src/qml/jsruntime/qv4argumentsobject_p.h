@@ -54,7 +54,9 @@ struct ArgumentsGetterFunction: FunctionObject
     uint index;
 
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
+        : FunctionObject(scope), index(index) {
+        setVTable(&static_vtbl);
+    }
 
     static ReturnedValue call(Managed *that, CallData *d);
 };
@@ -65,7 +67,9 @@ struct ArgumentsSetterFunction: FunctionObject
     uint index;
 
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
+        : FunctionObject(scope), index(index) {
+        setVTable(&static_vtbl);
+    }
 
     static ReturnedValue call(Managed *that, CallData *callData);
 };

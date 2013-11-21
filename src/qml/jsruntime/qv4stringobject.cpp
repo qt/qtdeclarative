@@ -80,7 +80,7 @@ DEFINE_MANAGED_VTABLE(StringObject);
 StringObject::StringObject(InternalClass *ic)
     : Object(ic)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_StringObject;
 
     Scope scope(engine());
@@ -96,7 +96,7 @@ StringObject::StringObject(InternalClass *ic)
 StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     : Object(engine->stringClass)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_StringObject;
 
     Scope scope(engine);
@@ -172,7 +172,7 @@ DEFINE_MANAGED_VTABLE(StringCtor);
 StringCtor::StringCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("String"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue StringCtor::construct(Managed *m, CallData *callData)

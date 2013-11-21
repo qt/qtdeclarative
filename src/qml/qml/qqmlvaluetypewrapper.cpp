@@ -79,7 +79,7 @@ QmlValueTypeWrapper::QmlValueTypeWrapper(QV8Engine *engine, ObjectType objectTyp
     : Object(QV8Engine::getV4(engine)), objectType(objectType)
 {
     v8 = engine;
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 QmlValueTypeWrapper::~QmlValueTypeWrapper()

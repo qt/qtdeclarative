@@ -484,7 +484,7 @@ public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     QQuickContext2D* context;
 
@@ -653,7 +653,7 @@ public:
       , patternRepeatX(false)
       , patternRepeatY(false)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     QBrush brush;
     bool patternRepeatX:1;
@@ -870,7 +870,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
     }
 
@@ -893,7 +893,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         pixelData = QV4::Primitive::undefinedValue();
 
         QV4::Scope scope(engine);

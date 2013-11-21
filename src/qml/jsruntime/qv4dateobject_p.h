@@ -55,7 +55,7 @@ struct DateObject: Object {
     Q_MANAGED
     SafeValue value;
     DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_DateObject;
         value = date;
     }
@@ -65,7 +65,7 @@ struct DateObject: Object {
 
 protected:
     DateObject(InternalClass *ic): Object(ic) {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_DateObject;
         value = Primitive::fromDouble(qSNaN());
     }

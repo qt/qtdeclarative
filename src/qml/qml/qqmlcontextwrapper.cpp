@@ -66,7 +66,7 @@ QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context
       v8(engine), readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
       context(context), scopeObject(scopeObject), idObjectsWrapper(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 QmlContextWrapper::~QmlContextWrapper()
@@ -439,7 +439,7 @@ QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrappe
     : Object(engine)
     , contextWrapper(contextWrapper)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)

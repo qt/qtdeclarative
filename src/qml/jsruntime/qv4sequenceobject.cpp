@@ -174,7 +174,7 @@ public:
         , m_isReference(false)
     {
         type = Type_QmlSequence;
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
@@ -189,7 +189,7 @@ public:
         , m_isReference(true)
     {
         type = Type_QmlSequence;
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);

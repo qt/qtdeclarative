@@ -67,7 +67,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 {
     Q_ASSERT(scope->inUse);
 
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     function = f;
     function->compilationUnit->ref();
     needsActivation = function->needsActivation();
@@ -88,7 +88,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 {
     Q_ASSERT(scope->inUse);
 
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     function = 0;
     needsActivation = false;
 
@@ -140,7 +140,7 @@ struct CompilationUnitHolder : public QV4::Object
         , unit(unit)
     {
         unit->ref();
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     ~CompilationUnitHolder()
     {

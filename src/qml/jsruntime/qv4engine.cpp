@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include <qv4engine_p.h>
+#include <qv4context_p.h>
 #include <qv4value_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
@@ -215,16 +216,22 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
     ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
-    objectClass = emptyClass->changePrototype(objectPrototype);
+    objectClass = emptyClass->changeVTable(&Object::static_vtbl);
+    objectClass = objectClass->changePrototype(objectPrototype);
+    Q_ASSERT(objectClass->vtable == &Object::static_vtbl);
 
     arrayClass = objectClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     ArrayPrototype *arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
-    InternalClass *argsClass = objectClass->addMember(id_length, Attr_NotEnumerable);
+    InternalClass *argsClass = objectClass->changeVTable(&ArgumentsObject::static_vtbl);
+    argsClass = argsClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
     strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    Q_ASSERT(argumentsObjectClass->vtable == &ArgumentsObject::static_vtbl);
+    Q_ASSERT(strictArgumentsObjectClass->vtable == &ArgumentsObject::static_vtbl);
+
     initRootContext();
 
     StringPrototype *stringPrototype = new (memoryManager) StringPrototype(objectClass);
@@ -391,10 +398,9 @@ void ExecutionEngine::enableDebugger()
 void ExecutionEngine::initRootContext()
 {
     rootContext = static_cast<GlobalContext *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
-    rootContext->init();
+    new (rootContext) GlobalContext(this);
     current = rootContext;
     current->parent = 0;
-    rootContext->initGlobalContext(this);
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -404,11 +410,10 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext *g = new (memoryManager) GlobalContext;
+    GlobalContext *g = new (memoryManager) GlobalContext(this, current);
     ExecutionContext *oldNext = g->next;
     memcpy(g, rootContext, sizeof(GlobalContext));
     g->next = oldNext;
-    g->parent = current;
     current = g;
 
     return current;

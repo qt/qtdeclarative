@@ -63,7 +63,7 @@ struct Q_QML_EXPORT String : public Managed {
     String()
         : Managed(0), _text(QStringData::sharedNull()), identifier(0)
         , stringHash(UINT_MAX), largestSubLength(0), len(0)
-    { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
+    { setVTable(&static_vtbl); type = Type_String; subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {

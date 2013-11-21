@@ -61,7 +61,7 @@ public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_Object;
     }
 

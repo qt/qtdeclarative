@@ -44,7 +44,6 @@
 #include "qv4global_p.h"
 #include "private/qv4isel_p.h"
 #include "qv4util_p.h"
-#include "qv4context_p.h"
 #include "qv4property_p.h"
 #include <private/qintrusivelist_p.h>
 
@@ -354,35 +353,6 @@ struct Q_QML_EXPORT ExecutionEngine
 
 private:
     QmlExtensions *m_qmlExtensions;
-};
-
-inline void ExecutionEngine::pushContext(CallContext *context)
-{
-    context->parent = current;
-    current = context;
-    current->currentEvalCode = 0;
-}
-
-inline ExecutionContext *ExecutionEngine::popContext()
-{
-    current = current->parent;
-    return current;
-}
-
-struct ExecutionContextSaver
-{
-    ExecutionEngine *engine;
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(ExecutionContext *context)
-        : engine(context->engine)
-        , savedContext(context)
-    {
-    }
-    ~ExecutionContextSaver()
-    {
-        engine->current = savedContext;
-    }
 };
 
 inline

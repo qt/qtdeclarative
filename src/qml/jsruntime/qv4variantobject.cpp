@@ -56,7 +56,7 @@ VariantObject::VariantObject(InternalClass *ic)
     , ExecutionEngine::ScarceResourceData(QVariant())
     , m_vmePropertyReferenceCount(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
@@ -64,7 +64,7 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
     , ExecutionEngine::ScarceResourceData(value)
     , m_vmePropertyReferenceCount(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     if (isScarce())
         engine->scarceResources.insert(this);
 }

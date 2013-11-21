@@ -349,7 +349,7 @@ DEFINE_MANAGED_VTABLE(EvalFunction);
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 }
 

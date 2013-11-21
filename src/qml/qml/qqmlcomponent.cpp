@@ -1491,7 +1491,7 @@ QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::Incubat
 {
     incubator.reset(new QQmlComponentIncubator(this, m));
     v8 = engine;
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     valuemap = QV4::Primitive::undefinedValue();
     qmlGlobal = QV4::Primitive::undefinedValue();

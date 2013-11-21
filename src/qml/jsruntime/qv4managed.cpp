@@ -81,7 +81,6 @@ void Managed::operator delete(void *ptr)
         return;
 
     Managed *m = static_cast<Managed *>(ptr);
-    m->vtbl = 0;
     m->_data = 0;
     m->markBit = 0;
     m->~Managed();
@@ -177,6 +176,12 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
+void Managed::setVTable(const ManagedVTable *vt)
+{
+    Q_ASSERT(internalClass);
+    internalClass = internalClass->changeVTable(vt);
+}
+
 ReturnedValue Managed::construct(Managed *m, CallData *)
 {
     return m->engine()->current->throwTypeError();
@@ -204,40 +209,40 @@ bool Managed::isEqualTo(Managed *, Managed *)
 
 ReturnedValue Managed::get(const StringRef name, bool *hasProperty)
 {
-    return vtbl->get(this, name, hasProperty);
+    return internalClass->vtable->get(this, name, hasProperty);
 }
 
 ReturnedValue Managed::getIndexed(uint index, bool *hasProperty)
 {
-    return vtbl->getIndexed(this, index, hasProperty);
+    return internalClass->vtable->getIndexed(this, index, hasProperty);
 }
 
 void Managed::put(const StringRef name, const ValueRef value)
 {
-    vtbl->put(this, name, value);
+    internalClass->vtable->put(this, name, value);
 }
 
 void Managed::setLookup(Lookup *l, const ValueRef v)
 {
-    vtbl->setLookup(this, l, v);
+    internalClass->vtable->setLookup(this, l, v);
 }
 
 void Managed::putIndexed(uint index, const ValueRef value)
 {
-    vtbl->putIndexed(this, index, value);
+    internalClass->vtable->putIndexed(this, index, value);
 }
 
 PropertyAttributes Managed::query(StringRef name) const
 {
-    return vtbl->query(this, name);
+    return internalClass->vtable->query(this, name);
 }
 
 bool Managed::deleteProperty(const StringRef name)
 {
-    return vtbl->deleteProperty(this, name);
+    return internalClass->vtable->deleteProperty(this, name);
 }
 
 Property *Managed::advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
 {
-    return vtbl->advanceIterator(this, it, name, index, attributes);
+    return internalClass->vtable->advanceIterator(this, it, name, index, attributes);
 }

@@ -108,7 +108,7 @@ public:
     QQmlSqlDatabaseWrapper(QV8Engine *e)
         : Object(QV8Engine::getV4(e)), type(Database), inTransaction(false), readonly(false), forwardOnly(false)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     ~QQmlSqlDatabaseWrapper() {

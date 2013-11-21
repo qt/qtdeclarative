@@ -110,7 +110,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , varCount(0)
     , function(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     name = ic->engine->id_undefined;
 
     type = Type_FunctionObject;
@@ -126,7 +126,7 @@ FunctionObject::~FunctionObject()
 
 void FunctionObject::init(const StringRef n, bool createProto)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     name = n;
 
     Scope s(internalClass->engine);
@@ -221,7 +221,7 @@ DEFINE_MANAGED_VTABLE(FunctionCtor);
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Function"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 // 15.3.2
@@ -386,7 +386,7 @@ DEFINE_MANAGED_VTABLE(ScriptFunction);
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope, function->name, true)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -471,7 +471,7 @@ DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
 SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope, function->name, true)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -519,8 +519,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
     ExecutionContext *context = v4->current;
 
-    CallContext ctx;
-    ctx.initSimpleCallContext(v4, context);
+    CallContext ctx(v4, context);
     ctx.strictMode = f->strictMode;
     ctx.callData = callData;
     ctx.function = f.getPointer();
@@ -557,8 +556,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     Scope scope(v4);
     ExecutionContext *context = v4->current;
 
-    CallContext ctx;
-    ctx.initSimpleCallContext(v4, context);
+    CallContext ctx(v4, context);
     ctx.strictMode = f->strictMode;
     ctx.callData = callData;
     ctx.function = f;
@@ -588,7 +586,7 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
     : FunctionObject(scope, name)
     , code(code)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
@@ -606,8 +604,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 
     ExecutionContext *context = v4->current;
 
-    CallContext ctx;
-    ctx.initSimpleCallContext(v4, context);
+    CallContext ctx(v4, context);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -625,10 +622,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     ExecutionContext *context = v4->current;
-    Scope scope(v4);
 
-    CallContext ctx;
-    ctx.initSimpleCallContext(v4, context);
+    CallContext ctx(v4, context);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -646,7 +641,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
     , target(target)
     , boundArgs(boundArgs)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     subtype = FunctionObject::BoundFunction;
     this->boundThis = boundThis;
 

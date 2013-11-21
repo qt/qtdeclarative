@@ -76,11 +76,9 @@ const ManagedVTable ExecutionContext::static_vtbl =
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
-    c->init();
+    new (c) CallContext(engine, this, Type_CallContext);
 
     engine->current = c;
-
-    c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
     c->realArgumentCount = callData->argc;
@@ -114,28 +112,22 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
 WithContext *ExecutionContext::newWithContext(ObjectRef with)
 {
-    WithContext *w = new (engine->memoryManager) WithContext;
+    WithContext *w = new (engine->memoryManager) WithContext(this, with);
     engine->current = w;
-    w->initWithContext(this, with);
     return w;
 }
 
 CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
-    CatchContext *c = new (engine->memoryManager) CatchContext;
+    CatchContext *c = new (engine->memoryManager) CatchContext(this, exceptionVarName, exceptionValue);
     engine->current = c;
-    c->initCatchContext(this, exceptionVarName, exceptionValue);
     return c;
 }
 
 CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
-    c->init();
-
-    engine->current = c;
-    c->initQmlContext(this, qml, f);
-
+    new (c) CallContext(this, qml, f);
     return c;
 }
 
@@ -200,20 +192,22 @@ unsigned int ExecutionContext::variableCount() const
 }
 
 
-void GlobalContext::initGlobalContext(ExecutionEngine *eng)
+GlobalContext::GlobalContext(ExecutionEngine *eng, ExecutionContext *parent)
+    : ExecutionContext(eng, Type_GlobalContext, parent)
 {
-    initBaseContext(Type_GlobalContext, eng, /*parentContext*/0);
-    callData = reinterpret_cast<CallData *>(this + 1);
-    callData->tag = QV4::Value::_Integer_Type;
-    callData->argc = 0;
-    callData->thisObject = eng->globalObject;
-    callData->args[0] = Encode::undefined();
+    if (!parent) {
+        callData = reinterpret_cast<CallData *>(this + 1);
+        callData->tag = QV4::Value::_Integer_Type;
+        callData->argc = 0;
+        callData->thisObject = eng->globalObject;
+        callData->args[0] = Encode::undefined();
+    }
     global = 0;
 }
 
-void WithContext::initWithContext(ExecutionContext *p, ObjectRef with)
+WithContext::WithContext(ExecutionContext *p, ObjectRef with)
+    : ExecutionContext(p->engine, Type_WithContext, p)
 {
-    initBaseContext(Type_WithContext, p->engine, p);
     callData = p->callData;
     outer = p;
     lookups = p->lookups;
@@ -222,9 +216,9 @@ void WithContext::initWithContext(ExecutionContext *p, ObjectRef with)
     withObject = with.getPointer();
 }
 
-void CatchContext::initCatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue)
+CatchContext::CatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue)
+    : ExecutionContext(p->engine, Type_CatchContext, p)
 {
-    initBaseContext(Type_CatchContext, p->engine, p);
     strictMode = p->strictMode;
     callData = p->callData;
     outer = p;
@@ -235,18 +229,17 @@ void CatchContext::initCatchContext(ExecutionContext *p, const StringRef excepti
     this->exceptionValue = exceptionValue;
 }
 
-void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml, FunctionObject *function)
+CallContext::CallContext(ExecutionContext *parentContext, ObjectRef qml, FunctionObject *function)
+    : ExecutionContext(parentContext->engine, Type_QmlContext, parentContext)
 {
-    initBaseContext(Type_QmlContext, parentContext->engine, parentContext);
-
     this->function = function;
-    this->callData = reinterpret_cast<CallData *>(this + 1);
-    this->callData->tag = QV4::Value::_Integer_Type;
-    this->callData->argc = 0;
-    this->callData->thisObject = Primitive::undefinedValue();
+    callData = reinterpret_cast<CallData *>(this + 1);
+    callData->tag = QV4::Value::_Integer_Type;
+    callData->argc = 0;
+    callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
-    this->outer = function->scope;
+    outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(outer->next != (ExecutionContext *)0x1);
 #endif

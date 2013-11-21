@@ -424,8 +424,8 @@ void MemoryManager::mark()
     // now that we marked all roots, start marking recursively and popping from the mark stack
     while (m_d->engine->jsStackTop > markBase) {
         Managed *m = m_d->engine->popForGC();
-        Q_ASSERT (m->vtbl->markObjects);
-        m->vtbl->markObjects(m, m_d->engine);
+        Q_ASSERT (m->internalClass->vtable->markObjects);
+        m->internalClass->vtable->markObjects(m, m_d->engine);
     }
 }
 
@@ -516,9 +516,9 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->vtbl->collectDeletables)
-                    m->vtbl->collectDeletables(m, deletable);
-                m->vtbl->destroy(m);
+                if (m->internalClass->vtable->collectDeletables)
+                    m->internalClass->vtable->collectDeletables(m, deletable);
+                m->internalClass->vtable->destroy(m);
 
                 m->setNextFree(*f);
 #ifdef V4_USE_VALGRIND

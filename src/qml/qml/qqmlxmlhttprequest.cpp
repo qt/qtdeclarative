@@ -192,7 +192,7 @@ public:
         , list(list)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -226,7 +226,7 @@ public:
         : Object(engine)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -258,7 +258,7 @@ public:
     NodePrototype(ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         Scope scope(engine);
         ScopedObject protectThis(scope, this);
@@ -312,7 +312,7 @@ class Node : public Object
         : Object(engine)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -1605,7 +1605,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
         : Object(engine)
         , request(request)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     ~QQmlXMLHttpRequestWrapper() {
         delete request;
@@ -1626,7 +1626,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
         : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         Scope scope(engine);
         ScopedValue protectThis(scope, this);
 

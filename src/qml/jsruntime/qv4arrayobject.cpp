@@ -51,7 +51,7 @@ DEFINE_MANAGED_VTABLE(ArrayCtor);
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Array"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)

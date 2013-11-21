@@ -646,7 +646,7 @@ DEFINE_MANAGED_VTABLE(DateObject);
 DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine->dateClass)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_DateObject;
     value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
@@ -661,7 +661,7 @@ DEFINE_MANAGED_VTABLE(DateCtor);
 DateCtor::DateCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Date"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue DateCtor::construct(Managed *m, CallData *callData)

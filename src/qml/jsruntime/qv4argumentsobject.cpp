@@ -47,9 +47,10 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(CallContext *context)
-    : Object(context->engine), context(context), fullyCreated(false)
+    : Object(context->strictMode ? context->engine->strictArgumentsObjectClass : context->engine->argumentsObjectClass)
+    , context(context)
+    , fullyCreated(false)
 {
-    vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
     flags &= ~SimpleArray;
 
@@ -58,8 +59,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     ScopedObject protectThis(scope, this);
 
     if (context->strictMode) {
-        internalClass = v4->strictArgumentsObjectClass;
-
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         Q_ASSERT(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
@@ -72,7 +71,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         arrayDataLen = context->callData->argc;
         fullyCreated = true;
     } else {
-        internalClass = engine()->argumentsObjectClass;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
         isNonStrictArgumentsObject = true;
@@ -80,6 +78,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
     lp->value = Primitive::fromInt32(context->realArgumentCount);
+
+    setVTable(&static_vtbl);
 }
 
 void ArgumentsObject::destroy(Managed *that)

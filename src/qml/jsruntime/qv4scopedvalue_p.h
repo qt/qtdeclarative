@@ -41,7 +41,7 @@
 #ifndef QV4SCOPEDVALUE_P_H
 #define QV4SCOPEDVALUE_P_H
 
-#include "qv4engine_p.h"
+#include "qv4context_p.h"
 #include "qv4value_def_p.h"
 
 QT_BEGIN_NAMESPACE

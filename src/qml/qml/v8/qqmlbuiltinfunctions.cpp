@@ -90,7 +90,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_platform(0)
     , m_application(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope scope(v4);
     ScopedObject protectThis(scope, this);
@@ -1183,7 +1183,7 @@ struct BindingFunction : public QV4::FunctionObject
         : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
         , originalFunction(originalFunction)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         bindingKeyFlag = true;
     }
 

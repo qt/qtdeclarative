@@ -99,7 +99,7 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
     , m_ignoreCase(ignoreCase)
     , m_multiLine(multiline)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_RegExpObject;
 
     if (!engine)

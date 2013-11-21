@@ -71,7 +71,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         , code(code)
         , flag(flag)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
@@ -3144,7 +3144,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3183,7 +3183,7 @@ public:
     QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}

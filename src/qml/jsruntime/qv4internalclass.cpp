@@ -126,10 +126,21 @@ uint PropertyHash::lookup(const Identifier *identifier) const
     }
 }
 
+InternalClass::InternalClass(ExecutionEngine *engine)
+    : engine(engine)
+    , prototype(0)
+    , vtable(&Managed::static_vtbl)
+    , m_sealed(0)
+    , m_frozen(0)
+    , size(0)
+{
+}
+
 
 InternalClass::InternalClass(const QV4::InternalClass &other)
     : engine(other.engine)
     , prototype(other.prototype)
+    , vtable(other.vtable)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
@@ -184,11 +195,41 @@ InternalClass *InternalClass::changePrototype(Object *proto)
 
     // create a new class and add it to the tree
     InternalClass *newClass;
-    if (this == engine->emptyClass) {
+    if (!size) {
         newClass = engine->newClass(*this);
         newClass->prototype = proto;
     } else {
-        newClass = engine->emptyClass->changePrototype(proto);
+        newClass = engine->emptyClass->changeVTable(vtable);
+        newClass = newClass->changePrototype(proto);
+        for (uint i = 0; i < size; ++i)
+            newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
+    }
+
+    transitions.insert(t, newClass);
+    return newClass;
+}
+
+InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
+{
+    if (vtable == vt)
+        return this;
+
+    Transition t;
+    t.vtable = vt;
+    t.flags = Transition::VTableChange;
+
+    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
+    if (tit != transitions.constEnd())
+        return tit.value();
+
+    // create a new class and add it to the tree
+    InternalClass *newClass;
+    if (this == engine->emptyClass) {
+        newClass = engine->newClass(*this);
+        newClass->vtable = vt;
+    } else {
+        newClass = engine->emptyClass->changeVTable(vt);
+        newClass = newClass->changePrototype(prototype);
         for (uint i = 0; i < size; ++i)
             newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
     }
@@ -343,7 +384,9 @@ void InternalClass::markObjects()
 
     for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
          it != end; ++it) {
-        if (it.key().flags == Transition::ProtoChange) {
+        if (it.key().flags == Transition::VTableChange) {
+            it.value()->markObjects();
+        } else if (it.key().flags == Transition::ProtoChange) {
             Q_ASSERT(it.value()->prototype);
             it.value()->prototype->mark(engine);
         }

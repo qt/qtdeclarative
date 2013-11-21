@@ -241,7 +241,7 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
@@ -1726,7 +1726,7 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     , m_object(object)
     , m_index(index)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     subtype = WrappedQtMethod;
     m_qmlGlobal = qmlGlobal;
 }
@@ -1847,7 +1847,7 @@ QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int
     , m_object(object)
     , m_signalIndex(signalIndex)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 DEFINE_MANAGED_VTABLE(QmlSignalHandler);

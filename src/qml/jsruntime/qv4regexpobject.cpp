@@ -142,7 +142,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
 
 void RegExpObject::init(ExecutionEngine *engine)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_RegExpObject;
 
     Scope scope(engine);
@@ -237,7 +237,7 @@ DEFINE_MANAGED_VTABLE(RegExpCtor);
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("RegExp"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)

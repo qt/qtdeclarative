@@ -77,7 +77,7 @@ DEFINE_MANAGED_VTABLE(ObjectCtor);
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Object"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)

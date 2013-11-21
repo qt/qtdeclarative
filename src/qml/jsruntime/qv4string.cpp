@@ -257,7 +257,8 @@ String::String(ExecutionEngine *engine, const QString &text)
 {
     _text->ref.ref();
     len = _text->size;
-    vtbl = &static_vtbl;
+    if (engine)
+        setVTable(&static_vtbl);
     type = Type_String;
     subtype = StringType_Unknown;
 }
@@ -268,7 +269,7 @@ String::String(ExecutionEngine *engine, String *l, String *r)
     , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
     , len(l->len + r->len)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     type = Type_String;
     subtype = StringType_Unknown;
 

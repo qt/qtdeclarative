@@ -449,9 +449,9 @@ void Debugger::collectReturnedValue(Collector *collector) const
     collector->collect(o);
 }
 
-QVector<ExecutionContext::Type> Debugger::getScopeTypes(int frame) const
+QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
 {
-    QVector<ExecutionContext::Type> types;
+    QVector<ExecutionContext::ContextType> types;
 
     if (state() != Paused)
         return types;

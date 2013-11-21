@@ -125,10 +125,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue construct(Managed *that, CallData *);
     static ReturnedValue call(Managed *that, CallData *d);
     inline ReturnedValue construct(CallData *callData) {
-        return vtbl->construct(this, callData);
+        return internalClass->vtable->construct(this, callData);
     }
     inline ReturnedValue call(CallData *callData) {
-        return vtbl->call(this, callData);
+        return internalClass->vtable->call(this, callData);
     }
 
     static FunctionObject *cast(const Value &v) {
@@ -194,7 +194,7 @@ struct IndexedBuiltinFunction: FunctionObject
         , code(code)
         , index(index)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static ReturnedValue construct(Managed *m, CallData *)

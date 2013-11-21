@@ -49,7 +49,7 @@ DEFINE_MANAGED_VTABLE(BooleanObject);
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Boolean"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
