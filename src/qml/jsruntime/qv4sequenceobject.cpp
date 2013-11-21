@@ -47,6 +47,7 @@
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4internalclass_p.h>
 
 #include <algorithm>
 
@@ -167,14 +168,13 @@ class QQmlSequence : public QV4::Object
     Q_MANAGED
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QV4::Object(engine->sequenceClass)
+        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
         , m_container(container)
         , m_object(0)
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
         type = Type_QmlSequence;
-        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
@@ -183,13 +183,12 @@ public:
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(engine->sequenceClass)
+        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
         , m_object(object)
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
         type = Type_QmlSequence;
-        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);

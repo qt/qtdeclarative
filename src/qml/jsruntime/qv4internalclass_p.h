@@ -230,6 +230,7 @@ struct InternalClass {
 
     uint size;
 
+    static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto);
     InternalClass *changePrototype(Object *proto);
     InternalClass *changeVTable(const ManagedVTable *vt);
     InternalClass *addMember(StringRef string, PropertyAttributes data, uint *index = 0);

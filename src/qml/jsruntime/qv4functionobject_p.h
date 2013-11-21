@@ -113,6 +113,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Function *function;
     InternalClass *protoCacheClass;
     uint protoCacheIndex;
+    ReturnedValue protoValue;
+    InternalClass *classForConstructor;
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
@@ -138,6 +140,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
 
     ReturnedValue protoProperty();
+    InternalClass *internalClassForConstructor();
 
 protected:
     FunctionObject(InternalClass *ic);

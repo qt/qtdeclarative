@@ -872,7 +872,7 @@ QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 {
-    engine->stringClass->prototype->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
+    engine->stringObjectClass->prototype->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
 }
 
 QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::CallContext *ctx)

@@ -157,7 +157,10 @@ private:
 protected:
     Managed(InternalClass *internal)
         : _data(0), internalClass(internal)
-    { inUse = 1; extensible = 1; }
+    {
+        Q_ASSERT(internalClass->vtable);
+        inUse = 1; extensible = 1;
+    }
 
 public:
     void *operator new(size_t size, MemoryManager *mm);

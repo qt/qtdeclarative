@@ -93,7 +93,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
         break;
     case Value::Managed_Type:
         Q_ASSERT(object->isString());
-        proto = engine->stringClass->prototype;
+        proto = engine->stringObjectClass->prototype;
         if (l->name->equals(engine->id_length)) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;

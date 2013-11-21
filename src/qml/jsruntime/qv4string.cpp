@@ -149,7 +149,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
         return Primitive::fromInt32(that->_text->size).asReturnedValue();
     }
     PropertyAttributes attrs;
-    Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
+    Property *pd = v4->stringObjectClass->prototype->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -157,7 +157,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return v4->stringClass->prototype->getValue(that, pd, attrs);
+    return v4->stringObjectClass->prototype->getValue(that, pd, attrs);
 }
 
 ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -172,7 +172,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
         return Encode(engine->newString(that->toQString().mid(index, 1)));
     }
     PropertyAttributes attrs;
-    Property *pd = engine->stringClass->prototype->__getPropertyDescriptor__(index, &attrs);
+    Property *pd = engine->stringObjectClass->prototype->__getPropertyDescriptor__(index, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -180,7 +180,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return engine->stringClass->prototype->getValue(that, pd, attrs);
+    return engine->stringObjectClass->prototype->getValue(that, pd, attrs);
 }
 
 void String::put(Managed *m, const StringRef name, const ValueRef value)
@@ -251,25 +251,22 @@ bool String::isEqualTo(Managed *t, Managed *o)
 
 
 String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine ? engine->emptyClass : 0), _text(const_cast<QString &>(text).data_ptr())
+    : Managed(engine->stringClass), _text(const_cast<QString &>(text).data_ptr())
     , identifier(0), stringHash(UINT_MAX)
     , largestSubLength(0)
 {
     _text->ref.ref();
     len = _text->size;
-    if (engine)
-        setVTable(&static_vtbl);
     type = Type_String;
     subtype = StringType_Unknown;
 }
 
 String::String(ExecutionEngine *engine, String *l, String *r)
-    : Managed(engine ? engine->emptyClass : 0)
+    : Managed(engine->stringClass)
     , left(l), right(r)
     , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
     , len(l->len + r->len)
 {
-    setVTable(&static_vtbl);
     type = Type_String;
     subtype = StringType_Unknown;
 

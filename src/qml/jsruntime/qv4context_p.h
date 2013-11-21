@@ -81,9 +81,8 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     };
 
     ExecutionContext(ExecutionEngine *engine, ContextType t, ExecutionContext *parent)
-        : Managed(engine->emptyClass)
+        : Managed(engine->executionContextClass)
     {
-        setVTable(&static_vtbl);
         this->type = t;
         strictMode = false;
         this->engine = engine;

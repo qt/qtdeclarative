@@ -79,7 +79,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
     lp->value = Primitive::fromInt32(context->realArgumentCount);
 
-    setVTable(&static_vtbl);
+    Q_ASSERT(internalClass->vtable == &static_vtbl);
 }
 
 void ArgumentsObject::destroy(Managed *that)

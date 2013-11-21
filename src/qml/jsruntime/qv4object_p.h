@@ -331,7 +331,6 @@ struct BooleanObject: Object {
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
-        setVTable(&static_vtbl);
         type = Type_BooleanObject;
         value = val;
     }
@@ -349,7 +348,6 @@ struct NumberObject: Object {
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
-        setVTable(&static_vtbl);
         type = Type_NumberObject;
         value = val;
     }

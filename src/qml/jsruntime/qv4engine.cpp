@@ -53,6 +53,7 @@
 #include <qv4mathobject_p.h>
 #include <qv4numberobject_p.h>
 #include <qv4regexpobject_p.h>
+#include <qv4regexp_p.h>
 #include <qv4variantobject_p.h>
 #include <qv4runtime_p.h>
 #include "qv4mm_p.h"
@@ -183,6 +184,9 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     identifierTable = new IdentifierTable(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
+    executionContextClass = emptyClass->changeVTable(&ExecutionContext::static_vtbl);
+    stringClass = emptyClass->changeVTable(&String::static_vtbl);
+    regExpValueClass = emptyClass->changeVTable(&RegExp::static_vtbl);
 
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
@@ -215,16 +219,16 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_toString = newIdentifier(QStringLiteral("toString"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
-    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
-    objectClass = emptyClass->changeVTable(&Object::static_vtbl);
-    objectClass = objectClass->changePrototype(objectPrototype);
+    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass->changeVTable(&ObjectPrototype::static_vtbl));
+    objectClass = InternalClass::create(this, &Object::static_vtbl, objectPrototype);
     Q_ASSERT(objectClass->vtable == &Object::static_vtbl);
 
-    arrayClass = objectClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
+    arrayClass = InternalClass::create(this, &ArrayObject::static_vtbl, objectPrototype);
+    arrayClass = arrayClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     ArrayPrototype *arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
-    InternalClass *argsClass = objectClass->changeVTable(&ArgumentsObject::static_vtbl);
+    InternalClass *argsClass = InternalClass::create(this, &ArgumentsObject::static_vtbl, objectPrototype);
     argsClass = argsClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
     strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
@@ -235,19 +239,19 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     initRootContext();
 
     StringPrototype *stringPrototype = new (memoryManager) StringPrototype(objectClass);
-    stringClass = emptyClass->changePrototype(stringPrototype);
+    stringObjectClass = InternalClass::create(this, &String::static_vtbl, stringPrototype);
 
     NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(objectClass);
-    numberClass = emptyClass->changePrototype(numberPrototype);
+    numberClass = InternalClass::create(this, &NumberObject::static_vtbl, numberPrototype);
 
     BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(objectClass);
-    booleanClass = emptyClass->changePrototype(booleanPrototype);
+    booleanClass = InternalClass::create(this, &BooleanObject::static_vtbl, booleanPrototype);
 
     DatePrototype *datePrototype = new (memoryManager) DatePrototype(objectClass);
-    dateClass = emptyClass->changePrototype(datePrototype);
+    dateClass = InternalClass::create(this, &DateObject::static_vtbl, datePrototype);
 
-    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(objectClass);
-    functionClass = emptyClass->changePrototype(functionPrototype);
+    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(InternalClass::create(this, &FunctionPrototype::static_vtbl, objectPrototype));
+    functionClass = InternalClass::create(this, &FunctionObject::static_vtbl, functionPrototype);
     uint index;
     functionWithProtoClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
@@ -255,32 +259,33 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
     RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
-    regExpClass = emptyClass->changePrototype(regExpPrototype);
+    regExpClass = InternalClass::create(this, &RegExpObject::static_vtbl, regExpPrototype);
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
     ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
-    errorClass = emptyClass->changePrototype(errorPrototype);
+    errorClass = InternalClass::create(this, &ErrorObject::static_vtbl, errorPrototype);
     EvalErrorPrototype *evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
-    evalErrorClass = emptyClass->changePrototype(evalErrorPrototype);
+    evalErrorClass = InternalClass::create(this, &EvalErrorObject::static_vtbl, evalErrorPrototype);
     RangeErrorPrototype *rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorClass);
-    rangeErrorClass = emptyClass->changePrototype(rangeErrorPrototype);
+    rangeErrorClass = InternalClass::create(this, &RangeErrorObject::static_vtbl, rangeErrorPrototype);
     ReferenceErrorPrototype *referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorClass);
-    referenceErrorClass = emptyClass->changePrototype(referenceErrorPrototype);
+    referenceErrorClass = InternalClass::create(this, &ReferenceErrorObject::static_vtbl, referenceErrorPrototype);
     SyntaxErrorPrototype *syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorClass);
-    syntaxErrorClass = emptyClass->changePrototype(syntaxErrorPrototype);
+    syntaxErrorClass = InternalClass::create(this, &SyntaxErrorObject::static_vtbl, syntaxErrorPrototype);
     TypeErrorPrototype *typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorClass);
-    typeErrorClass = emptyClass->changePrototype(typeErrorPrototype);
+    typeErrorClass = InternalClass::create(this, &TypeErrorObject::static_vtbl, typeErrorPrototype);
     URIErrorPrototype *uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
-    uriErrorClass = emptyClass->changePrototype(uRIErrorPrototype);
+    uriErrorClass = InternalClass::create(this, &URIErrorObject::static_vtbl, uRIErrorPrototype);
 
-    VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(objectClass);
-    variantClass = emptyClass->changePrototype(variantPrototype);
+    VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(InternalClass::create(this, &VariantPrototype::static_vtbl, objectPrototype));
+    variantClass = InternalClass::create(this, &VariantObject::static_vtbl, variantPrototype);
+    Q_ASSERT(variantClass->prototype == variantPrototype);
+    Q_ASSERT(variantPrototype->internalClass->prototype == objectPrototype);
 
-    SequencePrototype *sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
-    sequenceClass = emptyClass->changePrototype(sequencePrototype);
+    sequencePrototype = new (memoryManager) SequencePrototype(arrayClass);
 
     objectCtor = new (memoryManager) ObjectCtor(rootContext);
     stringCtor = new (memoryManager) StringCtor(rootContext);
@@ -315,7 +320,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorPrototype->init(this, uRIErrorCtor);
 
     variantPrototype->init();
-    sequencePrototype->init();
+    static_cast<SequencePrototype *>(sequencePrototype.managed())->init();
 
     //
     // set up the global object
@@ -323,6 +328,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
     rootContext->callData->thisObject = globalObject;
+    Q_ASSERT(globalObject->internalClass->vtable);
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);
@@ -802,6 +808,7 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark(this);
     typeErrorCtor.mark(this);
     uRIErrorCtor.mark(this);
+    sequencePrototype.mark(this);
 
     exceptionValue.mark(this);
 

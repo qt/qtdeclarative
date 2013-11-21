@@ -180,6 +180,12 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
 
 }
 
+InternalClass *InternalClass::create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto)
+{
+    InternalClass *c = engine->emptyClass->changeVTable(vtable);
+    return c->changePrototype(proto);
+}
+
 InternalClass *InternalClass::changePrototype(Object *proto)
 {
     if (prototype == proto)

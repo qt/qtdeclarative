@@ -55,7 +55,6 @@ struct DateObject: Object {
     Q_MANAGED
     SafeValue value;
     DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
-        setVTable(&static_vtbl);
         type = Type_DateObject;
         value = date;
     }

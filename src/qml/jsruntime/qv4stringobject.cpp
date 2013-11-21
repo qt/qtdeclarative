@@ -94,7 +94,7 @@ StringObject::StringObject(InternalClass *ic)
 }
 
 StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
-    : Object(engine->stringClass)
+    : Object(engine->stringObjectClass)
 {
     setVTable(&static_vtbl);
     type = Type_StringObject;

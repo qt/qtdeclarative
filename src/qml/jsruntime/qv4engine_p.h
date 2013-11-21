@@ -182,12 +182,16 @@ struct Q_QML_EXPORT ExecutionEngine
     SafeValue syntaxErrorCtor;
     SafeValue typeErrorCtor;
     SafeValue uRIErrorCtor;
+    SafeValue sequencePrototype;
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
+    InternalClass *executionContextClass;
+    InternalClass *stringClass;
+
     InternalClass *objectClass;
     InternalClass *arrayClass;
-    InternalClass *stringClass;
+    InternalClass *stringObjectClass;
     InternalClass *booleanClass;
     InternalClass *numberClass;
     InternalClass *dateClass;
@@ -198,6 +202,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     InternalClass *regExpClass;
     InternalClass *regExpExecArrayClass;
+    InternalClass *regExpValueClass;
 
     InternalClass *errorClass;
     InternalClass *evalErrorClass;
@@ -210,7 +215,6 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *strictArgumentsObjectClass;
 
     InternalClass *variantClass;
-    InternalClass *sequenceClass;
 
     EvalFunction *evalFunction;
     FunctionObject *thrower;

@@ -74,8 +74,6 @@ Object::Object(ExecutionEngine *engine)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
-    setVTable(&static_vtbl);
-
     type = Type_Object;
     flags = SimpleArray;
     memset(memberData, 0, sizeof(Property)*memberDataAlloc);
@@ -86,8 +84,7 @@ Object::Object(InternalClass *ic)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
-    setVTable(&static_vtbl);
-
+    Q_ASSERT(internalClass->vtable && internalClass->vtable != &Managed::static_vtbl);
     type = Type_Object;
     flags = SimpleArray;
 

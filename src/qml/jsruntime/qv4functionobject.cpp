@@ -110,7 +110,6 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , varCount(0)
     , function(0)
 {
-    setVTable(&static_vtbl);
     name = ic->engine->id_undefined;
 
     type = Type_FunctionObject;
@@ -126,7 +125,6 @@ FunctionObject::~FunctionObject()
 
 void FunctionObject::init(const StringRef n, bool createProto)
 {
-    setVTable(&static_vtbl);
     name = n;
 
     Scope s(internalClass->engine);
@@ -162,10 +160,7 @@ ReturnedValue FunctionObject::construct(Managed *that, CallData *)
     Scope scope(v4);
     Scoped<FunctionObject> f(scope, that, Scoped<FunctionObject>::Cast);
 
-    InternalClass *ic = v4->objectClass;
-    Scoped<Object> proto(scope, f->get(v4->id_prototype));
-    if (!!proto)
-        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    InternalClass *ic = f->internalClassForConstructor();
     Scoped<Object> obj(scope, v4->newObject(ic));
     return obj.asReturnedValue();
 }
@@ -209,12 +204,35 @@ ReturnedValue FunctionObject::protoProperty()
         protoCacheIndex = internalClass->find(internalClass->engine->id_prototype);
     }
     if (protoCacheIndex < UINT_MAX) {
-        if (internalClass->propertyData.at(protoCacheIndex).isData())
-            return memberData[protoCacheIndex].value.asReturnedValue();
+        if (internalClass->propertyData.at(protoCacheIndex).isData()) {
+            ReturnedValue v = memberData[protoCacheIndex].value.asReturnedValue();
+            if (v != protoValue) {
+                classForConstructor = 0;
+                protoValue = v;
+            }
+            return v;
+        }
     }
+    classForConstructor = 0;
     return get(internalClass->engine->id_prototype);
 }
 
+InternalClass *FunctionObject::internalClassForConstructor()
+{
+    // need to call this first to ensure we don't use a wrong class
+    ReturnedValue proto = protoProperty();
+    if (classForConstructor)
+        return classForConstructor;
+
+    Scope scope(internalClass->engine);
+    ScopedObject p(scope, proto);
+    if (p)
+        classForConstructor = InternalClass::create(scope.engine, &Object::static_vtbl, p.getPointer());
+    else
+        classForConstructor = scope.engine->objectClass;
+
+    return classForConstructor;
+}
 
 DEFINE_MANAGED_VTABLE(FunctionCtor);
 
@@ -426,10 +444,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
-    InternalClass *ic = v4->objectClass;
-    ScopedObject proto(scope, f->memberData[Index_Prototype].value);
-    if (proto)
-        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    InternalClass *ic = f->internalClassForConstructor();
     ScopedObject obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
@@ -511,10 +526,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
-    InternalClass *ic = v4->objectClass;
-    Scoped<Object> proto(scope, f->memberData[Index_Prototype].value);
-    if (!!proto)
-        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    InternalClass *ic = f->internalClassForConstructor();
     callData->thisObject = v4->newObject(ic);
 
     ExecutionContext *context = v4->current;
