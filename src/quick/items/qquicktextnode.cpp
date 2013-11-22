@@ -143,10 +143,13 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
                                      QSGNode *parentNode)
 {
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    QRawFontPrivate *fontP = QRawFontPrivate::get(glyphs.rawFont());
-    QSGGlyphNode *node = m_useNativeRenderer || !fontP->fontEngine->smoothScalable
+    QRawFont font = glyphs.rawFont();
+    bool smoothScalable = QFontDatabase().isSmoothlyScalable(font.familyName(),
+                                                             font.styleName());
+    QSGGlyphNode *node = m_useNativeRenderer || !smoothScalable
             ? sg->sceneGraphContext()->createNativeGlyphNode(sg)
             : sg->sceneGraphContext()->createGlyphNode(sg);
+
     node->setOwnerElement(m_ownerElement);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
