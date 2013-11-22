@@ -771,23 +771,24 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = scope;
 
-        Q_ASSERT(oldActiveFocusItem);
-
 #ifndef QT_NO_IM
         qApp->inputMethod()->commit();
 #endif
 
         activeFocusItem = 0;
-        QFocusEvent event(QEvent::FocusOut, reason);
-        q->sendEvent(oldActiveFocusItem, &event);
 
-        QQuickItem *afi = oldActiveFocusItem;
-        while (afi && afi != scope) {
-            if (QQuickItemPrivate::get(afi)->activeFocus) {
-                QQuickItemPrivate::get(afi)->activeFocus = false;
-                changed << afi;
+        if (oldActiveFocusItem) {
+            QFocusEvent event(QEvent::FocusOut, reason);
+            q->sendEvent(oldActiveFocusItem, &event);
+
+            QQuickItem *afi = oldActiveFocusItem;
+            while (afi && afi != scope) {
+                if (QQuickItemPrivate::get(afi)->activeFocus) {
+                    QQuickItemPrivate::get(afi)->activeFocus = false;
+                    changed << afi;
+                }
+                afi = afi->parentItem();
             }
-            afi = afi->parentItem();
         }
     }
 
