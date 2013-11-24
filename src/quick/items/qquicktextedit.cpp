@@ -830,7 +830,7 @@ void QQuickTextEdit::setBaseUrl(const QUrl &url)
     if (baseUrl() != url) {
         d->baseUrl = url;
 
-        d->document->setBaseUrl(url, d->richText);
+        d->document->setBaseUrl(url);
         emit baseUrlChanged();
     }
 }
@@ -1281,7 +1281,7 @@ void QQuickTextEdit::componentComplete()
     Q_D(QQuickTextEdit);
     QQuickImplicitSizeItem::componentComplete();
 
-    d->document->setBaseUrl(baseUrl(), d->richText);
+    d->document->setBaseUrl(baseUrl());
 #ifndef QT_NO_TEXTHTML_PARSER
     if (d->richText)
         d->control->setHtml(d->text);

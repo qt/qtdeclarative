@@ -115,6 +115,7 @@ QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuic
 {
     setUndoRedoEnabled(false);
     documentLayout()->registerHandler(QTextFormat::ImageObject, this);
+    connect(this, SIGNAL(baseUrlChanged(QUrl)), this, SLOT(reset()));
 }
 
 QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
@@ -126,14 +127,13 @@ QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
 QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
 {
     QQmlContext *context = qmlContext(parent());
-    QUrl url = m_baseUrl.resolved(name);
 
     if (type == QTextDocument::ImageResource) {
-        QQuickPixmap *p = loadPixmap(context, url);
+        QQuickPixmap *p = loadPixmap(context, name);
         return p->image();
     }
 
-    return QTextDocument::loadResource(type,url); // The *resolved* URL
+    return QTextDocument::loadResource(type, name);
 }
 
 void QQuickTextDocumentWithImageResources::requestFinished()
@@ -144,14 +144,6 @@ void QQuickTextDocumentWithImageResources::requestFinished()
         emit imagesLoaded();
     }
 }
-
-void QQuickTextDocumentWithImageResources::clear()
-{
-    clearResources();
-
-    QTextDocument::clear();
-}
-
 
 QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
         QTextDocument *, int, const QTextFormat &format)
@@ -167,7 +159,7 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
             QQmlContext *context = qmlContext(parent());
-            QUrl url = m_baseUrl.resolved(QUrl(imageFormat.name()));
+            QUrl url = baseUrl().resolved(QUrl(imageFormat.name()));
 
             QQuickPixmap *p = loadPixmap(context, url);
             if (!p->isReady()) {
@@ -205,19 +197,16 @@ void QQuickTextDocumentWithImageResources::drawObject(
 QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
 {
     QQmlContext *context = qmlContext(parent());
-    QUrl url = m_baseUrl.resolved(QUrl(format.name()));
+    QUrl url = baseUrl().resolved(QUrl(format.name()));
 
     QQuickPixmap *p = loadPixmap(context, url);
     return p->image();
 }
 
-void QQuickTextDocumentWithImageResources::setBaseUrl(const QUrl &url, bool clear)
+void QQuickTextDocumentWithImageResources::reset()
 {
-    m_baseUrl = url;
-    if (clear) {
-        clearResources();
-        markContentsDirty(0, characterCount());
-    }
+    clearResources();
+    markContentsDirty(0, characterCount());
 }
 
 QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(

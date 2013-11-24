@@ -195,16 +195,13 @@ public:
     void setText(const QString &);
     int resourcesLoading() const { return outstanding; }
 
-    void clearResources();
-
-    void clear();
-
     QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format);
     void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format);
 
     QImage image(const QTextImageFormat &format);
 
-    void setBaseUrl(const QUrl &url, bool clear = true);
+public Q_SLOTS:
+    void clearResources();
 
 Q_SIGNALS:
     void imagesLoaded();
@@ -215,11 +212,11 @@ protected:
     QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
 
 private Q_SLOTS:
+    void reset();
     void requestFinished();
 
 private:
     QHash<QUrl, QQuickPixmap *> m_resources;
-    QUrl m_baseUrl;
 
     int outstanding;
     static QSet<QUrl> errors;
