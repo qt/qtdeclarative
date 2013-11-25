@@ -302,7 +302,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
-        allocation.chunkSize = size;
+        allocation.chunkSize = int(size);
         m_d->heapChunks.append(allocation);
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
@@ -320,8 +320,9 @@ Managed *MemoryManager::alloc(std::size_t size)
         }
         *last = 0;
         m = m_d->smallItems[pos];
-        m_d->availableItems[pos] += allocation.memory.size()/size - 1;
-        m_d->totalItems += allocation.memory.size()/size - 1;
+        const size_t increase = allocation.memory.size()/size - 1;
+        m_d->availableItems[pos] += uint(increase);
+        m_d->totalItems += int(increase);
 #ifdef V4_USE_VALGRIND
         VALGRIND_MAKE_MEM_NOACCESS(allocation.memory, allocation.chunkSize);
 #endif
