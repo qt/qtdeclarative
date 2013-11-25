@@ -886,9 +886,10 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
 void QSGThreadedRenderLoop::resize(QQuickWindow *window)
 {
     Window *w = windowFor(m_windows, window);
-    if (w->gotBrokenExposeFromPlatformPlugin
-            && window->width() > 0 && window->height() > 0
-            && w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+    if (w
+        && w->gotBrokenExposeFromPlatformPlugin
+        && window->width() > 0 && window->height() > 0
+        && w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
         w->gotBrokenExposeFromPlatformPlugin = false;
         handleExposure(w);
     }
