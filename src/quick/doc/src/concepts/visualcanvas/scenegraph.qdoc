@@ -724,6 +724,11 @@ with multiple windows.
   \li Some material flags prevent batching, the most limiting one
   being QSGMaterial::RequiresFullMatrix which prevents all batching.
 
+  \li Applications with a monochrome background should set it using
+  QQuickWindow::setColor() rather than using a top-level Rectangle item.
+  QQuickWindow::setColor() will be used in a call to \c glClear(),
+  which is potentially faster.
+
   \endlist
 
   If an application performs poorly, make sure that rendering is
