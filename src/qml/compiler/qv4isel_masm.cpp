@@ -1039,10 +1039,13 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         _as->and32(Assembler::TrustedImm32(QV4::Managed::SimpleArray), Assembler::ReturnValueRegister);
         Assembler::Jump notSimple = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
 
+        bool needNegativeCheck = false;
         Assembler::Jump fallback, fallback2;
         if (tindex->kind == V4IR::Temp::PhysicalRegister) {
             if (tindex->type == V4IR::SInt32Type) {
+                fallback = _as->branch32(Assembler::LessThan, (Assembler::RegisterID)tindex->index, Assembler::TrustedImm32(0));
                 _as->move((Assembler::RegisterID) tindex->index, Assembler::ScratchRegister);
+                needNegativeCheck = true;
             } else {
                 // double, convert and check if it's a int
                 fallback2 = _as->branchTruncateDoubleToUint32((Assembler::FPRegisterID) tindex->index, Assembler::ScratchRegister);
@@ -1068,13 +1071,17 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
 
             isInteger.link(_as);
             _as->or32(Assembler::TrustedImm32(0), Assembler::ScratchRegister);
+            needNegativeCheck = true;
         }
 
         // get data, ScratchRegister holds index
         addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
         _as->load64(addr, Assembler::ReturnValueRegister);
         Address arrayDataLen(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayDataLen));
-        Assembler::Jump outOfRange = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, arrayDataLen);
+        Assembler::Jump outOfRange;
+        if (needNegativeCheck)
+            outOfRange = _as->branch32(Assembler::LessThan, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
+        Assembler::Jump outOfRange2 = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, arrayDataLen);
         Address arrayData(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData));
         _as->load64(arrayData, Assembler::ReturnValueRegister);
         Q_ASSERT(sizeof(Property) == (1<<4));
@@ -1092,7 +1099,9 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         Assembler::Jump done = _as->jump();
 
         emptyValue.link(_as);
-        outOfRange.link(_as);
+        if (outOfRange.isSet())
+            outOfRange.link(_as);
+        outOfRange2.link(_as);
         if (fallback.isSet())
             fallback.link(_as);
         if (fallback2.isSet())
