@@ -298,7 +298,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         uint shift = ++m_d->nChunks[pos];
         if (shift > 10)
             shift = 10;
-        std::size_t allocSize = CHUNK_SIZE*(1 << shift);
+        std::size_t allocSize = CHUNK_SIZE*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
