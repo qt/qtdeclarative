@@ -402,8 +402,8 @@ bool QSGRenderThread::event(QEvent *e)
     case WM_TryRelease: {
         QSG_RT_DEBUG("WM_TryRelease");
         mutex.lock();
-        if (!window) {
-            WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
+        WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
+        if (!window || wme->inDestructor) {
             QSG_RT_DEBUG(" - setting exit flag and invalidating GL");
             invalidateOpenGL(wme->window, wme->inDestructor);
             active = gl;
