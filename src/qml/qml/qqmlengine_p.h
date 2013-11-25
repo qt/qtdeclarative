@@ -186,8 +186,8 @@ public:
     void referenceScarceResources();
     void dereferenceScarceResources();
 
-    QQmlTypeLoader typeLoader;
     QQmlImportDatabase importDatabase;
+    QQmlTypeLoader typeLoader;
 
     QString offlineStoragePath;
 
