@@ -48,6 +48,10 @@ exampledirs += ../../../examples/qml \
 
 imagedirs   += images
 
+# Add a thumbnail for examples that do not have images
+manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
+                                "QtQml/Chapter 6*"
+
 navigation.landingpage = "Qt QML"
 navigation.cppclassespage = "Qt QML C++ Classes"
 navigation.qmltypespage = "Qt QML QML Types"
