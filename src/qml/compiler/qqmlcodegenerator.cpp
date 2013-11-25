@@ -1292,7 +1292,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
     return runtimeFunctionIndices;
 }
 
-static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0)
+QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup)
 {
     if (propertyExistsButForceNameLookup)
         *propertyExistsButForceNameLookup = false;
@@ -1308,6 +1308,13 @@ static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, co
     if (pd && !cache->isAllowedInRevision(pd))
         pd = 0;
 
+    // Return a copy allocated from our memory pool. Property data pointers can change
+    // otherwise when the QQmlPropertyCache changes later in the QML type compilation process.
+    if (pd) {
+        QQmlPropertyData *copy = pd;
+        pd = _function->New<QQmlPropertyData>();
+        *pd = *copy;
+    }
     return pd;
 }
 
