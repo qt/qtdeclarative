@@ -823,6 +823,12 @@ void QQuickMouseArea::ungrabMouse()
         d->pressed = 0;
         d->stealMouse = false;
         setKeepMouseGrab(false);
+
+#ifndef QT_NO_DRAGANDDROP
+        if (d->drag)
+            d->drag->setActive(false);
+#endif
+
         emit canceled();
         emit pressedChanged();
         emit pressedButtonsChanged();
