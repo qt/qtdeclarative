@@ -402,8 +402,8 @@ bool QSGRenderThread::event(QEvent *e)
     case WM_TryRelease: {
         QSG_RT_DEBUG("WM_TryRelease");
         mutex.lock();
-        if (!window) {
-            WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
+        WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
+        if (!window || wme->inDestructor) {
             QSG_RT_DEBUG(" - setting exit flag and invalidating GL");
             invalidateOpenGL(wme->window, wme->inDestructor);
             active = gl;
@@ -506,7 +506,10 @@ void QSGRenderThread::sync()
 
     Q_ASSERT_X(wm->m_locked, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
-    if (windowSize.width() > 0 && windowSize.height() > 0) {
+    bool current = false;
+    if (windowSize.width() > 0 && windowSize.height() > 0)
+        current = gl->makeCurrent(window);
+    if (current) {
         gl->makeCurrent(window);
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
@@ -578,8 +581,10 @@ void QSGRenderThread::syncAndRender()
         d->animationController->unlock();
     }
 
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
-        gl->makeCurrent(window);
+    bool current = false;
+    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0)
+        current = gl->makeCurrent(window);
+    if (current) {
         d->renderSceneGraph(windowSize);
 #ifndef QSG_NO_RENDER_TIMING
         if (profileFrames)
@@ -654,10 +659,8 @@ void QSGRenderThread::run()
     while (active) {
 
         if (window) {
-            if (!sgrc->openglContext()) {
-                gl->makeCurrent(window);
+            if (!sgrc->openglContext() && windowSize.width() > 0 && windowSize.height() > 0 && gl->makeCurrent(window))
                 sgrc->initialize(gl);
-            }
             syncAndRender();
         }
 
@@ -814,6 +817,7 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
     win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
     win.timerId = 0;
     win.updateDuringSync = false;
+    win.gotBrokenExposeFromPlatformPlugin = false;
     m_windows << win;
 }
 
@@ -879,6 +883,18 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
     }
 }
 
+void QSGThreadedRenderLoop::resize(QQuickWindow *window)
+{
+    Window *w = windowFor(m_windows, window);
+    if (w
+        && w->gotBrokenExposeFromPlatformPlugin
+        && window->width() > 0 && window->height() > 0
+        && w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+        w->gotBrokenExposeFromPlatformPlugin = false;
+        handleExposure(w);
+    }
+}
+
 
 /*!
     Will post an event to the render thread that this window should
@@ -887,6 +903,15 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
 void QSGThreadedRenderLoop::handleExposure(Window *w)
 {
     QSG_GUI_DEBUG(w->window, "handleExposure");
+
+    if (w->window->width() <= 0 || w->window->height() <= 0
+            || !w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+#ifndef QT_NO_DEBUG
+        qWarning("QSGThreadedRenderLoop: expose event received for window with invalid geometry.");
+#endif
+        w->gotBrokenExposeFromPlatformPlugin = true;
+        return;
+    }
 
     // Because we are going to bind a GL context to it, make sure it
     // is created.

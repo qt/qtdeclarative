@@ -343,8 +343,8 @@ protected:
     virtual void commit(int gIdx, int pIdx);
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    void prepareNextFrame();
-    void buildParticleNodes();
+    void prepareNextFrame(QSGNode**);
+    void buildParticleNodes(QSGNode**);
 
     void sceneGraphInvalidated();
 
@@ -354,7 +354,7 @@ private Q_SLOTS:
     void spriteAdvance(int spriteIndex);
     void spritesUpdate(qreal time = 0 );
     void mainThreadFetchImageData();
-    void finishBuildParticleNodes();
+    void finishBuildParticleNodes(QSGNode **n);
 private:
     struct ImageData {
         QUrl source;

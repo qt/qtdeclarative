@@ -61,6 +61,7 @@ public:
 
     virtual void show(QQuickWindow *window) = 0;
     virtual void hide(QQuickWindow *window) = 0;
+    virtual void resize(QQuickWindow *) {};
 
     virtual void windowDestroyed(QQuickWindow *window) = 0;
 
