@@ -225,7 +225,6 @@ private:
 
     friend struct QQmlBindingProfiler;
     friend struct QQmlHandlingSignalProfiler;
-    friend struct QQmlObjectCreatingProfiler;
     friend struct QQmlCompilingProfiler;
     friend struct QQmlPixmapProfiler;
 };
@@ -272,40 +271,6 @@ struct QQmlHandlingSignalProfiler {
     {
         if (enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::HandlingSignal);
-    }
-
-    bool enabled;
-};
-
-struct QQmlObjectCreatingProfiler {
-    QQmlObjectCreatingProfiler()
-    {
-        enabled = QQmlProfilerService::instance
-                ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled) {
-            QQmlProfilerService *service = QQmlProfilerService::instance;
-            service->startRange(QQmlProfilerService::Creating);
-        }
-    }
-
-    void setTypeName(const QString &typeName)
-    {
-        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
-        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
-    }
-
-    void setLocation(const QUrl &url, int line, int column)
-    {
-        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
-        if (enabled)
-            QQmlProfilerService::instance->rangeLocation(
-                        QQmlProfilerService::Creating, url, line, column);
-    }
-
-    ~QQmlObjectCreatingProfiler()
-    {
-        if (enabled)
-            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
     }
 
     bool enabled;

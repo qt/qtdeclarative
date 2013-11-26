@@ -61,7 +61,6 @@
 #include "qqmlvme_p.h"
 #include "qqmlerror.h"
 #include "qqml.h"
-#include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlobjectcreator_p.h>
 
 #include <QtCore/QString>
@@ -85,7 +84,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
         
 public:
     QQmlComponentPrivate()
-        : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), profiler(0), depthIncreased(false) {}
+        : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -131,7 +130,6 @@ public:
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;
-    QQmlObjectCreatingProfiler *profiler;
     bool depthIncreased;
 
     void clear();

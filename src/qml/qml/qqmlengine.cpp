@@ -1339,14 +1339,6 @@ void qmlExecuteDeferred(QObject *object)
     QQmlData *data = QQmlData::get(object);
 
     if (data && data->deferredData && !data->wasDeleted(object)) {
-        QQmlObjectCreatingProfiler prof;
-        if (prof.enabled) {
-            QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
-            prof.setTypeName(type ? type->qmlTypeName()
-                                  : QString::fromUtf8(object->metaObject()->className()));
-            if (data->outerContext)
-                prof.setLocation(data->outerContext->url, data->lineNumber, data->columnNumber);
-        }
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
 
         QQmlComponentPrivate::ConstructionState state;
