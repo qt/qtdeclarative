@@ -81,6 +81,7 @@ private slots:
     void delayedRegistration();
     void startOnCompleted();
     void multipleChangesToValueType();
+    void currentValue();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -493,6 +494,35 @@ void tst_qquickbehaviors::multipleChangesToValueType()
 
     value.setPointSize(48);
     QTRY_COMPARE(text->property("font").value<QFont>(), value);
+}
+
+//QTBUG-21549
+void tst_qquickbehaviors::currentValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("qtbug21549.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+
+    QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
+    QVERIFY(target);
+
+    QCOMPARE(target->x(), qreal(0));
+
+    target->setProperty("x", 50);
+    QCOMPARE(item->property("behaviorCount").toInt(), 1);
+    QCOMPARE(target->x(), qreal(50));
+
+    target->setProperty("x", 50);
+    QCOMPARE(item->property("behaviorCount").toInt(), 1);
+    QCOMPARE(target->x(), qreal(50));
+
+    target->setX(100);
+    target->setProperty("x", 100);
+    QCOMPARE(item->property("behaviorCount").toInt(), 1);
+    QCOMPARE(target->x(), qreal(100));
+
+    delete item;
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

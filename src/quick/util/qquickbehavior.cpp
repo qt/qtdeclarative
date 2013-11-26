@@ -201,6 +201,11 @@ void QQuickBehavior::write(const QVariant &value)
     // to the item, so we need to read the value after.
     const QVariant &currentValue = d->property.read();
 
+    if (d->targetValue == currentValue) {
+        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+        return;
+    }
+
     QQuickStateOperation::ActionList actions;
     QQuickStateAction action;
     action.property = d->property;
