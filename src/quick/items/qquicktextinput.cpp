@@ -3392,7 +3392,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 */
 void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool edited)
 {
-    Q_Q(QQuickTextInput);
     internalDeselect();
     QString oldText = m_text;
     if (m_maskData) {
@@ -3410,6 +3409,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
 #ifdef QT_NO_ACCESSIBILITY
     Q_UNUSED(changed)
 #else
+    Q_Q(QQuickTextInput);
     if (changed && QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(q, QAccessible::EditableText)) {
             QAccessibleTextUpdateEvent ev(acc, 0, oldText, m_text);
