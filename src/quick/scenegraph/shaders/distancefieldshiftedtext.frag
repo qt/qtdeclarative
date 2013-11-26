@@ -1,7 +1,7 @@
 varying highp vec2 sampleCoord;
 varying highp vec2 shiftedSampleCoord;
 
-uniform sampler2D _qt_texture;
+uniform mediump sampler2D _qt_texture;
 uniform lowp vec4 color;
 uniform lowp vec4 styleColor;
 uniform mediump float alphaMin;
