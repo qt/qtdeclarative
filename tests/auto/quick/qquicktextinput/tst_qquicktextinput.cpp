@@ -49,6 +49,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
+#include <QtGui/qvalidator.h>
 #include <QInputMethod>
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextinput_p_p.h>
@@ -226,6 +227,7 @@ private slots:
     void hasAcceptableInputMask();
     void maskCharacter_data();
     void maskCharacter();
+    void fixup();
 
 private:
     void simulateKey(QWindow *, int key);
@@ -6294,6 +6296,38 @@ void tst_qquicktextinput::maskCharacter()
         textInput->setText(QString(input.at(i)));
         QCOMPARE(textInput->text(), expected);
     }
+}
+
+class TestValidator : public QValidator
+{
+public:
+    TestValidator(QObject *parent = 0) : QValidator(parent) { }
+
+    State validate(QString &input, int &) const { return input == QStringLiteral("ok") ? Acceptable : Intermediate; }
+    void fixup(QString &input) const { input = QStringLiteral("ok"); }
+};
+
+void tst_qquicktextinput::fixup()
+{
+    QQuickWindow window;
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QQuickTextInput *input = new QQuickTextInput(window.contentItem());
+    input->setValidator(new TestValidator(input));
+
+    // fixup() on accept
+    input->setFocus(true);
+    QVERIFY(input->hasActiveFocus());
+    QTest::keyClick(&window, Qt::Key_Enter);
+    QCOMPARE(input->text(), QStringLiteral("ok"));
+
+    // fixup() on defocus
+    input->setText(QString());
+    input->setFocus(false);
+    QVERIFY(!input->hasActiveFocus());
+    QCOMPARE(input->text(), QStringLiteral("ok"));
 }
 
 QTEST_MAIN(tst_qquicktextinput)
