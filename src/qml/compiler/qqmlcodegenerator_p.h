@@ -369,6 +369,8 @@ protected:
     virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
+    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
+
     QQmlEnginePrivate *engine;
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool

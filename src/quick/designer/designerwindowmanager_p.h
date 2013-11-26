@@ -82,7 +82,6 @@ public:
     void makeOpenGLContext(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
     QImage grab(QQuickWindow *window);
-    void resize(QQuickWindow *window, const QSize &size);
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window); // identical for this implementation.

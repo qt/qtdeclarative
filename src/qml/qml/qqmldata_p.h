@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlData : public QAbstractDeclarativeData
 {
 public:
     QQmlData()
-        : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
+        : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
           hasTaintedV8Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
           hasVMEMetaObject(false), parentFrozen(false), notifyList(0), context(0), outerContext(0),
           bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
@@ -113,6 +113,7 @@ public:
         if (!explicitIndestructibleSet) indestructible = false;
     }
 
+    quint32 ownedByQml1:1; // This bit is shared with QML1's QDeclarativeData.
     quint32 ownMemory:1;
     quint32 ownContext:1;
     quint32 indestructible:1;
@@ -126,7 +127,7 @@ public:
     quint32 rootObjectInCreation:1;
     quint32 hasVMEMetaObject:1;
     quint32 parentFrozen:1;
-    quint32 dummy:23;
+    quint32 dummy:22;
 
     struct NotifyList {
         quint64 connectionMask;

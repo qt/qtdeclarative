@@ -95,7 +95,14 @@ quintptr getStackLimit()
     pthread_t thread_self = pthread_self();
     void *stackTop = pthread_get_stackaddr_np(thread_self);
     stackLimit = reinterpret_cast<quintptr>(stackTop);
-    stackLimit -= pthread_get_stacksize_np(thread_self);
+    quintptr size = 0;
+    if (pthread_main_np()) {
+        rlimit limit;
+        getrlimit(RLIMIT_STACK, &limit);
+        size = limit.rlim_cur;
+    } else
+        size = pthread_get_stacksize_np(thread_self);
+    stackLimit -= size;
 #  else
     void* stackBottom = 0;
     pthread_attr_t attr;

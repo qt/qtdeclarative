@@ -315,6 +315,7 @@ namespace QQmlCompilerTypes {
             QList<QQmlJS::AST::Node*> functionsToCompile;
             QVector<int> runtimeFunctionIndices;
             QVector<CompiledMetaMethod> compiledMetaMethods;
+            QHash<int, QString> expressionNames;
         };
         QHash<QQmlScript::Object *, PerObjectCompileData> jsCompileData;
     };

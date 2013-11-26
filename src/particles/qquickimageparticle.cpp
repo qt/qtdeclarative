@@ -715,7 +715,6 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_sizeTable(0)
     , m_opacityTable(0)
     , m_color_variation(0.0)
-    , m_rootNode(0)
     , m_material(0)
     , m_alphaVariation(0.0)
     , m_alpha(1.0)
@@ -757,7 +756,6 @@ QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 void QQuickImageParticle::sceneGraphInvalidated()
 {
     m_nodes.clear();
-    m_rootNode = 0;
     m_material = 0;
 }
 
@@ -1209,24 +1207,25 @@ void QQuickImageParticle::mainThreadFetchImageData()
     m_startedImageLoading = 2;
 }
 
-void QQuickImageParticle::buildParticleNodes()
+void QQuickImageParticle::buildParticleNodes(QSGNode** passThrough)
 {
     // Starts async parts, like loading images, on gui thread
     // Not on individual properties, because we delay until system is running
-    if (m_rootNode || loadingSomething())
+    if (*passThrough || loadingSomething())
         return;
 
     if (m_startedImageLoading == 0) {
         m_startedImageLoading = 1;
+        //stage 1 is in gui thread
         QQuickImageParticle::staticMetaObject.invokeMethod(this, "mainThreadFetchImageData", Qt::QueuedConnection);
-    } else if (m_startedImageLoading == 2) { //stage 1 is in gui thread
-        finishBuildParticleNodes(); //rest happens in render thread
+    } else if (m_startedImageLoading == 2) {
+        finishBuildParticleNodes(passThrough); //rest happens in render thread
     }
 
     //No mutex, because it's slow and a compare that fails due to a race condition means just a dropped frame
 }
 
-void QQuickImageParticle::finishBuildParticleNodes()
+void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 {
 #ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
@@ -1456,17 +1455,18 @@ void QQuickImageParticle::finishBuildParticleNodes()
             (*(m_nodes.begin()))->appendChildNode(node);
     }
 
-    m_rootNode = *(m_nodes.begin());
+    *node = *(m_nodes.begin());
     update();
 }
 
-QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
+QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
     if (m_pleaseReset){
-        m_lastLevel = perfLevel;
+        if (node)
+            delete node;
+        node = 0;
 
-        delete m_rootNode;//Automatically deletes children, and SG manages material lifetime
-        m_rootNode = 0;
+        m_lastLevel = perfLevel;
         m_nodes.clear();
 
         m_idxStarts.clear();
@@ -1480,23 +1480,23 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
-        prepareNextFrame();
-        if (m_rootNode) {
+        prepareNextFrame(&node);
+        if (node) {
             update();
-            foreach (QSGGeometryNode* node, m_nodes)
-                node->markDirty(QSGNode::DirtyGeometry);
+            foreach (QSGGeometryNode* n, m_nodes)
+                n->markDirty(QSGNode::DirtyGeometry);
         } else if (m_startedImageLoading < 2) {
             update();//To call prepareNextFrame() again from the renderThread
         }
     }
 
-    return m_rootNode;
+    return node;
 }
 
-void QQuickImageParticle::prepareNextFrame()
+void QQuickImageParticle::prepareNextFrame(QSGNode **node)
 {
-    if (m_rootNode == 0){//TODO: Staggered loading (as emitted)
-        buildParticleNodes();
+    if (*node == 0){//TODO: Staggered loading (as emitted)
+        buildParticleNodes(node);
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
@@ -1507,7 +1507,7 @@ void QQuickImageParticle::prepareNextFrame()
             }
             qDebug() << "Total count: " << count;
         }
-        if (m_rootNode == 0)
+        if (*node == 0)
             return;
     }
     qint64 timeStamp = m_system->systemSync(this);

@@ -81,8 +81,6 @@ public:
     void render();
     void renderWindow(QQuickWindow *window);
 
-    void resize(QQuickWindow *, const QSize &) { }
-
     bool event(QEvent *event);
     bool anyoneShowing() const;
 

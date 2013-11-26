@@ -90,10 +90,6 @@ QImage DesignerWindowManager::grab(QQuickWindow *)
     return QImage();
 }
 
-void DesignerWindowManager::resize(QQuickWindow *, const QSize &)
-{
-}
-
 void DesignerWindowManager::maybeUpdate(QQuickWindow *)
 {
 }
