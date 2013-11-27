@@ -52,17 +52,15 @@ QT_BEGIN_NAMESPACE
 class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
-class QSGTexture;
 class QQuickPixmap;
 
 class QQuickCanvasPixmap : public QQmlRefCount
 {
 public:
-    QQuickCanvasPixmap(const QImage& image, QQuickWindow *window);
-    QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickWindow *window);
+    QQuickCanvasPixmap(const QImage& image);
+    QQuickCanvasPixmap(QQuickPixmap *pixmap);
     ~QQuickCanvasPixmap();
 
-    QSGTexture *texture();
     QImage image();
 
     qreal width() const;
@@ -73,8 +71,6 @@ public:
 private:
     QQuickPixmap *m_pixmap;
     QImage m_image;
-    QSGTexture *m_texture;
-    QQuickWindow *m_window;
 };
 
 class QQuickCanvasItem : public QQuickItem

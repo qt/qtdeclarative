@@ -44,8 +44,10 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcontext2d_p.h>
+#include <private/qquickcontext2dtexture_p.h>
 #include <qsgsimpletexturenode.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtGui/QGuiApplication>
 
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
@@ -58,19 +60,15 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image, QQuickWindow *window)
+QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image)
     : m_pixmap(0)
     , m_image(image)
-    , m_texture(0)
-    , m_window(window)
 {
 
 }
 
-QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickWindow *window)
+QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap)
     : m_pixmap(pixmap)
-    , m_texture(0)
-    , m_window(window)
 {
 
 }
@@ -78,8 +76,6 @@ QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickWindow *windo
 QQuickCanvasPixmap::~QQuickCanvasPixmap()
 {
     delete m_pixmap;
-    if (m_texture)
-        m_texture->deleteLater();
 }
 
 qreal QQuickCanvasPixmap::width() const
@@ -105,18 +101,6 @@ bool QQuickCanvasPixmap::isValid() const
     return !m_image.isNull();
 }
 
-QSGTexture *QQuickCanvasPixmap::texture()
-{
-    if (!m_texture) {
-        if (m_pixmap) {
-            Q_ASSERT(m_pixmap->textureFactory());
-            m_texture = m_pixmap->textureFactory()->createTexture(m_window);
-        } else {
-            m_texture = m_window->createTextureFromImage(m_image, QQuickWindow::TextureCanUseAtlas);
-        }
-    }
-    return m_texture;
-}
 QImage QQuickCanvasPixmap::image()
 {
     if (m_image.isNull() && m_pixmap)
@@ -194,7 +178,7 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , hasCanvasWindow(false)
     , available(false)
     , renderTarget(QQuickCanvasItem::Image)
-    , renderStrategy(QQuickCanvasItem::Cooperative)
+    , renderStrategy(QQuickCanvasItem::Immediate)
 {
     antialiasing = true;
 }
@@ -246,10 +230,14 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 
     The Canvas.FramebufferObject render target utilizes OpenGL hardware
     acceleration rather than rendering into system memory, which in many cases
-    results in faster rendering.
+    results in faster rendering. Canvas.FramebufferObject relies on the
+    OpenGL extensions \c GL_EXT_framebuffer_multisample and
+    \c GL_EXT_framebuffer_blit for antialiasing. It will also use more
+    graphics memory when rendering strategy is anything other than
+    Canvas.Cooperative.
 
     The default render target is Canvas.Image and the default renderStrategy is
-    Canvas.Cooperative.
+    Canvas.Immediate.
 
     \section1 Tiled Canvas
     The Canvas item supports tiled rendering by setting \l canvasSize, \l tileSize
@@ -489,7 +477,7 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
     context will choose appropriate options and Canvas will signal the change
     to the properties.
 
-    The default render target is \c Canvas.FramebufferObject.
+    The default render target is \c Canvas.Image.
 */
 QQuickCanvasItem::RenderTarget QQuickCanvasItem::renderTarget() const
 {
@@ -531,7 +519,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     the GUI thread.  Selecting \c Canvas.Cooperative, does not guarantee
     rendering will occur on a thread separate from the GUI thread.
 
-    The default value is \c Canvas.Cooperative.
+    The default value is \c Canvas.Immediate.
 
     \sa renderTarget
 */
@@ -689,6 +677,15 @@ void QQuickCanvasItem::updatePolish()
     }
 }
 
+class QQuickCanvasNode : public QSGSimpleTextureNode
+{
+public:
+    ~QQuickCanvasNode()
+    {
+        delete texture();
+    }
+};
+
 QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickCanvasItem);
@@ -698,9 +695,9 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         return 0;
     }
 
-    QSGSimpleTextureNode *node = static_cast<QSGSimpleTextureNode*>(oldNode);
+    QQuickCanvasNode *node = static_cast<QQuickCanvasNode*>(oldNode);
     if (!node)
-        node = new QSGSimpleTextureNode;
+        node = new QQuickCanvasNode();
 
     if (d->smooth)
         node->setFiltering(QSGTexture::Linear);
@@ -712,8 +709,15 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         d->context->flush();
     }
 
-    node->setTexture(d->context->texture());
-    node->markDirty(QSGNode::DirtyMaterial);
+    QQuickContext2D *ctx = qobject_cast<QQuickContext2D *>(d->context);
+    QQuickContext2DTexture *factory = ctx->texture();
+    QSGTexture *texture = factory->textureForNextFrame(node->texture());
+    if (!texture) {
+        delete node;
+        return 0;
+    }
+
+    node->setTexture(texture);
     node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
     return node;
 }
@@ -916,7 +920,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     if (!d->pixmaps.contains(fullPathUrl)) {
         QQuickPixmap* pix = new QQuickPixmap();
         QQmlRefPointer<QQuickCanvasPixmap> canvasPix;
-        canvasPix.take(new QQuickCanvasPixmap(pix, d->window));
+        canvasPix.take(new QQuickCanvasPixmap(pix));
         d->pixmaps.insert(fullPathUrl, canvasPix);
 
         pix->load(qmlEngine(this)

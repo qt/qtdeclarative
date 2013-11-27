@@ -58,16 +58,44 @@ QT_BEGIN_NAMESPACE
 class QQuickContext2DTile;
 class QQuickContext2DCommandBuffer;
 
-class QQuickContext2DTexture : public QSGDynamicTexture
+class QQuickContext2DTexture : public QObject
 {
     Q_OBJECT
 public:
+    class PaintEvent : public QEvent {
+    public:
+        PaintEvent(QQuickContext2DCommandBuffer *b) : QEvent(QEvent::Type(QEvent::User + 1)), buffer(b) {}
+        QQuickContext2DCommandBuffer *buffer;
+    };
+
+    class CanvasChangeEvent : public QEvent {
+    public:
+        CanvasChangeEvent(const QSize &cSize,
+                          const QSize &tSize,
+                          const QRect &cWindow,
+                          const QRect &dRect,
+                          bool sm,
+                          bool aa)
+            : QEvent(QEvent::Type(QEvent::User + 2))
+            , canvasSize(cSize)
+            , tileSize(tSize)
+            , canvasWindow(cWindow)
+            , dirtyRect(dRect)
+            , smooth(sm)
+            , antialiasing(aa)
+        {
+        }
+        QSize canvasSize;
+        QSize tileSize;
+        QRect canvasWindow;
+        QRect dirtyRect;
+        bool smooth;
+        bool antialiasing;
+    };
+
     QQuickContext2DTexture();
     ~QQuickContext2DTexture();
 
-    virtual bool hasAlphaChannel() const {return true;}
-    virtual bool hasMipmaps() const {return false;}
-    virtual QSize textureSize() const;
     virtual QQuickCanvasItem::RenderTarget renderTarget() const = 0;
     static QRect tiledRect(const QRectF& window, const QSize& tileSize);
 
@@ -78,15 +106,20 @@ public:
     void setAntialiasing(bool antialiasing);
     bool setDirtyRect(const QRect &dirtyRect);
     bool canvasDestroyed();
+    void setOnCustomThread(bool is) { m_onCustomThread = is; }
+
+    // Called during sync() on the scene graph thread while GUI is blocked.
+    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame) = 0;
+    bool event(QEvent *e);
 
 Q_SIGNALS:
     void textureChanged();
 
 public Q_SLOTS:
-    void markDirtyTexture();
-    void setItem(QQuickCanvasItem* item);
     void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     void paint(QQuickContext2DCommandBuffer *ccb);
+    void markDirtyTexture();
+    void setItem(QQuickCanvasItem* item);
     virtual void grabImage(const QRectF& region = QRectF()) = 0;
 
 protected:
@@ -110,13 +143,16 @@ protected:
     QSize m_tileSize;
     QRect m_canvasWindow;
 
-    uint m_dirtyCanvas : 1;
+    QMutex m_mutex;
+    QWaitCondition m_condition;
+
     uint m_canvasWindowChanged : 1;
     uint m_dirtyTexture : 1;
     uint m_smooth : 1;
     uint m_antialiasing : 1;
     uint m_tiledCanvas : 1;
     uint m_painting : 1;
+    uint m_onCustomThread : 1; // Not GUI and not SGRender
 };
 
 class QQuickContext2DFBOTexture : public QQuickContext2DTexture
@@ -126,16 +162,15 @@ class QQuickContext2DFBOTexture : public QQuickContext2DTexture
 public:
     QQuickContext2DFBOTexture();
     ~QQuickContext2DFBOTexture();
-    virtual int textureId() const;
-    virtual bool updateTexture();
     virtual QQuickContext2DTile* createTile() const;
     virtual QPaintDevice* beginPainting();
     virtual void endPainting();
     QRectF normalizedTextureSubRect() const;
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;
     virtual void compositeTile(QQuickContext2DTile* tile);
-    virtual void bind();
     QSize adjustedTileSize(const QSize &ts);
+
+    QSGTexture *textureForNextFrame(QSGTexture *);
 
 public Q_SLOTS:
     virtual void grabImage(const QRectF& region = QRectF());
@@ -144,10 +179,12 @@ private:
     bool doMultisampling() const;
     QOpenGLFramebufferObject *m_fbo;
     QOpenGLFramebufferObject *m_multisampledFbo;
-    QMutex m_mutex;
-    QWaitCondition m_condition;
     QSize m_fboSize;
     QPaintDevice *m_paint_device;
+
+
+    GLuint m_displayTextures[2];
+    int m_displayTexture;
 };
 
 class QSGPlainTexture;
@@ -158,24 +195,23 @@ class QQuickContext2DImageTexture : public QQuickContext2DTexture
 public:
     QQuickContext2DImageTexture();
     ~QQuickContext2DImageTexture();
-    virtual int textureId() const;
-    virtual void bind();
 
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;
 
-    virtual bool updateTexture();
     virtual QQuickContext2DTile* createTile() const;
     virtual QPaintDevice* beginPainting();
+    virtual void endPainting();
     virtual void compositeTile(QQuickContext2DTile* tile);
+
+    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame);
 
 public Q_SLOTS:
     virtual void grabImage(const QRectF& region = QRectF());
 
 private:
-    QSGPlainTexture *imageTexture() const;
     QImage m_image;
+    QImage m_displayImage;
     QPainter m_painter;
-    QSGPlainTexture*  m_texture;
 };
 
 QT_END_NAMESPACE

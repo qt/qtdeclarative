@@ -71,8 +71,6 @@ public:
     virtual void setV8Engine(QV8Engine *engine) = 0;
     virtual QV4::ReturnedValue v4value() const = 0;
 
-    virtual QSGDynamicTexture *texture() const = 0;
-
     virtual QImage toImage(const QRectF& bounds) = 0;
 
 Q_SIGNALS:
