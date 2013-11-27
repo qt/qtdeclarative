@@ -68,6 +68,7 @@
 #include <private/qfinitestack_p.h>
 
 #include <private/qqmltrace_p.h>
+#include <private/qqmlprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -171,6 +172,7 @@ private:
 #ifdef QML_ENABLE_TRACE
     QFiniteStack<QQmlData *> parserStatusData;
 #endif
+    QQmlVmeProfiler profiler;
 
     QQmlGuardedContextData rootContext;
     QQmlGuardedContextData creationContext;
