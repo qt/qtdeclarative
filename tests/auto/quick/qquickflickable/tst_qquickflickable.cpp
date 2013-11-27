@@ -94,6 +94,8 @@ private slots:
     void flickTwiceUsingTouches();
     void nestedStopAtBounds();
     void nestedStopAtBounds_data();
+    void stopAtBounds();
+    void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
 
 private:
@@ -1322,13 +1324,15 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     qreal contentYAfterFirstFlick = flickable->contentY();
     qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
     QVERIFY(contentYAfterFirstFlick > 50.0f);
+    // Wait until view stops moving
+    QTRY_VERIFY(!flickable->isMoving());
 
     flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
 
     // In the original bug, that second flick would cause Flickable to halt immediately
     qreal contentYAfterSecondFlick = flickable->contentY();
     qDebug() << "contentYAfterSecondFlick " << contentYAfterSecondFlick;
-    QVERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
+    QTRY_VERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
 }
 
 void tst_qquickflickable::flickWithTouch(QWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
@@ -1417,6 +1421,90 @@ void tst_qquickflickable::nestedStopAtBounds()
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 
     QTRY_VERIFY(!outer->isMoving());
+}
+
+void tst_qquickflickable::stopAtBounds_data()
+{
+    QTest::addColumn<bool>("transpose");
+    QTest::addColumn<bool>("invert");
+
+    QTest::newRow("left") << false << false;
+    QTest::newRow("right") << false << true;
+    QTest::newRow("top") << true << false;
+    QTest::newRow("bottom") << true << true;
+}
+
+void tst_qquickflickable::stopAtBounds()
+{
+    QFETCH(bool, transpose);
+    QFETCH(bool, invert);
+
+    QQuickView view;
+    view.setSource(testFileUrl("stopAtBounds.qml"));
+    QTRY_COMPARE(view.status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(&view);
+    QQuickViewTestUtil::moveMouseAway(&view);
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(view.rootObject());
+    QVERIFY(flickable);
+
+    if (transpose)
+        flickable->setContentY(invert ? 100 : 0);
+    else
+        flickable->setContentX(invert ? 100 : 0);
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    QPoint position(200, 200);
+    int &axis = transpose ? position.ry() : position.rx();
+
+    // drag away from the aligned boundary. View should not move
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    for (int i = 0; i < 3; ++i) {
+        axis += invert ? -threshold : threshold;
+        QTest::mouseMove(&view, position);
+    }
+    QCOMPARE(flickable->isDragging(), false);
+    if (invert)
+        QCOMPARE(transpose ? flickable->isAtYEnd() : flickable->isAtXEnd(), true);
+    else
+        QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), true);
+
+    // drag back towards boundary
+    for (int i = 0; i < 24; ++i) {
+        axis += invert ? threshold / 3 : -threshold / 3;
+        QTest::mouseMove(&view, position);
+    }
+    QTRY_COMPARE(flickable->isDragging(), true);
+    if (invert)
+        QCOMPARE(transpose ? flickable->isAtYEnd() : flickable->isAtXEnd(), false);
+    else
+        QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), false);
+
+    // Drag away from the aligned boundary again.
+    // None of the mouse movements will position the view at the boundary exactly,
+    // but the view should end up aligned on the boundary
+    for (int i = 0; i < 5; ++i) {
+        axis += invert ? -threshold * 2 : threshold * 2;
+        QTest::mouseMove(&view, position);
+    }
+    QCOMPARE(flickable->isDragging(), true);
+
+    // we should have hit the boundary and stopped
+    if (invert) {
+        QCOMPARE(transpose ? flickable->isAtYEnd() : flickable->isAtXEnd(), true);
+        QCOMPARE(transpose ? flickable->contentY() : flickable->contentX(), 100.0);
+    } else {
+        QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), true);
+        QCOMPARE(transpose ? flickable->contentY() : flickable->contentX(), 0.0);
+    }
+
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 }
 
 void tst_qquickflickable::nestedMouseAreaUsingTouch()
