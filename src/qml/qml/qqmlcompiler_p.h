@@ -150,6 +150,7 @@ public:
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
+    QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
     bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }
@@ -231,7 +232,7 @@ namespace QQmlCompilerTypes {
         QQmlScript::Value *value;
 
         int compiledIndex : 16;
-        int sharedIndex : 16;
+        int customParserBindingsIndex : 16;
 
         BindingContext bindingContext;
 
@@ -340,7 +341,7 @@ public:
 
     int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
-    int bindingIdentifier(const QQmlScript::Variant& value); // for QQmlCustomParser::bindingIndex
+    int bindingIdentifier(const QString &name, const QQmlScript::Variant& value, const QQmlCompilerTypes::BindingContext &ctxt); // for QQmlCustomParser::bindingIndex
 
 private:
     typedef QQmlCompiledData::Instruction Instruction;

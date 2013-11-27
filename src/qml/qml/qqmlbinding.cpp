@@ -50,6 +50,7 @@
 #include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -85,7 +86,14 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
         Q_ASSERT(typeData);
 
         if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            rv = new QQmlBinding(cdata->primitives.at(id), obj, ctxtdata, url, lineNumber, 0);
+            QV4::ExecutionEngine *v4 = engine->v4engine();
+            QV4::Scope valueScope(v4);
+            QV4::ScopedObject scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(v4->v8Engine, ctxtdata, obj));
+            QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject));
+            QV4::ExecutionContext *qmlContext = wrapper->context();
+            QV4::Function *runtimeFunction = cdata->compilationUnit->runtimeFunctions[cdata->customParserBindings[id]];
+            QV4::ScopedValue function(valueScope, QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction));
+            rv = new QQmlBinding(function, obj, ctxtdata, url, lineNumber, 0);
         }
 
         typeData->release();

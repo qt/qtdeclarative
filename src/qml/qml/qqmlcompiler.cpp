@@ -2682,9 +2682,24 @@ const QMetaObject *QQmlCompiler::resolveType(const QString& name) const
     return qmltype->metaObject();
 }
 
-int QQmlCompiler::bindingIdentifier(const Variant &value)
+int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, const BindingContext &ctxt)
 {
-    return output->indexForString(value.asScript());
+    JSBindingReference *reference = pool->New<JSBindingReference>();
+    reference->expression = value;
+    reference->property = pool->New<Property>();
+    reference->property->setName(name);
+    reference->value = 0;
+    reference->bindingContext = ctxt;
+    reference->bindingContext.owner++;
+
+    const int id = output->customParserBindings.count();
+    output->customParserBindings.append(0); // Filled in later.
+    reference->customParserBindingsIndex = id;
+
+    compileState->totalBindingsCount++;
+    compileState->bindings.prepend(reference);
+
+    return id;
 }
 
 // Ensures that the dynamic meta specification on obj is valid
@@ -3648,7 +3663,7 @@ bool QQmlCompiler::completeComponentBuild()
         binding.compiledIndex = cd->functionsToCompile.count() - 1;
         cd->expressionNames.insert(binding.compiledIndex, binding.property->name().toString().prepend(QStringLiteral("expression for ")));
 
-        if (componentStats)
+        if (componentStats && b->value)
             componentStats->componentStat.scriptBindings.append(b->value->location);
     }
 
@@ -3697,6 +3712,10 @@ bool QQmlCompiler::completeComponentBuild()
         for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
             JSBindingReference &binding = *b;
             binding.compiledIndex = compileState->jsCompileData[binding.bindingContext.object].runtimeFunctionIndices[binding.compiledIndex];
+            if (!binding.value) { // Must be a binding requested from custom parser
+                Q_ASSERT(binding.customParserBindingsIndex >= 0 && binding.customParserBindingsIndex < output->customParserBindings.count());
+                output->customParserBindings[binding.customParserBindingsIndex] = binding.compiledIndex;
+            }
         }
     }
 
