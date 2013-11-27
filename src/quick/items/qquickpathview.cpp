@@ -553,7 +553,7 @@ void QQuickPathViewPrivate::setDragging(bool d)
     to set \e {clip: true} in order to have the out of view items clipped
     nicely.
 
-    \sa Path, {quick/modelviews/pathview}{PathView example}
+    \sa Path, {QML Data Models}, ListView, GridView, {Qt Quick Examples - Views}
 */
 
 QQuickPathView::QQuickPathView(QQuickItem *parent)
@@ -2031,7 +2031,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 
     const int modelCount = d->modelCount;
     int moveId = -1;
-    int moveOffset;
+    int moveOffset = 0;
     bool currentChanged = false;
     bool changedOffset = false;
     foreach (const QQmlChangeSet::Remove &r, changeSet.removes()) {

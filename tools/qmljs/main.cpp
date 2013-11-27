@@ -202,22 +202,22 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                try {
-                    QV4::Script script(ctx, code, fn);
-                    script.parseAsBinding = runAsQml;
-                    script.parse();
-                    QV4::ScopedValue result(scope, script.run());
-                    if (!result->isUndefined()) {
-                        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                            std::cout << "exit value: " << qPrintable(result->toString(ctx)->toQString()) << std::endl;
-                    }
-                } catch (...) {
+                QV4::ScopedValue result(scope);
+                QV4::Script script(ctx, code, fn);
+                script.parseAsBinding = runAsQml;
+                script.parse();
+                if (!scope.engine->hasException)
+                    result = script.run();
+                if (scope.engine->hasException) {
                     QV4::StackTrace trace;
                     QV4::ScopedValue ex(scope, ctx->catchException(&trace));
                     showException(ctx, ex, trace);
                     return EXIT_FAILURE;
                 }
-
+                if (!result->isUndefined()) {
+                    if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+                        std::cout << "exit value: " << qPrintable(result->toString(ctx)->toQString()) << std::endl;
+                }
             } else {
                 std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
                 return EXIT_FAILURE;

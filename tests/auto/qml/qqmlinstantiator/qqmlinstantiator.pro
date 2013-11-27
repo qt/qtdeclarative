@@ -4,6 +4,7 @@ macx:CONFIG -= app_bundle
 
 INCLUDEPATH += ../../shared/
 SOURCES += tst_qqmlinstantiator.cpp
+HEADERS += stringmodel.h
 
 include (../../shared/util.pri)
 

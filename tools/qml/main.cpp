@@ -42,13 +42,17 @@
 #include "conf.h"
 
 #include <QCoreApplication>
+
+#ifdef QT_GUI_LIB
 #include <QGuiApplication>
+#include <QWindow>
+#include <QFileOpenEvent>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
-#endif
-#include <QWindow>
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+
 #include <QQmlApplicationEngine>
-#include <QFileOpenEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -68,8 +72,11 @@
 #define VERSION_MIN 0
 #define VERSION_STR "1.0"
 
+#define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
+
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
+static int exitTimerId = -1;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -90,7 +97,8 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
         QFileInfo fi;
         fi.setFile(override);
         if (!fi.exists()) {
-            qCritical() << QObject::tr("qml: Couldn't find required configuration file:") << fi.absoluteFilePath();
+            printf("qml: Couldn't find required configuration file: %s\n",
+                    qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())));
             exit(1);
         }
         settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
@@ -98,9 +106,12 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
 
     if (!quiet) {
         if (builtIn)
-            qWarning() << QObject::tr("qml: Using built-in configuration.");
+            printf("qml: Using built-in configuration.\n");
         else
-            qWarning() << QObject::tr("qml: Using configuration file:") << settingsUrl;
+            printf("qml: Using configuration file: %s\n",
+                    qPrintable(settingsUrl.isLocalFile()
+                    ? QDir::toNativeSeparators(settingsUrl.toLocalFile())
+                    : settingsUrl.toString()));
     }
 
     // TODO: When we have better engine control, ban QtQuick* imports on this engine
@@ -109,7 +120,7 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
     conf = qobject_cast<Config*>(c2.create());
 
     if (!conf){
-        qCritical() << QObject::tr("qml: Error loading configuration file:") << c2.errorString();
+        printf("qml: Error loading configuration file: %s\n", qPrintable(c2.errorString()));
         exit(1);
     }
 }
@@ -128,6 +139,10 @@ void contain(QObject *o, const QUrl &containPath)
         o->setParent(o2); //Set QObject parent, and assume container will react as needed
 }
 
+#ifdef QT_GUI_LIB
+
+void noFilesGiven();
+
 // Loads qml after receiving a QFileOpenEvent
 class LoaderApplication : public QGuiApplication
 {
@@ -136,13 +151,24 @@ public:
 
     bool event(QEvent *ev)
     {
-        if (ev->type() == QEvent::FileOpen)
+        if (ev->type() == QEvent::FileOpen) {
+            if (exitTimerId >= 0) {
+                killTimer(exitTimerId);
+                exitTimerId = -1;
+            }
             qae->load(static_cast<QFileOpenEvent *>(ev)->url());
+        }
         else
             return QGuiApplication::event(ev);
         return true;
     }
+
+    void timerEvent(QTimerEvent *) {
+        noFilesGiven();
+    }
 };
+
+#endif // QT_GUI_LIB
 
 // Listens to the appEngine signals to determine if all files failed to load
 class LoadWatcher : public QObject
@@ -176,7 +202,7 @@ public Q_SLOTS:
             return;
 
         if (! --expect) {
-            qCritical() << QObject::tr("qml: Did not load any objects, exiting.");
+            printf("qml: Did not load any objects, exiting.\n");
             exit(2);//Different return code from qFatal
         }
     }
@@ -200,9 +226,24 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
 
 
 // ### Should command line arguments have translations? Qt creator doesn't, so maybe it's not worth it.
-bool useCoreApp = false;
-bool useWidgetApp = false;
+enum QmlApplicationType {
+    QmlApplicationTypeUnknown
+    , QmlApplicationTypeCore
+#ifdef QT_GUI_LIB
+    , QmlApplicationTypeGui
+#ifdef QT_WIDGETS_LIB
+    , QmlApplicationTypeWidget
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+};
+
+#ifndef QT_GUI_LIB
+QmlApplicationType applicationType = QmlApplicationTypeCore;
+#else
+QmlApplicationType applicationType = QmlApplicationTypeGui;
+#endif // QT_GUI_LIB
 bool quietMode = false;
+bool verboseMode = false;
 void printVersion()
 {
     printf("qml binary version ");
@@ -220,19 +261,26 @@ void printUsage()
     printf("Any argument ending in .qml will be treated as a QML file to be loaded.\n");
     printf("Any number of QML files can be loaded. They will share the same engine.\n");
     printf("Any argument which is not a recognized option and which does not end in .qml will be ignored.\n");
+    printf("'gui' application type is only available if the QtGui module is avaialble.\n");
     printf("'widget' application type is only available if the QtWidgets module is avaialble.\n");
     printf("\n");
     printf("General Options:\n");
     printf("\t-h, -help..................... Print this usage information and exit.\n");
     printf("\t-v, -version.................. Print the version information and exit.\n");
+#ifdef QT_GUI_LIB
+#ifndef QT_WIDGETS_LIB
+    printf("\t-apptype [core|gui] .......... Select which application class to use. Default is gui.\n");
+#else
     printf("\t-apptype [core|gui|widget] ... Select which application class to use. Default is gui.\n");
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
     printf("\t-quiet ....................... Suppress all output.\n");
     printf("\t-I [path] .................... Prepend the given path to the import paths.\n");
     printf("\t-f [file] .................... Load the given file as a QML file.\n");
     printf("\t-config [file] ............... Load the given file as the configuration file.\n");
     printf("\t-- ........................... Arguments after this one are ignored by the launcher, but may be used within the QML application.\n");
     printf("\tDebugging options:\n");
-    printf("\t-enable-debugger ............. Allow the QML debugger to connect to the application (also requires debugger arguments).\n");
+    printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
     printf("\t-translation [file] .......... Load the given file as the translations file.\n");
     printf("\t-dummy-data [directory] ...... Load QML files from the given directory as context properties.\n");
     printf("\t-slow-animations ............. Run all animations in slow motion.\n");
@@ -240,59 +288,58 @@ void printUsage()
     exit(0);
 }
 
+void noFilesGiven()
+{
+    if (!quietMode)
+        printf("qml: No files specified. Terminating.\n");
+    exit(1);
+}
+
 //Called before application initialization, removes arguments it uses
 void getAppFlags(int &argc, char **argv)
 {
+#ifdef QT_GUI_LIB
     for (int i=0; i<argc; i++) {
         if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
-            int type = 0;
+            applicationType = QmlApplicationTypeUnknown;
             if (i+1 < argc) {
                 if (!strcmp(argv[i+1], "core"))
-                    type = 1;
+                    applicationType = QmlApplicationTypeCore;
                 else if (!strcmp(argv[i+1], "gui"))
-                    type = 2;
+                    applicationType = QmlApplicationTypeGui;
 #ifdef QT_WIDGETS_LIB
                 else if (!strcmp(argv[i+1], "widget"))
-                    type = 3;
-#endif
+                    applicationType = QmlApplicationTypeWidget;
+#endif // QT_WIDGETS_LIB
             }
 
-            if (!type) {
-#ifdef QT_WIDGETS_LIB
-                printf("-apptype must be followed by one of the following: core gui widget\n");
-#else
+            if (applicationType == QmlApplicationTypeUnknown) {
+#ifndef QT_WIDGETS_LIB
                 printf("-apptype must be followed by one of the following: core gui\n");
-#endif
+#else
+                printf("-apptype must be followed by one of the following: core gui widget\n");
+#endif // QT_WIDGETS_LIB
                 printUsage();
-            }
-
-            switch (type) {
-            case 1: useCoreApp = true; break;
-            case 2: useCoreApp = false; break;
-#ifdef QT_WIDGETS_LIB
-            case 3: useWidgetApp = true; break;
-#endif
             }
             for (int j=i; j<argc-2; j++)
                 argv[j] = argv[j+2];
             argc -= 2;
-        } else if (!strcmp(argv[i], "-enable-debugger")) { // Normally done via a define in the include, so expects to be before application (and must be before engine)
-            static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
-            for (int j=i; j<argc-1; j++)
-                argv[j] = argv[j+1];
-            argc --;
         }
     }
+#endif // QT_GUI_LIB
 }
 
-void getFileSansBangLine(const QString &path, QByteArray &output)
+bool getFileSansBangLine(const QString &path, QByteArray &output)
 {
     QFile f(path);
     if (!f.open(QFile::ReadOnly | QFile::Text))
-        return;
+        return false;
     output = f.readAll();
-    if (output.startsWith("#!"))//Remove first line in this case (except \n, to avoid disturbing line count)
+    if (output.startsWith("#!")) {//Remove first line in this case (except \n, to avoid disturbing line count)
         output.remove(0, output.indexOf('\n'));
+        return true;
+    }
+    return false;
 }
 
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
@@ -315,7 +362,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         }
 
         if (dummyData && !quietMode) {
-            qWarning() << QObject::tr("qml: Loaded dummy data:") << dir.filePath(qml);
+            printf("qml: Loaded dummy data: %s\n",  qPrintable(dir.filePath(qml)));
             qml.truncate(qml.length()-4);
             engine.rootContext()->setContextProperty(qml, dummyData);
             dummyData->setParent(&engine);
@@ -326,15 +373,25 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
-    QCoreApplication *app;
-    if (useCoreApp)
+    QCoreApplication *app = 0;
+    switch (applicationType) {
+    case QmlApplicationTypeCore:
         app = new QCoreApplication(argc, argv);
-#ifdef QT_WIDGETS_LIB
-    else if (useWidgetApp)
-        app = new QApplication(argc, argv);
-#endif
-    else
+        break;
+#ifdef QT_GUI_LIB
+    case QmlApplicationTypeGui:
         app = new LoaderApplication(argc, argv);
+        break;
+#ifdef QT_WIDGETS_LIB
+    case QmlApplicationTypeWidget:
+        app = new QApplication(argc, argv);
+        break;
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+    default:
+        Q_ASSERT_X(false, Q_FUNC_INFO, "impossible case");
+        break;
+    }
 
     app->setApplicationName("Qml Runtime");
     app->setOrganizationName("Qt Project");
@@ -360,6 +417,8 @@ int main(int argc, char *argv[])
             printUsage();
         else if (arg == QLatin1String("--"))
             break;
+        else if (arg == QLatin1String("-verbose"))
+            verboseMode = true;
         else if (arg == QLatin1String("-slow-animations"))
             QUnifiedTimer::instance()->setSlowModeEnabled(true);
         else if (arg == QLatin1String("-fixed-animations"))
@@ -396,39 +455,44 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (quietMode && verboseMode)
+        verboseMode = false;
+
 #ifndef QT_NO_TRANSLATION
     //qt_ translations loaded by QQmlApplicationEngine
-    QTranslator qmlTranslator;
     QString sysLocale = QLocale::system().name();
-    if (qmlTranslator.load(QLatin1String("qml_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
-        app->installTranslator(&qmlTranslator);
 
     if (!translationFile.isEmpty()) { //Note: installed before QQmlApplicationEngine's automatic translation loading
         QTranslator translator;
 
         if (translator.load(translationFile)) {
             app->installTranslator(&translator);
+            if (verboseMode)
+                printf("qml: Loaded translation file %s\n", qPrintable(QDir::toNativeSeparators(translationFile)));
         } else {
             if (!quietMode)
-                qWarning() << "qml: Could not load the translation file" << translationFile;
+                printf("qml: Could not load the translation file %s\n", qPrintable(QDir::toNativeSeparators(translationFile)));
         }
     }
 #else
     if (!translationFile.isEmpty() && !quietMode)
-        qWarning() << "qml: Translation file specified, but Qt built without translation support.";
+        printf("qml: Translation file specified, but Qt built without translation support.\n");
 #endif
 
     if (quietMode)
         qInstallMessageHandler(quietMessageHandler);
 
     if (files.count() <= 0) {
-        if (!quietMode)
-            qCritical() << QObject::tr("qml: No files specified. Terminating.");
-        exit(1);
+#if defined(Q_OS_MAC)
+        if (applicationType == QmlApplicationTypeGui)
+            exitTimerId = static_cast<LoaderApplication *>(app)->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
+        else
+#endif
+        noFilesGiven();
     }
 
     qae = &e;
-    loadConf(confFile, quietMode);
+    loadConf(confFile, !verboseMode);
 
     //Load files
     LoadWatcher lw(&e, files.count());
@@ -438,22 +502,21 @@ int main(int argc, char *argv[])
         QRegularExpression urlRe("[[:word:]]+://.*");
         if (urlRe.match(path).hasMatch()) { //Treat as a URL
             QUrl url = QUrl::fromUserInput(path);
-            if (!quietMode)
-                qDebug() << QObject::tr("qml: loading ") << url;
+            if (verboseMode)
+                printf("qml: loading %s\n",
+                        qPrintable(url.isLocalFile()
+                        ? QDir::toNativeSeparators(url.toLocalFile())
+                        : url.toString()));
             e.load(url);
         } else { //Local file path
-            if (!quietMode) {
-                qDebug() << QObject::tr("qml: loading ") << path;
-                QByteArray strippedFile;
-                getFileSansBangLine(path, strippedFile);
-                if (strippedFile.isEmpty())
-                    // If there's an error opening the file, this will give us the right error message
-                    e.load(path);
-                else
-                    e.loadData(strippedFile, QUrl::fromLocalFile(path));
-            } else {
+            if (verboseMode)
+                printf("qml: loading %s\n", qPrintable(QDir::toNativeSeparators(path)));
+
+            QByteArray strippedFile;
+            if (getFileSansBangLine(path, strippedFile))
+                e.loadData(strippedFile, e.baseUrl().resolved(QUrl::fromLocalFile(path))); //QQmlComponent won't resolve it for us, it doesn't know it's a valid file if we loadData
+            else //Errors or no bang line
                 e.load(path);
-            }
         }
     }
 

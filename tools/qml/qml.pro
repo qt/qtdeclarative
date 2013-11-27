@@ -1,4 +1,5 @@
-QT += qml gui core-private
+QT = qml core-private
+qtHaveModule(gui): QT += gui
 qtHaveModule(widgets): QT += widgets
 
 HEADERS += conf.h
@@ -10,5 +11,7 @@ mac {
     QMAKE_INFO_PLIST = Info.plist
     ICON = qml.icns
 }
+
+DEFINES += QT_QML_DEBUG_NO_WARNING
 
 load(qt_tool)

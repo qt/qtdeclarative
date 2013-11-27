@@ -52,20 +52,18 @@
 QT_BEGIN_NAMESPACE
 
 QQmlDebugServicePrivate::QQmlDebugServicePrivate()
-    : server(0)
 {
 }
 
 QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QQmlDebugServicePrivate), parent)
 {
+    QQmlDebugServer::instance(); // create it when it isn't there yet.
+
     Q_D(QQmlDebugService);
     d->name = name;
     d->version = version;
-    d->server = QQmlDebugServer::instance();
     d->state = QQmlDebugService::NotConnected;
-
-
 }
 
 QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd,
@@ -75,7 +73,6 @@ QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd,
     Q_D(QQmlDebugService);
     d->name = name;
     d->version = version;
-    d->server = QQmlDebugServer::instance();
     d->state = QQmlDebugService::NotConnected;
 }
 
@@ -86,24 +83,23 @@ QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd,
 QQmlDebugService::State QQmlDebugService::registerService()
 {
     Q_D(QQmlDebugService);
-    if (!d->server)
+    QQmlDebugServer *server = QQmlDebugServer::instance();
+
+    if (!server)
         return NotConnected;
 
-    if (d->server->serviceNames().contains(d->name)) {
+    if (server->serviceNames().contains(d->name)) {
         qWarning() << "QQmlDebugService: Conflicting plugin name" << d->name;
-        d->server = 0;
     } else {
-        d->server->addService(this);
+        server->addService(this);
     }
     return state();
 }
 
 QQmlDebugService::~QQmlDebugService()
 {
-    Q_D(const QQmlDebugService);
-    if (d->server) {
-        d->server->removeService(this);
-    }
+    if (QQmlDebugServer *inst = QQmlDebugServer::instance())
+        inst->removeService(this);
 }
 
 QString QQmlDebugService::name() const
@@ -303,12 +299,11 @@ void QQmlDebugService::sendMessage(const QByteArray &message)
 
 void QQmlDebugService::sendMessages(const QList<QByteArray> &messages)
 {
-    Q_D(QQmlDebugService);
-
     if (state() != Enabled)
         return;
 
-    d->server->sendMessages(this, messages);
+    if (QQmlDebugServer *inst = QQmlDebugServer::instance())
+        inst->sendMessages(this, messages);
 }
 
 void QQmlDebugService::stateAboutToBeChanged(State)

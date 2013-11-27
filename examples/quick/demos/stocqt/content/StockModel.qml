@@ -122,11 +122,14 @@ ListModel {
     }
 
     function updateStock() {
-       var xhr = new XMLHttpRequest;
-
         var req = requestUrl();
 
-        xhr.open("GET", req);
+        if (!req)
+            return;
+
+        var xhr = new XMLHttpRequest;
+
+        xhr.open("GET", req, true);
 
         model.ready = false;
         model.clear();
@@ -145,7 +148,7 @@ ListModel {
                     if (model.count > 0) {
                         model.ready = true;
                         model.stockPrice = model.get(0).adjusted;
-                        model.stockPriceChanged = Math.round((model.stockPrice - model.get(2).adjusted) * 100) / 100;
+                        model.stockPriceChanged = model.count > 1 ? (Math.round((model.stockPrice - model.get(1).close) * 100) / 100) : 0;
                         model.dataReady(); //emit signal
                     }
                 }

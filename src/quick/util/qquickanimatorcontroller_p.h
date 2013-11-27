@@ -47,6 +47,7 @@
 #include <QtQuick/qquickitem.h>
 
 #include <QtCore/qmutex.h>
+#include <QtCore/qthread.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,27 +56,6 @@ class QQuickAnimatorController : public QObject, public QAnimationJobChangeListe
     Q_OBJECT
 
 public:
-
-    enum EventType {
-        // GUI to RT events
-        StartAnimation = QEvent::User + 1,
-        StopAnimation,
-        DeleteAnimation,
-
-        // RT back to GUI events
-        AnimationFinished
-    };
-
-    class Event : public QEvent {
-    public:
-        Event(QAbstractAnimationJob *j, EventType type)
-            : QEvent(QEvent::Type(type))
-            , job(j)
-        {
-        }
-        QAbstractAnimationJob *job;
-    };
-
     QQuickAnimatorController();
     ~QQuickAnimatorController();
 
@@ -83,32 +63,35 @@ public:
     void beforeNodeSync();
     void afterNodeSync();
 
-    bool event(QEvent *);
+    void animationFinished(QAbstractAnimationJob *job);
+    void animationStateChanged(QAbstractAnimationJob *job, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 
-    void startAnimation(QAbstractAnimationJob *job);
+    void requestSync();
 
-    void animationStateChanged(QAbstractAnimationJob *job,
-                               QAbstractAnimationJob::State newState,
-                               QAbstractAnimationJob::State oldState);
+    // These are called from the GUI thread (the proxy)
+    void startJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job);
+    void stopJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job);
+    void deleteJob(QAbstractAnimationJob *job);
+
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
 
 public Q_SLOTS:
-    void animationsStarted();
     void itemDestroyed(QObject *);
 
 public:
-    QList<QAbstractAnimationJob *> starting;
-    QList<QAbstractAnimationJob *> stopped;
+    // These are manipulated from the GUI thread and should only
+    // be updated during the sync() phase.
+    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_starting;
+    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_stopping;
+    QSet<QAbstractAnimationJob *> m_deleting;
 
-    QSet<QAbstractAnimationJob *> activeRootAnimations;
-    QSet<QQuickAnimatorJob *> activeLeafAnimations;
-
-    QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> transforms;
-
-    QSet<QQuickItem *> deletedSinceLastFrame;
-
-    QQuickWindow *window;
-
-    QMutex mutex;
+    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_animatorRoots;
+    QSet<QQuickAnimatorJob *> m_activeLeafAnimations;
+    QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> m_transforms;
+    QSet<QQuickItem *> m_deletedSinceLastFrame;
+    QQuickWindow *m_window;
+    QMutex m_mutex;
 };
 
 QT_END_NAMESPACE

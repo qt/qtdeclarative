@@ -150,6 +150,7 @@ private slots:
     void header();
     void header_data();
     void header_delayItemCreation();
+    void headerChangesViewport();
     void footer();
     void footer_data();
     void extents();
@@ -212,6 +213,8 @@ private slots:
     void delayedChanges_QTBUG_30555();
     void outsideViewportChangeNotAffectingView();
     void testProxyModelChangedAfterMove();
+
+    void typedModel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -3655,6 +3658,35 @@ void tst_QQuickListView::header_delayItemCreation()
     delete window;
 }
 
+void tst_QQuickListView::headerChangesViewport()
+{
+    QQuickView *window = getView();
+    window->rootContext()->setContextProperty("headerHeight", 20);
+    window->rootContext()->setContextProperty("headerWidth", 240);
+    window->setSource(testFileUrl("headerchangesviewport.qml"));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QQuickText *header = 0;
+    QTRY_VERIFY(header = findItem<QQuickText>(contentItem, "header"));
+    QVERIFY(header == listview->headerItem());
+
+    QCOMPARE(header->height(), 20.);
+    QCOMPARE(listview->contentHeight(), 20.);
+
+    // change height
+    window->rootContext()->setContextProperty("headerHeight", 50);
+
+    // verify that list content height updates also
+    QCOMPARE(header->height(), 50.);
+    QCOMPARE(listview->contentHeight(), 50.);
+}
+
 void tst_QQuickListView::footer()
 {
     QFETCH(QQuickListView::Orientation, orientation);
@@ -6958,6 +6990,24 @@ void tst_QQuickListView::testProxyModelChangedAfterMove()
     QTRY_COMPARE(listview->count(), 3);
 
     delete window;
+}
+
+void tst_QQuickListView::typedModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("typedModel.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(object.data());
+    QVERIFY(listview);
+
+    QCOMPARE(listview->count(), 6);
+
+    QQmlListModel *listModel = 0;
+
+    listview->setModel(QVariant::fromValue(listModel));
+    QCOMPARE(listview->count(), 0);
 }
 
 QTEST_MAIN(tst_QQuickListView)

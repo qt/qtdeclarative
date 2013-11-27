@@ -68,7 +68,6 @@
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
-#include <QtQuick/private/qsgflashnode_p.h>
 #include <QtQuick/private/qsggeometry_p.h>
 #include <QtQuick/private/qsgnode_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>

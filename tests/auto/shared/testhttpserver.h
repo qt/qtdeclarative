@@ -74,6 +74,12 @@ private slots:
     void sendOne();
 
 private:
+    enum State {
+        AwaitingHeader,
+        AwaitingData,
+        Failed
+    };
+
     void serveGET(QTcpSocket *, const QByteArray &);
     bool reply(QTcpSocket *, const QByteArray &);
 
@@ -87,7 +93,8 @@ private:
     } waitData;
     QByteArray replyData;
     QByteArray bodyData;
-    bool m_hasFailed;
+    QByteArray m_data;
+    State m_state;
 
     QHash<QString,QString> aliases;
     QHash<QString,QString> redirects;

@@ -209,7 +209,7 @@ public:
 
     void ensureQObjectWrapper();
 
-    void mark();
+    void mark(QV4::ExecutionEngine *e);
 
     void connectAlias(int aliasId);
     QBitArray aConnected;

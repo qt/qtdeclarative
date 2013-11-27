@@ -32,7 +32,7 @@
 \brief the animation system in Qt Quick
 
 \section1 Animation and Transitions Types
-\generatelist{related}
+
 \list
 \li \l {Transition} - Animates transitions during state changes
 \li \l {SequentialAnimation} - Runs animations sequentially
@@ -47,15 +47,6 @@
 
 Types that animate properties based on data types
 \annotatedlist qtquick-animation-properties
-\list
-\li \l {PropertyAnimation} - Animates property changes
-\li \l {NumberAnimation} - Animates properties of type qreal
-\li \l {Vector3dAnimation} - Animates properties of type QVector3d
-\li \l {ColorAnimation} - Animates color changes
-\li \l {RotationAnimation} - Animates rotations
-\li \l {ParentAnimation} - Animates parent changes
-\li \l {AnchorAnimation} - Animates anchor changes
-\endlist
 
 Animations are created by applying animation types to property
 values. Animation types will interpolate property values to create smooth
@@ -64,6 +55,8 @@ transitions. As well, state transitions may assign animations to state changes.
 To create an animation, use an appropriate animation type for the type of
 the property that is to be animated, and apply the animation depending on the
 type of behavior that is required.
+
+\sa {Qt Quick Examples - Animation}
 
 \section1 Triggering Animations
 
@@ -217,9 +210,6 @@ sequential or parallel animation must be started and stopped as a group.
 The \l SequentialAnimation type is also useful for playing
 \l{qml-transition-animations}{transition animations} because animations are
 played in parallel inside transitions.
-
-See the \l {declarative/animation/basics}{Animation basics example} for a
-demonstration of creating and combining multiple animations in QML.
 
 \keyword qml-controlling-animations
 \section1 Controlling Animations

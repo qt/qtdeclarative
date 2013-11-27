@@ -94,7 +94,16 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     using Object::get;
 
+    ReturnedValue getProperty(ExecutionContext *ctx, int propertyIndex, bool captureRequired);
+    void setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value);
+
+protected:
+    static bool isEqualTo(Managed *that, Managed *o);
+
 private:
+    ReturnedValue getProperty(ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired = true);
+    static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value);
+
     static ReturnedValue create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
@@ -108,15 +117,15 @@ private:
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static PropertyAttributes query(const Managed *, StringRef name);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
     static void collectDeletables(Managed *m, GCDeletable **deletable);
     static void destroy(Managed *that)
     {
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
 
-    static ReturnedValue method_connect(SimpleCallContext *ctx);
-    static ReturnedValue method_disconnect(SimpleCallContext *ctx);
+    static ReturnedValue method_connect(CallContext *ctx);
+    static ReturnedValue method_disconnect(CallContext *ctx);
 };
 
 struct QObjectMethod : public QV4::FunctionObject

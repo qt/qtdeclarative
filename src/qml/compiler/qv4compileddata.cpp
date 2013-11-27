@@ -46,7 +46,6 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
-#include <private/qv4unwindhelper_p.h>
 
 #include <algorithm>
 
@@ -55,13 +54,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 namespace CompiledData {
-
-namespace {
-    bool functionSortHelper(QV4::Function *lhs, QV4::Function *rhs)
-    {
-        return reinterpret_cast<quintptr>(lhs->codePtr) < reinterpret_cast<quintptr>(rhs->codePtr);
-    }
-}
 
 CompilationUnit::~CompilationUnit()
 {
@@ -78,13 +70,13 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::SafeString *)malloc(data->stringTableSize * sizeof(QV4::SafeString));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::SafeString));
-    for (int i = 0; i < data->stringTableSize; ++i)
+    for (uint i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
     runtimeRegularExpressions = new QV4::SafeValue[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
     memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::SafeValue));
-    for (int i = 0; i < data->regexpTableSize; ++i) {
+    for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
         int flags = 0;
         if (re->flags & CompiledData::RegExp::RegExp_Global)
@@ -110,8 +102,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
 
-            for (int i = 0; i < QV4::Lookup::Size; ++i)
-                l->classList[i] = 0;
+            for (int j = 0; j < QV4::Lookup::Size; ++j)
+                l->classList[j] = 0;
             l->level = -1;
             l->index = UINT_MAX;
             l->name = runtimeStrings[compiledLookups[i].nameIndex].asString();
@@ -121,7 +113,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     if (data->jsClassTableSize) {
         runtimeClasses = (QV4::InternalClass**)malloc(data->jsClassTableSize * sizeof(QV4::InternalClass*));
 
-        for (int i = 0; i < data->jsClassTableSize; ++i) {
+        for (uint i = 0; i < data->jsClassTableSize; ++i) {
             int memberCount = 0;
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
             QV4::InternalClass *klass = engine->objectClass;
@@ -166,20 +158,20 @@ void CompilationUnit::unlink()
     runtimeFunctions.clear();
 }
 
-void CompilationUnit::markObjects()
+void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 {
-    for (int i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i].mark();
+    for (uint i = 0; i < data->stringTableSize; ++i)
+        runtimeStrings[i].mark(e);
     if (runtimeRegularExpressions) {
-        for (int i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark();
+        for (uint i = 0; i < data->regexpTableSize; ++i)
+            runtimeRegularExpressions[i].mark(e);
     }
     for (int i = 0; i < runtimeFunctions.count(); ++i)
         if (runtimeFunctions[i])
-            runtimeFunctions[i]->mark();
+            runtimeFunctions[i]->mark(e);
     if (runtimeLookups) {
-        for (int i = 0; i < data->lookupTableSize; ++i)
-            runtimeLookups[i].name->mark();
+        for (uint i = 0; i < data->lookupTableSize; ++i)
+            runtimeLookups[i].name->mark(e);
     }
 }
 

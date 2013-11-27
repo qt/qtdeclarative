@@ -168,29 +168,34 @@ QString Managed::className() const
     case Type_ForeachIteratorObject:
         s = "__ForeachIterator";
         break;
+    case Type_RegExp:
+        s = "RegExp";
+        break;
+    case Type_QmlSequence:
+        s = "QmlSequence";
+        break;
     }
     return QString::fromLatin1(s);
 }
 
 bool Managed::hasInstance(Managed *m, const ValueRef)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::construct(Managed *m, CallData *)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::call(Managed *m, CallData *)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::getLookup(Managed *m, Lookup *)
 {
-    m->engine()->current->throwTypeError();
-    return 0;
+    return m->engine()->current->throwTypeError();
 }
 
 void Managed::setLookup(Managed *m, Lookup *, const ValueRef)

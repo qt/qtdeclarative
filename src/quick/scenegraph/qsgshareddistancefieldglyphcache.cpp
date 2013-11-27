@@ -228,6 +228,7 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
             this, SLOT(reportItemsInvalidated(QByteArray,QVector<quint32>)),
             Qt::DirectConnection);
 
+    Q_ASSERT(c);
     QQuickWindow *window = static_cast<QQuickWindow *>(c->surface());
     Q_ASSERT(window != 0);
 

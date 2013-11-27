@@ -61,11 +61,11 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.PreemptiveModule");
-        qmlRegisterType<MyPluginType>("com.nokia.PreemptiveModule", 1, 0, "MyPluginType");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.PreemptiveModule");
+        qmlRegisterType<MyPluginType>("org.qtproject.PreemptiveModule", 1, 0, "MyPluginType");
 
         // Install into another namespace that should be protected
-        qmlRegisterType<MyPluginType>("com.nokia.PreemptedStrictModule", 1, 0, "MyPluginType");
+        qmlRegisterType<MyPluginType>("org.qtproject.PreemptedStrictModule", 1, 0, "MyPluginType");
     }
 };
 

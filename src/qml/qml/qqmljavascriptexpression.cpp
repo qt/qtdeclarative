@@ -86,7 +86,7 @@ void QQmlDelayedError::setErrorObject(QObject *object)
 
 void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionContext *context)
 {
-    m_error = QV4::ExecutionEngine::convertJavaScriptException(context);
+    m_error = QV4::ExecutionEngine::catchExceptionAsQmlError(context);
 }
 
 
@@ -148,9 +148,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
 
-    QQmlContextData *lastSharedContext = 0;
-    QObject *lastSharedScope = 0;
-
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
     DeleteWatcher watcher(this);
@@ -159,28 +156,27 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
-    try {
-        callData->thisObject = ep->v8engine()->global();
-        if (scopeObject() && requiresThisObject()) {
-            QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->engine, scopeObject()));
-            if (value->isObject())
-                callData->thisObject = value;
-        }
+    callData->thisObject = v4->globalObject;
+    if (scopeObject()) {
+        QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->engine, scopeObject()));
+        if (value->isObject())
+            callData->thisObject = value;
+    }
 
-        result = function->asFunctionObject()->call(callData);
-
-        if (isUndefined)
-            *isUndefined = result->isUndefined();
-
-        if (!watcher.wasDeleted() && hasDelayedError())
-            delayedError()->clearError();
-    } catch (...) {
+    result = function->asFunctionObject()->call(callData);
+    if (scope.hasException()) {
         if (watcher.wasDeleted())
             ctx->catchException(); // ignore exception
         else
             delayedError()->catchJavaScriptException(ctx);
         if (isUndefined)
             *isUndefined = true;
+    } else {
+        if (isUndefined)
+            *isUndefined = result->isUndefined();
+
+        if (!watcher.wasDeleted() && hasDelayedError())
+            delayedError()->clearError();
     }
 
     if (capture.errorString) {
@@ -276,6 +272,8 @@ void QQmlJavaScriptExpression::clearError()
 
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
+    Q_UNUSED(engine);
+
     if (m_vtable.hasValue())
         return m_vtable.constValue()->error();
     else
@@ -302,11 +300,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
-    try {
-        script.parse();
+    script.parse();
+    if (!v4->hasException)
         result = script.run();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    if (v4->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)
@@ -336,11 +334,11 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
     QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
-    try {
-        script.parse();
+    script.parse();
+    if (!v4->hasException)
         result = script.qmlBinding();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    if (v4->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)

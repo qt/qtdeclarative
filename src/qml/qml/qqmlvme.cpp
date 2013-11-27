@@ -400,8 +400,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_PROVIDER_VALUE(StoreColor, QMetaType::QColor, instr.value);
         QML_STORE_VALUE(StoreDate, QDate, QDate::fromJulianDay(instr.value));
         QML_STORE_VALUE(StoreDateTime, QDateTime,
-                        QDateTime(QDate::fromJulianDay(instr.date), *(QTime *)&instr.time));
-        QML_STORE_POINTER(StoreTime, (QTime *)&instr.time);
+                        QDateTime(QDate::fromJulianDay(instr.date), QTime::fromMSecsSinceStartOfDay(instr.time)));
+        QML_STORE_VALUE(StoreTime, QTime, QTime::fromMSecsSinceStartOfDay(instr.time));
         QML_STORE_POINTER(StorePoint, (QPoint *)&instr.point);
         QML_STORE_POINTER(StorePointF, (QPointF *)&instr.point);
         QML_STORE_POINTER(StoreSize, (QSize *)&instr.size);
@@ -638,7 +638,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CreateSimpleObject)
             QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));   
-            ::memset(o, 0, instr.typeSize + sizeof(QQmlData));
+            ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);
 
             QQmlData *ddata = (QQmlData *)(((const char *)o) + instr.typeSize);
@@ -791,7 +791,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
-            CTXT->importedScripts << SCRIPTS.at(instr.value)->scriptValueForContext(CTXT);
+            QV4::Scope scope(v4);
+            QV4::ScopedObject scripts(scope, CTXT->importedScripts.value());
+            if (!scripts) {
+                scripts = v4->newArrayObject();
+                CTXT->importedScripts = scripts;
+            }
+            scripts->putIndexed(instr.value, SCRIPTS.at(instr.value)->scriptValueForContext(CTXT));
         QML_END_INSTR(StoreImportedScript)
 
         QML_BEGIN_INSTR(StoreScriptString)

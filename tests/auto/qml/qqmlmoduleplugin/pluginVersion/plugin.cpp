@@ -65,7 +65,7 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.AutoTestQmlVersionPluginType");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlVersionPluginType");
         qmlRegisterType<FloorPluginType>(uri, 1, 4, "Floor");
     }
 };

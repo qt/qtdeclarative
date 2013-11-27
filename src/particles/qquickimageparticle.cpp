@@ -51,6 +51,7 @@
 #include <private/qquicksprite_p.h>
 #include <private/qquickspriteengine_p.h>
 #include <QOpenGLFunctions>
+#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
@@ -58,189 +59,14 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_OPENGL_ES_2
-#define SHADER_DEFINES "#version 120\n"
+#if defined(Q_OS_BLACKBERRY)
+#define SHADER_PLATFORM_DEFINES "Q_OS_BLACKBERRY\n"
 #else
-#define SHADER_DEFINES ""
+#define SHADER_PLATFORM_DEFINES
 #endif
 
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
-
-static const char vertexShaderCode[] =
-    "#if defined(DEFORM)\n"
-    "attribute highp vec4 vPosTex;\n"
-    "#else\n"
-    "attribute highp vec2 vPos;\n"
-    "#endif\n"
-    "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
-    "attribute highp vec4 vVec; // x,y = constant velocity,  z,w = acceleration\n"
-    "uniform highp float entry;\n"
-    "#if defined(COLOR)\n"
-    "attribute highp vec4 vColor;\n"
-    "#endif\n"
-    "#if defined(DEFORM)\n"
-    "attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector\n"
-    "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation velocity, z= bool autoRotate\n"
-    "#endif\n"
-    "#if defined(SPRITE)\n"
-    "attribute highp vec3 vAnimData;// w,h(premultiplied of anim), interpolation progress\n"
-    "attribute highp vec4 vAnimPos;//x,y, x,y (two frames for interpolation)\n"
-    "#endif\n"
-    "\n"
-    "uniform highp mat4 qt_Matrix;\n"
-    "uniform highp float timestamp;\n"
-    "#if defined(TABLE)\n"
-    "varying lowp vec2 tt;//y is progress if Sprite mode\n"
-    "uniform highp float sizetable[64];\n"
-    "uniform highp float opacitytable[64];\n"
-    "#endif\n"
-    "#if defined(SPRITE)\n"
-    "varying highp vec4 fTexS;\n"
-    "#elif defined(DEFORM)\n"
-    "varying highp vec2 fTex;\n"
-    "#endif\n"
-    "#if defined(COLOR)\n"
-    "varying lowp vec4 fColor;\n"
-    "#else\n"
-    "varying lowp float fFade;\n"
-    "#endif\n"
-    "\n"
-    "\n"
-    "void main() {\n"
-    "\n"
-    "    highp float t = (timestamp - vData.x) / vData.y;\n"
-    "    if (t < 0. || t > 1.) {\n"
-    "#if defined(DEFORM)\n"
-    "        gl_Position = qt_Matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);\n"
-    "#else\n"
-    "        gl_PointSize = 0.;\n"
-    "#endif\n"
-    "    } else {\n"
-    "#if defined(SPRITE)\n"
-    "        tt.y = vAnimData.z;\n"
-    "        //Calculate frame location in texture\n"
-    "        fTexS.xy = vAnimPos.xy + vPosTex.zw * vAnimData.xy;\n"
-    "        //Next frame is also passed, for interpolation\n"
-    "        fTexS.zw = vAnimPos.zw + vPosTex.zw * vAnimData.xy;\n"
-    "\n"
-    "#elif defined(DEFORM)\n"
-    "        fTex = vPosTex.zw;\n"
-    "#endif\n"
-    "        highp float currentSize = mix(vData.z, vData.w, t * t);\n"
-#if defined (Q_OS_BLACKBERRY)
-    "        highp float fade = 1.;\n"
-#else
-    "        lowp float fade = 1.;\n"
-#endif
-    "        highp float fadeIn = min(t * 10., 1.);\n"
-    "        highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);\n"
-    "\n"
-    "#if defined(TABLE)\n"
-    "        currentSize = currentSize * sizetable[int(floor(t*64.))];\n"
-    "        fade = fade * opacitytable[int(floor(t*64.))];\n"
-    "#endif\n"
-    "\n"
-    "        if (entry == 1.)\n"
-    "            fade = fade * fadeIn * fadeOut;\n"
-    "        else if (entry == 2.)\n"
-    "            currentSize = currentSize * fadeIn * fadeOut;\n"
-    "\n"
-    "        if (currentSize <= 0.) {\n"
-    "#if defined(DEFORM)\n"
-    "            gl_Position = qt_Matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);\n"
-    "#else\n"
-    "            gl_PointSize = 0.;\n"
-    "#endif\n"
-    "        } else {\n"
-    "            if (currentSize < 3.)//Sizes too small look jittery as they move\n"
-    "                currentSize = 3.;\n"
-    "\n"
-    "            highp vec2 pos;\n"
-    "#if defined(DEFORM)\n"
-    "            highp float rotation = vRotation.x + vRotation.y * t * vData.y;\n"
-    "            if (vRotation.z == 1.0){\n"
-    "                highp vec2 curVel = vVec.zw * t * vData.y + vVec.xy;\n"
-    "                if (length(curVel) > 0.)\n"
-    "                    rotation += atan(curVel.y, curVel.x);\n"
-    "            }\n"
-    "            highp vec2 trigCalcs = vec2(cos(rotation), sin(rotation));\n"
-    "            highp vec4 deform = vDeformVec * currentSize * (vPosTex.zzww - 0.5);\n"
-    "            highp vec4 rotatedDeform = deform.xxzz * trigCalcs.xyxy;\n"
-    "            rotatedDeform = rotatedDeform + (deform.yyww * trigCalcs.yxyx * vec4(-1.,1.,-1.,1.));\n"
-    "            /* The readable version:\n"
-    "            highp vec2 xDeform = vDeformVec.xy * currentSize * (vTex.x-0.5);\n"
-    "            highp vec2 yDeform = vDeformVec.zw * currentSize * (vTex.y-0.5);\n"
-    "            highp vec2 xRotatedDeform;\n"
-    "            xRotatedDeform.x = trigCalcs.x*xDeform.x - trigCalcs.y*xDeform.y;\n"
-    "            xRotatedDeform.y = trigCalcs.y*xDeform.x + trigCalcs.x*xDeform.y;\n"
-    "            highp vec2 yRotatedDeform;\n"
-    "            yRotatedDeform.x = trigCalcs.x*yDeform.x - trigCalcs.y*yDeform.y;\n"
-    "            yRotatedDeform.y = trigCalcs.y*yDeform.x + trigCalcs.x*yDeform.y;\n"
-    "            */\n"
-    "            pos = vPosTex.xy\n"
-    "                  + rotatedDeform.xy\n"
-    "                  + rotatedDeform.zw\n"
-    "                  + vVec.xy * t * vData.y         // apply velocity\n"
-    "                  + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration\n"
-    "#else\n"
-    "            pos = vPos\n"
-    "                  + vVec.xy * t * vData.y         // apply velocity vector..\n"
-    "                  + 0.5 * vVec.zw * pow(t * vData.y, 2.);\n"
-    "            gl_PointSize = currentSize;\n"
-    "#endif\n"
-    "            gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);\n"
-    "\n"
-    "#if defined(COLOR)\n"
-    "            fColor = vColor * fade;\n"
-    "#else\n"
-    "            fFade = fade;\n"
-    "#endif\n"
-    "#if defined(TABLE)\n"
-    "            tt.x = t;\n"
-    "#endif\n"
-    "        }\n"
-    "    }\n"
-    "}\n";
-
-static const char fragmentShaderCode[] =
-    "uniform sampler2D _qt_texture;\n"
-    "uniform lowp float qt_Opacity;\n"
-    "\n"
-    "#if defined(SPRITE)\n"
-    "varying highp vec4 fTexS;\n"
-    "#elif defined(DEFORM)\n"
-    "varying highp vec2 fTex;\n"
-    "#endif\n"
-    "#if defined(COLOR)\n"
-    "varying lowp vec4 fColor;\n"
-    "#else\n"
-    "varying lowp float fFade;\n"
-    "#endif\n"
-    "#if defined(TABLE)\n"
-    "varying lowp vec2 tt;\n"
-    "uniform sampler2D colortable;\n"
-    "#endif\n"
-    "\n"
-    "void main() {\n"
-    "#if defined(SPRITE)\n"
-    "    gl_FragColor = mix(texture2D(_qt_texture, fTexS.xy), texture2D(_qt_texture, fTexS.zw), tt.y)\n"
-    "            * fColor\n"
-    "            * texture2D(colortable, tt)\n"
-    "            * qt_Opacity;\n"
-    "#elif defined(TABLE)\n"
-    "    gl_FragColor = texture2D(_qt_texture, fTex)\n"
-    "            * fColor\n"
-    "            * texture2D(colortable, tt)\n"
-    "            * qt_Opacity;\n"
-    "#elif defined(DEFORM)\n"
-    "    gl_FragColor = (texture2D(_qt_texture, fTex)) * fColor * qt_Opacity;\n"
-    "#elif defined(COLOR)\n"
-    "    gl_FragColor = (texture2D(_qt_texture, gl_PointCoord)) * fColor * qt_Opacity;\n"
-    "#else\n"
-    "    gl_FragColor = texture2D(_qt_texture, gl_PointCoord) * (fFade * qt_Opacity);\n"
-    "#endif\n"
-    "}\n";
 
 const qreal CONV = 0.017453292519943295;
 class ImageMaterialData
@@ -273,13 +99,29 @@ class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 public:
     TabledMaterial()
     {
-        m_vertex_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + vertexShaderCode;
+        QSGShaderSourceBuilder builder;
 
-        m_fragment_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + fragmentShaderCode;
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+
+        m_vertex_code = builder.source();
+        builder.clear();
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -335,13 +177,26 @@ class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData
 public:
     DeformableMaterial()
     {
-        m_vertex_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define DEFORM\n#define COLOR\n")
-            + vertexShaderCode;
+        QSGShaderSourceBuilder builder;
 
-        m_fragment_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define DEFORM\n#define COLOR\n")
-            + fragmentShaderCode;
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_vertex_code = builder.source();
+        builder.clear();
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -386,13 +241,30 @@ class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
 public:
     SpriteMaterial()
     {
-        m_vertex_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + vertexShaderCode;
+        QSGShaderSourceBuilder builder;
 
-        m_fragment_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + fragmentShaderCode;
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("SPRITE"));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_vertex_code = builder.source();
+        builder.clear();
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("SPRITE"));
+        builder.addDefinition(QByteArrayLiteral("TABLE"));
+        builder.addDefinition(QByteArrayLiteral("DEFORM"));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -450,13 +322,24 @@ class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
 public:
     ColoredMaterial()
     {
-        m_vertex_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define COLOR\n")
-            + vertexShaderCode;
+        QSGShaderSourceBuilder builder;
 
-        m_fragment_code = QByteArray(SHADER_DEFINES)
-            + QByteArray("#define COLOR\n")
-            + fragmentShaderCode;
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_vertex_code = builder.source();
+        builder.clear();
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+        builder.addDefinition(QByteArrayLiteral("COLOR"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -516,11 +399,22 @@ class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
 public:
     SimpleMaterial()
     {
-        m_vertex_code = QByteArray(SHADER_DEFINES)
-            + vertexShaderCode;
+        QSGShaderSourceBuilder builder;
 
-        m_fragment_code = QByteArray(SHADER_DEFINES)
-            + fragmentShaderCode;
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_vertex_code = builder.source();
+        builder.clear();
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
+        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
+        m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -645,7 +539,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Note that the sprite image will be scaled to a square based on the size of
     the particle being rendered.
 
-    For full details, see the \l{Sprite Animation} overview.
+    For full details, see the \l{Sprite Animations} overview.
 */
 /*!
     \qmlproperty url QtQuick.Particles::ImageParticle::colorTable
@@ -821,7 +715,6 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_sizeTable(0)
     , m_opacityTable(0)
     , m_color_variation(0.0)
-    , m_rootNode(0)
     , m_material(0)
     , m_alphaVariation(0.0)
     , m_alpha(1.0)
@@ -846,7 +739,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_lastLevel(Unknown)
     , m_debugMode(false)
     , m_entryEffect(Fade)
-    , m_buildingNodes(false)
+    , m_startedImageLoading(0)
 {
     setFlag(ItemHasContents);
 }
@@ -863,7 +756,6 @@ QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 void QQuickImageParticle::sceneGraphInvalidated()
 {
     m_nodes.clear();
-    m_rootNode = 0;
     m_material = 0;
 }
 
@@ -1293,39 +1185,48 @@ bool QQuickImageParticle::loadingSomething()
         || (m_spriteEngine && m_spriteEngine->isLoading());
 }
 
-void QQuickImageParticle::buildParticleNodes()//Starts async parts, like loading images.
+void QQuickImageParticle::mainThreadFetchImageData()
 {
-    if (m_rootNode || loadingSomething())
-        return;
-
-    if (!m_buildingNodes) {
-        if (m_image) {//ImageData created on setSource
-            m_image->pix.clear(this);
-            m_image->pix.load(qmlEngine(this), m_image->source);
-        }
-
-        if (m_spriteEngine)
-            m_spriteEngine->startAssemblingImage();
-
-        if (m_colorTable)
-            m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
-
-        if (m_sizeTable)
-            m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
-
-        if (m_opacityTable)
-            m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
-
-        m_buildingNodes = true;
-        if (loadingSomething())
-            return;
+    if (m_image) {//ImageData created on setSource
+        m_image->pix.clear(this);
+        m_image->pix.load(qmlEngine(this), m_image->source);
     }
-    finishBuildParticleNodes();
+
+    if (m_spriteEngine)
+        m_spriteEngine->startAssemblingImage();
+
+    if (m_colorTable)
+        m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
+
+    if (m_sizeTable)
+        m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
+
+    if (m_opacityTable)
+        m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
+
+    m_startedImageLoading = 2;
 }
 
-void QQuickImageParticle::finishBuildParticleNodes()
+void QQuickImageParticle::buildParticleNodes(QSGNode** passThrough)
 {
-    m_buildingNodes = false;
+    // Starts async parts, like loading images, on gui thread
+    // Not on individual properties, because we delay until system is running
+    if (*passThrough || loadingSomething())
+        return;
+
+    if (m_startedImageLoading == 0) {
+        m_startedImageLoading = 1;
+        //stage 1 is in gui thread
+        QQuickImageParticle::staticMetaObject.invokeMethod(this, "mainThreadFetchImageData", Qt::QueuedConnection);
+    } else if (m_startedImageLoading == 2) {
+        finishBuildParticleNodes(passThrough); //rest happens in render thread
+    }
+
+    //No mutex, because it's slow and a compare that fails due to a race condition means just a dropped frame
+}
+
+void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
+{
 #ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
@@ -1383,6 +1284,12 @@ void QQuickImageParticle::finishBuildParticleNodes()
     if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "ATI")) {
         perfLevel = Deformable;
     }
+#endif
+
+#ifdef Q_OS_LINUX
+    // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
+    if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "nouveau"))
+        perfLevel = Deformable;
 #endif
 
     if (perfLevel >= Colored  && !m_color.isValid())
@@ -1548,17 +1455,18 @@ void QQuickImageParticle::finishBuildParticleNodes()
             (*(m_nodes.begin()))->appendChildNode(node);
     }
 
-    m_rootNode = *(m_nodes.begin());
+    *node = *(m_nodes.begin());
     update();
 }
 
-QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
+QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
     if (m_pleaseReset){
-        m_lastLevel = perfLevel;
+        if (node)
+            delete node;
+        node = 0;
 
-        delete m_rootNode;//Automatically deletes children, and SG manages material lifetime
-        m_rootNode = 0;
+        m_lastLevel = perfLevel;
         m_nodes.clear();
 
         m_idxStarts.clear();
@@ -1568,27 +1476,27 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         m_material = 0;
 
         m_pleaseReset = false;
-        m_buildingNodes = false;//Cancel a part-way build
+        m_startedImageLoading = 0;//Cancel a part-way build (may still have a pending load)
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
-        prepareNextFrame();
-        if (m_rootNode) {
+        prepareNextFrame(&node);
+        if (node) {
             update();
-            foreach (QSGGeometryNode* node, m_nodes)
-                node->markDirty(QSGNode::DirtyGeometry);
-        } else if (m_buildingNodes) {
+            foreach (QSGGeometryNode* n, m_nodes)
+                n->markDirty(QSGNode::DirtyGeometry);
+        } else if (m_startedImageLoading < 2) {
             update();//To call prepareNextFrame() again from the renderThread
         }
     }
 
-    return m_rootNode;
+    return node;
 }
 
-void QQuickImageParticle::prepareNextFrame()
+void QQuickImageParticle::prepareNextFrame(QSGNode **node)
 {
-    if (m_rootNode == 0){//TODO: Staggered loading (as emitted)
-        buildParticleNodes();
+    if (*node == 0){//TODO: Staggered loading (as emitted)
+        buildParticleNodes(node);
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
@@ -1599,7 +1507,7 @@ void QQuickImageParticle::prepareNextFrame()
             }
             qDebug() << "Total count: " << count;
         }
-        if (m_rootNode == 0)
+        if (*node == 0)
             return;
     }
     qint64 timeStamp = m_system->systemSync(this);

@@ -63,6 +63,18 @@ SOURCES += \
     $$PWD/qquickparticlegroup.cpp \
     $$PWD/qquickgroupgoal.cpp
 
+OTHER_FILES += \
+    $$PWD/shaders/customparticletemplate.vert \
+    $$PWD/shaders/customparticle.vert \
+    $$PWD/shaders/customparticle.frag \
+    $$PWD/shaders/imageparticle.vert \
+    $$PWD/shaders/imageparticle.frag \
+    $$PWD/shaders/customparticletemplate_core.vert \
+    $$PWD/shaders/customparticle_core.vert \
+    $$PWD/shaders/customparticle_core.frag \
+    $$PWD/shaders/imageparticle_core.vert \
+    $$PWD/shaders/imageparticle_core.frag
+
 RESOURCES += \
     $$PWD/particles.qrc
 

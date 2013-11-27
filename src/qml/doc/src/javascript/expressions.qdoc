@@ -71,7 +71,7 @@ logic.  There are four ways that JavaScript can be used in a QML document:
   \li \l{Method Attributes}{custom methods} can be defined
       in QML files as JavaScript functions
   \li JavaScript files providing functions and variables can be
-      \l{Importing JavaScript Files in QML Documents}{imported} in a QML
+      \l{Importing JavaScript Resources in QML}{imported} in a QML
       document
 \endlist
 
@@ -103,7 +103,7 @@ property binding definition, as long as the result of the expression is a
 value whose type can be assigned to the property.
 
 There are two ways to define a property binding: the first (and most common)
-is, as previously shown, in a \l{QML Object Attributes#property-initialization}
+is, as previously shown, in a \l{QML Object Attributes#Value Assignment on Initialization}
 {property initialization}.  The second (and much rarer) way is to assign the
 property a function returned from the \l{Qt::binding()}{Qt.binding()} function,
 from within imperative JavaScript code, as shown below:
@@ -259,7 +259,7 @@ Item {
 \endqml
 
 For more information about loading external JavaScript files into QML, read
-the section about \l{Importing JavaScript Files in QML Documents}.
+the section about \l{Importing JavaScript Resources in QML}.
 
 
 

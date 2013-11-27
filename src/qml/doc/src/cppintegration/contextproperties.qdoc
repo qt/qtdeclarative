@@ -91,7 +91,7 @@ following examples:
     \li \l {Models and Views: AbstractItemModel Example}{AbstractItemModel}
 \endlist
 
-demonstrating the use of QStringList, \l{QList<QObject*>}-based models and
+demonstrating the use of QStringList, QList<QObject*>-based models and
 QAbstractItemModel in QML views.
 
 Also see the QQmlContext documentation for more information.

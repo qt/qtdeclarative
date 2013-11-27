@@ -612,10 +612,9 @@ bool JsonParser::parseString(QString *string)
                 lastError = QJsonParseError::IllegalEscapeSequence;
                 return false;
             }
-            qDebug() << "scanEscape" << hex << ch;
             if (QChar::requiresSurrogates(ch)) {
-                *string += QChar::highSurrogate(ch);
-                *string += QChar::lowSurrogate(ch);
+                *string += QChar(QChar::highSurrogate(ch));
+                *string += QChar(QChar::lowSurrogate(ch));
             } else {
                 *string += QChar(ch);
             }
@@ -661,42 +660,42 @@ struct Stringify
 
 static QString quote(const QString &str)
 {
-    QString product = "\"";
+    QString product = QStringLiteral("\"");
     for (int i = 0; i < str.length(); ++i) {
         QChar c = str.at(i);
         switch (c.unicode()) {
         case '"':
-            product += "\\\"";
+            product += QStringLiteral("\\\"");
             break;
         case '\\':
-            product += "\\\\";
+            product += QStringLiteral("\\\\");
             break;
         case '\b':
-            product += "\\b";
+            product += QStringLiteral("\\b");
             break;
         case '\f':
-            product += "\\f";
+            product += QStringLiteral("\\f");
             break;
         case '\n':
-            product += "\\n";
+            product += QStringLiteral("\\n");
             break;
         case '\r':
-            product += "\\r";
+            product += QStringLiteral("\\r");
             break;
         case '\t':
-            product += "\\t";
+            product += QStringLiteral("\\t");
             break;
         default:
             if (c.unicode() <= 0x1f) {
-                product += "\\u00";
-                product += c.unicode() > 0xf ? '1' : '0';
-                product += "0123456789abcdef"[c.unicode() & 0xf];
+                product += QStringLiteral("\\u00");
+                product += c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0');
+                product += QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
             } else {
                 product += c;
             }
         }
     }
-    product += '"';
+    product += QLatin1Char('"');
     return product;
 }
 
@@ -768,9 +767,9 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
 {
     QString strP = Str(key, v);
     if (!strP.isEmpty()) {
-        QString member = quote(key) + ':';
+        QString member = quote(key) + QLatin1Char(':');
         if (!gap.isEmpty())
-            member += ' ';
+            member += QLatin1Char(' ');
         member += strP;
         return member;
     }
@@ -779,8 +778,10 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
 
 QString Stringify::JO(ObjectRef o)
 {
-    if (stack.contains(o.getPointer()))
+    if (stack.contains(o.getPointer())) {
         ctx->throwTypeError();
+        return QString();
+    }
 
     Scope scope(ctx);
 
@@ -799,7 +800,7 @@ QString Stringify::JO(ObjectRef o)
             name = it.nextPropertyNameAsString(val);
             if (name->isNull())
                 break;
-            QString key = name->toQStringNoThrow();
+            QString key = name->toQString();
             QString member = makeMember(key, val);
             if (!member.isEmpty())
                 partial += member;
@@ -821,10 +822,10 @@ QString Stringify::JO(ObjectRef o)
     if (partial.isEmpty()) {
         result = QStringLiteral("{}");
     } else if (gap.isEmpty()) {
-        result = "{" + partial.join(",") + "}";
+        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QStringLiteral("}");
     } else {
-        QString separator = ",\n" + indent;
-        result = "{\n" + indent + partial.join(separator) + "\n" + stepback + "}";
+        QString separator = QStringLiteral(",\n") + indent;
+        result = QStringLiteral("{\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("}");
     }
 
     indent = stepback;
@@ -834,8 +835,10 @@ QString Stringify::JO(ObjectRef o)
 
 QString Stringify::JA(ArrayObjectRef a)
 {
-    if (stack.contains(a.getPointer()))
+    if (stack.contains(a.getPointer())) {
         ctx->throwTypeError();
+        return QString();
+    }
 
     Scope scope(a->engine());
 
@@ -864,10 +867,10 @@ QString Stringify::JA(ArrayObjectRef a)
     if (partial.isEmpty()) {
         result = QStringLiteral("[]");
     } else if (gap.isEmpty()) {
-        result = "[" + partial.join(",") + "]";
+        result = QStringLiteral("[") + partial.join(QLatin1Char(',')) + QStringLiteral("]");
     } else {
-        QString separator = ",\n" + indent;
-        result = "[\n" + indent + partial.join(separator) + "\n" + stepback + "]";
+        QString separator = QStringLiteral(",\n") + indent;
+        result = QStringLiteral("[\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("]");
     }
 
     indent = stepback;
@@ -889,7 +892,7 @@ JsonObject::JsonObject(ExecutionEngine *engine)
 }
 
 
-ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_parse(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->argument(0));
@@ -901,13 +904,13 @@ ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
     ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        ctx->throwSyntaxError("JSON.parse: Parse error");
+        return ctx->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
     }
 
     return result.asReturnedValue();
 }
 
-ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -922,7 +925,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
             for (uint i = 0; i < arrayLen; ++i) {
                 v = o->getIndexed(i);
                 if (v->asNumberObject() || v->asStringObject() || v->isNumber())
-                    v = __qmljs_to_string(v, ctx);
+                    v = __qmljs_to_string(ctx, v);
                 if (v->isString()) {
                     String *s = v->stringValue();
                     if (!stringify.propertyList.contains(s))
@@ -947,7 +950,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 
     ScopedValue arg0(scope, ctx->argument(0));
     QString result = stringify.Str(QString(), arg0);
-    if (result.isEmpty())
+    if (result.isEmpty() || scope.engine->hasException)
         return Encode::undefined();
     return ctx->engine->newString(result)->asReturnedValue();
 }

@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlTypeNameCache;
+
 namespace QtQml {
 
 using namespace QQmlJS;
@@ -166,8 +168,9 @@ struct Pragma
 
 struct ParsedQML
 {
-    ParsedQML()
-        : jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
+    ParsedQML(bool debugMode)
+        : jsModule(debugMode)
+        , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
     {}
     QString code;
     QQmlJS::Engine jsParserEngine;
@@ -344,28 +347,43 @@ private:
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen()
-        : QQmlJS::Codegen(/*strict mode*/false)
-    {}
+    JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
+              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports);
+
+    struct IdMapping
+    {
+        QString name;
+        int idIndex;
+        QQmlPropertyCache *type;
+    };
+    typedef QVector<IdMapping> ObjectIdMapping;
+
+    void beginContextScope(const ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject);
+    void beginObjectScope(QQmlPropertyCache *scopeObject);
 
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
-    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
-    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-                                               QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, const QList<AST::Node*> &functions);
+    QVector<int> generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames);
+
+protected:
+    virtual void beginFunctionBodyHook();
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
-    struct QmlScanner : public ScanFunctions
-    {
-        QmlScanner(JSCodeGen *cg, const QString &sourceCode)
-            : ScanFunctions(cg, sourceCode, /*default program mode*/GlobalCode)
-            , codeGen(cg)
-        {}
+    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
 
-        void begin(AST::Node *rootNode, CompilationMode compilationMode);
-        void end();
+    QQmlEnginePrivate *engine;
+    QString sourceCode;
+    QQmlJS::Engine *jsEngine; // needed for memory pool
+    AST::UiProgram *qmlRoot;
+    QQmlTypeNameCache *imports;
 
-        JSCodeGen *codeGen;
-    };
+    ObjectIdMapping _idObjects;
+    QQmlPropertyCache *_contextObject;
+    QQmlPropertyCache *_scopeObject;
+    int _contextObjectTemp;
+    int _scopeObjectTemp;
+    int _importedScriptsTemp;
+    int _idArrayTemp;
 };
 
 } // namespace QtQml

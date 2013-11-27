@@ -10,7 +10,8 @@ HEADERS += \
     $$PWD/coreapi/qsgnodeupdater_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
     $$PWD/coreapi/qsgrendernode_p.h \
-    $$PWD/coreapi/qsggeometry_p.h
+    $$PWD/coreapi/qsggeometry_p.h \
+    $$PWD/coreapi/qsgmaterialshader_p.h
 
 SOURCES += \
     $$PWD/coreapi/qsgbatchrenderer.cpp \
@@ -20,8 +21,7 @@ SOURCES += \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp \
     $$PWD/coreapi/qsgrendernode.cpp \
-    $$PWD/coreapi/qsgshaderrewriter.cpp \
-    scenegraph/util/qsgsimplematerial.cpp
+    $$PWD/coreapi/qsgshaderrewriter.cpp
 
 # Util API
 HEADERS += \
@@ -39,7 +39,8 @@ HEADERS += \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider.h \
     $$PWD/util/qsgpainternode_p.h \
-    $$PWD/util/qsgdistancefieldutil_p.h
+    $$PWD/util/qsgdistancefieldutil_p.h \
+    $$PWD/util/qsgshadersourcebuilder_p.h
 
 SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
@@ -53,7 +54,9 @@ SOURCES += \
     $$PWD/util/qsgtexture.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
     $$PWD/util/qsgpainternode.cpp \
-    $$PWD/util/qsgdistancefieldutil.cpp
+    $$PWD/util/qsgdistancefieldutil.cpp \
+    $$PWD/util/qsgsimplematerial.cpp \
+    $$PWD/util/qsgshadersourcebuilder.cpp
 
 # QML / Adaptations API
 HEADERS += \
@@ -67,7 +70,6 @@ HEADERS += \
     $$PWD/qsgdefaultglyphnode_p_p.h \
     $$PWD/qsgdefaultimagenode_p.h \
     $$PWD/qsgdefaultrectanglenode_p.h \
-    $$PWD/qsgflashnode_p.h \
     $$PWD/qsgshareddistancefieldglyphcache_p.h \
     $$PWD/qsgrenderloop_p.h \
     $$PWD/qsgthreadedrenderloop_p.h \
@@ -84,8 +86,77 @@ SOURCES += \
     $$PWD/qsgdistancefieldglyphnode_p.cpp \
     $$PWD/qsgdefaultimagenode.cpp \
     $$PWD/qsgdefaultrectanglenode.cpp \
-    $$PWD/qsgflashnode.cpp \
     $$PWD/qsgshareddistancefieldglyphcache.cpp \
     $$PWD/qsgrenderloop.cpp \
     $$PWD/qsgthreadedrenderloop.cpp \
     $$PWD/qsgwindowsrenderloop.cpp
+
+RESOURCES += \
+    $$PWD/scenegraph.qrc
+
+OTHER_FILES += \
+    $$PWD/shaders/24bittextmask.frag \
+    $$PWD/shaders/8bittextmask.frag \
+    $$PWD/shaders/distancefieldoutlinetext.frag \
+    $$PWD/shaders/distancefieldshiftedtext.frag \
+    $$PWD/shaders/distancefieldshiftedtext.vert \
+    $$PWD/shaders/distancefieldtext.frag \
+    $$PWD/shaders/distancefieldtext.vert \
+    $$PWD/shaders/flatcolor.frag \
+    $$PWD/shaders/flatcolor.vert \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext.frag \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext.vert \
+    $$PWD/shaders/loqsubpixeldistancefieldtext.frag \
+    $$PWD/shaders/loqsubpixeldistancefieldtext.vert \
+    $$PWD/shaders/opaquetexture.frag \
+    $$PWD/shaders/opaquetexture.vert \
+    $$PWD/shaders/outlinedtext.frag \
+    $$PWD/shaders/outlinedtext.vert \
+    $$PWD/shaders/rendernode.frag \
+    $$PWD/shaders/rendernode.vert \
+    $$PWD/shaders/smoothcolor.frag \
+    $$PWD/shaders/smoothcolor.vert \
+    $$PWD/shaders/smoothtexture.frag \
+    $$PWD/shaders/smoothtexture.vert \
+    $$PWD/shaders/stencilclip.frag \
+    $$PWD/shaders/stencilclip.vert \
+    $$PWD/shaders/styledtext.frag \
+    $$PWD/shaders/styledtext.vert \
+    $$PWD/shaders/textmask.frag \
+    $$PWD/shaders/textmask.vert \
+    $$PWD/shaders/texture.frag \
+    $$PWD/shaders/vertexcolor.frag \
+    $$PWD/shaders/vertexcolor.vert \
+    $$PWD/shaders/24bittextmask_core.frag \
+    $$PWD/shaders/8bittextmask_core.frag \
+    $$PWD/shaders/distancefieldoutlinetext_core.frag \
+    $$PWD/shaders/distancefieldshiftedtext_core.frag \
+    $$PWD/shaders/distancefieldshiftedtext_core.vert \
+    $$PWD/shaders/distancefieldtext_core.frag \
+    $$PWD/shaders/distancefieldtext_core.vert \
+    $$PWD/shaders/flatcolor_core.frag \
+    $$PWD/shaders/flatcolor_core.vert \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext_core.frag \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext_core.vert \
+    $$PWD/shaders/loqsubpixeldistancefieldtext_core.frag \
+    $$PWD/shaders/loqsubpixeldistancefieldtext_core.vert \
+    $$PWD/shaders/opaquetexture_core.frag \
+    $$PWD/shaders/opaquetexture_core.vert \
+    $$PWD/shaders/outlinedtext_core.frag \
+    $$PWD/shaders/outlinedtext_core.vert \
+    $$PWD/shaders/rendernode_core.frag \
+    $$PWD/shaders/rendernode_core.vert \
+    $$PWD/shaders/smoothcolor_core.frag \
+    $$PWD/shaders/smoothcolor_core.vert \
+    $$PWD/shaders/smoothtexture_core.frag \
+    $$PWD/shaders/smoothtexture_core.vert \
+    $$PWD/shaders/stencilclip_core.frag \
+    $$PWD/shaders/stencilclip_core.vert \
+    $$PWD/shaders/styledtext_core.frag \
+    $$PWD/shaders/styledtext_core.vert \
+    $$PWD/shaders/textmask_core.frag \
+    $$PWD/shaders/textmask_core.vert \
+    $$PWD/shaders/texture_core.frag \
+    $$PWD/shaders/vertexcolor_core.frag \
+    $$PWD/shaders/vertexcolor_core.vert
+

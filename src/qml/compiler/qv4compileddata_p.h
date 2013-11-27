@@ -160,6 +160,8 @@ struct Unit
     uint offsetToLookupTable;
     uint regexpTableSize;
     uint offsetToRegexpTable;
+    uint constantTableSize;
+    uint offsetToConstantTable;
     uint jsClassTableSize;
     uint offsetToJSClassTable;
     qint32 indexOfRootFunction;
@@ -186,6 +188,9 @@ struct Unit
     const RegExp *regexpAt(int index) const {
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
+    const QV4::SafeValue *constants() const {
+        return reinterpret_cast<const QV4::SafeValue*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
         const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
@@ -196,11 +201,12 @@ struct Unit
         return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
     }
 
-    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps,
+    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps, uint nConstants,
                              uint nLookups, uint nClasses) {
         return (headerSize
                 + (nStrings + nFunctions + nClasses) * sizeof(uint)
                 + nRegExps * RegExp::calculateSize()
+                + nConstants * sizeof(QV4::ReturnedValue)
                 + nLookups * Lookup::calculateSize()
                 + 7) & ~7; }
 };
@@ -211,7 +217,8 @@ struct Function
         HasDirectEval       = 0x1,
         UsesArgumentsObject = 0x2,
         IsStrict            = 0x4,
-        IsNamedExpression   = 0x8
+        IsNamedExpression   = 0x8,
+        HasCatchOrWith      = 0x10
     };
 
     quint32 index; // in CompilationUnit's function table
@@ -226,6 +233,16 @@ struct Function
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
     Location location;
+
+    // Qml Extensions Begin
+    quint32 nDependingIdObjects;
+    quint32 dependingIdObjectsOffset; // Array of resolved ID objects
+    quint32 nDependingContextProperties;
+    quint32 dependingContextPropertiesOffset; // Array of int pairs (property index and notify index)
+    quint32 nDependingScopeProperties;
+    quint32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
+    // Qml Extensions End
+
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
@@ -234,9 +251,14 @@ struct Function
     const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
     const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
+    const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
+    const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
+    const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings) * sizeof(quint32) + 7) & ~0x7;
+    inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
+
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies, int nPropertyDependencies) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
     }
 };
 
@@ -484,7 +506,7 @@ struct Q_QML_EXPORT CompilationUnit
     // ### runtime data
     // pointer to qml data for QML unit
 
-    void markObjects();
+    void markObjects(QV4::ExecutionEngine *e);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

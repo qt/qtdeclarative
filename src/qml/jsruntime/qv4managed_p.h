@@ -81,7 +81,7 @@ struct ManagedVTable
 {
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
-    void (*markObjects)(Managed *);
+    void (*markObjects)(Managed *, ExecutionEngine *e);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, const ValueRef value);
@@ -166,13 +166,7 @@ public:
     void operator delete(void *ptr);
     void operator delete(void *ptr, MemoryManager *mm);
 
-    inline void mark() {
-        if (markBit)
-            return;
-        markBit = 1;
-        if (vtbl->markObjects)
-            vtbl->markObjects(this);
-    }
+    inline void mark(QV4::ExecutionEngine *engine);
 
     enum Type {
         Type_Invalid,

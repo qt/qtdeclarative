@@ -53,24 +53,15 @@
 // We mean it.
 //
 
-#include <QMessageBox>
 #include "../dialogs/qquickabstractmessagedialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QAbstractButton;
-
 class QQuickQMessageBox : public QQuickAbstractMessageDialog
 {
-    Q_OBJECT
-
 public:
     QQuickQMessageBox(QObject *parent = 0);
     virtual ~QQuickQMessageBox();
-
-protected slots:
-    void clicked(QAbstractButton* button);
-    void finished(int button);
 
 protected:
     virtual QPlatformDialogHelper *helper();

@@ -42,7 +42,6 @@
 #ifndef QAccessibleQuickView_H
 #define QAccessibleQuickView_H
 
-#include <QtGui/private/qaccessible2_p.h>
 #include <QtGui/qaccessibleobject.h>
 #include <QtQuick/qquickwindow.h>
 

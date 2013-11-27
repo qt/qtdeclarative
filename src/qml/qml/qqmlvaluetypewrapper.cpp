@@ -208,8 +208,10 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, StringRef name)
 {
     const QmlValueTypeWrapper *r = m->as<const QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
-    if (!r)
+    if (!r) {
         v4->current->throwTypeError();
+        return PropertyAttributes();
+    }
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
@@ -242,14 +244,14 @@ bool QmlValueTypeWrapper::isEqual(const QVariant& value)
     }
 }
 
-ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
+ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
 {
     Object *o = ctx->callData->thisObject.asObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     QmlValueTypeWrapper *w = o->as<QmlValueTypeWrapper>();
     if (!w)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (w->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
@@ -271,7 +273,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     // Note: readReferenceValue() can change the reference->type.
     if (r->objectType == QmlValueTypeWrapper::Reference) {
@@ -332,9 +334,14 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return;
+
     Scoped<QmlValueTypeWrapper> r(scope, m->as<QmlValueTypeWrapper>());
-    if (!r)
+    if (!r) {
         v4->current->throwTypeError();
+        return;
+    }
 
     QByteArray propName = name->toQString().toUtf8();
     if (r->objectType == QmlValueTypeWrapper::Reference) {
@@ -359,6 +366,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
                 Scoped<String> e(scope, r->v8->toString(error));
                 v4->current->throwError(e);
+                return;
             }
 
             QQmlContextData *context = r->v8->callingContext();
@@ -377,8 +385,6 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             newBinding = new QQmlBinding(value, reference->object, context,
                                          frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
-            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                         QQmlBinding::RequiresThisObject);
         }
 
         QQmlAbstractBinding *oldBinding =

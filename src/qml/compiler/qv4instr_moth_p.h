@@ -51,26 +51,33 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
-    F(LoadValue, loadValue) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
-    F(MoveTemp, moveTemp) \
+    F(Move, move) \
     F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
+    F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
     F(StoreElement, storeElement) \
     F(LoadProperty, loadProperty) \
+    F(GetLookup, getLookup) \
     F(StoreProperty, storeProperty) \
+    F(SetLookup, setLookup) \
+    F(StoreQObjectProperty, storeQObjectProperty) \
+    F(LoadQObjectProperty, loadQObjectProperty) \
     F(Push, push) \
-    F(EnterTry, enterTry) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
+    F(CallPropertyLookup, callPropertyLookup) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
+    F(CallGlobalLookup, callGlobalLookup) \
+    F(SetExceptionHandler, setExceptionHandler) \
     F(CallBuiltinThrow, callBuiltinThrow) \
-    F(CallBuiltinFinishTry, callBuiltinFinishTry) \
+    F(CallBuiltinUnwindException, callBuiltinUnwindException) \
+    F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
     F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
@@ -88,18 +95,42 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
     F(CallBuiltinSetupArgumentsObject, callBuiltinSetupArgumentsObject) \
+    F(CallBuiltinConvertThisToObject, callBuiltinConvertThisToObject) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
+    F(ConstructPropertyLookup, constructPropertyLookup) \
     F(CreateActivationProperty, createActivationProperty) \
+    F(ConstructGlobalLookup, constructGlobalLookup) \
     F(Jump, jump) \
     F(CJump, cjump) \
-    F(Unop, unop) \
+    F(UNot, unot) \
+    F(UNotBool, unotBool) \
+    F(UPlus, uplus) \
+    F(UMinus, uminus) \
+    F(UCompl, ucompl) \
+    F(UComplInt, ucomplInt) \
+    F(Increment, increment) \
+    F(Decrement, decrement) \
     F(Binop, binop) \
+    F(Add, add) \
+    F(BitAnd, bitAnd) \
+    F(BitOr, bitOr) \
+    F(BitXor, bitXor) \
+    F(BitAndConst, bitAndConst) \
+    F(BitOrConst, bitOrConst) \
+    F(BitXorConst, bitXorConst) \
+    F(Mul, mul) \
+    F(Sub, sub) \
     F(BinopContext, binopContext) \
     F(AddNumberParams, addNumberParams) \
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
-    F(LoadThis, loadThis)
+    F(LoadThis, loadThis) \
+    F(LoadQmlIdArray, loadQmlIdArray) \
+    F(LoadQmlImportedScripts, loadQmlImportedScripts) \
+    F(LoadQmlContextObject, loadQmlContextObject) \
+    F(LoadQmlScopeObject, loadQmlScopeObject) \
+    F(LoadQmlSingleton, loadQmlSingleton)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -123,38 +154,35 @@ namespace QQmlJS {
 namespace Moth {
 
 struct Param {
-    enum {
-        ValueType    = 0,
-        ArgumentType = 1,
-        LocalType    = 2,
-        TempType     = 3,
-        ScopedLocalType  = 4
-    };
-    QV4::Primitive value;
-    unsigned type  : 3;
-    unsigned scope : 29;
+    // Params are looked up as follows:
+    // Constant: 0
+    // Temp: 1
+    // Argument: 2
+    // Local: 3
+    // Arg(outer): 4
+    // Local(outer): 5
+    // ...
+    unsigned scope;
     unsigned index;
 
-    bool isValue() const { return type == ValueType; }
-    bool isArgument() const { return type == ArgumentType; }
-    bool isLocal() const { return type == LocalType; }
-    bool isTemp() const { return type == TempType; }
-    bool isScopedLocal() const { return type == ScopedLocalType; }
+    bool isConstant() const { return !scope; }
+    bool isArgument() const { return scope >= 2 && !(scope &1); }
+    bool isLocal() const { return scope == 3; }
+    bool isTemp() const { return scope == 1; }
+    bool isScopedLocal() const { return scope >= 3 && (scope & 1); }
 
-    static Param createValue(const QV4::Primitive &v)
+    static Param createConstant(int index)
     {
         Param p;
-        p.type = ValueType;
         p.scope = 0;
-        p.value = v;
+        p.index = index;
         return p;
     }
 
     static Param createArgument(unsigned idx, uint scope)
     {
         Param p;
-        p.type = ArgumentType;
-        p.scope = scope;
+        p.scope = 2 + 2*scope;
         p.index = idx;
         return p;
     }
@@ -162,8 +190,7 @@ struct Param {
     static Param createLocal(unsigned idx)
     {
         Param p;
-        p.type = LocalType;
-        p.scope = 0;
+        p.scope = 3;
         p.index = idx;
         return p;
     }
@@ -171,8 +198,7 @@ struct Param {
     static Param createTemp(unsigned idx)
     {
         Param p;
-        p.type = TempType;
-        p.scope = 0;
+        p.scope = 1;
         p.index = idx;
         return p;
     }
@@ -180,14 +206,13 @@ struct Param {
     static Param createScopedLocal(unsigned idx, uint scope)
     {
         Param p;
-        p.type = ScopedLocalType;
-        p.scope = scope;
+        p.scope = 3 + 2*scope;
         p.index = idx;
         return p;
     }
 
     inline bool operator==(const Param &other) const
-    { return type == other.type && scope == other.scope && index == other.index; }
+    { return scope == other.scope && index == other.index; }
 
     inline bool operator!=(const Param &other) const
     { return !(*this == other); }
@@ -206,11 +231,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     }; 
-    struct instr_loadValue {
-        MOTH_INSTR_HEADER
-        Param value;
-        Param result;
-    };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
@@ -221,7 +241,7 @@ union Instr
         int regExpId;
         Param result;
     };
-    struct instr_moveTemp {
+    struct instr_move {
         MOTH_INSTR_HEADER
         Param source;
         Param result;
@@ -241,6 +261,11 @@ union Instr
         int name;
         Param result;
     };
+    struct instr_getGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        Param result;
+    };
     struct instr_storeName {
         MOTH_INSTR_HEADER
         int name;
@@ -252,10 +277,35 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_getLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        Param base;
+        Param result;
+    };
+    struct instr_loadQObjectProperty {
+        MOTH_INSTR_HEADER
+        int propertyIndex;
+        Param base;
+        Param result;
+        bool captureRequired;
+    };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
         int name;
         Param base;
+        Param source;
+    };
+    struct instr_setLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        Param base;
+        Param source;
+    };
+    struct instr_storeQObjectProperty {
+        MOTH_INSTR_HEADER
+        Param base;
+        int propertyIndex;
         Param source;
     };
     struct instr_loadElement {
@@ -274,13 +324,6 @@ union Instr
         MOTH_INSTR_HEADER
         quint32 value;
     };
-    struct instr_enterTry {
-        MOTH_INSTR_HEADER
-        ptrdiff_t tryOffset;
-        ptrdiff_t catchOffset;
-        int exceptionVarName;
-        Param exceptionVar;
-    };
     struct instr_callValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -291,6 +334,14 @@ union Instr
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         int name;
+        quint32 argc;
+        quint32 callData;
+        Param base;
+        Param result;
+    };
+    struct instr_callPropertyLookup {
+        MOTH_INSTR_HEADER
+        int lookupIndex;
         quint32 argc;
         quint32 callData;
         Param base;
@@ -311,12 +362,28 @@ union Instr
         quint32 callData;
         Param result;
     };
+    struct instr_callGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        quint32 argc;
+        quint32 callData;
+        Param result;
+    };
+    struct instr_setExceptionHandler {
+        MOTH_INSTR_HEADER
+        qptrdiff offset;
+    };
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
         Param arg;
     };
-    struct instr_callBuiltinFinishTry {
+    struct instr_callBuiltinUnwindException {
         MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_callBuiltinPushCatchScope {
+        MOTH_INSTR_HEADER
+        int name;
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
@@ -408,6 +475,9 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_callBuiltinConvertThisToObject {
+        MOTH_INSTR_HEADER
+    };
     struct instr_createValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -423,9 +493,24 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_constructPropertyLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        quint32 argc;
+        quint32 callData;
+        Param base;
+        Param result;
+    };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
+        quint32 argc;
+        quint32 callData;
+        Param result;
+    };
+    struct instr_constructGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
         quint32 argc;
         quint32 callData;
         Param result;
@@ -440,15 +525,103 @@ union Instr
         Param condition;
         bool invert;
     };
-    struct instr_unop {
+    struct instr_unot {
         MOTH_INSTR_HEADER
-        QV4::UnaryOpName alu;
+        Param source;
+        Param result;
+    };
+    struct instr_unotBool {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_uplus {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_uminus {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_ucompl {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_ucomplInt {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_increment {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_decrement {
+        MOTH_INSTR_HEADER
         Param source;
         Param result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
         QV4::BinOp alu;
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_add {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitAnd {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitOr {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitXor {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitAndConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_bitOrConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_bitXorConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_mul {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_sub {
+        MOTH_INSTR_HEADER
         Param lhs;
         Param rhs;
         Param result;
@@ -482,29 +655,57 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_loadQmlIdArray {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_loadQmlImportedScripts {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_loadQmlContextObject {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_loadQmlScopeObject {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_loadQmlSingleton {
+        MOTH_INSTR_HEADER
+        Param result;
+        int name;
+    };
 
     instr_common common;
     instr_ret ret;
-    instr_loadValue loadValue;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
-    instr_moveTemp moveTemp;
+    instr_move move;
     instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
+    instr_getGlobalLookup getGlobalLookup;
     instr_storeName storeName;
     instr_loadElement loadElement;
     instr_storeElement storeElement;
     instr_loadProperty loadProperty;
+    instr_getLookup getLookup;
+    instr_loadQObjectProperty loadQObjectProperty;
     instr_storeProperty storeProperty;
+    instr_setLookup setLookup;
+    instr_storeQObjectProperty storeQObjectProperty;
     instr_push push;
-    instr_enterTry enterTry;
     instr_callValue callValue;
     instr_callProperty callProperty;
+    instr_callPropertyLookup callPropertyLookup;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
+    instr_callGlobalLookup callGlobalLookup;
     instr_callBuiltinThrow callBuiltinThrow;
-    instr_callBuiltinFinishTry callBuiltinFinishTry;
+    instr_setExceptionHandler setExceptionHandler;
+    instr_callBuiltinUnwindException callBuiltinUnwindException;
+    instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;
     instr_callBuiltinPushScope callBuiltinPushScope;
     instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
@@ -522,18 +723,42 @@ union Instr
     instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
     instr_callBuiltinSetupArgumentsObject callBuiltinSetupArgumentsObject;
+    instr_callBuiltinConvertThisToObject callBuiltinConvertThisToObject;
     instr_createValue createValue;
     instr_createProperty createProperty;
+    instr_constructPropertyLookup constructPropertyLookup;
     instr_createActivationProperty createActivationProperty;
+    instr_constructGlobalLookup constructGlobalLookup;
     instr_jump jump;
     instr_cjump cjump;
-    instr_unop unop;
+    instr_unot unot;
+    instr_unotBool unotBool;
+    instr_uplus uplus;
+    instr_uminus uminus;
+    instr_ucompl ucompl;
+    instr_ucomplInt ucomplInt;
+    instr_increment increment;
+    instr_decrement decrement;
     instr_binop binop;
+    instr_add add;
+    instr_bitAnd bitAnd;
+    instr_bitOr bitOr;
+    instr_bitXor bitXor;
+    instr_bitAndConst bitAndConst;
+    instr_bitOrConst bitOrConst;
+    instr_bitXorConst bitXorConst;
+    instr_mul mul;
+    instr_sub sub;
     instr_binopContext binopContext;
     instr_addNumberParams addNumberParams;
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
+    instr_loadQmlIdArray loadQmlIdArray;
+    instr_loadQmlImportedScripts loadQmlImportedScripts;
+    instr_loadQmlContextObject loadQmlContextObject;
+    instr_loadQmlScopeObject loadQmlScopeObject;
+    instr_loadQmlSingleton loadQmlSingleton;
 
     static int size(Type type);
 };

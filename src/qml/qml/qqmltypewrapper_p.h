@@ -76,6 +76,8 @@ private:
 public:
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
 
+    bool isSingleton() const;
+
     QVariant toVariant() const;
 
     static ReturnedValue create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
@@ -86,6 +88,9 @@ public:
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static PropertyAttributes query(const Managed *, StringRef name);
     static void destroy(Managed *that);
+
+protected:
+    static bool isEqualTo(Managed *that, Managed *o);
 
 private:
     QV8Engine *v8;

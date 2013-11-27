@@ -66,7 +66,7 @@
 #include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
-#include "qqmlabstracturlinterceptor.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlboundsignal_p.h>
 
@@ -556,7 +556,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   workerScriptEngine(0), activeVME(0),
   activeObjectCreator(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
-  scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
+  scarceResourcesRefCount(0), importDatabase(e), typeLoader(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
     useNewCompiler = qmlUseNewCompiler();
@@ -615,12 +615,18 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 
 void QQmlData::destroyed(QAbstractDeclarativeData *d, QObject *o)
 {
-    static_cast<QQmlData *>(d)->destroyed(o);
+    QQmlData *ddata = static_cast<QQmlData *>(d);
+    if (ddata->ownedByQml1)
+        return;
+    ddata->destroyed(o);
 }
 
 void QQmlData::parentChanged(QAbstractDeclarativeData *d, QObject *o, QObject *p)
 {
-    static_cast<QQmlData *>(d)->parentChanged(o, p);
+    QQmlData *ddata = static_cast<QQmlData *>(d);
+    if (ddata->ownedByQml1)
+        return;
+    ddata->parentChanged(o, p);
 }
 
 class QQmlThreadNotifierProxyObject : public QObject
@@ -649,6 +655,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 {
     QQmlData *ddata = QQmlData::get(object, false);
     if (!ddata) return; // Probably being deleted
+    if (ddata->ownedByQml1) return;
 
     // In general, QML only supports QObject's that live on the same thread as the QQmlEngine
     // that they're exposed to.  However, to make writing "worker objects" that calculate data
@@ -706,12 +713,18 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
 int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)
 {
-    return static_cast<QQmlData *>(d)->endpointCount(index);
+    QQmlData *ddata = static_cast<QQmlData *>(d);
+    if (ddata->ownedByQml1)
+        return 0;
+    return ddata->endpointCount(index);
 }
 
 bool QQmlData::isSignalConnected(QAbstractDeclarativeData *d, const QObject *, int index)
 {
-    return static_cast<QQmlData *>(d)->signalHasEndpoint(index);
+    QQmlData *ddata = static_cast<QQmlData *>(d);
+    if (ddata->ownedByQml1)
+        return false;
+    return ddata->signalHasEndpoint(index);
 }
 
 int QQmlData::endpointCount(int index)
@@ -1761,7 +1774,6 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
 
 void QQmlEnginePrivate::warning(QQmlDelayedError *error)
 {
-    Q_Q(QQmlEngine);
     warning(error->error());
 }
 

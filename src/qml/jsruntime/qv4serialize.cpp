@@ -280,12 +280,10 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             serialize(data, s, engine);
 
             QV4::ExecutionContext *ctx = v4->current;
-            try {
-                str = s;
-                val = o->get(str);
-            } catch (...) {
+            str = s;
+            val = o->get(str);
+            if (scope.hasException())
                 ctx->catchException();
-            }
 
             serialize(data, val, engine);
         }
@@ -373,7 +371,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         QQmlListModelWorkerAgent::VariantRef ref(agent);
         QVariant var = qVariantFromValue(ref);
         QV4::ScopedValue v(scope, engine->fromVariant((var)));
-        QV4::ScopedString s(scope, v4->newString("__qml:hidden:ref"));
+        QV4::ScopedString s(scope, v4->newString(QStringLiteral("__qml:hidden:ref")));
         rv->asObject()->defineReadonlyProperty(s, v);
 
         agent->release();

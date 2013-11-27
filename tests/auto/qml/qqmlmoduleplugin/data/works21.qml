@@ -1,3 +1,3 @@
-import com.nokia.AutoTestQmlPluginType 2.1
+import org.qtproject.AutoTestQmlPluginType 2.1
 
 MyPluginType { valueOnlyIn2: 123 }

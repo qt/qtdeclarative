@@ -106,7 +106,7 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
     QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     if (name->equals(v4->id_length) && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
@@ -122,10 +122,12 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
 ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    Q_UNUSED(hasProperty);
+
     QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
-        e->current->throwTypeError();
+        return e->current->throwTypeError();
 
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
     if (index < count && w->property.at)

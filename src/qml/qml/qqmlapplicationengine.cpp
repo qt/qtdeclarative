@@ -77,7 +77,7 @@ void QQmlApplicationEnginePrivate::init()
         QCoreApplication::installTranslator(qtTranslator);
     translators << qtTranslator;
 #endif
-    q->setUrlInterceptor(new QQmlFileSelector(q));
+    new QQmlFileSelector(q,q);
     QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
 }
 

@@ -910,7 +910,7 @@ void tst_qqmllocale::dateToLocaleTimeStringFormatted()
         Q_ARG(QVariant, QVariant(format)));
 
     QLocale l(locale);
-    QCOMPARE(val.toString(), l.toString(dt.time(), format));
+    QCOMPARE(val.toString(), l.toString(dt, format));
 }
 
 void tst_qqmllocale::dateFromLocaleString_data()

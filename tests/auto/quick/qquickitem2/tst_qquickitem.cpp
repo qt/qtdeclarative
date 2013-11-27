@@ -83,6 +83,7 @@ private slots:
     void standardKeys();
     void keysProcessingOrder();
     void keysim();
+    void keyNavigation_data();
     void keyNavigation();
     void keyNavigation_RightToLeft();
     void keyNavigation_skipNotVisible();
@@ -1408,12 +1409,21 @@ void tst_QQuickItem::layoutMirroringIllegalParent()
     QVERIFY(object != 0);
 }
 
+void tst_QQuickItem::keyNavigation_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("KeyNavigation") << QStringLiteral("keynavigationtest.qml");
+    QTest::newRow("KeyNavigation_FocusScope") << QStringLiteral("keynavigationtest_focusscope.qml");
+}
+
 void tst_QQuickItem::keyNavigation()
 {
+    QFETCH(QString, source);
+
     QQuickView *window = new QQuickView(0);
     window->setBaseSize(QSize(240,320));
 
-    window->setSource(testFileUrl("keynavigationtest.qml"));
+    window->setSource(testFileUrl(source));
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));

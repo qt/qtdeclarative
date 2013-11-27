@@ -82,7 +82,8 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             }
         }
 
-        m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
+        if (!QQmlData::wasDeleted(m_target->object))
+            m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
     }
 }
 
@@ -956,14 +957,14 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QV4::ScopedValue result(scope);
                 QV4::ExecutionContext *ctx = function->engine()->current;
-                try {
-                    result = function->call(callData);
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
-                } catch (...) {
-                    QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+                result = function->call(callData);
+                if (scope.hasException()) {
+                    QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
+                } else {
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -1231,9 +1232,9 @@ void QQmlVMEMetaObject::ensureQObjectWrapper()
     QV4::QObjectWrapper::wrap(v4, object);
 }
 
-void QQmlVMEMetaObject::mark()
+void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 {
-    varProperties.markOnce();
+    varProperties.markOnce(e);
 
     // add references created by VMEVariant properties
     int maxDataIdx = metaData->propertyCount - metaData->varPropertyCount;
@@ -1244,13 +1245,13 @@ void QQmlVMEMetaObject::mark()
             if (ref) {
                 QQmlData *ddata = QQmlData::get(ref);
                 if (ddata)
-                    ddata->jsWrapper.markOnce();
+                    ddata->jsWrapper.markOnce(e);
             }
         }
     }
 
     if (QQmlVMEMetaObject *parent = parentVMEMetaObject())
-        parent->mark();
+        parent->mark(e);
 }
 
 void QQmlVMEMetaObject::allocateVarPropertiesArray()

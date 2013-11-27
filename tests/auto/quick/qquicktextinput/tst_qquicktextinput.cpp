@@ -146,6 +146,8 @@ private slots:
     void validators();
     void inputMethods();
 
+    void signal_editingfinished();
+
     void passwordCharacter();
     void cursorDelegate_data();
     void cursorDelegate();
@@ -2301,6 +2303,49 @@ void tst_qquicktextinput::inputMethods()
     input->setReadOnly(true);
     QGuiApplication::sendEvent(input, &enabledQueryEvent);
     QCOMPARE(enabledQueryEvent.value(Qt::ImEnabled).toBool(), false);
+}
+
+void tst_qquicktextinput::signal_editingfinished()
+{
+    QQuickView window(testFileUrl("signal_editingfinished.qml"));
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QVERIFY(window.rootObject() != 0);
+
+    QQuickTextInput *input1 = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("input1")));
+    QVERIFY(input1);
+    QQuickTextInput *input2 = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("input2")));
+    QVERIFY(input2);
+    QSignalSpy input1Spy(input1, SIGNAL(editingFinished()));
+
+    input1->setFocus(true);
+    QTRY_VERIFY(input1->hasActiveFocus());
+    QTRY_VERIFY(!input2->hasActiveFocus());
+
+    QTest::keyPress(&window, Qt::Key_A);
+    QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
+    QTRY_COMPARE(input1->text(), QLatin1String("a"));
+
+    QTest::keyPress(&window, Qt::Key_Enter);
+    QTest::keyRelease(&window, Qt::Key_Enter, Qt::NoModifier);
+    QTRY_COMPARE(input1Spy.count(), 1);
+
+    QSignalSpy input2Spy(input2, SIGNAL(editingFinished()));
+
+    input2->setFocus(true);
+    QTRY_VERIFY(!input1->hasActiveFocus());
+    QTRY_VERIFY(input2->hasActiveFocus());
+
+    QTest::keyPress(&window, Qt::Key_A);
+    QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
+    QTRY_COMPARE(input2->text(), QLatin1String("a"));
+
+    input1->setFocus(true);
+    QTRY_VERIFY(input1->hasActiveFocus());
+    QTRY_VERIFY(!input2->hasActiveFocus());
+    QTRY_COMPARE(input2Spy.count(), 1);
 }
 
 /*

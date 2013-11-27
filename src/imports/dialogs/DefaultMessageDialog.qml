@@ -48,28 +48,37 @@ AbstractMessageDialog {
 
     Rectangle {
         id: content
-        property real spacing: 8
+        property real spacing: 6
         property real outerSpacing: 12
-        property int maxSize: 0.9 * Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+        property real buttonsRowImplicitWidth: Screen.pixelDensity * 50
         implicitHeight: contentColumn.implicitHeight + outerSpacing * 2
         onImplicitHeightChanged: root.height = implicitHeight
-        implicitWidth: Math.min(maxSize, Math.max(
-            mainText.implicitWidth, buttons.implicitWidth) + outerSpacing * 2);
-        onImplicitWidthChanged: if (implicitWidth > root.width) root.width = implicitWidth
+        implicitWidth: Math.min(Screen.desktopAvailableWidth * 0.9, Math.max(
+            mainText.implicitWidth, buttonsRowImplicitWidth) + outerSpacing * 2);
+        onImplicitWidthChanged: root.width = implicitWidth
         color: palette.window
-        focus: true
-        Keys.onEscapePressed: root.reject()
-        Keys.onEnterPressed: root.accept()
-        Keys.onReturnPressed: root.accept()
-        Keys.onPressed: if (event.modifiers === Qt.ControlModifier)
-            switch (event.key) {
-            case Qt.Key_A:
-                detailedText.selectAll();
-                break;
-            case Qt.Key_C:
-                detailedText.copy();
-                break;
+        focus: root.visible
+        Keys.onPressed: {
+            event.accepted = true
+            if (event.modifiers === Qt.ControlModifier)
+                switch (event.key) {
+                case Qt.Key_A:
+                    detailedText.selectAll()
+                    break
+                case Qt.Key_C:
+                    detailedText.copy()
+                    break
+            } else switch (event.key) {
+                case Qt.Key_Escape:
+                case Qt.Key_Back:
+                    reject()
+                    break
+                case Qt.Key_Enter:
+                case Qt.Key_Return:
+                    accept()
+                    break
             }
+        }
 
         Column {
             id: contentColumn
@@ -118,112 +127,113 @@ AbstractMessageDialog {
             }
 
 
-            Row {
+            Flow {
                 id: buttons
                 spacing: content.spacing
                 layoutDirection: Qt.RightToLeft
-                width: parent.width
+                width: parent.width + content.outerSpacing
+                x: -content.outerSpacing
                 Button {
                     id: okButton
                     text: "OK"
-                    onClicked: root.click(Message.Ok)
-                    visible: root.standardButtons & Message.Ok
+                    onClicked: root.click(StandardButton.Ok)
+                    visible: root.standardButtons & StandardButton.Ok
                 }
                 Button {
                     id: openButton
                     text: "Open"
-                    onClicked: root.click(Message.Open)
-                    visible: root.standardButtons & Message.Open
+                    onClicked: root.click(StandardButton.Open)
+                    visible: root.standardButtons & StandardButton.Open
                 }
                 Button {
                     id: saveButton
                     text: "Save"
-                    onClicked: root.click(Message.Save)
-                    visible: root.standardButtons & Message.Save
+                    onClicked: root.click(StandardButton.Save)
+                    visible: root.standardButtons & StandardButton.Save
                 }
                 Button {
                     id: saveAllButton
                     text: "Save All"
-                    onClicked: root.click(Message.SaveAll)
-                    visible: root.standardButtons & Message.SaveAll
+                    onClicked: root.click(StandardButton.SaveAll)
+                    visible: root.standardButtons & StandardButton.SaveAll
                 }
                 Button {
                     id: retryButton
                     text: "Retry"
-                    onClicked: root.click(Message.Retry)
-                    visible: root.standardButtons & Message.Retry
+                    onClicked: root.click(StandardButton.Retry)
+                    visible: root.standardButtons & StandardButton.Retry
                 }
                 Button {
                     id: ignoreButton
                     text: "Ignore"
-                    onClicked: root.click(Message.Ignore)
-                    visible: root.standardButtons & Message.Ignore
+                    onClicked: root.click(StandardButton.Ignore)
+                    visible: root.standardButtons & StandardButton.Ignore
                 }
                 Button {
                     id: applyButton
                     text: "Apply"
-                    onClicked: root.click(Message.Apply)
-                    visible: root.standardButtons & Message.Apply
+                    onClicked: root.click(StandardButton.Apply)
+                    visible: root.standardButtons & StandardButton.Apply
                 }
                 Button {
                     id: yesButton
                     text: "Yes"
-                    onClicked: root.click(Message.Yes)
-                    visible: root.standardButtons & Message.Yes
+                    onClicked: root.click(StandardButton.Yes)
+                    visible: root.standardButtons & StandardButton.Yes
                 }
                 Button {
                     id: yesAllButton
                     text: "Yes to All"
-                    onClicked: root.click(Message.YesToAll)
-                    visible: root.standardButtons & Message.YesToAll
+                    onClicked: root.click(StandardButton.YesToAll)
+                    visible: root.standardButtons & StandardButton.YesToAll
                 }
                 Button {
                     id: noButton
                     text: "No"
-                    onClicked: root.click(Message.No)
-                    visible: root.standardButtons & Message.No
+                    onClicked: root.click(StandardButton.No)
+                    visible: root.standardButtons & StandardButton.No
                 }
                 Button {
                     id: noAllButton
                     text: "No to All"
-                    onClicked: root.click(Message.NoToAll)
-                    visible: root.standardButtons & Message.NoToAll
+                    onClicked: root.click(StandardButton.NoToAll)
+                    visible: root.standardButtons & StandardButton.NoToAll
                 }
                 Button {
                     id: discardButton
                     text: "Discard"
-                    onClicked: root.click(Message.Discard)
-                    visible: root.standardButtons & Message.Discard
+                    onClicked: root.click(StandardButton.Discard)
+                    visible: root.standardButtons & StandardButton.Discard
                 }
                 Button {
                     id: resetButton
                     text: "Reset"
-                    onClicked: root.click(Message.Reset)
-                    visible: root.standardButtons & Message.Reset
+                    onClicked: root.click(StandardButton.Reset)
+                    visible: root.standardButtons & StandardButton.Reset
                 }
                 Button {
                     id: restoreDefaultsButton
                     text: "Restore Defaults"
-                    onClicked: root.click(Message.RestoreDefaults)
-                    visible: root.standardButtons & Message.RestoreDefaults
+                    onClicked: root.click(StandardButton.RestoreDefaults)
+                    visible: root.standardButtons & StandardButton.RestoreDefaults
                 }
                 Button {
                     id: cancelButton
                     text: "Cancel"
-                    onClicked: root.click(Message.Cancel)
-                    visible: root.standardButtons & Message.Cancel
+                    onClicked: root.click(StandardButton.Cancel)
+                    visible: root.standardButtons & StandardButton.Cancel
                 }
                 Button {
                     id: abortButton
                     text: "Abort"
-                    onClicked: root.click(Message.Abort)
-                    visible: root.standardButtons & Message.Abort
+                    onClicked: root.click(StandardButton.Abort)
+                    visible: root.standardButtons & StandardButton.Abort
                 }
                 Button {
                     id: closeButton
                     text: "Close"
-                    onClicked: root.click(Message.Close)
-                    visible: root.standardButtons & Message.Close
+                    onClicked: root.click(StandardButton.Close)
+                    visible: root.standardButtons & StandardButton.Close
                 }
                 Button {
                     id: moreButton
@@ -234,9 +244,10 @@ AbstractMessageDialog {
                 Button {
                     id: helpButton
                     text: "Help"
-                    onClicked: root.click(Message.Help)
-                    visible: root.standardButtons & Message.Help
+                    onClicked: root.click(StandardButton.Help)
+                    visible: root.standardButtons & StandardButton.Help
                 }
+                onVisibleChildrenChanged: calculateImplicitWidth()
             }
         }
 
@@ -307,4 +318,13 @@ AbstractMessageDialog {
             }
         ]
     }
+    function calculateImplicitWidth() {
+        if (buttons.visibleChildren.length < 2)
+            return;
+        var calcWidth = 0;
+        for (var i = 0; i < buttons.visibleChildren.length; ++i)
+            calcWidth += Math.max(100, buttons.visibleChildren[i].implicitWidth) + content.spacing
+        content.buttonsRowImplicitWidth = content.outerSpacing + calcWidth
+    }
+    Component.onCompleted: calculateImplicitWidth()
 }

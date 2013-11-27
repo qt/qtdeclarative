@@ -68,11 +68,21 @@ using namespace QV4;
     QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->throwError(ex); \
+    return Encode::undefined(); \
+}
+
+#define V4THROW_SQL2(error, desc) { \
+    QV4::Scoped<String> v(scope, ctx->engine->newString(desc)); \
+    QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
+    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    args->setReturnValue(ctx->throwError(ex)); \
+    return; \
 }
 
 #define V4THROW_REFERENCE(string) { \
     QV4::Scoped<String> v(scope, ctx->engine->newString(string)); \
     ctx->throwReferenceError(v); \
+    return Encode::undefined(); \
 }
 
 
@@ -123,7 +133,7 @@ public:
 
 DEFINE_MANAGED_VTABLE(QQmlSqlDatabaseWrapper);
 
-static ReturnedValue qmlsqldatabase_version(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -133,7 +143,7 @@ static ReturnedValue qmlsqldatabase_version(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(r->version));
 }
 
-static ReturnedValue qmlsqldatabase_rows_length(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_length(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -152,7 +162,7 @@ static ReturnedValue qmlsqldatabase_rows_length(SimpleCallContext *ctx)
     return Encode(s);
 }
 
-static ReturnedValue qmlsqldatabase_rows_forwardOnly(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_forwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -161,14 +171,14 @@ static ReturnedValue qmlsqldatabase_rows_forwardOnly(SimpleCallContext *ctx)
     return Encode(r->sqlQuery.isForwardOnly());
 }
 
-static ReturnedValue qmlsqldatabase_rows_setForwardOnly(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_setForwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
     if (ctx->callData->argc < 1)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     r->sqlQuery.setForwardOnly(ctx->callData->args[0].toBoolean());
     return Encode::undefined();
@@ -231,7 +241,7 @@ ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *h
     return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty);
 }
 
-static ReturnedValue qmlsqldatabase_rows_item(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -241,7 +251,7 @@ static ReturnedValue qmlsqldatabase_rows_item(SimpleCallContext *ctx)
     return qmlsqldatabase_rows_index(r, ctx->engine, ctx->callData->argc ? ctx->callData->args[0].toUInt32() : 0);
 }
 
-static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -353,7 +363,7 @@ struct TransactionRollback {
 };
 
 
-static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         return Encode::undefined();
@@ -412,7 +422,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool readOnly)
+static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool readOnly)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -451,12 +461,12 @@ static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, b
     return Encode::undefined();
 }
 
-static ReturnedValue qmlsqldatabase_transaction(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_transaction(CallContext *ctx)
 {
     return qmlsqldatabase_transaction_shared(ctx, false);
 }
 
-static ReturnedValue qmlsqldatabase_read_transaction(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_read_transaction(CallContext *ctx)
 {
     return qmlsqldatabase_transaction_shared(ctx, true);
 }
@@ -652,7 +662,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     QV4::ExecutionContext *ctx = args->v4engine()->current;
     QV4::Scope scope(ctx);
     if (engine->engine()->offlineStoragePath().isEmpty())
-        V4THROW_SQL(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
+        V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
 
     qmlsqldatabase_initDatabasesPath(engine);
 
@@ -680,7 +690,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
             database = QSqlDatabase::database(dbid);
             version = ini.value(QLatin1String("Version")).toString();
             if (version != dbversion && !dbversion.isEmpty() && !version.isEmpty())
-                V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("SQL: database version mismatch"));
+                V4THROW_SQL2(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("SQL: database version mismatch"));
         } else {
             created = !QFile::exists(basename+QLatin1String(".sqlite"));
             database = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"), dbid);
@@ -695,7 +705,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
             } else {
                 if (!dbversion.isEmpty() && ini.value(QLatin1String("Version")) != dbversion) {
                     // Incompatible
-                    V4THROW_SQL(SQLEXCEPTION_VERSION_ERR,QQmlEngine::tr("SQL: database version mismatch"));
+                    V4THROW_SQL2(SQLEXCEPTION_VERSION_ERR,QQmlEngine::tr("SQL: database version mismatch"));
                 }
                 version = ini.value(QLatin1String("Version")).toString();
             }

@@ -63,12 +63,12 @@ public:
 
 V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
-static QV4::ReturnedValue get_index(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     return QV4::Encode(o->item->index);
 }
@@ -108,8 +108,8 @@ public:
     void setValue(const QString &role, const QVariant &value);
     bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
-    static QV4::ReturnedValue get_property(QV4::SimpleCallContext *ctx, uint propertyId);
-    static QV4::ReturnedValue set_property(QV4::SimpleCallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue get_property(QV4::CallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue set_property(QV4::CallContext *ctx, uint propertyId);
 
     VDMModelDelegateDataType *type;
     QVector<QVariant> cachedData;
@@ -195,12 +195,12 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
-    static QV4::ReturnedValue get_hasModelChildren(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue get_hasModelChildren(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->item)->type->model;
         if (o->item->index >= 0 && *model) {
@@ -339,12 +339,12 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
     }
 }
 
-QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->item);
     if (o->item->index == -1) {
@@ -359,14 +359,14 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *c
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
     if (!ctx->callData->argc)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (o->item->index == -1) {
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->item);
@@ -579,24 +579,24 @@ public:
         }
     }
 
-    static QV4::ReturnedValue get_modelData(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue get_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->item)->cachedData);
     }
 
-    static QV4::ReturnedValue set_modelData(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
         if (!ctx->callData->argc)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         static_cast<QQmlDMListAccessorData *>(o->item)->setModelData(ctx->engine->v8Engine->toVariant(ctx->callData->args[0], QVariant::Invalid));
         return QV4::Encode::undefined();
@@ -902,7 +902,7 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm,
 
     list.setList(variant, engine);
 
-    if (QObject *object = qvariant_cast<QObject *>(variant)) {
+    if (QObject *object = qvariant_cast<QObject *>(list.list())) {
         setObject(object);
         if (QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(object)) {
             accessors = new VDMAbstractItemModelDataType(this);
@@ -927,8 +927,8 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm,
     } else if (list.type() == QQmlListAccessor::ListProperty) {
         setObject(static_cast<const QQmlListReference *>(variant.constData())->object());
         accessors = new VDMObjectDelegateDataType;
-    } else if (list.type() != QQmlListAccessor::Invalid) {
-        Q_ASSERT(list.type() != QQmlListAccessor::Instance);  // Should have cast to QObject.
+    } else if (list.type() != QQmlListAccessor::Invalid
+            && list.type() != QQmlListAccessor::Instance) { // Null QObject
         setObject(0);
         accessors = &qt_vdm_list_accessors;
     } else {

@@ -119,8 +119,10 @@ struct ExecutableAllocator {
         size_t iaddr = reinterpret_cast<size_t>(addr);
         size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
 #if OS(WINDOWS)
+#if !OS(WINRT)
         DWORD oldProtect;
         VirtualProtect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), PAGE_EXECUTE_READWRITE, &oldProtect);
+#endif
 #else
         int mode = PROT_READ | PROT_EXEC;
 #if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)

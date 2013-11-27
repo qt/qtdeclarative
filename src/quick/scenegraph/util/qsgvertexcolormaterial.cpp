@@ -48,6 +48,8 @@ QT_BEGIN_NAMESPACE
 class QSGVertexColorMaterialShader : public QSGMaterialShader
 {
 public:
+    QSGVertexColorMaterialShader();
+
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
 
@@ -55,14 +57,19 @@ public:
 
 private:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_matrix_id;
     int m_opacity_id;
 };
 
 QSGMaterialType QSGVertexColorMaterialShader::type;
+
+QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
+    : QSGMaterialShader()
+{
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/vertexcolor.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/vertexcolor.frag"));
+}
 
 void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial * /*newEffect*/, QSGMaterial *)
 {
@@ -84,28 +91,6 @@ void QSGVertexColorMaterialShader::initialize()
     m_matrix_id = program()->uniformLocation("matrix");
     m_opacity_id = program()->uniformLocation("opacity");
 }
-
-const char *QSGVertexColorMaterialShader::vertexShader() const {
-    return
-        "attribute highp vec4 vertexCoord;              \n"
-        "attribute highp vec4 vertexColor;              \n"
-        "uniform highp mat4 matrix;                     \n"
-        "uniform highp float opacity;                   \n"
-        "varying lowp vec4 color;                       \n"
-        "void main() {                                  \n"
-        "    gl_Position = matrix * vertexCoord;        \n"
-        "    color = vertexColor * opacity;             \n"
-        "}";
-}
-
-const char *QSGVertexColorMaterialShader::fragmentShader() const {
-    return
-        "varying lowp vec4 color;                       \n"
-        "void main() {                                  \n"
-        "    gl_FragColor = color;                      \n"
-        "}";
-}
-
 
 
 /*!

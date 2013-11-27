@@ -105,24 +105,16 @@ public:
     int freeAllocationCount() const { return freeAllocations.count(); }
     int chunkCount() const { return chunks.count(); }
 
-    // Used to store CIE+FDE on x86/x86-64.
-    struct PlatformUnwindInfo
-    {
-        virtual ~PlatformUnwindInfo() {}
-    };
-
     struct ChunkOfPages
     {
         ChunkOfPages()
             : pages(0)
             , firstAllocation(0)
-            , unwindInfo(0)
         {}
         ~ChunkOfPages();
 
         WTF::PageAllocation *pages;
         Allocation *firstAllocation;
-        PlatformUnwindInfo *unwindInfo;
 
         bool contains(Allocation *alloc) const;
     };

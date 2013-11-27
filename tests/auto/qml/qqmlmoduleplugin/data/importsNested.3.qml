@@ -1,4 +1,4 @@
-import com.nokia.AutoTestQmlNestedPluginType 1.0
+import org.qtproject.AutoTestQmlNestedPluginType 1.0
 
 MyNestedPluginType {
 }

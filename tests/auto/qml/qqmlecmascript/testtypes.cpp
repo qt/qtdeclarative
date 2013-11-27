@@ -235,6 +235,21 @@ public:
     }
 };
 
+class MiscTypeTestClass : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QUrl invalidUrl()
+    {
+        return QUrl();
+    }
+
+    Q_INVOKABLE QUrl validUrl()
+    {
+        return QUrl("http://wwww.qt-project.org");
+    }
+};
+
 class MyStringClass : public QObject
 {
     Q_OBJECT
@@ -257,10 +272,34 @@ public:
     }
 };
 
+static MyInheritedQmlObject *theSingletonObject = 0;
+
+static QObject *inheritedQmlObject_provider(QQmlEngine* /* engine */, QJSEngine* /* scriptEngine */)
+{
+    theSingletonObject = new MyInheritedQmlObject();
+    return theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouQObject(QObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouMyQmlObject(MyQmlObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouMyInheritedQmlObject(MyInheritedQmlObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObject");
+    qmlRegisterSingletonType<MyInheritedQmlObject>("Test", 1, 0, "MyInheritedQmlObjectSingleton", inheritedQmlObject_provider);
     qmlRegisterType<MyDeferredObject>("Qt.test", 1,0, "MyDeferredObject");
     qmlRegisterType<MyVeryDeferredObject>("Qt.test", 1,0, "MyVeryDeferredObject");
     qmlRegisterType<MyQmlContainer>("Qt.test", 1,0, "MyQmlContainer");
@@ -329,6 +368,7 @@ void registerTypes()
 
     qmlRegisterType<MyDateClass>("Qt.test", 1, 0, "MyDateClass");
     qmlRegisterType<MyStringClass>("Qt.test", 1, 0, "MyStringClass");
+    qmlRegisterType<MiscTypeTestClass>("Qt.test", 1, 0, "MiscTypeTest");
 
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi",1,0,"Data",testImportOrder_api);
     qmlRegisterSingletonType<testImportOrderApi>("NamespaceAndType",1,0,"NamespaceAndType",testImportOrder_api);

@@ -73,7 +73,7 @@ using namespace QV4;
 
 #define V4THROW_REFERENCE(string) { \
         Scoped<Object> error(scope, ctx->engine->newReferenceErrorObject(QStringLiteral(string))); \
-        ctx->throwError(error); \
+        return ctx->throwError(error); \
     }
 
 QT_BEGIN_NAMESPACE
@@ -189,8 +189,8 @@ class NamedNodeMap : public Object
 public:
     NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
         : Object(engine)
-        , d(data)
         , list(list)
+        , d(data)
     {
         vtbl = &static_vtbl;
 
@@ -279,24 +279,24 @@ public:
     static void initClass(ExecutionEngine *engine);
 
     // JS API
-    static ReturnedValue method_get_nodeName(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nodeValue(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nodeType(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nodeName(CallContext *ctx);
+    static ReturnedValue method_get_nodeValue(CallContext *ctx);
+    static ReturnedValue method_get_nodeType(CallContext *ctx);
 
-    static ReturnedValue method_get_parentNode(SimpleCallContext *ctx);
-    static ReturnedValue method_get_childNodes(SimpleCallContext *ctx);
-    static ReturnedValue method_get_firstChild(SimpleCallContext *ctx);
-    static ReturnedValue method_get_lastChild(SimpleCallContext *ctx);
-    static ReturnedValue method_get_previousSibling(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nextSibling(SimpleCallContext *ctx);
-    static ReturnedValue method_get_attributes(SimpleCallContext *ctx);
+    static ReturnedValue method_get_parentNode(CallContext *ctx);
+    static ReturnedValue method_get_childNodes(CallContext *ctx);
+    static ReturnedValue method_get_firstChild(CallContext *ctx);
+    static ReturnedValue method_get_lastChild(CallContext *ctx);
+    static ReturnedValue method_get_previousSibling(CallContext *ctx);
+    static ReturnedValue method_get_nextSibling(CallContext *ctx);
+    static ReturnedValue method_get_attributes(CallContext *ctx);
 
-    //static ReturnedValue ownerDocument(SimpleCallContext *ctx);
-    //static ReturnedValue namespaceURI(SimpleCallContext *ctx);
-    //static ReturnedValue prefix(SimpleCallContext *ctx);
-    //static ReturnedValue localName(SimpleCallContext *ctx);
-    //static ReturnedValue baseURI(SimpleCallContext *ctx);
-    //static ReturnedValue textContent(SimpleCallContext *ctx);
+    //static ReturnedValue ownerDocument(CallContext *ctx);
+    //static ReturnedValue namespaceURI(CallContext *ctx);
+    //static ReturnedValue prefix(CallContext *ctx);
+    //static ReturnedValue localName(CallContext *ctx);
+    //static ReturnedValue baseURI(CallContext *ctx);
+    //static ReturnedValue textContent(CallContext *ctx);
 
     static ReturnedValue getProto(ExecutionEngine *v4);
 
@@ -352,12 +352,12 @@ class Attr : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_name(SimpleCallContext *ctx);
-//    static ReturnedValue specified(SimpleCallContext *);
-    static ReturnedValue method_value(SimpleCallContext *ctx);
-    static ReturnedValue method_ownerElement(SimpleCallContext *ctx);
-//    static ReturnedValue schemaTypeInfo(SimpleCallContext *);
-//    static ReturnedValue isId(SimpleCallContext *c);
+    static ReturnedValue method_name(CallContext *ctx);
+//    static ReturnedValue specified(CallContext *);
+    static ReturnedValue method_value(CallContext *ctx);
+    static ReturnedValue method_ownerElement(CallContext *ctx);
+//    static ReturnedValue schemaTypeInfo(CallContext *);
+//    static ReturnedValue isId(CallContext *c);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -367,7 +367,7 @@ class CharacterData : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_length(SimpleCallContext *ctx);
+    static ReturnedValue method_length(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *v4);
@@ -377,8 +377,8 @@ class Text : public CharacterData
 {
 public:
     // JS API
-    static ReturnedValue method_isElementContentWhitespace(SimpleCallContext *ctx);
-    static ReturnedValue method_wholeText(SimpleCallContext *ctx);
+    static ReturnedValue method_isElementContentWhitespace(CallContext *ctx);
+    static ReturnedValue method_wholeText(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -395,10 +395,10 @@ class Document : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_xmlVersion(SimpleCallContext *ctx);
-    static ReturnedValue method_xmlEncoding(SimpleCallContext *ctx);
-    static ReturnedValue method_xmlStandalone(SimpleCallContext *ctx);
-    static ReturnedValue method_documentElement(SimpleCallContext *ctx);
+    static ReturnedValue method_xmlVersion(CallContext *ctx);
+    static ReturnedValue method_xmlEncoding(CallContext *ctx);
+    static ReturnedValue method_xmlStandalone(CallContext *ctx);
+    static ReturnedValue method_documentElement(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -417,12 +417,12 @@ void NodeImpl::release()
     document->release();
 }
 
-ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeName(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QString name;
     switch (r->d->type) {
@@ -442,12 +442,12 @@ ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(name));
 }
 
-ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeValue(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (r->d->type == NodeImpl::Document ||
         r->d->type == NodeImpl::DocumentFragment ||
@@ -461,22 +461,22 @@ ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(r->d->data));
 }
 
-ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeType(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return Encode(r->d->type);
 }
 
-ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_parentNode(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -486,24 +486,24 @@ ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
         return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_childNodes(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
     return NodeList::create(engine, r->d);
 }
 
-ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_firstChild(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -513,12 +513,12 @@ ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
         return Node::create(engine, r->d->children.first());
 }
 
-ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -528,12 +528,12 @@ ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
         return Node::create(engine, r->d->children.last());
 }
 
-ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_previousSibling(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -552,12 +552,12 @@ ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
     return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nextSibling(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -576,12 +576,12 @@ ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
     return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_attributes(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -608,7 +608,6 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
     Scoped<Node> instance(scope, new (v4->memoryManager) Node(v4, data));
     ScopedObject p(scope);
 
@@ -671,7 +670,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
     return d->attrPrototype.value();
 }
 
-ReturnedValue Attr::method_name(SimpleCallContext *ctx)
+ReturnedValue Attr::method_name(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -682,7 +681,7 @@ ReturnedValue Attr::method_name(SimpleCallContext *ctx)
     return engine->toString(r->d->name);
 }
 
-ReturnedValue Attr::method_value(SimpleCallContext *ctx)
+ReturnedValue Attr::method_value(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -693,7 +692,7 @@ ReturnedValue Attr::method_value(SimpleCallContext *ctx)
     return engine->toString(r->d->data);
 }
 
-ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
+ReturnedValue Attr::method_ownerElement(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -704,7 +703,7 @@ ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
     return Node::create(engine, r->d->parent);
 }
 
-ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
+ReturnedValue CharacterData::method_length(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -731,7 +730,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
     return d->characterDataPrototype.value();
 }
 
-ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
+ReturnedValue Text::method_isElementContentWhitespace(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -740,7 +739,7 @@ ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
     return Encode(r->d->data.trimmed().isEmpty());
 }
 
-ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
+ReturnedValue Text::method_wholeText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -907,7 +906,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -926,7 +925,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     name->makeIdentifier();
     if (name->equals(v4->id_length))
@@ -962,7 +961,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -981,7 +980,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     name->makeIdentifier();
 
@@ -992,14 +991,13 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
 
 ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
     Scoped<NodeList> instance(scope, new (v4->memoryManager) NodeList(v4, data));
     return instance.asReturnedValue();
 }
 
-ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
+ReturnedValue Document::method_documentElement(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1010,7 +1008,7 @@ ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
     return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
 }
 
-ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlStandalone(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1021,7 +1019,7 @@ ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
     return Encode(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
-ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlVersion(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1032,7 +1030,7 @@ ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
     return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
 }
 
-ReturnedValue Document::method_xmlEncoding(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlEncoding(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1108,6 +1106,7 @@ private:
     void setMe(const ValueRef me);
     PersistentValue m_me;
 
+    void dispatchCallbackImpl(const ValueRef me);
     void dispatchCallback(const ValueRef me);
 
     int m_status;
@@ -1534,45 +1533,57 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
+void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 {
     ExecutionContext *ctx = v4->current;
     QV4::Scope scope(v4);
-    try {
-        Scoped<Object> o(scope, me);
-        if (!o)
-            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+    Scoped<Object> o(scope, me);
+    if (!o) {
+        ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        return;
+    }
 
-        ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
-        Scoped<Object> thisObj(scope, o->get(s));
-        if (!thisObj)
-            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+    ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
+    Scoped<Object> thisObj(scope, o->get(s));
+    if (!thisObj) {
+        ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        return;
+    }
 
-        s = v4->newString(QStringLiteral("onreadystatechange"));
-        Scoped<FunctionObject> callback(scope, thisObj->get(s));
-        if (!callback) {
-            // not an error, but no onreadystatechange function to call.
-            return;
-        }
+    s = v4->newString(QStringLiteral("onreadystatechange"));
+    Scoped<FunctionObject> callback(scope, thisObj->get(s));
+    if (!callback) {
+        // not an error, but no onreadystatechange function to call.
+        return;
+    }
 
-        s = v4->newString(QStringLiteral("ActivationObject"));
-        Scoped<Object> activationObject(scope, o->get(s));
-        if (!activationObject)
-            v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
+    s = v4->newString(QStringLiteral("ActivationObject"));
+    Scoped<Object> activationObject(scope, o->get(s));
+    if (!activationObject) {
+        v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
+        return;
+    }
 
-        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
-        if (callingContext) {
-            QV4::ScopedCallData callData(scope, 0);
-            callData->thisObject = activationObject.asReturnedValue();
-            callback->call(callData);
-        }
+    QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
+    if (callingContext) {
+        QV4::ScopedCallData callData(scope, 0);
+        callData->thisObject = activationObject.asReturnedValue();
+        callback->call(callData);
+    }
 
-        // if the callingContext object is no longer valid, then it has been
-        // deleted explicitly (e.g., by a Loader deleting the itemContext when
-        // the source is changed).  We do nothing in this case, as the evaluation
-        // cannot succeed.
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    // if the callingContext object is no longer valid, then it has been
+    // deleted explicitly (e.g., by a Loader deleting the itemContext when
+    // the source is changed).  We do nothing in this case, as the evaluation
+    // cannot succeed.
+
+}
+
+void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
+{
+    ExecutionContext *ctx = v4->current;
+    dispatchCallbackImpl(me);
+    if (v4->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }
 }
@@ -1635,17 +1646,17 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static void destroy(Managed *that) {
         that->as<QQmlXMLHttpRequestCtor>()->~QQmlXMLHttpRequestCtor();
     }
-    static void markObjects(Managed *that) {
+    static void markObjects(Managed *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->proto)
-            c->proto->mark();
+            c->proto->mark(e);
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
         Scope scope(that->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
-            that->engine()->current->throwTypeError();
+            return that->engine()->current->throwTypeError();
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
@@ -1660,18 +1671,18 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
     void setupProto();
 
-    static ReturnedValue method_open(SimpleCallContext *ctx);
-    static ReturnedValue method_setRequestHeader(SimpleCallContext *ctx);
-    static ReturnedValue method_send(SimpleCallContext *ctx);
-    static ReturnedValue method_abort(SimpleCallContext *ctx);
-    static ReturnedValue method_getResponseHeader(SimpleCallContext *ctx);
-    static ReturnedValue method_getAllResponseHeaders(SimpleCallContext *ctx);
+    static ReturnedValue method_open(CallContext *ctx);
+    static ReturnedValue method_setRequestHeader(CallContext *ctx);
+    static ReturnedValue method_send(CallContext *ctx);
+    static ReturnedValue method_abort(CallContext *ctx);
+    static ReturnedValue method_getResponseHeader(CallContext *ctx);
+    static ReturnedValue method_getAllResponseHeaders(CallContext *ctx);
 
-    static ReturnedValue method_get_readyState(SimpleCallContext *ctx);
-    static ReturnedValue method_get_status(SimpleCallContext *ctx);
-    static ReturnedValue method_get_statusText(SimpleCallContext *ctx);
-    static ReturnedValue method_get_responseText(SimpleCallContext *ctx);
-    static ReturnedValue method_get_responseXML(SimpleCallContext *ctx);
+    static ReturnedValue method_get_readyState(CallContext *ctx);
+    static ReturnedValue method_get_status(CallContext *ctx);
+    static ReturnedValue method_get_statusText(CallContext *ctx);
+    static ReturnedValue method_get_responseText(CallContext *ctx);
+    static ReturnedValue method_get_responseXML(CallContext *ctx);
 
 
     Object *proto;
@@ -1711,7 +1722,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
 
 
 // XMLHttpRequest methods
-ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1761,7 +1772,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     return r->open(meObject, method, url);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1808,7 +1819,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext 
     return Encode::undefined();
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_send(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1830,7 +1841,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
     return r->send(meObject, data);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_abort(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1842,7 +1853,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
     return r->abort(meObject);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1863,7 +1874,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext
     return engine->toString(r->header(ctx->callData->args[0].toQStringNoThrow()));
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1885,7 +1896,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallCon
 }
 
 // XMLHttpRequest properties
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1896,7 +1907,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *c
     return Encode(r->readyState());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1914,7 +1925,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
         return Encode(r->replyStatus());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1934,7 +1945,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *c
         return engine->toString(r->replyStatusText());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1951,7 +1962,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext 
         return engine->toString(r->responseBody());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());

@@ -49,13 +49,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
+class QSGRenderContext;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldTextMaterial;
 class QSGDistanceFieldGlyphNode: public QSGGlyphNode, public QSGDistanceFieldGlyphConsumer
 {
 public:
-    QSGDistanceFieldGlyphNode(QSGContext *context);
+    QSGDistanceFieldGlyphNode(QSGRenderContext *context);
     ~QSGDistanceFieldGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
@@ -86,7 +86,7 @@ private:
     DistanceFieldGlyphNodeType m_glyphNodeType;
     QColor m_color;
     QPointF m_baseLine;
-    QSGContext *m_context;
+    QSGRenderContext *m_context;
     QSGDistanceFieldTextMaterial *m_material;
     QPointF m_originalPosition;
     QPointF m_position;

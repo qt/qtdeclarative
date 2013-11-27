@@ -25,7 +25,7 @@ HEADERS += \
     qquickabstractmessagedialog_p.h \
     qquickplatformmessagedialog_p.h \
     qquickmessagedialog_p.h \
-    qquickmessageattached_p.h \
+    qquickdialogassets_p.h \
     qquickabstractfiledialog_p.h \
     qquickplatformfiledialog_p.h \
     qquickfiledialog_p.h \

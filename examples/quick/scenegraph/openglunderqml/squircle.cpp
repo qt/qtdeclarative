@@ -129,7 +129,10 @@ void Squircle::paint()
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
     m_program->setUniformValue("t", (float) m_thread_t);
 
-    glViewport(0, 0, window()->width(), window()->height());
+    qreal ratio = window()->devicePixelRatio();
+    int w = int(ratio * window()->width());
+    int h = int(ratio * window()->height());
+    glViewport(0, 0, w, h);
 
     glDisable(GL_DEPTH_TEST);
 

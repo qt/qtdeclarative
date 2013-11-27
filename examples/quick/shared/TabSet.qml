@@ -69,7 +69,7 @@ Item {
             model: stack.children.length
             delegate: Rectangle {
                 width: tabWidget.width / stack.children.length
-                height: Math.max(Screen.logicalPixelDensity * 11, label.implicitHeight * 1.2)
+                height: Math.max(Screen.pixelDensity * 7, label.implicitHeight * 1.2)
 
                 Rectangle {
                     width: parent.width; height: 1

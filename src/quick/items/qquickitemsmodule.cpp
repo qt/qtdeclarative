@@ -188,6 +188,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextEdit>(uri,major,minor,"TextEdit");
     qmlRegisterType<QQuickTextEdit,1>(uri,2,1,"TextEdit");
     qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
+    qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
 
     qmlRegisterType<QQuickItemLayer>();
@@ -268,8 +269,17 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextEdit, 2>(uri, 2, 2, "TextEdit");
 }
 
+static void initResources()
+{
+    Q_INIT_RESOURCE(items);
+}
+
+QT_BEGIN_NAMESPACE
+
 void QQuickItemsModule::defineModule()
 {
+    initResources();
+
     QByteArray name = "QtQuick";
     int majorVersion = 2;
     int minorVersion = 0;
@@ -277,3 +287,4 @@ void QQuickItemsModule::defineModule()
     qt_quickitems_defineModule(name, majorVersion, minorVersion);
 }
 
+QT_END_NAMESPACE

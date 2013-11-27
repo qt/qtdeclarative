@@ -91,7 +91,7 @@ void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
 
     // ### This should be using qml instead of qmlscene, but can't because of QTBUG-33376 (same as the XFAIL testcase)
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
-    m_process->start(QStringList() << QLatin1String("-enable-debugger") << argument << testFile("qtquick2.qml"));
+    m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");
 

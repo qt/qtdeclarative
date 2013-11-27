@@ -295,9 +295,16 @@ static inline double DaylightSavingTA(double t)
     __time64_t  tt = (__time64_t)(t / msPerSecond);
     // _localtime_64_s returns non-zero on failure
     if (_localtime64_s(&tmtm, &tt) != 0)
-#else
+#elif !defined(QT_NO_THREAD) && defined(_POSIX_THREAD_SAFE_FUNCTIONS)
     long int tt = (long int)(t / msPerSecond);
     if (!localtime_r((const time_t*) &tt, &tmtm))
+#else
+    // Returns shared static data which may be overwritten at any time
+    // (for MinGW/Windows localtime is luckily thread safe)
+    long int tt = (long int)(t / msPerSecond);
+    if (struct tm *tmtm_p = localtime((const time_t*) &tt))
+        tmtm = *tmtm_p;
+    else
 #endif
         return 0;
     return (tmtm.tm_isdst > 0) ? msPerHour : 0;
@@ -772,14 +779,14 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
     }
 }
 
-ReturnedValue DatePrototype::method_parse(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_parse(CallContext *ctx)
 {
     if (!ctx->callData->argc)
         return Encode(qSNaN());
     return Encode(ParseString(ctx->callData->args[0].toString(ctx)->toQString()));
 }
 
-ReturnedValue DatePrototype::method_UTC(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_UTC(CallContext *ctx)
 {
     const int numArgs = ctx->callData->argc;
     if (numArgs >= 2) {
@@ -799,62 +806,62 @@ ReturnedValue DatePrototype::method_UTC(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue DatePrototype::method_now(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_now(CallContext *ctx)
 {
     Q_UNUSED(ctx);
     double t = currentTime();
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toDateString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toDateString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToDateString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toTimeString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toTimeString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToTimeString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toLocaleString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToLocaleString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toLocaleDateString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toLocaleDateString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToLocaleDateString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toLocaleTimeString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toLocaleTimeString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return ctx->engine->newString(ToLocaleTimeString(t))->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_valueOf(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getTime(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getTime(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getYear(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -862,7 +869,7 @@ ReturnedValue DatePrototype::method_getYear(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getFullYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getFullYear(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -870,7 +877,7 @@ ReturnedValue DatePrototype::method_getFullYear(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCFullYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCFullYear(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -878,7 +885,7 @@ ReturnedValue DatePrototype::method_getUTCFullYear(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getMonth(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getMonth(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -886,7 +893,7 @@ ReturnedValue DatePrototype::method_getMonth(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCMonth(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCMonth(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -894,7 +901,7 @@ ReturnedValue DatePrototype::method_getUTCMonth(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getDate(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getDate(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -902,7 +909,7 @@ ReturnedValue DatePrototype::method_getDate(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCDate(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCDate(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -910,7 +917,7 @@ ReturnedValue DatePrototype::method_getUTCDate(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getDay(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getDay(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -918,7 +925,7 @@ ReturnedValue DatePrototype::method_getDay(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCDay(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCDay(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -926,7 +933,7 @@ ReturnedValue DatePrototype::method_getUTCDay(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getHours(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getHours(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -934,7 +941,7 @@ ReturnedValue DatePrototype::method_getHours(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCHours(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCHours(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -942,7 +949,7 @@ ReturnedValue DatePrototype::method_getUTCHours(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getMinutes(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getMinutes(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -950,7 +957,7 @@ ReturnedValue DatePrototype::method_getMinutes(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCMinutes(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCMinutes(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -958,7 +965,7 @@ ReturnedValue DatePrototype::method_getUTCMinutes(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getSeconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getSeconds(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -966,7 +973,7 @@ ReturnedValue DatePrototype::method_getSeconds(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCSeconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCSeconds(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -974,7 +981,7 @@ ReturnedValue DatePrototype::method_getUTCSeconds(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getMilliseconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getMilliseconds(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -982,7 +989,7 @@ ReturnedValue DatePrototype::method_getMilliseconds(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getUTCMilliseconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getUTCMilliseconds(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -990,7 +997,7 @@ ReturnedValue DatePrototype::method_getUTCMilliseconds(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_getTimezoneOffset(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_getTimezoneOffset(CallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! std::isnan(t))
@@ -998,24 +1005,24 @@ ReturnedValue DatePrototype::method_getTimezoneOffset(SimpleCallContext *ctx)
     return Encode(t);
 }
 
-ReturnedValue DatePrototype::method_setTime(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setTime(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<DateObject> self(scope, ctx->callData->thisObject);
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
     self->value.setDouble(TimeClip(t));
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setMilliseconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setMilliseconds(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<DateObject> self(scope, ctx->callData->thisObject);
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double ms = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1023,11 +1030,11 @@ ReturnedValue DatePrototype::method_setMilliseconds(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCMilliseconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double ms = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1035,11 +1042,11 @@ ReturnedValue DatePrototype::method_setUTCMilliseconds(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setSeconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double sec = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1049,11 +1056,11 @@ ReturnedValue DatePrototype::method_setSeconds(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCSeconds(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double sec = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1063,11 +1070,11 @@ ReturnedValue DatePrototype::method_setUTCSeconds(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setMinutes(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double min = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1078,11 +1085,11 @@ ReturnedValue DatePrototype::method_setMinutes(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCMinutes(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double min = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1093,11 +1100,11 @@ ReturnedValue DatePrototype::method_setUTCMinutes(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setHours(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double hour = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1109,11 +1116,11 @@ ReturnedValue DatePrototype::method_setHours(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCHours(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double hour = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1125,11 +1132,11 @@ ReturnedValue DatePrototype::method_setUTCHours(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setDate(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double date = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1138,11 +1145,11 @@ ReturnedValue DatePrototype::method_setDate(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCDate(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double date = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1151,11 +1158,11 @@ ReturnedValue DatePrototype::method_setUTCDate(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setMonth(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     double month = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1165,11 +1172,11 @@ ReturnedValue DatePrototype::method_setMonth(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCMonth(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double month = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1179,11 +1186,11 @@ ReturnedValue DatePrototype::method_setUTCMonth(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     if (std::isnan(t))
@@ -1205,11 +1212,11 @@ ReturnedValue DatePrototype::method_setYear(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setUTCFullYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     double year = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
@@ -1220,11 +1227,11 @@ ReturnedValue DatePrototype::method_setUTCFullYear(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_setFullYear(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
     if (std::isnan(t))
@@ -1237,11 +1244,11 @@ ReturnedValue DatePrototype::method_setFullYear(SimpleCallContext *ctx)
     return self->value.asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toUTCString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toUTCString(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     return ctx->engine->newString(ToUTCString(t))->asReturnedValue();
@@ -1260,45 +1267,45 @@ static void addZeroPrefixedInt(QString &str, int num, int nDigits)
     }
 }
 
-ReturnedValue DatePrototype::method_toISOString(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 {
     DateObject *self = ctx->callData->thisObject.asDateObject();
     if (!self)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     double t = self->value.asDouble();
     if (!std::isfinite(t))
-        ctx->throwRangeError(ctx->callData->thisObject);
+        return ctx->throwRangeError(ctx->callData->thisObject);
 
     QString result;
     int year = (int)YearFromTime(t);
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
             return ctx->engine->newString(QStringLiteral("Invalid Date"))->asReturnedValue();
-        result += year < 0 ? '-' : '+';
+        result += year < 0 ? QLatin1Char('-') : QLatin1Char('+');
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
     } else {
         addZeroPrefixedInt(result, year, 4);
     }
-    result += '-';
+    result += QLatin1Char('-');
     addZeroPrefixedInt(result, (int)MonthFromTime(t) + 1, 2);
-    result += '-';
+    result += QLatin1Char('-');
     addZeroPrefixedInt(result, (int)DateFromTime(t), 2);
-    result += 'T';
+    result += QLatin1Char('T');
     addZeroPrefixedInt(result, HourFromTime(t), 2);
-    result += ':';
+    result += QLatin1Char(':');
     addZeroPrefixedInt(result, MinFromTime(t), 2);
-    result += ':';
+    result += QLatin1Char(':');
     addZeroPrefixedInt(result, SecFromTime(t), 2);
-    result += '.';
+    result += QLatin1Char('.');
     addZeroPrefixedInt(result, msFromTime(t), 3);
-    result += 'Z';
+    result += QLatin1Char('Z');
 
     return ctx->engine->newString(result)->asReturnedValue();
 }
 
-ReturnedValue DatePrototype::method_toJSON(SimpleCallContext *ctx)
+ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue O(scope, __qmljs_to_object(ctx, ValueRef(&ctx->callData->thisObject)));
@@ -1312,7 +1319,7 @@ ReturnedValue DatePrototype::method_toJSON(SimpleCallContext *ctx)
     FunctionObject *toIso = v->asFunctionObject();
 
     if (!toIso)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedCallData callData(scope, 0);
     callData->thisObject = ctx->callData->thisObject;

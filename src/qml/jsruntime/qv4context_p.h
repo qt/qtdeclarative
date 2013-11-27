@@ -62,11 +62,25 @@ struct Function;
 };
 
 struct CallContext;
+struct CallContext;
 struct CatchContext;
 struct WithContext;
 
-struct Q_QML_EXPORT ExecutionContext
+struct Q_QML_EXPORT ExecutionContext : public Managed
 {
+    Q_MANAGED
+    ExecutionContext()
+        : Managed(0) {
+        vtbl = &static_vtbl;
+    }
+    void init() {
+        _data = 0;
+        internalClass = 0;
+        inUse = 1;
+        extensible = 1;
+        vtbl = &static_vtbl;
+    }
+
     enum Type {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -78,7 +92,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     Type type;
     bool strictMode;
-    bool marked;
 
     CallData *callData;
 
@@ -97,13 +110,12 @@ struct Q_QML_EXPORT ExecutionContext
     EvalCode *currentEvalCode;
 
     const uchar **interpreterInstructionPointer;
-    char *jitInstructionPointer;
+    int lineNumber;
 
     void initBaseContext(Type type, ExecutionEngine *engine, ExecutionContext *parentContext)
     {
         this->type = type;
         strictMode = false;
-        marked = false;
         this->engine = engine;
         parent = parentContext;
         outer = 0;
@@ -111,10 +123,9 @@ struct Q_QML_EXPORT ExecutionContext
         compilationUnit = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
-        jitInstructionPointer = 0;
+        lineNumber = -1;
     }
 
-    CallContext *newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *f, CallData *callData);
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
     CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
@@ -127,49 +138,50 @@ struct Q_QML_EXPORT ExecutionContext
 
     void createMutableBinding(const StringRef name, bool deletable);
 
-    void Q_NORETURN throwError(const QV4::ValueRef value);
-    void Q_NORETURN throwError(const QString &message);
-    void Q_NORETURN throwSyntaxError(const QString &message);
-    void Q_NORETURN throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
-    void Q_NORETURN throwTypeError();
-    void Q_NORETURN throwTypeError(const QString &message);
-    void Q_NORETURN throwReferenceError(const ValueRef value);
-    void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
-    void Q_NORETURN throwRangeError(const ValueRef value);
-    void Q_NORETURN throwURIError(const ValueRef msg);
-    void Q_NORETURN throwUnimplemented(const QString &message);
+    ReturnedValue throwError(const QV4::ValueRef value);
+    ReturnedValue throwError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int lineNumber, int column);
+    ReturnedValue throwTypeError();
+    ReturnedValue throwTypeError(const QString &message);
+    ReturnedValue throwReferenceError(const ValueRef value);
+    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
+    ReturnedValue throwRangeError(const ValueRef value);
+    ReturnedValue throwRangeError(const QString &message);
+    ReturnedValue throwURIError(const ValueRef msg);
+    ReturnedValue throwUnimplemented(const QString &message);
 
     void setProperty(const StringRef name, const ValueRef value);
     ReturnedValue getProperty(const StringRef name);
-    ReturnedValue getPropertyNoThrow(const StringRef name);
     ReturnedValue getPropertyAndBase(const StringRef name, ObjectRef base);
     bool deleteProperty(const StringRef name);
 
     // Can only be called from within catch(...), rethrows if no JS exception.
     ReturnedValue catchException(StackTrace *trace = 0);
 
-    void mark();
-
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+
+    static void markObjects(Managed *m, ExecutionEngine *e);
 };
 
-struct SimpleCallContext : public ExecutionContext
+struct CallContext : public ExecutionContext
 {
-    void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
     int realArgumentCount;
-
-    inline ReturnedValue argument(int i);
-};
-
-struct CallContext : public SimpleCallContext
-{
-    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
-    bool needsOwnArguments() const;
-
     SafeValue *locals;
     Object *activation;
+
+    void initSimpleCallContext(ExecutionEngine *engine, ExecutionContext *parent) {
+        initBaseContext(Type_SimpleCallContext, engine, parent);
+        function = 0;
+        locals = 0;
+        activation = 0;
+    }
+    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
+
+    inline ReturnedValue argument(int i);
+    bool needsOwnArguments() const;
 };
 
 struct GlobalContext : public ExecutionContext
@@ -196,22 +208,17 @@ struct WithContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return type >= Type_CallContext ? static_cast<CallContext *>(this) : 0;
+    return type >= Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this) : 0;
+    return type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
-#define requiredMemoryForExecutionContectSimple(f) \
-    sizeof(CallContext)
-#define requiredMemoryForQmlExecutionContect(f) \
-    sizeof(CallContext) + sizeof(Value) * (f->locals.size())
-#define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))
 
 } // namespace QV4
 

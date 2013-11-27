@@ -1485,7 +1485,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             if (result->isInteger())
                 QUICK_STORE(int, result->integerValue())
             else if (result->isNumber())
-                QUICK_STORE(int, qRound(result->doubleValue()))
+                QUICK_STORE(int, result->doubleValue())
             break;
         case QMetaType::Double:
             if (result->isNumber())

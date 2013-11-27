@@ -715,7 +715,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
     with a combined value of all key roles that is not already present in
     the model.
 
-    \sa {RSS News}
+    \sa {Qt Quick Demo - RSS News}
 */
 
 QQuickXmlListModel::QQuickXmlListModel(QObject *parent)

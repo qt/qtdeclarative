@@ -245,7 +245,7 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endqml
 
-    The \l{declarative/rssnews}{RSS News demo} shows how XmlListModel can
+    The \l{Qt Quick Demo - RSS News}{RSS News demo} shows how XmlListModel can
     be used to display an RSS feed.
 
 

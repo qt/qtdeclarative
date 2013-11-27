@@ -113,7 +113,7 @@ private:
     void updateRenderTarget();
     void updateFBOSize();
 
-    QSGContext *m_context;
+    QSGRenderContext *m_context;
 
     QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
     QQuickPaintedItem::RenderTarget m_actualRenderTarget;

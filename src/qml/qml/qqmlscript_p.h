@@ -229,6 +229,7 @@ public:
     // Used by compiler
     struct SignalData {
         int signalExpressionContextStack;
+        Object *signalScopeObject;
         int functionIndex; // before gen() index in functionsToCompile, then index in runtime functions
     };
     union {
@@ -334,6 +335,8 @@ public:
     void setBindingBit(int);
 
     QQmlPropertyCache *metatype;
+
+    QQmlJS::AST::Node *astNode; // responsible for the creation of this object
 
     // The synthesized metaobject, if QML added signals or properties to
     // this type.  Otherwise null

@@ -85,7 +85,6 @@ struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
 class MemoryManager;
-class UnwindHelper;
 class ExecutableAllocator;
 
 struct ObjectPrototype;
@@ -114,6 +113,12 @@ class RegExpCache;
 struct QmlExtensions;
 struct Exception;
 
+#define CHECK_STACK_LIMITS(v4) \
+    if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
+    else \
+        return v4->current->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
+
+
 struct Q_QML_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
@@ -124,21 +129,34 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *current;
     GlobalContext *rootContext;
 
+    SafeValue *jsStackTop;
+    SafeValue *jsStackLimit;
+    quintptr cStackLimit;
+
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
+    enum { JSStackLimit = 4*1024*1024 };
     WTF::PageAllocation *jsStack;
     SafeValue *jsStackBase;
-    SafeValue *jsStackTop;
 
     SafeValue *stackPush(uint nValues) {
         SafeValue *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
         return ptr;
     }
-
     void stackPop(uint nValues) {
         jsStackTop -= nValues;
     }
+
+    void pushForGC(Managed *m) {
+        *jsStackTop = Value::fromManaged(m);
+        ++jsStackTop;
+    }
+    Managed *popForGC() {
+        --jsStackTop;
+        return jsStackTop->managed();
+    }
+
 
     IdentifierTable *identifierTable;
 
@@ -263,10 +281,10 @@ struct Q_QML_EXPORT ExecutionEngine
     void enableDebugger();
 
     ExecutionContext *pushGlobalContext();
-    void pushContext(SimpleCallContext *context);
+    void pushContext(CallContext *context);
     ExecutionContext *popContext();
 
-    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *));
+    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
     Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs);
 
     Returned<Object> *newObject();
@@ -321,26 +339,24 @@ struct Q_QML_EXPORT ExecutionEngine
 
     QmlExtensions *qmlExtensions();
 
+    bool recheckCStackLimits();
+
     // Exception handling
     SafeValue exceptionValue;
-    bool hasException;
+    quint32 hasException;
     StackTrace exceptionStackTrace;
 
-    void Q_NORETURN throwException(const ValueRef value);
+    ReturnedValue throwException(const ValueRef value);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
     // Use only inside catch(...) -- will re-throw if no JS exception
-    static QQmlError convertJavaScriptException(QV4::ExecutionContext *context);
-
-    void Q_NORETURN throwInternal();
-    // ----
-
+    static QQmlError catchExceptionAsQmlError(QV4::ExecutionContext *context);
 
 private:
     QmlExtensions *m_qmlExtensions;
 };
 
-inline void ExecutionEngine::pushContext(SimpleCallContext *context)
+inline void ExecutionEngine::pushContext(CallContext *context)
 {
     context->parent = current;
     current = context;
@@ -365,10 +381,21 @@ struct ExecutionContextSaver
     }
     ~ExecutionContextSaver()
     {
-        while (engine->current != savedContext)
-            engine->popContext();
+        engine->current = savedContext;
     }
 };
+
+inline
+void Managed::mark(QV4::ExecutionEngine *engine)
+{
+    Q_ASSERT(inUse);
+    if (markBit)
+        return;
+    markBit = 1;
+    engine->pushForGC(this);
+}
+
+
 
 } // namespace QV4
 

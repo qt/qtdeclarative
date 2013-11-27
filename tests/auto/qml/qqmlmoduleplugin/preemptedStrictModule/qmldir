@@ -1,2 +1,2 @@
-module com.nokia.PreemptedStrictModule
+module org.qtproject.PreemptedStrictModule
 plugin preemptedStrictModule

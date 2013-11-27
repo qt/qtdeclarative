@@ -98,6 +98,7 @@ public:
 
     void verifyReceiverCount()
     {
+        //Note: QTBUG-34829 means we can't call this from within disconnectNotify or it can lock
         QCOMPARE(receivers(SIGNAL(qmlObjectPropChanged())), qmlObjectPropConnections);
         QCOMPARE(receivers(SIGNAL(cppObjectPropChanged())), cppObjectPropConnections);
         QCOMPARE(receivers(SIGNAL(unboundPropChanged())), unboundPropConnections);
@@ -134,7 +135,6 @@ protected:
         if (signal.name() == "scriptBindingPropChanged") scriptBindingPropConnections--;
         if (signal.name() == "boundSignal")   boundSignalConnections--;
         if (signal.name() == "unusedSignal") unusedSignalConnections--;
-        verifyReceiverCount();
         //qDebug() << Q_FUNC_INFO << this << signal.methodSignature();
     }
 
@@ -205,6 +205,7 @@ void tst_qqmlnotifier::createObjects()
     exportedClass = qobject_cast<ExportedClass *>(
                 root->findChild<ExportedClass*>("exportedClass"));
     QVERIFY(exportedClass != 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::cleanupTestCase()

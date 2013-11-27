@@ -49,8 +49,8 @@ Item {
     signal clicked
     property alias containsMouse: mouseArea.containsMouse
     property alias pressed: mouseArea.pressed
-    implicitHeight: Math.max(Screen.logicalPixelDensity * 7, buttonLabel.implicitHeight * 1.2)
-    implicitWidth: Math.max(Screen.logicalPixelDensity * 11, buttonLabel.implicitWidth * 1.3)
+    implicitHeight: Math.max(Screen.pixelDensity * 7, buttonLabel.implicitHeight * 1.2)
+    implicitWidth: Math.max(Screen.pixelDensity * 11, buttonLabel.implicitWidth * 1.3)
     height: implicitHeight
     width: implicitWidth
 

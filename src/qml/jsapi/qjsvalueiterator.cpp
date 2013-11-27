@@ -199,21 +199,20 @@ QJSValue QJSValueIterator::value() const
     QV4::ScopedObject o(scope, it->it.object);
 
     QV4::ExecutionContext *ctx = engine->current;
-    try {
-        QV4::ScopedValue v(scope);
-        if (!!d_ptr->currentName) {
-            QV4::ScopedString n(scope, d_ptr->currentName);
-            v = o->get(n);
-        } else if (d_ptr->currentIndex != UINT_MAX) {
-            v = o->getIndexed(d_ptr->currentIndex);
-        } else {
-            return QJSValue();
-        }
-        return new QJSValuePrivate(engine, v);
-    } catch (...) {
+    QV4::ScopedValue v(scope);
+    if (!!d_ptr->currentName) {
+        QV4::ScopedString n(scope, d_ptr->currentName);
+        v = o->get(n);
+    } else if (d_ptr->currentIndex != UINT_MAX) {
+        v = o->getIndexed(d_ptr->currentIndex);
+    } else {
+        return QJSValue();
+    }
+    if (scope.hasException()) {
         ctx->catchException();
         return QJSValue();
     }
+    return new QJSValuePrivate(engine, v);
 }
 
 

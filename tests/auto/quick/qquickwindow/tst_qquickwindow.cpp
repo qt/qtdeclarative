@@ -1093,7 +1093,11 @@ void tst_qquickwindow::noUpdateWhenNothingChanges()
     QQuickRectangle rect(window.contentItem());
 
     window.showNormal();
-    QTRY_VERIFY(window.isExposed());
+    QTest::qWaitForWindowExposed(&window);
+    // Many platforms are broken in the sense that that they follow up
+    // the initial expose with a second expose or more. Let these go
+    // through before we let the test continue.
+    QTest::qWait(100);
 
     if (window.openglContext()->thread() == QGuiApplication::instance()->thread()) {
         QSKIP("Only threaded renderloop implements this feature");
@@ -1102,7 +1106,8 @@ void tst_qquickwindow::noUpdateWhenNothingChanges()
 
     QSignalSpy spy(&window, SIGNAL(frameSwapped()));
     rect.update();
-    QTest::qWait(500);
+    // Wait a while and verify that no more frameSwapped come our way.
+    QTest::qWait(100);
 
     QCOMPARE(spy.size(), 0);
 }
@@ -1348,11 +1353,6 @@ void tst_qquickwindow::hideThenDelete_data()
 
 void tst_qquickwindow::hideThenDelete()
 {
-    if (QGuiApplication::platformName() == QStringLiteral("xcb")) {
-        QSKIP("For some obscure reason this test fails in CI only");
-        return;
-    }
-
     QFETCH(bool, persistentSG);
     QFETCH(bool, persistentGL);
 

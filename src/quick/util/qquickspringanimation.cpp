@@ -308,7 +308,8 @@ void QSpringAnimation::updateCurrentTime(int time)
                                        QQmlPropertyPrivate::DontRemoveBinding);
 
     if (stopped && old_to == to) { // do not stop if we got restarted
-        stopTime = animationTemplate->elapsed.elapsed();
+        if (animationTemplate)
+            stopTime = animationTemplate->elapsed.elapsed();
         stop();
     }
 }
@@ -365,7 +366,7 @@ void QQuickSpringAnimationPrivate::updateMode()
     sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa SmoothedAnimation, {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}, {declarative/toys/clocks}{Clocks example}
+    \sa SmoothedAnimation, {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}, {Qt Quick Demo - Clocks}
 */
 
 QQuickSpringAnimation::QQuickSpringAnimation(QObject *parent)

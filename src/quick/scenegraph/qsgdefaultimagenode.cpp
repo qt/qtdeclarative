@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgdefaultimagenode_p.h"
+#include <private/qsgmaterialshader_p.h>
 
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qmath.h>
@@ -75,13 +76,13 @@ namespace
 class SmoothTextureMaterialShader : public QSGTextureMaterialShader
 {
 public:
+    SmoothTextureMaterialShader();
+
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
 
 protected:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_pixelSizeLoc;
 };
@@ -107,6 +108,13 @@ QSGMaterialType *QSGSmoothTextureMaterial::type() const
 QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
 {
     return new SmoothTextureMaterialShader;
+}
+
+SmoothTextureMaterialShader::SmoothTextureMaterialShader()
+    : QSGTextureMaterialShader()
+{
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/smoothtexture.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/smoothtexture.frag"));
 }
 
 void SmoothTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -135,70 +143,6 @@ void SmoothTextureMaterialShader::initialize()
 {
     m_pixelSizeLoc = program()->uniformLocation("pixelSize");
     QSGTextureMaterialShader::initialize();
-}
-
-const char *SmoothTextureMaterialShader::vertexShader() const
-{
-    return
-            "uniform highp vec2 pixelSize; \n"
-            "uniform highp mat4 qt_Matrix; \n"
-            "uniform lowp float opacity; \n"
-            "attribute highp vec4 vertex; \n"
-            "attribute highp vec2 multiTexCoord; \n"
-            "attribute highp vec2 vertexOffset; \n"
-            "attribute highp vec2 texCoordOffset; \n"
-            "varying highp vec2 texCoord; \n"
-            "varying lowp float vertexOpacity; \n"
-            "void main() { \n"
-            "    highp vec4 pos = qt_Matrix * vertex; \n"
-            "    gl_Position = pos; \n"
-            "    texCoord = multiTexCoord; \n"
-
-            "    if (vertexOffset.x != 0.) { \n"
-            "        highp vec4 delta = qt_Matrix[0] * vertexOffset.x; \n"
-            "        highp vec2 dir = delta.xy * pos.w - pos.xy * delta.w; \n"
-            "        highp vec2 ndir = .5 * pixelSize * normalize(dir / pixelSize);  \n"
-            "        dir -= ndir * delta.w * pos.w; \n"
-            "        highp float numerator = dot(dir, ndir * pos.w * pos.w); \n"
-            "        highp float scale = 0.0; \n"
-            "        if (numerator < 0.0) \n"
-            "            scale = 1.0; \n"
-            "        else \n"
-            "            scale = min(1.0, numerator / dot(dir, dir)); \n"
-            "        gl_Position += scale * delta; \n"
-            "        texCoord.x += scale * texCoordOffset.x; \n"
-            "    } \n"
-
-            "    if (vertexOffset.y != 0.) { \n"
-            "        highp vec4 delta = qt_Matrix[1] * vertexOffset.y; \n"
-            "        highp vec2 dir = delta.xy * pos.w - pos.xy * delta.w; \n"
-            "        highp vec2 ndir = .5 * pixelSize * normalize(dir / pixelSize);  \n"
-            "        dir -= ndir * delta.w * pos.w; \n"
-            "        highp float numerator = dot(dir, ndir * pos.w * pos.w); \n"
-            "        highp float scale = 0.0; \n"
-            "        if (numerator < 0.0) \n"
-            "            scale = 1.0; \n"
-            "        else \n"
-            "            scale = min(1.0, numerator / dot(dir, dir)); \n"
-            "        gl_Position += scale * delta; \n"
-            "        texCoord.y += scale * texCoordOffset.y; \n"
-            "    } \n"
-
-            "    bool onEdge = any(notEqual(vertexOffset, vec2(0.))); \n"
-            "    bool outerEdge = all(equal(texCoordOffset, vec2(0.))); \n"
-            "    vertexOpacity = onEdge && outerEdge ? 0. : opacity; \n"
-            "}";
-}
-
-const char *SmoothTextureMaterialShader::fragmentShader() const
-{
-    return
-            "uniform sampler2D qt_Texture; \n"
-            "varying highp vec2 texCoord; \n"
-            "varying lowp float vertexOpacity; \n"
-            "void main() { \n"
-            "    gl_FragColor = texture2D(qt_Texture, texCoord) * vertexOpacity; \n"
-            "}";
 }
 
 QSGDefaultImageNode::QSGDefaultImageNode()

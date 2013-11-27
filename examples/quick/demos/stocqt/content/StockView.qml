@@ -53,6 +53,8 @@ Rectangle {
     signal settingsClicked
 
     function update() {
+        if (!settings)
+            return;
         chart.endDate = settings.endDate
         chart.update()
     }

@@ -86,10 +86,10 @@ namespace QV4 {
 // #define QML_GLOBAL_HANDLE_DEBUGGING
 
 #define V4THROW_ERROR(string) \
-    ctx->throwError(QString::fromUtf8(string));
+    return ctx->throwError(QString::fromUtf8(string));
 
 #define V4THROW_TYPE(string) \
-    ctx->throwTypeError(QStringLiteral(string));
+    return ctx->throwTypeError(QStringLiteral(string));
 
 #define V8_DEFINE_EXTENSION(dataclass, datafunction) \
     static inline dataclass *datafunction(QV8Engine *engine) \

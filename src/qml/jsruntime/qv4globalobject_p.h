@@ -61,16 +61,16 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 
 struct GlobalFunctions
 {
-    static ReturnedValue method_parseInt(SimpleCallContext *context);
-    static ReturnedValue method_parseFloat(SimpleCallContext *context);
-    static ReturnedValue method_isNaN(SimpleCallContext *context);
-    static ReturnedValue method_isFinite(SimpleCallContext *ctx);
-    static ReturnedValue method_decodeURI(SimpleCallContext *context);
-    static ReturnedValue method_decodeURIComponent(SimpleCallContext *context);
-    static ReturnedValue method_encodeURI(SimpleCallContext *context);
-    static ReturnedValue method_encodeURIComponent(SimpleCallContext *context);
-    static ReturnedValue method_escape(SimpleCallContext *context);
-    static ReturnedValue method_unescape(SimpleCallContext *context);
+    static ReturnedValue method_parseInt(CallContext *context);
+    static ReturnedValue method_parseFloat(CallContext *context);
+    static ReturnedValue method_isNaN(CallContext *context);
+    static ReturnedValue method_isFinite(CallContext *ctx);
+    static ReturnedValue method_decodeURI(CallContext *context);
+    static ReturnedValue method_decodeURIComponent(CallContext *context);
+    static ReturnedValue method_encodeURI(CallContext *context);
+    static ReturnedValue method_encodeURIComponent(CallContext *context);
+    static ReturnedValue method_escape(CallContext *context);
+    static ReturnedValue method_unescape(CallContext *context);
 };
 
 }

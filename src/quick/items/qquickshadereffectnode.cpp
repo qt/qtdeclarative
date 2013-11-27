@@ -45,6 +45,7 @@
 #include "qquickshadereffect_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
+#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -196,6 +197,12 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 case QMetaType::QVector4D:
                     program()->setUniformValue(loc, qvariant_cast<QVector4D>(d.value));
                     break;
+                case QMetaType::QQuaternion:
+                    {
+                        QQuaternion q = qvariant_cast<QQuaternion>(d.value);
+                        program()->setUniformValue(loc, q.x(), q.y(), q.z(), q.scalar());
+                    }
+                    break;
                 case QMetaType::QMatrix4x4:
                     program()->setUniformValue(loc, qvariant_cast<QMatrix4x4>(d.value));
                     break;
@@ -276,20 +283,15 @@ void QQuickCustomMaterialShader::compile()
         m_log += program()->log();
     }
 
-    static const char fallbackVertexShader[] =
-            "uniform highp mat4 qt_Matrix;"
-            "attribute highp vec4 v;"
-            "void main() { gl_Position = qt_Matrix * v; }";
-    static const char fallbackFragmentShader[] =
-            "void main() { gl_FragColor = vec4(1., 0., 1., 1.); }";
-
     if (!m_compiled) {
         qWarning("QQuickCustomMaterialShader: Shader compilation failed:");
         qWarning() << program()->log();
 
-        program()->removeAllShaders();
-        program()->addShaderFromSourceCode(QOpenGLShader::Vertex, fallbackVertexShader);
-        program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fallbackFragmentShader);
+        QSGShaderSourceBuilder::initializeProgramFromFiles(
+            program(),
+            QStringLiteral(":/items/shaders/shadereffectfallback.vert"),
+            QStringLiteral(":/items/shaders/shadereffectfallback.frag"));
+
 #ifndef QT_NO_DEBUG
         for (int i = 0; i < attrCount; ++i) {
 #else

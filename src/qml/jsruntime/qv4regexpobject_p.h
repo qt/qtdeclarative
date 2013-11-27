@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct RegExp;
+class RegExp;
 
 struct RegExpObject: Object {
     Q_MANAGED
@@ -97,7 +97,7 @@ struct RegExpObject: Object {
 protected:
     RegExpObject(InternalClass *ic);
     static void destroy(Managed *that);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
 
@@ -115,10 +115,10 @@ struct RegExpPrototype: RegExpObject
     RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static ReturnedValue method_exec(SimpleCallContext *ctx);
-    static ReturnedValue method_test(SimpleCallContext *ctx);
-    static ReturnedValue method_toString(SimpleCallContext *ctx);
-    static ReturnedValue method_compile(SimpleCallContext *ctx);
+    static ReturnedValue method_exec(CallContext *ctx);
+    static ReturnedValue method_test(CallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
+    static ReturnedValue method_compile(CallContext *ctx);
 };
 
 }

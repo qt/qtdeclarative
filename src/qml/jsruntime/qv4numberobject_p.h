@@ -63,12 +63,12 @@ struct NumberPrototype: NumberObject
     NumberPrototype(InternalClass *ic): NumberObject(ic) {}
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static ReturnedValue method_toString(SimpleCallContext *ctx);
-    static ReturnedValue method_toLocaleString(SimpleCallContext *ctx);
-    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
-    static ReturnedValue method_toFixed(SimpleCallContext *ctx);
-    static ReturnedValue method_toExponential(SimpleCallContext *ctx);
-    static ReturnedValue method_toPrecision(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
+    static ReturnedValue method_toLocaleString(CallContext *ctx);
+    static ReturnedValue method_valueOf(CallContext *ctx);
+    static ReturnedValue method_toFixed(CallContext *ctx);
+    static ReturnedValue method_toExponential(CallContext *ctx);
+    static ReturnedValue method_toPrecision(CallContext *ctx);
 };
 
 

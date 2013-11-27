@@ -55,6 +55,7 @@
 #include "private/qv4global_p.h"
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qqmljsastfwd_p.h>
+#include <private/qflagpointer_p.h>
 
 #include <QtCore/QVector>
 #include <QtCore/QString>
@@ -72,6 +73,9 @@ QT_BEGIN_NAMESPACE
 
 class QTextStream;
 class QQmlType;
+class QQmlPropertyData;
+class QQmlPropertyCache;
+class QQmlEnginePrivate;
 
 namespace QV4 {
 struct ExecutionContext;
@@ -119,8 +123,15 @@ struct Move;
 struct Jump;
 struct CJump;
 struct Ret;
-struct Try;
 struct Phi;
+
+// Flag pointer:
+// * The first flag indicates whether the meta object is final.
+//   If final, then none of its properties themselves need to
+//   be final when considering for lookups in QML.
+// * The second flag indicates whether enums should be included
+//   in the lookup of properties or not. The default is false.
+typedef QFlagPointer<QQmlPropertyCache> IRMetaObject;
 
 enum AluOp {
     OpInvalid = 0,
@@ -181,7 +192,8 @@ enum Type {
     NumberType    = SInt32Type | UInt32Type | DoubleType,
 
     StringType    = 1 << 7,
-    VarType       = 1 << 8
+    QObjectType   = 1 << 8,
+    VarType       = 1 << 9
 };
 
 inline bool strictlyEqualTypes(Type t1, Type t2)
@@ -215,8 +227,23 @@ struct StmtVisitor {
     virtual void visitJump(Jump *) = 0;
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
-    virtual void visitTry(Try *) = 0;
     virtual void visitPhi(Phi *) = 0;
+};
+
+
+struct MemberExpressionResolver
+{
+    typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
+
+    MemberExpressionResolver()
+        : resolveMember(0), data(0), flags(0) {}
+
+    bool isValid() const { return !!resolveMember; }
+    void clear() { *this = MemberExpressionResolver(); }
+
+    ResolveFunction resolveMember;
+    void *data; // Could be pointer to meta object, QQmlTypeNameCache, etc. - depends on resolveMember implementation
+    int flags;
 };
 
 struct Expr {
@@ -312,7 +339,9 @@ struct Name: Expr {
         builtin_typeof,
         builtin_delete,
         builtin_throw,
-        builtin_finish_try,
+        builtin_rethrow,
+        builtin_unwind_exception,
+        builtin_push_catch_scope,
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
         builtin_push_with_scope,
@@ -322,12 +351,19 @@ struct Name: Expr {
         builtin_define_array,
         builtin_define_getter_setter,
         builtin_define_object_literal,
-        builtin_setup_argument_object
+        builtin_setup_argument_object,
+        builtin_convert_this_to_object,
+        builtin_qml_id_array,
+        builtin_qml_imported_scripts_object,
+        builtin_qml_context_object,
+        builtin_qml_scope_object
     };
 
     const QString *id;
     Builtin builtin;
-    bool global;
+    bool global : 1;
+    bool qmlSingleton : 1;
+    bool freeOfSideEffects : 1;
     quint32 line;
     quint32 column;
 
@@ -354,9 +390,12 @@ struct Temp: Expr {
     };
 
     unsigned index;
-    unsigned scope : 28; // how many scopes outside the current one?
+    unsigned scope : 27; // how many scopes outside the current one?
     unsigned kind  : 3;
     unsigned isArgumentsOrEval : 1;
+    unsigned isReadOnly : 1;
+    // Used when temp is used as base in member expression
+    MemberExpressionResolver memberResolver;
 
     void init(unsigned kind, unsigned index, unsigned scope)
     {
@@ -368,10 +407,11 @@ struct Temp: Expr {
         this->index = index;
         this->scope = scope;
         this->isArgumentsOrEval = false;
+        this->isReadOnly = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
-    virtual bool isLValue() { return true; }
+    virtual bool isLValue() { return !isReadOnly; }
     virtual Temp *asTemp() { return this; }
 
     virtual void dump(QTextStream &out) const;
@@ -514,11 +554,16 @@ struct Subscript: Expr {
 struct Member: Expr {
     Expr *base;
     const QString *name;
+    QQmlPropertyData *property;
+    int enumValue;
+    bool memberIsEnum;
 
-    void init(Expr *base, const QString *name)
+    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0)
     {
         this->base = base;
         this->name = name;
+        this->property = property;
+        this->memberIsEnum = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -543,7 +588,14 @@ struct Stmt {
     AST::SourceLocation location;
 
     Stmt(): d(0), id(-1) {}
-    virtual ~Stmt() { Q_UNREACHABLE(); }
+    virtual ~Stmt()
+    {
+#ifdef Q_CC_MSVC
+         // MSVC complains about potential memory leaks if a destructor never returns.
+#else
+        Q_UNREACHABLE();
+#endif
+    }
     virtual Stmt *asTerminator() { return 0; }
 
     virtual void accept(StmtVisitor *) = 0;
@@ -552,7 +604,6 @@ struct Stmt {
     virtual Jump *asJump() { return 0; }
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
-    virtual Try *asTry() { return 0; }
     virtual Phi *asPhi() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
@@ -646,28 +697,6 @@ struct Ret: Stmt {
     virtual void dump(QTextStream &out, Mode);
 };
 
-struct Try: Stmt {
-    BasicBlock *tryBlock;
-    BasicBlock *catchBlock;
-    const QString *exceptionVarName;
-    Temp *exceptionVar; // place to store the caught exception, for use when re-throwing
-
-    void init(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
-    {
-        this->tryBlock = tryBlock;
-        this->catchBlock = catchBlock;
-        this->exceptionVarName = exceptionVarName;
-        this->exceptionVar = exceptionVar;
-    }
-
-    virtual Stmt *asTerminator() { return this; }
-
-    virtual void accept(StmtVisitor *v) { v->visitTry(this); }
-    virtual Try *asTry() { return this; }
-
-    virtual void dump(QTextStream &out, Mode mode);
-};
-
 struct Phi: Stmt {
     Temp *targetTemp;
 
@@ -683,12 +712,14 @@ struct Q_QML_EXPORT Module {
     Function *rootFunction;
     QString fileName;
     bool isQmlModule; // implies rootFunction is always 0
+    bool debugMode;
 
     Function *newFunction(const QString &name, Function *outer);
 
-    Module()
+    Module(bool debugMode)
         : rootFunction(0)
         , isQmlModule(false)
+        , debugMode(debugMode)
     {}
     ~Module();
 
@@ -712,15 +743,23 @@ struct Function {
 
     uint hasDirectEval: 1;
     uint usesArgumentsObject : 1;
+    uint usesThis : 1;
     uint isStrict: 1;
     uint isNamedExpression : 1;
     uint hasTry: 1;
     uint hasWith: 1;
-    uint unused : 26;
+    uint unused : 25;
 
     // Location of declaration in source code (-1 if not specified)
     int line;
     int column;
+
+    // Qml extension:
+    QSet<int> idObjectDependencies;
+    QSet<QQmlPropertyData*> contextObjectDependencies;
+    QSet<QQmlPropertyData*> scopeObjectDependencies;
+
+    bool hasQmlDependencies() const { return !idObjectDependencies.isEmpty() || !contextObjectDependencies.isEmpty() || !scopeObjectDependencies.isEmpty(); }
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -749,7 +788,7 @@ struct Function {
         DontInsertBlock
     };
 
-    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlockInsertMode mode = InsertBlock);
+    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
     const QString *newString(const QString &text);
 
     void RECEIVE(const QString &name) { formals.append(newString(name)); }
@@ -764,22 +803,26 @@ struct Function {
     int indexOfArgument(const QStringRef &string) const;
 
     bool variablesCanEscape() const
-    { return hasDirectEval || !nestedFunctions.isEmpty(); }
+    { return hasDirectEval || !nestedFunctions.isEmpty() || module->debugMode; }
 };
 
 struct BasicBlock {
     Function *function;
+    BasicBlock *catchBlock;
     QVector<Stmt *> statements;
     QVector<BasicBlock *> in;
     QVector<BasicBlock *> out;
     QBitArray liveIn;
     QBitArray liveOut;
     int index;
+    bool isExceptionHandler;
     AST::SourceLocation nextLocation;
 
-    BasicBlock(Function *function, BasicBlock *containingLoop)
+    BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
         : function(function)
+        , catchBlock(catcher)
         , index(-1)
+        , isExceptionHandler(false)
         , _containingGroup(containingLoop)
         , _groupStart(false)
     {}
@@ -826,7 +869,7 @@ struct BasicBlock {
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
-    Expr *MEMBER(Expr *base, const QString *name);
+    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0);
 
     Stmt *EXP(Expr *expr);
 
@@ -835,7 +878,6 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
-    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
@@ -892,6 +934,8 @@ public:
         newName->id = n->id;
         newName->builtin = n->builtin;
         newName->global = n->global;
+        newName->qmlSingleton = n->qmlSingleton;
+        newName->freeOfSideEffects = n->freeOfSideEffects;
         newName->line = n->line;
         newName->column = n->column;
         return newName;
@@ -902,6 +946,7 @@ public:
         Temp *newTemp = f->New<Temp>();
         newTemp->init(t->kind, t->index, t->scope);
         newTemp->type = t->type;
+        newTemp->memberResolver = t->memberResolver;
         return newTemp;
     }
 

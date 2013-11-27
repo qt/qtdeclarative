@@ -41,6 +41,7 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 import "samegame.js" as Logic
+import "."
 
 Item {
     id: gameCanvas
@@ -54,6 +55,7 @@ Item {
     property alias backgroundVisible: bg.visible
     property string background: "gfx/background.png"
     property string blockFile: "Block.qml"
+    property int blockSize: Settings.blockSize
     onBlockFileChanged: Logic.changeBlock(blockFile);
     property alias particlePack: auxLoader.source
     //For multiplayer

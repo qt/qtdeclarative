@@ -47,6 +47,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
 #include <private/qquickclipnode_p.h>
+#include <private/qquickitem_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtCore/qpoint.h>
@@ -80,8 +81,8 @@ namespace {
 /*!
   Creates an empty QQuickTextNode
 */
-QQuickTextNode::QQuickTextNode(QSGContext *context, QQuickItem *ownerElement)
-    : m_context(context), m_cursorNode(0), m_ownerElement(ownerElement), m_useNativeRenderer(false)
+QQuickTextNode::QQuickTextNode(QQuickItem *ownerElement)
+    : m_cursorNode(0), m_ownerElement(ownerElement), m_useNativeRenderer(false)
 {
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("text"));
@@ -141,9 +142,14 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
                                      QQuickText::TextStyle style, const QColor &styleColor,
                                      QSGNode *parentNode)
 {
-    QSGGlyphNode *node = m_useNativeRenderer
-            ? m_context->createNativeGlyphNode()
-            : m_context->createGlyphNode();
+    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
+    QRawFont font = glyphs.rawFont();
+    bool smoothScalable = QFontDatabase().isSmoothlyScalable(font.familyName(),
+                                                             font.styleName());
+    QSGGlyphNode *node = m_useNativeRenderer || !smoothScalable
+            ? sg->sceneGraphContext()->createNativeGlyphNode(sg)
+            : sg->sceneGraphContext()->createGlyphNode(sg);
+
     node->setOwnerElement(m_ownerElement);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
@@ -189,8 +195,9 @@ void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedT
 
 void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
 {
-    QSGImageNode *node = m_context->createImageNode();
-    QSGTexture *texture = m_context->createTexture(image);
+    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
+    QSGImageNode *node = sg->sceneGraphContext()->createImageNode();
+    QSGTexture *texture = sg->createTexture(image);
     m_textures.append(texture);
     node->setTargetRect(rect);
     node->setInnerTargetRect(rect);

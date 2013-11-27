@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/qquickview.h>
 #include <private/qquickspringanimation_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include "../../shared/util.h"
@@ -55,6 +56,7 @@ private slots:
     void defaultValues();
     void values();
     void disabled();
+    void inTransition();
 
 private:
     QQmlEngine engine;
@@ -126,6 +128,14 @@ void tst_qquickspringanimation::disabled()
     QCOMPARE(obj->isRunning(), false);
 
     delete obj;
+}
+
+void tst_qquickspringanimation::inTransition()
+{
+    QQuickView view(testFileUrl("inTransition.qml"));
+    view.show();
+    // this used to crash after ~1 sec, once the spring animation was done
+    QTest::qWait(2000);
 }
 
 QTEST_MAIN(tst_qquickspringanimation)

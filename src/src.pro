@@ -14,3 +14,5 @@ SUBDIRS += \
     plugins \
     imports \
     qmldevtools
+
+qmldevtools.CONFIG = host_build

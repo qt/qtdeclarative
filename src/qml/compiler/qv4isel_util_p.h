@@ -95,6 +95,71 @@ inline QV4::Primitive convertToValue(V4IR::Const *c)
     return QV4::Primitive::undefinedValue();
 }
 
+class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
+{
+    int _nextFreeStackSlot;
+    QHash<V4IR::Temp, int> _stackSlotForTemp;
+
+    void renumber(V4IR::Temp *t)
+    {
+        if (t->kind != V4IR::Temp::VirtualRegister)
+            return;
+
+        int stackSlot = _stackSlotForTemp.value(*t, -1);
+        if (stackSlot == -1) {
+            stackSlot = _nextFreeStackSlot++;
+            _stackSlotForTemp[*t] = stackSlot;
+        }
+
+        t->kind = V4IR::Temp::StackSlot;
+        t->index = stackSlot;
+    }
+
+public:
+    ConvertTemps()
+        : _nextFreeStackSlot(0)
+    {}
+
+    void toStackSlots(V4IR::Function *function)
+    {
+        _stackSlotForTemp.reserve(function->tempCount);
+
+        foreach (V4IR::BasicBlock *bb, function->basicBlocks)
+            foreach (V4IR::Stmt *s, bb->statements)
+                s->accept(this);
+
+        function->tempCount = _nextFreeStackSlot;
+    }
+
+protected:
+    virtual void visitConst(V4IR::Const *) {}
+    virtual void visitString(V4IR::String *) {}
+    virtual void visitRegExp(V4IR::RegExp *) {}
+    virtual void visitName(V4IR::Name *) {}
+    virtual void visitTemp(V4IR::Temp *e) { renumber(e); }
+    virtual void visitClosure(V4IR::Closure *) {}
+    virtual void visitConvert(V4IR::Convert *e) { e->expr->accept(this); }
+    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitCall(V4IR::Call *e) {
+        e->base->accept(this);
+        for (V4IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitNew(V4IR::New *e) {
+        e->base->accept(this);
+        for (V4IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
+    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
+    virtual void visitMove(V4IR::Move *s) { s->target->accept(this); s->source->accept(this); }
+    virtual void visitJump(V4IR::Jump *) {}
+    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
+    virtual void visitPhi(V4IR::Phi *) { Q_UNREACHABLE(); }
+};
 } // namespace QQmlJS
 
 QT_END_NAMESPACE

@@ -57,7 +57,7 @@
 // disabled.)
 // On Linux,x86 89255e-22 != Div_double(89255.0/1e22)
 #if defined(_M_X64) || defined(__x86_64__) || \
-    defined(__ARMEL__) || defined(__avr32__) || \
+    defined(__ARMEL__) || defined(__avr32__) || _M_ARM_FP || \
     defined(__hppa__) || defined(__ia64__) || \
     defined(__mips__) || defined(__powerpc__) || \
     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
@@ -302,7 +302,8 @@ template <class Dest, class Source>
 inline Dest BitCast(const Source& source) {
   // Compile time assertion: sizeof(Dest) == sizeof(Source)
   // A compile error here means your Dest and Source have different sizes.
-  typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
+  char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
+  (void) VerifySizesAreEqual;
 
   Dest dest;
   memmove(&dest, &source, sizeof(dest));

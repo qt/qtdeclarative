@@ -404,6 +404,11 @@
 #define WTF_OS_WINCE 1
 #endif
 
+/* OS(WINCE) - Windows Runtime; note that for this platform OS(WINDOWS) is also defined */
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+#define WTF_OS_WINRT 1
+#endif
+
 /* OS(WINDOWS) - Any version of Windows */
 #if defined(WIN32) || defined(_WIN32)
 #define WTF_OS_WINDOWS 1

@@ -86,14 +86,20 @@ struct Scope {
         return ptr;
     }
 
+    bool hasException() const {
+        return engine->hasException;
+    }
+
     ExecutionEngine *engine;
     SafeValue *mark;
 #ifndef QT_NO_DEBUG
     mutable int size;
 #endif
+
+private:
+    Q_DISABLE_COPY(Scope)
 };
 
-struct ScopedValue;
 struct ValueRef;
 
 struct ScopedValue
@@ -735,7 +741,7 @@ inline WeakValue &WeakValue::operator=(Returned<T> *obj)
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
 }
 
-inline ReturnedValue SimpleCallContext::argument(int i) {
+inline ReturnedValue CallContext::argument(int i) {
     return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 

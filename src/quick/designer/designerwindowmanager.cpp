@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "designerwindowmanager_p.h"
-
+#include "private/qquickwindow_p.h"
 #include <QtGui/QOpenGLContext>
 
 #include <QtQuick/QQuickWindow>
@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 DesignerWindowManager::DesignerWindowManager()
     : m_sgContext(QSGContext::createDefaultContext())
 {
+    m_renderContext.reset(new QSGRenderContext(m_sgContext.data()));
 }
 
 void DesignerWindowManager::show(QQuickWindow *window)
@@ -74,7 +75,7 @@ void DesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
         m_openGlContext->create();
         if (!m_openGlContext->makeCurrent(window))
             qWarning("QQuickWindow: makeCurrent() failed...");
-        m_sgContext->initialize(m_openGlContext.data());
+        m_renderContext->initialize(m_openGlContext.data());
     } else {
         m_openGlContext->makeCurrent(window);
     }
@@ -87,10 +88,6 @@ void DesignerWindowManager::exposureChanged(QQuickWindow *)
 QImage DesignerWindowManager::grab(QQuickWindow *)
 {
     return QImage();
-}
-
-void DesignerWindowManager::resize(QQuickWindow *, const QSize &)
-{
 }
 
 void DesignerWindowManager::maybeUpdate(QQuickWindow *)

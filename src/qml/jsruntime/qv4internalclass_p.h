@@ -82,7 +82,7 @@ struct PropertyHashData
         free(entries);
     }
 
-    QBasicAtomicInt refCount;
+    int refCount;
     int alloc;
     int size;
     int numBits;
@@ -97,14 +97,101 @@ inline PropertyHash::PropertyHash()
 inline PropertyHash::PropertyHash(const PropertyHash &other)
 {
     d = other.d;
-    d->refCount.ref();
+    ++d->refCount;
 }
 
 inline PropertyHash::~PropertyHash()
 {
-    if (!d->refCount.deref())
+    if (!--d->refCount)
         delete d;
 }
+
+
+template <typename T>
+struct SharedInternalClassData {
+    struct Private {
+        Private(int alloc)
+            : refcount(1),
+              alloc(alloc),
+              size(0)
+        { data = new T  [alloc]; }
+        ~Private() { delete [] data; }
+
+        int refcount;
+        uint alloc;
+        uint size;
+        T *data;
+    };
+    Private *d;
+
+    inline SharedInternalClassData() {
+        d = new Private(8);
+    }
+
+    inline SharedInternalClassData(const SharedInternalClassData &other)
+        : d(other.d)
+    {
+        ++d->refcount;
+    }
+    inline ~SharedInternalClassData() {
+        if (!--d->refcount)
+            delete d;
+    }
+
+    void add(uint pos, T value) {
+        if (pos < d->size) {
+            Q_ASSERT(d->refcount > 1);
+            // need to detach
+            Private *dd = new Private(pos + 8);
+            memcpy(dd->data, d->data, pos*sizeof(T));
+            dd->size = pos + 1;
+            dd->data[pos] = value;
+            if (!--d->refcount)
+                delete d;
+            d = dd;
+            return;
+        }
+        Q_ASSERT(pos == d->size);
+        if (pos == d->alloc) {
+            T *n = new T[d->alloc * 2];
+            memcpy(n, d->data, d->alloc*sizeof(T));
+            delete [] d->data;
+            d->data = n;
+            d->alloc *= 2;
+        }
+        d->data[pos] = value;
+        ++d->size;
+    }
+
+    void set(uint pos, T value) {
+        Q_ASSERT(pos < d->size);
+        if (d->refcount > 1) {
+            // need to detach
+            Private *dd = new Private(d->alloc);
+            memcpy(dd->data, d->data, d->size*sizeof(T));
+            dd->size = d->size;
+            if (!--d->refcount)
+                delete d;
+            d = dd;
+        }
+        d->data[pos] = value;
+    }
+
+    T *constData() const {
+        return d->data;
+    }
+    T at(uint i) const {
+        Q_ASSERT(i < d->size);
+        return d->data[i];
+    }
+    T operator[] (uint i) {
+        Q_ASSERT(i < d->size);
+        return d->data[i];
+    }
+
+private:
+    SharedInternalClassData &operator=(const SharedInternalClassData &other);
+};
 
 struct InternalClassTransition
 {
@@ -124,9 +211,8 @@ struct InternalClass {
     ExecutionEngine *engine;
     Object *prototype;
     PropertyHash propertyTable; // id to valueIndex
-    QVector<String *> nameMap;
-
-    QVector<PropertyAttributes> propertyData;
+    SharedInternalClassData<String *> nameMap;
+    SharedInternalClassData<PropertyAttributes> propertyData;
 
     typedef InternalClassTransition Transition;
     QHash<Transition, InternalClass *> transitions; // id to next class, positive means add, negative delete

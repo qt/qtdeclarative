@@ -1,4 +1,4 @@
-import com.nokia.WrongCase 1.0
+import org.qtproject.WrongCase 1.0
 
 MyPluginType { value: 123 }
 

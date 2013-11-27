@@ -85,6 +85,8 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
     qsg_debug_timer.start();
 #endif
 
+    m_rc = new QSGRenderContext(m_sg);
+
     m_animationDriver = m_sg->createAnimationDriver(m_sg);
     m_animationDriver->install();
 
@@ -100,6 +102,12 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
 #ifndef QSG_NO_RENDER_TIMIMG
     qsg_render_timer.start();
 #endif
+}
+
+QSGWindowsRenderLoop::~QSGWindowsRenderLoop()
+{
+    delete m_rc;
+    delete m_sg;
 }
 
 bool QSGWindowsRenderLoop::interleaveIncubation() const
@@ -170,13 +178,22 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         RLDEBUG(" - creating GL context");
         m_gl = new QOpenGLContext();
         m_gl->setFormat(window->requestedFormat());
-        m_gl->create();
+        if (QSGContext::sharedOpenGLContext())
+            m_gl->setShareContext(QSGContext::sharedOpenGLContext());
+        bool created = m_gl->create();
+        if (!created) {
+            qWarning("QtQuick: failed to create OpenGL context");
+            delete m_gl;
+            m_gl = 0;
+            return;
+        }
         QSG_RENDER_TIMING_SAMPLE(time_created);
         RLDEBUG(" - making current");
-        m_gl->makeCurrent(window);
+        bool current = m_gl->makeCurrent(window);
         RLDEBUG(" - initializing SG");
         QSG_RENDER_TIMING_SAMPLE(time_current);
-        m_sg->initialize(m_gl);
+        if (current)
+            m_rc->initialize(m_gl);
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
@@ -230,7 +247,8 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
     // potentially clean up.
     if (m_windows.size() == 0) {
         if (!cd->persistentSceneGraph) {
-            m_sg->invalidate();
+            QQuickWindowPrivate::get(window)->context->invalidate();
+            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
             if (!cd->persistentGLContext) {
                 delete m_gl;
                 m_gl = 0;
@@ -246,7 +264,8 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
 
     // If this is the last tracked window, clean up SG and GL.
     if (m_windows.size() == 0) {
-        m_sg->invalidate();
+        QQuickWindowPrivate::get(window)->context->invalidate();
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete m_gl;
         m_gl = 0;
     }

@@ -72,7 +72,10 @@ public:
         GlobalCode,
         EvalCode,
         FunctionCode,
-        QmlBinding
+        QmlBinding // This is almost the same as EvalCode, except:
+                   //  * function declarations are moved to the return address when encountered
+                   //  * return statements are allowed everywhere (like in FunctionCode)
+                   //  * variable declarations are treated as true locals (like in FunctionCode)
     };
 
     void generateFromProgram(const QString &fileName,
@@ -145,6 +148,7 @@ protected:
         bool hasNestedFunctions;
         bool isStrict;
         bool isNamedFunctionExpression;
+        bool usesThis;
         enum UsesArgumentsObject {
             ArgumentsObjectUnknown,
             ArgumentsObjectNotUsed,
@@ -163,6 +167,7 @@ protected:
             , hasNestedFunctions(false)
             , isStrict(false)
             , isNamedFunctionExpression(false)
+            , usesThis(false)
             , usesArgumentsObject(ArgumentsObjectUnknown)
             , compilationMode(mode)
         {
@@ -238,12 +243,11 @@ protected:
 
         ScopeAndFinally *parent;
         AST::Finally *finally;
-        V4IR::ExprList *finishTryArgs;
         ScopeType type;
 
-        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), finishTryArgs(0), type(t) {}
-        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, V4IR::ExprList *finishTryArgs)
-        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), type(TryScope)
+        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), type(t) {}
+        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally)
+        : parent(parent), finally(finally), type(TryScope)
         {}
     };
 
@@ -271,6 +275,22 @@ protected:
             if (it->groupStartBlock)
                 return it->groupStartBlock;
         return 0;
+    }
+    V4IR::BasicBlock *exceptionHandler() const
+    {
+        if (_exceptionHandlers.isEmpty())
+            return 0;
+        return _exceptionHandlers.top();
+    }
+    void pushExceptionHandler(V4IR::BasicBlock *handler)
+    {
+        handler->isExceptionHandler = true;
+        _exceptionHandlers.push(handler);
+    }
+    void popExceptionHandler()
+    {
+        Q_ASSERT(!_exceptionHandlers.isEmpty());
+        _exceptionHandlers.pop();
     }
 
     V4IR::Expr *member(V4IR::Expr *base, const QString *name);
@@ -308,6 +328,9 @@ protected:
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+    // Hook provided to implement QML lookup semantics
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual void beginFunctionBodyHook() {}
 
     // nodes
     virtual bool visit(AST::ArgumentList *ast);
@@ -413,7 +436,7 @@ protected:
     virtual bool visit(AST::UiScriptBinding *ast);
     virtual bool visit(AST::UiSourceElement *ast);
 
-    void throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
+    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
@@ -428,7 +451,6 @@ protected:
     V4IR::Function *_function;
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_exitBlock;
-    V4IR::BasicBlock *_throwBlock;
     unsigned _returnAddress;
     Environment *_env;
     Loop *_loop;
@@ -436,8 +458,11 @@ protected:
     ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
+    QStack<V4IR::BasicBlock *> _exceptionHandlers;
     bool _strictMode;
 
+    bool _fileNameIsUrl;
+    bool hasError;
     QList<QQmlError> _errors;
 
     class ScanFunctions: protected Visitor
@@ -449,6 +474,12 @@ protected:
 
         void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
         void leaveEnvironment();
+
+        void enterQmlScope(AST::Node *ast, const QString &name)
+        { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0, /*isExpression*/false); }
+
+        void enterQmlFunction(AST::FunctionDeclaration *ast)
+        { enterFunction(ast, false, false); }
 
     protected:
         using Visitor::visit;
@@ -489,6 +520,7 @@ protected:
         virtual bool visit(AST::LocalForStatement *ast);
         virtual bool visit(AST::ForEachStatement *ast);
         virtual bool visit(AST::LocalForEachStatement *ast);
+        virtual bool visit(AST::ThisExpression *ast);
 
         virtual bool visit(AST::Block *ast);
 

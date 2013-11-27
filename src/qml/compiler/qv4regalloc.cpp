@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4regalloc_p.h"
+#include <private/qv4value_p.h>
 
 #include <algorithm>
 
@@ -51,7 +52,7 @@ struct Use {
     unsigned flag : 1;
     unsigned pos  : 31;
 
-    Use(): pos(0), flag(MustHaveRegister) {}
+    Use(): flag(MustHaveRegister), pos(0) {}
     Use(int pos, RegisterFlag flag): flag(flag), pos(pos) {}
 
     bool mustHaveRegister() const { return flag == MustHaveRegister; }
@@ -193,7 +194,9 @@ protected: // IRDecoder
     virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
     virtual void callBuiltinThrow(V4IR::Expr *) {}
-    virtual void callBuiltinFinishTry() {}
+    virtual void callBuiltinReThrow() {}
+    virtual void callBuiltinUnwindException(V4IR::Temp *) {}
+    virtual void callBuiltinPushCatchScope(const QString &) {};
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *, V4IR::Temp *) {}
@@ -205,6 +208,7 @@ protected: // IRDecoder
     virtual void callBuiltinDefineArray(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *) {}
+    virtual void callBuiltinConvertThisToObject() {}
 
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
     {
@@ -217,6 +221,8 @@ protected: // IRDecoder
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
                               V4IR::Temp *result)
     {
+        Q_UNUSED(name)
+
         addDef(result);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addUses(args, Use::CouldHaveRegister);
@@ -332,18 +338,58 @@ protected: // IRDecoder
         addDef(temp);
     }
 
+    virtual void loadQmlIdArray(V4IR::Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlImportedScripts(V4IR::Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlContextObject(Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlScopeObject(Temp *temp)
+    {
+        Q_UNUSED(temp);
+
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlSingleton(const QString &/*name*/, Temp *temp)
+    {
+        Q_UNUSED(temp);
+
+        addDef(temp);
+        addCall();
+    }
+
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(sourceConst);
+
         addDef(targetTemp);
     }
 
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(str);
+
         addDef(targetTemp);
     }
 
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(sourceRegexp);
+
         addDef(targetTemp);
         addCall();
     }
@@ -362,6 +408,8 @@ protected: // IRDecoder
 
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target)
     {
+        Q_UNUSED(closure);
+
         addDef(target);
         addCall();
     }
@@ -377,6 +425,20 @@ protected: // IRDecoder
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int /*propertyIndex*/)
+    {
+        addUses(source->asTemp(), Use::CouldHaveRegister);
+        addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
+    virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, V4IR::Temp *target)
+    {
+        addDef(target);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
@@ -494,7 +556,7 @@ protected: // IRDecoder
 #endif
         } else if (Binop *b = s->cond->asBinop()) {
             binop(b->op, b->left, b->right, 0);
-        } else if (Const *c = s->cond->asConst()) {
+        } else if (s->cond->asConst()) {
             // TODO: SSA optimization for constant condition evaluation should remove this.
             // See also visitCJump() in masm.
             addCall();
@@ -505,9 +567,6 @@ protected: // IRDecoder
 
     virtual void visitRet(V4IR::Ret *s)
     { addUses(s->expr->asTemp(), Use::CouldHaveRegister); }
-
-    virtual void visitTry(V4IR::Try *)
-    { Q_UNREACHABLE(); } // this should never happen, we do not optimize when there is a try in the function
 
     virtual void visitPhi(V4IR::Phi *s)
     {
@@ -537,6 +596,7 @@ private:
         Q_ASSERT(!_defs.contains(*t));
         bool canHaveReg = true;
         switch (t->type) {
+        case QObjectType:
         case VarType:
         case StringType:
         case UndefinedType:
@@ -593,7 +653,9 @@ namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QVector<LifeTimeInterval> _intervals;
     Function *_function;
+#if !defined(QT_NO_DEBUG)
     RegAllocInfo *_info;
+#endif
     const QHash<V4IR::Temp, int> &_assignedSpillSlots;
     QHash<V4IR::Temp, LifeTimeInterval> _intervalForTemp;
     const QVector<int> &_intRegs;
@@ -612,11 +674,16 @@ public:
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
         , _function(function)
+#if !defined(QT_NO_DEBUG)
         , _info(info)
+#endif
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
     {
+#if defined(QT_NO_DEBUG)
+        Q_UNUSED(info)
+#endif
     }
 
     void run() {
@@ -835,8 +902,28 @@ private:
 #if !defined(QT_NO_DEBUG)
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
-                    foreach (const Use &use, _info->uses(it.temp()))
-                        Q_ASSERT(use.pos < successorStart || use.pos > successorEnd);
+                    const int idx = successor->in.indexOf(predecessor);
+                    foreach (const Use &use, _info->uses(it.temp())) {
+                        if (use.pos == static_cast<unsigned>(successorStart)) {
+                            // only check the current edge, not all other possible ones. This is
+                            // important for phi nodes: they have uses that are only valid when
+                            // coming in over a specific edge.
+                            foreach (Stmt *s, successor->statements) {
+                                if (Phi *phi = s->asPhi()) {
+                                    Q_ASSERT(it.temp().index != phi->targetTemp->index);
+                                    Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0
+                                             || it.temp().index != phi->d->incoming[idx]->asTemp()->index);
+                                } else {
+                                    // TODO: check that the first non-phi statement does not use
+                                    // the temp.
+                                    break;
+                                }
+                            }
+                        } else {
+                            Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) ||
+                                     use.pos > static_cast<unsigned>(successorEnd));
+                        }
+                    }
                 }
 #endif
 
@@ -917,7 +1004,6 @@ protected:
             int pReg = platformRegister(i);
             t->kind = Temp::PhysicalRegister;
             t->index = pReg;
-            Q_ASSERT(t->index >= 0);
         } else {
             int stackSlot = _assignedSpillSlots.value(*t, -1);
             Q_ASSERT(stackSlot >= 0);
@@ -954,7 +1040,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) { Q_UNREACHABLE(); }
     virtual void visitPhi(Phi *) {}
 };
 } // anonymous namespace

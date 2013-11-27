@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlEnginePrivate;
+
 namespace QV4 {
 class ExecutableAllocator;
 struct Function;
@@ -92,7 +94,7 @@ class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
+    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
 };
 
@@ -100,6 +102,7 @@ namespace V4IR {
 class Q_QML_EXPORT IRDecoder: protected V4IR::StmtVisitor
 {
 public:
+    IRDecoder() : _function(0) {}
     virtual ~IRDecoder() = 0;
 
     virtual void visitPhi(V4IR::Phi *) {}
@@ -119,7 +122,9 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(V4IR::Temp *result) = 0;
     virtual void callBuiltinThrow(V4IR::Expr *arg) = 0;
-    virtual void callBuiltinFinishTry() = 0;
+    virtual void callBuiltinReThrow() = 0;
+    virtual void callBuiltinUnwindException(V4IR::Temp *) = 0;
+    virtual void callBuiltinPushCatchScope(const QString &exceptionName) = 0;
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinPushWithScope(V4IR::Temp *arg) = 0;
@@ -130,6 +135,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result) = 0;
+    virtual void callBuiltinConvertThisToObject() = 0;
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result) = 0;
@@ -138,6 +144,11 @@ public: // to implement by subclasses:
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void loadThisObject(V4IR::Temp *temp) = 0;
+    virtual void loadQmlIdArray(V4IR::Temp *temp) = 0;
+    virtual void loadQmlImportedScripts(V4IR::Temp *temp) = 0;
+    virtual void loadQmlContextObject(V4IR::Temp *temp) = 0;
+    virtual void loadQmlScopeObject(V4IR::Temp *temp) = 0;
+    virtual void loadQmlSingleton(const QString &name, V4IR::Temp *temp) = 0;
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp) = 0;
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp) = 0;
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp) = 0;
@@ -145,7 +156,9 @@ public: // to implement by subclasses:
     virtual void setActivationProperty(V4IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target) = 0;
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target) = 0;
+    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *targetTemp) = 0;
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName) = 0;
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex) = 0;
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target) = 0;
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex) = 0;
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
@@ -155,6 +168,8 @@ public: // to implement by subclasses:
 
 protected:
     virtual void callBuiltin(V4IR::Call *c, V4IR::Temp *result);
+
+    V4IR::Function *_function; // subclass needs to set
 };
 } // namespace IR
 

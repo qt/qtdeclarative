@@ -51,6 +51,8 @@
 #include <QtCore/QStack>
 #include <qv4runtime_p.h>
 #include <qv4context_p.h>
+#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlengine_p.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -118,6 +120,11 @@ void showMeTheCode(Function *function)
                 str.append('L');
                 str.append(QByteArray::number(bb->index));
                 str.append(':');
+                if (bb->catchBlock) {
+                    str.append(" (exception handler L");
+                    str.append(QByteArray::number(bb->catchBlock->index));
+                    str.append(')');
+                }
                 for (int i = 66 - str.length(); i; --i)
                     str.append(' ');
                 qout << str;
@@ -218,26 +225,65 @@ class DominatorTree {
     QHash<BasicBlock *, BasicBlock *> samedom;
     QHash<BasicBlock *, QSet<BasicBlock *> > bucket;
 
-    void DFS(BasicBlock *p, BasicBlock *n) {
-        if (dfnum[n] == 0) {
-            dfnum[n] = N;
-            vertex[N] = n;
-            parent[n] = p;
-            ++N;
-            foreach (BasicBlock *w, n->out)
-                DFS(n, w);
+    struct DFSTodo {
+        BasicBlock *node, *parent;
+
+        DFSTodo():node(0),parent(0){}
+        DFSTodo(BasicBlock *node, BasicBlock *parent):node(node),parent(parent){}
+    };
+
+    void DFS(BasicBlock *node) {
+        QVector<DFSTodo> worklist;
+        worklist.reserve(vertex.capacity());
+        DFSTodo todo(node, 0);
+
+        while (true) {
+            BasicBlock *n = todo.node;
+
+            if (dfnum[n] == 0) {
+                dfnum[n] = N;
+                vertex[N] = n;
+                parent[n] = todo.parent;
+                ++N;
+                for (int i = n->out.size() - 1; i > 0; --i)
+                    worklist.append(DFSTodo(n->out[i], n));
+
+                if (n->out.size() > 0) {
+                    todo.node = n->out.first();
+                    todo.parent = n;
+                    continue;
+                }
+            }
+
+            if (worklist.isEmpty())
+                break;
+
+            todo = worklist.last();
+            worklist.removeLast();
         }
     }
 
     BasicBlock *ancestorWithLowestSemi(BasicBlock *v) {
-        BasicBlock *a = ancestor[v];
-        if (ancestor[a]) {
-            BasicBlock *b = ancestorWithLowestSemi(a);
-            ancestor[v] = ancestor[a];
-            if (dfnum[semi[b]] < dfnum[semi[best[v]]])
-                best[v] = b;
+        QVector<BasicBlock *> worklist;
+        worklist.reserve(vertex.capacity());
+        for (BasicBlock *it = v; it; it = ancestor[it])
+            worklist.append(it);
+
+        if (worklist.size() < 2)
+            return best[v];
+
+        BasicBlock *b = 0;
+        BasicBlock *last = worklist.last();
+        for (int it = worklist.size() - 2; it >= 0; --it) {
+            BasicBlock *bbIt = worklist[it];
+            ancestor[bbIt] = last;
+            BasicBlock *&best_it = best[bbIt];
+            if (b && dfnum[semi[b]] < dfnum[semi[best_it]])
+                best_it = b;
+            else
+                b = best_it;
         }
-        return best[v];
+        return b;
     }
 
     void link(BasicBlock *p, BasicBlock *n) {
@@ -256,8 +302,8 @@ class DominatorTree {
             samedom[n] = 0;
         }
 
-        DFS(0, nodes.first());
-        Q_ASSERT(N == nodes.size()); // fails with unreachable nodes...
+        DFS(nodes.first());
+        Q_ASSERT(N == nodes.size()); // fails with unreachable nodes, but those should have been removed before.
 
         for (int i = N - 1; i > 0; --i) {
             BasicBlock *n = vertex[i];
@@ -278,9 +324,9 @@ class DominatorTree {
             link(p, n);
             foreach (BasicBlock *v, bucket[p]) {
                 BasicBlock *y = ancestorWithLowestSemi(v);
-                Q_ASSERT(semi[y] == p);
-                if (semi[y] == semi[v])
-                    idom[v] = p;
+                BasicBlock *semi_v = semi[v];
+                if (semi[y] == semi_v)
+                    idom[v] = semi_v;
                 else
                     samedom[v] = y;
             }
@@ -316,52 +362,88 @@ class DominatorTree {
         return false;
     }
 
-    void computeDF(BasicBlock *n) {
-        if (DF.contains(n))
-            return; // TODO: verify this!
+    struct NodeProgress {
+        QSet<BasicBlock *> children;
+        QSet<BasicBlock *> todo;
+    };
 
-        QSet<BasicBlock *> S;
-        foreach (BasicBlock *y, n->out)
-            if (idom[y] != n)
-                S.insert(y);
-
-        /*
-         * foreach child c of n in the dominator tree
-         *   computeDF[c]
-         *   foreach element w of DF[c]
-         *     if n does not dominate w or if n = w
-         *       S.insert(w)
-         * DF[n] = S;
-         */
-        foreach (BasicBlock *c, children[n]) {
-            computeDF(c);
-            foreach (BasicBlock *w, DF[c])
-                if (!dominates(n, w) || n == w)
-                    S.insert(w);
+    void computeDF(const QVector<BasicBlock *> &nodes) {
+        QHash<BasicBlock *, NodeProgress> nodeStatus;
+        nodeStatus.reserve(nodes.size());
+        QVector<BasicBlock *> worklist;
+        worklist.reserve(nodes.size() * 2);
+        for (int i = 0, ei = nodes.size(); i != ei; ++i) {
+            BasicBlock *node = nodes[i];
+            worklist.append(node);
+            NodeProgress &np = nodeStatus[node];
+            np.children = children[node];
+            np.todo = children[node];
         }
-        DF[n] = S;
 
-#ifdef SHOW_SSA
-        qout << "\tDF[" << n->index << "]: {";
-        QList<BasicBlock *> SList = S.values();
-        for (int i = 0; i < SList.size(); ++i) {
-            if (i > 0)
-                qout << ", ";
-            qout << SList[i]->index;
-        }
-        qout << "}" << endl;
-#endif // SHOW_SSA
-#ifndef QT_NO_DEBUG
-        foreach (BasicBlock *fBlock, S) {
-            Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
-            bool hasDominatedSucc = false;
-            foreach (BasicBlock *succ, fBlock->in)
-                if (dominates(n, succ))
-                    hasDominatedSucc = true;
-            if (!hasDominatedSucc) {
-                qout << fBlock->index << " in DF[" << n->index << "] has no dominated predecessors" << endl;
+        while (!worklist.isEmpty()) {
+            BasicBlock *node = worklist.last();
+
+            if (DF.contains(node)) {
+                worklist.removeLast();
+                continue;
             }
-            Q_ASSERT(hasDominatedSucc);
+
+            NodeProgress &np = nodeStatus[node];
+            QSet<BasicBlock *>::iterator it = np.todo.begin();
+            while (it != np.todo.end()) {
+                if (DF.contains(*it)) {
+                    it = np.todo.erase(it);
+                } else {
+                    worklist.append(*it);
+                    break;
+                }
+            }
+
+            if (np.todo.isEmpty()) {
+                QSet<BasicBlock *> S;
+                foreach (BasicBlock *y, node->out)
+                    if (idom[y] != node)
+                        if (!S.contains(y))
+                            S.insert(y);
+                foreach (BasicBlock *child, np.children)
+                    foreach (BasicBlock *w, DF[child])
+                        if (!dominates(node, w) || node == w)
+                            if (!S.contains(w))
+                                S.insert(w);
+                DF.insert(node, S);
+                worklist.removeLast();
+            }
+        }
+
+#if defined(SHOW_SSA)
+        qout << "Dominator Frontiers:" << endl;
+        foreach (BasicBlock *n, nodes) {
+            qout << "\tDF[" << n->index << "]: {";
+            QList<BasicBlock *> SList = DF[n].values();
+            for (int i = 0; i < SList.size(); ++i) {
+                if (i > 0)
+                    qout << ", ";
+                qout << SList[i]->index;
+            }
+            qout << "}" << endl;
+        }
+#endif // SHOW_SSA
+#if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
+        foreach (BasicBlock *n, nodes) {
+            foreach (BasicBlock *fBlock, DF[n]) {
+                Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
+                bool hasDominatedSucc = false;
+                foreach (BasicBlock *succ, fBlock->in) {
+                    if (dominates(n, succ)) {
+                        hasDominatedSucc = true;
+                        break;
+                    }
+                }
+                if (!hasDominatedSucc) {
+                    qout << fBlock->index << " in DF[" << n->index << "] has no dominated predecessors" << endl;
+                }
+                Q_ASSERT(hasDominatedSucc);
+            }
         }
 #endif // !QT_NO_DEBUG
     }
@@ -376,14 +458,13 @@ public:
         calculateIDoms(nodes);
 
         // compute children of n
-        foreach (BasicBlock *n, nodes)
-            children[idom[n]].insert(n);
+        foreach (BasicBlock *n, nodes) {
+            QSet<BasicBlock *> &c = children[idom[n]];
+            if (!c.contains(n))
+                c.insert(n);
+        }
 
-#ifdef SHOW_SSA
-        qout << "Dominator Frontiers:" << endl;
-#endif // SHOW_SSA
-        foreach (BasicBlock *n, nodes)
-            computeDF(n);
+        computeDF(nodes);
     }
 
     QSet<BasicBlock *> operator[](BasicBlock *n) const {
@@ -481,8 +562,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) { // ### TODO
-    }
 
     virtual void visitCall(Call *e) {
         e->base->accept(this);
@@ -725,7 +804,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *s) { /* this should never happen */ }
 
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -959,7 +1037,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) {}
 
     virtual void visitPhi(Phi *s) {
         addDef(s->targetTemp);
@@ -1112,6 +1189,8 @@ protected:
 
     virtual void visitName(Name *e)
     {
+        if (e->freeOfSideEffects)
+            return;
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
         // a side-effect.
         if (e->builtin == Name::builtin_invalid || (e->id && *e->id != QStringLiteral("this")))
@@ -1133,6 +1212,7 @@ protected:
         e->expr->accept(this);
 
         switch (e->expr->type) {
+        case QObjectType:
         case StringType:
         case VarType:
             markAsSideEffect();
@@ -1151,7 +1231,7 @@ protected:
         case OpNot:
         case OpIncrement:
         case OpDecrement:
-            if (e->expr->type == VarType || e->expr->type == StringType)
+            if (e->expr->type == VarType || e->expr->type == StringType || e->expr->type == QObjectType)
                 markAsSideEffect();
             break;
 
@@ -1167,8 +1247,8 @@ protected:
         _sideEffect = checkForSideEffects(e->left);
         _sideEffect |= checkForSideEffects(e->right);
 
-        if (e->left->type == VarType || e->left->type == StringType
-                || e->right->type == VarType || e->right->type == StringType)
+        if (e->left->type == VarType || e->left->type == StringType || e->left->type == QObjectType
+                || e->right->type == VarType || e->right->type == StringType || e->right->type == QObjectType)
             markAsSideEffect();
     }
 
@@ -1199,22 +1279,42 @@ protected:
 };
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
+    struct DiscoveredType {
+        int type;
+        MemberExpressionResolver memberResolver;
+
+        DiscoveredType() : type(UnknownType) {}
+        DiscoveredType(Type t) : type(t) { Q_ASSERT(type != QObjectType); }
+        explicit DiscoveredType(int t) : type(t) { Q_ASSERT(type != QObjectType); }
+        explicit DiscoveredType(MemberExpressionResolver memberResolver) : type(QObjectType), memberResolver(memberResolver) {}
+
+        bool test(Type t) const { return type & t; }
+        bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
+
+        bool operator!=(Type other) const { return type != other; }
+        bool operator==(Type other) const { return type == other; }
+        bool operator==(const DiscoveredType &other) const { return type == other.type; }
+        bool operator!=(const DiscoveredType &other) const { return type != other.type; }
+    };
+
+    QQmlEnginePrivate *qmlEngine;
     bool _variablesCanEscape;
     const DefUsesCalculator &_defUses;
-    QHash<Temp, int> _tempTypes;
+    QHash<Temp, DiscoveredType> _tempTypes;
     QSet<Stmt *> _worklist;
     struct TypingResult {
-        int type;
+        DiscoveredType type;
         bool fullyTyped;
 
-        TypingResult(int type, bool fullyTyped): type(type), fullyTyped(fullyTyped) {}
-        explicit TypingResult(int type = UnknownType): type(type), fullyTyped(type != UnknownType) {}
+        TypingResult(const DiscoveredType &type = DiscoveredType()) : type(type), fullyTyped(type.type != UnknownType) {}
+        explicit TypingResult(MemberExpressionResolver memberResolver): type(memberResolver), fullyTyped(true) {}
     };
     TypingResult _ty;
 
 public:
-    TypeInference(const DefUsesCalculator &defUses)
-        : _defUses(defUses)
+    TypeInference(QQmlEnginePrivate *qmlEngine, const DefUsesCalculator &defUses)
+        : qmlEngine(qmlEngine)
+        , _defUses(defUses)
         , _ty(UnknownType)
     {}
 
@@ -1260,7 +1360,7 @@ private:
     class PropagateTempTypes: public StmtVisitor, ExprVisitor
     {
     public:
-        PropagateTempTypes(const QHash<Temp, int> &tempTypes)
+        PropagateTempTypes(const QHash<Temp, DiscoveredType> &tempTypes)
             : _tempTypes(tempTypes)
         {}
 
@@ -1272,11 +1372,15 @@ private:
         }
 
     protected:
-        virtual void visitConst(Const *e) {}
+        virtual void visitConst(Const *) {}
         virtual void visitString(String *) {}
         virtual void visitRegExp(RegExp *) {}
         virtual void visitName(Name *) {}
-        virtual void visitTemp(Temp *e) { e->type = (Type) _tempTypes[*e]; }
+        virtual void visitTemp(Temp *e) {
+            DiscoveredType t = _tempTypes[*e];
+            e->type = (Type) t.type;
+            e->memberResolver = t.memberResolver;
+        }
         virtual void visitClosure(Closure *) {}
         virtual void visitConvert(Convert *e) { e->expr->accept(this); }
         virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -1310,7 +1414,6 @@ private:
         virtual void visitJump(Jump *) {}
         virtual void visitCJump(CJump *s) { s->cond->accept(this); }
         virtual void visitRet(Ret *s) { s->expr->accept(this); }
-        virtual void visitTry(Try *s) { s->exceptionVar->accept(this); }
         virtual void visitPhi(Phi *s) {
             s->targetTemp->accept(this);
             foreach (Expr *e, s->d->incoming)
@@ -1318,7 +1421,7 @@ private:
         }
 
     private:
-        QHash<Temp, int> _tempTypes;
+        QHash<Temp, DiscoveredType> _tempTypes;
     };
 
 private:
@@ -1354,13 +1457,13 @@ private:
         }
     }
 
-    void setType(Expr *e, int ty) {
+    void setType(Expr *e, DiscoveredType ty) {
         if (Temp *t = e->asTemp()) {
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
             if (isAlwaysAnObject(t))
-                ty = VarType;
+                ty = DiscoveredType(VarType);
             if (_tempTypes[*t] != ty) {
                 _tempTypes[*t] = ty;
 
@@ -1375,7 +1478,7 @@ private:
                 _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
             }
         } else {
-            e->type = (Type) ty;
+            e->type = (Type) ty.type;
         }
     }
 
@@ -1397,8 +1500,10 @@ protected:
     virtual void visitTemp(Temp *e) {
         if (isAlwaysAnObject(e))
             _ty = TypingResult(VarType);
+        else if (e->memberResolver.isValid())
+            _ty = TypingResult(e->memberResolver);
         else
-            _ty = TypingResult(_tempTypes.value(*e, UnknownType));
+            _ty = TypingResult(_tempTypes.value(*e));
         setType(e, _ty.type);
     }
     virtual void visitClosure(Closure *) { _ty = TypingResult(VarType); }
@@ -1430,9 +1535,9 @@ protected:
 
         switch (e->op) {
         case OpAdd:
-            if (leftTy.type & VarType || rightTy.type & VarType)
+            if (leftTy.type.test(VarType) || leftTy.type.test(QObjectType) || rightTy.type.test(VarType) || rightTy.type.test(QObjectType))
                 _ty.type = VarType;
-            else if (leftTy.type & StringType || rightTy.type & StringType)
+            else if (leftTy.type.test(StringType) || rightTy.type.test(StringType))
                 _ty.type = StringType;
             else if (leftTy.type != UnknownType && rightTy.type != UnknownType)
                 _ty.type = DoubleType;
@@ -1499,9 +1604,13 @@ protected:
     }
 
     virtual void visitMember(Member *e) {
-        // TODO: for QML, try to do a static lookup
         _ty = run(e->base);
-        _ty.type = VarType;
+
+        if (_ty.fullyTyped && _ty.type.memberResolver.isValid()) {
+            MemberExpressionResolver &resolver = _ty.type.memberResolver;
+            _ty.type.type = resolver.resolveMember(qmlEngine, &resolver, e);
+        } else
+            _ty.type = VarType;
     }
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
@@ -1520,7 +1629,6 @@ protected:
     virtual void visitJump(Jump *) { _ty = TypingResult(MissingType); }
     virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
-    virtual void visitTry(Try *s) { setType(s->exceptionVar, VarType); _ty = TypingResult(MissingType); }
     virtual void visitPhi(Phi *s) {
         _ty = run(s->d->incoming[0]);
         for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
@@ -1532,11 +1640,13 @@ protected:
                 _ty.fullyTyped = false;
                 break;
             }
-            _ty.type |= ty.type;
+            _ty.type.type |= ty.type.type;
             _ty.fullyTyped &= ty.fullyTyped;
+            if (_ty.type.test(QObjectType))
+                _ty.type.memberResolver.clear(); // ### TODO: find common ancestor meta-object
         }
 
-        switch (_ty.type) {
+        switch (_ty.type.type) {
         case UnknownType:
         case UndefinedType:
         case NullType:
@@ -1545,13 +1655,14 @@ protected:
         case UInt32Type:
         case DoubleType:
         case StringType:
+        case QObjectType:
         case VarType:
             // The type is not a combination of two or more types, so we're done.
             break;
 
         default:
             // There are multiple types involved, so:
-            if ((_ty.type & NumberType) && !(_ty.type & ~NumberType))
+            if (_ty.type.isNumber())
                 // The type is any combination of double/int32/uint32, but nothing else. So we can
                 // type it as double.
                 _ty.type = DoubleType;
@@ -1651,7 +1762,11 @@ public:
             }
 
             foreach (const Conversion &conversion, _conversions) {
-                if (conversion.stmt->asMove() && conversion.stmt->asMove()->source->asTemp()) {
+                V4IR::Move *move = conversion.stmt->asMove();
+
+                // Note: isel only supports move into member when source is a temp, so convert
+                // is not a supported source.
+                if (move && move->source->asTemp() && !move->target->asMember()) {
                     *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
                 } else if (Const *c = (*conversion.expr)->asConst()) {
                     convertConst(c, conversion.targetType);
@@ -1789,14 +1904,20 @@ protected:
             }
         }
 
-        run(s->source, s->target->type);
+        // Don't convert when writing to QObject properties. All sorts of extra behavior
+        // is defined when writing to them, for example resettable properties are reset
+        // when writing undefined to them, and an exception is thrown when they're missing
+        // a reset function.
+        const Member *targetMember = s->target->asMember();
+        const bool inhibitConversion = targetMember && targetMember->property;
+
+        run(s->source, s->target->type, !inhibitConversion);
     }
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) {
         run(s->cond, BoolType);
     }
     virtual void visitRet(Ret *s) { run(s->expr); }
-    virtual void visitTry(Try *) {}
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
         for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
@@ -1818,7 +1939,7 @@ void splitCriticalEdges(Function *f)
 #endif
 
                     // create the basic block:
-                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup());
+                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup(), bb->catchBlock);
                     newBB->index = f->basicBlocks.last()->index + 1;
                     f->basicBlocks.append(newBB);
                     Jump *s = f->New<Jump>();
@@ -1868,8 +1989,8 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
         I(const DominatorTree &df, QVector<BasicBlock *> &sequence,
           QHash<BasicBlock *, BasicBlock *> &startEndLoops)
             : df(df)
-            , sequence(sequence)
             , startEndLoops(startEndLoops)
+            , sequence(sequence)
             , currentGroup(0)
         {}
 
@@ -1934,6 +2055,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
     return startEndLoops;
 }
 
+#ifndef QT_NO_DEBUG
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
     foreach (BasicBlock *bb, basicBlocks) {
         if (bb && bb->out.size() > 1) {
@@ -1947,34 +2069,61 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
         }
     }
 }
+#endif
 
-void cleanupBasicBlocks(Function *function)
+void cleanupBasicBlocks(Function *function, bool renumber)
 {
-//        showMeTheCode(function);
+    showMeTheCode(function);
 
-    // remove all basic blocks that have no incoming edges, but skip the entry block
-    QVector<BasicBlock *> W = function->basicBlocks;
-    W.removeFirst();
+    // Algorithm: this is the iterative version of a depth-first search for all blocks that are
+    // reachable through outgoing edges, starting with the start block and all exception handler
+    // blocks.
+    QSet<BasicBlock *> postponed, done;
     QSet<BasicBlock *> toRemove;
-
-    while (!W.isEmpty()) {
-        BasicBlock *bb = W.first();
-        W.removeFirst();
-        if (toRemove.contains(bb))
-            continue;
-        if (bb->in.isEmpty()) {
-            foreach (BasicBlock *outBB, bb->out) {
-                int idx = outBB->in.indexOf(bb);
-                if (idx != -1) {
-                    outBB->in.remove(idx);
-                    W.append(outBB);
-                }
-            }
+    toRemove.reserve(function->basicBlocks.size());
+    done.reserve(function->basicBlocks.size());
+    postponed.reserve(8);
+    for (int i = 0, ei = function->basicBlocks.size(); i != ei; ++i) {
+        BasicBlock *bb = function->basicBlocks[i];
+        if (i == 0 || bb->isExceptionHandler)
+            postponed.insert(bb);
+        else
             toRemove.insert(bb);
+    }
+
+    while (!postponed.isEmpty()) {
+        QSet<BasicBlock *>::iterator it = postponed.begin();
+        BasicBlock *bb = *it;
+        postponed.erase(it);
+        done.insert(bb);
+
+        foreach (BasicBlock *outBB, bb->out) {
+            if (!done.contains(outBB)) {
+                postponed.insert(outBB);
+                toRemove.remove(outBB);
+            }
         }
     }
 
     foreach (BasicBlock *bb, toRemove) {
+        foreach (BasicBlock *outBB, bb->out) {
+            if (toRemove.contains(outBB))
+                continue; // We do not need to unlink from blocks that are scheduled to be removed.
+                          // Actually, it is potentially dangerous: if that block was already
+                          // destroyed, this could result in a use-after-free.
+
+            int idx = outBB->in.indexOf(bb);
+            if (idx != -1) {
+                outBB->in.remove(idx);
+                foreach (Stmt *s, outBB->statements) {
+                    if (Phi *phi = s->asPhi())
+                        phi->d->incoming.remove(idx);
+                    else
+                        break;
+                }
+            }
+        }
+
         foreach (Stmt *s, bb->statements)
             s->destroyData();
         int idx = function->basicBlocks.indexOf(bb);
@@ -1983,9 +2132,11 @@ void cleanupBasicBlocks(Function *function)
         delete bb;
     }
 
-    // re-number all basic blocks:
-    for (int i = 0; i < function->basicBlocks.size(); ++i)
-        function->basicBlocks[i]->index = i;
+    if (renumber)
+        for (int i = 0; i < function->basicBlocks.size(); ++i)
+            function->basicBlocks[i]->index = i;
+
+    showMeTheCode(function);
 }
 
 inline Const *isConstPhi(Phi *phi)
@@ -2005,20 +2156,6 @@ inline Const *isConstPhi(Phi *phi)
             }
         }
         return c;
-    }
-    return 0;
-}
-
-inline Temp *isSameTempPhi(Phi *phi)
-{
-    if (Temp *t = phi->d->incoming[0]->asTemp()) {
-        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
-            if (Temp *tt = phi->d->incoming[i]->asTemp())
-                if (t->index == tt->index)
-                    continue;
-            return 0;
-        }
-        return t;
     }
     return 0;
 }
@@ -2103,7 +2240,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { check(s->cond); }
     virtual void visitRet(Ret *s) { check(s->expr); }
-    virtual void visitTry(Try *) { Q_UNREACHABLE(); }
     virtual void visitPhi(Phi *s) {
         for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
             check(s->d->incoming[i]);
@@ -2166,6 +2302,11 @@ namespace {
 /// Important: this assumes that there are no critical edges in the control-flow graph!
 void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W)
 {
+    // don't purge blocks that are entry points for catch statements. They might not be directly
+    // connected, but are required anyway
+    if (bb->isExceptionHandler)
+        return;
+
     QVector<BasicBlock *> toPurge;
     toPurge.append(bb);
 
@@ -2235,10 +2376,10 @@ bool tryOptimizingComparison(Expr *&expr)
     if (!b)
         return false;
     Const *leftConst = b->left->asConst();
-    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
+    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType || leftConst->type == QObjectType)
         return false;
     Const *rightConst = b->right->asConst();
-    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
+    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType || rightConst->type == QObjectType)
         return false;
 
     QV4::Primitive l = convertToValue(leftConst);
@@ -2373,6 +2514,17 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     }
                     continue;
                 }
+                if (Member *potentialEnumMember = m->source->asMember()) {
+                    if (potentialEnumMember->memberIsEnum) {
+                        Const *c = function->New<Const>();
+                        c->init(SInt32Type, potentialEnumMember->enumValue);
+                        W += replaceUses(targetTemp, c);
+                        defUses.removeDef(*targetTemp);
+                        *ref[s] = 0;
+                        defUses.removeUse(s, *potentialEnumMember->base->asTemp());
+                        continue;
+                    }
+                }
 
                 // copy propagation:
                 if (Temp *sourceTemp = unescapableTemp(m->source, variablesCanEscape)) {
@@ -2449,10 +2601,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     // TODO: If the result of the move is only used in one single cjump, then
                     //       inline the binop into the cjump.
                     Const *leftConst = binop->left->asConst();
-                    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
+                    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType || leftConst->type == QObjectType)
                         continue;
                     Const *rightConst = binop->right->asConst();
-                    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
+                    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType || rightConst->type == QObjectType)
                         continue;
 
                     QV4::Primitive lc = convertToValue(leftConst);
@@ -2603,8 +2755,7 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) {}
-    virtual void visitPhi(Phi *s) {
+    virtual void visitPhi(Phi *) {
         // Handled separately
     }
 };
@@ -2837,7 +2988,7 @@ bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval &r1, const LifeTim
     return r1.temp() < r2.temp();
 }
 
-void Optimizer::run()
+void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 {
 #if defined(SHOW_SSA)
     qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
@@ -2849,7 +3000,7 @@ void Optimizer::run()
         function->basicBlocks[i]->index = i;
 //    showMeTheCode(function);
 
-    cleanupBasicBlocks(function);
+    cleanupBasicBlocks(function, true);
 
     function->removeSharedExpressions();
 
@@ -2858,7 +3009,7 @@ void Optimizer::run()
     static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
-    if (!function->hasTry && !function->hasWith && doSSA) {
+    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
 //        qout << "SSA for " << *function->name << endl;
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);
@@ -2879,7 +3030,7 @@ void Optimizer::run()
 //        showMeTheCode(function);
 
 //        qout << "Running type inference..." << endl;
-        TypeInference(defUses).run(function);
+        TypeInference(qmlEngine, defUses).run(function);
 //        showMeTheCode(function);
 
 //        qout << "Doing type propagation..." << endl;
@@ -2894,6 +3045,13 @@ void Optimizer::run()
 
 //        qout << "Doing block merging..." << endl;
 //        mergeBasicBlocks(function);
+//        showMeTheCode(function);
+
+        // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
+        // condition is calculated to be always false) are not yet removed. This will choke the
+        // block scheduling, so remove those now.
+//        qout << "Cleaning up unreachable basic blocks..." << endl;
+        cleanupBasicBlocks(function, false);
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;

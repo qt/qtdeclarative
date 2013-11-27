@@ -46,6 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 class QTextStream;
+class QQmlEnginePrivate;
 
 namespace QQmlJS {
 namespace V4IR {
@@ -98,9 +99,7 @@ public:
     bool covers(int position) const
     {
         foreach (const Range &r, _ranges) {
-            if (position < r.start)
-                return false;
-            if (position <= r.end)
+            if (r.covers(position))
                 return true;
         }
         return false;
@@ -131,7 +130,7 @@ public:
         , inSSA(false)
     {}
 
-    void run();
+    void run(QQmlEnginePrivate *qmlEngine);
     void convertOutOfSSA();
 
     bool isInSSA() const

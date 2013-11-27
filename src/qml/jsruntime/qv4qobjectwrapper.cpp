@@ -257,6 +257,8 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
 {
+    Q_UNUSED(revisionMode);
+
     QQmlData *ddata = QQmlData::get(m_object, false);
     if (!ddata)
         return 0;
@@ -277,7 +279,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         return QV4::Encode::undefined();
     }
 
-    QV4:Scope scope(ctx);
+    QV4::Scope scope(ctx);
     QV4::ScopedString name(scope, n);
 
     if (name->equals(m_destroy) || name->equals(scope.engine->id_toString)) {
@@ -329,16 +331,23 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     if (hasProperty)
         *hasProperty = true;
 
-    if (result->isFunction() && !result->isVarProperty()) {
-        if (result->isVMEFunction()) {
+    return getProperty(ctx, result);
+}
+
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired)
+{
+    QV4::Scope scope(ctx);
+
+    if (property->isFunction() && !property->isVarProperty()) {
+        if (property->isVMEFunction()) {
             QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
             Q_ASSERT(vmemo);
-            return vmemo->vmeMethod(result->coreIndex);
-        } else if (result->isV4Function()) {
+            return vmemo->vmeMethod(property->coreIndex);
+        } else if (property->isV4Function()) {
             QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->engine->qmlContextObject());
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex, qmlcontextobject);
-        } else if (result->isSignalHandler()) {
-            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex));
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, property->coreIndex, qmlcontextobject);
+        } else if (property->isSignalHandler()) {
+            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, property->coreIndex));
 
             QV4::ScopedString connect(scope, ctx->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->engine->newIdentifier(QStringLiteral("disconnect")));
@@ -347,42 +356,44 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
 
             return handler.asReturnedValue();
         } else {
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex);
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, property->coreIndex);
         }
     }
 
     QQmlEnginePrivate *ep = ctx->engine->v8Engine->engine() ? QQmlEnginePrivate::get(ctx->engine->v8Engine->engine()) : 0;
 
-    if (result->hasAccessors()) {
+    if (property->hasAccessors()) {
         QQmlNotifier *n = 0;
         QQmlNotifier **nptr = 0;
 
-        if (ep && ep->propertyCapture && result->accessors->notifier)
+        if (ep && ep->propertyCapture && property->accessors->notifier)
             nptr = &n;
 
-        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *result, nptr));
+        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *property, nptr));
 
-        if (result->accessors->notifier) {
-            if (n)
-                ep->captureProperty(n);
-        } else {
-            ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+        if (captureRequired) {
+            if (property->accessors->notifier) {
+                if (n)
+                    ep->captureProperty(n);
+            } else {
+                ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
+            }
         }
 
         return rv.asReturnedValue();
     }
 
-    if (ep && !result->isConstant())
-        ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+    if (captureRequired && ep && !property->isConstant())
+        ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
 
-    if (result->isVarProperty()) {
+    if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
         Q_ASSERT(vmemo);
-        return vmemo->vmeProperty(result->coreIndex);
-    } else if (result->isDirect())  {
-        return LoadProperty<ReadAccessor::Direct>(ctx->engine->v8Engine, m_object, *result, 0);
+        return vmemo->vmeProperty(property->coreIndex);
+    } else if (property->isDirect())  {
+        return LoadProperty<ReadAccessor::Direct>(ctx->engine->v8Engine, m_object, *property, 0);
     } else {
-        return LoadProperty<ReadAccessor::Indirect>(ctx->engine->v8Engine, m_object, *result, 0);
+        return LoadProperty<ReadAccessor::Indirect>(ctx->engine->v8Engine, m_object, *property, 0);
     }
 }
 
@@ -416,8 +427,6 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     if (QQmlData::wasDeleted(object))
         return false;
 
-    QV4::Scope scope(ctx);
-
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
@@ -433,24 +442,33 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
             return false;
     }
 
-    if (!result->isWritable() && !result->isQList()) {
+    setProperty(object, ctx, result, value);
+    return true;
+}
+
+void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value)
+{
+    if (!property->isWritable() && !property->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
-                        name->toQString() + QLatin1Char('\"');
+                        property->name(object) + QLatin1Char('\"');
         ctx->throwTypeError(error);
+        return;
     }
 
     QQmlBinding *newBinding = 0;
+    QV4::Scope scope(ctx);
     QV4::ScopedFunctionObject f(scope, value);
     if (f) {
         if (!f->bindingKeyFlag) {
-            if (!result->isVarProperty() && result->propType != qMetaTypeId<QJSValue>()) {
+            if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
-                if (!QMetaType::typeName(result->propType))
+                if (!QMetaType::typeName(property->propType))
                     error += QLatin1String("[unknown property type]");
                 else
-                    error += QLatin1String(QMetaType::typeName(result->propType));
+                    error += QLatin1String(QMetaType::typeName(property->propType));
                 ctx->throwError(error);
+                return;
             }
         } else {
             // binding assignment.
@@ -460,23 +478,21 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
 
             newBinding = new QQmlBinding(value, object, callingQmlContext, frame.source,
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
-            newBinding->setTarget(object, *result, callingQmlContext);
-            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                         QQmlBinding::RequiresThisObject);
+            newBinding->setTarget(object, *property, callingQmlContext);
         }
     }
 
     QQmlAbstractBinding *oldBinding =
-        QQmlPropertyPrivate::setBinding(object, result->coreIndex, -1, newBinding);
+        QQmlPropertyPrivate::setBinding(object, property->coreIndex, -1, newBinding);
     if (oldBinding)
         oldBinding->destroy();
 
-    if (!newBinding && result->isVarProperty()) {
+    if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, value);
-        return true;
+        vmemo->setVMEProperty(property->coreIndex, value);
+        return;
     }
 
 #define PROPERTY_STORE(cpptype, value) \
@@ -484,56 +500,57 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     int status = -1; \
     int flags = 0; \
     void *argv[] = { &o, 0, &status, &flags }; \
-    QMetaObject::metacall(object, QMetaObject::WriteProperty, result->coreIndex, argv);
+    QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex, argv);
 
-    if (value->isNull() && result->isQObject()) {
+    if (value->isNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, 0);
-    } else if (value->isUndefined() && result->isResettable()) {
+    } else if (value->isUndefined() && property->isResettable()) {
         void *a[] = { 0 };
-        QMetaObject::metacall(object, QMetaObject::ResetProperty, result->coreIndex, a);
-    } else if (value->isUndefined() && result->propType == qMetaTypeId<QVariant>()) {
+        QMetaObject::metacall(object, QMetaObject::ResetProperty, property->coreIndex, a);
+    } else if (value->isUndefined() && property->propType == qMetaTypeId<QVariant>()) {
         PROPERTY_STORE(QVariant, QVariant());
-    } else if (value->isUndefined() && result->propType == QMetaType::QJsonValue) {
+    } else if (value->isUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
-    } else if (!newBinding && result->propType == qMetaTypeId<QJSValue>()) {
+    } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, new QJSValuePrivate(ctx->engine, value));
     } else if (value->isUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
-        if (!QMetaType::typeName(result->propType))
+        if (!QMetaType::typeName(property->propType))
             error += QLatin1String("[unknown property type]");
         else
-            error += QLatin1String(QMetaType::typeName(result->propType));
+            error += QLatin1String(QMetaType::typeName(property->propType));
         ctx->throwError(error);
+        return;
     } else if (value->asFunctionObject()) {
         // this is handled by the binding creation above
-    } else if (result->propType == QMetaType::Int && value->isNumber()) {
-        PROPERTY_STORE(int, qRound(value->asDouble()));
-    } else if (result->propType == QMetaType::QReal && value->isNumber()) {
+    } else if (property->propType == QMetaType::Int && value->isNumber()) {
+        PROPERTY_STORE(int, value->asDouble());
+    } else if (property->propType == QMetaType::QReal && value->isNumber()) {
         PROPERTY_STORE(qreal, qreal(value->asDouble()));
-    } else if (result->propType == QMetaType::Float && value->isNumber()) {
+    } else if (property->propType == QMetaType::Float && value->isNumber()) {
         PROPERTY_STORE(float, float(value->asDouble()));
-    } else if (result->propType == QMetaType::Double && value->isNumber()) {
+    } else if (property->propType == QMetaType::Double && value->isNumber()) {
         PROPERTY_STORE(double, double(value->asDouble()));
-    } else if (result->propType == QMetaType::QString && value->isString()) {
+    } else if (property->propType == QMetaType::QString && value->isString()) {
         PROPERTY_STORE(QString, value->toQStringNoThrow());
-    } else if (result->isVarProperty()) {
+    } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, value);
+        vmemo->setVMEProperty(property->coreIndex, value);
     } else {
         QVariant v;
-        if (result->isQList())
+        if (property->isQList())
             v = ctx->engine->v8Engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
         else
-            v = ctx->engine->v8Engine->toVariant(value, result->propType);
+            v = ctx->engine->v8Engine->toVariant(value, property->propType);
 
         QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
-        if (!QQmlPropertyPrivate::write(object, *result, v, callingQmlContext)) {
+        if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
             const char *valueType = 0;
             if (v.userType() == QVariant::Invalid) valueType = "null";
             else valueType = QMetaType::typeName(v.userType());
 
-            const char *targetTypeName = QMetaType::typeName(result->propType);
+            const char *targetTypeName = QMetaType::typeName(property->propType);
             if (!targetTypeName)
                 targetTypeName = "an unregistered type";
 
@@ -542,10 +559,9 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
                             QLatin1String(" to ") +
                             QLatin1String(targetTypeName);
             ctx->throwError(error);
+            return;
         }
     }
-
-    return true;
 }
 
 ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
@@ -600,6 +616,45 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     }
 }
 
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyIndex, bool captureRequired)
+{
+    if (QQmlData::wasDeleted(m_object))
+        return QV4::Encode::null();
+    QQmlData *ddata = QQmlData::get(m_object, /*create*/false);
+    if (!ddata)
+        return QV4::Encode::undefined();
+
+    QQmlPropertyCache *cache = ddata->propertyCache;
+    Q_ASSERT(cache);
+    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
+    return getProperty(ctx, property, captureRequired);
+}
+
+void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value)
+{
+    if (QQmlData::wasDeleted(m_object))
+        return;
+    QQmlData *ddata = QQmlData::get(m_object, /*create*/false);
+    if (!ddata)
+        return;
+
+    QQmlPropertyCache *cache = ddata->propertyCache;
+    Q_ASSERT(cache);
+    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
+    return setProperty(m_object, ctx, property, value);
+}
+
+bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    QV4::QObjectWrapper *qobjectWrapper = a->as<QV4::QObjectWrapper>();
+    if (QV4::QmlTypeWrapper *qmlTypeWrapper = b->asObject()->as<QV4::QmlTypeWrapper>())
+        return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
+
+    return false;
+}
+
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
 {
     QQmlEngine *qmlEngine = engine->v8Engine->engine();
@@ -624,7 +679,7 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
 
-    if (QQmlData::wasDeleted(that->m_object))
+    if (v4->hasException || QQmlData::wasDeleted(that->m_object))
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
@@ -660,7 +715,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
 
     const QMetaObject *mo = that->m_object->metaObject();
     const int propertyCount = mo->propertyCount();
-    if (it->arrayIndex < propertyCount) {
+    if (it->arrayIndex < static_cast<uint>(propertyCount)) {
         name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
         ++it->arrayIndex;
         if (attributes)
@@ -669,7 +724,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
-    if (it->arrayIndex < propertyCount + methodCount) {
+    if (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
         name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
         ++it->arrayIndex;
         if (attributes)
@@ -724,10 +779,9 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 }
             }
 
-            try {
-                f->call(callData);
-            } catch (...) {
-                QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+            f->call(callData);
+            if (scope.hasException()) {
+                QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
@@ -790,7 +844,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
@@ -836,7 +890,7 @@ ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
@@ -887,36 +941,36 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-static void markChildQObjectsRecursively(QObject *parent)
+static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *e)
 {
     const QObjectList &children = parent->children();
     for (int i = 0; i < children.count(); ++i) {
         QObject *child = children.at(i);
         QQmlData *ddata = QQmlData::get(child, /*create*/false);
         if (ddata)
-            ddata->jsWrapper.markOnce();
-        markChildQObjectsRecursively(child);
+            ddata->jsWrapper.markOnce(e);
+        markChildQObjectsRecursively(child, e);
     }
 }
 
-void QObjectWrapper::markObjects(Managed *that)
+void QObjectWrapper::markObjects(Managed *that, QV4::ExecutionEngine *e)
 {
     QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
 
     if (QObject *o = This->m_object.data()) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
         if (vme)
-            vme->mark();
+            vme->mark(e);
 
         // Children usually don't need to be marked, the gc keeps them alive.
         // But in the rare case of a "floating" QObject without a parent that
         // _gets_ marked (we've been called here!) then we also need to
         // propagate the marking down to the children recursively.
         if (!o->parent())
-            markChildQObjectsRecursively(o);
+            markChildQObjectsRecursively(o, e);
     }
 
-    QV4::Object::markObjects(that);
+    QV4::Object::markObjects(that, e);
 }
 
 namespace {
@@ -1183,7 +1237,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
     } else if (QV4::Object *obj = actual->asObject()) {
         QV8Engine *engine = obj->engine()->v8Engine;
 
-        if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
+        if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
             if (engine->toVariant(actual, -1).userType() == conversionType)
@@ -1281,7 +1335,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
         QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
-        QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->current->throwError(error);
     }
 
     if (data.hasArguments()) {
@@ -1295,12 +1349,12 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
             QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
-            QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         if (args[0] > callArgs->argc) {
             QString error = QLatin1String("Insufficient arguments");
-            QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
@@ -1399,7 +1453,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
-        QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->current->throwError(error);
     }
 }
 
@@ -1494,6 +1548,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
 
     QV4::Scope scope(QV8Engine::getV4(engine));
 
+    bool queryEngine = false;
     if (callType == qMetaTypeId<QJSValue>()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(v4, value));
@@ -1523,6 +1578,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         qobjectPtr = 0;
         if (QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
+        else if (QV4::QmlTypeWrapper *qmlTypeWrapper = value->as<QV4::QmlTypeWrapper>())
+            queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
@@ -1565,6 +1622,10 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
     } else {
+        queryEngine = true;
+    }
+
+    if (queryEngine) {
         qvariantPtr = new (&allocData) QVariant();
         type = -1;
 
@@ -1697,7 +1758,7 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
     if (!m_object)
         return Encode::undefined();
     if (QQmlData::keepAliveDuringGarbageCollection(m_object))
-        ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+        return ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
     if (argc > 0)

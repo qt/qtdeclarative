@@ -42,6 +42,7 @@
 #include "qv4jsir_p.h"
 #include <private/qqmljsast_p.h>
 
+#include <private/qqmlpropertycache_p.h>
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qset.h>
@@ -71,6 +72,7 @@ QString typeName(Type t)
     case NumberType: return QStringLiteral("number");
     case StringType: return QStringLiteral("string");
     case VarType: return QStringLiteral("var");
+    case QObjectType: return QStringLiteral("qobject");
     default: return QStringLiteral("multiple");
     }
 }
@@ -217,11 +219,6 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         s->expr = cleanup(s->expr);
     }
 
-    virtual void visitTry(Try *)
-    {
-        // nothing to do for Try statements
-    }
-
     virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); }
 
     // expressions
@@ -278,8 +275,16 @@ static QString dumpStart(const Expr *e) {
     if (e->type == UnknownType)
 //        return QStringLiteral("**UNKNOWN**");
         return QString();
-    else
-        return typeName(e->type) + QStringLiteral("{");
+
+    QString result = typeName(e->type);
+    const Temp *temp = const_cast<Expr*>(e)->asTemp();
+    if (e->type == QObjectType && temp && temp->memberResolver.data) {
+        result += QLatin1Char('<');
+        result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
+        result += QLatin1Char('>');
+    }
+    result += QLatin1Char('{');
+    return result;
 }
 
 static const char *dumpEnd(const Expr *e) {
@@ -367,6 +372,8 @@ void Name::initGlobal(const QString *id, quint32 line, quint32 column)
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = true;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }
@@ -376,6 +383,8 @@ void Name::init(const QString *id, quint32 line, quint32 column)
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = false;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }
@@ -385,6 +394,8 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
     this->id = 0;
     this->builtin = builtin;
     this->global = false;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }
@@ -400,8 +411,12 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_delete";
     case Name::builtin_throw:
         return "builtin_throw";
-    case Name::builtin_finish_try:
-        return "builtin_finish_try";
+    case Name::builtin_rethrow:
+        return "builtin_rethrow";
+    case Name::builtin_unwind_exception:
+        return "builtin_unwind_exception";
+    case Name::builtin_push_catch_scope:
+        return "builtin_push_catch_scope";
     case V4IR::Name::builtin_foreach_iterator_object:
         return "builtin_foreach_iterator_object";
     case V4IR::Name::builtin_foreach_next_property_name:
@@ -422,6 +437,16 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_define_object_literal";
     case V4IR::Name::builtin_setup_argument_object:
         return "builtin_setup_argument_object";
+    case V4IR::Name::builtin_convert_this_to_object:
+        return "builtin_convert_this_to_object";
+    case V4IR::Name::builtin_qml_id_array:
+        return "builtin_qml_id_array";
+    case V4IR::Name::builtin_qml_imported_scripts_object:
+        return "builtin_qml_imported_scripts_object";
+    case V4IR::Name::builtin_qml_scope_object:
+        return "builtin_qml_scope_object";
+    case V4IR::Name::builtin_qml_context_object:
+        return "builtin_qml_context_object";
     }
     return "builtin_(###FIXME)";
 };
@@ -466,7 +491,7 @@ void Closure::dump(QTextStream &out) const
 {
     QString name = functionName ? *functionName : QString();
     if (name.isEmpty())
-        name.sprintf("%p", value);
+        name.sprintf("%x", value);
     out << "closure(" << name << ')';
 }
 
@@ -531,6 +556,8 @@ void Member::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '.' << *name;
+    if (property)
+        out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
 }
 
 void Exp::dump(QTextStream &out, Mode)
@@ -585,15 +612,10 @@ void Ret::dump(QTextStream &out, Mode)
     out << ';';
 }
 
-void Try::dump(QTextStream &out, Stmt::Mode mode)
-{
-    out << "try L" << tryBlock->index << "; catch exception in ";
-    exceptionVar->dump(out);
-    out << " with the name " << exceptionVarName << " and go to L" << catchBlock->index << ';';
-}
-
 void Phi::dump(QTextStream &out, Stmt::Mode mode)
 {
+    Q_UNUSED(mode);
+
     targetTemp->dump(out);
     out << " = phi(";
     for (int i = 0, ei = d->incoming.size(); i < ei; ++i) {
@@ -653,9 +675,9 @@ const QString *Function::newString(const QString &text)
     return &*strings.insert(text);
 }
 
-BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlockInsertMode mode)
+BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode)
 {
-    BasicBlock *block = new BasicBlock(this, containingLoop);
+    BasicBlock *block = new BasicBlock(this, containingLoop, catchBlock);
     return mode == InsertBlock ? insertBasicBlock(block) : block;
 }
 
@@ -818,10 +840,10 @@ Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property)
 {
     Member*e = function->New<Member>();
-    e->init(base, name);
+    e->init(base, name, property);
     return e;
 }
 
@@ -905,33 +927,12 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
-{
-    if (isTerminated())
-        return 0;
-
-    Try *t = function->New<Try>();
-    t->init(tryBlock, catchBlock, exceptionVarName, exceptionVar);
-    appendStatement(t);
-
-    assert(! out.contains(tryBlock));
-    out.append(tryBlock);
-
-    assert(! out.contains(catchBlock));
-    out.append(catchBlock);
-
-    assert(! tryBlock->in.contains(this));
-    tryBlock->in.append(this);
-
-    assert(! catchBlock->in.contains(this));
-    catchBlock->in.append(this);
-
-    return t;
-}
-
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 {
-    out << 'L' << index << ':' << endl;
+    out << 'L' << index << ':';
+    if (catchBlock)
+        out << " (catchBlock L" << catchBlock->index << ")";
+    out << endl;
     foreach (Stmt *s, statements) {
         out << '\t';
         s->dump(out, mode);
@@ -1032,7 +1033,7 @@ void CloneExpr::visitSubscript(Subscript *e)
 
 void CloneExpr::visitMember(Member *e)
 {
-    cloned = block->MEMBER(clone(e->base), e->name);
+    cloned = block->MEMBER(clone(e->base), e->name, e->property);
 }
 
 } // end of namespace IR

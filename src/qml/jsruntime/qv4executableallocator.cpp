@@ -121,7 +121,6 @@ bool ExecutableAllocator::Allocation::mergePrevious(ExecutableAllocator *allocat
 
 ExecutableAllocator::ChunkOfPages::~ChunkOfPages()
 {
-    delete unwindInfo;
     Allocation *alloc = firstAllocation;
     while (alloc) {
         Allocation *next = alloc->next;

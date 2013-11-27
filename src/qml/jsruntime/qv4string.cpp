@@ -105,7 +105,7 @@ const ManagedVTable String::static_vtbl =
 {
     call,
     construct,
-    0 /*markObjects*/,
+    markObjects,
     destroy,
     0 /*collectDeletables*/,
     hasInstance,
@@ -129,6 +129,15 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
+void String::markObjects(Managed *that, ExecutionEngine *e)
+{
+    String *s = static_cast<String *>(that);
+    if (s->largestSubLength) {
+        s->left->mark(e);
+        s->right->mark(e);
+    }
+}
+
 ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     ExecutionEngine *v4 = m->engine();
@@ -138,7 +147,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     if (name->equals(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Primitive::fromInt32(that->_text.length()).asReturnedValue();
+        return Primitive::fromInt32(that->_text->size).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
@@ -158,7 +167,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     Scope scope(engine);
     ScopedString that(scope, static_cast<String *>(m));
 
-    if (index < that->_text.length()) {
+    if (index < static_cast<uint>(that->_text->size)) {
         if (hasProperty)
             *hasProperty = true;
         return Encode(engine->newString(that->toQString().mid(index, 1)));
@@ -178,6 +187,8 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 void String::put(Managed *m, const StringRef name, const ValueRef value)
 {
     Scope scope(m->engine());
+    if (scope.hasException())
+        return;
     ScopedString that(scope, static_cast<String *>(m));
     Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->put(name, value);
@@ -186,6 +197,9 @@ void String::put(Managed *m, const StringRef name, const ValueRef value)
 void String::putIndexed(Managed *m, uint index, const ValueRef value)
 {
     Scope scope(m->engine());
+    if (scope.hasException())
+        return;
+
     ScopedString that(scope, static_cast<String *>(m));
     Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->putIndexed(index, value);
@@ -202,7 +216,7 @@ PropertyAttributes String::query(const Managed *m, StringRef name)
 PropertyAttributes String::queryIndexed(const Managed *m, uint index)
 {
     const String *that = static_cast<const String *>(m);
-    return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
+    return (index < static_cast<uint>(that->_text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
 bool String::deleteProperty(Managed *, const StringRef)
@@ -210,7 +224,7 @@ bool String::deleteProperty(Managed *, const StringRef)
     return false;
 }
 
-bool String::deleteIndexedProperty(Managed *m, uint index)
+bool String::deleteIndexedProperty(Managed *, uint)
 {
     return false;
 }
@@ -220,7 +234,10 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (t == o)
         return true;
 
-    Q_ASSERT(t->type == Type_String && o->type == Type_String);
+    if (o->type != Type_String)
+        return false;
+
+    Q_ASSERT(t->type == Type_String);
     String *that = static_cast<String *>(t);
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())
@@ -235,11 +252,35 @@ bool String::isEqualTo(Managed *t, Managed *o)
 
 
 String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine ? engine->emptyClass : 0), _text(text), identifier(0), stringHash(UINT_MAX)
+    : Managed(engine ? engine->emptyClass : 0), _text(const_cast<QString &>(text).data_ptr())
+    , identifier(0), stringHash(UINT_MAX)
+    , largestSubLength(0)
+{
+    _text->ref.ref();
+    len = _text->size;
+    vtbl = &static_vtbl;
+    type = Type_String;
+    subtype = StringType_Unknown;
+}
+
+String::String(ExecutionEngine *engine, String *l, String *r)
+    : Managed(engine ? engine->emptyClass : 0)
+    , left(l), right(r)
+    , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
+    , len(l->len + r->len)
 {
     vtbl = &static_vtbl;
     type = Type_String;
     subtype = StringType_Unknown;
+
+    if (!l->largestSubLength && l->len > largestSubLength)
+        largestSubLength = l->len;
+    if (!r->largestSubLength && r->len > largestSubLength)
+        largestSubLength = r->len;
+
+    // make sure we don't get excessive depth in our strings
+    if (len > 256 && len >= 2*largestSubLength)
+        simplifyString();
 }
 
 uint String::toUInt(bool *ok) const
@@ -276,13 +317,46 @@ bool String::equals(const StringRef other) const
 
 void String::makeIdentifierImpl() const
 {
+    if (largestSubLength)
+        simplifyString();
+    Q_ASSERT(!largestSubLength);
     engine()->identifierTable->identifier(this);
 }
 
+void String::simplifyString() const
+{
+    Q_ASSERT(largestSubLength);
+
+    int l = length();
+    QString result(l, Qt::Uninitialized);
+    QChar *ch = const_cast<QChar *>(result.constData());
+    recursiveAppend(ch);
+    _text = result.data_ptr();
+    _text->ref.ref();
+    identifier = 0;
+    largestSubLength = 0;
+}
+
+QChar *String::recursiveAppend(QChar *ch) const
+{
+    if (largestSubLength) {
+        ch = left->recursiveAppend(ch);
+        ch = right->recursiveAppend(ch);
+    } else {
+        memcpy(ch, _text->data(), _text->size*sizeof(QChar));
+        ch += _text->size;
+    }
+    return ch;
+}
+
+
 void String::createHashValue() const
 {
-    const QChar *ch = _text.constData();
-    const QChar *end = ch + _text.length();
+    if (largestSubLength)
+        simplifyString();
+    Q_ASSERT(!largestSubLength);
+    const QChar *ch = reinterpret_cast<const QChar *>(_text->data());
+    const QChar *end = ch + _text->size;
 
     // array indices get their number as hash value
     bool ok;
@@ -333,7 +407,7 @@ uint String::createHashValue(const char *ch, int length)
 
     uint h = 0xffffffff;
     while (ch < end) {
-        if (*ch >= 0x80)
+        if ((uchar)(*ch) >= 0x80)
             return UINT_MAX;
         h = 31 * h + *ch;
         ++ch;

@@ -63,7 +63,7 @@ struct StringObject: Object {
 protected:
     StringObject(InternalClass *ic);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
 struct StringCtor: FunctionObject
@@ -80,26 +80,26 @@ struct StringPrototype: StringObject
     StringPrototype(InternalClass *ic): StringObject(ic) {}
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static ReturnedValue method_toString(SimpleCallContext *context);
-    static ReturnedValue method_charAt(SimpleCallContext *context);
-    static ReturnedValue method_charCodeAt(SimpleCallContext *context);
-    static ReturnedValue method_concat(SimpleCallContext *context);
-    static ReturnedValue method_indexOf(SimpleCallContext *context);
-    static ReturnedValue method_lastIndexOf(SimpleCallContext *context);
-    static ReturnedValue method_localeCompare(SimpleCallContext *context);
-    static ReturnedValue method_match(SimpleCallContext *context);
-    static ReturnedValue method_replace(SimpleCallContext *ctx);
-    static ReturnedValue method_search(SimpleCallContext *ctx);
-    static ReturnedValue method_slice(SimpleCallContext *ctx);
-    static ReturnedValue method_split(SimpleCallContext *ctx);
-    static ReturnedValue method_substr(SimpleCallContext *context);
-    static ReturnedValue method_substring(SimpleCallContext *context);
-    static ReturnedValue method_toLowerCase(SimpleCallContext *ctx);
-    static ReturnedValue method_toLocaleLowerCase(SimpleCallContext *ctx);
-    static ReturnedValue method_toUpperCase(SimpleCallContext *ctx);
-    static ReturnedValue method_toLocaleUpperCase(SimpleCallContext *ctx);
-    static ReturnedValue method_fromCharCode(SimpleCallContext *context);
-    static ReturnedValue method_trim(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(CallContext *context);
+    static ReturnedValue method_charAt(CallContext *context);
+    static ReturnedValue method_charCodeAt(CallContext *context);
+    static ReturnedValue method_concat(CallContext *context);
+    static ReturnedValue method_indexOf(CallContext *context);
+    static ReturnedValue method_lastIndexOf(CallContext *context);
+    static ReturnedValue method_localeCompare(CallContext *context);
+    static ReturnedValue method_match(CallContext *context);
+    static ReturnedValue method_replace(CallContext *ctx);
+    static ReturnedValue method_search(CallContext *ctx);
+    static ReturnedValue method_slice(CallContext *ctx);
+    static ReturnedValue method_split(CallContext *ctx);
+    static ReturnedValue method_substr(CallContext *context);
+    static ReturnedValue method_substring(CallContext *context);
+    static ReturnedValue method_toLowerCase(CallContext *ctx);
+    static ReturnedValue method_toLocaleLowerCase(CallContext *ctx);
+    static ReturnedValue method_toUpperCase(CallContext *ctx);
+    static ReturnedValue method_toLocaleUpperCase(CallContext *ctx);
+    static ReturnedValue method_fromCharCode(CallContext *context);
+    static ReturnedValue method_trim(CallContext *ctx);
 };
 
 }

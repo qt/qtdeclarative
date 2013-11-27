@@ -61,20 +61,18 @@ and visual effects can be supplemented through specialised components for
 particle and shader effects.
 
 \list
-\li \l{qtquick-visualcanvas-topic.html}{The Visual Canvas}
-\li \l{qtquick-input-topic.html}{User Input}
-\li \l{qtquick-positioning-topic.html}{Positioning}
-\li \l{qtquick-statesanimations-topic.html}{States, Transitions And Animations}
-\li \l{qtquick-modelviewsdata-topic.html}{Data - Models, Views and Data Storage}
-\li \l{qtquick-effects-topic.html}{Particles And Graphical Effects}
-\li \l{qtquick-convenience-topic.html}{Convenience Types}
+\li \l{Important Concepts In Qt Quick - The Visual Canvas}{The Visual Canvas}
+\li \l{Important Concepts In Qt Quick - User Input}{User Input}
+\li \l{Important Concepts In Qt Quick - Positioning}{Positioning}
+\li \l{Important Concepts in Qt Quick - States, Transitions and Animations}{States, Transitions And Animations}
+\li \l{Important Concepts In Qt Quick - Data - Models, Views and Data Storage}{Data - Models, Views and Data Storage}
+\li \l{Important Concepts In Qt Quick - Graphical Effects}{Particles And Graphical Effects}
+\li \l{Important Concepts In Qt Quick - Convenience Types}{Convenience Types}
 \endlist
 
 When using the \c QtQuick module, you will need to know how to write QML
-applications using the QML language. In particular, you should have a grasp
-of the \l{qtquick-quickstart-basics.html}{QML Basics} and
-\l{qtquick-quickstart-essentials.html}{QML Essentials} from the
-\l{QML Applications}.
+applications using the QML language. In particular, QML Basics and QML
+Essentials from the \l{QML Applications} page.
 
 To find out more about using the QML language, see the \l{Qt QML} module documentation.
 
@@ -82,28 +80,28 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
 \section1 Qt Quick Module Documentation
 
 \list
-    \li \l{qtquick-qmltypereference.html}{Qt Quick QML Types}
+    \li \l{Qt Quick QML Types}
         \list
-        \li \l{qtquick-qmltypereference.html#importing-qtquick}{Importing QtQuick}
-        \li \l{qtquick-qmltypereference.html#basic-types}{Basic Types}
-        \li \l{qtquick-qmltypereference.html#object-types}{Object Types}
+        \li \l{importing-qtquick}{Importing QtQuick}
+        \li \l{basic-types}{Basic Types}
+        \li \l{object-types}{Object Types}
             \list
-            \li \l{qtquick-qmltypereference.html#visual-types}{Visual Types}
-            \li \l{qtquick-qmltypereference.html#user-input}{User Input}
-            \li \l{qtquick-qmltypereference.html#positioning}{Positioning}
-            \li \l{qtquick-qmltypereference.html#states-transitions-and-animations}{States, Transitions And Animations}
-            \li \l{qtquick-qmltypereference.html#model-view-types-and-data-storage-and-access}{Model/View Types And Data Storage And Access}
-            \li \l{qtquick-qmltypereference.html#graphical-effects}{Graphical Effects}
-            \li \l{qtquick-qmltypereference.html#convenience-types}{Convenience Types}
-            \li \l{qtquick-qmltypereference.html#canvas-similar-to-html5-canvas}{Canvas (similar to HTML5 Canvas)}
+            \li \l{visual-types}{Visual Types}
+            \li \l{user-input}{User Input}
+            \li \l{positioning}{Positioning}
+            \li \l{states-transitions-and-animations}{States, Transitions And Animations}
+            \li \l{model-view-types-and-data-storage-and-access}{Model/View Types And Data Storage And Access}
+            \li \l{graphical-effects}{Graphical Effects}
+            \li \l{convenience-types}{Convenience Types}
+            \li \l{canvas-similar-to-html5-canvas}{Canvas (similar to HTML5 Canvas)}
             \endlist
         \endlist
 
-    \li \l{qtquick-cppextensionpoints.html}{C++ Extension Points}
+    \li \l{C++ Extension Points Provided By Qt Quick}{C++ Extension Points}
         \list
-        \li \l{qtquick-cppextensionpoints.html#user-defined-qquickitem-derived-types}{Creating User-Defined QQuickItem-Derived Types}
-        \li \l{qtquick-cppextensionpoints.html#scene-graph-related-classes}{Scene Graph-Related Classes}
-        \li \l{qtquick-cppextensionpoints.html#pixmap-and-threaded-image-support}{Pixmap and Threaded Image Support}
+        \li \l{user-defined-qquickitem-derived-types}{Creating User-Defined QQuickItem-Derived Types}
+        \li \l{scene-graph-related-classes}{Scene Graph-Related Classes}
+        \li \l{pixmap-and-threaded-image-support}{Pixmap and Threaded Image Support}
         \endlist
 
 \endlist
@@ -117,20 +115,19 @@ Additional Qt Quick information:
 \li \l{Qt Quick QML Types} - a list of QML types provided by the
     \c{QtQuick} import
     \list
-    \li \l{QtQuick.XmlListModel 2}{XML List Model} - contains types
+    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
     for creating models from XML data
-    \li \l{QtQuick.LocalStorage 2}{Local Storage} - a submodule
+    \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
-    \li \l{QtQuick.Particles 2}{Particles} - provides a particle
+    \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
     system for Qt Quick
-    \li \l{QtQuick.Window 2}{Window} - contains types for creating
+    \li \l{Qt Quick Window QML Types}{Window} - contains types for creating
     top-level windows and accessing screen information
     \li \l{Qt Quick Dialogs}{Dialogs} - contains types for creating and
     interacting with system dialogs
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Code Samples} - list of all Qt Quick examples
-module
 \endlist
 
 Further information for writing QML applications:

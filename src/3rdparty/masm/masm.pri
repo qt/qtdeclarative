@@ -11,7 +11,8 @@ HEADERS += $$PWD/wtf/FilePrintStream.h
 
 HEADERS += $$PWD/wtf/RawPointer.h
 
-win32: SOURCES += $$PWD/wtf/OSAllocatorWin.cpp
+winrt: SOURCES += $$PWD/wtf/OSAllocatorWinRT.cpp
+else:win32: SOURCES += $$PWD/wtf/OSAllocatorWin.cpp
 else: SOURCES += $$PWD/wtf/OSAllocatorPosix.cpp
 HEADERS += $$PWD/wtf/OSAllocator.h
 

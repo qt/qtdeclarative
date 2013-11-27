@@ -156,7 +156,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     }
 
     QQuickMouseArea* ma = qobject_cast<QQuickMouseArea*>(item);
-    if (ma && ma != q && itemPrivate->acceptedMouseButtons() & ev->button()) {
+    if (ma && ma != q && ma->isEnabled() && itemPrivate->acceptedMouseButtons() & ev->button()) {
         switch (sig) {
         case Click:
             if (!ma->d_func()->isClickConnected())

@@ -47,10 +47,13 @@
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
+#include <QtGui/QSurface>
 
 #include <private/qsgtexture_p.h>
 
 #include <private/qqmlprofilerservice_p.h>
+
+QT_BEGIN_NAMESPACE
 
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
@@ -89,26 +92,36 @@ static int qsg_envInt(const char *name, int defaultValue)
 Manager::Manager()
     : m_atlas(0)
 {
-    QSize screenSize = QGuiApplication::primaryScreen()->geometry().size();
+    QOpenGLContext *gl = QOpenGLContext::currentContext();
+    Q_ASSERT(gl);
+    QSurface *surface = gl->surface();
+    QSize surfaceSize = surface->size();
     int max;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-    int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qsg_powerOfTwo(screenSize.width())));
-    int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qsg_powerOfTwo(screenSize.height())));
+
+    int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512, qsg_powerOfTwo(surfaceSize.width()))));
+    int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512, qsg_powerOfTwo(surfaceSize.height()))));
 
     m_atlas_size_limit = qsg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
     m_atlas_size = QSize(w, h);
+
+    if (qEnvironmentVariableIsSet("QSG_INFO"))
+        qDebug() << "QSG: texture atlas dimensions:" << w << "x" << h;
 }
 
 
 Manager::~Manager()
 {
-    invalidate();
+    Q_ASSERT(m_atlas == 0);
 }
 
 void Manager::invalidate()
 {
-    delete m_atlas;
-    m_atlas = 0;
+    if (m_atlas) {
+        m_atlas->invalidate();
+        m_atlas->deleteLater();
+        m_atlas = 0;
+    }
 }
 
 QSGTexture *Manager::create(const QImage &image)
@@ -118,10 +131,7 @@ QSGTexture *Manager::create(const QImage &image)
         if (!m_atlas)
             m_atlas = new Atlas(m_atlas_size);
         t = m_atlas->create(image);
-        if (t)
-            return t;
     }
-
     return t;
 }
 
@@ -139,6 +149,11 @@ Atlas::Atlas(const QSize &size)
             || strstr(ext, "GL_EXT_texture_format_BGRA8888")
             || strstr(ext, "GL_IMG_texture_format_BGRA8888")) {
         m_internalFormat = m_externalFormat = GL_BGRA;
+#ifdef Q_OS_IOS
+    } else if (strstr(ext, "GL_APPLE_texture_format_BGRA8888")) {
+        m_internalFormat = GL_RGBA;
+        m_externalFormat = GL_BGRA;
+#endif
     } else {
         m_internalFormat = m_externalFormat = GL_RGBA;
     }
@@ -153,13 +168,21 @@ Atlas::Atlas(const QSize &size)
 
 Atlas::~Atlas()
 {
-    if (m_texture_id)
-        glDeleteTextures(1, &m_texture_id);
+    Q_ASSERT(!m_texture_id);
 }
 
+void Atlas::invalidate()
+{
+    Q_ASSERT(QOpenGLContext::currentContext());
+    if (m_texture_id) {
+        glDeleteTextures(1, &m_texture_id);
+        m_texture_id = 0;
+    }
+}
 
 Texture *Atlas::create(const QImage &image)
 {
+    // No need to lock, as manager already locked it.
     QRect rect = m_allocator.allocate(QSize(image.width() + 2, image.height() + 2));
     if (rect.width() > 0 && rect.height() > 0) {
         Texture *t = new Texture(this, rect, image);
@@ -293,6 +316,9 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#if !defined(QT_OPENGL_ES_2)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+#endif
         glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);
 
 #if 0
@@ -383,7 +409,6 @@ void Atlas::remove(Texture *t)
 {
     QRect atlasRect = t->atlasSubRect();
     m_allocator.deallocate(atlasRect);
-
     m_pending_uploads.removeOne(t);
 }
 
@@ -428,3 +453,5 @@ QSGTexture *Texture::removedFromAtlas() const
 }
 
 }
+
+QT_END_NAMESPACE

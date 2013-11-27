@@ -50,8 +50,12 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenGLVertexArrayObject;
+
 namespace QSGBatchRenderer
 {
+
+#define QSG_RENDERER_COORD_LIMIT 1000000.0f
 
 struct Vec;
 struct Rect;
@@ -117,14 +121,7 @@ struct Rect {
         Q_ASSERT(tl.y <= br.y);
     }
 
-    void map(const QMatrix4x4 &m) {
-        tl.map(m);
-        br.map(m);
-        if (br.x < tl.x)
-            qSwap(br.x, tl.x);
-        if (br.y < tl.y)
-            qSwap(br.y, tl.y);
-    }
+    void map(const QMatrix4x4 &m);
 
     void set(float left, float top, float right, float bottom) {
         tl.set(left, top);
@@ -135,6 +132,13 @@ struct Rect {
         bool xOverlap = r.tl.x < br.x && r.br.x > tl.x;
         bool yOverlap = r.tl.y < br.y && r.br.y > tl.y;
         return xOverlap && yOverlap;
+    }
+
+    bool isOutsideFloatRange() const {
+        return tl.x < -QSG_RENDERER_COORD_LIMIT
+                || tl.y < -QSG_RENDERER_COORD_LIMIT
+                || br.x > QSG_RENDERER_COORD_LIMIT
+                || br.y > QSG_RENDERER_COORD_LIMIT;
     }
 };
 
@@ -158,6 +162,7 @@ struct Element {
         , root(0)
         , order(0)
         , boundsComputed(false)
+        , boundsOutsideFloatRange(false)
         , translateOnlyToRoot(false)
         , removed(false)
         , orphaned(false)
@@ -181,6 +186,7 @@ struct Element {
     int order;
 
     uint boundsComputed : 1;
+    uint boundsOutsideFloatRange : 1;
     uint translateOnlyToRoot : 1;
     uint removed : 1;
     uint orphaned : 1;
@@ -242,7 +248,7 @@ struct Batch
     void cleanupRemovedElements();
 
     bool isTranslateOnlyToRoot() const;
-    bool allMatricesAre2DSafe() const;
+    bool isSafeToBatch() const;
 
     // pseudo-constructor...
     void init() {
@@ -389,11 +395,12 @@ public:
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
 {
 public:
-    Renderer(QSGContext *);
+    Renderer(QSGRenderContext *);
     ~Renderer();
 
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+    void preprocess() Q_DECL_OVERRIDE;
     void render();
 
 private:
@@ -420,6 +427,7 @@ private:
     void prepareOpaqueBatches();
     bool checkOverlap(int first, int last, const Rect &bounds);
     void prepareAlphaBatches();
+    void invalidateAlphaBatchesForRoot(Node *root);
 
     void uploadBatch(Batch *b);
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, quint16 *iBase, int *indexCount);
@@ -476,6 +484,9 @@ private:
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
     const QSGClipNode *m_currentClip;
+
+    // For minimal OpenGL core profile support
+    QOpenGLVertexArrayObject *m_vao;
 };
 
 Batch *Renderer::newBatch()

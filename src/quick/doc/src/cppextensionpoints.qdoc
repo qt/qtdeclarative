@@ -41,7 +41,7 @@ QQuickItem-derived types which can be rendered by Qt Quick.  It also provides
 several scene graph-related classes which allow developers to define their own
 rendering primitives.
 
-
+\target user-defined-qquickitem-derived-types
 \section1 User-Defined QQuickItem-Derived Types
 
 While the Qt Quick module already provides a rich library of visual item types
@@ -51,7 +51,7 @@ way to do this is to subclass QQuickItem, which is the base type
 for all visual types in the Qt Quick module. See the QQuickItem documentation
 for more details.
 
-
+\target scene-graph-related-classes
 \section1 Scene Graph-Related Classes
 
 Qt Quick 2 makes use of a dedicated scene graph based on OpenGL ES 2.0 or OpenGL 2.0
@@ -66,7 +66,7 @@ enable custom nodes to be created in C++.
 
 See the \l {Qt Quick Scene Graph} documentation for details.
 
-
+\target pixmap-and-threaded-image-support
 \section1 Pixmap and Threaded Image Support
 
 While the QML engine allows QML application to load images from filesystem or

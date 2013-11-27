@@ -45,7 +45,9 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qqmlinstantiator_p.h>
+#include <QtQml/qqmlcontext.h>
 #include "../../shared/util.h"
+#include "stringmodel.h"
 
 class tst_qqmlinstantiator: public QQmlDataTest
 {
@@ -58,6 +60,7 @@ private slots:
     void stringModel();
     void activeProperty();
     void intModelChange();
+    void createAndRemove();
 };
 
 void tst_qqmlinstantiator::createNone()
@@ -193,6 +196,27 @@ void tst_qqmlinstantiator::intModelChange()
     }
 }
 
+void tst_qqmlinstantiator::createAndRemove()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("createAndRemove.qml"));
+    StringModel *model = new StringModel("model1");
+    engine.rootContext()->setContextProperty("model1", model);
+    QObject *rootObject = component.create();
+    QVERIFY(rootObject != 0);
+
+    QQmlInstantiator *instantiator =
+        qobject_cast<QQmlInstantiator*>(rootObject->findChild<QObject*>("instantiator1"));
+    QVERIFY(instantiator != 0);
+    model->drop(1);
+    QVector<QString> names;
+    names << "Beta" << "Gamma" << "Delta";
+    for (int i=0; i<3; i++) {
+        QObject *object = instantiator->objectAt(i);
+        QVERIFY(object);
+        QCOMPARE(object->property("datum").toString(), names[i]);
+    }
+}
 QTEST_MAIN(tst_qqmlinstantiator)
 
 #include "tst_qqmlinstantiator.moc"

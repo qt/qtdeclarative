@@ -43,7 +43,7 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include "qquickmessagedialog_p.h"
 #include "qquickabstractmessagedialog_p.h"
-#include "qquickmessageattached_p.h"
+#include "qquickdialogassets_p.h"
 #include "qquickplatformmessagedialog_p.h"
 #include "qquickfiledialog_p.h"
 #include "qquickabstractfiledialog_p.h"
@@ -59,6 +59,11 @@
 
 //#define PURE_QML_ONLY
 //#define DEBUG_REGISTRATION
+
+static void initResources()
+{
+    Q_INIT_RESOURCE(dialogs);
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -96,6 +101,8 @@ public:
     }
 
     virtual void registerTypes(const char *uri) {
+        initResources();
+
 #ifdef DEBUG_REGISTRATION
         qDebug() << Q_FUNC_INFO << uri;
 #endif
@@ -122,7 +129,10 @@ public:
         // Otherwise fall back to a pure-QML implementation.
 
         // MessageDialog
-        qmlRegisterUncreatableType<QQuickMessageAttached>(uri, 1, 1, "Message", QQuickMessageAttached::tr("Message can only be used via the attached property."));
+        qmlRegisterUncreatableType<QQuickStandardButton>(uri, 1, 1, "StandardButton",
+            QLatin1String("Do not create objects of type StandardButton"));
+        qmlRegisterUncreatableType<QQuickStandardIcon>(uri, 1, 1, "StandardIcon",
+            QLatin1String("Do not create objects of type StandardIcon"));
 #ifndef PURE_QML_ONLY
         if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::MessageDialog))
             qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");

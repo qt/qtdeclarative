@@ -74,6 +74,7 @@ public:
     void setShowDirs(bool showFolders);
     void setShowDirsFirst(bool show);
     void setShowDotAndDotDot(bool on);
+    void setShowHidden(bool on);
     void setShowOnlyReadable(bool on);
 
 public Q_SLOTS:
@@ -107,6 +108,7 @@ private:
     bool showDirs;
     bool showDirsFirst;
     bool showDotAndDotDot;
+    bool showHidden;
     bool showOnlyReadable;
 };
 

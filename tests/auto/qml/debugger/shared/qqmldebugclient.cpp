@@ -449,6 +449,7 @@ QString QQmlDebugClient::stateString() const
     case Unavailable: return QLatin1String("Unavailable");
     case Enabled: return QLatin1String("Enabled");
     }
+    return QLatin1String("Invalid");
 }
 
 void QQmlDebugClient::sendMessage(const QByteArray &message)

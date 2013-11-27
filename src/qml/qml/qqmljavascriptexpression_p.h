@@ -117,8 +117,6 @@ public:
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::ValueRef function, bool *isUndefined);
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::ValueRef function, QV4::CallData *callData, bool *isUndefined);
 
-    inline bool requiresThisObject() const;
-    inline void setRequiresThisObject(bool v);
     inline bool notifyOnValueChanged() const;
 
     void setNotifyOnValueChanged(bool v);
@@ -183,7 +181,6 @@ private:
     QPointerValuePair<VTable, QQmlDelayedError> m_vtable;
 
     // We store some flag bits in the following flag pointers.
-    //    m_scopeObject:flag1 - requiresThisObject
     //    activeGuards:flag1  - notifyOnValueChanged
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
@@ -213,16 +210,6 @@ QQmlJavaScriptExpression::DeleteWatcher::~DeleteWatcher()
 bool QQmlJavaScriptExpression::DeleteWatcher::wasDeleted() const
 {
     return *_w == 0;
-}
-
-bool QQmlJavaScriptExpression::requiresThisObject() const
-{
-    return m_scopeObject.flag();
-}
-
-void QQmlJavaScriptExpression::setRequiresThisObject(bool v)
-{
-    m_scopeObject.setFlagValue(v);
 }
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const

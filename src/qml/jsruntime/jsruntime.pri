@@ -1,7 +1,3 @@
-CONFIG += exceptions
-
-CONFIG += warn_off
-
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
@@ -37,7 +33,6 @@ SOURCES += \
     $$PWD/qv4string.cpp \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
-    $$PWD/qv4unwindhelper.cpp \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
     $$PWD/qv4executableallocator.cpp \
@@ -83,9 +78,6 @@ HEADERS += \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
-    $$PWD/qv4unwindhelper_p.h \
-    $$PWD/qv4unwindhelper_dw2_p.h \
-    $$PWD/qv4unwindhelper_arm_p.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \
@@ -102,31 +94,6 @@ HEADERS += \
 linux-g++*:isEqual(QT_ARCH,i386) {
     QMAKE_CFLAGS += -march=pentium4 -msse2 -mfpmath=sse
     QMAKE_CXXFLAGS += -march=pentium4 -msse2 -mfpmath=sse
-}
-
-linux*|mac {
-    LIBS += -ldl
-}
-
-!win32:!ios:!mac {
-    *g++*:equals(QT_ARCH, "arm") {
-        static_libgcc = $$system($$QMAKE_CXX -print-file-name=libgcc.a)
-        LIBS += $$static_libgcc
-    }
-    SOURCES += $$PWD/qv4engine_cxxabi.cpp
-    DEFINES += V4_CXX_ABI_EXCEPTION
-}
-
-debug-with-libunwind {
-    UW_INC=$$(LIBUNWIND_INCLUDES)
-    isEmpty(UW_INC): error("Please set LIBUNWIND_INCLUDES")
-    INCLUDEPATH += $$UW_INC
-    UW_LIBS=$$(LIBUNWIND_LIBS)
-    isEmpty(UW_LIBS): error("Please set LIBUNWIND_LIBS")
-    LIBS += -L$$UW_LIBS
-    equals(QT_ARCH, arm): LIBS += -lunwind-arm
-    LIBS += -lunwind-dwarf-common -lunwind-dwarf-local -lunwind-elf32 -lunwind
-    DEFINES += WTF_USE_LIBUNWIND_DEBUG=1
 }
 
 valgrind {

@@ -1118,11 +1118,13 @@ void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     if (header && header->item == item) {
         updateHeader();
         markExtentsDirty();
+        updateViewport();
         if (!q->isMoving() && !q->isFlicking())
             fixupPosition();
     } else if (footer && footer->item == item) {
         updateFooter();
         markExtentsDirty();
+        updateViewport();
         if (!q->isMoving() && !q->isFlicking())
             fixupPosition();
     }

@@ -732,7 +732,7 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {
-            currentItem->setFocus(true);
+            currentItem->forceActiveFocus(Qt::OtherFocusReason);
         } else {
             QObject *attached =
                 qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(currentItem, false);
@@ -3827,7 +3827,12 @@ void QQuickItem::setBaselineOffset(qreal offset)
 void QQuickItem::update()
 {
     Q_D(QQuickItem);
-    Q_ASSERT(flags() & ItemHasContents);
+    if (!(flags() & ItemHasContents)) {
+#ifndef QT_NO_DEBUG
+        qWarning() << metaObject()->className() << ": Update called for a item without content";
+#endif
+        return;
+    }
     d->dirty(QQuickItemPrivate::Content);
 }
 
@@ -4125,7 +4130,7 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 }
 
 /*!
-  \qmlproperty real QtQuick::Item::visibleChildren
+  \qmlproperty list<Item> QtQuick::Item::visibleChildren
   This read-only property lists all of the item's children that are currently visible.
   Note that a child's visibility may have changed explicitly, or because the visibility
   of this (it's parent) item or another grandparent changed.

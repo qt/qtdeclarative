@@ -66,6 +66,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qdatetime.h>
+#include <private/qsimd_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
@@ -93,6 +94,12 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
 {
+#ifdef Q_PROCESSOR_X86_32
+    if (!(qCpuFeatures() & SSE2)) {
+        qFatal("This program requires an X86 processor that supports SSE2 extension, at least a Pentium 4 or newer");
+    }
+#endif
+
     QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
@@ -141,7 +148,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
-        } else if (QV4::QmlContextWrapper *wrapper = object->as<QV4::QmlContextWrapper>()) {
+        } else if (object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
         } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
             return w->toVariant();

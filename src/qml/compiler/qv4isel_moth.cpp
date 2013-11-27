@@ -134,85 +134,31 @@ inline bool isNumberType(V4IR::Expr *e)
     }
 }
 
+inline bool isIntegerType(V4IR::Expr *e)
+{
+    switch (e->type) {
+    case V4IR::SInt32Type:
+    case V4IR::UInt32Type:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool isBoolType(V4IR::Expr *e)
+{
+    return (e->type == V4IR::BoolType);
+}
+
 } // anonymous namespace
 
-// TODO: extend to optimize out temp-to-temp moves, where the lifetime of one temp ends at that statement.
-//       To handle that, add a hint when such a move will occur, and add a stmt for the hint.
-//       Then when asked for a register, check if the active statement is the terminating statement, and if so, apply the hint.
-//       This generalises the hint usage for Phi removal too, when the phi is passed in there as the current statement.
-class QQmlJS::Moth::StackSlotAllocator
-{
-    QHash<V4IR::Temp, int> _slotForTemp;
-    QHash<V4IR::Temp, int> _hints;
-    QVector<int> _activeSlots;
-
-    QHash<V4IR::Temp, V4IR::LifeTimeInterval> _intervals;
-
-public:
-    StackSlotAllocator(const QVector<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
-        : _activeSlots(maxTempCount)
-    {
-        _intervals.reserve(ranges.size());
-        foreach (const V4IR::LifeTimeInterval &r, ranges)
-            _intervals[r.temp()] = r;
-    }
-
-    void addHint(const V4IR::Temp &hintedSlotOfTemp, const V4IR::Temp &newTemp)
-    {
-        if (hintedSlotOfTemp.kind != V4IR::Temp::VirtualRegister
-                || newTemp.kind != V4IR::Temp::VirtualRegister)
-            return;
-
-        if (_slotForTemp.contains(newTemp) || _hints.contains(newTemp))
-            return;
-
-        int hintedSlot = _slotForTemp.value(hintedSlotOfTemp, -1);
-        Q_ASSERT(hintedSlot >= 0);
-        _hints[newTemp] = hintedSlot;
-    }
-
-    int stackSlotFor(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
-        Q_ASSERT(t->kind == V4IR::Temp::VirtualRegister);
-        Q_ASSERT(t->scope == 0);
-        int idx = _slotForTemp.value(*t, -1);
-        if (idx == -1)
-            idx = allocateSlot(t, currentStmt);
-        Q_ASSERT(idx >= 0);
-        return idx;
-    }
-
-private:
-    int allocateSlot(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
-        Q_ASSERT(currentStmt->id > 0);
-
-        const V4IR::LifeTimeInterval &interval = _intervals[*t];
-        int idx = _hints.value(*t, -1);
-        if (idx != -1 && _activeSlots[idx] == currentStmt->id) {
-            _slotForTemp[*t] = idx;
-            _activeSlots[idx] = interval.end();
-            return idx;
-        }
-
-        for (int i = 0, ei = _activeSlots.size(); i != ei; ++i) {
-            if (_activeSlots[i] < currentStmt->id) {
-                _slotForTemp[*t] = i;
-                _activeSlots[i] = interval.end();
-                return i;
-            }
-        }
-
-        return -1;
-    }
-};
-
-InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
-    , _function(0)
+    , qmlEngine(qmlEngine)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
     , _codeEnd(0)
-    , _stackSlotAllocator(0)
     , _currentStatement(0)
 {
     compilationUnit = new CompilationUnit;
@@ -246,14 +192,13 @@ void InstructionSelection::run(int functionIndex)
     qSwap(codeEnd, _codeEnd);
 
     V4IR::Optimizer opt(_function);
-    opt.run();
-    StackSlotAllocator *stackSlotAllocator = 0;
+    opt.run(qmlEngine);
     if (opt.isInSSA()) {
-        stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
         opt.convertOutOfSSA();
+        opt.showMeTheCode(_function);
     }
+    ConvertTemps().toStackSlots(_function);
 
-    qSwap(_stackSlotAllocator, stackSlotAllocator);
     QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
@@ -262,6 +207,8 @@ void InstructionSelection::run(int functionIndex)
 
     int locals = frameSize();
     assert(locals >= 0);
+
+    V4IR::BasicBlock *exceptionHandler = 0;
 
     Instruction::Push push;
     push.value = quint32(locals);
@@ -274,6 +221,18 @@ void InstructionSelection::run(int functionIndex)
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
+
+        if (_block->catchBlock != exceptionHandler) {
+            Instruction::SetExceptionHandler set;
+            set.offset = 0;
+            if (_block->catchBlock) {
+                ptrdiff_t loc = addInstruction(set) + (((const char *)&set.offset) - ((const char *)&set));
+                _patches[_block->catchBlock].append(loc);
+            } else {
+                addInstruction(set);
+            }
+            exceptionHandler = _block->catchBlock;
+        }
 
         foreach (V4IR::Stmt *s, _block->statements) {
             _currentStatement = s;
@@ -294,8 +253,6 @@ void InstructionSelection::run(int functionIndex)
 
     qSwap(_currentStatement, cs);
     qSwap(_removableJumps, removableJumps);
-    qSwap(_stackSlotAllocator, stackSlotAllocator);
-    delete stackSlotAllocator;
     qSwap(_function, function);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
@@ -330,14 +287,24 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
                                         V4IR::Temp *result)
 {
-    // call the property on the loaded base
-    Instruction::CallProperty call;
-    call.base = getParam(base);
-    call.name = registerString(name);
-    prepareCallArgs(args, call.argc);
-    call.callData = callDataStart();
-    call.result = getResultParam(result);
-    addInstruction(call);
+    if (useFastLookups) {
+        Instruction::CallPropertyLookup call;
+        call.base = getParam(base);
+        call.lookupIndex = registerGetterLookup(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+    } else {
+        // call the property on the loaded base
+        Instruction::CallProperty call;
+        call.base = getParam(base);
+        call.name = registerString(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+    }
 }
 
 void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args,
@@ -355,9 +322,6 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*source, *target);
-
     // FIXME: do something more useful with this info
     if (target->type & V4IR::NumberType)
         unop(V4IR::OpUPlus, source, target);
@@ -369,6 +333,15 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
                                                        V4IR::ExprList *args,
                                                        V4IR::Temp *result)
 {
+    if (useFastLookups && func->global) {
+        Instruction::ConstructGlobalLookup call;
+        call.index = registerGlobalGetterLookup(*func->id);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CreateActivationProperty create;
     create.name = registerString(*func->id);
     prepareCallArgs(args, create.argc);
@@ -379,6 +352,16 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
 
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
+    if (useFastLookups) {
+        Instruction::ConstructPropertyLookup call;
+        call.base = getParam(base);
+        call.index = registerGetterLookup(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CreateProperty create;
     create.base = getParam(base);
     create.name = registerString(name);
@@ -405,14 +388,50 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
     addInstruction(load);
 }
 
+void InstructionSelection::loadQmlIdArray(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlIdArray load;
+    load.result = getResultParam(temp);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlImportedScripts(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlImportedScripts load;
+    load.result = getResultParam(temp);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlContextObject(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlContextObject load;
+    load.result = getResultParam(temp);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlScopeObject(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlScopeObject load;
+    load.result = getResultParam(temp);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlSingleton(const QString &name, V4IR::Temp *temp)
+{
+    Instruction::LoadQmlSingleton load;
+    load.result = getResultParam(temp);
+    load.name = registerString(name);
+    addInstruction(load);
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     assert(sourceConst);
 
-    Instruction::LoadValue load;
-    load.value = getParam(sourceConst);
-    load.result = getResultParam(targetTemp);
-    addInstruction(load);
+    Instruction::Move move;
+    move.source = getParam(sourceConst);
+    move.result = getResultParam(targetTemp);
+    addInstruction(move);
 }
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
@@ -433,6 +452,13 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
 
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
+    if (useFastLookups && name->global) {
+        Instruction::GetGlobalLookup load;
+        load.index = registerGlobalGetterLookup(*name->id);
+        load.result = getResultParam(temp);
+        addInstruction(load);
+        return;
+    }
     Instruction::LoadName load;
     load.name = registerString(*name->id);
     load.result = getResultParam(temp);
@@ -458,6 +484,14 @@ void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *targe
 
 void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target)
 {
+    if (useFastLookups) {
+        Instruction::GetLookup load;
+        load.base = getParam(base);
+        load.index = registerGetterLookup(name);
+        load.result = getResultParam(target);
+        addInstruction(load);
+        return;
+    }
     Instruction::LoadProperty load;
     load.base = getParam(base);
     load.name = registerString(name);
@@ -468,11 +502,38 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
 void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBase,
                                        const QString &targetName)
 {
+    if (useFastLookups) {
+        Instruction::SetLookup store;
+        store.base = getParam(targetBase);
+        store.index = registerSetterLookup(targetName);
+        store.source = getParam(source);
+        addInstruction(store);
+        return;
+    }
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
     store.name = registerString(targetName);
     store.source = getParam(source);
     addInstruction(store);
+}
+
+void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex)
+{
+    Instruction::StoreQObjectProperty store;
+    store.base = getParam(targetBase);
+    store.propertyIndex = propertyIndex;
+    store.source = getParam(source);
+    addInstruction(store);
+}
+
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target)
+{
+    Instruction::LoadQObjectProperty load;
+    load.base = getParam(base);
+    load.propertyIndex = propertyIndex;
+    load.result = getResultParam(target);
+    load.captureRequired = captureRequired;
+    addInstruction(load);
 }
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
@@ -496,10 +557,7 @@ void InstructionSelection::setElement(V4IR::Expr *source, V4IR::Expr *targetBase
 
 void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
-
-    Instruction::MoveTemp move;
+    Instruction::Move move;
     move.source = getParam(sourceTemp);
     move.result = getResultParam(targetTemp);
     if (move.source != move.result)
@@ -516,30 +574,79 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
-
-    QV4::UnaryOpName op = 0;
     switch (oper) {
-    case V4IR::OpIfTrue: assert(!"unreachable"); break;
-    case V4IR::OpNot: op = QV4::__qmljs_not; break;
-    case V4IR::OpUMinus: op = QV4::__qmljs_uminus; break;
-    case V4IR::OpUPlus: op = QV4::__qmljs_uplus; break;
-    case V4IR::OpCompl: op = QV4::__qmljs_compl; break;
-    case V4IR::OpIncrement: op = QV4::__qmljs_increment; break;
-    case V4IR::OpDecrement: op = QV4::__qmljs_decrement; break;
-    default: assert(!"unreachable"); break;
+    case V4IR::OpIfTrue:
+        Q_ASSERT(!"unreachable"); break;
+    case V4IR::OpNot: {
+        // ### enabling this fails in some cases, where apparently the value is not a bool at runtime
+        if (0 && isBoolType(sourceTemp)) {
+            Instruction::UNotBool unot;
+            unot.source = getParam(sourceTemp);
+            unot.result = getResultParam(targetTemp);
+            addInstruction(unot);
+            return;
+        }
+        Instruction::UNot unot;
+        unot.source = getParam(sourceTemp);
+        unot.result = getResultParam(targetTemp);
+        addInstruction(unot);
+        return;
+    }
+    case V4IR::OpUMinus: {
+        Instruction::UMinus uminus;
+        uminus.source = getParam(sourceTemp);
+        uminus.result = getResultParam(targetTemp);
+        addInstruction(uminus);
+        return;
+    }
+    case V4IR::OpUPlus: {
+        if (isNumberType(sourceTemp)) {
+            // use a move
+            Instruction::Move move;
+            move.source = getParam(sourceTemp);
+            move.result = getResultParam(targetTemp);
+            addInstruction(move);
+            return;
+        }
+        Instruction::UPlus uplus;
+        uplus.source = getParam(sourceTemp);
+        uplus.result = getResultParam(targetTemp);
+        addInstruction(uplus);
+        return;
+    }
+    case V4IR::OpCompl: {
+        // ### enabling this fails in some cases, where apparently the value is not a int at runtime
+        if (0 && isIntegerType(sourceTemp)) {
+            Instruction::UComplInt unot;
+            unot.source = getParam(sourceTemp);
+            unot.result = getResultParam(targetTemp);
+            addInstruction(unot);
+            return;
+        }
+        Instruction::UCompl ucompl;
+        ucompl.source = getParam(sourceTemp);
+        ucompl.result = getResultParam(targetTemp);
+        addInstruction(ucompl);
+        return;
+    }
+    case V4IR::OpIncrement: {
+        Instruction::Increment inc;
+        inc.source = getParam(sourceTemp);
+        inc.result = getResultParam(targetTemp);
+        addInstruction(inc);
+        return;
+    }
+    case V4IR::OpDecrement: {
+        Instruction::Decrement dec;
+        dec.source = getParam(sourceTemp);
+        dec.result = getResultParam(targetTemp);
+        addInstruction(dec);
+        return;
+    }
+    default:  break;
     } // switch
 
-    if (op) {
-        Instruction::Unop unop;
-        unop.alu = op;
-        unop.source = getParam(sourceTemp);
-        unop.result = getResultParam(targetTemp);
-        addInstruction(unop);
-    } else {
-        qWarning("  UNOP1");
-    }
+    Q_ASSERT(!"unreachable");
 }
 
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
@@ -580,8 +687,84 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
         }
     }
 
-    if (_stackSlotAllocator && target && leftSource->asTemp())
-        _stackSlotAllocator->addHint(*leftSource->asTemp(), *target);
+    if (oper == V4IR::OpAdd) {
+        Instruction::Add add;
+        add.lhs = getParam(leftSource);
+        add.rhs = getParam(rightSource);
+        add.result = getResultParam(target);
+        addInstruction(add);
+        return add.result;
+    }
+    if (oper == V4IR::OpSub) {
+        Instruction::Sub sub;
+        sub.lhs = getParam(leftSource);
+        sub.rhs = getParam(rightSource);
+        sub.result = getResultParam(target);
+        addInstruction(sub);
+        return sub.result;
+    }
+    if (oper == V4IR::OpMul) {
+        Instruction::Mul mul;
+        mul.lhs = getParam(leftSource);
+        mul.rhs = getParam(rightSource);
+        mul.result = getResultParam(target);
+        addInstruction(mul);
+        return mul.result;
+    }
+    if (oper == V4IR::OpBitAnd) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitAndConst bitAnd;
+            bitAnd.lhs = getParam(leftSource);
+            bitAnd.rhs = convertToValue(c).Value::toInt32();
+            bitAnd.result = getResultParam(target);
+            addInstruction(bitAnd);
+            return bitAnd.result;
+        }
+        Instruction::BitAnd bitAnd;
+        bitAnd.lhs = getParam(leftSource);
+        bitAnd.rhs = getParam(rightSource);
+        bitAnd.result = getResultParam(target);
+        addInstruction(bitAnd);
+        return bitAnd.result;
+    }
+    if (oper == V4IR::OpBitOr) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitOrConst bitOr;
+            bitOr.lhs = getParam(leftSource);
+            bitOr.rhs = convertToValue(c).Value::toInt32();
+            bitOr.result = getResultParam(target);
+            addInstruction(bitOr);
+            return bitOr.result;
+        }
+        Instruction::BitOr bitOr;
+        bitOr.lhs = getParam(leftSource);
+        bitOr.rhs = getParam(rightSource);
+        bitOr.result = getResultParam(target);
+        addInstruction(bitOr);
+        return bitOr.result;
+    }
+    if (oper == V4IR::OpBitXor) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitXorConst bitXor;
+            bitXor.lhs = getParam(leftSource);
+            bitXor.rhs = convertToValue(c).Value::toInt32();
+            bitXor.result = getResultParam(target);
+            addInstruction(bitXor);
+            return bitXor.result;
+        }
+        Instruction::BitXor bitXor;
+        bitXor.lhs = getParam(leftSource);
+        bitXor.rhs = getParam(rightSource);
+        bitXor.result = getResultParam(target);
+        addInstruction(bitXor);
+        return bitXor.result;
+    }
 
     if (oper == V4IR::OpInstanceof || oper == V4IR::OpIn || oper == V4IR::OpAdd) {
         Instruction::BinopContext binop;
@@ -619,7 +802,7 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
         // We need to move all the temps into the function arg array
         assert(argLocation >= 0);
         while (e) {
-            Instruction::MoveTemp move;
+            Instruction::Move move;
             move.source = getParam(e->expr);
             move.result = Param::createTemp(argLocation);
             addInstruction(move);
@@ -684,24 +867,17 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     addInstruction(ret);
 }
 
-void InstructionSelection::visitTry(V4IR::Try *t)
-{
-    Instruction::EnterTry enterTry;
-    enterTry.tryOffset = 0;
-    enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = registerString(*t->exceptionVarName);
-    enterTry.exceptionVar = getParam(t->exceptionVar);
-    ptrdiff_t enterTryLoc = addInstruction(enterTry);
-
-    ptrdiff_t tryLoc = enterTryLoc + (((const char *)&enterTry.tryOffset) - ((const char *)&enterTry));
-    _patches[t->tryBlock].append(tryLoc);
-
-    ptrdiff_t catchLoc = enterTryLoc + (((const char *)&enterTry.catchOffset) - ((const char *)&enterTry));
-    _patches[t->catchBlock].append(catchLoc);
-}
-
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
+    if (useFastLookups && func->global) {
+        Instruction::CallGlobalLookup call;
+        call.index = registerGlobalGetterLookup(*func->id);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CallActivationProperty call;
     call.name = registerString(*func->id);
     prepareCallArgs(args, call.argc);
@@ -775,10 +951,11 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
-    Instruction::LoadValue load;
-    load.value = Param::createValue(QV4::Primitive::fromBoolean(false));
-    load.result = getResultParam(result);
-    addInstruction(load);
+    Instruction::Move move;
+    int idx = jsUnitGenerator()->registerConstant(QV4::Encode(false));
+    move.source = Param::createConstant(idx);
+    move.result = getResultParam(result);
+    addInstruction(move);
 }
 
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
@@ -788,9 +965,35 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinFinishTry()
+void InstructionSelection::callBuiltinReThrow()
 {
-    Instruction::CallBuiltinFinishTry call;
+    if (_block->catchBlock) {
+        // jump to exception handler
+        Instruction::Jump jump;
+        jump.offset = 0;
+        ptrdiff_t loc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+
+        _patches[_block->catchBlock].append(loc);
+    } else {
+        Instruction::Ret ret;
+        int idx = jsUnitGenerator()->registerConstant(QV4::Encode::undefined());
+        ret.result = Param::createConstant(idx);
+        addInstruction(ret);
+    }
+}
+
+void InstructionSelection::callBuiltinUnwindException(V4IR::Temp *result)
+{
+    Instruction::CallBuiltinUnwindException call;
+    call.result = getResultParam(result);
+    addInstruction(call);
+}
+
+
+void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
+{
+    Instruction::CallBuiltinPushCatchScope call;
+    call.name = registerString(exceptionName);
     addInstruction(call);
 }
 
@@ -871,7 +1074,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         bool isData = it->expr->asConst()->value;
         it = it->next;
 
-        Instruction::MoveTemp move;
+        Instruction::Move move;
         move.source = getParam(it->expr);
         move.result = Param::createTemp(argLocation);
         addInstruction(move);
@@ -880,7 +1083,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         if (!isData) {
             it = it->next;
 
-            Instruction::MoveTemp move;
+            Instruction::Move move;
             move.source = getParam(it->expr);
             move.result = Param::createTemp(argLocation);
             addInstruction(move);
@@ -901,6 +1104,13 @@ void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
 {
     Instruction::CallBuiltinSetupArgumentsObject call;
     call.result = getResultParam(result);
+    addInstruction(call);
+}
+
+
+void QQmlJS::Moth::InstructionSelection::callBuiltinConvertThisToObject()
+{
+    Instruction::CallBuiltinConvertThisToObject call;
     addInstruction(call);
 }
 
@@ -961,22 +1171,21 @@ QByteArray InstructionSelection::squeezeCode() const
 }
 
 Param InstructionSelection::getParam(V4IR::Expr *e) {
-    typedef Param Param;
     assert(e);
 
     if (V4IR::Const *c = e->asConst()) {
-        return Param::createValue(convertToValue(c));
+        int idx = jsUnitGenerator()->registerConstant(convertToValue(c).asReturnedValue());
+        return Param::createConstant(idx);
     } else if (V4IR::Temp *t = e->asTemp()) {
         switch (t->kind) {
         case V4IR::Temp::Formal:
         case V4IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
         case V4IR::Temp::Local: return Param::createLocal(t->index);
         case V4IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
-        case V4IR::Temp::VirtualRegister:
-            return Param::createTemp(_stackSlotAllocator ?
-                        _stackSlotAllocator->stackSlotFor(t, _currentStatement) : t->index);
+        case V4IR::Temp::StackSlot:
+            return Param::createTemp(t->index);
         default:
-            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
             return Param();
         }
     } else {

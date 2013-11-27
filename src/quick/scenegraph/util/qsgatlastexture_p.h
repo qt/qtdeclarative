@@ -50,6 +50,8 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgareaallocator_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QSGAtlasTexture
 {
 
@@ -69,19 +71,18 @@ public:
 
 private:
     Atlas *m_atlas;
-    Atlas *m_secondary_atlas;
 
     QSize m_atlas_size;
     int m_atlas_size_limit;
 };
 
-class Atlas
+class Atlas : public QObject
 {
 public:
     Atlas(const QSize &size);
     ~Atlas();
 
-    void initialize();
+    void invalidate();
 
     int textureId() const;
     bool bind(QSGTexture::Filtering filteing);
@@ -95,7 +96,6 @@ public:
     QSize size() const { return m_size; }
 
 private:
-
     QSGAreaAllocator m_allocator;
     GLuint m_texture_id;
     QSize m_size;
@@ -152,5 +152,7 @@ private:
 };
 
 }
+
+QT_END_NAMESPACE
 
 #endif

@@ -51,6 +51,8 @@
 #include "qv4function_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
+#include <private/qqmlcontextwrapper_p.h>
+#include "qv4qobjectwrapper_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -284,6 +286,8 @@ ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, 
 {
     Scope scope(ctx);
     ScopedObject obj(scope, base->toObject(ctx));
+    if (scope.engine->hasException)
+        return Encode::undefined();
     return Encode(obj->deleteProperty(name));
 }
 
@@ -293,29 +297,11 @@ ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, const StringRef name)
     return Encode(ctx->deleteProperty(name));
 }
 
-QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
-{
-    Scope scope(ctx);
-
-    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
-    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
-    if (pleft->isString() || pright->isString()) {
-        if (!pleft->isString())
-            pleft = __qmljs_to_string(pleft, ctx);
-        if (!pright->isString())
-            pright = __qmljs_to_string(pright, ctx);
-        return __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue())->asReturnedValue();
-    }
-    double x = __qmljs_to_number(pleft);
-    double y = __qmljs_to_number(pright);
-    return Encode(x + y);
-}
-
 QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     Object *o = right->asObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     bool r = o->hasInstance(left);
     return Encode(r);
@@ -324,9 +310,11 @@ QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left
 QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     if (!right->isObject())
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     Scope scope(ctx);
     ScopedString s(scope, left->toString(ctx));
+    if (scope.hasException())
+        return Encode::undefined();
     bool r = right->objectValue()->__hasProperty__(s);
     return Encode(r);
 }
@@ -359,19 +347,6 @@ Returned<String> *__qmljs_string_from_number(ExecutionContext *ctx, double numbe
     return ctx->engine->newString(qstr);
 }
 
-Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
-{
-    const QString &a = first->toQString();
-    const QString &b = second->toQString();
-    QString newStr(a.length() + b.length(), Qt::Uninitialized);
-    QChar *data = newStr.data();
-    memcpy(data, a.constData(), a.length()*sizeof(QChar));
-    data += a.length();
-    memcpy(data, b.constData(), b.length()*sizeof(QChar));
-
-    return ctx->engine->newString(newStr);
-}
-
 ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
@@ -382,6 +357,9 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     }
 
     ExecutionEngine *engine = object->internalClass->engine;
+    if (engine->hasException)
+        return Encode::undefined();
+
     SafeString *meth1 = &engine->id_toString;
     SafeString *meth2 = &engine->id_valueOf;
 
@@ -400,6 +378,9 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
             return r->asReturnedValue();
     }
 
+    if (engine->hasException)
+        return Encode::undefined();
+
     conv = object->get(*meth2);
     if (FunctionObject *o = conv->asFunctionObject()) {
         ScopedValue r(scope, o->call(callData));
@@ -407,8 +388,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
             return r->asReturnedValue();
     }
 
-    ctx->throwTypeError();
-    return Encode::undefined();
+    return ctx->throwTypeError();
 }
 
 Bool __qmljs_to_boolean(const ValueRef value)
@@ -424,6 +404,7 @@ Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRe
     case Value::Undefined_Type:
     case Value::Null_Type:
         ctx->throwTypeError();
+        return 0;
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(value);
     case Value::Managed_Type:
@@ -464,10 +445,96 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     } // switch
 }
 
+// This is slightly different from the method above, as
+// the + operator requires a slightly different conversion
+static Returned<String> *convert_to_string_add(ExecutionContext *ctx, const ValueRef value)
+{
+    switch (value->type()) {
+    case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+    case Value::Undefined_Type:
+        return ctx->engine->id_undefined.ret();
+    case Value::Null_Type:
+        return ctx->engine->id_null.ret();
+    case Value::Boolean_Type:
+        if (value->booleanValue())
+            return ctx->engine->id_true.ret();
+        else
+            return ctx->engine->id_false.ret();
+    case Value::Managed_Type:
+        if (value->isString())
+            return value->stringValue()->asReturned<String>();
+        {
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(value, PREFERREDTYPE_HINT));
+            return __qmljs_convert_to_string(ctx, prim);
+        }
+    case Value::Integer_Type:
+        return __qmljs_string_from_number(ctx, value->int_32);
+    default: // double
+        return __qmljs_string_from_number(ctx, value->doubleValue());
+    } // switch
+}
+
+QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+{
+    Scope scope(ctx);
+
+    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
+    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
+    if (pleft->isString() || pright->isString()) {
+        if (!pleft->isString())
+            pleft = convert_to_string_add(ctx, pleft);
+        if (!pright->isString())
+            pright = convert_to_string_add(ctx, pright);
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        if (!pleft->stringValue()->length())
+            return pright->asReturnedValue();
+        if (!pright->stringValue()->length())
+            return pleft->asReturnedValue();
+        return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+    }
+    double x = __qmljs_to_number(pleft);
+    double y = __qmljs_to_number(pright);
+    return Encode(x + y);
+}
+
+QV4::ReturnedValue __qmljs_add_string(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right)
+{
+    Q_ASSERT(left->isString() || right->isString());
+
+    if (left->isString() && right->isString()) {
+        if (!left->stringValue()->length())
+            return right->asReturnedValue();
+        if (!right->stringValue()->length())
+            return left->asReturnedValue();
+        return (new (ctx->engine->memoryManager) String(ctx->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
+    }
+
+    Scope scope(ctx);
+    ScopedValue pleft(scope, *left);
+    ScopedValue pright(scope, *right);
+
+    if (!pleft->isString())
+        pleft = convert_to_string_add(ctx, left);
+    if (!pright->isString())
+        pright = convert_to_string_add(ctx, right);
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    if (!pleft->stringValue()->length())
+        return pright->asReturnedValue();
+    if (!pright->stringValue()->length())
+        return pleft->asReturnedValue();
+    return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+}
+
 void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef value)
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
+    if (!o)
+        return;
     o->put(name, value);
 }
 
@@ -490,10 +557,12 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
 
         if (object->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
-            ctx->throwTypeError(message);
+            return ctx->throwTypeError(message);
         }
 
         o = __qmljs_convert_to_object(ctx, object);
+        if (!o) // type error
+            return Encode::undefined();
     }
 
     if (idx < UINT_MAX) {
@@ -509,6 +578,8 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
     }
 
     ScopedString name(scope, index->toString(ctx));
+    if (scope.hasException())
+        return Encode::undefined();
     return o->get(name);
 }
 
@@ -516,6 +587,8 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
+    if (scope.engine->hasException)
+        return;
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
@@ -592,10 +665,12 @@ ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object,
 
     if (object->isNullOrUndefined()) {
         QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
-        ctx->throwTypeError(message);
+        return ctx->throwTypeError(message);
     }
 
     o = __qmljs_convert_to_object(ctx, object);
+    if (!o) // type error
+        return Encode::undefined();
     return o->get(name);
 }
 
@@ -647,8 +722,8 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
 
     if (x->isNumber())
         return y->isNumber() && x->asDouble() == y->asDouble();
-    if (x->isString())
-        return y->isString() && x->stringValue()->isEqualTo(y->stringValue());
+    if (x->isManaged())
+        return y->isManaged() && x->managed()->isEqualTo(y->managed());
     return false;
 }
 
@@ -753,7 +828,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
     Lookup *l = context->lookups + index;
     Scoped<FunctionObject> o(scope, l->globalGetter(l, context));
     if (!o)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     if (o.getPointer() == context->engine->evalFunction && l->name->equals(context->engine->id_eval))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
@@ -769,6 +844,9 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
 
     ScopedObject base(scope);
     ScopedValue func(scope, context->getPropertyAndBase(name, base));
+    if (context->engine->hasException)
+        return Encode::undefined();
+
     if (base)
         callData->thisObject = base;
 
@@ -778,7 +856,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
         if (base)
             objectAsString = ScopedValue(scope, base.asReturnedValue())->toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
-        context->throwTypeError(msg);
+        return context->throwTypeError(msg);
     }
 
     if (o == context->engine->evalFunction && name->equals(context->engine->id_eval)) {
@@ -796,17 +874,19 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
         Q_ASSERT(!callData->thisObject.isEmpty());
         if (callData->thisObject.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
-            context->throwTypeError(message);
+            return context->throwTypeError(message);
         }
 
         baseObject = __qmljs_convert_to_object(context, ValueRef(&callData->thisObject));
+        if (!baseObject) // type error
+            return Encode::undefined();
         callData->thisObject = baseObject.asReturnedValue();
     }
 
     Scoped<FunctionObject> o(scope, baseObject->get(name));
     if (!o) {
-        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
-        context->throwTypeError(error);
+        QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
+        return context->throwTypeError(error);
     }
 
     return o->call(callData);
@@ -814,37 +894,38 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
 
 ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
-    Scope scope(context);
-
     Lookup *l = context->lookups + index;
-    Scoped<Object> o(scope, l->getter(l, callData->thisObject));
-    if (!o)
-        context->throwTypeError();
+    SafeValue v;
+    v = l->getter(l, callData->thisObject);
+    if (!v.isManaged())
+        return context->throwTypeError();
 
-    return o->call(callData);
+    return v.managed()->call(callData);
 }
 
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
     Scope scope(context);
     ScopedObject baseObject(scope, callData->thisObject.toObject(context));
+    ScopedString s(scope, index->toString(context));
+
+    if (scope.engine->hasException)
+        return Encode::undefined();
     callData->thisObject = baseObject;
 
-    ScopedString s(scope, index->toString(context));
     ScopedObject o(scope, baseObject->get(s));
     if (!o)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     return o->call(callData);
 }
 
 ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
-    Object *o = func->asObject();
-    if (!o)
-        context->throwTypeError();
+    if (!func->isManaged())
+        return context->throwTypeError();
 
-    return o->call(callData);
+    return func->managed()->call(callData);
 }
 
 
@@ -856,7 +937,7 @@ ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint in
     Lookup *l = context->lookups + index;
     Scoped<Object> f(scope, l->globalGetter(l, context));
     if (!f)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     return f->construct(callData);
 }
@@ -866,9 +947,12 @@ ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, c
 {
     Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
+    if (context->engine->hasException)
+        return Encode::undefined();
+
     Object *f = func->asObject();
     if (!f)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     return f->construct(callData);
 }
@@ -877,26 +961,41 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
 {
     Object *f = func->asObject();
     if (!f)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     return f->construct(callData);
 }
 
-ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, const StringRef name, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const StringRef name, CallDataRef callData)
 {
     Scope scope(context);
-    ScopedObject thisObject(scope, base->toObject(context));
+    ScopedObject thisObject(scope, callData->thisObject.toObject(context));
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     return f->construct(callData);
 }
 
+ReturnedValue __qmljs_construct_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
+{
+    Lookup *l = context->lookups + index;
+    SafeValue v;
+    v = l->getter(l, callData->thisObject);
+    if (!v.isManaged())
+        return context->throwTypeError();
+
+    return v.managed()->construct(callData);
+}
+
+
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 {
-    context->throwError(value);
+    if (!value->isEmpty())
+        context->throwError(value);
 }
 
 ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
@@ -931,7 +1030,9 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
 QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, const StringRef name)
 {
     Scope scope(context);
-    ScopedValue prop(scope, context->getPropertyNoThrow(name));
+    ScopedValue prop(scope, context->getProperty(name));
+    // typeof doesn't throw. clear any possible exception
+    context->engine->hasException = false;
     return __qmljs_builtin_typeof(context, prop);
 }
 
@@ -939,6 +1040,8 @@ QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, cons
 {
     Scope scope(context);
     ScopedObject obj(scope, base->toObject(context));
+    if (scope.engine->hasException)
+        return Encode::undefined();
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
 }
@@ -948,6 +1051,8 @@ QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, con
     Scope scope(context);
     ScopedString name(scope, index->toString(context));
     ScopedObject obj(scope, base->toObject(context));
+    if (scope.engine->hasException)
+        return Encode::undefined();
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
 }
@@ -959,9 +1064,18 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionCon
     return ctx->newWithContext(obj);
 }
 
-ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
+ReturnedValue __qmljs_builtin_unwind_exception(ExecutionContext *ctx)
 {
-    return ctx->newCatchContext(exceptionVarName, exceptionValue);
+    if (!ctx->engine->hasException)
+        return Primitive::emptyValue().asReturnedValue();
+    return ctx->engine->catchException(ctx, 0);
+}
+
+ExecutionContext *__qmljs_builtin_push_catch_scope(ExecutionContext *ctx, const StringRef exceptionVarName)
+{
+    Scope scope(ctx);
+    ScopedValue v(scope, ctx->engine->catchException(ctx, 0));
+    return ctx->newCatchContext(exceptionVarName, v);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
@@ -1023,7 +1137,7 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Scoped<Object> o(scope, ctx->engine->newObject(klass));
 
-    for (int i = 0; i < klass->size; ++i) {
+    for (uint i = 0; i < klass->size; ++i) {
         if (klass->propertyData[i].isData())
             o->memberData[i].value = *args++;
         else {
@@ -1068,7 +1182,7 @@ QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
     }
 }
 
-QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
+QV4::ReturnedValue __qmljs_to_string(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
 {
     if (value->isString())
         return value.asReturnedValue();
@@ -1079,7 +1193,12 @@ QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Valu
 {
     if (value->isObject())
         return value.asReturnedValue();
-    return Encode(__qmljs_convert_to_object(ctx, value));
+
+    Returned<Object> *o = __qmljs_convert_to_object(ctx, value);
+    if (!o) // type error
+        return Encode::undefined();
+
+    return Encode(o);
 }
 
 ReturnedValue __qmljs_value_to_double(const ValueRef value)
@@ -1121,6 +1240,69 @@ ReturnedValue __qmljs_value_from_string(String *string)
 ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
 {
     return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
+}
+
+ReturnedValue __qmljs_get_id_array(NoThrowContext *ctx)
+{
+    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->idObjectsArray();
+}
+
+ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx)
+{
+    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    return QObjectWrapper::wrap(ctx->engine, context->contextObject);
+}
+
+ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    return QObjectWrapper::wrap(ctx->engine, c->getScopeObject());
+}
+
+ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
+    if (!wrapper) {
+        ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
+        return Encode::undefined();
+    }
+    return wrapper->getProperty(ctx, propertyIndex, captureRequired);
+}
+
+void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
+    if (!wrapper) {
+        ctx->throwTypeError(QStringLiteral("Cannot write property of null"));
+        return;
+    }
+    wrapper->setProperty(ctx, propertyIndex, value);
+}
+
+ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx)
+{
+    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    return context->importedScripts.value();
+}
+
+QV4::ReturnedValue __qmljs_get_qml_singleton(QV4::NoThrowContext *ctx, const QV4::StringRef name)
+{
+    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(name);
+}
+
+void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx)
+{
+    SafeValue *t = &ctx->callData->thisObject;
+    if (t->isObject())
+        return;
+    if (t->isNullOrUndefined()) {
+        *t = ctx->engine->globalObject->asReturnedValue();
+    } else {
+        *t = t->toObject(ctx)->asReturnedValue();
+    }
 }
 
 } // namespace QV4

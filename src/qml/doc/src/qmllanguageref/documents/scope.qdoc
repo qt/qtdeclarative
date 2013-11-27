@@ -76,7 +76,7 @@ with local variables declared in another.
 
 \section1 Type Names and Imported JavaScript Files
 
-\l {QML Document}s include import statements that define the type names
+\l {QML Documents} include import statements that define the type names
 and JavaScript files visible to the document.  In addition to their use in the
 QML declaration itself, type names are used by JavaScript code when accessing
 \l {Attached Properties} and enumeration values.

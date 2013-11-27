@@ -51,54 +51,33 @@
 
 using namespace QV4;
 
-CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *function, CallData *callData)
+const ManagedVTable ExecutionContext::static_vtbl =
 {
-    CallContext *c = (CallContext *)stackSpace;
-#ifndef QT_NO_DEBUG
-    c->next = (CallContext *)0x1;
-#endif
-
-    engine->current = c;
-
-    c->initBaseContext(Type_CallContext, engine, this);
-
-    c->function = function;
-    c->callData = callData;
-    c->realArgumentCount = callData->argc;
-
-    c->strictMode = function->strictMode;
-    c->marked = false;
-    c->outer = function->scope;
-#ifndef QT_NO_DEBUG
-    assert(c->outer->next != (ExecutionContext *)0x1);
-#endif
-
-    c->activation = 0;
-
-    if (function->function) {
-        c->compilationUnit = function->function->compilationUnit;
-        c->lookups = c->compilationUnit->runtimeLookups;
-    }
-
-    c->locals = locals;
-
-    if (function->varCount)
-        std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
-
-    if (callData->argc < function->formalParameterCount) {
-#ifndef QT_NO_DEBUG
-        Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
-#endif
-        std::fill(c->callData->args + callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
-        c->callData->argc = function->formalParameterCount;
-    }
-
-    return c;
-}
+    call,
+    construct,
+    markObjects,
+    destroy,
+    0 /*collectDeletables*/,
+    hasInstance,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    isEqualTo,
+    0,
+    "ExecutionContext",
+};
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, callData->argc)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
+    c->init();
 
     engine->current = c;
 
@@ -108,7 +87,6 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode;
-    c->marked = false;
     c->outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(c->outer->next != (ExecutionContext *)0x1);
@@ -128,7 +106,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
     c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
     ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(SafeValue));
-    if (callData->argc < function->formalParameterCount)
+    if (callData->argc < static_cast<int>(function->formalParameterCount))
         std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
 
@@ -137,7 +115,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
 WithContext *ExecutionContext::newWithContext(ObjectRef with)
 {
-    WithContext *w = static_cast<WithContext *>(engine->memoryManager->allocContext(sizeof(WithContext)));
+    WithContext *w = new (engine->memoryManager) WithContext;
     engine->current = w;
     w->initWithContext(this, with);
     return w;
@@ -145,7 +123,7 @@ WithContext *ExecutionContext::newWithContext(ObjectRef with)
 
 CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
-    CatchContext *c = static_cast<CatchContext *>(engine->memoryManager->allocContext(sizeof(CatchContext)));
+    CatchContext *c = new (engine->memoryManager) CatchContext;
     engine->current = c;
     c->initCatchContext(this, exceptionVarName, exceptionValue);
     return c;
@@ -153,7 +131,8 @@ CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName
 
 CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
+    c->init();
 
     engine->current = c;
     c->initQmlContext(this, qml, f);
@@ -191,22 +170,34 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
 
 String * const *ExecutionContext::formals() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterList : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->formalParameterList : 0;
 }
 
 unsigned int ExecutionContext::formalCount() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterCount : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->formalParameterCount : 0;
 }
 
 String * const *ExecutionContext::variables() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varList : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->varList : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varCount : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->varCount : 0;
 }
 
 
@@ -217,6 +208,7 @@ void GlobalContext::initGlobalContext(ExecutionEngine *eng)
     callData->tag = QV4::Value::_Integer_Type;
     callData->argc = 0;
     callData->thisObject = eng->globalObject;
+    callData->args[0] = Encode::undefined();
     global = 0;
 }
 
@@ -255,7 +247,6 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml,
     this->callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
-    marked = false;
     this->outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(outer->next != (ExecutionContext *)0x1);
@@ -309,45 +300,44 @@ bool ExecutionContext::deleteProperty(const StringRef name)
     }
 
     if (strictMode)
-        throwSyntaxError(QString("Can't delete property %1").arg(name->toQString()));
+        throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name->toQString()));
     return true;
 }
 
 bool CallContext::needsOwnArguments() const
 {
-    return function->needsActivation || callData->argc < function->formalParameterCount;
+    return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount);
 }
 
-void ExecutionContext::mark()
+void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
 {
-    if (marked)
-        return;
-    marked = true;
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(m);
 
-    if (type != Type_SimpleCallContext && outer)
-        outer->mark();
+    if (ctx->outer)
+        ctx->outer->mark(engine);
 
-    callData->thisObject.mark();
-    for (unsigned arg = 0; arg < callData->argc; ++arg)
-        callData->args[arg].mark();
+    // ### shouldn't need these 3 lines
+    ctx->callData->thisObject.mark(engine);
+    for (int arg = 0; arg < ctx->callData->argc; ++arg)
+        ctx->callData->args[arg].mark(engine);
 
-    if (type >= Type_CallContext) {
-        QV4::CallContext *c = static_cast<CallContext *>(this);
+    if (ctx->type >= Type_CallContext) {
+        QV4::CallContext *c = static_cast<CallContext *>(ctx);
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
-            c->locals[local].mark();
+            c->locals[local].mark(engine);
         if (c->activation)
-            c->activation->mark();
-        c->function->mark();
-    } else if (type == Type_WithContext) {
-        WithContext *w = static_cast<WithContext *>(this);
-        w->withObject->mark();
-    } else if (type == Type_CatchContext) {
-        CatchContext *c = static_cast<CatchContext *>(this);
-        c->exceptionVarName->mark();
-        c->exceptionValue.mark();
-    } else if (type == Type_GlobalContext) {
-        GlobalContext *g = static_cast<GlobalContext *>(this);
-        g->global->mark();
+            c->activation->mark(engine);
+        c->function->mark(engine);
+    } else if (ctx->type == Type_WithContext) {
+        WithContext *w = static_cast<WithContext *>(ctx);
+        w->withObject->mark(engine);
+    } else if (ctx->type == Type_CatchContext) {
+        CatchContext *c = static_cast<CatchContext *>(ctx);
+        c->exceptionVarName->mark(engine);
+        c->exceptionValue.mark(engine);
+    } else if (ctx->type == Type_GlobalContext) {
+        GlobalContext *g = static_cast<GlobalContext *>(ctx);
+        g->global->mark(engine);
     }
 }
 
@@ -392,6 +382,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
     if (strictMode || name->equals(engine->id_this)) {
         ScopedValue n(scope, name.asReturnedValue());
         throwReferenceError(n);
+        return;
     }
     engine->globalObject->put(name, value);
 }
@@ -457,71 +448,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         }
     }
     ScopedValue n(scope, name.asReturnedValue());
-    throwReferenceError(n);
-    return 0;
-}
-
-ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
-{
-    Scope scope(this);
-    ScopedValue v(scope);
-    name->makeIdentifier();
-
-    if (name->equals(engine->id_this))
-        return callData->thisObject.asReturnedValue();
-
-    bool hasWith = false;
-    bool hasCatchScope = false;
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == Type_WithContext) {
-            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
-            hasWith = true;
-            bool hasProperty = false;
-            v = w->get(name, &hasProperty);
-            if (hasProperty) {
-                return v.asReturnedValue();
-            }
-            continue;
-        }
-
-        else if (ctx->type == Type_CatchContext) {
-            hasCatchScope = true;
-            CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue.asReturnedValue();
-        }
-
-        else if (ctx->type >= Type_CallContext) {
-            QV4::CallContext *c = static_cast<CallContext *>(ctx);
-            ScopedFunctionObject f(scope, c->function);
-            if (f->needsActivation || hasWith || hasCatchScope) {
-                for (unsigned int i = 0; i < f->varCount; ++i)
-                    if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i].asReturnedValue();
-                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
-                    if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->callData->args[i].asReturnedValue();
-            }
-            if (c->activation) {
-                bool hasProperty = false;
-                v = c->activation->get(name, &hasProperty);
-                if (hasProperty)
-                    return v.asReturnedValue();
-            }
-            if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name))
-                return f.asReturnedValue();
-        }
-
-        else if (ctx->type == Type_GlobalContext) {
-            GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            bool hasProperty = false;
-            v = g->global->get(name, &hasProperty);
-            if (hasProperty)
-                return v.asReturnedValue();
-        }
-    }
-    return Encode::undefined();
+    return throwReferenceError(n);
 }
 
 ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectRef base)
@@ -590,58 +517,57 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         }
     }
     ScopedValue n(scope, name.asReturnedValue());
-    throwReferenceError(n);
-    return 0;
+    return throwReferenceError(n);
 }
 
 
-void ExecutionContext::throwError(const ValueRef value)
+ReturnedValue ExecutionContext::throwError(const ValueRef value)
 {
-    engine->throwException(value);
+    return engine->throwException(value);
 }
 
-void ExecutionContext::throwError(const QString &message)
+ReturnedValue ExecutionContext::throwError(const QString &message)
 {
     Scope scope(this);
     ScopedValue v(scope, engine->newString(message));
     v = engine->newErrorObject(v);
-    throwError(v);
+    return throwError(v);
 }
 
-void ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
+ReturnedValue ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
     Scoped<Object> error(scope, engine->newSyntaxErrorObject(message, fileName, line, column));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwSyntaxError(const QString &message)
+ReturnedValue ExecutionContext::throwSyntaxError(const QString &message)
 {
     Scope scope(this);
     Scoped<Object> error(scope, engine->newSyntaxErrorObject(message));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwTypeError()
+ReturnedValue ExecutionContext::throwTypeError()
 {
     Scope scope(this);
     Scoped<Object> error(scope, engine->newTypeErrorObject(QStringLiteral("Type error")));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwTypeError(const QString &message)
+ReturnedValue ExecutionContext::throwTypeError(const QString &message)
 {
     Scope scope(this);
     Scoped<Object> error(scope, engine->newTypeErrorObject(message));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwUnimplemented(const QString &message)
+ReturnedValue ExecutionContext::throwUnimplemented(const QString &message)
 {
     Scope scope(this);
     ScopedValue v(scope, engine->newString(QStringLiteral("Unimplemented ") + message));
     v = engine->newErrorObject(v);
-    throwError(v);
+    return throwError(v);
 }
 
 ReturnedValue ExecutionContext::catchException(StackTrace *trace)
@@ -649,41 +575,42 @@ ReturnedValue ExecutionContext::catchException(StackTrace *trace)
     return engine->catchException(this, trace);
 }
 
-void ExecutionContext::throwReferenceError(const ValueRef value)
+ReturnedValue ExecutionContext::throwReferenceError(const ValueRef value)
 {
     Scope scope(this);
     Scoped<String> s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" is not defined");
     Scoped<Object> error(scope, engine->newReferenceErrorObject(msg));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
+ReturnedValue ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
-    QString msg = message + QStringLiteral(" is not defined");
+    QString msg = message;
     Scoped<Object> error(scope, engine->newReferenceErrorObject(msg, fileName, line, column));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwRangeError(const ValueRef value)
+ReturnedValue ExecutionContext::throwRangeError(const ValueRef value)
 {
     Scope scope(this);
     ScopedString s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" out of range");
     ScopedObject error(scope, engine->newRangeErrorObject(msg));
-    throwError(error);
+    return throwError(error);
 }
 
-void ExecutionContext::throwURIError(const ValueRef msg)
+ReturnedValue ExecutionContext::throwRangeError(const QString &message)
+{
+    Scope scope(this);
+    ScopedObject error(scope, engine->newRangeErrorObject(message));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionContext::throwURIError(const ValueRef msg)
 {
     Scope scope(this);
     ScopedObject error(scope, engine->newURIErrorObject(msg));
-    throwError(error);
-}
-
-void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)
-{
-    initBaseContext(Type_SimpleCallContext, engine, engine->current);
-    function = 0;
+    return throwError(error);
 }

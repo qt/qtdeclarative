@@ -178,6 +178,7 @@ public:
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
+        Q_UNUSED(protectThis);
         init();
     }
 
@@ -192,6 +193,7 @@ public:
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
+        Q_UNUSED(protectThis);
         loadReference();
         init();
     }
@@ -231,6 +233,9 @@ public:
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)
     {
+        if (internalClass->engine->hasException)
+            return;
+
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
             generateWarning(engine()->current, QLatin1String("Index out of range during indexed set"));
@@ -294,7 +299,7 @@ public:
             loadReference();
         }
 
-        if (it->arrayIndex < m_container.count()) {
+        if (it->arrayIndex < static_cast<uint>(m_container.count())) {
             if (attrs)
                 *attrs = QV4::Attr_Data;
             *index = it->arrayIndex;
@@ -374,7 +379,7 @@ public:
         QV4::ValueRef m_compareFn;
     };
 
-    void sort(QV4::SimpleCallContext *ctx)
+    void sort(QV4::CallContext *ctx)
     {
         if (m_isReference) {
             if (!m_object)
@@ -395,12 +400,12 @@ public:
             storeReference();
     }
 
-    static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue method_get_length(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         if (This->m_isReference) {
             if (!This->m_object)
@@ -410,12 +415,12 @@ public:
         return QV4::Encode(This->m_container.count());
     }
 
-    static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
+    static QV4::ReturnedValue method_set_length(QV4::CallContext* ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         quint32 newLength = ctx->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
@@ -548,12 +553,12 @@ void SequencePrototype::init()
     defineDefaultProperty(engine()->id_valueOf, method_valueOf, 0);
 }
 
-QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue SequencePrototype::method_sort(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::ScopedObject o(scope, ctx->callData->thisObject);
     if (!o || !o->isListType())
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (ctx->callData->argc >= 2)
         return o.asReturnedValue();
@@ -566,6 +571,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
+        {}
     return o.asReturnedValue();
 }
 

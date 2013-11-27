@@ -77,7 +77,7 @@ void BooleanPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
     defineDefaultProperty(engine->id_valueOf, method_valueOf);
 }
 
-ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
 {
     bool result;
     if (ctx->callData->thisObject.isBoolean()) {
@@ -86,14 +86,14 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
         Scope scope(ctx);
         Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
         if (!thisObject)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
         result = thisObject->value.booleanValue();
     }
 
     return Encode(ctx->engine->newString(QLatin1String(result ? "true" : "false")));
 }
 
-ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue BooleanPrototype::method_valueOf(CallContext *ctx)
 {
     if (ctx->callData->thisObject.isBoolean())
         return ctx->callData->thisObject.asReturnedValue();
@@ -101,7 +101,7 @@ ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
     if (!thisObject)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return thisObject->value.asReturnedValue();
 }

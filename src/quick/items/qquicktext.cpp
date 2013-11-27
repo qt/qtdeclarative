@@ -107,7 +107,6 @@ void QQuickTextPrivate::init()
     Q_Q(QQuickText);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QQuickItem::ItemHasContents);
-    q->setAcceptHoverEvents(true);
 }
 
 QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
@@ -1523,6 +1522,7 @@ void QQuickText::setText(const QString &n)
     qDeleteAll(d->imgTags);
     d->imgTags.clear();
     d->updateLayout();
+    setAcceptHoverEvents(d->richText || d->styledText);
     emit textChanged(d->text);
 }
 
@@ -2002,6 +2002,7 @@ void QQuickText::setTextFormat(TextFormat format)
         d->determineHorizontalAlignment();
     }
     d->updateLayout();
+    setAcceptHoverEvents(d->richText || d->styledText);
 
     emit textFormatChanged(d->format);
 }
@@ -2241,11 +2242,10 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height(), height(), d->vAlign);
 
     QQuickTextNode *node = 0;
-    if (!oldNode) {
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
-    } else {
+    if (!oldNode)
+        node = new QQuickTextNode(this);
+    else
         node = static_cast<QQuickTextNode *>(oldNode);
-    }
 
     node->setUseNativeRenderer(d->renderType == NativeRendering && d->window->devicePixelRatio() <= 1);
     node->deleteContent();
@@ -2635,34 +2635,34 @@ void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
 {
     Q_Q(QQuickText);
     QString link;
-    if (event->type() != QEvent::HoverLeave)
-        link = anchorAt(event->posF());
+    if (isLinkHoveredConnected()) {
+        if (event->type() != QEvent::HoverLeave)
+            link = anchorAt(event->posF());
 
-    if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
-        extra.value().hoveredLink = link;
-        emit q->linkHovered(extra->hoveredLink);
+        if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
+            extra.value().hoveredLink = link;
+            emit q->linkHovered(extra->hoveredLink);
+        }
     }
+    event->setAccepted(!link.isEmpty());
 }
 
 void QQuickText::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
-    if (d->isLinkHoveredConnected())
-        d->processHoverEvent(event);
+    d->processHoverEvent(event);
 }
 
 void QQuickText::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
-    if (d->isLinkHoveredConnected())
-        d->processHoverEvent(event);
+    d->processHoverEvent(event);
 }
 
 void QQuickText::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
-    if (d->isLinkHoveredConnected())
-        d->processHoverEvent(event);
+    d->processHoverEvent(event);
 }
 
 QT_END_NAMESPACE

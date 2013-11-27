@@ -682,16 +682,21 @@ void QSGPlainTexture::bind()
     GLenum externalFormat = GL_RGBA;
     GLenum internalFormat = GL_RGBA;
 
-    const char *extensions = (const char *) glGetString(GL_EXTENSIONS);
-    if (strstr(extensions, "GL_EXT_bgra")) {
+    QOpenGLContext *context = QOpenGLContext::currentContext();
+    if (context->hasExtension(QByteArrayLiteral("GL_EXT_bgra"))) {
         externalFormat = GL_BGRA;
 #ifdef QT_OPENGL_ES
         internalFormat = GL_BGRA;
 #endif
-    } else if (strstr(extensions, "GL_EXT_texture_format_BGRA8888")
-               || strstr(extensions, "GL_IMG_texture_format_BGRA8888")) {
+    } else if (context->hasExtension(QByteArrayLiteral("GL_EXT_texture_format_BGRA8888"))
+            || context->hasExtension(QByteArrayLiteral("GL_IMG_texture_format_BGRA8888"))) {
         externalFormat = GL_BGRA;
         internalFormat = GL_BGRA;
+#ifdef Q_OS_IOS
+    } else if (context->hasExtension(QByteArrayLiteral("GL_APPLE_texture_format_BGRA8888"))) {
+        externalFormat = GL_BGRA;
+        internalFormat = GL_RGBA;
+#endif
     } else {
         qsg_swizzleBGRAToRGBA(&tmp);
     }
@@ -711,8 +716,7 @@ void QSGPlainTexture::bind()
 
 
     if (m_has_mipmaps) {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+        context->functions()->glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmaps_generated = true;
     }
 

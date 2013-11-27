@@ -41,7 +41,6 @@
 /* This script file handles the game logic */
 .pragma library
 .import QtQuick.LocalStorage 2.0 as Sql
-.import "settings.js" as Settings
 
 var maxColumn = 10;
 var maxRow = 13;
@@ -111,8 +110,8 @@ function startNewGame(gc, mode, map)
     gc.gameOver = false;
     gc.mode = gameMode;
     // Calculate board size
-    maxColumn = Math.floor(gameCanvas.width/Settings.blockSize);
-    maxRow = Math.floor(gameCanvas.height/Settings.blockSize);
+    maxColumn = Math.floor(gameCanvas.width/gameCanvas.blockSize);
+    maxRow = Math.floor(gameCanvas.height/gameCanvas.blockSize);
     maxIndex = maxRow * maxColumn;
     if (gameMode == "arcade") //Needs to be after board sizing
         getHighScore();
@@ -143,8 +142,8 @@ function handleClick(x,y)
 {
     if (betweenTurns || gameOver || gameCanvas == undefined)
         return;
-    var column = Math.floor(x/Settings.blockSize);
-    var row = Math.floor(y/Settings.blockSize);
+    var column = Math.floor(x/gameCanvas.blockSize);
+    var row = Math.floor(y/gameCanvas.blockSize);
     if (column >= maxColumn || column < 0 || row >= maxRow || row < 0)
         return;
     if (board[index(column, row)] == null)
@@ -212,7 +211,7 @@ function shuffleDown()
             } else {
                 if (fallDist > 0) {
                     var obj = board[index(column, row)];
-                    obj.y = (row + fallDist) * Settings.blockSize;
+                    obj.y = (row + fallDist) * gameCanvas.blockSize;
                     board[index(column, row + fallDist)] = obj;
                     board[index(column, row)] = null;
                 }
@@ -230,7 +229,7 @@ function shuffleDown()
                     obj = board[index(column, row)];
                     if (obj == null)
                         continue;
-                    obj.x = (column - fallDist) * Settings.blockSize;
+                    obj.x = (column - fallDist) * gameCanvas.blockSize;
                     board[index(column - fallDist,row)] = obj;
                     board[index(column, row)] = null;
                 }
@@ -251,7 +250,7 @@ function shuffleUp()
             } else {
                 if (fallDist > 0) {
                     var obj = board[index(column, row)];
-                    obj.y = (row - fallDist) * Settings.blockSize;
+                    obj.y = (row - fallDist) * gameCanvas.blockSize;
                     board[index(column, row - fallDist)] = obj;
                     board[index(column, row)] = null;
                 }
@@ -269,7 +268,7 @@ function shuffleUp()
                     obj = board[index(column, row)];
                     if (obj == null)
                         continue;
-                    obj.x = (column - fallDist) * Settings.blockSize;
+                    obj.x = (column - fallDist) * gameCanvas.blockSize;
                     board[index(column - fallDist,row)] = obj;
                     board[index(column, row)] = null;
                 }
@@ -372,17 +371,17 @@ function createBlock(column,row,type)
         }
         var dynamicObject = component.createObject(gameCanvas,
                 {"type": type,
-                "x": column*Settings.blockSize,
-                "y": -1*Settings.blockSize,
-                "width": Settings.blockSize,
-                "height": Settings.blockSize,
+                "x": column*gameCanvas.blockSize,
+                "y": -1*gameCanvas.blockSize,
+                "width": gameCanvas.blockSize,
+                "height": gameCanvas.blockSize,
                 "particleSystem": gameCanvas.ps});
         if (dynamicObject == null){
             console.log("error creating block");
             console.log(component.errorString());
             return false;
         }
-        dynamicObject.y = row*Settings.blockSize;
+        dynamicObject.y = row*gameCanvas.blockSize;
         dynamicObject.spawned = true;
 
         board[index(column,row)] = dynamicObject;

@@ -77,7 +77,7 @@ public:
     };
     Q_DECLARE_FLAGS(Decorations, Decoration)
 
-    QQuickTextNode(QSGContext *, QQuickItem *ownerElement);
+    QQuickTextNode(QQuickItem *ownerElement);
     ~QQuickTextNode();
 
     static bool isComplexRichText(QTextDocument *);
@@ -110,7 +110,6 @@ private:
     void initEngine(const QColor &textColor, const QColor &selectedTextColor, const QColor &selectionColor, const QColor& anchorColor = QColor()
             , const QPointF &position = QPointF());
 
-    QSGContext *m_context;
     QSGSimpleRectNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;

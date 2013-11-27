@@ -69,7 +69,6 @@ public:
 
     QString name;
     float version;
-    QQmlDebugServer *server;
     QQmlDebugService::State state;
 };
 

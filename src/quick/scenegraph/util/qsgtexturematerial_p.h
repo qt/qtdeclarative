@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterialShader
 {
 public:
+    QSGOpaqueTextureMaterialShader();
+
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
 
@@ -57,8 +59,6 @@ public:
 
 protected:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_matrix_id;
 };
@@ -66,14 +66,14 @@ protected:
 class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
 {
 public:
+    QSGTextureMaterialShader();
+
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual void initialize();
 
     static QSGMaterialType type;
 
 protected:
-    virtual const char *fragmentShader() const;
-
     int m_opacity_id;
 };
 

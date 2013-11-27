@@ -185,7 +185,7 @@ command-line parameter "-reverse":
 qmlviewer myapp.qml -reverse
 \endcode
 
-The layout direction can also be set from C++ by calling the static function \l QApplication::setLayoutDirection():
+The layout direction can also be set from C++ by calling the static function \l QGuiApplication::setLayoutDirection():
 
 \code
 QApplication app(argc, argv);

@@ -59,10 +59,17 @@
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+
+namespace CompiledData {
+struct Function;
+}
+
+struct QQmlIdObjectsArray;
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
@@ -85,7 +92,12 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void destroy(Managed *that);
+    static void markObjects(Managed *m, ExecutionEngine *engine);
 
+    static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
+
+    ReturnedValue idObjectsArray();
+    ReturnedValue qmlSingletonWrapper(const StringRef &name);
 
     QV8Engine *v8; // ### temporary, remove
     bool readOnly;
@@ -94,6 +106,19 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     QQmlGuardedContextData context;
     QPointer<QObject> scopeObject;
+private:
+    QQmlIdObjectsArray *idObjectsWrapper;
+};
+
+struct QQmlIdObjectsArray : public Object
+{
+    Q_MANAGED
+    QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
+
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static void markObjects(Managed *that, ExecutionEngine *engine);
+
+    QmlContextWrapper *contextWrapper;
 };
 
 }

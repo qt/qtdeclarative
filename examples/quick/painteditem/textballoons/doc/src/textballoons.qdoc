@@ -49,7 +49,7 @@
 
     We will focus on the \c TextBalloon class first and continue with the
     \c textballoons.qml file. For an example on how to implement a \l {Qt Quick}
-    plugin please look at \l{declarative/tutorials/extending/chapter6-plugins}
+    plugin please look at \l{Chapter 6: Writing an Extension Plugin}
     {Writing an Extension Plugin}
 
     \section1 TextBalloon Class Declaration

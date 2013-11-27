@@ -65,6 +65,7 @@ private slots:
     void aliases();
     void categories();
     void siblings();
+    void initial();
 };
 
 class CppObject : public QObject
@@ -577,6 +578,23 @@ void tst_QQmlSettings::siblings()
     QSettings settings;
     QCOMPARE(settings.value("alias1").toString(), QStringLiteral("value1"));
     QCOMPARE(settings.value("alias2").toString(), QStringLiteral("value2"));
+}
+
+void tst_QQmlSettings::initial()
+{
+    QSettings qs;
+    qs.setValue("value", QStringLiteral("initial"));
+    qs.sync();
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import Qt.labs.settings 1.0; Settings { property var value }", QUrl());
+    QScopedPointer<QObject> settings(component.create());
+    QVERIFY(settings.data());
+
+    // verify that the initial value from QSettings gets properly loaded
+    // even if no initial value is set in QML
+    QCOMPARE(settings->property("value").toString(), QStringLiteral("initial"));
 }
 
 QTEST_MAIN(tst_QQmlSettings)

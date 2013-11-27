@@ -79,6 +79,9 @@ Item {
         Text { text: "dimensions" }
         Text { text: Screen.width + "x" + Screen.height }
 
+        Text { text: "pixel density" }
+        Text { text: Screen.pixelDensity.toFixed(2) + " dots/mm" }
+
         Text { text: "logical pixel density" }
         Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm" }
 

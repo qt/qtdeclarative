@@ -69,10 +69,17 @@
 #include "qquickparticlegroup_p.h"
 #include "qquickgroupgoal_p.h"
 
+static void initResources()
+{
+    Q_INIT_RESOURCE(particles);
+}
+
 QT_BEGIN_NAMESPACE
 
 void QQuickParticlesModule::defineModule()
 {
+    initResources();
+
     const char* uri = "QtQuick.Particles";
 
     qmlRegisterType<QQuickParticleSystem>(uri, 2, 0, "ParticleSystem");

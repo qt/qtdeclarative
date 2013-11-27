@@ -86,23 +86,6 @@ struct Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
     inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
-
-        struct StackSaver {
-            ExecutionEngine *engine;
-            SafeValue *stack;
-
-            StackSaver(ExecutionEngine *engine)
-                : engine(engine)
-                , stack(engine->jsStackTop)
-            {}
-
-            ~StackSaver()
-            {
-                engine->jsStackTop = stack;
-            }
-        };
-
-        StackSaver(ctx->engine);
         return codePtr(ctx, data);
     }
 
@@ -126,9 +109,10 @@ struct Function {
     inline bool needsActivation() const
     { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
 
-    void mark();
+    void mark(ExecutionEngine *e);
 
     int lineNumberForProgramCounter(qptrdiff offset) const;
+    QList<qptrdiff> programCountersForAllLines() const;
 };
 
 }

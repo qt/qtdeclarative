@@ -1212,6 +1212,17 @@ bool QQuickTextInput::hasAcceptableInput() const
     state.
 */
 
+/*!
+    \qmlsignal QtQuick::TextInput::onEditingFinished()
+    \since 5.2
+
+    This handler is called when the Return or Enter key is pressed or
+    the text input loses focus. Note that if there is a validator or
+    inputMask set on the text input and enter/return is pressed, this
+    handler will only be called if the input follows
+    the inputMask and the validator returns an acceptable state.
+*/
+
 #ifndef QT_NO_IM
 Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 {
@@ -1834,7 +1845,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
     if (node == 0)
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
+        node = new QQuickTextNode(this);
     d->textNode = node;
 
     if (!d->textLayoutDirty && oldNode != 0) {
@@ -2521,6 +2532,9 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
                 && hasSelectedText()
                 && !persistentSelection)
             deselect();
+
+        if (hasAcceptableInput(m_text) || fixup())
+            emit q->editingFinished();
 
 #ifndef QT_NO_IM
         q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
@@ -3378,7 +3392,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 */
 void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool edited)
 {
-    Q_Q(QQuickTextInput);
     internalDeselect();
     QString oldText = m_text;
     if (m_maskData) {
@@ -3396,6 +3409,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
 #ifdef QT_NO_ACCESSIBILITY
     Q_UNUSED(changed)
 #else
+    Q_Q(QQuickTextInput);
     if (changed && QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(q, QAccessible::EditableText)) {
             QAccessibleTextUpdateEvent ev(acc, 0, oldText, m_text);
@@ -4105,6 +4119,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (hasAcceptableInput(m_text) || fixup()) {
             emit q->accepted();
+            emit q->editingFinished();
         }
         event->ignore();
         return;

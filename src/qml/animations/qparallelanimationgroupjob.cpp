@@ -227,7 +227,7 @@ void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimatio
 
     if (!running
             && ((m_direction == Forward && m_currentLoop == m_loopCount -1)
-                || m_direction == Backward && m_currentLoop == 0)) {
+                || (m_direction == Backward && m_currentLoop == 0))) {
         stop();
     }
 }

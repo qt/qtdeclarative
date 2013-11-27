@@ -1,2 +1,2 @@
-module com.nokia.InvalidStrictModule
+module org.qtproject.InvalidStrictModule
 plugin invalidStrictModule

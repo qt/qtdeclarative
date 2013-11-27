@@ -40,11 +40,13 @@
 ****************************************************************************/
 
 #include "qsgbatchrenderer_p.h"
+#include <private/qsgshadersourcebuilder_p.h>
 
 #include <QtCore/QElapsedTimer>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
+#include <QtGui/QOpenGLVertexArrayObject>
 
 #include <private/qqmlprofilerservice_p.h>
 
@@ -56,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input);
+extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat::OpenGLContextProfile profile);
 
 namespace QSGBatchRenderer
 {
@@ -112,6 +114,7 @@ struct QMatrix4x4_Accessor
     int flagBits;
 
     static bool isTranslate(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits <= 0x1; }
+    static bool isScale(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits <= 0x2; }
     static bool is2DSafe(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits < 0x8; }
 };
 
@@ -130,10 +133,12 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 #endif
 
     QSGMaterialShader *s = material->createShader();
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     QOpenGLShaderProgram *p = s->program();
     p->addShaderFromSourceCode(QOpenGLShader::Vertex,
-                               qsgShaderRewriter_insertZAttributes(s->vertexShader()));
+                               qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile));
     p->addShaderFromSourceCode(QOpenGLShader::Fragment,
                                s->fragmentShader());
 
@@ -283,7 +288,6 @@ Updater::Updater(Renderer *r)
 
 void Updater::updateStates(QSGNode *n)
 {
-    m_toplevel_alpha = 1;
     m_current_clip = 0;
 
     m_added = 0;
@@ -389,6 +393,9 @@ void Updater::visitOpacityNode(Node *n)
         if (was != is) {
             renderer->m_rebuild = Renderer::FullRebuild;
             n->isOpaque = is;
+        } else if (!is) {
+            renderer->invalidateAlphaBatchesForRoot(m_roots.last());
+            renderer->m_rebuild |= Renderer::BuildBatches;
         }
         ++m_force_update;
         SHADOWNODE_TRAVERSE(n) visitNode(*child);
@@ -530,6 +537,38 @@ int qsg_positionAttribute(QSGGeometry *g) {
     return -1;
 }
 
+
+void Rect::map(const QMatrix4x4 &matrix)
+{
+    const float *m = matrix.constData();
+    if (QMatrix4x4_Accessor::isScale(matrix)) {
+        tl.x = tl.x * m[0] + m[12];
+        tl.y = tl.y * m[5] + m[13];
+        br.x = br.x * m[0] + m[12];
+        br.y = br.y * m[5] + m[13];
+        if (tl.x > br.x)
+            qSwap(tl.x, br.x);
+        if (tl.y > br.y)
+            qSwap(tl.y, br.y);
+    } else {
+        Pt mtl = tl;
+        Pt mtr = { br.x, tl.y };
+        Pt mbl = { tl.x, br.y };
+        Pt mbr = br;
+
+        mtl.map(matrix);
+        mtr.map(matrix);
+        mbl.map(matrix);
+        mbr.map(matrix);
+
+        set(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
+        (*this) |= mtl;
+        (*this) |= mtr;
+        (*this) |= mbl;
+        (*this) |= mbr;
+    }
+}
+
 void Element::computeBounds()
 {
     Q_ASSERT(!boundsComputed);
@@ -550,6 +589,17 @@ void Element::computeBounds()
         vd += g->sizeOfVertex();
     }
     bounds.map(*node->matrix());
+
+    if (!qIsFinite(bounds.tl.x))
+        bounds.tl.x = -FLT_MAX;
+    if (!qIsFinite(bounds.tl.y))
+        bounds.tl.y = -FLT_MAX;
+    if (!qIsFinite(bounds.br.x))
+        bounds.br.x = FLT_MAX;
+    if (!qIsFinite(bounds.br.y))
+        bounds.br.y = FLT_MAX;
+
+    boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
 
 RenderNodeElement::~RenderNodeElement()
@@ -650,12 +700,26 @@ bool Batch::isTranslateOnlyToRoot() const {
 
 /*
  * Iterates through all the nodes in the batch and returns true if the
- * nodes are all "2D safe" meaning that they can be merged and that
- * the value in the z coordinate is of no consequence.
+ * nodes are all safe to batch. There are two separate criteria:
+ *
+ * - The matrix is such that the z component of the result is of no
+ *   consequence.
+ *
+ * - The bounds are inside the stable floating point range. This applies
+ *   to desktop only where we in this case can trigger a fallback to
+ *   unmerged in which case we pass the geometry straight through and
+ *   just apply the matrix.
+ *
+ *   NOTE: This also means a slight performance impact for geometries which
+ *   are defined to be outside the stable floating point range and still
+ *   use single precision float, but given that this implicitly fixes
+ *   huge lists and tables, it is worth it.
  */
-bool Batch::allMatricesAre2DSafe() const {
+bool Batch::isSafeToBatch() const {
     Element *e = first;
     while (e) {
+        if (e->boundsOutsideFloatRange)
+            return false;
         if (!QMatrix4x4_Accessor::is2DSafe(*e->node->matrix()))
             return false;
         e = e->nextInBatch;
@@ -683,7 +747,7 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGContext *ctx)
+Renderer::Renderer(QSGRenderContext *ctx)
     : QSGRenderer(ctx)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)
@@ -700,6 +764,7 @@ Renderer::Renderer(QSGContext *ctx)
     , m_zRange(0)
     , m_currentMaterial(0)
     , m_currentShader(0)
+    , m_vao(0)
 {
     setNodeUpdater(new Updater(this));
 
@@ -739,6 +804,13 @@ Renderer::Renderer(QSGContext *ctx)
     if (Q_UNLIKELY(debug_build || debug_render)) {
         qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
         qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));
+    }
+
+    // If rendering with an OpenGL Core profile context, we need to create a VAO
+    // to hold our vertex specification state.
+    if (context()->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+        m_vao = new QOpenGLVertexArrayObject(this);
+        m_vao->create();
     }
 }
 
@@ -1344,6 +1416,15 @@ void Renderer::buildRenderListsFromScratch()
     buildRenderLists(rootNode());
 }
 
+void Renderer::invalidateAlphaBatchesForRoot(Node *root)
+{
+    for (int i=0; i<m_alphaBatches.size(); ++i) {
+        Batch *b = m_alphaBatches.at(i);
+        if (b->root == root || root == 0)
+            b->invalidate();
+    }
+}
+
 /* Clean up batches by making it a consecutive list of "valid"
  * batches and moving all invalidated batches to the batches pool.
  */
@@ -1491,6 +1572,13 @@ void Renderer::prepareAlphaBatches()
                     ej->batch = batch;
                     next->nextInBatch = ej;
                     next = ej;
+                } else {
+                    /* When we come across a compatible element which hits an overlap, we
+                     * need to stop the batch right away. We cannot add more elements
+                     * to the current batch as they will be rendered before the batch that the
+                     * current 'ej' will be added to.
+                     */
+                    break;
                 }
             } else {
                 overlapBounds |= ej->bounds;
@@ -1616,7 +1704,7 @@ void Renderer::uploadBatch(Batch *b)
                         && (((gn->activeMaterial()->flags() & QSGMaterial::RequiresDeterminant) == 0)
                             || (((gn->activeMaterial()->flags() & QSGMaterial_RequiresFullMatrixBit) == 0) && b->isTranslateOnlyToRoot())
                             )
-                        && b->allMatricesAre2DSafe();
+                        && b->isSafeToBatch();
 
         b->merged = canMerge;
 
@@ -1890,7 +1978,14 @@ void Renderer::renderMergedBatch(const Batch *batch)
     updateClip(gn->clipList(), batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+
+    char *indexBase = 0;
+    if (m_context->hasBrokenIndexBufferObjects()) {
+        indexBase = batch->vbo.data;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    } else {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+    }
 
 
     QSGMaterial *material = gn->activeMaterial();
@@ -1925,7 +2020,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
         }
         glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
 
-        glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (draw.indices));
+        glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (indexBase + draw.indices));
     }
 }
 
@@ -1958,8 +2053,15 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     updateClip(gn->clipList(), batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
-    if (batch->indexCount)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+    char *indexBase = 0;
+    if (batch->indexCount) {
+        if (m_context->hasBrokenIndexBufferObjects()) {
+            indexBase = batch->vbo.data;
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        } else {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+        }
+    }
 
     // We always have dirty matrix as all batches are at a unique z range.
     QSGMaterialShader::RenderState::DirtyStates dirty = QSGMaterialShader::RenderState::DirtyMatrix;
@@ -1978,7 +2080,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     }
 
     int vOffset = 0;
-    int iOffset = batch->vertexCount * gn->geometry()->sizeOfVertex();
+    char *iOffset = indexBase + batch->vertexCount * gn->geometry()->sizeOfVertex();
 
     QMatrix4x4 rootMatrix = batch->root ? matrixForRoot(batch->root) : QMatrix4x4();
 
@@ -1994,7 +2096,9 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
         program->updateState(state(dirty), material, m_currentMaterial);
 
-        m_currentMaterial = gn->activeMaterial();
+        // We don't need to bother with asking each node for its material as they
+        // are all identical (compare==0) since they are in the same batch.
+        m_currentMaterial = material;
 
         QSGGeometry* g = gn->geometry();
         char const *const *attrNames = program->attributeNames();
@@ -2009,7 +2113,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         }
 
         if (g->indexCount())
-            glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), (void *) (qintptr) iOffset);
+            glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), iOffset);
         else
             glDrawArrays(g->drawingMode(), 0, g->vertexCount());
 
@@ -2031,14 +2135,13 @@ void Renderer::renderBatches()
                            << " -> Alpha: " << qsg_countNodesInBatches(m_alphaBatches) << " nodes in " << m_alphaBatches.size() << " batches...";
     }
 
-    QRect r = viewportRect();
-    glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
-
     for (QHash<QSGRenderNode *, RenderNodeElement *>::const_iterator it = m_renderNodeElements.constBegin();
          it != m_renderNodeElements.constEnd(); ++it) {
         prepareRenderNode(it.value());
     }
 
+    QRect r = viewportRect();
+    glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
     glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
 #if defined(QT_OPENGL_ES)
     glClearDepthf(1);
@@ -2124,6 +2227,17 @@ void Renderer::deleteRemovedElements()
             delete e;
     }
     m_elementsToDelete.reset();
+}
+
+void Renderer::preprocess()
+{
+    // Bind our VAO. It's important that we do this here as the
+    // QSGRenderer::preprocess() call may well do work that requires
+    // a bound VAO.
+    if (m_vao)
+        m_vao->bind();
+
+    QSGRenderer::preprocess();
 }
 
 void Renderer::render()
@@ -2233,6 +2347,9 @@ void Renderer::render()
     renderBatches();
 
     m_rebuild = 0;
+
+    if (m_vao)
+        m_vao->release();
 }
 
 void Renderer::prepareRenderNode(RenderNodeElement *e)
@@ -2310,23 +2427,11 @@ void Renderer::renderRenderNode(Batch *batch)
 
     if (!m_shaderManager->blitProgram) {
         m_shaderManager->blitProgram = new QOpenGLShaderProgram();
-        const char *vs =
-                "attribute highp vec4 av;               "
-                "attribute highp vec2 at;               "
-                "varying highp vec2 t;                  "
-                "void main() {                          "
-                "    gl_Position = av;                  "
-                "    t = at;                            "
-                "}                                      ";
-        const char *fs =
-                "uniform lowp sampler2D tex;            "
-                "varying highp vec2 t;                  "
-                "void main() {                          "
-                "    gl_FragColor = texture2D(tex, t);  "
-                "}                                      ";
 
-        m_shaderManager->blitProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, vs);
-        m_shaderManager->blitProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, fs);
+        QSGShaderSourceBuilder::initializeProgramFromFiles(
+            m_shaderManager->blitProgram,
+            QStringLiteral(":/scenegraph/shaders/rendernode.vert"),
+            QStringLiteral(":/scenegraph/shaders/rendernode.frag"));
         m_shaderManager->blitProgram->bindAttributeLocation("av", 0);
         m_shaderManager->blitProgram->bindAttributeLocation("at", 1);
         m_shaderManager->blitProgram->link();

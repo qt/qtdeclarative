@@ -72,8 +72,6 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
     // be negligiblie compared to animating and re-rendering the scene on the render thread.
     m_duration = -1;
 
-    job->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
-
     QObject *ctx = findAnimationContext(m_animation);
     if (!ctx) {
         qWarning("QtQuick: unable to find animation context for RT animation...");
@@ -100,7 +98,7 @@ void QQuickAnimatorProxyJob::deleteJob()
 {
     if (m_job) {
         if (m_controller && m_internalState != State_Starting)
-            QCoreApplication::postEvent(m_controller, new QQuickAnimatorController::Event(m_job, QQuickAnimatorController::DeleteAnimation));
+            m_controller->deleteJob(m_job);
         else if (m_internalState == State_Starting)
             delete m_job;
         m_job = 0;
@@ -122,18 +120,15 @@ void QQuickAnimatorProxyJob::updateCurrentTime(int)
 void QQuickAnimatorProxyJob::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
 {
     if (m_state == Running) {
-        if (m_controller) {
-            m_internalState = State_Running;
-            startOnRenderThread();
-        } else {
-            m_internalState = State_Starting;
-        }
+        m_internalState = State_Starting;
+        if (m_controller)
+            m_controller->startJob(this, m_job);
     } else if (newState == Stopped) {
         syncBackCurrentValues();
         if (m_internalState == State_Starting)
             m_internalState = State_Stopped;
         else if (m_controller) {
-            QCoreApplication::postEvent(m_controller, new QQuickAnimatorController::Event(m_job, QQuickAnimatorController::StopAnimation));
+            m_controller->stopJob(this, m_job);
         }
     }
 }
@@ -143,23 +138,28 @@ void QQuickAnimatorProxyJob::windowChanged(QQuickWindow *window)
     setWindow(window);
 }
 
+void QQuickAnimatorProxyJob::controllerWasDeleted()
+{
+    m_controller = 0;
+    m_job = 0;
+}
+
 void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 {
     if (!window) {
-        m_controller = 0;
         // Stop will trigger syncBackCurrentValues so best to do it before
         // we delete m_job.
         stop();
         deleteJob();
         return;
+
+    } else if (!m_controller && m_job) {
+        m_controller = QQuickWindowPrivate::get(window)->animationController;
+        if (window->openglContext())
+            readyToAnimate();
+        else
+            connect(window, SIGNAL(sceneGraphInitialized()), this, SLOT(sceneGraphInitialized()));
     }
-
-    m_controller = QQuickWindowPrivate::get(window)->animationController;
-
-    if (window->openglContext())
-        readyToAnimate();
-    else
-        connect(window, SIGNAL(sceneGraphInitialized()), this, SLOT(sceneGraphInitialized()));
 }
 
 void QQuickAnimatorProxyJob::sceneGraphInitialized()
@@ -170,34 +170,22 @@ void QQuickAnimatorProxyJob::sceneGraphInitialized()
 
 void QQuickAnimatorProxyJob::readyToAnimate()
 {
-    if (m_internalState == State_Starting) {
-        startOnRenderThread();
-    }
+    if (m_internalState == State_Starting)
+        m_controller->startJob(this, m_job);
 }
 
-void QQuickAnimatorProxyJob::animationFinished(QAbstractAnimationJob *job)
+void QQuickAnimatorProxyJob::startedByController()
 {
-    QCoreApplication::postEvent(this, new QQuickAnimatorController::Event(job, QQuickAnimatorController::AnimationFinished));
+    m_internalState = State_Running;
 }
 
 bool QQuickAnimatorProxyJob::event(QEvent *e)
 {
-    if ((uint) e->type() == QQuickAnimatorController::AnimationFinished) {
-        // Update the duration of this proxy to the current time and stop it so
-        // that parent animations can progress gracefully
+    if (e->type() == QEvent::User) {
         stop();
         return true;
     }
-
     return QObject::event(e);
-}
-
-void QQuickAnimatorProxyJob::startOnRenderThread()
-{
-    m_internalState = State_Running;
-    // Force a "sync" pass as the newly started animation needs to sync properties from GUI.
-    m_controller->startAnimation(m_job);
-    QQuickWindowPrivate::get(m_controller->window)->dirtyItem(0);
 }
 
 static void qquick_syncback_helper(QAbstractAnimationJob *job)
@@ -216,7 +204,8 @@ static void qquick_syncback_helper(QAbstractAnimationJob *job)
 
 void QQuickAnimatorProxyJob::syncBackCurrentValues()
 {
-    qquick_syncback_helper(m_job);
+    if (m_job)
+        qquick_syncback_helper(m_job);
 }
 
 QQuickAnimatorJob::QQuickAnimatorJob()
@@ -236,9 +225,9 @@ QQuickAnimatorJob::QQuickAnimatorJob()
 qreal QQuickAnimatorJob::value() const
 {
     qreal v;
-    m_controller->mutex.lock();
+    m_controller->lock();
     v = m_value;
-    m_controller->mutex.unlock();
+    m_controller->unlock();
     return v;
 }
 
@@ -258,21 +247,6 @@ void QQuickAnimatorJob::targetWasDeleted()
     m_controller = 0;
 }
 
-void QQuickAnimatorJob::updateState(State newState, State oldState)
-{
-    if (!m_controller) {
-        stop();
-        return;
-    }
-
-    if (newState == Running) {
-        m_controller->activeLeafAnimations << this;
-        m_hasBeenRunning = true;
-    } else if (oldState == Running) {
-        m_controller->activeLeafAnimations.remove(this);
-    }
-}
-
 QQuickTransformAnimatorJob::QQuickTransformAnimatorJob()
     : m_helper(0)
 {
@@ -282,7 +256,7 @@ QQuickTransformAnimatorJob::QQuickTransformAnimatorJob()
 QQuickTransformAnimatorJob::~QQuickTransformAnimatorJob()
 {
     if (m_helper && --m_helper->ref == 0) {
-        m_controller->transforms.remove(m_helper->item);
+        m_controller->m_transforms.remove(m_helper->item);
         delete m_helper;
     }
 }
@@ -292,11 +266,11 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
     QQuickAnimatorJob::initialize(controller);
 
     if (m_controller) {
-        m_helper = m_controller->transforms.value(m_target);
+        m_helper = m_controller->m_transforms.value(m_target);
         if (!m_helper) {
             m_helper = new Helper();
             m_helper->item = m_target;
-            m_controller->transforms.insert(m_target, m_helper);
+            m_controller->m_transforms.insert(m_target, m_helper);
             QObject::connect(m_target, SIGNAL(destroyed(QObject *)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
         } else {
             ++m_helper->ref;
@@ -307,16 +281,12 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
     }
 }
 
-QQuickTransformAnimatorJob::Helper::~Helper()
-{
-}
-
-
 void QQuickTransformAnimatorJob::Helper::sync()
 {
     const quint32 mask = QQuickItemPrivate::Position
             | QQuickItemPrivate::BasicTransform
-            | QQuickItemPrivate::TransformOrigin;
+            | QQuickItemPrivate::TransformOrigin
+            | QQuickItemPrivate::Size;
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
     if (d->extra.isAllocated()
@@ -347,7 +317,7 @@ void QQuickTransformAnimatorJob::Helper::sync()
         rotation = item->rotation();
     }
 
-    if (dirty & QQuickItemPrivate::TransformOrigin) {
+    if (dirty & (QQuickItemPrivate::TransformOrigin | QQuickItemPrivate::Size)) {
         QPointF o = item->transformOriginPoint();
         ox = o.x();
         oy = o.y();
@@ -382,7 +352,7 @@ void QQuickXAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->dx = m_value;
@@ -399,7 +369,7 @@ void QQuickYAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->dy = m_value;
@@ -452,7 +422,7 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_opacityNode->setOpacity(m_value);
@@ -468,7 +438,7 @@ void QQuickScaleAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->scale = m_value;
@@ -488,7 +458,7 @@ void QQuickRotationAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     float t =  m_easing.valueForProgress(time / (qreal) m_duration);
     switch (m_direction) {
@@ -563,7 +533,7 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-    Q_ASSERT(m_controller->window->openglContext()->thread() == QThread::currentThread());
+    Q_ASSERT(m_controller->m_window->openglContext()->thread() == QThread::currentThread());
 
     if (!m_node || m_uniformIndex == -1 || m_uniformType == -1)
         return;

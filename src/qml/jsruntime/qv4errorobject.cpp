@@ -82,7 +82,7 @@ ErrorObject::ErrorObject(InternalClass *ic)
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
 
-    ScopedString s(scope, ic->engine->newString("Error"));
+    ScopedString s(scope, ic->engine->newString(QStringLiteral("Error")));
     defineDefaultProperty(QStringLiteral("name"), s);
 }
 
@@ -167,12 +167,12 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineDefaultProperty(QStringLiteral("message"), v);
 }
 
-ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
+ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
     if (!This)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     if (!This->stack) {
         QString trace;
         for (int i = 0; i < This->stackTrace.count(); ++i) {
@@ -192,12 +192,12 @@ ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
     return This->stack->asReturnedValue();
 }
 
-void ErrorObject::markObjects(Managed *that)
+void ErrorObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ErrorObject *This = that->asErrorObject();
     if (This->stack)
-        This->stack->mark();
-    Object::markObjects(that);
+        This->stack->mark(e);
+    Object::markObjects(that, e);
 }
 
 DEFINE_MANAGED_VTABLE(ErrorObject);
@@ -383,13 +383,13 @@ void ErrorPrototype::init(ExecutionEngine *engine, ObjectRef ctor, Object *obj)
     obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())));
 }
 
-ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
 
     Object *o = ctx->callData->thisObject.asObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue name(scope, o->get(ctx->engine->id_name));
     QString qname;

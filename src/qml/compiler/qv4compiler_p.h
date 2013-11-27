@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyData;
+
 namespace QV4 {
 
 namespace CompiledData {
@@ -71,6 +73,8 @@ struct Q_QML_EXPORT JSUnitGenerator {
 
     int registerRegExp(QQmlJS::V4IR::RegExp *regexp);
 
+    int registerConstant(ReturnedValue v);
+
     void registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings);
 
     int registerJSClass(QQmlJS::V4IR::ExprList *args);
@@ -85,10 +89,18 @@ struct Q_QML_EXPORT JSUnitGenerator {
     QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
+    QVector<ReturnedValue> constants;
     QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
     uint headerSize;
+
+    typedef QHash<QQmlJS::V4IR::Function *, QSet<int> > IdDependencyHash;
+    IdDependencyHash qmlIdObjectDependenciesPerFunction;
+
+    typedef QHash<QQmlJS::V4IR::Function *, QSet<QQmlPropertyData*> > PropertyDependencyHash;
+    PropertyDependencyHash qmlContextPropertyDependenciesPerFunction;
+    PropertyDependencyHash qmlScopePropertyDependenciesPerFunction;
 };
 
 }

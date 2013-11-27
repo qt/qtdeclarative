@@ -2,6 +2,11 @@
 
 DEFINES += WTF_EXPORT_PRIVATE="" JS_EXPORT_PRIVATE=""
 
+# Avoid symbol clashes with QtScript during static linking
+DEFINES += WTFReportAssertionFailure=qmlWTFReportAssertionFailure
+DEFINES += WTFReportBacktrace=qmlWTFReportBacktrace
+DEFINES += WTFInvokeCrashHook=qmlWTFInvokeCrashHook
+
 win*: DEFINES += NOMINMAX
 
 DEFINES += ENABLE_LLINT=0

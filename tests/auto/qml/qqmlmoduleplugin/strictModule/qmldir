@@ -1,2 +1,2 @@
-module com.nokia.StrictModule
+module org.qtproject.StrictModule
 plugin strictModule

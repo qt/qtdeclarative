@@ -45,7 +45,6 @@
 #include "qv4value_p.h"
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
-#include "qv4unwindhelper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -59,19 +58,21 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , codeData(0)
         , codeSize(_codeSize)
 {
+    Q_UNUSED(engine);
+
     name = compilationUnit->runtimeStrings[compiledFunction->nameIndex].asString();
 
     formals.resize(compiledFunction->nFormals);
     formals.fill(0);
     const quint32 *formalsIndices = compiledFunction->formalsTable();
-    for (int i = 0; i < compiledFunction->nFormals; ++i)
+    for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
         formals[i] = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
 
 
     locals.resize(compiledFunction->nLocals);
     locals.fill(0);
     const quint32 *localsIndices = compiledFunction->localsTable();
-    for (int i = 0; i < compiledFunction->nLocals; ++i)
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         locals[i] = compilationUnit->runtimeStrings[localsIndices[i]].asString();
 }
 
@@ -80,20 +81,21 @@ Function::~Function()
 }
 
 
-void Function::mark()
+void Function::mark(ExecutionEngine *e)
 {
-    name.mark();
+    name.mark(e);
     for (int i = 0; i < formals.size(); ++i)
-        formals.at(i)->mark();
+        formals.at(i)->mark(e);
     for (int i = 0; i < locals.size(); ++i)
-        locals.at(i)->mark();
+        locals.at(i)->mark(e);
 }
 
 namespace QV4 {
+template <int field, typename SearchType>
 struct LineNumberMappingHelper
 {
     const quint32 *table;
-    int lowerBound(int begin, int end, qptrdiff offset) {
+    int lowerBound(int begin, int end, SearchType value) {
         int middle;
         int n = int(end - begin);
         int half;
@@ -101,7 +103,7 @@ struct LineNumberMappingHelper
         while (n > 0) {
             half = n >> 1;
             middle = begin + half;
-            if (table[middle * 2] < offset) {
+            if (table[middle * 2 + field] < static_cast<quint32>(value)) {
                 begin = middle + 1;
                 n -= half + 1;
             } else {
@@ -110,22 +112,57 @@ struct LineNumberMappingHelper
         }
         return begin;
     }
-};
+    int upperBound(int begin, int end, SearchType value) {
+        int middle;
+        int n = int(end - begin);
+        int half;
 
+        while (n > 0) {
+            half = n >> 1;
+            middle = begin + half;
+            if (value < table[middle * 2 + field]) {
+                n = half;
+            } else {
+                begin = middle + 1;
+                n -= half + 1;
+            }
+        }
+        return begin;
+    }
+};
 }
 
 int Function::lineNumberForProgramCounter(qptrdiff offset) const
 {
-    LineNumberMappingHelper helper;
+    // Access the first field, the program counter
+    LineNumberMappingHelper<0, qptrdiff> helper;
     helper.table = compiledFunction->lineNumberMapping();
     const uint count = compiledFunction->nLineNumberMappingEntries;
 
     int pos = helper.lowerBound(0, count, offset);
     if (pos != 0 && count > 0)
         --pos;
-    if (pos == count)
+    if (static_cast<uint>(pos) == count)
         return -1;
     return helper.table[pos * 2 + 1];
+}
+
+QList<qptrdiff> Function::programCountersForAllLines() const
+{
+    // Only store 1 breakpoint per line...
+    QHash<quint32, qptrdiff> offsetsPerLine;
+    const quint32 *mapping = compiledFunction->lineNumberMapping();
+
+    // ... and make it the first instruction by walking backwards over the line mapping table
+    // and inserting all entries keyed on line.
+    for (quint32 i = compiledFunction->nLineNumberMappingEntries; i > 0; ) {
+        --i; // the loop is written this way, because starting at endIndex-1 and checking for i>=0 will never end: i>=0 is always true for unsigned.
+        quint32 offset = mapping[i * 2];
+        quint32 line = mapping[i * 2 + 1];
+        offsetsPerLine.insert(line, offset);
+    }
+
+    return offsetsPerLine.values();
 }
 
 QT_END_NAMESPACE

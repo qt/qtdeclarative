@@ -211,19 +211,8 @@ void tst_QPauseAnimationJob::multiplePauseAnimations()
 #endif
     QCOMPARE(animation2.m_updateCurrentTimeCount, 2);
 
-    QTest::qWait(550);
-
-#ifdef Q_OS_WIN
-    if (animation2.state() != QAbstractAnimationJob::Stopped)
-        QEXPECT_FAIL("", winTimerError, Abort);
-#endif
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Stopped);
-
-#ifdef Q_OS_WIN
-    if (animation2.m_updateCurrentTimeCount != 3)
-        QEXPECT_FAIL("", winTimerError, Abort);
-#endif
-    QCOMPARE(animation2.m_updateCurrentTimeCount, 3);
+    QTRY_COMPARE(animation2.state(), QAbstractAnimationJob::Stopped);
+    QVERIFY(animation2.m_updateCurrentTimeCount >= 3);
 }
 
 void tst_QPauseAnimationJob::pauseAndPropertyAnimations()
@@ -240,19 +229,17 @@ void tst_QPauseAnimationJob::pauseAndPropertyAnimations()
     QTest::qWait(100);
     animation.start();
 
-    QVERIFY(animation.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
+
+    QTRY_COMPARE(animation.state(), QAbstractAnimationJob::Running);
     QVERIFY(pause.state() == QAbstractAnimationJob::Running);
-    QCOMPARE(pause.m_updateCurrentTimeCount, 2);
+    QVERIFY2(pause.m_updateCurrentTimeCount >= 2,
+             QByteArrayLiteral("pause.m_updateCurrentTimeCount=") + QByteArray::number(pause.m_updateCurrentTimeCount));
 
-    QTest::qWait(animation.totalDuration() + 100);
-
-#ifdef Q_OS_WIN
-    if (animation.state() != QAbstractAnimationJob::Stopped)
-        QEXPECT_FAIL("", winTimerError, Abort);
-#endif
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(pause.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(pause.m_updateCurrentTimeCount > 3);
+    QTRY_COMPARE(animation.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(pause.state(), QAbstractAnimationJob::Stopped);
+    QVERIFY2(pause.m_updateCurrentTimeCount > 3,
+             QByteArrayLiteral("pause.m_updateCurrentTimeCount=") + QByteArray::number(pause.m_updateCurrentTimeCount));
 }
 
 void tst_QPauseAnimationJob::pauseResume()
@@ -260,19 +247,15 @@ void tst_QPauseAnimationJob::pauseResume()
     TestablePauseAnimation animation;
     animation.setDuration(400);
     animation.start();
-    QVERIFY(animation.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
     QTest::qWait(200);
     animation.pause();
-    QVERIFY(animation.state() == QAbstractAnimationJob::Paused);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Paused);
     animation.start();
     QTest::qWait(300);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
-
-#ifdef Q_OS_WIN
-    if (animation.m_updateCurrentTimeCount != 3)
-        QEXPECT_FAIL("", winTimerError, Abort);
-#endif
-    QCOMPARE(animation.m_updateCurrentTimeCount, 3);
+    QTRY_VERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QVERIFY2(animation.m_updateCurrentTimeCount >= 3,
+            QByteArrayLiteral("animation.m_updateCurrentTimeCount=") + QByteArray::number(animation.m_updateCurrentTimeCount));
 }
 
 void tst_QPauseAnimationJob::sequentialPauseGroup()
@@ -423,7 +406,7 @@ void tst_QPauseAnimationJob::multipleSequentialGroups()
     if (group.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(group.state() == QAbstractAnimationJob::Stopped);
+    QTRY_VERIFY(group.state() == QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (subgroup1.state() != QAbstractAnimationJob::Stopped)

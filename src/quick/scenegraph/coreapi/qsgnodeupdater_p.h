@@ -64,9 +64,6 @@ public:
     virtual void updateStates(QSGNode *n);
     virtual bool isNodeBlocked(QSGNode *n, QSGNode *root) const;
 
-    void setToplevelOpacity(qreal alpha) { m_opacity_stack.last() = alpha; }
-    qreal toplevelOpacity() const { return m_opacity_stack.last(); }
-
 protected:
     virtual void enterTransformNode(QSGTransformNode *);
     virtual void leaveTransformNode(QSGTransformNode *);
@@ -88,8 +85,6 @@ protected:
     const QSGClipNode *m_current_clip;
 
     int m_force_update;
-
-    qreal m_toplevel_alpha;
 };
 
 QT_END_NAMESPACE

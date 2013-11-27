@@ -117,6 +117,7 @@ public:
 
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
+    virtual int compare(const QSGMaterial *other) const;
 
     void setShift(const QPointF &shift) { m_shift = shift; }
     const QPointF &shift() const { return m_shift; }

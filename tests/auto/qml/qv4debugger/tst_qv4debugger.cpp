@@ -45,6 +45,9 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv8engine_p.h>
 
+using namespace QV4;
+using namespace QV4::Debugging;
+
 static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
 {
     QEventLoop loop;
@@ -77,7 +80,7 @@ public:
 
     QV4::ExecutionEngine *v4Engine() { return QV8Engine::getV4(this); }
 
-    typedef QV4::ReturnedValue (*InjectedFunction)(QV4::SimpleCallContext*);
+    typedef QV4::ReturnedValue (*InjectedFunction)(QV4::CallContext*);
 
     Q_INVOKABLE void injectFunction(const QString &functionName, TestEngine::InjectedFunction injectedFunction)
     {
@@ -95,26 +98,109 @@ signals:
 
 Q_DECLARE_METATYPE(TestEngine::InjectedFunction)
 
+namespace {
+class TestCollector: public QV4::Debugging::Debugger::Collector
+{
+public:
+    TestCollector(QV4::ExecutionEngine *engine)
+        : Collector(engine)
+        , destination(0)
+    {}
+
+    virtual ~TestCollector() {}
+
+    void setDestination(QVariantMap *dest)
+    { destination = dest; }
+
+protected:
+    virtual void addUndefined(const QString &name)
+    {
+        destination->insert(name, QStringLiteral("undefined")); // TODO: add a user-defined type for this
+    }
+
+    virtual void addNull(const QString &name)
+    {
+        destination->insert(name, QStringLiteral("null")); // TODO: add a user-defined type for this
+    }
+
+    virtual void addBoolean(const QString &name, bool value)
+    {
+        destination->insert(name, value);
+    }
+
+    virtual void addString(const QString &name, const QString &value)
+    {
+        destination->insert(name, value);
+    }
+
+    virtual void addObject(const QString &name, QV4::ValueRef value)
+    {
+        QV4::Scope scope(engine());
+        QV4::ScopedObject obj(scope, value->asObject());
+
+        QVariantMap props, *prev = &props;
+        qSwap(destination, prev);
+        collect(obj);
+        qSwap(destination, prev);
+
+        destination->insert(name, props);
+    }
+
+    virtual void addInteger(const QString &name, int value)
+    {
+        destination->insert(name, QVariant::fromValue<double>(static_cast<double>(value)));
+    }
+
+    virtual void addDouble(const QString &name, double value)
+    {
+        destination->insert(name, QVariant::fromValue<double>(value));
+    }
+
+private:
+    QVariantMap *destination;
+};
+}
+
 class TestAgent : public QV4::Debugging::DebuggerAgent
 {
     Q_OBJECT
 public:
     TestAgent()
         : m_wasPaused(false)
+        , m_captureContextInfo(false)
     {
     }
 
-    virtual void debuggerPaused(QV4::Debugging::Debugger *debugger)
+    virtual void debuggerPaused(Debugger *debugger, PauseReason reason)
     {
         Q_ASSERT(m_debuggers.count() == 1 && m_debuggers.first() == debugger);
         m_wasPaused = true;
+        m_pauseReason = reason;
         m_statesWhenPaused << debugger->currentExecutionState();
+
+        TestCollector collector(debugger->engine());
+        QVariantMap tmp;
+        collector.setDestination(&tmp);
+        debugger->collectThrownValue(&collector);
+        m_thrownValue = tmp["exception"];
 
         foreach (const TestBreakPoint &bp, m_breakPointsToAddWhenPaused)
             debugger->addBreakPoint(bp.fileName, bp.lineNumber);
         m_breakPointsToAddWhenPaused.clear();
 
-        debugger->resume();
+        m_stackTrace = debugger->stackTrace();
+
+        if (m_captureContextInfo)
+            captureContextInfo(debugger);
+
+        debugger->resume(Debugger::FullThrottle);
+    }
+
+    virtual void sourcesCollected(Debugger *debugger, QStringList sources, int requestSequenceNr)
+    {
+        Q_UNUSED(debugger);
+        Q_UNUSED(sources);
+        Q_UNUSED(requestSequenceNr);
     }
 
     int debuggerCount() const { return m_debuggers.count(); }
@@ -128,24 +214,67 @@ public:
         int lineNumber;
     };
 
+    void captureContextInfo(Debugger *debugger)
+    {
+        TestCollector collector(debugger->engine());
+
+        for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
+            QVariantMap args;
+            collector.setDestination(&args);
+            debugger->collectArgumentsInContext(&collector, i);
+            m_capturedArguments.append(args);
+
+            QVariantMap locals;
+            collector.setDestination(&locals);
+            debugger->collectLocalsInContext(&collector, i);
+            m_capturedLocals.append(locals);
+        }
+    }
+
     bool m_wasPaused;
-    QList<QV4::Debugging::Debugger::ExecutionState> m_statesWhenPaused;
+    PauseReason m_pauseReason;
+    bool m_captureContextInfo;
+    QList<Debugger::ExecutionState> m_statesWhenPaused;
     QList<TestBreakPoint> m_breakPointsToAddWhenPaused;
+    QVector<QV4::StackFrame> m_stackTrace;
+    QList<QVariantMap> m_capturedArguments;
+    QList<QVariantMap> m_capturedLocals;
+    QVariant m_thrownValue;
+
+    // Utility methods:
+    void dumpStackTrace() const
+    {
+        qDebug() << "Stack depth:" << m_stackTrace.size();
+        foreach (const QV4::StackFrame &frame, m_stackTrace)
+            qDebug("\t%s (%s:%d:%d)", qPrintable(frame.function), qPrintable(frame.source),
+                   frame.line, frame.column);
+    }
 };
 
 class tst_qv4debugger : public QObject
 {
     Q_OBJECT
+
 private slots:
     void init();
     void cleanup();
 
+    // breakpoints:
     void breakAnywhere();
     void pendingBreakpoint();
     void liveBreakPoint();
     void removePendingBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
+
+    // context access:
+    void readArguments();
+    void readLocals();
+    void readObject();
+    void readContextInAllFrames();
+
+    // exceptions:
+    void pauseOnThrow();
 
 private:
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
@@ -235,8 +364,8 @@ void tst_qv4debugger::removePendingBreakPoint()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint("removePendingBreakPoint", 2);
-    m_debuggerAgent->removeBreakPoint("removePendingBreakPoint", 2);
+    int id = m_debuggerAgent->addBreakPoint("removePendingBreakPoint", 2);
+    m_debuggerAgent->removeBreakPoint(id);
     evaluateJavaScript(script, "removePendingBreakPoint");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
 }
@@ -262,7 +391,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
     QCOMPARE(state.lineNumber, 2);
 }
 
-static QV4::ReturnedValue someCall(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue someCall(QV4::CallContext *ctx)
 {
     ctx->engine->debugger->removeBreakPoint("removeBreakPointForNextInstruction", 2);
     return QV4::Encode::undefined();
@@ -281,6 +410,134 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
 
     evaluateJavaScript(script, "removeBreakPointForNextInstruction");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
+}
+
+void tst_qv4debugger::readArguments()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a, b, c, d) {\n"
+            "  return a === b\n"
+            "}\n"
+            "var four;\n"
+            "f(1, 'two', null, four);\n";
+    m_debuggerAgent->addBreakPoint("readArguments", 2);
+    evaluateJavaScript(script, "readArguments");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0].size(), 4);
+    QVERIFY(m_debuggerAgent->m_capturedArguments[0].contains(QStringLiteral("a")));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0]["a"].type(), QVariant::Double);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0]["a"].toDouble(), 1.0);
+    QVERIFY(m_debuggerAgent->m_capturedArguments[0].contains("b"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0]["b"].type(), QVariant::String);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0]["b"].toString(), QLatin1String("two"));
+}
+
+void tst_qv4debugger::readLocals()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a, b) {\n"
+            "  var c = a + b\n"
+            "  var d = a - b\n" // breakpoint, c should be set, d should be undefined
+            "  return c === d\n"
+            "}\n"
+            "f(1, 2, 3);\n";
+    m_debuggerAgent->addBreakPoint("readLocals", 3);
+    evaluateJavaScript(script, "readLocals");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 2);
+    QVERIFY(m_debuggerAgent->m_capturedLocals[0].contains("c"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["c"].type(), QVariant::Double);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["c"].toDouble(), 3.0);
+    QVERIFY(m_debuggerAgent->m_capturedLocals[0].contains("d"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["d"].toString(), QString("undefined"));
+}
+
+void tst_qv4debugger::readObject()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a) {\n"
+            "  var b = a\n"
+            "  return b\n"
+            "}\n"
+            "f({head: 1, tail: { head: 'asdf', tail: null }});\n";
+    m_debuggerAgent->addBreakPoint("readObject", 3);
+    evaluateJavaScript(script, "readObject");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 1);
+    QVERIFY(m_debuggerAgent->m_capturedLocals[0].contains("b"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["b"].type(), QVariant::Map);
+
+    QVariantMap b = m_debuggerAgent->m_capturedLocals[0]["b"].toMap();
+    QCOMPARE(b.size(), 2);
+    QVERIFY(b.contains("head"));
+    QCOMPARE(b["head"].type(), QVariant::Double);
+    QCOMPARE(b["head"].toDouble(), 1.0);
+    QVERIFY(b.contains("tail"));
+    QCOMPARE(b["tail"].type(), QVariant::Map);
+
+    QVariantMap b_tail = b["tail"].toMap();
+    QCOMPARE(b_tail.size(), 2);
+    QVERIFY(b_tail.contains("head"));
+    QCOMPARE(b_tail["head"].type(), QVariant::String);
+    QCOMPARE(b_tail["head"].toString(), QString("asdf"));
+}
+
+void tst_qv4debugger::readContextInAllFrames()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function fact(n) {\n"
+            "  if (n > 1) {\n"
+            "    var n_1 = n - 1;\n"
+            "    n_1 = fact(n_1);\n"
+            "    return n * n_1;\n"
+            "  } else\n"
+            "    return 1;\n" // breakpoint
+            "}\n"
+            "fact(12);\n";
+    m_debuggerAgent->addBreakPoint("readFormalsInAllFrames", 7);
+    evaluateJavaScript(script, "readFormalsInAllFrames");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 13);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments.size(), 13);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals.size(), 13);
+
+    for (int i = 0; i < 12; ++i) {
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i].size(), 1);
+        QVERIFY(m_debuggerAgent->m_capturedArguments[i].contains("n"));
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i]["n"].type(), QVariant::Double);
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i]["n"].toDouble(), i + 1.0);
+
+        QCOMPARE(m_debuggerAgent->m_capturedLocals[i].size(), 1);
+        QVERIFY(m_debuggerAgent->m_capturedLocals[i].contains("n_1"));
+        if (i == 0) {
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i]["n_1"].toString(), QString("undefined"));
+        } else {
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i]["n_1"].type(), QVariant::Double);
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i]["n_1"].toInt(), i);
+        }
+    }
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[12].size(), 0);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[12].size(), 0);
+}
+
+void tst_qv4debugger::pauseOnThrow()
+{
+    QString script =
+            "function die(n) {\n"
+            "  throw n\n"
+            "}\n"
+            "die('hard');\n";
+    m_debuggerAgent->setBreakOnThrow(true);
+    evaluateJavaScript(script, "pauseOnThrow");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, Throwing);
+    QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 2);
+    QCOMPARE(m_debuggerAgent->m_thrownValue.type(), QVariant::String);
+    QCOMPARE(m_debuggerAgent->m_thrownValue.toString(), QString("hard"));
 }
 
 QTEST_MAIN(tst_qv4debugger)

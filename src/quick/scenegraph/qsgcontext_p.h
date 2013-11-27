@@ -56,6 +56,9 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QSGAtlasTexture {
+    class Manager;
+}
 
 class QSGContextPrivate;
 class QSGRectangleNode;
@@ -73,6 +76,65 @@ class QOpenGLContext;
 class QOpenGLFramebufferObject;
 
 class QQuickTextureFactory;
+class QSGDistanceFieldGlyphCacheManager;
+class QSGContext;
+
+
+class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject
+{
+    Q_OBJECT
+public:
+    QSGRenderContext(QSGContext *context);
+    ~QSGRenderContext();
+
+    QOpenGLContext *openglContext() const { return m_gl; }
+    QSGContext *sceneGraphContext() const { return m_sg; }
+
+    virtual void initialize(QOpenGLContext *context);
+    virtual void invalidate();
+
+    virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
+
+    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
+    QSGDepthStencilBufferManager *depthStencilBufferManager();
+
+    virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
+    QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
+
+    virtual QSGTexture *createTexture(const QImage &image) const;
+    virtual QSGTexture *createTextureNoAtlas(const QImage &image) const;
+    virtual QSGRenderer *createRenderer();
+
+    void registerFontengineForCleanup(QFontEngine *engine);
+
+    static QSGRenderContext *from(QOpenGLContext *context);
+
+    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
+
+Q_SIGNALS:
+    void initialized();
+    void invalidated();
+
+public Q_SLOTS:
+    void textureFactoryDestroyed(QObject *o);
+
+protected:
+    QOpenGLContext *m_gl;
+    QSGContext *m_sg;
+
+    QMutex m_mutex;
+    QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
+    QSGAtlasTexture::Manager *m_atlasManager;
+
+    QSGDepthStencilBufferManager *m_depthStencilManager;
+    QSGDistanceFieldGlyphCacheManager *m_distanceFieldCacheManager;
+
+    QSet<QFontEngine *> m_fontEnginesToClean;
+
+    bool m_brokenIBOs;
+    bool m_serializedRender;
+};
+
 
 class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
 {
@@ -80,59 +142,36 @@ class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
     Q_DECLARE_PRIVATE(QSGContext)
 
 public:
+    enum AntialiasingMethod {
+        UndecidedAntialiasing,
+        VertexAntialiasing,
+        MsaaAntialiasing
+    };
+
     explicit QSGContext(QObject *parent = 0);
     ~QSGContext();
 
-    virtual void initialize(QOpenGLContext *context);
-    virtual void invalidate();
-
-    QOpenGLContext *glContext() const;
-
-    bool isReady() const;
-
-    virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
-
-    virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
+    virtual void renderContextInitialized(QSGRenderContext *renderContext);
+    virtual void renderContextInvalidated(QSGRenderContext *renderContext);
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
-    virtual QSGGlyphNode *createGlyphNode();
-    virtual QSGGlyphNode *createNativeGlyphNode();
-    virtual QSGRenderer *createRenderer();
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc);
+    virtual QSGGlyphNode *createNativeGlyphNode(QSGRenderContext *rc);
+    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
-    virtual QSGTexture *createTexture(const QImage &image) const;
-    virtual QSGTexture *createTextureNoAtlas(const QImage &image) const;
     virtual QSize minimumFBOSize() const;
-    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
-    QSGDepthStencilBufferManager *depthStencilBufferManager();
-
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
-    QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
-
-    static QSGContext *createDefaultContext();
-
-    void setFlashModeEnabled(bool enabled);
-    bool isFlashModeEnabled() const;
-
-    void setRenderAlpha(qreal renderAlpha);
-    qreal renderAlpha() const;
+    static void setSharedOpenGLContext(QOpenGLContext *context);
+    static QOpenGLContext *sharedOpenGLContext();
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
-    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
-
+    static QSGContext *createDefaultContext();
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
     static QSGRenderLoop *createWindowManager();
-
-
-public Q_SLOTS:
-    void textureFactoryDestroyed(QObject *o);
-
-Q_SIGNALS:
-    void initialized();
-    void invalidated();
 };
 
 QT_END_NAMESPACE

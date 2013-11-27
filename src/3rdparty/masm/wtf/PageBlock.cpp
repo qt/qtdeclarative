@@ -53,7 +53,11 @@ inline size_t systemPageSize()
 {
     static size_t size = 0;
     SYSTEM_INFO system_info;
+#if OS(WINRT)
+    GetNativeSystemInfo(&system_info);
+#else
     GetSystemInfo(&system_info);
+#endif
     size = system_info.dwPageSize;
     return size;
 }

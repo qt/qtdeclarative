@@ -54,8 +54,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Moth {
 
-class StackSlotAllocator;
-
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
@@ -65,13 +63,12 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 
 };
 
-
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::IRDecoder,
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
@@ -82,7 +79,6 @@ protected:
     virtual void visitJump(V4IR::Jump *);
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
-    virtual void visitTry(V4IR::Try *);
 
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callBuiltinTypeofMember(V4IR::Expr *base, const QString &name, V4IR::Temp *result);
@@ -94,7 +90,9 @@ protected:
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
-    virtual void callBuiltinFinishTry();
+    virtual void callBuiltinReThrow();
+    virtual void callBuiltinUnwindException(V4IR::Temp *);
+    virtual void callBuiltinPushCatchScope(const QString &exceptionName);
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinPushWithScope(V4IR::Temp *arg);
@@ -105,6 +103,7 @@ protected:
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result);
+    virtual void callBuiltinConvertThisToObject();
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);
@@ -113,6 +112,11 @@ protected:
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void loadThisObject(V4IR::Temp *temp);
+    virtual void loadQmlIdArray(V4IR::Temp *temp);
+    virtual void loadQmlImportedScripts(V4IR::Temp *temp);
+    virtual void loadQmlContextObject(V4IR::Temp *temp);
+    virtual void loadQmlScopeObject(V4IR::Temp *temp);
+    virtual void loadQmlSingleton(const QString &name, V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
@@ -121,6 +125,8 @@ protected:
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex);
+    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target);
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
@@ -163,7 +169,8 @@ private:
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
 
-    V4IR::Function *_function;
+    QQmlEnginePrivate *qmlEngine;
+
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_nextBlock;
 
@@ -174,7 +181,6 @@ private:
     uchar *_codeNext;
     uchar *_codeEnd;
 
-    StackSlotAllocator *_stackSlotAllocator;
     QSet<V4IR::Jump *> _removableJumps;
     V4IR::Stmt *_currentStatement;
 
@@ -186,8 +192,8 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    { return new InstructionSelection(execAllocator, module, jsGenerator); }
+    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return false; }
 };

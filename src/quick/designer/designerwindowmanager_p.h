@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
 class QSGContext;
+class QSGRenderContext;
 class QAnimationDriver;
 class QOpenGLContext;
 
@@ -81,7 +82,6 @@ public:
     void makeOpenGLContext(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
     QImage grab(QQuickWindow *window);
-    void resize(QQuickWindow *window, const QSize &size);
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window); // identical for this implementation.
@@ -91,12 +91,14 @@ public:
     QAnimationDriver *animationDriver() const { return 0; }
 
     QSGContext *sceneGraphContext() const;
+    QSGRenderContext *createRenderContext(QSGContext *) const { return m_renderContext.data(); }
 
     static void createOpenGLContext(QQuickWindow *window);
 
 private:
     QScopedPointer<QOpenGLContext> m_openGlContext;
     QScopedPointer<QSGContext> m_sgContext;
+    QScopedPointer<QSGRenderContext> m_renderContext;
 };
 
 QT_END_NAMESPACE

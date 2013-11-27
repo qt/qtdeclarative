@@ -48,63 +48,62 @@ AbstractFileDialog {
     id: root
     onVisibleChanged: {
         if (visible) {
-            selectedIndices = []
-            lastClickedIdx = -1
+            __selectedIndices = []
+            __lastClickedIdx = -1
             currentPathField.visible = false
         }
     }
     onFolderChanged: view.model.folder = folder
 
-    property bool showFocusHighlight: false
-    property real textX: titleBar.height
-    property SystemPalette palette
-    property var selectedIndices: []
-    property int lastClickedIdx: -1
+    property real __textX: titleBar.height
+    property SystemPalette __palette
+    property var __selectedIndices: []
+    property int __lastClickedIdx: -1
 
-    function dirDown(path) {
+    function __dirDown(path) {
         view.model.folder = path
-        lastClickedIdx = -1
-        selectedIndices = []
+        __lastClickedIdx = -1
+        __selectedIndices = []
     }
-    function dirUp() {
+    function __dirUp() {
         view.model.folder = view.model.parentFolder
-        lastClickedIdx = -1
-        selectedIndices = []
+        __lastClickedIdx = -1
+        __selectedIndices = []
     }
-    function up(extend) {
+    function __up(extend) {
         if (view.currentIndex > 0)
             --view.currentIndex
         else
             view.currentIndex = 0
         if (extend) {
-            if (selectedIndices.indexOf(view.currentIndex) < 0) {
-                var selCopy = selectedIndices
+            if (__selectedIndices.indexOf(view.currentIndex) < 0) {
+                var selCopy = __selectedIndices
                 selCopy.push(view.currentIndex)
-                selectedIndices = selCopy
+                __selectedIndices = selCopy
             }
         } else
-            selectedIndices = [view.currentIndex]
+            __selectedIndices = [view.currentIndex]
     }
-    function down(extend) {
+    function __down(extend) {
         if (view.currentIndex < view.model.count - 1)
             ++view.currentIndex
         else
             view.currentIndex = view.model.count - 1
         if (extend) {
-            if (selectedIndices.indexOf(view.currentIndex) < 0) {
-                var selCopy = selectedIndices
+            if (__selectedIndices.indexOf(view.currentIndex) < 0) {
+                var selCopy = __selectedIndices
                 selCopy.push(view.currentIndex)
-                selectedIndices = selCopy
+                __selectedIndices = selCopy
             }
         } else
-            selectedIndices = [view.currentIndex]
+            __selectedIndices = [view.currentIndex]
     }
-    function acceptSelection() {
+    function __acceptSelection() {
         clearSelection()
-        if (selectFolder && selectedIndices.length == 0)
+        if (selectFolder && __selectedIndices.length == 0)
             addSelection(folder)
-        else {
-            selectedIndices.map(function(idx) {
+        else if (__selectedIndices.length > 0) {
+            __selectedIndices.map(function(idx) {
                 if (view.model.isFolder(idx)) {
                     if (selectFolder)
                         addSelection(view.model.get(idx, "fileURL"))
@@ -113,19 +112,23 @@ AbstractFileDialog {
                         addSelection(view.model.get(idx, "fileURL"))
                 }
             })
+        } else {
+            addSelection(pathToUrl(currentPathField.text))
         }
         accept()
     }
 
     Rectangle {
+        id: content
         property int maxSize: Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
         // TODO: QTBUG-29817 geometry from AbstractFileDialog
-        implicitWidth: Math.min(maxSize, Screen.logicalPixelDensity * 100)
-        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * 80)
-        id: window
-        color: palette.window
-
-        SystemPalette { id: palette }
+        implicitWidth: Math.min(maxSize, Screen.pixelDensity * 100)
+        implicitHeight: Math.min(maxSize, Screen.pixelDensity * 80)
+        color: __palette.window
+        focus: root.visible && !currentPathField.visible
+        property real spacing: 6
+        property real outerSpacing: 12
+        SystemPalette { id: __palette }
 
         Component {
             id: folderDelegate
@@ -133,25 +136,25 @@ AbstractFileDialog {
                 id: wrapper
                 function launch() {
                     if (view.model.isFolder(index)) {
-                        dirDown(filePath)
+                        __dirDown(filePath)
                     } else {
-                        root.acceptSelection()
+                        root.__acceptSelection()
                     }
                 }
-                width: window.width
+                width: content.width
                 height: nameText.implicitHeight * 1.5
                 color: "transparent"
                 Rectangle {
                     id: itemHighlight
-                    visible: root.selectedIndices.indexOf(index) >= 0
+                    visible: root.__selectedIndices.indexOf(index) >= 0
                     anchors.fill: parent
-                    color: palette.highlight
+                    color: __palette.highlight
                 }
                 Image {
                     id: icon
                     source: "images/folder.png"
                     height: wrapper.height - y * 2; width: height
-                    x: (root.textX - width) / 2
+                    x: (root.__textX - width) / 2
                     y: 2
                     visible: view.model.isFolder(index)
                 }
@@ -159,48 +162,89 @@ AbstractFileDialog {
                     id: nameText
                     anchors.fill: parent; verticalAlignment: Text.AlignVCenter
                     text: fileName
-                    anchors.leftMargin: root.textX
-                    color: itemHighlight.visible ? palette.highlightedText : palette.windowText
+                    anchors.leftMargin: root.__textX
+                    color: itemHighlight.visible ? __palette.highlightedText : __palette.windowText
                     elide: Text.ElideRight
                 }
                 MouseArea {
                     id: mouseRegion
                     anchors.fill: parent
                     onDoubleClicked: {
-                        selectedIndices = [index]
-                        root.lastClickedIdx = index
+                        __selectedIndices = [index]
+                        root.__lastClickedIdx = index
                         launch()
                     }
                     onClicked: {
                         view.currentIndex = index
                         if (mouse.modifiers & Qt.ControlModifier && root.selectMultiple) {
-                            // modifying the contents of selectedIndices doesn't notify,
+                            // modifying the contents of __selectedIndices doesn't notify,
                             // so we have to re-assign the variable
-                            var selCopy = selectedIndices
+                            var selCopy = __selectedIndices
                             var existingIdx = selCopy.indexOf(index)
                             if (existingIdx >= 0)
                                 selCopy.splice(existingIdx, 1)
                             else
                                 selCopy.push(index)
-                            selectedIndices = selCopy
+                            __selectedIndices = selCopy
                         } else if (mouse.modifiers & Qt.ShiftModifier && root.selectMultiple) {
-                            if (root.lastClickedIdx >= 0) {
+                            if (root.__lastClickedIdx >= 0) {
                                 var sel = []
-                                if (index > lastClickedIdx) {
-                                    for (var i = root.lastClickedIdx; i <= index; i++)
+                                if (index > __lastClickedIdx) {
+                                    for (var i = root.__lastClickedIdx; i <= index; i++)
                                         sel.push(i)
                                 } else {
-                                    for (var i = root.lastClickedIdx; i >= index; i--)
+                                    for (var i = root.__lastClickedIdx; i >= index; i--)
                                         sel.push(i)
                                 }
-                                selectedIndices = sel
+                                __selectedIndices = sel
                             }
                         } else {
-                            selectedIndices = [index]
-                            root.lastClickedIdx = index
+                            __selectedIndices = [index]
+                            root.__lastClickedIdx = index
                         }
                     }
                 }
+            }
+        }
+
+        Keys.onPressed: {
+            event.accepted = true
+            switch (event.key) {
+            case Qt.Key_Up:
+                root.__up(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
+                break
+            case Qt.Key_Down:
+                root.__down(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
+                break
+            case Qt.Key_Left:
+                root.__dirUp()
+                break
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+            case Qt.Key_Right:
+                if (view.currentItem)
+                    view.currentItem.launch()
+                else
+                    root.__acceptSelection()
+                break
+            case Qt.Key_Back:
+            case Qt.Key_Escape:
+                reject()
+                break
+            case Qt.Key_C:
+                if (event.modifiers & Qt.ControlModifier)
+                    currentPathField.copyAll()
+                break
+            case Qt.Key_V:
+                if (event.modifiers & Qt.ControlModifier) {
+                    currentPathField.visible = true
+                    currentPathField.paste()
+                }
+                break
+            default:
+                // do nothing
+                event.accepted = false
+                break
             }
         }
 
@@ -220,37 +264,10 @@ AbstractFileDialog {
             delegate: folderDelegate
             highlight: Rectangle {
                 color: "transparent"
-                border.color: Qt.darker(palette.window, 1.3)
+                border.color: Qt.darker(__palette.window, 1.3)
             }
             highlightMoveDuration: 0
             highlightMoveVelocity: -1
-            focus: !currentPathField.visible
-            Keys.onPressed: {
-                event.accepted = true
-                switch (event.key) {
-                case Qt.Key_Up:
-                    root.up(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
-                    break
-                case Qt.Key_Down:
-                    root.down(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
-                    break
-                case Qt.Key_Left:
-                    root.dirUp()
-                    break
-                case Qt.Key_Return:
-                case Qt.Key_Select:
-                case Qt.Key_Right:
-                    if (view.currentItem)
-                        view.currentItem.launch()
-                    else
-                        root.acceptSelection()
-                    break
-                default:
-                    // do nothing
-                    event.accepted = false
-                    break
-                }
-            }
         }
 
         MouseArea {
@@ -266,12 +283,12 @@ AbstractFileDialog {
             height: currentPathField.height * 1.5
             Rectangle {
                 anchors.fill: parent
-                color: Qt.darker(palette.window, 1.1)
-                border.color: Qt.darker(palette.window, 1.3)
+                color: Qt.darker(__palette.window, 1.1)
+                border.color: Qt.darker(__palette.window, 1.3)
             }
             Rectangle {
                 id: upButton
-                width: root.textX
+                width: root.__textX
                 height: titleBar.height
                 color: "transparent"
 
@@ -282,22 +299,22 @@ AbstractFileDialog {
                 MouseArea { id: upRegion; anchors.centerIn: parent
                     width: 56
                     height: parent.height
-                    onClicked: if (view.model.parentFolder != "") dirUp()
+                    onClicked: if (view.model.parentFolder !== "") __dirUp()
                 }
                 states: [
                     State {
                         name: "pressed"
                         when: upRegion.pressed
-                        PropertyChanges { target: upButton; color: palette.highlight }
+                        PropertyChanges { target: upButton; color: __palette.highlight }
                     }
                 ]
             }
             Text {
                 id: currentPathText
                 anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: textX; anchors.rightMargin: 4
+                anchors.leftMargin: __textX; anchors.rightMargin: content.spacing
                 text: root.urlToPath(view.model.folder)
-                color: palette.text
+                color: __palette.text
                 elide: Text.ElideLeft; horizontalAlignment: Text.AlignRight; verticalAlignment: Text.AlignVCenter
                 MouseArea {
                     anchors.fill: parent
@@ -307,7 +324,7 @@ AbstractFileDialog {
             TextField {
                 id: currentPathField
                 anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: textX; anchors.rightMargin: 4
+                anchors.leftMargin: __textX; anchors.rightMargin: content.spacing
                 visible: false
                 focus: visible
                 onAccepted: {
@@ -318,6 +335,8 @@ AbstractFileDialog {
                         view.model.folder = root.pathFolder(text)
                 }
                 onDownPressed: currentPathField.visible = false
+                onBackPressed: reject()
+                onEscapePressed: reject()
             }
         }
         Rectangle {
@@ -325,15 +344,15 @@ AbstractFileDialog {
             width: parent.width
             height: buttonRow.height + buttonRow.spacing * 2
             anchors.bottom: parent.bottom
-            color: Qt.darker(palette.window, 1.1)
-            border.color: Qt.darker(palette.window, 1.3)
+            color: Qt.darker(__palette.window, 1.1)
+            border.color: Qt.darker(__palette.window, 1.3)
 
             Row {
                 id: buttonRow
                 anchors.right: parent.right
                 anchors.rightMargin: spacing
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
+                spacing: content.spacing
                 TextField {
                     id: filterField
                     text: root.selectedNameFilter
@@ -355,9 +374,9 @@ AbstractFileDialog {
                     text: "OK"
                     onClicked: {
                         if (view.model.isFolder(view.currentIndex) && !selectFolder)
-                            dirDown(view.model.get(view.currentIndex, "filePath"))
+                            __dirDown(view.model.get(view.currentIndex, "filePath"))
                         else
-                            root.acceptSelection()
+                            root.__acceptSelection()
                     }
                 }
             }

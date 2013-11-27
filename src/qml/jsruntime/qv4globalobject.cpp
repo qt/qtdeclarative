@@ -101,16 +101,16 @@ static QString escape(const QString &input)
                 output.append(QChar(uc));
             } else {
                 output.append('%');
-                output.append(QChar(toHex(uc >> 4)));
-                output.append(QChar(toHex(uc)));
+                output.append(QLatin1Char(toHex(uc >> 4)));
+                output.append(QLatin1Char(toHex(uc)));
             }
         } else {
             output.append('%');
             output.append('u');
-            output.append(QChar(toHex(uc >> 12)));
-            output.append(QChar(toHex(uc >> 8)));
-            output.append(QChar(toHex(uc >> 4)));
-            output.append(QChar(toHex(uc)));
+            output.append(QLatin1Char(toHex(uc >> 12)));
+            output.append(QLatin1Char(toHex(uc >> 8)));
+            output.append(QLatin1Char(toHex(uc >> 4)));
+            output.append(QLatin1Char(toHex(uc)));
         }
     }
     return output;
@@ -396,10 +396,12 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     const QString code = callData->args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    Script script(ctx, code, QString("eval code"));
+    Script script(ctx, code, QStringLiteral("eval code"));
     script.strictMode = (directCall && parentContext->strictMode);
     script.inheritContext = inheritContext;
     script.parse();
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Function *function = script.function();
     if (!function)
@@ -457,7 +459,7 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_parseInt(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue string(scope, ctx->argument(0));
@@ -467,6 +469,10 @@ ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
     // [15.1.2.2] step by step:
     String *inputString = string->toString(ctx); // 1
     QString trimmed = inputString->toQString().trimmed(); // 2
+
+    if (ctx->engine->hasException)
+        return Encode::undefined();
+
     const QChar *pos = trimmed.constData();
     const QChar *end = pos + trimmed.length();
 
@@ -537,19 +543,22 @@ ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
 }
 
 // parseFloat [15.1.2.3]
-ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_parseFloat(CallContext *ctx)
 {
     Scope scope(ctx);
 
     // [15.1.2.3] step by step:
     Scoped<String> inputString(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
     QString trimmed = inputString->toQString().trimmed(); // 2
 
     // 4:
     if (trimmed.startsWith(QLatin1String("Infinity"))
             || trimmed.startsWith(QLatin1String("+Infinity")))
         return Encode(Q_INFINITY);
-    if (trimmed.startsWith("-Infinity"))
+    if (trimmed.startsWith(QStringLiteral("-Infinity")))
         return Encode(-Q_INFINITY);
     QByteArray ba = trimmed.toLatin1();
     bool ok;
@@ -563,7 +572,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
 }
 
 /// isNaN [15.1.2.4]
-ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_isNaN(CallContext *ctx)
 {
     if (!ctx->callData->argc)
         // undefined gets converted to NaN
@@ -577,7 +586,7 @@ ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
 }
 
 /// isFinite [15.1.2.5]
-ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_isFinite(CallContext *ctx)
 {
     if (!ctx->callData->argc)
         // undefined gets converted to NaN
@@ -591,7 +600,7 @@ ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
 }
 
 /// decodeURI [15.1.3.1]
-ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURI(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -602,14 +611,14 @@ ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
-        context->throwURIError(s);
+        return context->throwURIError(s);
     }
 
     return context->engine->newString(out)->asReturnedValue();
 }
 
 /// decodeURIComponent [15.1.3.2]
-ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -620,14 +629,14 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *cont
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
-        context->throwURIError(s);
+        return context->throwURIError(s);
     }
 
     return context->engine->newString(out)->asReturnedValue();
 }
 
 /// encodeURI [15.1.3.3]
-ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURI(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -638,14 +647,14 @@ ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
-        context->throwURIError(s);
+        return context->throwURIError(s);
     }
 
     return context->engine->newString(out)->asReturnedValue();
 }
 
 /// encodeURIComponent [15.1.3.4]
-ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -656,13 +665,13 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *cont
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
-        context->throwURIError(s);
+        return context->throwURIError(s);
     }
 
     return context->engine->newString(out)->asReturnedValue();
 }
 
-ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_escape(CallContext *context)
 {
     if (!context->callData->argc)
         return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
@@ -671,7 +680,7 @@ ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
     return context->engine->newString(escape(str))->asReturnedValue();
 }
 
-ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_unescape(CallContext *context)
 {
     if (!context->callData->argc)
         return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();

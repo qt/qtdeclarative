@@ -500,7 +500,7 @@ public:
 
 protected:
 
-    QQmlScript::Object *defineObjectBinding(AST::UiQualifiedId *propertyName, bool onAssignment,
+    QQmlScript::Object *defineObjectBinding(AST::Node *node, AST::UiQualifiedId *propertyName, bool onAssignment,
                                 const QString &objectType,
                                 AST::SourceLocation typeLocation,
                                 LocationSpan location,
@@ -659,7 +659,8 @@ QString ProcessAST::asString(AST::UiQualifiedId *node) const
 }
 
 QQmlScript::Object *
-ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
+ProcessAST::defineObjectBinding(AST::Node *node,
+                                AST::UiQualifiedId *propertyName,
                                 bool onAssignment,
                                 const QString &objectType,
                                 AST::SourceLocation typeLocation,
@@ -731,6 +732,7 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
         obj->type = _parser->findOrCreateTypeId(objectType, obj);
         obj->typeReference = _parser->_refTypes.at(obj->type);
         obj->location = location;
+        obj->astNode = node;
 
         if (propertyCount) {
             Property *prop = currentProperty();
@@ -1130,7 +1132,7 @@ bool ProcessAST::visit(AST::UiObjectDefinition *node)
     const QString objectType = asString(node->qualifiedTypeNameId);
     const AST::SourceLocation typeLocation = node->qualifiedTypeNameId->identifierToken;
 
-    defineObjectBinding(/*propertyName = */ 0, false, objectType,
+    defineObjectBinding(node, /*propertyName = */ 0, false, objectType,
                         typeLocation, l, node->initializer);
 
     return false;
@@ -1146,7 +1148,7 @@ bool ProcessAST::visit(AST::UiObjectBinding *node)
     const QString objectType = asString(node->qualifiedTypeNameId);
     const AST::SourceLocation typeLocation = node->qualifiedTypeNameId->identifierToken;
 
-    defineObjectBinding(node->qualifiedId, node->hasOnToken, objectType, 
+    defineObjectBinding(node, node->qualifiedId, node->hasOnToken, objectType,
                         typeLocation, l, node->initializer);
 
     return false;

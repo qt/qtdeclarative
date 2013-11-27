@@ -1116,10 +1116,10 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         hData.velocity = 0;
     }
 
-    if ((hMoved && !prevHMoved) || (vMoved && !prevVMoved)) {
-        draggingStarting();
+    draggingStarting();
+
+    if ((hMoved && !prevHMoved) || (vMoved && !prevVMoved))
         q->movementStarting();
-    }
 
     qint64 currentTimestamp = computeCurrentTime(event);
     qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;

@@ -1,2 +1,2 @@
 imports/*/*/*
-!imports/com/nokia/PureQmlModule/*
+!imports/org/qtproject/PureQmlModule/*

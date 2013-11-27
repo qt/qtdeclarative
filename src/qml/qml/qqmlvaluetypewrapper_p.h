@@ -89,7 +89,7 @@ public:
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes query(const Managed *, StringRef name);
 
-    static QV4::ReturnedValue method_toString(SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toString(CallContext *ctx);
 
     QV8Engine *v8;
     ObjectType objectType;

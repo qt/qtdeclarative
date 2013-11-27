@@ -194,16 +194,6 @@ QQmlBinding::~QQmlBinding()
 {
 }
 
-void QQmlBinding::setEvaluateFlags(EvaluateFlags flags)
-{
-    setRequiresThisObject(flags & RequiresThisObject);
-}
-
-QQmlBinding::EvaluateFlags QQmlBinding::evaluateFlags() const
-{
-    return requiresThisObject()?RequiresThisObject:None;
-}
-
 void QQmlBinding::setNotifyOnValueChanged(bool v)
 {
     QQmlJavaScriptExpression::setNotifyOnValueChanged(v);

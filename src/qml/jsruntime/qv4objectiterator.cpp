@@ -42,6 +42,7 @@
 #include "qv4object_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4identifier_p.h"
+#include "qv4argumentsobject_p.h"
 
 using namespace QV4;
 
@@ -56,6 +57,11 @@ ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const
     object = o;
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
+
+    if (object && object->isNonStrictArgumentsObject) {
+        Scope scope(object->engine());
+        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
+    }
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
@@ -69,6 +75,11 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     object = o;
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
+
+    if (object && object->isNonStrictArgumentsObject) {
+        Scope scope(object->engine());
+        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
+    }
 }
 
 Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *attrs)
@@ -83,7 +94,7 @@ Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *
         if (!current)
             break;
 
-        while (p = current->advanceIterator(this, name, index, attrs)) {
+        while ((p = current->advanceIterator(this, name, index, attrs))) {
             // check the property is not already defined earlier in the proto chain
             if (current != object) {
                 Property *pp;
@@ -174,10 +185,10 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
 DEFINE_MANAGED_VTABLE(ForEachIteratorObject);
 
-void ForEachIteratorObject::markObjects(Managed *that)
+void ForEachIteratorObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
-    o->workArea[0].mark();
-    o->workArea[1].mark();
-    Object::markObjects(that);
+    o->workArea[0].mark(e);
+    o->workArea[1].mark(e);
+    Object::markObjects(that, e);
 }

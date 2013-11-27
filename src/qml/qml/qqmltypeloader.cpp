@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qqmltypeloader_p.h"
-#include "qqmlabstracturlinterceptor.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include "qqmlcontextwrapper_p.h"
 #include "qqmlexpression_p.h"
 
@@ -1341,7 +1341,7 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
     Q_ASSERT(errors);
 
     if (pragma.type == QQmlScript::Pragma::Singleton) {
-        QUrl myUrl = url();
+        QUrl myUrl = finalUrl();
 
         QQmlType *ret = QQmlMetaType::qmlType(myUrl, true);
         if (!ret) {
@@ -1369,7 +1369,7 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
     } else {
         QQmlError error;
         error.setDescription(QLatin1String("Invalid pragma"));
-        error.setUrl(url());
+        error.setUrl(finalUrl());
         error.setLine(pragma.location.start.line);
         error.setColumn(pragma.location.start.column);
         errors->prepend(error);
@@ -1801,9 +1801,25 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 Return a QmldirContent for absoluteFilePath.  The QmldirContent may be cached.
 
 \a filePath is either a bundle URL, or a local file path.
+
+It can also be a remote path for a remote directory import, but it will have been cached by now in this case.
 */
-const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePath, const QString &uriHint)
+const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn, const QString &uriHint)
 {
+    QUrl url(filePathIn); //May already contain bundle or http scheme
+    if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
+        return *(m_importQmlDirCache.value(filePathIn)); //Can't load the remote here, but should be cached
+    else if (!QQmlFile::isBundle(filePathIn))
+        url = QUrl::fromLocalFile(filePathIn);
+    if (engine() && engine()->urlInterceptor())
+        url = engine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::QmldirFile);
+    Q_ASSERT(url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("bundle"));
+    QString filePath;
+    if (url.scheme() == QLatin1String("file"))
+        filePath = url.toLocalFile();
+    else
+        filePath = url.path();
+
     QmldirContent *qmldir;
     QmldirContent **val = m_importQmlDirCache.value(filePath);
     if (!val) {
@@ -1813,13 +1829,10 @@ const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString
 #define NOT_READABLE_ERROR QString(QLatin1String("module \"$$URI$$\" definition \"%1\" not readable"))
 #define CASE_MISMATCH_ERROR QString(QLatin1String("cannot load module \"$$URI$$\": File name case mismatch for \"%1\""))
 
-        if (QQmlFile::isBundle(filePath)) {
-
-            QUrl url(filePath);
-
+        if (QQmlFile::isBundle(url.toString())) {
             QQmlFile file(engine(), url);
             if (file.isError()) {
-                ERROR(NOT_READABLE_ERROR.arg(filePath));
+                ERROR(NOT_READABLE_ERROR.arg(url.toString()));
             } else {
                 QString content(QString::fromUtf8(file.data(), file.size()));
                 qmldir->setContent(filePath, content);
@@ -2086,7 +2099,7 @@ void QQmlTypeData::done()
     // If the type is CompositeSingleton but there was no pragma Singleton in the
     // QML file, lets report an error.
     QQmlType *type = QQmlMetaType::qmlType(url(), true);
-    if (type && type->isCompositeSingleton() && !m_isSingleton) {
+    if (!isError() && type && type->isCompositeSingleton() && !m_isSingleton) {
         QString typeName = type->qmlTypeName();
 
         QQmlError error;
@@ -2141,7 +2154,7 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
     if (m_useNewCompiler) {
-        parsedQML.reset(new QtQml::ParsedQML);
+        parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(typeLoader()->engine())->debugger != 0));
         QQmlCodeGenerator compiler;
         if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
             setError(compiler.errors);
@@ -2307,6 +2320,7 @@ void QQmlTypeData::compile()
         m_compiledData->importCache->addref();
 
         QQmlEngine *engine = typeLoader()->engine();
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
 
         for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
              resolvedType != end; ++resolvedType) {
@@ -2357,12 +2371,13 @@ void QQmlTypeData::compile()
 
         // Compile JS binding expressions and signal handlers
 
-        JSCodeGen jsCodeGen;
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
+        JSCodeGen jsCodeGen(enginePrivate, finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
+        QHash<int, QString> expressionNames; // ### TODO
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions, expressionNames);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
-        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(enginePrivate, v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
 
@@ -2389,7 +2404,7 @@ void QQmlTypeData::compile()
         m_compiledData->datas.reserve(qmlUnit->nObjects);
         m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
 
-        QQmlPropertyCacheCreator propertyCacheBuilder(QQmlEnginePrivate::get(m_typeLoader->engine()),
+        QQmlPropertyCacheCreator propertyCacheBuilder(enginePrivate,
                                                       qmlUnit, m_compiledData->url,
                                                       &m_imports, &m_compiledData->resolvedTypes);
 
@@ -2689,8 +2704,8 @@ QQmlScriptData::QQmlScriptData()
     : importCache(0)
     , pragmas(QQmlScript::Object::ScriptBlock::None)
     , m_loaded(false)
-    , m_program(0)
     , m_precompiledScript(0)
+    , m_program(0)
 {
 }
 
@@ -2769,9 +2784,15 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
     }
 
-    for (int ii = 0; ii < scripts.count(); ++ii) {
-        ctxt->importedScripts << scripts.at(ii)->scriptData()->scriptValueForContext(ctxt);
+    QV4::ScopedObject scriptsArray(scope);
+    if (ctxt->importedScripts.isNullOrUndefined()) {
+        scriptsArray = v4->newArrayObject(scripts.count());
+        ctxt->importedScripts = scriptsArray;
+    } else {
+        scriptsArray = ctxt->importedScripts;
     }
+    for (int ii = 0; ii < scripts.count(); ++ii)
+        scriptsArray->putIndexed(ii, scripts.at(ii)->scriptData()->scriptValueForContext(ctxt));
 
     if (!hasEngine())
         initialize(parentCtxt->engine);
@@ -2786,11 +2807,10 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
-    try {
-        m_program->qml = qmlglobal;
-        m_program->run();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    m_program->qml = qmlglobal;
+    m_program->run();
+    if (scope.engine->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.isValid())
             ep->warning(error);
     }
@@ -2921,7 +2941,7 @@ void QQmlScriptBlob::done()
 
     QList<QQmlError> errors;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, /*parseAsBinding*/true, &errors);
+    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, &errors);
     if (m_scriptData->m_precompiledScript)
         m_scriptData->m_precompiledScript->ref();
     m_source.clear();

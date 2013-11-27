@@ -69,6 +69,11 @@ QmlTypeWrapper::~QmlTypeWrapper()
         typeNamespace->release();
 }
 
+bool QmlTypeWrapper::isSingleton() const
+{
+    return type && type->isSingleton();
+}
+
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (type && type->isSingleton()) {
@@ -121,7 +126,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
     Scoped<QmlTypeWrapper> w(scope,  m->as<QmlTypeWrapper>());
     if (!w)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
 
     if (hasProperty)
@@ -202,9 +207,8 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
             if (r.type) {
                 return create(w->v8, object, r.type, w->mode);
             } else if (r.scriptIndex != -1) {
-                int index = r.scriptIndex;
-                if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value();
+                QV4::ScopedObject scripts(scope, context->importedScripts);
+                return scripts->getIndexed(r.scriptIndex);
             } else if (r.importNamespace) {
                 return create(w->v8, object, context->imports, r.importNamespace);
             }
@@ -229,8 +233,12 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
-    if (!w)
+    if (v4->hasException)
+        return;
+    if (!w) {
         v4->current->throwTypeError();
+        return;
+    }
 
     QV4::Scope scope(v4);
     QV8Engine *v8engine = v4->v8Engine;
@@ -255,6 +263,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
                 v4->current->throwError(error);
+                return;
             } else {
                 apiprivate->put(name, value);
             }
@@ -275,6 +284,17 @@ PropertyAttributes QmlTypeWrapper::query(const Managed *m, StringRef name)
 void QmlTypeWrapper::destroy(Managed *that)
 {
     static_cast<QmlTypeWrapper *>(that)->~QmlTypeWrapper();
+}
+
+bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    QV4::QmlTypeWrapper *qmlTypeWrapperA = a->asObject()->as<QV4::QmlTypeWrapper>();
+    if (QV4::QmlTypeWrapper *qmlTypeWrapperB = b->asObject()->as<QV4::QmlTypeWrapper>())
+        return qmlTypeWrapperA->toVariant() == qmlTypeWrapperB->toVariant();
+    else if (QV4::QObjectWrapper *qobjectWrapper = b->as<QV4::QObjectWrapper>())
+        return qmlTypeWrapperA->toVariant().value<QObject*>() == qobjectWrapper->object();
+
+    return false;
 }
 
 QT_END_NAMESPACE

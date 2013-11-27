@@ -61,7 +61,7 @@ struct QmlBindingWrapper : FunctionObject {
     QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml);
 
     static ReturnedValue call(Managed *that, CallData *);
-    static void markObjects(Managed *m);
+    static void markObjects(Managed *m, ExecutionEngine *e);
 
     CallContext *context() const { return qmlContext; }
 
@@ -100,9 +100,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static CompiledData::CompilationUnit *precompile(ExecutionEngine *engine, const QUrl &url, const QString &source,
-                                                     bool parseAsBinding,
-                                                     QList<QQmlError> *reportedErrors = 0);
+    static CompiledData::CompilationUnit *precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
 };
