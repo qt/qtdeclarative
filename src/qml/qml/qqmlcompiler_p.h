@@ -169,7 +169,7 @@ public:
     int addInstruction(const QQmlInstructionData<Instr> &data)
     {
         QQmlInstruction genericInstr;
-        QQmlInstructionMeta<Instr>::setData(genericInstr, data);
+        QQmlInstructionMeta<Instr>::setDataNoCommon(genericInstr, data);
         return addInstructionHelper(static_cast<QQmlInstruction::Type>(Instr), genericInstr);
     }
     int nextInstructionIndex();
