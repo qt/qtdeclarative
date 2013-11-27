@@ -425,4 +425,128 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     m_initializeCondition.wakeAll();
 }
 
+void QQmlVmeProfiler::Data::clear()
+{
+    url = QUrl();
+    line = 0;
+    column = 0;
+    typeName = QString();
+}
+
+void QQmlVmeProfiler::start(const QUrl &url, int line, int column, const QString &typeName)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        switchRange();
+        updateLocation(url, line, column);
+        updateTypeName(typeName);
+    }
+}
+
+void QQmlVmeProfiler::start()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        currentRange.clear();
+        switchRange();
+    }
+}
+
+void QQmlVmeProfiler::switchRange()
+{
+    if (running)
+        QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+    else
+        running = true;
+    QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating);
+}
+
+void QQmlVmeProfiler::updateLocation(const QUrl &url, int line, int column)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to update location on stopped profiler");
+    if (enabled && running) {
+        currentRange.url = url;
+        currentRange.line = line;
+        currentRange.column = column;
+        QQmlProfilerService::instance->rangeLocation(
+                QQmlProfilerService::Creating, url, line, column);
+    }
+}
+
+void QQmlVmeProfiler::updateTypeName(const QString &typeName)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to update typeName on stopped profiler");
+    if (enabled && running) {
+        currentRange.typeName = typeName;
+        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
+    }
+}
+
+void QQmlVmeProfiler::pop()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(ranges.count() > 0, Q_FUNC_INFO, "trying to pop an invalid profiler");
+    if (enabled && ranges.count() > 0) {
+        start();
+        currentRange = ranges.pop();
+        QQmlProfilerService::instance->rangeLocation(
+                QQmlProfilerService::Creating, currentRange.url, currentRange.line, currentRange.column);
+        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, currentRange.typeName);
+    }
+}
+
+void QQmlVmeProfiler::push()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to push stopped profiler");
+    if (enabled && running)
+        ranges.push(currentRange);
+}
+
+void QQmlVmeProfiler::clear()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        stop();
+        ranges.clear();
+        for (int i = 0; i < backgroundRanges.count(); ++i) {
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+        }
+        backgroundRanges.clear();
+    }
+}
+
+void QQmlVmeProfiler::stop()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled && running) {
+        QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+        currentRange.clear();
+        running = false;
+    }
+}
+
+void QQmlVmeProfiler::background()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to push stopped profiler to the background.");
+    if (enabled && running) {
+        backgroundRanges.push(currentRange);
+        running = false;
+    }
+}
+
+void QQmlVmeProfiler::foreground()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(backgroundRanges.count() > 0, Q_FUNC_INFO, "trying to foreground stopped profiler.");
+    if (enabled && backgroundRanges.count() > 0) {
+        stop();
+        currentRange = backgroundRanges.pop();
+        running = true;
+    }
+}
+
 QT_END_NAMESPACE

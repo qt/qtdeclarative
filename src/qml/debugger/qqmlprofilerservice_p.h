@@ -225,6 +225,7 @@ private:
 
     friend struct QQmlBindingProfiler;
     friend struct QQmlHandlingSignalProfiler;
+    friend struct QQmlVmeProfiler;
     friend struct QQmlCompilingProfiler;
     friend struct QQmlPixmapProfiler;
 };
@@ -296,6 +297,54 @@ struct QQmlCompilingProfiler {
     }
 
     bool enabled;
+};
+
+struct QQmlVmeProfiler {
+public:
+    const bool enabled;
+
+    struct Data {
+        Data() : line(0), column(0) {}
+        QUrl url;
+        int line;
+        int column;
+        QString typeName;
+        void clear();
+    };
+
+    QQmlVmeProfiler() :
+        enabled(QQmlProfilerService::instance ? QQmlProfilerService::instance->profilingEnabled() : false),
+        running(false)
+    {}
+
+    ~QQmlVmeProfiler()
+    {
+        if (enabled)
+            clear();
+    }
+
+    void clear();
+
+    void start(const QUrl &url, int line, int column, const QString &typeName);
+    void start();
+    void stop();
+
+    void updateLocation(const QUrl &url, int line, int column);
+    void updateTypeName(const QString &typeName);
+
+    void pop();
+    void push();
+
+    void background();
+    void foreground();
+
+private:
+    void switchRange();
+
+    Data currentRange;
+    QStack<Data> ranges;
+    QStack<Data> backgroundRanges;
+    bool running;
 };
 
 struct QQmlPixmapProfiler {
