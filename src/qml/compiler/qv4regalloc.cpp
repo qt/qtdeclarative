@@ -897,9 +897,9 @@ private:
                 }
             }
             if (!moveFrom) {
-                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval() || lifeTimeHole);
                 Q_UNUSED(lifeTimeHole);
 #if !defined(QT_NO_DEBUG)
+                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
                     const int idx = successor->in.indexOf(predecessor);
