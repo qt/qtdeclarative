@@ -848,7 +848,7 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
 
     QPair<QObject *, int> signalInfo = extractQtSignal(ctx->callData->thisObject);
     QObject *signalObject = signalInfo.first;
-    int signalIndex = signalInfo.second;
+    int signalIndex = signalInfo.second; // in method range, not signal range!
 
     if (signalIndex < 0)
         V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
@@ -882,6 +882,11 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
     slot->thisObject = thisObject;
     slot->function = f;
 
+    if (QQmlData *ddata = QQmlData::get(signalObject)) {
+        if (QQmlPropertyCache *propertyCache = ddata->propertyCache) {
+            QQmlPropertyPrivate::flushSignal(signalObject, propertyCache->methodIndexToSignalIndex(signalIndex));
+        }
+    }
     QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
 
     return Encode::undefined();
