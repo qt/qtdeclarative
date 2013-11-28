@@ -104,8 +104,6 @@ struct Rect {
             tl.y = pt.y;
         if (pt.y > br.y)
             br.y = pt.y;
-        Q_ASSERT(tl.x <= br.x);
-        Q_ASSERT(tl.y <= br.y);
     }
 
     void operator |= (const Rect &r) {
@@ -117,8 +115,6 @@ struct Rect {
             br.x = r.br.x;
         if (r.br.y > br.y)
             br.y = r.br.y;
-        Q_ASSERT(tl.x <= br.x);
-        Q_ASSERT(tl.y <= br.y);
     }
 
     void map(const QMatrix4x4 &m);
