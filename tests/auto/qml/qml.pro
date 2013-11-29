@@ -75,7 +75,8 @@ PRIVATETESTS += \
 qtHaveModule(widgets) {
     PUBLICTESTS += \
         qjsengine \
-        qjsvalue
+        qjsvalue \
+        qwidgetsinqml
 }
 
 SUBDIRS += $$PUBLICTESTS

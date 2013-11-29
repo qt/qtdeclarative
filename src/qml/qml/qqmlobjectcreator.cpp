@@ -1113,8 +1113,16 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 return 0;
             }
         }
-        if (parent)
+        if (instance->isWidgetType()) {
+            if (parent && parent->isWidgetType()) {
+                QAbstractDeclarativeData::setWidgetParent(instance, parent);
+            } else {
+                // No parent! Layouts need to handle this through a default property that
+                // reparents accordingly. Otherwise the garbage collector will collect.
+            }
+        } else if (parent) {
             QQml_setParent_noEvent(instance, parent);
+        }
 
         ddata = QQmlData::get(instance, /*create*/true);
         ddata->lineNumber = obj->location.line;
