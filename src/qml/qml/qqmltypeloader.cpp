@@ -2371,7 +2371,7 @@ void QQmlTypeData::compile()
 
         // Compile JS binding expressions and signal handlers
 
-        JSCodeGen jsCodeGen(enginePrivate, finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
+        JSCodeGen jsCodeGen(finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
         QHash<int, QString> expressionNames; // ### TODO
         const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions, expressionNames);
 

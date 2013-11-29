@@ -3671,7 +3671,7 @@ bool QQmlCompiler::completeComponentBuild()
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
 
-        JSCodeGen jsCodeGen(enginePrivate, unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
+        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
 
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {

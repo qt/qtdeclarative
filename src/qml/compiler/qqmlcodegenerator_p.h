@@ -347,7 +347,7 @@ private:
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
+    JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports);
 
     struct IdMapping
@@ -371,7 +371,6 @@ protected:
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
 
-    QQmlEnginePrivate *engine;
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool
     AST::UiProgram *qmlRoot;
