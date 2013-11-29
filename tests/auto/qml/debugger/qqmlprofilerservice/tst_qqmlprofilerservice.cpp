@@ -418,22 +418,22 @@ void tst_QQmlProfilerService::pixmapCacheData()
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // image starting to load
-    QCOMPARE(m_client->traceMessages[8].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[8].detailType, (int)QQmlProfilerClient::PixmapLoadingStarted);
+    QCOMPARE(m_client->traceMessages[16].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[16].detailType, (int)QQmlProfilerClient::PixmapLoadingStarted);
 
     // image loaded
-    QCOMPARE(m_client->traceMessages[9].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[9].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
+    QCOMPARE(m_client->traceMessages[17].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[17].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
 
     // image size
-    QCOMPARE(m_client->traceMessages[10].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[10].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
-    QCOMPARE(m_client->traceMessages[10].line, 2); // width
-    QCOMPARE(m_client->traceMessages[10].column, 2); // height
+    QCOMPARE(m_client->traceMessages[18].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[18].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
+    QCOMPARE(m_client->traceMessages[18].line, 2); // width
+    QCOMPARE(m_client->traceMessages[18].column, 2); // height
 
     // cache size
-    QCOMPARE(m_client->traceMessages[11].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[11].detailType, (int)QQmlProfilerClient::PixmapCacheCountChanged);
+    QCOMPARE(m_client->traceMessages[19].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[19].detailType, (int)QQmlProfilerClient::PixmapCacheCountChanged);
 
     // must end with "EndTrace"
     QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
