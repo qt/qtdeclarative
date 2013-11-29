@@ -156,7 +156,7 @@ private:
 
 protected:
     Managed(InternalClass *internal)
-        : _data(0), internalClass(internal)
+        : internalClass(internal), _data(0)
     {
         Q_ASSERT(!internalClass || internalClass->vtable);
         inUse = 1; extensible = 1;
@@ -278,6 +278,9 @@ public:
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
+
+    InternalClass *internalClass;
+
     enum {
         SimpleArray = 1
     };
@@ -298,9 +301,6 @@ public:
             uchar flags;
         };
     };
-
-public:
-    InternalClass *internalClass;
 
 private:
     friend class MemoryManager;
