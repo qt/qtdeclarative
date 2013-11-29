@@ -267,7 +267,7 @@ template<typename T> inline T clampTo(double value, T min = defaultMinimumForCla
         return min;
     return static_cast<T>(value);
 }
-template<> inline long long int clampTo(double, long long int, long long int); // clampTo does not support long long ints.
+template<> long long int clampTo(double, long long int, long long int); // clampTo does not support long long ints.
 
 inline int clampToInteger(double value)
 {
