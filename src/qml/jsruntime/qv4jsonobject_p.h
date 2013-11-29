@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4JSONOBJECTS_H
-#define QV4SJONOBJECTS_H
+#ifndef QV4JSONOBJECT_H
+#define QV4JSONOBJECT_H
 
 #include "qv4object_p.h"
 #include <qjsonarray.h>

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #ifndef QV4BOOLEANOBJECT_H
-#define QBOOLEANOBJECT_H
+#define QV4BOOLEANOBJECT_H
 
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
