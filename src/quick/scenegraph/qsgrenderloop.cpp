@@ -122,6 +122,7 @@ public:
     QSGRenderContext *rc;
 
     QImage grabContent;
+    int m_update_timer;
 
     bool eventPending;
 };
@@ -384,7 +385,8 @@ void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
     m_windows[window].updatePending = true;
 
     if (!eventPending) {
-        QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+        const int exhaust_delay = 5;
+        m_update_timer = startTimer(exhaust_delay, Qt::PreciseTimer);
         eventPending = true;
     }
 }
@@ -399,8 +401,10 @@ QSGContext *QSGGuiThreadRenderLoop::sceneGraphContext() const
 
 bool QSGGuiThreadRenderLoop::event(QEvent *e)
 {
-    if (e->type() == QEvent::User) {
+    if (e->type() == QEvent::Timer) {
         eventPending = false;
+        killTimer(m_update_timer);
+        m_update_timer = 0;
         for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
              it != m_windows.constEnd(); ++it) {
             const WindowData &data = it.value();

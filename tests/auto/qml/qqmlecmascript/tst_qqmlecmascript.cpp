@@ -6060,6 +6060,13 @@ void tst_qqmlecmascript::signalHandlers()
     QMetaObject::invokeMethod(o, "testSignalHandlerDefined");
     QCOMPARE(o->property("definedHandlerResult").toBool(), true);
 
+    QVariant result;
+    QMetaObject::invokeMethod(o, "testConnectionOnAlias", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
+    QMetaObject::invokeMethod(o, "testAliasSignalHandler", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
     delete o;
 }
 

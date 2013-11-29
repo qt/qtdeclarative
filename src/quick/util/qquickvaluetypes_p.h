@@ -64,10 +64,10 @@ void registerValueTypes();
 
 class Q_AUTOTEST_EXPORT QQuickColorValueType : public QQmlValueTypeBase<QColor>
 {
-    Q_PROPERTY(qreal r READ r WRITE setR)
-    Q_PROPERTY(qreal g READ g WRITE setG)
-    Q_PROPERTY(qreal b READ b WRITE setB)
-    Q_PROPERTY(qreal a READ a WRITE setA)
+    Q_PROPERTY(qreal r READ r WRITE setR FINAL)
+    Q_PROPERTY(qreal g READ g WRITE setG FINAL)
+    Q_PROPERTY(qreal b READ b WRITE setB FINAL)
+    Q_PROPERTY(qreal a READ a WRITE setA FINAL)
     Q_OBJECT
 public:
     QQuickColorValueType(QObject *parent = 0);
@@ -86,8 +86,8 @@ public:
 
 class Q_AUTOTEST_EXPORT QQuickVector2DValueType : public QQmlValueTypeBase<QVector2D>
 {
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_OBJECT
 public:
     QQuickVector2DValueType(QObject *parent = 0);
@@ -115,9 +115,9 @@ public:
 
 class Q_AUTOTEST_EXPORT QQuickVector3DValueType : public QQmlValueTypeBase<QVector3D>
 {
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
+    Q_PROPERTY(qreal z READ z WRITE setZ FINAL)
     Q_OBJECT
 public:
     QQuickVector3DValueType(QObject *parent = 0);
@@ -149,10 +149,10 @@ public:
 
 class Q_AUTOTEST_EXPORT QQuickVector4DValueType : public QQmlValueTypeBase<QVector4D>
 {
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
-    Q_PROPERTY(qreal w READ w WRITE setW)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
+    Q_PROPERTY(qreal z READ z WRITE setZ FINAL)
+    Q_PROPERTY(qreal w READ w WRITE setW FINAL)
     Q_OBJECT
 public:
     QQuickVector4DValueType(QObject *parent = 0);
@@ -207,22 +207,22 @@ public:
 
 class Q_AUTOTEST_EXPORT QQuickMatrix4x4ValueType : public QQmlValueTypeBase<QMatrix4x4>
 {
-    Q_PROPERTY(qreal m11 READ m11 WRITE setM11)
-    Q_PROPERTY(qreal m12 READ m12 WRITE setM12)
-    Q_PROPERTY(qreal m13 READ m13 WRITE setM13)
-    Q_PROPERTY(qreal m14 READ m14 WRITE setM14)
-    Q_PROPERTY(qreal m21 READ m21 WRITE setM21)
-    Q_PROPERTY(qreal m22 READ m22 WRITE setM22)
-    Q_PROPERTY(qreal m23 READ m23 WRITE setM23)
-    Q_PROPERTY(qreal m24 READ m24 WRITE setM24)
-    Q_PROPERTY(qreal m31 READ m31 WRITE setM31)
-    Q_PROPERTY(qreal m32 READ m32 WRITE setM32)
-    Q_PROPERTY(qreal m33 READ m33 WRITE setM33)
-    Q_PROPERTY(qreal m34 READ m34 WRITE setM34)
-    Q_PROPERTY(qreal m41 READ m41 WRITE setM41)
-    Q_PROPERTY(qreal m42 READ m42 WRITE setM42)
-    Q_PROPERTY(qreal m43 READ m43 WRITE setM43)
-    Q_PROPERTY(qreal m44 READ m44 WRITE setM44)
+    Q_PROPERTY(qreal m11 READ m11 WRITE setM11 FINAL)
+    Q_PROPERTY(qreal m12 READ m12 WRITE setM12 FINAL)
+    Q_PROPERTY(qreal m13 READ m13 WRITE setM13 FINAL)
+    Q_PROPERTY(qreal m14 READ m14 WRITE setM14 FINAL)
+    Q_PROPERTY(qreal m21 READ m21 WRITE setM21 FINAL)
+    Q_PROPERTY(qreal m22 READ m22 WRITE setM22 FINAL)
+    Q_PROPERTY(qreal m23 READ m23 WRITE setM23 FINAL)
+    Q_PROPERTY(qreal m24 READ m24 WRITE setM24 FINAL)
+    Q_PROPERTY(qreal m31 READ m31 WRITE setM31 FINAL)
+    Q_PROPERTY(qreal m32 READ m32 WRITE setM32 FINAL)
+    Q_PROPERTY(qreal m33 READ m33 WRITE setM33 FINAL)
+    Q_PROPERTY(qreal m34 READ m34 WRITE setM34 FINAL)
+    Q_PROPERTY(qreal m41 READ m41 WRITE setM41 FINAL)
+    Q_PROPERTY(qreal m42 READ m42 WRITE setM42 FINAL)
+    Q_PROPERTY(qreal m43 READ m43 WRITE setM43 FINAL)
+    Q_PROPERTY(qreal m44 READ m44 WRITE setM44 FINAL)
     Q_OBJECT
 public:
     QQuickMatrix4x4ValueType(QObject *parent = 0);
@@ -288,18 +288,18 @@ class Q_AUTOTEST_EXPORT QQuickFontValueType : public QQmlValueTypeBase<QFont>
     Q_ENUMS(FontWeight)
     Q_ENUMS(Capitalization)
 
-    Q_PROPERTY(QString family READ family WRITE setFamily)
-    Q_PROPERTY(bool bold READ bold WRITE setBold)
-    Q_PROPERTY(FontWeight weight READ weight WRITE setWeight)
-    Q_PROPERTY(bool italic READ italic WRITE setItalic)
-    Q_PROPERTY(bool underline READ underline WRITE setUnderline)
-    Q_PROPERTY(bool overline READ overline WRITE setOverline)
-    Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout)
-    Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize)
-    Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize)
-    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization)
-    Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing)
-    Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing)
+    Q_PROPERTY(QString family READ family WRITE setFamily FINAL)
+    Q_PROPERTY(bool bold READ bold WRITE setBold FINAL)
+    Q_PROPERTY(FontWeight weight READ weight WRITE setWeight FINAL)
+    Q_PROPERTY(bool italic READ italic WRITE setItalic FINAL)
+    Q_PROPERTY(bool underline READ underline WRITE setUnderline FINAL)
+    Q_PROPERTY(bool overline READ overline WRITE setOverline FINAL)
+    Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout FINAL)
+    Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize FINAL)
+    Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize FINAL)
+    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
+    Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing FINAL)
+    Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
 
 public:
     enum FontWeight { Light = QFont::Light,

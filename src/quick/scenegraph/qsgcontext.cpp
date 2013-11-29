@@ -454,6 +454,8 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
     const char *renderer = (const char *) glGetString(GL_RENDERER);
     if (strstr(renderer, "llvmpipe"))
         m_serializedRender = true;
+    if (strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
+        m_brokenIBOs = true;
 #endif
 
     emit initialized();

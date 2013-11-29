@@ -425,4 +425,204 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     m_initializeCondition.wakeAll();
 }
 
+/*!
+ * \brief QQmlVmeProfiler::Data::clear Reset to defaults
+ * Reset the profiling data to defaults.
+ */
+void QQmlVmeProfiler::Data::clear()
+{
+    url = QUrl();
+    line = 0;
+    column = 0;
+    typeName = QString();
+}
+
+/*!
+ * \brief QQmlVmeProfiler::start Start profiler and set data
+ * \param url URL of file being executed
+ * \param line Curent line in file
+ * \param column Current column in file
+ * \param typeName Type of object be created
+ * Stops the profiler previously running in the foreground if there is one, then starts a
+ * new one and sets it up with the data given.
+ * Preconditions: Profiling must be enabled.
+ */
+void QQmlVmeProfiler::start(const QUrl &url, int line, int column, const QString &typeName)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        switchRange();
+        updateLocation(url, line, column);
+        updateTypeName(typeName);
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::start Start profiler without data
+ * Clears the current range data, then stops the profiler previously running in the
+ * foreground if any, then starts a new one.
+ * Preconditions: Profiling must be enabled.
+ */
+void QQmlVmeProfiler::start()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        currentRange.clear();
+        switchRange();
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::switchRange Switch foreground profilers
+ * Stops the current profiler if any, and starts a new one.
+ */
+void QQmlVmeProfiler::switchRange()
+{
+    if (running)
+        QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+    else
+        running = true;
+    QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating);
+}
+
+/*!
+ * \brief QQmlVmeProfiler::updateLocation Update current location information
+ * \param url URL of file being executed
+ * \param line line Curent line in file
+ * \param column column Current column in file
+ * Updates the current profiler's location information.
+ * Preconditions: Profiling must be enabled and a profiler must be running in the foreground.
+ */
+void QQmlVmeProfiler::updateLocation(const QUrl &url, int line, int column)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to update location on stopped profiler");
+    if (enabled && running) {
+        currentRange.url = url;
+        currentRange.line = line;
+        currentRange.column = column;
+        QQmlProfilerService::instance->rangeLocation(
+                QQmlProfilerService::Creating, url, line, column);
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::updateTypeName Update current type information
+ * \param typeName Type of object being created
+ * Updates the current profiler's type information.
+ * Preconditions: Profiling must be enabled and a profiler must be running in the foreground.
+ */
+void QQmlVmeProfiler::updateTypeName(const QString &typeName)
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to update typeName on stopped profiler");
+    if (enabled && running) {
+        currentRange.typeName = typeName;
+        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::pop Pops a paused profiler from the stack and restarts it
+ * Stops the currently running profiler, if any, then retrieves an old one from the stack
+ * of paused profilers and starts that.
+ * Preconditions: Profiling must be enabled and there must be at least one profiler on the
+ * stack.
+ */
+void QQmlVmeProfiler::pop()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(ranges.count() > 0, Q_FUNC_INFO, "trying to pop an invalid profiler");
+    if (enabled && ranges.count() > 0) {
+        start();
+        currentRange = ranges.pop();
+        QQmlProfilerService::instance->rangeLocation(
+                QQmlProfilerService::Creating, currentRange.url, currentRange.line, currentRange.column);
+        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, currentRange.typeName);
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::push Pushes the currently running profiler on the stack.
+ * Pushes the currently running profiler on the stack of paused profilers. Note: The profiler
+ * isn't paused here. That's a separate step. If it's never paused, but pop()'ed later that
+ * won't do any harm, though.
+ * Preconditions: Profiling must be enabled and a profiler must be running in the foreground.
+ */
+void QQmlVmeProfiler::push()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to push stopped profiler");
+    if (enabled && running)
+        ranges.push(currentRange);
+}
+
+/*!
+ * \brief QQmlVmeProfiler::clear Stop all running profilers and clear all data.
+ * Stops the currently running (foreground and background) profilers and removes all saved
+ * data about paused profilers.
+ * Precondtions: Profiling must be enabled.
+ */
+void QQmlVmeProfiler::clear()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled) {
+        stop();
+        ranges.clear();
+        for (int i = 0; i < backgroundRanges.count(); ++i) {
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+        }
+        backgroundRanges.clear();
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::stop Stop profiler running in the foreground, if any.
+ * Precondition: Profiling must be enabled.
+ */
+void QQmlVmeProfiler::stop()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    if (enabled && running) {
+        QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+        currentRange.clear();
+        running = false;
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::background Push the current profiler to the background.
+ * Push the profiler currently running in the foreground to the background so that it
+ * won't be stopped by stop() or start(). There can be multiple profilers in the background.
+ * You can retrieve them in reverse order by calling foreground().
+ * Precondition: Profiling must be enabled and a profiler must be running in the foreground.
+ */
+void QQmlVmeProfiler::background()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(running, Q_FUNC_INFO, "trying to push stopped profiler to the background.");
+    if (enabled && running) {
+        backgroundRanges.push(currentRange);
+        running = false;
+    }
+}
+
+/*!
+ * \brief QQmlVmeProfiler::foreground Retrieve a profiler from the background
+ * Stop the profiler currently running in the foreground, if any and put the next profiler
+ * from the background in its place.
+ * Preconditions: Profiling must be enabled and there must be at least one profiler in the
+ * background.
+ */
+void QQmlVmeProfiler::foreground()
+{
+    Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+    Q_ASSERT_X(backgroundRanges.count() > 0, Q_FUNC_INFO, "trying to foreground stopped profiler.");
+    if (enabled && backgroundRanges.count() > 0) {
+        stop();
+        currentRange = backgroundRanges.pop();
+        running = true;
+    }
+}
+
 QT_END_NAMESPACE

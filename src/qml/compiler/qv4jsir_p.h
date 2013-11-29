@@ -236,14 +236,16 @@ struct MemberExpressionResolver
     typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0), flags(0) {}
+        : resolveMember(0), data(0), extraData(0), flags(0), isQObjectResolver(false) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
 
     ResolveFunction resolveMember;
-    void *data; // Could be pointer to meta object, QQmlTypeNameCache, etc. - depends on resolveMember implementation
-    int flags;
+    void *data; // Could be pointer to meta object, importNameSpace, etc. - depends on resolveMember implementation
+    void *extraData; // Could be QQmlTypeNameCache
+    unsigned int flags : 31;
+    unsigned int isQObjectResolver; // neede for IR dump helpers
 };
 
 struct Expr {
@@ -555,15 +557,39 @@ struct Member: Expr {
     Expr *base;
     const QString *name;
     QQmlPropertyData *property;
+    int attachedPropertiesId;
     int enumValue;
-    bool memberIsEnum;
+    bool memberIsEnum : 1;
+    bool freeOfSideEffects : 1;
 
-    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0)
+    // This is set for example for for QObject properties. All sorts of extra behavior
+    // is defined when writing to them, for example resettable properties are reset
+    // when writing undefined to them, and an exception is thrown when they're missing
+    // a reset function. And then there's also Qt.binding().
+    bool inhibitTypeConversionOnWrite: 1;
+
+    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, int attachedPropertiesId = 0)
     {
         this->base = base;
         this->name = name;
         this->property = property;
+        this->attachedPropertiesId = attachedPropertiesId;
+        this->enumValue = 0;
         this->memberIsEnum = false;
+        this->freeOfSideEffects = false;
+        this->inhibitTypeConversionOnWrite = property != 0;
+    }
+
+    void init(Expr *base, const QString *name, int enumValue)
+    {
+        this->base = base;
+        this->name = name;
+        this->property = 0;
+        this->attachedPropertiesId = 0;
+        this->enumValue = enumValue;
+        this->memberIsEnum = true;
+        this->freeOfSideEffects = false;
+        this->inhibitTypeConversionOnWrite = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -869,7 +895,8 @@ struct BasicBlock {
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
-    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0);
+    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0, int attachedPropertiesId = 0);
+    Expr *MEMBER(Expr *base, const QString *name, int enumValue);
 
     Stmt *EXP(Expr *expr);
 

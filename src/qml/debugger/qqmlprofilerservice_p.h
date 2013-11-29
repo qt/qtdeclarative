@@ -225,7 +225,7 @@ private:
 
     friend struct QQmlBindingProfiler;
     friend struct QQmlHandlingSignalProfiler;
-    friend struct QQmlObjectCreatingProfiler;
+    friend struct QQmlVmeProfiler;
     friend struct QQmlCompilingProfiler;
     friend struct QQmlPixmapProfiler;
 };
@@ -277,40 +277,6 @@ struct QQmlHandlingSignalProfiler {
     bool enabled;
 };
 
-struct QQmlObjectCreatingProfiler {
-    QQmlObjectCreatingProfiler()
-    {
-        enabled = QQmlProfilerService::instance
-                ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled) {
-            QQmlProfilerService *service = QQmlProfilerService::instance;
-            service->startRange(QQmlProfilerService::Creating);
-        }
-    }
-
-    void setTypeName(const QString &typeName)
-    {
-        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
-        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
-    }
-
-    void setLocation(const QUrl &url, int line, int column)
-    {
-        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
-        if (enabled)
-            QQmlProfilerService::instance->rangeLocation(
-                        QQmlProfilerService::Creating, url, line, column);
-    }
-
-    ~QQmlObjectCreatingProfiler()
-    {
-        if (enabled)
-            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-    }
-
-    bool enabled;
-};
-
 struct QQmlCompilingProfiler {
     QQmlCompilingProfiler(const QString &name)
     {
@@ -331,6 +297,54 @@ struct QQmlCompilingProfiler {
     }
 
     bool enabled;
+};
+
+struct QQmlVmeProfiler {
+public:
+    const bool enabled;
+
+    struct Data {
+        Data() : line(0), column(0) {}
+        QUrl url;
+        int line;
+        int column;
+        QString typeName;
+        void clear();
+    };
+
+    QQmlVmeProfiler() :
+        enabled(QQmlProfilerService::instance ? QQmlProfilerService::instance->profilingEnabled() : false),
+        running(false)
+    {}
+
+    ~QQmlVmeProfiler()
+    {
+        if (enabled)
+            clear();
+    }
+
+    void clear();
+
+    void start(const QUrl &url, int line, int column, const QString &typeName);
+    void start();
+    void stop();
+
+    void updateLocation(const QUrl &url, int line, int column);
+    void updateTypeName(const QString &typeName);
+
+    void pop();
+    void push();
+
+    void background();
+    void foreground();
+
+private:
+    void switchRange();
+
+    Data currentRange;
+    QStack<Data> ranges;
+    QStack<Data> backgroundRanges;
+    bool running;
 };
 
 struct QQmlPixmapProfiler {

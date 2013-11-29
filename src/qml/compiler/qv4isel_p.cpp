@@ -148,11 +148,11 @@ void IRDecoder::visitMove(V4IR::Move *s)
         } else if (V4IR::Member *m = s->source->asMember()) {
             if (m->property) {
                 bool captureRequired = true;
-                if (_function) {
+                if (_function && m->attachedPropertiesId == 0) {
                     captureRequired = !_function->contextObjectDependencies.contains(m->property)
                                       && !_function->scopeObjectDependencies.contains(m->property);
                 }
-                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, t);
+                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, m->attachedPropertiesId, t);
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
@@ -191,7 +191,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
     } else if (V4IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                if (m->property) {
+                if (m->property && m->attachedPropertiesId == 0) {
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
                     return;
                 } else {

@@ -320,6 +320,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadQObjectProperty)
 
+    MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
+        STOREVALUE(instr.result, __qmljs_get_attached_property(context, instr.attachedPropertiesId, instr.propertyIndex));
+    MOTH_END_INSTR(LoadAttachedQObjectProperty)
+
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;

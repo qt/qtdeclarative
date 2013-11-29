@@ -1260,6 +1260,8 @@ protected:
 
     virtual void visitMember(Member *e) {
         e->base->accept(this);
+        if (e->freeOfSideEffects)
+            return;
         markAsSideEffect();
     }
 
@@ -1904,12 +1906,8 @@ protected:
             }
         }
 
-        // Don't convert when writing to QObject properties. All sorts of extra behavior
-        // is defined when writing to them, for example resettable properties are reset
-        // when writing undefined to them, and an exception is thrown when they're missing
-        // a reset function.
         const Member *targetMember = s->target->asMember();
-        const bool inhibitConversion = targetMember && targetMember->property;
+        const bool inhibitConversion = targetMember && targetMember->inhibitTypeConversionOnWrite;
 
         run(s->source, s->target->type, !inhibitConversion);
     }
@@ -2514,14 +2512,22 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     }
                     continue;
                 }
-                if (Member *potentialEnumMember = m->source->asMember()) {
-                    if (potentialEnumMember->memberIsEnum) {
+                if (Member *member = m->source->asMember()) {
+                    if (member->memberIsEnum) {
                         Const *c = function->New<Const>();
-                        c->init(SInt32Type, potentialEnumMember->enumValue);
+                        c->init(SInt32Type, member->enumValue);
                         W += replaceUses(targetTemp, c);
                         defUses.removeDef(*targetTemp);
                         *ref[s] = 0;
-                        defUses.removeUse(s, *potentialEnumMember->base->asTemp());
+                        defUses.removeUse(s, *member->base->asTemp());
+                        continue;
+                    } else if (member->attachedPropertiesId != 0 && member->property && member->base->asTemp()) {
+                        // Attached properties have no dependency on their base. Isel doesn't
+                        // need it and we can eliminate the temp used to initialize it.
+                        defUses.removeUse(s, *member->base->asTemp());
+                        Const *c = function->New<Const>();
+                        c->init(SInt32Type, 0);
+                        member->base = c;
                         continue;
                     }
                 }

@@ -57,4 +57,38 @@ QtObject {
         if (onTestSignal !== undefined)
             definedHandlerResult = true;
     }
+
+    property QtObject objWithAlias: QtObject {
+        id: testObjectWithAlias
+
+        property int count: 0;
+        property alias countAlias: testObjectWithAlias.count
+    }
+
+    function testConnectionOnAlias() {
+        var called = false;
+
+        testObjectWithAlias.onCountAliasChanged.connect(function() {
+            called = true
+        })
+
+        testObjectWithAlias.count++;
+        return called;
+    }
+
+    property QtObject objWithAliasHandler: QtObject {
+        id: testObjectWithAliasHandler
+
+        property bool testSuccess: false
+
+        property int count: 0
+        property alias countAlias: testObjectWithAliasHandler.count
+        onCountAliasChanged: testSuccess = true
+    }
+
+    function testAliasSignalHandler() {
+        testObjectWithAliasHandler.testSuccess = false
+        testObjectWithAliasHandler.count++
+        return testObjectWithAliasHandler.testSuccess
+    }
 }

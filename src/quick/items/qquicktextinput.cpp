@@ -2533,7 +2533,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
                 && !persistentSelection)
             deselect();
 
-        if (hasAcceptableInput(m_text) || fixup())
+        if (q->hasAcceptableInput() || fixup())
             emit q->editingFinished();
 
 #ifndef QT_NO_IM
@@ -4117,7 +4117,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     Q_Q(QQuickTextInput);
 
     if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
-        if (hasAcceptableInput(m_text) || fixup()) {
+        if (q->hasAcceptableInput() || fixup()) {
             emit q->accepted();
             emit q->editingFinished();
         }
