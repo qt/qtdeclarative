@@ -1956,6 +1956,8 @@ void tst_QQuickListView::sections(const QUrl &source)
         QCOMPARE(next->text().toInt(), (i+1)/5);
     }
 
+    QVERIFY(!listview->property("sectionsInvalidOnCompletion").toBool());
+
     QSignalSpy currentSectionChangedSpy(listview, SIGNAL(currentSectionChanged()));
 
     // Remove section boundary
