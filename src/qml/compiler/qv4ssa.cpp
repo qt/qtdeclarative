@@ -2603,13 +2603,40 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 }
 
                 if (Binop *binop = m->source->asBinop()) {
+                    Const *leftConst = binop->left->asConst();
+                    Const *rightConst = binop->right->asConst();
+
+                    { // Typical casts to int32:
+                        Expr *casted = 0;
+                        switch (binop->op) {
+                        case OpBitAnd:
+                            if (leftConst && !rightConst && leftConst->value == 0xffffffff)
+                                casted = rightConst;
+                            else if (!leftConst && rightConst && rightConst->value == 0xffffffff)
+                                casted = leftConst;
+                            break;
+                        case OpBitOr:
+                            if (leftConst && !rightConst && leftConst->value == 0)
+                                casted = rightConst;
+                            else if (!leftConst && rightConst && rightConst->value == 0)
+                                casted = leftConst;
+                            break;
+                        default:
+                            break;
+                        }
+                        if (casted) {
+                            Q_ASSERT(casted->type == SInt32Type);
+                            m->source = casted;
+                            W += m;
+                            continue;
+                        }
+                    }
+
                     // TODO: More constant binary expression evaluation
                     // TODO: If the result of the move is only used in one single cjump, then
                     //       inline the binop into the cjump.
-                    Const *leftConst = binop->left->asConst();
                     if (!leftConst || leftConst->type == StringType || leftConst->type == VarType || leftConst->type == QObjectType)
                         continue;
-                    Const *rightConst = binop->right->asConst();
                     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType || rightConst->type == QObjectType)
                         continue;
 
