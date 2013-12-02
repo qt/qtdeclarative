@@ -230,9 +230,7 @@ void IRDecoder::visitExp(V4IR::Exp *s)
             Q_ASSERT(member->base->asTemp());
             callProperty(member->base->asTemp(), *member->name, c->args, 0);
         } else if (Subscript *s = c->base->asSubscript()) {
-            Q_ASSERT(s->base->asTemp());
-            Q_ASSERT(s->index->asTemp());
-            callSubscript(s->base->asTemp(), s->index->asTemp(), c->args, 0);
+            callSubscript(s->base, s->index, c->args, 0);
         } else {
             Q_UNIMPLEMENTED();
         }
