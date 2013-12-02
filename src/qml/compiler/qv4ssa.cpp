@@ -1982,7 +1982,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
         QSet<BasicBlock *> visited;
         QVector<BasicBlock *> &sequence;
         BasicBlock *currentGroup;
-        QList<BasicBlock *> postponed;
+        QSet<BasicBlock *> postponed;
 
         I(const DominatorTree &df, QVector<BasicBlock *> &sequence,
           QHash<BasicBlock *, BasicBlock *> &startEndLoops)
@@ -1998,7 +1998,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
                 return;
 
             if (bb->containingGroup() != currentGroup) {
-                postponed.append(bb);
+                postponed.insert(bb);
                 return;
             }
             if (bb->isGroupStart())
@@ -2031,7 +2031,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
             if (bb->isGroupStart()) {
                 currentGroup = bb->containingGroup();
                 startEndLoops.insert(bb, sequence.last());
-                QList<BasicBlock *> p = postponed;
+                QSet<BasicBlock *> p = postponed;
                 foreach (BasicBlock *pBB, p)
                     DFS(pBB);
             }
@@ -2040,7 +2040,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
         void layout(BasicBlock *bb) {
             sequence.append(bb);
             visited.insert(bb);
-            postponed.removeAll(bb);
+            postponed.remove(bb);
         }
     };
 
