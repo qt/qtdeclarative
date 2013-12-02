@@ -1726,7 +1726,9 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
 
     QString path = ctxt->url.toString();
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) : QString();
+    int lastDot = path.lastIndexOf(QLatin1Char('.'));
+    int length = lastDot - (lastSlash + 1);
+    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
 
     QString text = ctx->callData->args[0].toQStringNoThrow();
     QString comment;
