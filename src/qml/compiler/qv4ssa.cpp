@@ -213,6 +213,32 @@ void showMeTheCode(Function *function)
     }
 }
 
+class ProcessedBlocks
+{
+    QBitArray processed;
+
+public:
+    ProcessedBlocks(const QVector<BasicBlock *> allBlocks)
+    {
+        int maxBB = 0;
+        foreach (BasicBlock *bb, allBlocks)
+            maxBB = qMax(maxBB, bb->index);
+        processed = QBitArray(maxBB + 1, false);
+    }
+
+    bool alreadyProcessed(BasicBlock *bb) const
+    {
+        Q_ASSERT(bb);
+
+        return processed.at(bb->index);
+    }
+
+    void markAsProcessed(BasicBlock *bb)
+    {
+        processed.setBit(bb->index);
+    }
+};
+
 inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
 {
     Temp *t = e->asTemp();
@@ -369,15 +395,6 @@ class DominatorTree {
 #endif // SHOW_SSA
     }
 
-    bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
-        for (BasicBlock *it = dominated; it; it = idom[it]) {
-            if (it == dominator)
-                return true;
-        }
-
-        return false;
-    }
-
     struct NodeProgress {
         QSet<BasicBlock *> children;
         QSet<BasicBlock *> todo;
@@ -489,6 +506,15 @@ public:
 
     BasicBlock *immediateDominator(BasicBlock *bb) const {
         return idom[bb];
+    }
+
+    bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
+        for (BasicBlock *it = dominated; it; it = idom[it]) {
+            if (it == dominator)
+                return true;
+        }
+
+        return false;
     }
 };
 
@@ -720,19 +746,7 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
     enum { Absent = -1 };
     Mapping localMapping;
     Mapping vregMapping;
-    QBitArray processed;
-
-    bool alreadyProcessed(BasicBlock *bb) const
-    {
-        Q_ASSERT(bb);
-
-        return processed.at(bb->index);
-    }
-
-    void markAsProcessed(BasicBlock *bb)
-    {
-        processed.setBit(bb->index);
-    }
+    ProcessedBlocks processed;
 
     bool isRenamable(Temp *t) const
     {
@@ -796,11 +810,8 @@ public:
         : function(f)
         , variablesCanEscape(f->variablesCanEscape())
         , tempCount(0)
+        , processed(f->basicBlocks)
     {
-        int maxBB = 0;
-        foreach (BasicBlock *bb, f->basicBlocks)
-            maxBB = qMax(maxBB, bb->index);
-        processed = QBitArray(maxBB + 1, false);
     }
 
     void run() {
@@ -840,13 +851,13 @@ private:
 
     void rename(BasicBlock *bb)
     {
-        while (bb && !alreadyProcessed(bb)) {
+        while (bb && !processed.alreadyProcessed(bb)) {
             renameStatementsAndPhis(bb);
-            markAsProcessed(bb);
+            processed.markAsProcessed(bb);
 
             BasicBlock *next = 0;
             foreach (BasicBlock *out, bb->out) {
-                if (alreadyProcessed(out))
+                if (processed.alreadyProcessed(out))
                     continue;
                 if (!next)
                     next = out;
@@ -2251,13 +2262,16 @@ void splitCriticalEdges(Function *f)
             for (int inIdx = 0, eInIdx = bb->in.size(); inIdx != eInIdx; ++inIdx) {
                 BasicBlock *inBB = bb->in[inIdx];
                 if (inBB->out.size() > 1) { // this should have been split!
+                    int newIndex = f->basicBlocks.last()->index + 1;
 #if defined(SHOW_SSA)
-                    qDebug() << "Splitting edge from block" << inBB->index << "to block" << bb->index;
+                    qDebug() << "Splitting edge from block" << inBB->index << "to block" << bb->index << "by introducing block" << newIndex;
 #endif
 
+                    BasicBlock *containingGroup = inBB->isGroupStart() ? inBB : inBB->containingGroup();
+
                     // create the basic block:
-                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup(), bb->catchBlock);
-                    newBB->index = f->basicBlocks.last()->index + 1;
+                    BasicBlock *newBB = new BasicBlock(f, containingGroup, bb->catchBlock);
+                    newBB->index = newIndex;
                     f->basicBlocks.append(newBB);
                     Jump *s = f->New<Jump>();
                     s->init(bb);
@@ -2293,84 +2307,153 @@ void splitCriticalEdges(Function *f)
     }
 }
 
-QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const DominatorTree &df)
+// High-level algorithm:
+//  0. start with the first node (the start node) of a function
+//  1. emit the node
+//  2. add all outgoing edges that are not yet emitted to the postponed stack
+//  3. When the postponed stack is empty, pop a stack from the loop stack. If that is empty too,
+//     we're done.
+//  4. pop a node from the postponed stack, and check if it can be scheduled:
+//     a. if all incoming edges are scheduled, go to 4.
+//     b. if an incoming edge is unscheduled, but it's a back-edge (an edge in a loop that jumps
+//        back to the start of the loop), ignore it
+//     c. if there is any unscheduled edge that is not a back-edge, ignore this node, and go to 4.
+//  5. if this node is the start of a loop, push the postponed stack on the loop stack.
+//  6. go back to 1.
+//
+// The postponing action in step 2 will put the node into its containing group. The case where this
+// is important is when a (labeled) continue or a (labeled) break statement occur in a loop: the
+// outgoing edge points to a node that is not part of the current loop (and possibly not of the
+// parent loop).
+//
+// Linear scan register allocation benefits greatly from short life-time intervals with few holes
+// (see for example section 4 (Lifetime Analysis) of [Wimmer1]). This algorithm makes sure that the
+// blocks of a group are scheduled together, with no non-loop blocks in between. This applies
+// recursively for nested loops. It also schedules groups of if-then-else-endif blocks together for
+// the smae reason.
+class BlockScheduler
 {
-    struct I {
-        const DominatorTree &df;
-        QHash<BasicBlock *, BasicBlock *> &startEndLoops;
-        QSet<BasicBlock *> visited;
-        QVector<BasicBlock *> &sequence;
-        BasicBlock *currentGroup;
-        QSet<BasicBlock *> postponed;
+    Function *function;
+    const DominatorTree &dominatorTree;
 
-        I(const DominatorTree &df, QVector<BasicBlock *> &sequence,
-          QHash<BasicBlock *, BasicBlock *> &startEndLoops)
-            : df(df)
-            , startEndLoops(startEndLoops)
-            , sequence(sequence)
-            , currentGroup(0)
-        {}
+    struct WorkForGroup
+    {
+        BasicBlock *group;
+        QStack<BasicBlock *> postponed;
 
-        void DFS(BasicBlock *bb) {
-            Q_ASSERT(bb);
-            if (visited.contains(bb))
-                return;
-
-            if (bb->containingGroup() != currentGroup) {
-                postponed.insert(bb);
-                return;
-            }
-            if (bb->isGroupStart())
-                currentGroup = bb;
-            else if (bb->in.size() > 1)
-                foreach (BasicBlock *inBB, bb->in)
-                    if (!visited.contains(inBB))
-                        return;
-
-            Q_ASSERT(df.immediateDominator(bb) == 0 || sequence.contains(df.immediateDominator(bb)));
-            layout(bb);
-            if (Stmt *terminator = bb->terminator()) {
-                if (Jump *j = terminator->asJump()) {
-                    Q_ASSERT(bb->out.size() == 1);
-                    DFS(j->target);
-                } else if (CJump *cj = terminator->asCJump()) {
-                    Q_ASSERT(bb->out.size() == 2);
-                    DFS(cj->iftrue);
-                    DFS(cj->iffalse);
-                } else if (terminator->asRet()) {
-                    Q_ASSERT(bb->out.size() == 0);
-                    // nothing to do.
-                } else {
-                    Q_UNREACHABLE();
-                }
-            } else {
-                Q_UNREACHABLE();
-            }
-
-            if (bb->isGroupStart()) {
-                currentGroup = bb->containingGroup();
-                startEndLoops.insert(bb, sequence.last());
-                QSet<BasicBlock *> p = postponed;
-                foreach (BasicBlock *pBB, p)
-                    DFS(pBB);
-            }
-        }
-
-        void layout(BasicBlock *bb) {
-            sequence.append(bb);
-            visited.insert(bb);
-            postponed.remove(bb);
-        }
+        WorkForGroup(BasicBlock *group = 0): group(group) {}
     };
-
+    WorkForGroup currentGroup;
+    QStack<WorkForGroup> postponedGroups;
     QVector<BasicBlock *> sequence;
-    sequence.reserve(function->basicBlocks.size());
-    QHash<BasicBlock *, BasicBlock *> startEndLoops;
-    I(df, sequence, startEndLoops).DFS(function->basicBlocks.first());
-    qSwap(function->basicBlocks, sequence);
+    ProcessedBlocks emitted;
+    QHash<BasicBlock *, BasicBlock *> loopsStartEnd;
 
-    return startEndLoops;
-}
+    bool checkCandidate(BasicBlock *candidate)
+    {
+        Q_ASSERT(candidate->containingGroup() == currentGroup.group);
+
+        foreach (BasicBlock *in, candidate->in) {
+            if (emitted.alreadyProcessed(in))
+                continue;
+
+            // this is a loop, where there in -> candidate edge is the jump back to the top of the loop.
+            if (dominatorTree.dominates(candidate, in))
+                continue;
+
+            return false; // an incoming edge that is not yet emitted, and is not a back-edge
+        }
+
+        // postpone everything, and schedule the loop first.
+        if (candidate->isGroupStart()) {
+            postponedGroups.push(currentGroup);
+            currentGroup = WorkForGroup(candidate);
+        }
+
+        return true;
+    }
+
+    BasicBlock *pickNext()
+    {
+        while (true) {
+            while (currentGroup.postponed.isEmpty()) {
+                if (postponedGroups.isEmpty())
+                    return 0;
+                if (currentGroup.group) // record the first and the last node of a group
+                    loopsStartEnd.insert(currentGroup.group, sequence.last());
+                currentGroup = postponedGroups.pop();
+            }
+
+            BasicBlock *next = currentGroup.postponed.pop();
+            if (checkCandidate(next))
+                return next;
+        }
+
+        return 0;
+    }
+
+    void emitBlock(BasicBlock *bb)
+    {
+        if (emitted.alreadyProcessed(bb))
+            return;
+
+        sequence.append(bb);
+        emitted.markAsProcessed(bb);
+    }
+
+    void schedule(BasicBlock *functionEntryPoint)
+    {
+        BasicBlock *next = functionEntryPoint;
+
+        while (next) {
+            emitBlock(next);
+            for (int i = next->out.size(); i != 0; ) {
+                // postpone all outgoing edges, if they were not already processed
+                --i;
+                BasicBlock *out = next->out[i];
+                if (!emitted.alreadyProcessed(out))
+                    postpone(out);
+            }
+            next = pickNext();
+        }
+    }
+
+    void postpone(BasicBlock *bb)
+    {
+        if (currentGroup.group == bb->containingGroup()) {
+            currentGroup.postponed.append(bb);
+            return;
+        }
+
+        for (int i = postponedGroups.size(); i != 0; ) {
+            --i;
+            WorkForGroup &g = postponedGroups[i];
+            if (g.group == bb->containingGroup()) {
+                g.postponed.append(bb);
+                return;
+            }
+        }
+
+        Q_UNREACHABLE();
+    }
+
+public:
+    BlockScheduler(Function *function, const DominatorTree &dominatorTree)
+        : function(function)
+        , dominatorTree(dominatorTree)
+        , emitted(function->basicBlocks)
+    {}
+
+    QHash<BasicBlock *, BasicBlock *> go()
+    {
+        showMeTheCode(function);
+        schedule(function->basicBlocks.first());
+
+        Q_ASSERT(function->basicBlocks.size() == sequence.size());
+        function->basicBlocks = sequence;
+        return loopsStartEnd;
+    }
+};
 
 #ifndef QT_NO_DEBUG
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
@@ -3393,11 +3476,11 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         // block scheduling, so remove those now.
 //        qout << "Cleaning up unreachable basic blocks..." << endl;
         cleanupBasicBlocks(function, false);
-//        showMeTheCode(function);
+        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
-        startEndLoops = scheduleBlocks(function, df);
-//        showMeTheCode(function);
+        startEndLoops = BlockScheduler(function, df).go();
+        showMeTheCode(function);
 
 #ifndef QT_NO_DEBUG
         checkCriticalEdges(function->basicBlocks);
@@ -3663,3 +3746,7 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
     output.append(m);
     return NormalMove;
 }
+
+// References:
+//  [Wimmer1] C. Wimmer and M. Franz. Linear Scan Register Allocation on SSA Form. In Proceedings of
+//            CGO’10, ACM Press, 2010
