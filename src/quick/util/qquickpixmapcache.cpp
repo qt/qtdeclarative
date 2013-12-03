@@ -519,6 +519,9 @@ void QQuickPixmapReader::processJobs()
             runningJob->loading = true;
 
             QUrl url = runningJob->url;
+            QQmlPixmapProfiler pixmapProfiler;
+            pixmapProfiler.startLoading(url);
+
             QSize requestSize = runningJob->requestSize;
             locker.unlock();
             processJob(runningJob, url, requestSize);
