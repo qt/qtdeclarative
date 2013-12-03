@@ -1966,8 +1966,7 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
 
              if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
                  QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-                 const char *moduleId = uri.toUtf8().constData();
-                 ep->typeLoader.initializeEngine(eiface, moduleId);
+                 ep->typeLoader.initializeEngine(eiface, uri.toUtf8().constData());
              }
          }
     }
