@@ -690,7 +690,7 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     : sg(QSGContext::createDefaultContext())
     , m_animation_timer(0)
 {
-#if defined(QSG_RENDER_LOOP_DEBUG_BASIC) || defined (QSG_RENDER_LOOP_DEBUG_FULL)
+#if defined(QSG_RENDER_LOOP_DEBUG)
     qsgrl_timer.start();
 #endif
 
