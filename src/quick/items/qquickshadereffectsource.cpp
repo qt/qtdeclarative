@@ -158,16 +158,24 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
 
 QQuickShaderEffectTexture::~QQuickShaderEffectTexture()
 {
-    if (m_renderer)
-        disconnect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
+    invalidated();
+}
+
+void QQuickShaderEffectTexture::invalidated()
+{
     delete m_renderer;
+    m_renderer = 0;
     delete m_fbo;
     delete m_secondaryFbo;
+    m_fbo = m_secondaryFbo = 0;
 #ifdef QSG_DEBUG_FBO_OVERLAY
     delete m_debugOverlay;
+    m_debugOverlay = 0;
 #endif
-    if (m_transparentTexture)
+    if (m_transparentTexture) {
         glDeleteTextures(1, &m_transparentTexture);
+        m_transparentTexture = 0;
+    }
 }
 
 int QQuickShaderEffectTexture::textureId() const
@@ -609,6 +617,7 @@ void QQuickShaderEffectSource::ensureTexture()
                "Cannot be used outside the rendering thread");
 
     m_texture = new QQuickShaderEffectTexture(this);
+    connect(QQuickItemPrivate::get(this)->window, SIGNAL(sceneGraphInvalidated()), m_texture, SLOT(invalidated()), Qt::DirectConnection);
     connect(m_texture, SIGNAL(updateRequested()), this, SLOT(update()));
     connect(m_texture, SIGNAL(scheduledUpdateCompleted()), this, SIGNAL(scheduledUpdateCompleted()));
 }
