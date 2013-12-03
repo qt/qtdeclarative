@@ -40,10 +40,10 @@
 ****************************************************************************/
 
 #include <QtCore/QFileSelector>
+#include <QtQml/QQmlAbstractUrlInterceptor>
 #include <qobjectdefs.h>
 #include "qqmlfileselector.h"
 #include "qqmlfileselector_p.h"
-#include "qqmlabstracturlinterceptor_p.h"
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
