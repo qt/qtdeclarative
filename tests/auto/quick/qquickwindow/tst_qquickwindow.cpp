@@ -304,6 +304,7 @@ private slots:
 
     void qmlCreation();
     void clearColor();
+    void defaultState();
 
     void grab_data();
     void grab();
@@ -953,6 +954,25 @@ void tst_qquickwindow::clearColor()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QCOMPARE(window->color(), QColor(Qt::blue));
+}
+
+void tst_qquickwindow::defaultState()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; import QtQuick.Window 2.1; Window { }", QUrl());
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *qmlWindow = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(qmlWindow);
+
+    QQuickWindow cppWindow;
+    cppWindow.show();
+    QTest::qWaitForWindowExposed(&cppWindow);
+
+    QCOMPARE(qmlWindow->windowState(), cppWindow.windowState());
 }
 
 void tst_qquickwindow::grab_data()

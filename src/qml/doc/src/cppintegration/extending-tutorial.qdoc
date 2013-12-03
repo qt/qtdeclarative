@@ -397,36 +397,50 @@ The complete code can be seen in the updated \c examples/qml/tutorials/extending
 Currently the \c PieChart and \c PieSlice types are used by \c app.qml,
 which is displayed using a QQuickView in a C++ application. An alternative
 way to use our QML extension is to create a plugin library to make it available
-to the QML engine. This would allow the \c PieChart and \c PieSlice types to be
-registered into a type namespace which could be imported by any QML application,
-instead of restricting these types to be only used by the one application.
+to the QML engine as a new QML import module. This allows the \c PieChart and
+\c PieSlice types to be registered into a type namespace which can be imported
+by any QML application, instead of restricting these types to be only used by
+the one application.
 
-The setps for creating a plugin are described in \l {Creating C++ Plugins for QML}.
+The steps for creating a plugin are described in \l {Creating C++ Plugins for QML}.
 To start with, we create a plugin class named \c ChartsPlugin. It subclasses QQmlExtensionPlugin
 and registers our QML types in the inherited \l{QQmlExtensionPlugin::}{registerTypes()} method.
 
 Here is the \c ChartsPlugin definition in \c chartsplugin.h:
 
-\snippet tutorials/extending/chapter6-plugins/chartsplugin.h 0
+\snippet tutorials/extending/chapter6-plugins/import/chartsplugin.h 0
 
 And its implementation in \c chartsplugin.cpp:
 
-\snippet tutorials/extending/chapter6-plugins/chartsplugin.cpp 0
+\snippet tutorials/extending/chapter6-plugins/import/chartsplugin.cpp 0
 
 Then, we write a \c .pro project file that defines the project as a plugin library
-and specifies with DESTDIR that library files should be built into a "lib" subdirectory:
+and specifies with DESTDIR that library files should be built into a \c {../Charts}
+directory.
 
-\quotefile tutorials/extending/chapter6-plugins/chapter6-plugins.pro
+\quotefile tutorials/extending/chapter6-plugins/import/import.pro
 
-Finally, we add a \l{qtqml-modules-qmldir.html}{qmldir} file that is
-parsed by the QML engine.  In this file, we specify that a plugin named
-"chapter6-plugin" (the name of the example project) can be found in the "lib" subdirectory:
+In this example, the \c Charts directory is located at the same level as the application
+that uses our new import module. This way, the QML engine will find our module
+as the default search path for QML imports includes the directory of the application
+executable. Alternatively, we could control what directories the \l {QML Import Path}
+{QML import path} contains, useful if there are multiple QML applications using the
+same QML imports.
 
-\quotefile tutorials/extending/chapter6-plugins/Charts/qmldir
+The \c .pro file also contains additional magic to ensure that the
+\l {Module Definition qmldir Files}{module definition qmldir file} is always copied
+to the same location as the plugin binary.
 
-Now we have a plugin, and instead of having a main.cpp and an executable, we can build
-the project and then load the QML file using the \l{Prototyping with qmlscene}{qmlscene tool},
-setting the import path to the current directory so that it finds the \c qmldir file:
+The \c qmldir file declares the module name and the plugin that is made available
+by the module:
+
+\quotefile tutorials/extending/chapter6-plugins/import/qmldir
+
+Now we have a QML module that can be imported to any application, provided that the
+QML engine knows where to find it. The example contains an executable that loads
+\c app.qml, which uses the \c {import Charts 1.0} statement. Alternatively, you can
+load the QML file using the \l{Prototyping with qmlscene}{qmlscene tool}, setting the
+import path to the current directory so that it finds the \c qmldir file:
 
 \code
     qmlscene -I . app.qml
@@ -434,7 +448,6 @@ setting the import path to the current directory so that it finds the \c qmldir 
 
 The module "Charts" will be loaded by the QML engine, and the types provided by that
 module will be available for use in any QML document which imports it.
-
 */
 
 

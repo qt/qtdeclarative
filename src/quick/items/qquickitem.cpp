@@ -7012,7 +7012,10 @@ bool QQuickItem::event(QEvent *ev)
     } else
 #endif // QT_NO_IM
     if (ev->type() == QEvent::StyleAnimationUpdate) {
-        update();
+        if (isVisible()) {
+            ev->accept();
+            update();
+        }
         return true;
     }
     return QObject::event(ev);
