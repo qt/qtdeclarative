@@ -297,44 +297,6 @@ qreal QQuickTextPrivate::getImplicitHeight() const
     return implicitHeight;
 }
 
-/*!
-    \qmlproperty enumeration QtQuick::Text::renderType
-
-    Override the default rendering type for this component.
-
-    Supported render types are:
-    \list
-    \li Text.QtRendering - the default
-    \li Text.NativeRendering
-    \endlist
-
-    Select Text.NativeRendering if you prefer text to look native on the target platform and do
-    not require advanced features such as transformation of the text. Using such features in
-    combination with the NativeRendering render type will lend poor and sometimes pixelated
-    results.
-
-    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
-    and QtRendering is always used.
-*/
-QQuickText::RenderType QQuickText::renderType() const
-{
-    Q_D(const QQuickText);
-    return d->renderType;
-}
-
-void QQuickText::setRenderType(QQuickText::RenderType renderType)
-{
-    Q_D(QQuickText);
-    if (d->renderType == renderType)
-        return;
-
-    d->renderType = renderType;
-    emit renderTypeChanged();
-
-    if (isComponentComplete())
-        d->updateLayout();
-}
-
 void QQuickText::q_imagesLoaded()
 {
     Q_D(QQuickText);
@@ -639,17 +601,6 @@ void QQuickTextLine::setY(qreal y)
 {
     if (m_line)
         m_line->setPosition(QPointF(m_line->x(), y));
-}
-
-/*!
-    \qmlmethod QtQuick::Text::doLayout()
-
-    Triggers a re-layout of the displayed text.
-*/
-void QQuickText::doLayout()
-{
-    Q_D(QQuickText);
-    d->updateSize();
 }
 
 bool QQuickTextPrivate::isLineLaidOutConnected()
@@ -2663,6 +2614,55 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
     d->processHoverEvent(event);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Text::renderType
+
+    Override the default rendering type for this component.
+
+    Supported render types are:
+    \list
+    \li Text.QtRendering - the default
+    \li Text.NativeRendering
+    \endlist
+
+    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    not require advanced features such as transformation of the text. Using such features in
+    combination with the NativeRendering render type will lend poor and sometimes pixelated
+    results.
+
+    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
+    and QtRendering is always used.
+*/
+QQuickText::RenderType QQuickText::renderType() const
+{
+    Q_D(const QQuickText);
+    return d->renderType;
+}
+
+void QQuickText::setRenderType(QQuickText::RenderType renderType)
+{
+    Q_D(QQuickText);
+    if (d->renderType == renderType)
+        return;
+
+    d->renderType = renderType;
+    emit renderTypeChanged();
+
+    if (isComponentComplete())
+        d->updateLayout();
+}
+
+/*!
+    \qmlmethod QtQuick::Text::doLayout()
+
+    Triggers a re-layout of the displayed text.
+*/
+void QQuickText::doLayout()
+{
+    Q_D(QQuickText);
+    d->updateSize();
 }
 
 QT_END_NAMESPACE
