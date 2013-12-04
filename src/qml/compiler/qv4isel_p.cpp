@@ -149,8 +149,17 @@ void IRDecoder::visitMove(V4IR::Move *s)
             if (m->property) {
                 bool captureRequired = true;
                 if (_function && m->attachedPropertiesId == 0) {
-                    captureRequired = !_function->contextObjectDependencies.contains(m->property)
-                                      && !_function->scopeObjectDependencies.contains(m->property);
+                    if (_function->contextObjectDependencyCandidates.remove(m->property)) {
+                        _function->contextObjectDependencies.insert(m->property);
+                        captureRequired = false;
+                    } else if (_function->scopeObjectDependencyCandidates.remove(m->property)) {
+                        _function->scopeObjectDependencies.insert(m->property);
+                        captureRequired = false;
+                    }
+
+                    if (captureRequired)
+                        captureRequired = !_function->contextObjectDependencies.contains(m->property)
+                                          && !_function->scopeObjectDependencies.contains(m->property);
                 }
                 getQObjectProperty(m->base, m->property->coreIndex, captureRequired, m->attachedPropertiesId, t);
                 return;

@@ -782,6 +782,10 @@ struct Function {
 
     // Qml extension:
     QSet<int> idObjectDependencies;
+    // Context/Scope properties discovered during identifier resolution
+    QSet<QQmlPropertyData*> contextObjectDependencyCandidates;
+    QSet<QQmlPropertyData*> scopeObjectDependencyCandidates;
+    // Context/Scope properties actually being read from, not only written
     QSet<QQmlPropertyData*> contextObjectDependencies;
     QSet<QQmlPropertyData*> scopeObjectDependencies;
 

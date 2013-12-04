@@ -1595,7 +1595,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             return 0;
         if (pd) {
             if (!pd->isConstant())
-                _function->scopeObjectDependencies.insert(pd);
+                _function->scopeObjectDependencyCandidates.insert(pd); // We don't know if we'll ever read from there or just write, hence candidate
             V4IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
             return _block->MEMBER(base, _function->newString(name), pd);
@@ -1609,7 +1609,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             return 0;
         if (pd) {
             if (!pd->isConstant())
-                _function->contextObjectDependencies.insert(pd);
+                _function->contextObjectDependencyCandidates.insert(pd); // We don't know if we'll ever read from there or just write, hence candidate
             V4IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
             return _block->MEMBER(base, _function->newString(name), pd);

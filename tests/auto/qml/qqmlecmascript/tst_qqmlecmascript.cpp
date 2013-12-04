@@ -319,6 +319,7 @@ private slots:
     void stackLimits();
     void idsAsLValues();
     void qtbug_34792();
+    void noCaptureWhenWritingProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7496,6 +7497,14 @@ void tst_qqmlecmascript::qtbug_34792()
         qDebug() << component.errorString();
     QVERIFY(object != 0);
     delete object;
+}
+
+void tst_qqmlecmascript::noCaptureWhenWritingProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("noCaptureWhenWritingProperty.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("somePropertyEvaluated").toBool(), false);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
