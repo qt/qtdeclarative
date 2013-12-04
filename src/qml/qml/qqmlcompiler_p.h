@@ -105,6 +105,7 @@ public:
             : type(0), typePropertyCache(0), component(0)
             , majorVersion(0)
             , minorVersion(0)
+            , isFullyDynamicType(false)
         {}
 
         QQmlType *type;
@@ -113,9 +114,14 @@ public:
 
         int majorVersion;
         int minorVersion;
+        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+        // therefore cannot have a property cache installed when instantiated.
+        bool isFullyDynamicType;
 
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+
+        void doDynamicTypeCheck();
     };
     // --- old compiler:
     QList<TypeReference> types;

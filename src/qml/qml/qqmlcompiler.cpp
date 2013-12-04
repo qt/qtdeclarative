@@ -848,6 +848,8 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
             }
         }
 
+        ref.doDynamicTypeCheck();
+
         out->types << ref;
     }
 
@@ -859,6 +861,19 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
         if (componentStats)
             dumpStats();
         Q_ASSERT(out->rootPropertyCache);
+
+        // Any QQmlPropertyMap instances for example need to have their property cache removed,
+        // because the class is too dynamic and allows adding properties at any point at run-time.
+        for (int i = 0; i < output->types.count(); ++i) {
+            QQmlCompiledData::TypeReference &tr = output->types[i];
+            if (!tr.typePropertyCache)
+                continue;
+
+            if (tr.isFullyDynamicType) {
+                tr.typePropertyCache->release();
+                tr.typePropertyCache = 0;
+            }
+        }
     } else {
         reset(out);
     }
@@ -1227,6 +1242,7 @@ void QQmlCompiler::genObject(QQmlScript::Object *obj, bool parentToSuper)
 
     // Setup the synthesized meta object if necessary
     if (!obj->synthdata.isEmpty()) {
+        Q_ASSERT(!output->types.at(obj->type).isFullyDynamicType);
         Instruction::StoreMetaObject meta;
         meta.aliasData = output->indexForByteArray(obj->synthdata);
         meta.propertyCache = output->propertyCaches.count();
@@ -2705,6 +2721,15 @@ int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, c
 // Ensures that the dynamic meta specification on obj is valid
 bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 {
+    if (output->types[obj->type].isFullyDynamicType) {
+        if (!obj->dynamicProperties.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully dynamic types cannot declare new properties."));
+        if (!obj->dynamicSignals.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully dynamic types cannot declare new signals."));
+        if (!obj->dynamicSlots.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully Dynamic types cannot declare new functions."));
+    }
+
     bool seenDefaultProperty = false;
 
     // We use a coarse grain, 31 bit hash to check if there are duplicates.

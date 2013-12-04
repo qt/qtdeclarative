@@ -55,6 +55,8 @@ public:
     tst_QQmlPropertyMap() {}
 
 private slots:
+    void initTestCase();
+
     void insert();
     void operatorInsert();
     void operatorValue();
@@ -68,7 +70,38 @@ private slots:
     void metaObjectAccessibility();
     void QTBUG_31226();
     void QTBUG_29836();
+    void QTBUG_35233();
+    void disallowExtending();
 };
+
+class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+
+    Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty)
+public:
+    LazyPropertyMap()
+        : QQmlPropertyMap(this, /*parent*/0)
+        , value(0)
+    {}
+
+    virtual void classBegin() {}
+    virtual void componentComplete() {
+        insert(QStringLiteral("lateProperty"), QStringLiteral("lateValue"));
+    }
+
+    int someFixedProperty() const { return value; }
+    void setSomeFixedProperty(int v) { value = v; }
+
+private:
+    int value;
+};
+
+void tst_QQmlPropertyMap::initTestCase()
+{
+    qmlRegisterType<LazyPropertyMap>("QTBUG_35233", 1, 0, "LazyPropertyMap");
+}
 
 void tst_QQmlPropertyMap::insert()
 {
@@ -367,6 +400,54 @@ void tst_QQmlPropertyMap::QTBUG_29836()
 
     delete obj;
 
+}
+
+void tst_QQmlPropertyMap::QTBUG_35233()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0\n"
+                      "import QTBUG_35233 1.0\n"
+                      "QtObject {\n"
+                      "    property QtObject testMap: LazyPropertyMap {\n"
+                      "        id: map\n"
+                      "    }\n"
+                      "    property QtObject sibling: QtObject {\n"
+                      "        objectName: \"sibling\"\n"
+                      "        property string testValue: map.lateProperty\n"
+                      "    }\n"
+                      "}", QUrl());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QObject *sibling = obj->findChild<QObject*>("sibling");
+    QVERIFY(sibling);
+    QCOMPARE(sibling->property("testValue").toString(), QString("lateValue"));
+}
+
+void tst_QQmlPropertyMap::disallowExtending()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0\n"
+                      "import QTBUG_35233 1.0\n"
+                      "LazyPropertyMap {\n"
+                      "    id: blah\n"
+                      "    someFixedProperty: 42\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    component.setData("import QtQml 2.0\n"
+                      "import QTBUG_35233 1.0\n"
+                      "LazyPropertyMap {\n"
+                      "    id: blah\n"
+                      "    property int someNewProperty;\n"
+                      "}\n", QUrl());
+    obj.reset(component.create());
+    QVERIFY(obj.isNull());
+    QCOMPARE(component.errors().count(), 1);
+    QCOMPARE(component.errors().at(0).toString(), QStringLiteral("<Unknown File>: Fully dynamic types cannot declare new properties."));
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
