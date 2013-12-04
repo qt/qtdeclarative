@@ -134,6 +134,7 @@ private slots:
     void reentrancy_Array();
     void reentrancy_objectCreation();
     void jsIncDecNonObjectProperty();
+    void JSONparse();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -2498,6 +2499,13 @@ void tst_QJSEngine::jsIncDecNonObjectProperty()
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toInt(), 3);
     }
+}
+
+void tst_QJSEngine::JSONparse()
+{
+    QJSEngine eng;
+    QJSValue ret = eng.evaluate("var json=\"{\\\"1\\\": null}\"; JSON.parse(json);");
+    QVERIFY(ret.isObject());
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }

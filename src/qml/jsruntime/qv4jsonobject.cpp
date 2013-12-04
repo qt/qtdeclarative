@@ -284,8 +284,13 @@ bool JsonParser::parseMember(ObjectRef o)
         return false;
 
     ScopedString s(scope, context->engine->newIdentifier(key));
-    Property *p = o->insertMember(s, Attr_Data);
-    p->value = val.asReturnedValue();
+    uint idx = s->asArrayIndex();
+    if (idx < UINT_MAX) {
+        o->putIndexed(idx, val);
+    } else {
+        Property *p = o->insertMember(s, Attr_Data);
+        p->value = val.asReturnedValue();
+    }
 
     END;
     return true;
