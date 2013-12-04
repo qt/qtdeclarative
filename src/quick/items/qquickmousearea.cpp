@@ -49,14 +49,13 @@
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qstylehints.h>
 
 #include <float.h>
 
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
-
-static const int PressAndHoldDelay = 800;
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hovered(false), longPress(false),
@@ -627,7 +626,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
 #endif
         setHovered(true);
         d->startScene = event->windowPos();
-        d->pressAndHoldTimer.start(PressAndHoldDelay, this);
+        d->pressAndHoldTimer.start(qApp->styleHints()->mousePressAndHoldInterval(), this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true));
     }
