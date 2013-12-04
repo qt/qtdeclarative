@@ -216,6 +216,8 @@ private slots:
 
     void typedModel();
 
+    void highlightItemGeometryChanges();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -7010,6 +7012,25 @@ void tst_QQuickListView::typedModel()
 
     listview->setModel(QVariant::fromValue(listModel));
     QCOMPARE(listview->count(), 0);
+}
+
+void tst_QQuickListView::highlightItemGeometryChanges()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("HighlightResize.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(object.data());
+    QVERIFY(listview);
+
+    QCOMPARE(listview->count(), 5);
+
+    for (int i = 0; i < listview->count(); ++i) {
+        listview->setCurrentIndex(i);
+        QTRY_COMPARE(listview->highlightItem()->width(), qreal(100 + i * 20));
+        QTRY_COMPARE(listview->highlightItem()->height(), qreal(100 + i * 10));
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)

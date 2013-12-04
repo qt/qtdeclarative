@@ -143,7 +143,8 @@ public:
     QQuickListView::SnapMode snapMode;
 
     QSmoothedAnimation *highlightPosAnimator;
-    QSmoothedAnimation *highlightSizeAnimator;
+    QSmoothedAnimation *highlightWidthAnimator;
+    QSmoothedAnimation *highlightHeightAnimator;
     qreal highlightMoveVelocity;
     qreal highlightResizeVelocity;
     int highlightResizeDuration;
@@ -168,7 +169,7 @@ public:
         , visiblePos(0)
         , averageSize(100.0), spacing(0.0)
         , snapMode(QQuickListView::NoSnap)
-        , highlightPosAnimator(0), highlightSizeAnimator(0)
+        , highlightPosAnimator(0), highlightWidthAnimator(0), highlightHeightAnimator(0)
         , highlightMoveVelocity(400), highlightResizeVelocity(400), highlightResizeDuration(-1)
         , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
         , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
@@ -177,7 +178,8 @@ public:
     }
     ~QQuickListViewPrivate() {
         delete highlightPosAnimator;
-        delete highlightSizeAnimator;
+        delete highlightWidthAnimator;
+        delete highlightHeightAnimator;
     }
 
     friend class QQuickViewSection;
@@ -855,9 +857,11 @@ void QQuickListViewPrivate::createHighlight()
         highlight = 0;
 
         delete highlightPosAnimator;
-        delete highlightSizeAnimator;
+        delete highlightWidthAnimator;
+        delete highlightHeightAnimator;
         highlightPosAnimator = 0;
-        highlightSizeAnimator = 0;
+        highlightWidthAnimator = 0;
+        highlightHeightAnimator = 0;
 
         changed = true;
     }
@@ -878,11 +882,15 @@ void QQuickListViewPrivate::createHighlight()
             highlightPosAnimator->velocity = highlightMoveVelocity;
             highlightPosAnimator->userDuration = highlightMoveDuration;
 
-            const QLatin1String sizeProp(orient == QQuickListView::Vertical ? "height" : "width");
-            highlightSizeAnimator = new QSmoothedAnimation;
-            highlightSizeAnimator->velocity = highlightResizeVelocity;
-            highlightSizeAnimator->userDuration = highlightResizeDuration;
-            highlightSizeAnimator->target = QQmlProperty(item, sizeProp);
+            highlightWidthAnimator = new QSmoothedAnimation;
+            highlightWidthAnimator->velocity = highlightResizeVelocity;
+            highlightWidthAnimator->userDuration = highlightResizeDuration;
+            highlightWidthAnimator->target = QQmlProperty(item, "width");
+
+            highlightHeightAnimator = new QSmoothedAnimation;
+            highlightHeightAnimator->velocity = highlightResizeVelocity;
+            highlightHeightAnimator->userDuration = highlightResizeDuration;
+            highlightHeightAnimator->target = QQmlProperty(item, "height");
 
             highlight = newHighlight;
             changed = true;
@@ -905,7 +913,8 @@ void QQuickListViewPrivate::updateHighlight()
         highlightPosAnimator->to = isContentFlowReversed()
                 ? -listItem->itemPosition()-listItem->itemSize()
                 : listItem->itemPosition();
-        highlightSizeAnimator->to = listItem->itemSize();
+        highlightWidthAnimator->to = listItem->item->width();
+        highlightHeightAnimator->to = listItem->item->height();
         if (orient == QQuickListView::Vertical) {
             if (highlight->item->width() == 0)
                 highlight->item->setWidth(currentItem->item->width());
@@ -915,7 +924,8 @@ void QQuickListViewPrivate::updateHighlight()
         }
 
         highlightPosAnimator->restart();
-        highlightSizeAnimator->restart();
+        highlightWidthAnimator->restart();
+        highlightHeightAnimator->restart();
     }
     updateTrackedItem();
 }
@@ -1968,8 +1978,10 @@ void QQuickListView::setHighlightFollowsCurrentItem(bool autoHighlight)
         if (!autoHighlight) {
             if (d->highlightPosAnimator)
                 d->highlightPosAnimator->stop();
-            if (d->highlightSizeAnimator)
-                d->highlightSizeAnimator->stop();
+            if (d->highlightWidthAnimator)
+                d->highlightWidthAnimator->stop();
+            if (d->highlightHeightAnimator)
+                d->highlightHeightAnimator->stop();
         }
         QQuickItemView::setHighlightFollowsCurrentItem(autoHighlight);
     }
@@ -2271,8 +2283,10 @@ void QQuickListView::setHighlightResizeVelocity(qreal speed)
     Q_D(QQuickListView);
     if (d->highlightResizeVelocity != speed) {
         d->highlightResizeVelocity = speed;
-        if (d->highlightSizeAnimator)
-            d->highlightSizeAnimator->velocity = d->highlightResizeVelocity;
+        if (d->highlightWidthAnimator)
+            d->highlightWidthAnimator->velocity = d->highlightResizeVelocity;
+        if (d->highlightHeightAnimator)
+            d->highlightHeightAnimator->velocity = d->highlightResizeVelocity;
         emit highlightResizeVelocityChanged();
     }
 }
@@ -2288,8 +2302,10 @@ void QQuickListView::setHighlightResizeDuration(int duration)
     Q_D(QQuickListView);
     if (d->highlightResizeDuration != duration) {
         d->highlightResizeDuration = duration;
-        if (d->highlightSizeAnimator)
-            d->highlightSizeAnimator->userDuration = d->highlightResizeDuration;
+        if (d->highlightWidthAnimator)
+            d->highlightWidthAnimator->userDuration = d->highlightResizeDuration;
+        if (d->highlightHeightAnimator)
+            d->highlightHeightAnimator->userDuration = d->highlightResizeDuration;
         emit highlightResizeDurationChanged();
     }
 }
