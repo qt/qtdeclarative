@@ -72,17 +72,14 @@ DEFINE_MANAGED_VTABLE(Object);
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
     type = Type_Object;
     flags = SimpleArray;
-    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
 Object::Object(InternalClass *ic)
     : Managed(ic)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
     Q_ASSERT(internalClass->vtable && internalClass->vtable != &Managed::static_vtbl);
     type = Type_Object;
@@ -92,7 +89,6 @@ Object::Object(InternalClass *ic)
         memberDataAlloc = internalClass->size;
         memberData = new Property[memberDataAlloc];
     }
-    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
 Object::~Object()

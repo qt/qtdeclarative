@@ -275,6 +275,7 @@ Managed *MemoryManager::alloc(std::size_t size)
     if (size >= MemoryManager::Data::MaxItemSize) {
         // we use malloc for this
         MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(malloc(size + sizeof(MemoryManager::Data::LargeItem)));
+        memset(item, 0, size + sizeof(MemoryManager::Data::LargeItem));
         item->next = m_d->largeItems;
         m_d->largeItems = item;
         return item->managed();
@@ -520,6 +521,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
                     m->internalClass->vtable->collectDeletables(m, deletable);
                 m->internalClass->vtable->destroy(m);
 
+                memset(m, 0, size);
                 m->setNextFree(*f);
 #ifdef V4_USE_VALGRIND
                 VALGRIND_DISABLE_ERROR_REPORTING;
