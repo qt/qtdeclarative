@@ -185,7 +185,7 @@ void QQmlAccessible::doAction(const QString &actionName)
         // use the "stepSize" property on the item
         if (QAccessibleValueInterface *valueIface = valueInterface()) {
             QVariant valueV = valueIface->currentValue();
-            qreal newValue = valueV.toInt();
+            qreal newValue = valueV.toReal();
 
             QVariant stepSizeV = object()->property("stepSize");
             qreal stepSize = stepSizeV.isValid() ? stepSizeV.toReal() : qreal(1.0);
