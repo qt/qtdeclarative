@@ -642,15 +642,98 @@ void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
     }
 }
 
+// High-level (recursive) algorithm:
+//   Mapping: old temp number -> new temp number
+//
+//   Start:
+//     Rename(start-node)
+//
+//   Rename(node, mapping):
+//     for each statement S in block n
+//       if S not in a phi-function
+//         for each use of some variable x in S
+//           y = mapping[x]
+//           replace the use of x with y in S
+//       for each definition of some variable a in S                        [1]
+//         a_new = generate new/unique temp
+//         mapping[a] = a_new
+//         replace definition of a with definition of a_new in S
+//     for each successor Y of block n
+//       Suppose n is the j-th predecessor of Y
+//       for each phi function in Y
+//         suppose the j-th operand of the phi-function is a
+//         i = mapping[a]
+//         replace the j-th operand with a_i
+//     for each child X of n                                                [2]
+//       Rename(X)
+//     for each newly generated temp from step [1] restore the old value    [3]
+//
+// This algorithm can run out of CPU stack space when there are lots of basic-blocks, like in a
+// switch statement with 8000 cases that all fall-through. The iterativer version below uses a
+// work-item stack, where step [1] from the algorithm above also pushes an "undo mapping change",
+// and step [2] pushes a "rename(X)" action. This eliminates step [3].
+//
+// Iterative version:
+//   Mapping: old temp number -> new temp number
+//
+//   The stack can hold two kinds of actions:
+//     "Rename basic block n"
+//     "Restore count for temp"
+//
+//   Start:
+//     counter = 0
+//     push "Rename start node" onto the stack
+//     while the stack is not empty:
+//       take the last item, and process it
+//
+//   Rename(n) =
+//     for each statement S in block n
+//       if S not in a phi-function
+//         for each use of some variable x in S
+//           y = mapping[x]
+//           replace the use of x with y in S
+//       for each definition of some variable a in S
+//         old = mapping[a]
+//         push Undo(a, old)
+//         counter = counter + 1
+//         new = counter;
+//         mapping[a] = new
+//         replace definition of a with definition of a_new in S
+//     for each successor Y of block n
+//       Suppose n is the j-th predecessor of Y
+//       for each phi function in Y
+//         suppose the j-th operand of the phi-function is a
+//         i = mapping[a]
+//         replace the j-th operand with a_i
+//     for each child X of n
+//       push Rename(X)
+//
+//   Undo(t, c) =
+//     mapping[t] = c
 class VariableRenamer: public StmtVisitor, public ExprVisitor
 {
     Function *function;
-    QHash<Temp, QStack<unsigned> > stack;
-    QSet<BasicBlock *> seen;
-
-    QHash<Temp, unsigned> defCounts;
-
     const bool variablesCanEscape;
+    unsigned tempCount;
+
+    typedef QHash<unsigned, int> Mapping; // maps from existing/old temp number to the new and unique temp number.
+    enum { Absent = -1 };
+    Mapping localMapping;
+    Mapping vregMapping;
+    QBitArray processed;
+
+    bool alreadyProcessed(BasicBlock *bb) const
+    {
+        Q_ASSERT(bb);
+
+        return processed.at(bb->index);
+    }
+
+    void markAsProcessed(BasicBlock *bb)
+    {
+        processed.setBit(bb->index);
+    }
+
     bool isRenamable(Temp *t) const
     {
         switch (t->kind) {
@@ -667,99 +750,125 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
             return false;
         }
     }
-    int nextFreeTemp() {
-        const int next = function->tempCount++;
-//        qDebug()<<"Next free temp:"<<next;
-        return next;
-    }
 
-    /*
+    struct TodoAction {
+        enum { RestoreLocal, RestoreVReg, Rename } action;
+        union {
+            struct {
+                unsigned temp;
+                int previous;
+            } restoreData;
+            struct {
+                BasicBlock *basicBlock;
+            } renameData;
+        };
 
-    Initialization:
-      for each variable a
-        count[a] = 0;
-        stack[a] = empty;
-        push 0 onto stack
+        bool isValid() const { return action != Rename || renameData.basicBlock != 0; }
 
-    Rename(n) =
-      for each statement S in block n [1]
-        if S not in a phi-function
-          for each use of some variable x in S
-            i = top(stack[x])
-            replace the use of x with x_i in S
-        for each definition of some variable a in S
-          count[a] = count[a] + 1
-          i = count[a]
-          push i onto stack[a]
-          replace definition of a with definition of a_i in S
-      for each successor Y of block n [2]
-        Suppose n is the j-th predecessor of Y
-        for each phi function in Y
-          suppose the j-th operand of the phi-function is a
-          i = top(stack[a])
-          replace the j-th operand with a_i
-      for each child X of n [3]
-        Rename(X)
-      for each statement S in block n [4]
-        for each definition of some variable a in S
-          pop stack[a]
+        TodoAction()
+        {
+            action = Rename;
+            renameData.basicBlock = 0;
+        }
 
-     */
+        TodoAction(const Temp &t, int prev)
+        {
+            Q_ASSERT(t.kind == Temp::Local || t.kind == Temp::VirtualRegister);
+
+            action = t.kind == Temp::Local ? RestoreLocal : RestoreVReg;
+            restoreData.temp = t.index;
+            restoreData.previous = prev;
+        }
+
+        TodoAction(BasicBlock *bb)
+        {
+            Q_ASSERT(bb);
+
+            action = Rename;
+            renameData.basicBlock = bb;
+        }
+    };
+
+    QVector<TodoAction> todo;
 
 public:
     VariableRenamer(Function *f)
         : function(f)
         , variablesCanEscape(f->variablesCanEscape())
+        , tempCount(0)
     {
-        if (!variablesCanEscape) {
-            Temp t;
-            t.init(Temp::Local, 0, 0);
-            for (int i = 0, ei = f->locals.size(); i != ei; ++i) {
-                t.index = i;
-                stack[t].push(nextFreeTemp());
-            }
-        }
-
-        Temp t;
-        t.init(Temp::VirtualRegister, 0, 0);
-        for (int i = 0, ei = f->tempCount; i != ei; ++i) {
-            t.index = i;
-            stack[t].push(i);
-        }
+        int maxBB = 0;
+        foreach (BasicBlock *bb, f->basicBlocks)
+            maxBB = qMax(maxBB, bb->index);
+        processed = QBitArray(maxBB + 1, false);
     }
 
     void run() {
-        foreach (BasicBlock *n, function->basicBlocks)
-            rename(n);
+        todo.append(TodoAction(function->basicBlocks.first()));
 
-#ifdef SHOW_SSA
-//        qout << "Temp to local mapping:" << endl;
-//        foreach (int key, tempMapping.keys())
-//            qout << '\t' << key << " -> " << tempMapping[key] << endl;
-#endif
+        while (!todo.isEmpty()) {
+            TodoAction todoAction = todo.back();
+            Q_ASSERT(todoAction.isValid());
+            todo.pop_back();
+
+            switch (todoAction.action) {
+            case TodoAction::Rename:
+                rename(todoAction.renameData.basicBlock);
+                break;
+            case TodoAction::RestoreLocal:
+                restore(localMapping, todoAction.restoreData.temp, todoAction.restoreData.previous);
+                break;
+            case TodoAction::RestoreVReg:
+                restore(vregMapping, todoAction.restoreData.temp, todoAction.restoreData.previous);
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
+        }
+
+        function->tempCount = tempCount;
     }
 
-    void rename(BasicBlock *n) {
-        if (seen.contains(n))
-            return;
-        seen.insert(n);
-//        qDebug() << "I: L"<<n->index;
+private:
+    static inline void restore(Mapping &mapping, unsigned temp, int previous)
+    {
+        if (previous == Absent)
+            mapping.remove(temp);
+        else
+            mapping[temp] = previous;
+    }
 
-        // [1]:
-        foreach (Stmt *s, n->statements)
+    void rename(BasicBlock *bb)
+    {
+        while (bb && !alreadyProcessed(bb)) {
+            renameStatementsAndPhis(bb);
+            markAsProcessed(bb);
+
+            BasicBlock *next = 0;
+            foreach (BasicBlock *out, bb->out) {
+                if (alreadyProcessed(out))
+                    continue;
+                if (!next)
+                    next = out;
+                else
+                    todo.append(TodoAction(out));
+            }
+            bb = next;
+        }
+    }
+
+    void renameStatementsAndPhis(BasicBlock *bb)
+    {
+        foreach (Stmt *s, bb->statements)
             s->accept(this);
 
-        QHash<Temp, unsigned> dc = defCounts;
-        defCounts.clear();
-
-        // [2]:
-        foreach (BasicBlock *Y, n->out) {
-            const int j = Y->in.indexOf(n);
+        foreach (BasicBlock *Y, bb->out) {
+            const int j = Y->in.indexOf(bb);
             Q_ASSERT(j >= 0 && j < Y->in.size());
             foreach (Stmt *s, Y->statements) {
                 if (Phi *phi = s->asPhi()) {
                     Temp *t = phi->d->incoming[j]->asTemp();
-                    unsigned newTmp = stack[*t].top();
+                    unsigned newTmp = currentNumber(*t);
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
                     t->index = newTmp;
                     t->kind = Temp::VirtualRegister;
@@ -768,24 +877,65 @@ public:
                 }
             }
         }
+    }
 
-        // [3]:
-        foreach (BasicBlock *X, n->out)
-            rename(X);
-
-        // [4]:
-        for (QHash<Temp, unsigned>::const_iterator i = dc.begin(), ei = dc.end(); i != ei; ++i) {
-//            qDebug()<<i.key() <<" -> " << i.value();
-            for (unsigned j = 0, ej = i.value(); j < ej; ++j)
-                stack[i.key()].pop();
+    unsigned currentNumber(const Temp &t)
+    {
+        int nr = Absent;
+        switch (t.kind) {
+        case Temp::Local:
+            nr = localMapping.value(t.index, Absent);
+            break;
+        case Temp::VirtualRegister:
+            nr = vregMapping.value(t.index, Absent);
+            break;
+        default:
+            Q_UNREACHABLE();
+            nr = Absent;
+            break;
         }
+        if (nr == Absent) {
+            // Special case: we didn't prune the Phi nodes yet, so for proper temps (virtual
+            // registers) the SSA algorithm might insert superfluous Phis that have uses without
+            // definition. E.g.: if a temporary got introduced in the "then" clause, it "could"
+            // reach the "end-if" block, so there will be a phi node for that temp. A later pass
+            // will clean this up by looking for uses-without-defines in phi nodes. So, what we do
+            // is to generate a new unique number, and leave it dangling.
+            nr = nextFreeTemp(t);
+        }
+
+        return nr;
+    }
+
+    unsigned nextFreeTemp(const Temp &t)
+    {
+        unsigned newIndex = tempCount++;
+        Q_ASSERT(newIndex <= INT_MAX);
+        int oldIndex = Absent;
+
+        switch (t.kind) {
+        case Temp::Local:
+            oldIndex = localMapping.value(t.index, Absent);
+            localMapping.insert(t.index, newIndex);
+            break;
+        case Temp::VirtualRegister:
+            oldIndex = vregMapping.value(t.index, Absent);
+            vregMapping.insert(t.index, newIndex);
+            break;
+        default:
+            Q_UNREACHABLE();
+        }
+
+        todo.append(TodoAction(t, oldIndex));
+
+        return newIndex;
     }
 
 protected:
     virtual void visitTemp(Temp *e) { // only called for uses, not defs
         if (isRenamable(e)) {
 //            qDebug()<<"I: replacing use of"<<e->index<<"with"<<stack[e->index].top();
-            e->index = stack[*e].top();
+            e->index = currentNumber(*e);
             e->kind = Temp::VirtualRegister;
         }
     }
@@ -803,9 +953,7 @@ protected:
 
     void renameTemp(Temp *t) {
         if (isRenamable(t)) {
-            defCounts[*t] = defCounts.value(*t, 0) + 1;
-            const int newIdx = nextFreeTemp();
-            stack[*t].push(newIdx);
+            const int newIdx = nextFreeTemp(*t);
 //            qDebug()<<"I: replacing def of"<<a<<"with"<<newIdx;
             t->kind = Temp::VirtualRegister;
             t->index = newIdx;
