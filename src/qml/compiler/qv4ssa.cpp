@@ -2668,15 +2668,16 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
                 if (Member *member = m->source->asMember()) {
-                    if (member->memberIsEnum) {
+                    if (member->kind == Member::MemberOfEnum) {
                         Const *c = function->New<Const>();
-                        c->init(SInt32Type, member->enumValue);
+                        const int enumValue = member->attachedPropertiesIdOrEnumValue;
+                        c->init(SInt32Type, enumValue);
                         W += replaceUses(targetTemp, c);
                         defUses.removeDef(*targetTemp);
                         *ref[s] = 0;
                         defUses.removeUse(s, *member->base->asTemp());
                         continue;
-                    } else if (member->attachedPropertiesId != 0 && member->property && member->base->asTemp()) {
+                    } else if (member->attachedPropertiesIdOrEnumValue != 0 && member->property && member->base->asTemp()) {
                         // Attached properties have no dependency on their base. Isel doesn't
                         // need it and we can eliminate the temp used to initialize it.
                         defUses.removeUse(s, *member->base->asTemp());

@@ -148,20 +148,20 @@ void IRDecoder::visitMove(V4IR::Move *s)
         } else if (V4IR::Member *m = s->source->asMember()) {
             if (m->property) {
                 bool captureRequired = true;
-                if (_function && m->attachedPropertiesId == 0) {
-                    if (_function->contextObjectDependencyCandidates.remove(m->property)) {
-                        _function->contextObjectDependencies.insert(m->property);
+
+                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+
+                if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
+                    if (m->kind == V4IR::Member::MemberOfQmlContextObject) {
+                        _function->contextObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
                         captureRequired = false;
-                    } else if (_function->scopeObjectDependencyCandidates.remove(m->property)) {
-                        _function->scopeObjectDependencies.insert(m->property);
+                    } else if (m->kind == V4IR::Member::MemberOfQmlScopeObject) {
+                        _function->scopeObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
                         captureRequired = false;
                     }
-
-                    if (captureRequired)
-                        captureRequired = !_function->contextObjectDependencies.contains(m->property)
-                                          && !_function->scopeObjectDependencies.contains(m->property);
                 }
-                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, m->attachedPropertiesId, t);
+                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, attachedPropertiesId, t);
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
@@ -200,7 +200,9 @@ void IRDecoder::visitMove(V4IR::Move *s)
     } else if (V4IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                if (m->property && m->attachedPropertiesId == 0) {
+                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+                if (m->property && attachedPropertiesId == 0) {
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
                     return;
                 } else {

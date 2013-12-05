@@ -1364,15 +1364,14 @@ static V4IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpre
             bool ok = false;
             int value = type->enumValue(*member->name, &ok);
             if (ok) {
-                member->memberIsEnum = true;
-                member->enumValue = value;
+                member->setEnumValue(value);
                 resolver->clear();
                 return V4IR::SInt32Type;
             }
         } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
             QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
             initMetaObjectResolver(resolver, cache);
-            member->attachedPropertiesId = type->attachedPropertiesId();
+            member->setAttachedPropertiesId(type->attachedPropertiesId());
             return resolver->resolveMember(qmlEngine, resolver, member);
         }
     }
@@ -1439,8 +1438,7 @@ static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::
             bool ok;
             int value = metaEnum.keyToValue(enumName.constData(), &ok);
             if (ok) {
-                member->memberIsEnum = true;
-                member->enumValue = value;
+                member->setEnumValue(value);
                 resolver->clear();
                 return V4IR::SInt32Type;
             }
@@ -1594,11 +1592,9 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            if (!pd->isConstant())
-                _function->scopeObjectDependencyCandidates.insert(pd); // We don't know if we'll ever read from there or just write, hence candidate
             V4IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
-            return _block->MEMBER(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd, V4IR::Member::MemberOfQmlScopeObject);
         }
     }
 
@@ -1608,11 +1604,9 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            if (!pd->isConstant())
-                _function->contextObjectDependencyCandidates.insert(pd); // We don't know if we'll ever read from there or just write, hence candidate
             V4IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
-            return _block->MEMBER(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd, V4IR::Member::MemberOfQmlContextObject);
         }
     }
 

@@ -170,20 +170,6 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
             registerString(*f->formals.at(i));
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(*f->locals.at(i));
-
-        if (f->hasQmlDependencies()) {
-            QSet<int> idObjectDeps = f->idObjectDependencies;
-            QSet<QQmlPropertyData*> contextPropertyDeps = f->contextObjectDependencies;
-            QSet<QQmlPropertyData*> scopePropertyDeps = f->scopeObjectDependencies;
-
-            if (!idObjectDeps.isEmpty())
-                qmlIdObjectDependenciesPerFunction.insert(f, idObjectDeps);
-            if (!contextPropertyDeps.isEmpty())
-                qmlContextPropertyDependenciesPerFunction.insert(f, contextPropertyDeps);
-            if (!scopePropertyDeps.isEmpty())
-                qmlScopePropertyDependenciesPerFunction.insert(f, scopePropertyDeps);
-        }
-
     }
 
     int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, strings.size(), irModule->functions.size(), regexps.size(),
@@ -199,23 +185,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd())
             lineNumberMappingCount = lineNumberMapping->count() / 2;
 
-        int qmlIdDepsCount = 0;
-        int qmlPropertyDepsCount = 0;
-
-        if (f->hasQmlDependencies()) {
-            IdDependencyHash::ConstIterator idIt = qmlIdObjectDependenciesPerFunction.find(f);
-            if (idIt != qmlIdObjectDependenciesPerFunction.constEnd())
-                qmlIdDepsCount += idIt->count();
-
-            PropertyDependencyHash::ConstIterator it = qmlContextPropertyDependenciesPerFunction.find(f);
-            if (it != qmlContextPropertyDependenciesPerFunction.constEnd())
-                qmlPropertyDepsCount += it->count();
-
-            it = qmlScopePropertyDependenciesPerFunction.find(f);
-            if (it != qmlScopePropertyDependenciesPerFunction.constEnd())
-                qmlPropertyDepsCount += it->count();
-        }
-
+        const int qmlIdDepsCount = f->idObjectDependencies.count();
+        const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount, qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
@@ -353,32 +324,22 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
     function->nDependingContextProperties = 0;
     function->nDependingScopeProperties = 0;
 
-    QSet<int> qmlIdObjectDeps;
-    QSet<QQmlPropertyData*> qmlContextPropertyDeps;
-    QSet<QQmlPropertyData*> qmlScopePropertyDeps;
+    if (!irFunction->idObjectDependencies.isEmpty()) {
+        function->nDependingIdObjects = irFunction->idObjectDependencies.count();
+        function->dependingIdObjectsOffset = currentOffset;
+        currentOffset += function->nDependingIdObjects * sizeof(quint32);
+    }
 
-    if (irFunction->hasQmlDependencies()) {
-        qmlIdObjectDeps = qmlIdObjectDependenciesPerFunction.value(irFunction);
-        qmlContextPropertyDeps = qmlContextPropertyDependenciesPerFunction.value(irFunction);
-        qmlScopePropertyDeps = qmlScopePropertyDependenciesPerFunction.value(irFunction);
+    if (!irFunction->contextObjectPropertyDependencies.isEmpty()) {
+        function->nDependingContextProperties = irFunction->contextObjectPropertyDependencies.count();
+        function->dependingContextPropertiesOffset = currentOffset;
+        currentOffset += function->nDependingContextProperties * sizeof(quint32) * 2;
+    }
 
-        if (!qmlIdObjectDeps.isEmpty()) {
-            function->nDependingIdObjects = qmlIdObjectDeps.count();
-            function->dependingIdObjectsOffset = currentOffset;
-            currentOffset += function->nDependingIdObjects * sizeof(quint32);
-        }
-
-        if (!qmlContextPropertyDeps.isEmpty()) {
-            function->nDependingContextProperties = qmlContextPropertyDeps.count();
-            function->dependingContextPropertiesOffset = currentOffset;
-            currentOffset += function->nDependingContextProperties * sizeof(quint32) * 2;
-        }
-
-        if (!qmlScopePropertyDeps.isEmpty()) {
-            function->nDependingScopeProperties = qmlScopePropertyDeps.count();
-            function->dependingScopePropertiesOffset = currentOffset;
-            currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
-        }
+    if (!irFunction->scopeObjectPropertyDependencies.isEmpty()) {
+        function->nDependingScopeProperties = irFunction->scopeObjectPropertyDependencies.count();
+        function->dependingScopePropertiesOffset = currentOffset;
+        currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
     }
 
     function->location.line = irFunction->line;
@@ -407,19 +368,21 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
 
     // write QML dependencies
     quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
-    foreach (int id, qmlIdObjectDeps)
+    foreach (int id, irFunction->idObjectDependencies)
         *writtenDeps++ = id;
 
     writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
-    foreach (QQmlPropertyData *property, qmlContextPropertyDeps) {
-        *writtenDeps++ = property->coreIndex;
-        *writtenDeps++ = property->notifyIndex;
+    for (QQmlJS::V4IR::PropertyDependencyMap::ConstIterator property = irFunction->contextObjectPropertyDependencies.constBegin(), end = irFunction->contextObjectPropertyDependencies.constEnd();
+         property != end; ++property) {
+        *writtenDeps++ = property.key(); // property index
+        *writtenDeps++ = property.value(); // notify index
     }
 
     writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
-    foreach (QQmlPropertyData *property, qmlScopePropertyDeps) {
-        *writtenDeps++ = property->coreIndex;
-        *writtenDeps++ = property->notifyIndex;
+    for (QQmlJS::V4IR::PropertyDependencyMap::ConstIterator property = irFunction->scopeObjectPropertyDependencies.constBegin(), end = irFunction->scopeObjectPropertyDependencies.constEnd();
+         property != end; ++property) {
+        *writtenDeps++ = property.key(); // property index
+        *writtenDeps++ = property.value(); // notify index
     }
 
     return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions, function->nLineNumberMappingEntries,
