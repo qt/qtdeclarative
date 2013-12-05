@@ -128,6 +128,8 @@ private slots:
     void sizeBound();
     void QTBUG_30183();
 
+    void sourceComponentGarbageCollection();
+
 private:
     QQmlEngine engine;
 };
@@ -1142,6 +1144,26 @@ void tst_QQuickLoader::QTBUG_30183()
     QCOMPARE(rect->height(), 120.0);
 
     delete loader;
+}
+
+void tst_QQuickLoader::sourceComponentGarbageCollection()
+{
+    QQmlComponent component(&engine, testFileUrl("sourceComponentGarbageCollection.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QMetaObject::invokeMethod(obj.data(), "setSourceComponent");
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+
+    QSignalSpy spy(obj.data(), SIGNAL(loaded()));
+
+    obj->setProperty("active", true);
+
+    if (spy.isEmpty())
+        QVERIFY(spy.wait());
+
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickLoader)
