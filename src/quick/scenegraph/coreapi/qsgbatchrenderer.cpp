@@ -2115,6 +2115,9 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
             offset += a.tupleSize * size_of_type(a.type);
         }
 
+        if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
+            glLineWidth(g->lineWidth());
+
         if (g->indexCount())
             glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), iOffset);
         else
