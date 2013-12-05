@@ -183,6 +183,8 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
 InternalClass *InternalClass::create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto)
 {
     InternalClass *c = engine->emptyClass->changeVTable(vtable);
+    if (!proto)
+        return c;
     return c->changePrototype(proto);
 }
 

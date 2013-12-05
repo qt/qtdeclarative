@@ -195,9 +195,9 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     identifierTable = new IdentifierTable(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
-    executionContextClass = emptyClass->changeVTable(&ExecutionContext::static_vtbl);
-    stringClass = emptyClass->changeVTable(&String::static_vtbl);
-    regExpValueClass = emptyClass->changeVTable(&RegExp::static_vtbl);
+    executionContextClass = InternalClass::create(this, &ExecutionContext::static_vtbl, 0);
+    stringClass = InternalClass::create(this, &String::static_vtbl, 0);
+    regExpValueClass = InternalClass::create(this, &RegExp::static_vtbl, 0);
 
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
@@ -230,7 +230,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_toString = newIdentifier(QStringLiteral("toString"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
-    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass->changeVTable(&ObjectPrototype::static_vtbl));
+    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(InternalClass::create(this, &ObjectPrototype::static_vtbl, 0));
     objectClass = InternalClass::create(this, &Object::static_vtbl, objectPrototype);
     Q_ASSERT(objectClass->vtable == &Object::static_vtbl);
 
