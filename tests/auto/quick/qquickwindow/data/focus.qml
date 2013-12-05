@@ -12,4 +12,8 @@ Window.Window {
      Item {
           objectName: "item2"
      }
+
+     FocusScope {
+         Item { objectName: "item3" }
+     }
 }

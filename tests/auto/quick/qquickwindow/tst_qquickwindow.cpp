@@ -1145,20 +1145,35 @@ void tst_qquickwindow::focusObject()
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
 
+    QSignalSpy focusObjectSpy(window, SIGNAL(focusObjectChanged(QObject*)));
+
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
+    QCOMPARE(window->contentItem(), window->focusObject());
+    QCOMPARE(focusObjectSpy.count(), 1);
+
     QQuickItem *item1 = window->findChild<QQuickItem*>("item1");
     QVERIFY(item1);
     item1->setFocus(true);
     QCOMPARE(item1, window->focusObject());
+    QCOMPARE(focusObjectSpy.count(), 2);
 
     QQuickItem *item2 = window->findChild<QQuickItem*>("item2");
     QVERIFY(item2);
     item2->setFocus(true);
     QCOMPARE(item2, window->focusObject());
+    QCOMPARE(focusObjectSpy.count(), 3);
+
+    // set focus for item in non-focused focus scope and
+    // ensure focusObject does not change and signal is not emitted
+    QQuickItem *item3 = window->findChild<QQuickItem*>("item3");
+    QVERIFY(item3);
+    item3->setFocus(true);
+    QCOMPARE(item2, window->focusObject());
+    QCOMPARE(focusObjectSpy.count(), 3);
 }
 
 void tst_qquickwindow::ignoreUnhandledMouseEvents()
