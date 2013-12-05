@@ -1047,6 +1047,7 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
         if (!window->handle()) {
             QSG_GUI_DEBUG(w->window, " - using fallback surface");
             fallback = new QOffscreenSurface();
+            fallback->setFormat(window->requestedFormat());
             fallback->create();
         }
 
