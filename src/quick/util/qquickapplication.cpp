@@ -123,7 +123,7 @@ bool QQuickApplication::eventFilter(QObject *, QEvent *event)
         if (d->isActive != wasActive) {
             emit activeChanged();
         }
-    } else if (event->type() == QEvent::LayoutDirectionChange) {
+    } else if (event->type() == QEvent::ApplicationLayoutDirectionChange) {
         Qt::LayoutDirection newDirection = QGuiApplication::layoutDirection();
         if (d->direction != newDirection) {
             d->direction = newDirection;
