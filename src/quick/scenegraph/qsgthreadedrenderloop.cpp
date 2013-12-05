@@ -402,6 +402,7 @@ bool QSGRenderThread::event(QEvent *e)
     case WM_TryRelease: {
         QSG_RT_DEBUG("WM_TryRelease");
         mutex.lock();
+        wm->m_locked = true;
         WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
         if (!window || wme->inDestructor) {
             QSG_RT_DEBUG(" - setting exit flag and invalidating GL");
@@ -413,6 +414,7 @@ bool QSGRenderThread::event(QEvent *e)
             QSG_RT_DEBUG(" - not releasing anything because we have active windows...");
         }
         waitCondition.wakeOne();
+        wm->m_locked = false;
         mutex.unlock();
         return true;
     }

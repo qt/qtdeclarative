@@ -2289,6 +2289,8 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
 
         p->groupNode = 0;
         p->paintNode = 0;
+
+        p->dirty(QQuickItemPrivate::Window);
     }
 
     for (int ii = 0; ii < p->childItems.count(); ++ii)
