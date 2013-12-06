@@ -217,7 +217,7 @@ public:
     virtual QNetworkAccessManager *networkAccessManager();
 
     // Return the list of illegal id names (the names of the properties on the global object)
-    const QV4::IdentifierHash<bool> &illegalNames() const;
+    const QSet<QString> &illegalNames() const;
 
     void gc();
 
@@ -268,7 +268,7 @@ protected:
     QVector<Deletable *> m_extensionData;
     Deletable *m_listModelData;
 
-    QV4::IdentifierHash<bool> m_illegalNames;
+    QSet<QString> m_illegalNames;
 
     QElapsedTimer m_time;
     QHash<QString, qint64> m_startedTimers;

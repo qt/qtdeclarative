@@ -1140,7 +1140,7 @@ QString QQmlPropertyCache::signalParameterStringForJS(QQmlEngine *engine, const 
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     bool unnamedParameter = false;
-    const QV4::IdentifierHash<bool> &illegalNames = ep->v8engine()->illegalNames();
+    const QSet<QString> &illegalNames = ep->v8engine()->illegalNames();
     QString error;
     QString parameters;
 

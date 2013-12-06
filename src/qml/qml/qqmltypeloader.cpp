@@ -2154,8 +2154,9 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
     if (m_useNewCompiler) {
-        parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(typeLoader()->engine())->debugger != 0));
-        QQmlCodeGenerator compiler;
+        QQmlEngine *qmlEngine = typeLoader()->engine();
+        parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(qmlEngine)->debugger != 0));
+        QQmlCodeGenerator compiler(QV8Engine::get(qmlEngine)->illegalNames());
         if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
             setError(compiler.errors);
             return;

@@ -361,7 +361,7 @@ QNetworkAccessManager *QV8Engine::networkAccessManager()
     return QQmlEnginePrivate::get(m_engine)->getNetworkAccessManager();
 }
 
-const QV4::IdentifierHash<bool> &QV8Engine::illegalNames() const
+const QSet<QString> &QV8Engine::illegalNames() const
 {
     return m_illegalNames;
 }
@@ -437,9 +437,8 @@ void QV8Engine::initializeGlobal()
     qt_add_sqlexceptions(m_v4Engine);
 
     {
-        m_illegalNames = QV4::IdentifierHash<bool>(m_v4Engine);
         for (uint i = 0; i < m_v4Engine->globalObject->internalClass->size; ++i)
-            m_illegalNames.add(m_v4Engine->globalObject->internalClass->nameMap.at(i)->toQString(), true);
+            m_illegalNames.insert(m_v4Engine->globalObject->internalClass->nameMap.at(i)->toQString());
     }
 
     {

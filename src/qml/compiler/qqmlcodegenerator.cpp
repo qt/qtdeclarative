@@ -82,8 +82,9 @@ QStringList Signal::parameterStringList(const QStringList &stringPool) const
     return result;
 }
 
-QQmlCodeGenerator::QQmlCodeGenerator()
-    : _object(0)
+QQmlCodeGenerator::QQmlCodeGenerator(const QSet<QString> &illegalNames)
+    : illegalNames(illegalNames)
+    , _object(0)
     , jsGenerator(0)
 {
 }
@@ -292,10 +293,8 @@ bool QQmlCodeGenerator::sanityCheckFunctionNames()
 
         if (name.at(0).isUpper())
             COMPILE_EXCEPTION(function->identifierToken, tr("Method names cannot begin with an upper case letter"));
-#if 0 // ###
-        if (enginePrivate->v8engine()->illegalNames().contains(currSlot.name.toString()))
-            COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
-#endif
+        if (illegalNames.contains(name))
+            COMPILE_EXCEPTION(function->identifierToken, tr("Illegal method name"));
     }
     return true;
 }
@@ -589,10 +588,8 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         if (signalName.at(0).isUpper())
             COMPILE_EXCEPTION(node->identifierToken, tr("Signal names cannot begin with an upper case letter"));
 
-#if 0 // ### cannot access identifier table from separate thread
-        if (enginePrivate->v8engine()->illegalNames().contains(currSig.name.toString()))
-            COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
-#endif
+        if (illegalNames.contains(signalName))
+            COMPILE_EXCEPTION(node->identifierToken, tr("Illegal signal name"));
 
         _object->qmlSignals->append(signal);
     } else {
@@ -926,12 +923,11 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
             COMPILE_EXCEPTION(loc, tr( "IDs must contain only letters, numbers, and underscores"));
     }
 
-#if 0 // ###
-    if (enginePrivate->v8engine()->illegalNames().contains(str))
-        COMPILE_EXCEPTION(v, tr( "ID illegally masks global JavaScript property"));
-#endif
+    QString idQString(str.toString());
+    if (illegalNames.contains(idQString))
+        COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
 
-    _object->idIndex = registerString(str.toString());
+    _object->idIndex = registerString(idQString);
     _object->locationOfIdProperty.line = loc.startLine;
     _object->locationOfIdProperty.column = loc.startColumn;
 
@@ -987,13 +983,8 @@ bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameL
     if (name.at(0).isUpper())
         COMPILE_EXCEPTION(nameLocation, tr("Property names cannot begin with an upper case letter"));
 
-#if 0 // ### how to check against illegalNames when in separate thread?
-    if (enginePrivate->v8engine()->illegalNames().contains(prop.name.toString())) {
-        COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
-                                   prop.nameLocation.column,
-                                   tr("Illegal property name"));
-    }
-#endif
+    if (illegalNames.contains(name))
+        COMPILE_EXCEPTION(nameLocation, tr("Illegal property name"));
 
     return true;
 }

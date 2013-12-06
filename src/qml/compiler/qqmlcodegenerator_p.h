@@ -207,7 +207,7 @@ struct Q_QML_EXPORT QQmlCodeGenerator : public AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
-    QQmlCodeGenerator();
+    QQmlCodeGenerator(const QSet<QString> &illegalNames);
     bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output);
 
     static bool isSignalPropertyName(const QString &name);
@@ -279,6 +279,8 @@ public:
     static bool isStatementNodeScript(AST::Statement *statement);
 
     QList<QQmlError> errors;
+
+    QSet<QString> illegalNames;
 
     QList<QV4::CompiledData::Import*> _imports;
     QList<Pragma*> _pragmas;
