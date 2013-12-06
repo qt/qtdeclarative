@@ -900,8 +900,7 @@ bool QQuickPixmapReply::event(QEvent *event)
                 pixmapProfiler.finishLoading(data->url);
                 data->textureFactory = de->textureFactory;
                 data->implicitSize = de->implicitSize;
-                if (data->implicitSize.width() > 0)
-                    pixmapProfiler.setSize(url, data->implicitSize.width(), data->implicitSize.height());
+                pixmapProfiler.setSize(url, data->requestSize.width() > 0 ? data->requestSize : data->implicitSize);
             } else {
                 pixmapProfiler.errorLoading(data->url);
                 data->errorString = de->errorString;
@@ -971,8 +970,6 @@ void QQuickPixmapData::addToCache()
         inCache = true;
         QQmlPixmapProfiler pixmapProfiler;
         pixmapProfiler.cacheCountChanged(url, pixmapStore()->m_cache.count());
-        if (implicitSize.width() > 0)
-            pixmapProfiler.setSize(url, implicitSize.width(), implicitSize.height());
     }
 }
 
@@ -1259,8 +1256,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
             d = createPixmapDataSync(this, engine, url, requestSize, &ok);
             if (ok) {
                 pixmapProfiler.finishLoading(url);
-                if (d->implicitSize.width() > 0)
-                    QQmlPixmapProfiler().setSize(url, d->implicitSize.width(), d->implicitSize.height());
+                pixmapProfiler.setSize(url, d->requestSize.width() > 0 ? d->requestSize : d->implicitSize);
                 if (options & QQuickPixmap::Cache)
                     d->addToCache();
                 return;
