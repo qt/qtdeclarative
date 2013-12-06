@@ -91,4 +91,15 @@ QtObject {
         testObjectWithAliasHandler.count++
         return testObjectWithAliasHandler.testSuccess
     }
+
+    signal signalWithClosureArgument(var f)
+    onSignalWithClosureArgument: f()
+
+    function testSignalWithClosureArgument() {
+        var testSuccess = false
+        signalWithClosureArgument(function() {
+            testSuccess = true
+        })
+        return testSuccess
+    }
 }

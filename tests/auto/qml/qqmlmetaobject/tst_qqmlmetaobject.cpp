@@ -329,11 +329,11 @@ void tst_QQmlMetaObject::method_data()
             << (QList<QByteArray>() << "int" << "bool" << "double")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(variant foo, var bar)") << "signal.4.qml"
-            << "testSignal(QVariant,QVariant)"
+            << "testSignal(QVariant,QJSValue)"
             << QMetaMethod::Signal
             << int(QMetaType::Void) << "void"
-            << (QList<int>() << QMetaType::QVariant << QMetaType::QVariant)
-            << (QList<QByteArray>() << "QVariant" << "QVariant")
+            << (QList<int>() << QMetaType::QVariant << qMetaTypeId<QJSValue>())
+            << (QList<QByteArray>() << "QVariant" << "QJSValue")
             << (QList<QByteArray>() << "foo" << "bar");
     QTest::newRow("testSignal(color foo, date bar, url baz)") << "signal.5.qml"
             << "testSignal(QColor,QDateTime,QUrl)"

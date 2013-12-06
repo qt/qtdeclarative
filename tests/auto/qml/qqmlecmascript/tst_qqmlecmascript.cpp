@@ -6068,6 +6068,9 @@ void tst_qqmlecmascript::signalHandlers()
     QMetaObject::invokeMethod(o, "testAliasSignalHandler", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toBool(), true);
 
+    QMetaObject::invokeMethod(o, "testSignalWithClosureArgument", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
     delete o;
 }
 

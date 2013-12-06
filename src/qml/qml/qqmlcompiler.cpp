@@ -2882,7 +2882,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         Object::DynamicProperty::Type dtype;
         int metaType;
     } builtinTypes[] = {
-        { Object::DynamicProperty::Var, QMetaType::QVariant },
+        { Object::DynamicProperty::Var, qMetaTypeId<QJSValue>() },
         { Object::DynamicProperty::Variant, QMetaType::QVariant },
         { Object::DynamicProperty::Int, QMetaType::Int },
         { Object::DynamicProperty::Bool, QMetaType::Bool },

@@ -128,7 +128,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
         QV4::CompiledData::Property::Type dtype;
         int metaType;
     } builtinTypes[] = {
-        { QV4::CompiledData::Property::Var, QMetaType::QVariant },
+        { QV4::CompiledData::Property::Var, qMetaTypeId<QJSValue>() },
         { QV4::CompiledData::Property::Variant, QMetaType::QVariant },
         { QV4::CompiledData::Property::Int, QMetaType::Int },
         { QV4::CompiledData::Property::Bool, QMetaType::Bool },
