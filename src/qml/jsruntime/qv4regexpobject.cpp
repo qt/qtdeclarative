@@ -76,6 +76,7 @@ RegExpObject::RegExpObject(InternalClass *ic)
     , value(RegExp::create(ic->engine, QString(), false, false))
     , global(false)
 {
+    Q_ASSERT(internalClass->vtable == &static_vtbl);
     init(ic->engine);
 }
 
@@ -143,7 +144,6 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
 void RegExpObject::init(ExecutionEngine *engine)
 {
     setVTable(&static_vtbl);
-    type = Type_RegExpObject;
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);

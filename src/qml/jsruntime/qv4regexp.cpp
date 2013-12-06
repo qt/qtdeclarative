@@ -99,8 +99,6 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
     , m_ignoreCase(ignoreCase)
     , m_multiLine(multiline)
 {
-    type = Type_RegExpObject;
-
     if (!engine)
         return;
     const char* error = 0;

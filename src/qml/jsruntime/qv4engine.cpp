@@ -249,16 +249,16 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     initRootContext();
 
-    StringPrototype *stringPrototype = new (memoryManager) StringPrototype(objectClass);
+    StringPrototype *stringPrototype = new (memoryManager) StringPrototype(InternalClass::create(this, &StringPrototype::static_vtbl, objectPrototype));
     stringObjectClass = InternalClass::create(this, &String::static_vtbl, stringPrototype);
 
-    NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(objectClass);
+    NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(InternalClass::create(this, &NumberPrototype::static_vtbl, objectPrototype));
     numberClass = InternalClass::create(this, &NumberObject::static_vtbl, numberPrototype);
 
-    BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(objectClass);
+    BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(InternalClass::create(this, &BooleanPrototype::static_vtbl, objectPrototype));
     booleanClass = InternalClass::create(this, &BooleanObject::static_vtbl, booleanPrototype);
 
-    DatePrototype *datePrototype = new (memoryManager) DatePrototype(objectClass);
+    DatePrototype *datePrototype = new (memoryManager) DatePrototype(InternalClass::create(this, &DatePrototype::static_vtbl, objectPrototype));
     dateClass = InternalClass::create(this, &DateObject::static_vtbl, datePrototype);
 
     FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(InternalClass::create(this, &FunctionPrototype::static_vtbl, objectPrototype));
@@ -269,14 +269,14 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
-    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
+    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(InternalClass::create(this, &RegExpPrototype::static_vtbl, objectPrototype));
     regExpClass = InternalClass::create(this, &RegExpObject::static_vtbl, regExpPrototype);
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
+    ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(InternalClass::create(this, &ErrorObject::static_vtbl, objectPrototype));
     errorClass = InternalClass::create(this, &ErrorObject::static_vtbl, errorPrototype);
     EvalErrorPrototype *evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
     evalErrorClass = InternalClass::create(this, &EvalErrorObject::static_vtbl, evalErrorPrototype);
@@ -357,8 +357,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(this)));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(QV4::InternalClass::create(this, &MathObject::static_vtbl, objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(QV4::InternalClass::create(this, &JsonObject::static_vtbl, objectPrototype))));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));

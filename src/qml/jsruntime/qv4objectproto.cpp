@@ -105,9 +105,9 @@ ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
 {
     Scope scope(v4);
-    ScopedObject o(scope);
+    ScopedObject o(scope, this);
 
-    ctor->defineReadonlyProperty(v4->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(v4->id_prototype, o);
     ctor->defineReadonlyProperty(v4->id_length, Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);

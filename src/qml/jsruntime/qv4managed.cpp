@@ -47,6 +47,13 @@ using namespace QV4;
 
 const ManagedVTable Managed::static_vtbl =
 {
+    Managed::IsExecutionContext,
+    Managed::IsString,
+    Managed::IsObject,
+    Managed::IsFunctionObject,
+    Managed::IsErrorObject,
+    0,
+    Managed::MyType,
     call,
     construct,
     0 /*markObjects*/,
@@ -101,7 +108,7 @@ ExecutionEngine *Managed::engine() const
 QString Managed::className() const
 {
     const char *s = 0;
-    switch (Type(type)) {
+    switch (Type(internalClass->vtable->type)) {
     case Type_Invalid:
     case Type_String:
         return QString();
@@ -157,18 +164,23 @@ QString Managed::className() const
     case Type_ArgumentsObject:
         s = "Arguments";
         break;
-    case Type_JSONObject:
+    case Type_JsonObject:
         s = "JSON";
         break;
     case Type_MathObject:
         s = "Math";
         break;
+
+    case Type_ExecutionContext:
+        s = "__ExecutionContext";
+        break;
     case Type_ForeachIteratorObject:
         s = "__ForeachIterator";
         break;
     case Type_RegExp:
-        s = "RegExp";
+        s = "__RegExp";
         break;
+
     case Type_QmlSequence:
         s = "QmlSequence";
         break;

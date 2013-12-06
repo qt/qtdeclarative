@@ -51,6 +51,7 @@ namespace QV4 {
 
 struct StringObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(StringObject)
 
     SafeValue value;
     mutable Property tmpProperty;

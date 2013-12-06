@@ -94,6 +94,7 @@ public:
 class RegExp : public Managed
 {
     Q_MANAGED
+    Q_MANAGED_TYPE(RegExp)
 public:
     static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
     ~RegExp();

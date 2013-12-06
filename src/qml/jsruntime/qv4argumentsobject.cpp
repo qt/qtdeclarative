@@ -51,7 +51,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     , context(context)
     , fullyCreated(false)
 {
-    type = Type_ArgumentsObject;
     flags &= ~SimpleArray;
 
     ExecutionEngine *v4 = context->engine;

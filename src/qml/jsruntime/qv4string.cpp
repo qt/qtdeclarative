@@ -103,6 +103,13 @@ static uint toArrayIndex(const char *ch, const char *end, bool *ok)
 
 const ManagedVTable String::static_vtbl =
 {
+    String::IsExecutionContext,
+    String::IsString,
+    String::IsObject,
+    String::IsFunctionObject,
+    String::IsErrorObject,
+    0,
+    String::MyType,
     call,
     construct,
     markObjects,
@@ -233,10 +240,10 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (t == o)
         return true;
 
-    if (o->type != Type_String)
+    if (o->internalClass->vtable->type != Type_String)
         return false;
 
-    Q_ASSERT(t->type == Type_String);
+    Q_ASSERT(t->internalClass->vtable->type == Type_String);
     String *that = static_cast<String *>(t);
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())
@@ -257,7 +264,6 @@ String::String(ExecutionEngine *engine, const QString &text)
 {
     _text->ref.ref();
     len = _text->size;
-    type = Type_String;
     subtype = StringType_Unknown;
 }
 
@@ -267,7 +273,6 @@ String::String(ExecutionEngine *engine, String *l, String *r)
     , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
     , len(l->len + r->len)
 {
-    type = Type_String;
     subtype = StringType_Unknown;
 
     if (!l->largestSubLength && l->len > largestSubLength)

@@ -94,6 +94,10 @@ struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(FunctionObject)
+    enum {
+        IsFunctionObject = true
+    };
     // Used with Managed::subType
     enum FunctionType {
         RegularFunction = 0,

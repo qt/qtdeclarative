@@ -52,6 +52,10 @@ struct SyntaxErrorObject;
 
 struct ErrorObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(ErrorObject)
+    enum {
+        IsErrorObject = true
+    };
 
     enum ErrorType {
         Error,

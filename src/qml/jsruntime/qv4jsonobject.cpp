@@ -66,6 +66,8 @@ static int indent = 0;
 #endif
 
 
+DEFINE_MANAGED_VTABLE(JsonObject);
+
 class JsonParser
 {
 public:
@@ -884,12 +886,10 @@ QString Stringify::JA(ArrayObjectRef a)
 }
 
 
-JsonObject::JsonObject(ExecutionEngine *engine)
-    : Object(engine)
+JsonObject::JsonObject(InternalClass *ic)
+    : Object(ic)
 {
-    type = Type_JSONObject;
-
-    Scope scope(engine);
+    Scope scope(ic->engine);
     ScopedObject protectThis(scope, this);
 
     defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);

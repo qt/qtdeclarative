@@ -53,9 +53,9 @@ namespace QV4 {
 
 struct DateObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(DateObject)
     SafeValue value;
     DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
-        type = Type_DateObject;
         value = date;
     }
     DateObject(ExecutionEngine *engine, const QDateTime &value);
@@ -64,8 +64,7 @@ struct DateObject: Object {
 
 protected:
     DateObject(InternalClass *ic): Object(ic) {
-        setVTable(&static_vtbl);
-        type = Type_DateObject;
+        Q_ASSERT(internalClass->vtable == &static_vtbl);
         value = Primitive::fromDouble(qSNaN());
     }
 };

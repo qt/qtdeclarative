@@ -51,14 +51,14 @@
 
 using namespace QV4;
 
+DEFINE_MANAGED_VTABLE(MathObject);
+
 static const double qt_PI = 2.0 * ::asin(1.0);
 
-MathObject::MathObject(ExecutionEngine *engine)
-    : Object(engine)
+MathObject::MathObject(InternalClass *ic)
+    : Object(ic)
 {
-    type = Type_MathObject;
-
-    Scope scope(engine);
+    Scope scope(ic->engine);
     ScopedObject protectThis(scope, this);
 
     defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(::exp(1.0)));

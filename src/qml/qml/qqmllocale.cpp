@@ -62,7 +62,6 @@ public:
         : QV4::Object(engine)
     {
         setVTable(&static_vtbl);
-        type = Type_Object;
     }
 
     QLocale locale;

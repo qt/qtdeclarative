@@ -77,6 +77,7 @@ struct ArgumentsSetterFunction: FunctionObject
 
 struct ArgumentsObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(ArgumentsObject)
     CallContext *context;
     bool fullyCreated;
     QVector<SafeValue> mappedArguments;

@@ -69,6 +69,9 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
 
+#define Q_MANAGED_TYPE(type) \
+    public: \
+        enum { MyType = Type_##type };
 
 struct GCDeletable
 {
@@ -80,6 +83,13 @@ struct GCDeletable
 
 struct ManagedVTable
 {
+    uint isExecutionContext : 1;
+    uint isString : 1;
+    uint isObject : 1;
+    uint isFunctionObject : 1;
+    uint isErrorObject : 1;
+    uint unused : 19;
+    uint type : 8;
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
     void (*markObjects)(Managed *, ExecutionEngine *e);
@@ -103,6 +113,13 @@ struct ManagedVTable
 #define DEFINE_MANAGED_VTABLE(classname) \
 const QV4::ManagedVTable classname::static_vtbl =    \
 {                                               \
+    classname::IsExecutionContext,   \
+    classname::IsString,   \
+    classname::IsObject,   \
+    classname::IsFunctionObject,   \
+    classname::IsErrorObject,   \
+    0,                                          \
+    classname::MyType,                          \
     call,                                       \
     construct,                                  \
     markObjects,                                \
@@ -123,9 +140,46 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     #classname                                  \
 }
 
+#define DEFINE_MANAGED_VTABLE_WITH_NAME(classname, name) \
+const QV4::ManagedVTable classname::static_vtbl =    \
+{                                               \
+    classname::IsExecutionContext,   \
+    classname::IsString,   \
+    classname::IsObject,   \
+    classname::IsFunctionObject,   \
+    classname::IsErrorObject,   \
+    0,                                          \
+    classname::MyType,                          \
+    call,                                       \
+    construct,                                  \
+    markObjects,                                \
+    destroy,                                    \
+    0,                                          \
+    get,                                        \
+    getIndexed,                                 \
+    put,                                        \
+    putIndexed,                                 \
+    query,                                      \
+    queryIndexed,                               \
+    deleteProperty,                             \
+    deleteIndexedProperty,                      \
+    getLookup,                                  \
+    setLookup,                                  \
+    isEqualTo,                                  \
+    advanceIterator,                            \
+    #name                                       \
+}
+
 #define DEFINE_MANAGED_VTABLE_WITH_DELETABLES(classname) \
 const QV4::ManagedVTable classname::static_vtbl =    \
 {                                               \
+    classname::IsExecutionContext,   \
+    classname::IsString,   \
+    classname::IsObject,   \
+    classname::IsFunctionObject,   \
+    classname::IsErrorObject,   \
+    0,                                          \
+    classname::MyType,                          \
     call,                                       \
     construct,                                  \
     markObjects,                                \
@@ -149,6 +203,13 @@ const QV4::ManagedVTable classname::static_vtbl =    \
 struct Q_QML_EXPORT Managed
 {
     Q_MANAGED
+    enum {
+        IsExecutionContext = false,
+        IsString = false,
+        IsObject = false,
+        IsFunctionObject = false,
+        IsErrorObject = false
+    };
 private:
     void *operator new(size_t);
     Managed(const Managed &other);
@@ -183,13 +244,16 @@ public:
         Type_RegExpObject,
         Type_ErrorObject,
         Type_ArgumentsObject,
-        Type_JSONObject,
+        Type_JsonObject,
         Type_MathObject,
+
+        Type_ExecutionContext,
         Type_ForeachIteratorObject,
         Type_RegExp,
 
         Type_QmlSequence
     };
+    Q_MANAGED_TYPE(Invalid)
 
     ExecutionEngine *engine() const;
 
@@ -214,21 +278,21 @@ public:
         return internalClass->vtable == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
 
-    String *asString() { return type == Type_String ? reinterpret_cast<String *>(this) : 0; }
-    Object *asObject() { return type != Type_String ? reinterpret_cast<Object *>(this) : 0; }
-    ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
-    FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
-    BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
-    NumberObject *asNumberObject() { return type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
-    StringObject *asStringObject() { return type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
-    DateObject *asDateObject() { return type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
-    ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
-    ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
+    String *asString() { return internalClass->vtable->type == Type_String ? reinterpret_cast<String *>(this) : 0; }
+    Object *asObject() { return internalClass->vtable->type != Type_String ? reinterpret_cast<Object *>(this) : 0; }
+    ArrayObject *asArrayObject() { return internalClass->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
+    FunctionObject *asFunctionObject() { return internalClass->vtable->type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
+    BooleanObject *asBooleanObject() { return internalClass->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
+    NumberObject *asNumberObject() { return internalClass->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
+    StringObject *asStringObject() { return internalClass->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
+    DateObject *asDateObject() { return internalClass->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
+    ErrorObject *asErrorObject() { return internalClass->vtable->type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
+    ArgumentsObject *asArgumentsObject() { return internalClass->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
-    bool isListType() const { return type == Type_QmlSequence; }
+    bool isListType() const { return internalClass->vtable->type == Type_QmlSequence; }
 
-    bool isArrayObject() const { return type == Type_ArrayObject; }
-    bool isStringObject() const { return type == Type_StringObject; }
+    bool isArrayObject() const { return internalClass->vtable->type == Type_ArrayObject; }
+    bool isStringObject() const { return internalClass->vtable->type == Type_StringObject; }
 
     QString className() const;
 
@@ -272,10 +336,6 @@ public:
     static void setLookup(Managed *m, Lookup *l, const ValueRef v);
     static bool isEqualTo(Managed *m, Managed *other);
 
-    uint internalType() const {
-        return type;
-    }
-
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
 
@@ -296,7 +356,7 @@ public:
             uchar strictMode : 1; // used by FunctionObject
             uchar bindingKeyFlag : 1;
             uchar hasAccessorProperty : 1;
-            uchar type;
+            uchar _type;
             mutable uchar subtype;
             uchar flags;
         };

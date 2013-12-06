@@ -102,6 +102,10 @@ struct URIErrorPrototype;
 
 struct Q_QML_EXPORT Object: Managed {
     Q_MANAGED
+    Q_MANAGED_TYPE(Object)
+    enum {
+        IsObject = true
+    };
     uint memberDataAlloc;
     Property *memberData;
 
@@ -328,40 +332,39 @@ private:
 
 struct BooleanObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(BooleanObject)
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
-        type = Type_BooleanObject;
         value = val;
     }
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
-        setVTable(&static_vtbl);
-        type = Type_BooleanObject;
+        Q_ASSERT(internalClass->vtable == &static_vtbl);
         value = Encode(false);
     }
 };
 
 struct NumberObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(NumberObject)
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
-        type = Type_NumberObject;
         value = val;
     }
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
-        setVTable(&static_vtbl);
-        type = Type_NumberObject;
+        Q_ASSERT(internalClass->vtable == &static_vtbl);
         value = Encode((int)0);
     }
 };
 
 struct ArrayObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(ArrayObject)
     enum {
         LengthPropertyIndex = 0
     };

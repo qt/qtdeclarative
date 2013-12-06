@@ -166,6 +166,7 @@ template <typename Container>
 class QQmlSequence : public QV4::Object
 {
     Q_MANAGED
+    Q_MANAGED_TYPE(QmlSequence)
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
         : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
@@ -174,7 +175,6 @@ public:
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
-        type = Type_QmlSequence;
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
@@ -188,7 +188,6 @@ public:
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
-        type = Type_QmlSequence;
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);

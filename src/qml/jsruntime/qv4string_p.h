@@ -53,6 +53,11 @@ struct Identifier;
 
 struct Q_QML_EXPORT String : public Managed {
     Q_MANAGED
+    Q_MANAGED_TYPE(String)
+    enum {
+        IsString = true
+    };
+
     enum StringType {
         StringType_Unknown,
         StringType_Regular,
@@ -63,7 +68,7 @@ struct Q_QML_EXPORT String : public Managed {
     String()
         : Managed(0), _text(QStringData::sharedNull()), identifier(0)
         , stringHash(UINT_MAX), largestSubLength(0), len(0)
-    { type = Type_String; subtype = StringType_Unknown; }
+    { subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {

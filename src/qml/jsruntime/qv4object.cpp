@@ -73,7 +73,6 @@ Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
 {
-    type = Type_Object;
     flags = SimpleArray;
 }
 
@@ -82,7 +81,6 @@ Object::Object(InternalClass *ic)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
 {
     Q_ASSERT(internalClass->vtable && internalClass->vtable != &Managed::static_vtbl);
-    type = Type_Object;
     flags = SimpleArray;
 
     if (internalClass->size >= memberDataAlloc) {
@@ -1438,7 +1436,6 @@ void ArrayObject::init(ExecutionEngine *engine)
 {
     Q_UNUSED(engine);
 
-    type = Type_ArrayObject;
     memberData[LengthPropertyIndex].value = Primitive::fromInt32(0);
 }
 

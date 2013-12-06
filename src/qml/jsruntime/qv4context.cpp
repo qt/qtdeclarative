@@ -53,6 +53,13 @@ using namespace QV4;
 
 const ManagedVTable ExecutionContext::static_vtbl =
 {
+    ExecutionContext::IsExecutionContext,
+    ExecutionContext::IsString,
+    ExecutionContext::IsObject,
+    ExecutionContext::IsFunctionObject,
+    ExecutionContext::IsErrorObject,
+    0,
+    ExecutionContext::MyType,
     call,
     construct,
     markObjects,

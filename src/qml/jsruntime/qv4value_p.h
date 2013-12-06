@@ -64,13 +64,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return managed() && managed()->type == Managed::Type_String;
+    return managed() && managed()->internalClass->vtable->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return managed() && managed()->type != Managed::Type_String;
+    return managed() && managed()->internalClass->vtable->isObject;
 }
 
 inline bool Value::isPrimitive() const

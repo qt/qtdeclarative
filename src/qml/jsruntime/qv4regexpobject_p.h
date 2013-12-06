@@ -67,6 +67,7 @@ class RegExp;
 
 struct RegExpObject: Object {
     Q_MANAGED
+    Q_MANAGED_TYPE(RegExpObject)
     // needs to be compatible with the flags in qv4jsir_p.h
     enum Flags {
         RegExp_Global     = 0x01,

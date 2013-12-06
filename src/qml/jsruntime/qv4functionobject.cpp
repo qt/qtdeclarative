@@ -112,7 +112,6 @@ FunctionObject::FunctionObject(InternalClass *ic)
 {
     name = ic->engine->id_undefined;
 
-    type = Type_FunctionObject;
     needsActivation = false;
     strictMode = false;
 }
@@ -130,7 +129,6 @@ void FunctionObject::init(const StringRef n, bool createProto)
     Scope s(internalClass->engine);
     ScopedValue protectThis(s, this);
 
-    type = Type_FunctionObject;
     needsActivation = true;
     strictMode = false;
 #ifndef QT_NO_DEBUG

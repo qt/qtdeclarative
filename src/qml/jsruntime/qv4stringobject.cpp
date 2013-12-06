@@ -80,8 +80,7 @@ DEFINE_MANAGED_VTABLE(StringObject);
 StringObject::StringObject(InternalClass *ic)
     : Object(ic)
 {
-    setVTable(&static_vtbl);
-    type = Type_StringObject;
+    Q_ASSERT(internalClass->vtable == &static_vtbl);
 
     Scope scope(engine());
     ScopedObject protectThis(scope, this);
@@ -97,7 +96,6 @@ StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     : Object(engine->stringObjectClass)
 {
     setVTable(&static_vtbl);
-    type = Type_StringObject;
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
