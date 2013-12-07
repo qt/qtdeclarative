@@ -57,6 +57,7 @@
 #include "qquickwindow.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qsgbatchrenderer_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -200,6 +201,7 @@ public:
 
     QSGRenderContext *context;
     QSGRenderer *renderer;
+    QByteArray customRenderMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.
 
     QSGRenderLoop *windowManager;
     QQuickAnimatorController *animationController;

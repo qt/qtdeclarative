@@ -132,6 +132,8 @@ public:
     void setClearMode(ClearMode mode) { m_clear_mode = mode; }
     ClearMode clearMode() const { return m_clear_mode; }
 
+    virtual void setCustomRenderMode(const QByteArray &) { };
+
 Q_SIGNALS:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 

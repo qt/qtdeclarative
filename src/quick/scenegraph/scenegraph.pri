@@ -160,5 +160,7 @@ OTHER_FILES += \
     $$PWD/shaders/textmask_core.vert \
     $$PWD/shaders/texture_core.frag \
     $$PWD/shaders/vertexcolor_core.frag \
-    $$PWD/shaders/vertexcolor_core.vert
+    $$PWD/shaders/vertexcolor_core.vert \
+    scenegraph/shaders/visualization.frag \
+    scenegraph/shaders/visualization.vert
 

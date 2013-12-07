@@ -64,5 +64,7 @@
         <file>shaders/texture_core.frag</file>
         <file>shaders/vertexcolor_core.frag</file>
         <file>shaders/vertexcolor_core.vert</file>
+        <file>shaders/visualization.vert</file>
+        <file>shaders/visualization.frag</file>
     </qresource>
 </RCC>

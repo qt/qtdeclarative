@@ -344,6 +344,7 @@ void QQuickWindowPrivate::syncSceneGraph()
         mode |= QSGRenderer::ClearColorBuffer;
     renderer->setClearMode(mode);
 
+    renderer->setCustomRenderMode(customRenderMode);
     context->endSync();
 }
 
@@ -418,6 +419,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     contentItemPrivate->windowRefCount = 1;
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
+    customRenderMode = qgetenv("QSG_VISUALIZE");
     windowManager = QSGRenderLoop::instance();
     QSGContext *sg = windowManager->sceneGraphContext();
     context = windowManager->createRenderContext(sg);
