@@ -195,20 +195,6 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
     return true;
 }
 
-// Unicode stuff
-static inline bool isUnicodeNonCharacter(uint ucs4)
-{
-    // Unicode has a couple of "non-characters" that one can use internally,
-    // but are not allowed to be used for text interchange.
-    //
-    // Those are the last two entries each Unicode Plane (U+FFFE, U+FFFF,
-    // U+1FFFE, U+1FFFF, etc.) as well as the entries between U+FDD0 and
-    // U+FDEF (inclusive)
-
-    return (ucs4 & 0xfffe) == 0xfffe
-            || (ucs4 - 0xfdd0U) < 16;
-}
-
 QHashedStringRef QHashedStringRef::mid(int offset, int length) const
 {
     Q_ASSERT(offset < m_length);
