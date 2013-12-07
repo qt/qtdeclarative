@@ -427,8 +427,7 @@ void tst_qquickflickable::pressDelay()
 
     // As we moved pass the drag threshold, we should never receive the press
     QVERIFY(mouseArea->property("pressed").toBool() == false);
-    QTest::qWait(200);
-    QVERIFY(mouseArea->property("pressed").toBool() == false);
+    QTRY_VERIFY(mouseArea->property("pressed").toBool() == false);
 
     // On release the clicked signal should *not* be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 190));
@@ -1182,8 +1181,7 @@ void tst_qquickflickable::margins()
     // position to the far right, including margin
     obj->setContentX(1600 + 50 - obj->width());
     obj->returnToBounds();
-    QTest::qWait(200);
-    QCOMPARE(obj->contentX(), 1600. + 50. - obj->width());
+    QTRY_COMPARE(obj->contentX(), 1600. + 50. - obj->width());
 
     // position beyond the far right, including margin
     obj->setContentX(1600 + 50 - obj->width() + 1.);
@@ -1198,8 +1196,7 @@ void tst_qquickflickable::margins()
     // position to the far bottom, including margin
     obj->setContentY(600 + 30 - obj->height());
     obj->returnToBounds();
-    QTest::qWait(200);
-    QCOMPARE(obj->contentY(), 600. + 30. - obj->height());
+    QTRY_COMPARE(obj->contentY(), 600. + 30. - obj->height());
 
     // position beyond the far bottom, including margin
     obj->setContentY(600 + 30 - obj->height() + 1.);
@@ -1268,14 +1265,12 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
 
     // click outside child rect
     QTest::mousePress(view.data(), Qt::LeftButton, 0, QPoint(190, 190));
-    QTest::qWait(10);
-    QCOMPARE(flickable->property("itemPressed").toBool(), false);
+    QTRY_COMPARE(flickable->property("itemPressed").toBool(), false);
     QTest::mouseRelease(view.data(), Qt::LeftButton, 0, QPoint(190, 190));
 
     // click inside child rect
     QTest::mousePress(view.data(), Qt::LeftButton, 0, QPoint(200, 200));
-    QTest::qWait(10);
-    QCOMPARE(flickable->property("itemPressed").toBool(), true);
+    QTRY_COMPARE(flickable->property("itemPressed").toBool(), true);
     QTest::mouseRelease(view.data(), Qt::LeftButton, 0, QPoint(200, 200));
 
     const int threshold = qApp->styleHints()->startDragDistance();
