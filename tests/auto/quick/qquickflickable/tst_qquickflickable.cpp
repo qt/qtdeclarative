@@ -287,11 +287,6 @@ void tst_qquickflickable::rebound()
     window->rootObject()->setProperty("transitionsStarted", 0);
     window->rootObject()->setProperty("transitionsFinished", 0);
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-26696 - sometimes fails on Mac");
-    return;
-#endif
-
     // flick and trigger the transition multiple times
     // (moving signals are emitted as soon as the first transition starts)
     flick(window.data(), QPoint(20,20), QPoint(120,120), 200);     // both x and y will bounce back
