@@ -86,7 +86,7 @@ void tst_qquicktrailemitter::test_basic()
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 
-    QCOMPARE(system->groupData[1]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[1]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[1]->data) {
         if (d->t == -1)
             continue; //Particle data unused
