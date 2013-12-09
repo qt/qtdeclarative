@@ -1462,7 +1462,7 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(const QUrl &url, co
 
 bool QQmlComponentAndAliasResolver::resolve()
 {
-    Q_ASSERT(componentRoots.isEmpty());
+    QVector<int> componentRoots;
 
     // Find objects that are Components. This is missing an extra pass
     // that finds implicitly defined components, i.e.
@@ -1482,30 +1482,29 @@ bool QQmlComponentAndAliasResolver::resolve()
             continue;
 
         componentRoots.append(i);
-        // Sanity checks: There can be only an (optional) id property and
-        // a default property, that defines the component tree.
+
+        if (obj->nFunctions > 0)
+            COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
+        if (obj->nProperties > 0)
+            COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new properties."));
+        if (obj->nSignals > 0)
+            COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new signals."));
+
+        if (obj->nBindings == 0)
+            COMPILE_EXCEPTION(obj, tr("Cannot create empty component specification"));
+
+        const QV4::CompiledData::Binding *rootBinding = obj->bindingTable();
+        if (obj->nBindings > 1 || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
+            COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
+
+        componentBoundaries.append(rootBinding->value.objectIndex);
     }
 
-    std::sort(componentRoots.begin(), componentRoots.end());
+    std::sort(componentBoundaries.begin(), componentBoundaries.end());
 
-    // For each component's tree, remember to which component the children
-    // belong to
     for (int i = 0; i < componentRoots.count(); ++i) {
         const QV4::CompiledData::Object *component = qmlUnit->objectAt(componentRoots.at(i));
-
-        if (component->nFunctions > 0)
-            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new functions."));
-        if (component->nProperties > 0)
-            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new properties."));
-        if (component->nSignals > 0)
-            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new signals."));
-
-        if (component->nBindings == 0)
-            COMPILE_EXCEPTION(component, tr("Cannot create empty component specification"));
-
         const QV4::CompiledData::Binding *rootBinding = component->bindingTable();
-        if (component->nBindings > 1 || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
-            COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
 
         _componentIndex = i;
         _idToObjectIndex.clear();
@@ -1538,11 +1537,6 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
 
-    // Only include creatable types. Everything else is synthetic, such as group property
-    // objects.
-    if (_componentIndex != -1 && !stringAt(obj->inheritedTypeNameIndex).isEmpty())
-        objectIndexToComponentIndex.insert(objectIndex, _componentIndex);
-
     QString id = stringAt(obj->idIndex);
     if (!id.isEmpty()) {
         if (_idToObjectIndex.contains(obj->idIndex)) {
@@ -1568,7 +1562,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
             continue;
 
         // Stop at Component boundary
-        if (std::binary_search(componentRoots.constBegin(), componentRoots.constEnd(), binding->value.objectIndex))
+        if (std::binary_search(componentBoundaries.constBegin(), componentBoundaries.constEnd(), binding->value.objectIndex))
             continue;
 
         if (!collectIdsAndAliases(binding->value.objectIndex))

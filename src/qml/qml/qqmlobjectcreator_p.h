@@ -93,15 +93,15 @@ public:
 
     bool resolve();
 
-    QVector<int> componentRoots;
-    QHash<int, int> objectIndexToComponentIndex;
-
 protected:
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
     bool isComponentType(int typeNameIndex) const
     { return resolvedTypes.value(typeNameIndex).type == 0; }
+
+    // indices of objects that are of type QQmlComponent
+    QVector<int> componentBoundaries;
 
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;
