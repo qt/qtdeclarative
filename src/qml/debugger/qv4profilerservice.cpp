@@ -39,9 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qv8profilerservice_p.h"
+#include "qv4profilerservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>
 #include <QtCore/QMutex>
@@ -49,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
+Q_GLOBAL_STATIC(QV4ProfilerService, v4ProfilerInstance)
 
 #if 0
 // ### FIXME: v4
@@ -63,7 +62,7 @@ public:
     {
         QByteArray data;
         QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-        ds << QV8ProfilerService::V8SnapshotChunk << QByteArray(rawData, size);
+        ds << QV4ProfilerService::V4SnapshotChunk << QByteArray(rawData, size);
         messages.append(data);
         return kContinue;
     }
@@ -72,7 +71,7 @@ public:
 #endif
 
 // convert to a QByteArray that can be sent to the debug client
-QByteArray QV8ProfilerData::toByteArray() const
+QByteArray QV4ProfilerData::toByteArray() const
 {
     QByteArray data;
     //### using QDataStream is relatively expensive
@@ -82,12 +81,12 @@ QByteArray QV8ProfilerData::toByteArray() const
     return data;
 }
 
-class QV8ProfilerServicePrivate : public QQmlDebugServicePrivate
+class QV4ProfilerServicePrivate : public QQmlDebugServicePrivate
 {
-    Q_DECLARE_PUBLIC(QV8ProfilerService)
+    Q_DECLARE_PUBLIC(QV4ProfilerService)
 
 public:
-    QV8ProfilerServicePrivate()
+    QV4ProfilerServicePrivate()
         :initialized(false)
     {
     }
@@ -97,7 +96,7 @@ public:
 //    void printProfileTree(const v8::CpuProfileNode *node, int level = 0);
 //    void sendMessages();
 
-    QList<QV8ProfilerData> m_data;
+    QList<QV4ProfilerData> m_data;
 
     bool initialized;
     QMutex initializeMutex;
@@ -105,10 +104,10 @@ public:
     QList<QString> m_ongoing;
 };
 
-QV8ProfilerService::QV8ProfilerService(QObject *parent)
-    : QQmlDebugService(*(new QV8ProfilerServicePrivate()), QStringLiteral("V8Profiler"), 1, parent)
+QV4ProfilerService::QV4ProfilerService(QObject *parent)
+    : QQmlDebugService(*(new QV4ProfilerServicePrivate()), QStringLiteral("V8Profiler"), 1, parent)
 {
-    Q_D(QV8ProfilerService);
+    Q_D(QV4ProfilerService);
 
     QMutexLocker lock(&d->initializeMutex);
 
@@ -119,24 +118,24 @@ QV8ProfilerService::QV8ProfilerService(QObject *parent)
     }
 }
 
-QV8ProfilerService::~QV8ProfilerService()
+QV4ProfilerService::~QV4ProfilerService()
 {
 }
 
-QV8ProfilerService *QV8ProfilerService::instance()
+QV4ProfilerService *QV4ProfilerService::instance()
 {
-    return v8ProfilerInstance();
+    return v4ProfilerInstance();
 }
 
-void QV8ProfilerService::initialize()
+void QV4ProfilerService::initialize()
 {
     // just make sure that the service is properly registered
-    v8ProfilerInstance();
+    v4ProfilerInstance();
 }
 
-void QV8ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
+void QV4ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
-    Q_D(QV8ProfilerService);
+    Q_D(QV4ProfilerService);
 
     if (state() == newState)
         return;
@@ -154,9 +153,9 @@ void QV8ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
     }
 }
 
-void QV8ProfilerService::messageReceived(const QByteArray &message)
+void QV4ProfilerService::messageReceived(const QByteArray &message)
 {
-    Q_D(QV8ProfilerService);
+    Q_D(QV4ProfilerService);
 
     QQmlDebugStream ds(message);
     QByteArray command;
@@ -192,9 +191,9 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     QQmlDebugService::messageReceived(message);
 }
 
-void QV8ProfilerService::startProfiling(const QString &title)
+void QV4ProfilerService::startProfiling(const QString &title)
 {
-    Q_D(QV8ProfilerService);
+    Q_D(QV4ProfilerService);
     // Start Profiling
 
     if (d->m_ongoing.contains(title))
@@ -209,14 +208,14 @@ void QV8ProfilerService::startProfiling(const QString &title)
     // indicate profiling started
     QByteArray data;
     QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-    ds << (int)QV8ProfilerService::V8Started;
+    ds << (int)QV4ProfilerService::V4Started;
 
     sendMessage(data);
 }
 
-void QV8ProfilerService::stopProfiling(const QString &title)
+void QV4ProfilerService::stopProfiling(const QString &title)
 {
-    Q_D(QV8ProfilerService);
+    Q_D(QV4ProfilerService);
     // Stop profiling
 
     if (!d->m_ongoing.contains(title))
@@ -237,7 +236,7 @@ void QV8ProfilerService::stopProfiling(const QString &title)
         // indicate completion, even without data
         QByteArray data;
         QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-        ds << (int)QV8ProfilerService::V8Complete;
+        ds << (int)QV4ProfilerService::V4Complete;
 
         sendMessage(data);
 #if 0
@@ -245,22 +244,22 @@ void QV8ProfilerService::stopProfiling(const QString &title)
 #endif
 }
 
-void QV8ProfilerService::takeSnapshot()
+void QV4ProfilerService::takeSnapshot()
 {
-//    Q_D(QV8ProfilerService);
+//    Q_D(QV4ProfilerService);
     // ### FIXME: v4
 //    d->takeSnapshot(v8::HeapSnapshot::kFull);
 }
 
-void QV8ProfilerService::deleteSnapshots()
+void QV4ProfilerService::deleteSnapshots()
 {
     // ### FIXME: v4
 //    v8::HeapProfiler::DeleteAllSnapshots();
 }
 
-void QV8ProfilerService::sendProfilingData()
+void QV4ProfilerService::sendProfilingData()
 {
-//    Q_D(QV8ProfilerService);
+//    Q_D(QV4ProfilerService);
     // Send messages to client
     // ### FIXME: v4
 //    d->sendMessages();
@@ -268,14 +267,14 @@ void QV8ProfilerService::sendProfilingData()
 
 #if 0
 // ### FIXME: v4
-void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)
+void QV4ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)
 {
     for (int index = 0 ; index < node->GetChildrenCount() ; index++) {
         const v8::CpuProfileNode* childNode = node->GetChild(index);
         QString scriptResourceName = QJSConverter::toString(childNode->GetScriptResourceName());
         if (scriptResourceName.length() > 0) {
 
-            QV8ProfilerData rd = {(int)QV8ProfilerService::V8Entry, scriptResourceName,
+            QV4ProfilerData rd = {(int)QV4ProfilerService::V4Entry, scriptResourceName,
                 QJSConverter::toString(childNode->GetFunctionName()),
                 childNode->GetLineNumber(), childNode->GetTotalTime(), childNode->GetSelfTime(), level};
             m_data.append(rd);
@@ -288,9 +287,9 @@ void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node,
     }
 }
 
-void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType)
+void QV4ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType)
 {
-    Q_Q(QV8ProfilerService);
+    Q_Q(QV4ProfilerService);
 
     v8::HandleScope scope;
     v8::Handle<v8::String> title = v8::String::New("");
@@ -303,15 +302,15 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     //indicate completion
     QByteArray data;
     QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-    ds << (int)QV8ProfilerService::V8SnapshotComplete;
+    ds << (int)QV4ProfilerService::V4SnapshotComplete;
     messages.append(data);
 
     q->sendMessages(messages);
 }
 
-void QV8ProfilerServicePrivate::sendMessages()
+void QV4ProfilerServicePrivate::sendMessages()
 {
-    Q_Q(QV8ProfilerService);
+    Q_Q(QV4ProfilerService);
 
     QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
@@ -321,7 +320,7 @@ void QV8ProfilerServicePrivate::sendMessages()
     //indicate completion
     QByteArray data;
     QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-    ds << (int)QV8ProfilerService::V8Complete;
+    ds << (int)QV4ProfilerService::V4Complete;
     messages.append(data);
 
     q->sendMessages(messages);

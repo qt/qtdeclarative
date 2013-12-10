@@ -1,6 +1,5 @@
 HEADERS += \
     $$PWD/qv8debug_p.h \
-    $$PWD/qv8profiler_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qv4domerrors_p.h \
     $$PWD/qv4sqlerrors_p.h \

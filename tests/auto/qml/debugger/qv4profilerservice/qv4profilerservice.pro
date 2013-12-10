@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_qv8profilerservice
+TARGET = tst_qv4profilerservice
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qv8profilerservice.cpp
+SOURCES += tst_qv4profilerservice.cpp
 
 INCLUDEPATH += ../shared
 include(../../../shared/util.pri)

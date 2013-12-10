@@ -49,7 +49,7 @@
 #define STR_PORT_FROM "13774"
 #define STR_PORT_TO "13790"
 
-struct QV8ProfilerData
+struct QV4ProfilerData
 {
     int messageType;
     QString filename;
@@ -62,24 +62,24 @@ struct QV8ProfilerData
     QByteArray toByteArray() const;
 };
 
-class QV8ProfilerClient : public QQmlDebugClient
+class QV4ProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
 
 public:
     enum MessageType {
-        V8Entry,
-        V8Complete,
-        V8SnapshotChunk,
-        V8SnapshotComplete,
-        V8Started,
+        V4Entry,
+        V4Complete,
+        V4SnapshotChunk,
+        V4SnapshotComplete,
+        V4Started,
 
-        V8MaximumMessage
+        V4MaximumMessage
     };
 
     enum ServiceState { NotRunning, Running } serviceState;
 
-    QV8ProfilerClient(QQmlDebugConnection *connection)
+    QV4ProfilerClient(QQmlDebugConnection *connection)
         : QQmlDebugClient(QLatin1String("V8Profiler"), connection)
         , serviceState(NotRunning)
     {
@@ -113,7 +113,7 @@ public:
         sendMessage(message);
     }
 
-    QList<QV8ProfilerData> traceMessages;
+    QList<QV4ProfilerData> traceMessages;
     QList<QByteArray> snapshotMessages;
 
 signals:
@@ -125,12 +125,12 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QV8ProfilerService : public QQmlDataTest
+class tst_QV4ProfilerService : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    tst_QV8ProfilerService()
+    tst_QV4ProfilerService()
         : m_process(0)
         , m_connection(0)
         , m_client(0)
@@ -140,7 +140,7 @@ public:
 private:
     QQmlDebugProcess *m_process;
     QQmlDebugConnection *m_connection;
-    QV8ProfilerClient *m_client;
+    QV4ProfilerClient *m_client;
 
     bool connect(bool block, const QString &testFile, QString *error);
 
@@ -155,7 +155,7 @@ private slots:
     void console();
 };
 
-void QV8ProfilerClient::messageReceived(const QByteArray &message)
+void QV4ProfilerClient::messageReceived(const QByteArray &message)
 {
     QByteArray msg = message;
     QDataStream stream(&msg, QIODevice::ReadOnly);
@@ -164,31 +164,31 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     stream >> messageType;
 
     QVERIFY(messageType >= 0);
-    QVERIFY(messageType < QV8ProfilerClient::V8MaximumMessage);
+    QVERIFY(messageType < QV4ProfilerClient::V4MaximumMessage);
 
     switch (messageType) {
-    case QV8ProfilerClient::V8Entry: {
+    case QV4ProfilerClient::V4Entry: {
         QCOMPARE(serviceState, Running);
-        QV8ProfilerData entry;
+        QV4ProfilerData entry;
         stream >> entry.filename >> entry.functionname >> entry.lineNumber >> entry.totalTime >> entry.selfTime >> entry.treeLevel;
         traceMessages.append(entry);
         break;
     }
-    case QV8ProfilerClient::V8Complete:
+    case QV4ProfilerClient::V4Complete:
         QCOMPARE(serviceState, Running);
         serviceState = NotRunning;
         emit complete();
         break;
-    case QV8ProfilerClient::V8SnapshotChunk: {
+    case QV4ProfilerClient::V4SnapshotChunk: {
         QByteArray json;
         stream >> json;
         snapshotMessages.append(json);
         break;
     }
-    case QV8ProfilerClient::V8SnapshotComplete:
+    case QV4ProfilerClient::V4SnapshotComplete:
         emit snapshot();
         break;
-    case QV8ProfilerClient::V8Started:
+    case QV4ProfilerClient::V4Started:
         QCOMPARE(serviceState, NotRunning);
         serviceState = Running;
         emit started();
@@ -201,7 +201,7 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     QVERIFY(stream.atEnd());
 }
 
-bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
+bool tst_QV4ProfilerService::connect(bool block, const QString &testFile,
                                      QString *error)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml";
@@ -215,7 +215,7 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
     arguments << QQmlDataTest::instance()->testFile(testFile);
 
     m_connection = new QQmlDebugConnection();
-    m_client = new QV8ProfilerClient(m_connection);
+    m_client = new QV4ProfilerClient(m_connection);
 
     m_process = new QQmlDebugProcess(executable);
     m_process->start(QStringList() << arguments);
@@ -232,7 +232,7 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
     return true;
 }
 
-void tst_QV8ProfilerService::cleanup()
+void tst_QV4ProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
         qDebug() << "Process State:" << m_process->state();
@@ -243,7 +243,7 @@ void tst_QV8ProfilerService::cleanup()
     delete m_connection;
 }
 
-void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
+void tst_QV4ProfilerService::blockingConnectWithTraceEnabled()
 {
     QString error;
     if (!connect(true, "test.qml", &error))
@@ -257,7 +257,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
              "No trace received in time.");
 }
 
-void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
+void tst_QV4ProfilerService::blockingConnectWithTraceDisabled()
 {
     QString error;
     if (!connect(true, "test.qml", &error))
@@ -274,7 +274,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
              "No trace received in time.");
 }
 
-void tst_QV8ProfilerService::nonBlockingConnect()
+void tst_QV4ProfilerService::nonBlockingConnect()
 {
     QString error;
     if (!connect(false, "test.qml", &error))
@@ -288,7 +288,7 @@ void tst_QV8ProfilerService::nonBlockingConnect()
              "No trace received in time.");
 }
 
-void tst_QV8ProfilerService::snapshot()
+void tst_QV4ProfilerService::snapshot()
 {
     QString error;
     if (!connect(false, "test.qml", &error))
@@ -301,7 +301,7 @@ void tst_QV8ProfilerService::snapshot()
              "No trace received in time.");
 }
 
-void tst_QV8ProfilerService::profileOnExit()
+void tst_QV4ProfilerService::profileOnExit()
 {
     QString error;
     if (!connect(true, "exit.qml", &error))
@@ -314,7 +314,7 @@ void tst_QV8ProfilerService::profileOnExit()
              "No trace received in time.");
 }
 
-void tst_QV8ProfilerService::console()
+void tst_QV4ProfilerService::console()
 {
     QString error;
     if (!connect(true, "console.qml", &error))
@@ -329,6 +329,6 @@ void tst_QV8ProfilerService::console()
     QVERIFY(!m_client->traceMessages.isEmpty());
 }
 
-QTEST_MAIN(tst_QV8ProfilerService)
+QTEST_MAIN(tst_QV4ProfilerService)
 
-#include "tst_qv8profilerservice.moc"
+#include "tst_qv4profilerservice.moc"

@@ -4,7 +4,7 @@ PUBLICTESTS += \
     qqmlenginedebugservice \
     qqmldebugjs \
     qpacketprotocol \
-#    qv8profilerservice \
+#    qv4profilerservice \
 #    qdebugmessageservice \
     qqmlenginedebuginspectorintegrationtest \
     qqmlinspector \

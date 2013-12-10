@@ -48,7 +48,7 @@
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
 
-#include <private/qv8profilerservice_p.h>
+#include <private/qv4profilerservice_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -1435,7 +1435,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     if (!QQmlDebugService::isDebuggingEnabled()) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
     } else if (QQmlProfilerService::startProfiling()) {
-        QV8ProfilerService::instance()->startProfiling(title);
+        QV4ProfilerService::instance()->startProfiling(title);
 
         logger.debug("Profiling started.");
     } else {
@@ -1460,7 +1460,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
 
     if (QQmlProfilerService::stopProfiling()) {
-        QV8ProfilerService *profiler = QV8ProfilerService::instance();
+        QV4ProfilerService *profiler = QV4ProfilerService::instance();
         profiler->stopProfiling(title);
         QQmlProfilerService::sendProfilingData();
         profiler->sendProfilingData();
