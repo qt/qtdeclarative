@@ -449,7 +449,7 @@ public:
         // dirtyToString()
 
         TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position |
-                                  Size | Window,
+                                  Window,
         ComplexTransformUpdateMask     = Transform | Window,
         ContentUpdateMask       = Size | Content | Smooth | Window | Antialiasing,
         ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Window
