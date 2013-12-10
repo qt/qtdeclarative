@@ -1070,6 +1070,29 @@ QML_DECLARE_TYPE(MyRevisionedSubclass)
 QML_DECLARE_TYPE(MySubclass)
 QML_DECLARE_TYPE(MyReceiversTestObject)
 
+class CustomBinding : public QObject, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+    Q_PROPERTY(QObject* target READ target WRITE setTarget)
+public:
+
+    virtual void classBegin() {}
+    virtual void componentComplete();
+
+    QObject *target() const { return m_target; }
+    void setTarget(QObject *newTarget) { m_target = newTarget; }
+
+    QPointer<QObject> m_target;
+    QByteArray m_bindingData;
+};
+
+class CustomBindingParser : public QQmlCustomParser
+{
+    virtual QByteArray compile(const QList<QQmlCustomParserProperty> &properties);
+    virtual void setCustomData(QObject *object, const QByteArray &data);
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

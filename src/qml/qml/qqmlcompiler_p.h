@@ -62,6 +62,7 @@
 #include "qqmlpropertycache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
+#include <private/qqmlcodegenerator_p.h>
 #include "private/qv4identifier_p.h"
 #include <private/qqmljsastfwd_p.h>
 
@@ -231,14 +232,15 @@ namespace QQmlCompilerTypes {
     struct JSBindingReference : public QQmlPool::Class,
                                 public BindingReference
     {
-        JSBindingReference() : nextReference(0) {}
+        JSBindingReference() : disableLookupAcceleration(false), nextReference(0) {}
 
         QQmlScript::Variant expression;
         QQmlScript::Property *property;
         QQmlScript::Value *value;
 
         int compiledIndex : 16;
-        int customParserBindingsIndex : 16;
+        int customParserBindingsIndex : 15;
+        int disableLookupAcceleration: 1;
 
         BindingContext bindingContext;
 
@@ -319,10 +321,9 @@ namespace QQmlCompilerTypes {
         QList<CompiledMetaMethod> compiledMetaMethods;
         struct PerObjectCompileData
         {
-            QList<QQmlJS::AST::Node*> functionsToCompile;
+            QList<QtQml::CompiledFunctionOrExpression> functionsToCompile;
             QVector<int> runtimeFunctionIndices;
             QVector<CompiledMetaMethod> compiledMetaMethods;
-            QHash<int, QString> expressionNames;
         };
         QHash<QQmlScript::Object *, PerObjectCompileData> jsCompileData;
     };

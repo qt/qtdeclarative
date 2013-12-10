@@ -62,7 +62,6 @@
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
 #include "qqmlabstracturlinterceptor_p.h"
-#include "qqmlcodegenerator_p.h"
 
 #include <QDebug>
 #include <QPointF>
@@ -2707,6 +2706,10 @@ int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, c
     reference->value = 0;
     reference->bindingContext = ctxt;
     reference->bindingContext.owner++;
+    // Unfortunately this is required for example for PropertyChanges where the bindings
+    // will be executed in the dynamic scope of the target, so we can't resolve any lookups
+    // at run-time.
+    reference->disableLookupAcceleration = true;
 
     const int id = output->customParserBindings.count();
     output->customParserBindings.append(0); // Filled in later.
@@ -3684,9 +3687,12 @@ bool QQmlCompiler::completeComponentBuild()
         }
 
         ComponentCompileState::PerObjectCompileData *cd = &compileState->jsCompileData[b->bindingContext.object];
-        cd->functionsToCompile.append(node);
+        QtQml::CompiledFunctionOrExpression f;
+        f.node = node;
+        f.name = binding.property->name().toString().prepend(QStringLiteral("expression for "));
+        f.disableAcceleratedLookups = binding.disableLookupAcceleration;
+        cd->functionsToCompile.append(f);
         binding.compiledIndex = cd->functionsToCompile.count() - 1;
-        cd->expressionNames.insert(binding.compiledIndex, binding.property->name().toString().prepend(QStringLiteral("expression for ")));
 
         if (componentStats && b->value)
             componentStats->componentStat.scriptBindings.append(b->value->location);
@@ -3719,7 +3725,7 @@ bool QQmlCompiler::completeComponentBuild()
 
             jsCodeGen.beginObjectScope(scopeObject->metatype);
 
-            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile, cd->expressionNames);
+            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile);
             QList<QQmlError> errors = jsCodeGen.errors();
             if (!errors.isEmpty()) {
                 exceptions << errors;

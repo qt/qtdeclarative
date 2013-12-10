@@ -166,6 +166,20 @@ struct Pragma
     QV4::CompiledData::Location location;
 };
 
+struct CompiledFunctionOrExpression
+{
+    CompiledFunctionOrExpression()
+        : disableAcceleratedLookups(false)
+    {}
+    CompiledFunctionOrExpression(AST::Node *n)
+        : node(n)
+        , disableAcceleratedLookups(false)
+    {}
+    AST::Node *node; // FunctionDeclaration, Statement or Expression
+    QString name;
+    bool disableAcceleratedLookups;
+};
+
 struct ParsedQML
 {
     ParsedQML(bool debugMode)
@@ -180,7 +194,7 @@ struct ParsedQML
     AST::UiProgram *program;
     int indexOfRootObject;
     QList<QmlObject*> objects;
-    QList<AST::Node*> functions; // FunctionDeclaration, Statement or Expression
+    QList<CompiledFunctionOrExpression> functions;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
     QV4::CompiledData::TypeReferenceMap typeReferences;
@@ -269,7 +283,7 @@ public:
     QList<QV4::CompiledData::Import*> _imports;
     QList<Pragma*> _pragmas;
     QList<QmlObject*> _objects;
-    QList<AST::Node*> _functions;
+    QList<CompiledFunctionOrExpression> _functions;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
@@ -362,7 +376,7 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     void beginObjectScope(QQmlPropertyCache *scopeObject);
 
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
-    QVector<int> generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames);
+    QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
 protected:
     virtual void beginFunctionBodyHook();
@@ -376,6 +390,7 @@ private:
     AST::UiProgram *qmlRoot;
     QQmlTypeNameCache *imports;
 
+    bool _disableAcceleratedLookups;
     ObjectIdMapping _idObjects;
     QQmlPropertyCache *_contextObject;
     QQmlPropertyCache *_scopeObject;

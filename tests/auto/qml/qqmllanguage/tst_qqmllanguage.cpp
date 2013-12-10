@@ -214,6 +214,8 @@ private slots:
     void compositeSingletonSelectors();
     void compositeSingletonRegistered();
 
+    void customParserBindingScopes();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3532,6 +3534,17 @@ void tst_qqmllanguage::compositeSingletonRegistered()
     QVERIFY(o != 0);
 
     verifyCompositeSingletonPropertyValues(o, "value1", 925, "value2", 755);
+}
+
+void tst_qqmllanguage::customParserBindingScopes()
+{
+    QQmlComponent component(&engine, testFile("customParserBindingScopes.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QPointer<QObject> child = qvariant_cast<QObject*>(o->property("child"));
+    QVERIFY(!child.isNull());
+    QCOMPARE(child->property("testProperty").toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
