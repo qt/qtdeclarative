@@ -980,6 +980,9 @@ void QSGThreadedRenderLoop::maybeUpdate(QQuickWindow *window)
  */
 void QSGThreadedRenderLoop::maybeUpdate(Window *w)
 {
+    if (!QCoreApplication::instance())
+        return;
+
     Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || m_locked,
                "QQuickItem::update()",
                "Function can only be called from GUI thread or during QQuickItem::updatePaintNode()");
