@@ -148,6 +148,29 @@ private:
     Q_DECLARE_PRIVATE(QQuickRotation)
 };
 
+class QQuickMatrix4x4Private;
+class Q_AUTOTEST_EXPORT QQuickMatrix4x4 : public QQuickTransform
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY matrixChanged)
+public:
+    QQuickMatrix4x4(QObject *parent = 0);
+    ~QQuickMatrix4x4();
+
+    QMatrix4x4 matrix() const;
+    void setMatrix(const QMatrix4x4& matrix);
+
+    void applyTo(QMatrix4x4 *matrix) const;
+
+Q_SIGNALS:
+    void matrixChanged();
+
+private:
+    Q_DECLARE_PRIVATE(QQuickMatrix4x4)
+};
+
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTranslate)

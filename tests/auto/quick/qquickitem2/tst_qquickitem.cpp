@@ -1972,6 +1972,8 @@ void tst_QQuickItem::transforms_data()
     QTest::addColumn<QTransform>("transform");
     QTest::newRow("translate") << QByteArray("Translate { x: 10; y: 20 }")
         << QTransform(1,0,0,0,1,0,10,20,1);
+    QTest::newRow("matrix4x4") << QByteArray("Matrix4x4 { matrix: Qt.matrix4x4(1,0,0,10, 0,1,0,15, 0,0,1,0, 0,0,0,1) }")
+        << QTransform(1,0,0,0,1,0,10,15,1);
     QTest::newRow("rotation") << QByteArray("Rotation { angle: 90 }")
         << QTransform(0,1,0,-1,0,0,0,0,1);
     QTest::newRow("scale") << QByteArray("Scale { xScale: 1.5; yScale: -2  }")
@@ -1985,7 +1987,7 @@ void tst_QQuickItem::transforms()
     QFETCH(QByteArray, qml);
     QFETCH(QTransform, transform);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0\nItem { transform: "+qml+"}", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.4\nItem { transform: "+qml+"}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(item->itemTransform(0,0), transform);

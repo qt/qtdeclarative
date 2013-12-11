@@ -458,4 +458,79 @@ void QQuickRotation::applyTo(QMatrix4x4 *matrix) const
     matrix->translate(-d->origin);
 }
 
+class QQuickMatrix4x4Private : public QQuickTransformPrivate
+{
+public:
+    QQuickMatrix4x4Private()
+        : matrix() {}
+    QMatrix4x4 matrix;
+};
+
+/*!
+    \qmltype Matrix4x4
+    \instantiates QQuickMatrix4x4
+    \inqmlmodule QtQuick
+    \ingroup qtquick-visual-transforms
+    \brief Provides a way to apply a 4x4 tranformation matrix to an \l Item
+
+    The Matrix4x4 type provides a way to apply a transformation to an
+    \l Item through a 4x4 matrix.
+
+    It allows for a combination of rotation, scale, translatation and shearing
+    by using just one tranformation provided in a 4x4-matrix.
+
+    The following example rotates a Rectangle 45 degress (PI/4):
+
+    \qml
+    Rectangle {
+        width: 100
+        height: 100
+        color: "red"
+
+        transform: Matrix4x4 {
+            property real a: Math.PI / 4
+            matrix: Qt.matrix4x4(Math.cos(a), -Math.sin(a), 0, 0,
+                                 Math.sin(a),  Math.cos(a), 0, 0,
+                                 0,           0,            1, 0,
+                                 0,           0,            0, 1)
+        }
+    }
+    \endqml
+*/
+QQuickMatrix4x4::QQuickMatrix4x4(QObject *parent)
+    : QQuickTransform(*new QQuickMatrix4x4Private, parent)
+{
+}
+
+QQuickMatrix4x4::~QQuickMatrix4x4()
+{
+}
+
+/*!
+    \qmlproperty QMatrix4x4 QtQuick::Matrix4x4::matrix
+
+    4x4-matrix which will be used in the tranformation of an \l Item
+*/
+QMatrix4x4 QQuickMatrix4x4::matrix() const
+{
+    Q_D(const QQuickMatrix4x4);
+    return d->matrix;
+}
+
+void QQuickMatrix4x4::setMatrix(const QMatrix4x4 &matrix)
+{
+    Q_D(QQuickMatrix4x4);
+    if (d->matrix == matrix)
+         return;
+    d->matrix = matrix;
+    update();
+    emit matrixChanged();
+}
+
+void QQuickMatrix4x4::applyTo(QMatrix4x4 *matrix) const
+{
+    Q_D(const QQuickMatrix4x4);
+    *matrix *= d->matrix;
+}
+
 QT_END_NAMESPACE
