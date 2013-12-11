@@ -499,30 +499,54 @@ void tst_qquickbehaviors::multipleChangesToValueType()
 //QTBUG-21549
 void tst_qquickbehaviors::currentValue()
 {
-    QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("qtbug21549.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-    QVERIFY(item);
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("qtbug21549.qml"));
+        QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(item);
 
-    QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
-    QVERIFY(target);
+        QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
+        QVERIFY(target);
 
-    QCOMPARE(target->x(), qreal(0));
+        QCOMPARE(target->x(), qreal(0));
 
-    target->setProperty("x", 50);
-    QCOMPARE(item->property("behaviorCount").toInt(), 1);
-    QCOMPARE(target->x(), qreal(50));
+        target->setProperty("x", 50);
+        QCOMPARE(item->property("behaviorCount").toInt(), 1);
+        QCOMPARE(target->x(), qreal(50));
 
-    target->setProperty("x", 50);
-    QCOMPARE(item->property("behaviorCount").toInt(), 1);
-    QCOMPARE(target->x(), qreal(50));
+        target->setProperty("x", 50);
+        QCOMPARE(item->property("behaviorCount").toInt(), 1);
+        QCOMPARE(target->x(), qreal(50));
 
-    target->setX(100);
-    target->setProperty("x", 100);
-    QCOMPARE(item->property("behaviorCount").toInt(), 1);
-    QCOMPARE(target->x(), qreal(100));
+        target->setX(100);
+        target->setProperty("x", 100);
+        QCOMPARE(item->property("behaviorCount").toInt(), 1);
+        QCOMPARE(target->x(), qreal(100));
 
-    delete item;
+        delete item;
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("qtbug21549-2.qml"));
+        QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(item);
+
+        QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
+        QVERIFY(target);
+
+        QCOMPARE(target->x(), qreal(0));
+
+        target->setProperty("x", 100);
+
+        // the spring animation should smoothly transition to the new value triggered
+        // in the QML (which should be between 50 and 80);
+        QTRY_COMPARE(item->property("animRunning").toBool(), true);
+        QTRY_COMPARE(item->property("animRunning").toBool(), false);
+        QVERIFY(target->x() > qreal(50) && target->x() < qreal(80));
+
+        delete item;
+    }
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

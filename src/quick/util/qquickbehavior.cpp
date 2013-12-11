@@ -185,7 +185,8 @@ void QQuickBehavior::write(const QVariant &value)
         return;
     }
 
-    if (d->animation->isRunning() && value == d->targetValue)
+    bool behaviorActive = d->animation->isRunning();
+    if (behaviorActive && value == d->targetValue)
         return;
 
     d->targetValue = value;
@@ -201,7 +202,10 @@ void QQuickBehavior::write(const QVariant &value)
     // to the item, so we need to read the value after.
     const QVariant &currentValue = d->property.read();
 
-    if (d->targetValue == currentValue) {
+    // Don't unnecessarily wake up the animation system if no real animation
+    // is needed (value has not changed). If the Behavior was already
+    // running, let it continue as normal to ensure correct behavior and state.
+    if (!behaviorActive && d->targetValue == currentValue) {
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
         return;
     }
