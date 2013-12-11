@@ -1794,7 +1794,10 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
         bool notInRevision = false;
         QQmlPropertyData *pd = 0;
         if (!name.isEmpty()) {
-            pd = propertyResolver.property(name, &notInRevision);
+            if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+                pd = propertyResolver.signal(name, &notInRevision);
+            else
+                pd = propertyResolver.property(name, &notInRevision);
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
