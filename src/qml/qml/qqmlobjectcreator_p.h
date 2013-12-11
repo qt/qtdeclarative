@@ -54,25 +54,27 @@ class QQmlAbstractBinding;
 struct QQmlCompilePass
 {
     QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUnit *unit);
+    QQmlCompilePass(const QUrl &url, const QStringList &stringTable);
     QList<QQmlError> errors;
 
+    QString stringAt(int idx) const { return qmlUnit ? qmlUnit->header.stringAt(idx): stringTable.at(idx); }
 protected:
-    QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
     const QUrl url;
     const QV4::CompiledData::QmlUnit *qmlUnit;
+    const QStringList stringTable;
 };
 
 class QQmlPropertyCacheCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
-    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *qmlUnit,
+    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QStringList &stringTable,
                              const QUrl &url, const QQmlImports *imports,
                              QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes);
 
-    bool create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
+    bool create(const QtQml::QmlObject *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
 
 protected:
     QQmlEnginePrivate *enginePrivate;

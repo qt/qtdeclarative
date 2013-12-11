@@ -77,6 +77,14 @@ QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUn
 {
 }
 
+QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QStringList &stringTable)
+    : url(url)
+    , qmlUnit(0)
+    , stringTable(stringTable)
+{
+
+}
+
 void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
@@ -95,32 +103,32 @@ void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, c
 
 static QAtomicInt classIndexCounter(0);
 
-QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit, const QUrl &url, const QQmlImports *imports,
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QStringList &stringTable, const QUrl &url, const QQmlImports *imports,
                                                    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes)
-    : QQmlCompilePass(url, unit)
+    : QQmlCompilePass(url, stringTable)
     , enginePrivate(enginePrivate)
     , imports(imports)
     , resolvedTypes(resolvedTypes)
 {
 }
 
-bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
+bool QQmlPropertyCacheCreator::create(const QtQml::QmlObject *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
 {
     Q_ASSERT(!stringAt(obj->inheritedTypeNameIndex).isEmpty());
 
     QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
     QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
     Q_ASSERT(baseTypeCache);
-    if (obj->nProperties == 0 && obj->nSignals == 0 && obj->nFunctions == 0) {
+    if (obj->properties->count == 0 && obj->qmlSignals->count == 0 && obj->functions->count == 0) {
         *resultCache = baseTypeCache;
         vmeMetaObjectData->clear();
         return true;
     }
 
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate),
-                                                             obj->nProperties,
-                                                             obj->nFunctions + obj->nProperties + obj->nSignals,
-                                                             obj->nSignals + obj->nProperties);
+                                                             obj->properties->count,
+                                                             obj->functions->count + obj->properties->count + obj->qmlSignals->count,
+                                                             obj->qmlSignals->count + obj->properties->count);
     *resultCache = cache;
 
     vmeMetaObjectData->clear();
@@ -177,9 +185,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     int aliasCount = 0;
     int varPropCount = 0;
 
-    const QV4::CompiledData::Property *p = obj->propertyTable();
-    for (quint32 i = 0; i < obj->nProperties; ++i, ++p) {
-
+    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next) {
         if (p->type == QV4::CompiledData::Property::Alias)
             aliasCount++;
         else if (p->type == QV4::CompiledData::Property::Var)
@@ -196,8 +202,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     typedef QQmlVMEMetaData VMD;
 
     QByteArray &dynamicData = *vmeMetaObjectData = QByteArray(sizeof(QQmlVMEMetaData)
-                                                              + obj->nProperties * sizeof(VMD::PropertyData)
-                                                              + obj->nFunctions * sizeof(VMD::MethodData)
+                                                              + obj->properties->count * sizeof(VMD::PropertyData)
+                                                              + obj->functions->count * sizeof(VMD::MethodData)
                                                               + aliasCount * sizeof(VMD::AliasData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
@@ -233,8 +239,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
         if (ii == NSS_Var && varPropCount == 0) continue;
         else if (ii == NSS_Alias && aliasCount == 0) continue;
 
-        const QV4::CompiledData::Property *p = obj->propertyTable();
-        for (quint32 i = 0; i < obj->nProperties; ++i, ++p) {
+        for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next) {
             if ((ii == NSS_Normal && (p->type == QV4::CompiledData::Property::Alias ||
                                       p->type == QV4::CompiledData::Property::Var)) ||
                 ((ii == NSS_Var) && (p->type != QV4::CompiledData::Property::Var)) ||
@@ -252,9 +257,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     }
 
     // Dynamic signals
-    for (uint i = 0; i < obj->nSignals; ++i) {
-        const QV4::CompiledData::Signal *s = obj->signalAt(i);
-        const int paramCount = s->nParameters;
+    for (QtQml::Signal *s = obj->qmlSignals->first; s; s = s->next) {
+        const int paramCount = s->parameters->count;
 
         QList<QByteArray> names;
         QVarLengthArray<int, 10> paramTypes(paramCount?(paramCount + 1):0);
@@ -262,8 +266,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
         if (paramCount) {
             paramTypes[0] = paramCount;
 
-            for (int i = 0; i < paramCount; ++i) {
-                const QV4::CompiledData::Parameter *param = s->parameterAt(i);
+            QtQml::SignalParameter *param = s->parameters->first;
+            for (int i = 0; i < paramCount; ++i, param = param->next) {
                 names.append(stringAt(param->nameIndex).toUtf8());
                 if (param->type < builtinTypeCount) {
                     // built-in type
@@ -311,27 +315,26 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
 
 
     // Dynamic slots
-    const quint32 *functionIndex = obj->functionOffsetTable();
-    for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIndex) {
-        const QV4::CompiledData::Function *s = qmlUnit->header.functionAt(*functionIndex);
-        int paramCount = s->nFormals;
+    for (QtQml::Function *s = obj->functions->first; s; s = s->next) {
+        AST::FunctionDeclaration *astFunction = s->functionDeclaration;
 
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
 
-        if (paramCount)
+        if (astFunction->formals)
             flags |= QQmlPropertyData::HasArguments;
 
-        QString slotName = stringAt(s->nameIndex);
+        QString slotName = astFunction->name.toString();
         if (seenSignals.contains(slotName))
             COMPILE_EXCEPTION(s, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
-        const quint32 *formalsIndices = s->formalsTable();
         QList<QByteArray> parameterNames;
-        parameterNames.reserve(paramCount);
-        for (int i = 0; i < paramCount; ++i)
-            parameterNames << stringAt(formalsIndices[i]).toUtf8();
+        AST::FormalParameterList *param = astFunction->formals;
+        while (param) {
+            parameterNames << param->name.toUtf8();
+            param = param->next;
+        }
 
         cache->appendMethod(slotName, flags, effectiveMethodIndex++, parameterNames);
     }
@@ -339,8 +342,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
 
     // Dynamic properties (except var and aliases)
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
-    /* const QV4::CompiledData::Property* */ p = obj->propertyTable();
-    for (quint32 i = 0; i < obj->nProperties; ++i, ++p) {
+    int propertyIdx = 0;
+    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next, ++propertyIdx) {
 
         if (p->type == QV4::CompiledData::Property::Alias ||
             p->type == QV4::CompiledData::Property::Var)
@@ -403,7 +406,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
 
 
         QString propertyName = stringAt(p->nameIndex);
-        if (i == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
+        if (propertyIdx == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
         cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                               propertyType, effectiveSignalIndex);
 
@@ -415,8 +418,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     }
 
     // Now do var properties
-    /* const QV4::CompiledData::Property* */ p = obj->propertyTable();
-    for (quint32 i = 0; i < obj->nProperties; ++i, ++p) {
+    propertyIdx = 0;
+    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next, ++propertyIdx) {
 
         if (p->type != QV4::CompiledData::Property::Var)
             continue;
@@ -431,7 +434,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
         ((QQmlVMEMetaData *)dynamicData.data())->varPropertyCount++;
 
         QString propertyName = stringAt(p->nameIndex);
-        if (i == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
+        if (propertyIdx == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
         cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                               QMetaType::QVariant, effectiveSignalIndex);
 
@@ -442,12 +445,17 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     ((QQmlVMEMetaData *)dynamicData.data())->aliasCount = aliasCount;
 
     // Dynamic slot data - comes after the property data
-    /*const quint32* */functionIndex = obj->functionOffsetTable();
-    for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIndex) {
-        const QV4::CompiledData::Function *s = qmlUnit->header.functionAt(*functionIndex);
+    for (QtQml::Function *s = obj->functions->first; s; s = s->next) {
+        AST::FunctionDeclaration *astFunction = s->functionDeclaration;
+        int formalsCount = 0;
+        AST::FormalParameterList *param = astFunction->formals;
+        while (param) {
+            formalsCount++;
+            param = param->next;
+        }
 
         VMD::MethodData methodData = { /* runtimeFunctionIndex*/ 0, // ###
-                                       int(s->nFormals),
+                                       formalsCount,
                                        /* s->location.start.line */0 }; // ###
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();

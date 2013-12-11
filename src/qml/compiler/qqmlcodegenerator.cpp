@@ -736,6 +736,10 @@ bool QQmlCodeGenerator::visit(AST::UiSourceElement *node)
     if (AST::FunctionDeclaration *funDecl = AST::cast<AST::FunctionDeclaration *>(node->sourceElement)) {
         _functions << funDecl;
         Function *f = New<Function>();
+        f->functionDeclaration = funDecl;
+        AST::SourceLocation loc = funDecl->firstSourceLocation();
+        f->location.line = loc.startLine;
+        f->location.column = loc.startColumn;
         f->index = _functions.size() - 1;
         _object->functions->append(f);
     } else {
@@ -1616,14 +1620,16 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlEnginePrivate *enginePrivate,
 
 bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations()
 {
-    foreach (QmlObject *obj, parsedQML->objects) {
+    for (int objectIndex = 0; objectIndex < parsedQML->objects.count(); ++objectIndex) {
+        QmlObject * const obj = parsedQML->objects.at(objectIndex);
         QString elementName = stringAt(obj->inheritedTypeNameIndex);
         if (elementName.isEmpty())
             continue;
         QQmlCompiledData::TypeReference &tr = unit->resolvedTypes[obj->inheritedTypeNameIndex];
         if (tr.type && tr.type->customParser())
             continue;
-        QQmlPropertyCache *cache = tr.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        QQmlPropertyCache *cache = unit->propertyCaches.value(objectIndex);
+        Q_ASSERT(cache);
         if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
             return false;
     }

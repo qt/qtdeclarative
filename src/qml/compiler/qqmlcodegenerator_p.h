@@ -135,6 +135,8 @@ struct Binding : public QV4::CompiledData::Binding
 
 struct Function
 {
+    AST::FunctionDeclaration *functionDeclaration;
+    QV4::CompiledData::Location location;
     int index; // index in parsedQML::functions
     Function *next;
 };

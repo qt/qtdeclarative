@@ -2338,6 +2338,46 @@ void QQmlTypeData::compile()
             m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
         }
 
+        // Build property caches and VME meta object data
+
+        const int objectCount = parsedQML->objects.count();
+        m_compiledData->datas.reserve(objectCount);
+        m_compiledData->propertyCaches.reserve(objectCount);
+
+        QQmlPropertyCacheCreator propertyCacheBuilder(enginePrivate,
+                                                      parsedQML->jsGenerator.strings, m_compiledData->url,
+                                                      &m_imports, &m_compiledData->resolvedTypes);
+
+        for (int i = 0; i < objectCount; ++i) {
+            const QtQml::QmlObject *obj = parsedQML->objects.at(i);
+
+            QByteArray vmeMetaObjectData;
+            QQmlPropertyCache *propertyCache = 0;
+
+            // If the object has no type, then it's probably a nested object definition as part
+            // of a group property.
+            const bool objectHasType = !propertyCacheBuilder.stringAt(obj->inheritedTypeNameIndex).isEmpty();
+            if (objectHasType) {
+                if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
+                    setError(propertyCacheBuilder.errors);
+                    m_compiledData->release();
+                    m_compiledData = 0;
+                    return;
+                }
+            }
+
+            m_compiledData->datas << vmeMetaObjectData;
+            if (propertyCache)
+                propertyCache->addref();
+            m_compiledData->propertyCaches << propertyCache;
+
+            if (i == parsedQML->indexOfRootObject) {
+                Q_ASSERT(propertyCache);
+                m_compiledData->rootPropertyCache = propertyCache;
+                propertyCache->addref();
+            }
+        }
+
         {
             SignalHandlerConverter converter(QQmlEnginePrivate::get(engine),
                                              parsedQML.data(),
@@ -2399,46 +2439,9 @@ void QQmlTypeData::compile()
 
         QList<QQmlError> errors;
 
-        // Build property caches and VME meta object data
-
-        m_compiledData->datas.reserve(qmlUnit->nObjects);
-        m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
-
-        QQmlPropertyCacheCreator propertyCacheBuilder(enginePrivate,
-                                                      qmlUnit, m_compiledData->url,
-                                                      &m_imports, &m_compiledData->resolvedTypes);
-
-        for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
-            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
-
-            QByteArray vmeMetaObjectData;
-            QQmlPropertyCache *propertyCache = 0;
-
-            // If the object has no type, then it's probably a nested object definition as part
-            // of a group property.
-            const bool objectHasType = !parsedQML->jsGenerator.strings.at(obj->inheritedTypeNameIndex).isEmpty();
-            if (objectHasType) {
-                if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
-                    errors << propertyCacheBuilder.errors;
-                    break;
-                }
-            }
-
-            m_compiledData->datas << vmeMetaObjectData;
-            if (propertyCache)
-                propertyCache->addref();
-            m_compiledData->propertyCaches << propertyCache;
-
-            if (i == qmlUnit->indexOfRootObject) {
-                Q_ASSERT(propertyCache);
-                m_compiledData->rootPropertyCache = propertyCache;
-                propertyCache->addref();
-            }
-        }
-
         // Resolve component boundaries and aliases
 
-        if (errors.isEmpty()) {
+        {
             // Scan for components, determine their scopes and resolve aliases within the scope.
             QQmlComponentAndAliasResolver resolver(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes, m_compiledData->propertyCaches,
                                                    &m_compiledData->datas, &m_compiledData->objectIndexToIdForRoot, &m_compiledData->objectIndexToIdPerComponent);
