@@ -62,7 +62,9 @@ QQuickAbstractDialog::QQuickAbstractDialog(QObject *parent)
     , m_contentItem(0)
     , m_windowDecoration(0)
     , m_hasNativeWindows(QGuiApplicationPrivate::platformIntegration()->
-         hasCapability(QPlatformIntegration::MultipleWindows))
+        hasCapability(QPlatformIntegration::MultipleWindows) &&
+        QGuiApplicationPrivate::platformIntegration()->
+        hasCapability(QPlatformIntegration::WindowManagement))
     , m_hasAspiredPosition(false)
 {
 }
