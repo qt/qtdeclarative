@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtTest 1.0
+import QtQuick.Window 2.1
 
 TestCase {
   id:testCase
@@ -10,10 +11,16 @@ TestCase {
   function cleanupTestCase() {
     wait(100) //wait for a short while to make sure no leaked textures
   }
+  Window {
+    id: win
+    visible: true
+  }
+
   function testData(type) {
     if (type === "2d")
       return [
              { tag:"image threaded", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}},
+             { tag:"image canvas invisible", properties:{visible: false, width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}},
 //             { tag:"image cooperative", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Cooperative}},
              { tag:"image immediate", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Immediate}},
 //             { tag:"fbo cooperative", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Cooperative}},
@@ -24,7 +31,7 @@ TestCase {
   }
 
   function createCanvasObject(data) {
-    return component.createObject(testCase, data.properties);
+    return component.createObject(win, data.properties);
   }
 
   function comparePixel(ctx,x,y,r,g,b,a, d)

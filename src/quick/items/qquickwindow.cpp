@@ -257,8 +257,10 @@ void QQuickWindowPrivate::polishItems()
 
         for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
             QQuickItem *item = *it;
-            QQuickItemPrivate::get(item)->polishScheduled = false;
-            item->updatePolish();
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->polishScheduled = false;
+            if (item->isVisible() || (itemPrivate->extra.isAllocated() && itemPrivate->extra->effectRefCount>0))
+                item->updatePolish();
         }
     }
 
