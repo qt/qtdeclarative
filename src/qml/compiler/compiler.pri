@@ -15,7 +15,8 @@ HEADERS += \
     $$PWD/qv4ssa_p.h \
     $$PWD/qv4regalloc_p.h \
     $$PWD/qqmlcodegenerator_p.h \
-    $$PWD/qv4isel_masm_p.h
+    $$PWD/qv4isel_masm_p.h \
+    $$PWD/qqmltypecompiler_p.h
 
 SOURCES += \
     $$PWD/qv4compileddata.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
     $$PWD/qv4ssa.cpp \
     $$PWD/qv4regalloc.cpp \
     $$PWD/qqmlcodegenerator.cpp \
-    $$PWD/qv4isel_masm.cpp
+    $$PWD/qv4isel_masm.cpp \
+    $$PWD/qqmltypecompiler.cpp
 
 include(../../3rdparty/masm/masm.pri)

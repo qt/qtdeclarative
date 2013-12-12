@@ -425,7 +425,12 @@ public:
 
     const QQmlScript::Parser &parser() const;
 
+    // old compiler:
     const QList<TypeReference> &resolvedTypes() const;
+    // new compiler:
+    const QHash<int, TypeReference> &resolvedTypeRefs() const { return m_resolvedTypes; }
+    // ---
+
     const QList<ScriptReference> &resolvedScripts() const;
     const QSet<QString> &namespaces() const;
     const QList<TypeReference> &compositeSingletons() const;
