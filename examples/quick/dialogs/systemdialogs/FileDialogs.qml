@@ -173,7 +173,7 @@ Rectangle {
                 text: "go to /tmp"
                 anchors.verticalCenter: parent.verticalCenter
                 // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
-                onClicked: fileDialog.folder = "/tmp" // file:///tmp would also be OK
+                onClicked: fileDialog.folder = (Qt.platform.os === "windows" ? "/c:/temp" : "/tmp")
             }
         }
     }
