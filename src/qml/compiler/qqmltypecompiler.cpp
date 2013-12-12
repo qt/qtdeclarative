@@ -151,6 +151,18 @@ bool QQmlTypeCompiler::compile()
         compiledData->scripts << scriptData;
     }
 
+    // Resolve component boundaries and aliases
+
+    {
+        // Scan for components, determine their scopes and resolve aliases within the scope.
+        QQmlComponentAndAliasResolver resolver(compiledData->url, parsedQML->jsGenerator.strings, parsedQML->objects, parsedQML->indexOfRootObject, compiledData->resolvedTypes, compiledData->propertyCaches,
+                                               &compiledData->datas, &compiledData->objectIndexToIdForRoot, &compiledData->objectIndexToIdPerComponent);
+        if (!resolver.resolve()) {
+            errors << resolver.errors;
+            return false;
+        }
+    }
+
     // Compile JS binding expressions and signal handlers
 
     JSCodeGen jsCodeGen(typeData->finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, compiledData->importCache);
@@ -177,18 +189,6 @@ bool QQmlTypeCompiler::compile()
     if (compiledData->compilationUnit)
         compiledData->compilationUnit->ref();
     compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
-
-    // Resolve component boundaries and aliases
-
-    {
-        // Scan for components, determine their scopes and resolve aliases within the scope.
-        QQmlComponentAndAliasResolver resolver(compiledData->url, compiledData->qmlUnit, compiledData->resolvedTypes, compiledData->propertyCaches,
-                                               &compiledData->datas, &compiledData->objectIndexToIdForRoot, &compiledData->objectIndexToIdPerComponent);
-        if (!resolver.resolve()) {
-            errors << resolver.errors;
-            return false;
-        }
-    }
 
     // Add to type registry of composites
     if (compiledData->isCompositeType())

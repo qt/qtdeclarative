@@ -57,12 +57,12 @@ struct QQmlCompilePass
     QQmlCompilePass(const QUrl &url, const QStringList &stringTable);
     QList<QQmlError> errors;
 
-    QString stringAt(int idx) const { return qmlUnit ? qmlUnit->header.stringAt(idx): stringTable.at(idx); }
+    QString stringAt(int idx) const { return jsUnit ? jsUnit->stringAt(idx): stringTable.at(idx); }
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
     const QUrl url;
-    const QV4::CompiledData::QmlUnit *qmlUnit;
+    const QV4::CompiledData::Unit *jsUnit;
     const QStringList stringTable;
 };
 
@@ -86,12 +86,14 @@ class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
 public:
-    QQmlComponentAndAliasResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
-                                   const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                   const QList<QQmlPropertyCache *> &propertyCaches,
-                                   QList<QByteArray> *vmeMetaObjectData,
-                                   QHash<int, int> *objectIndexToIdForRoot,
-                                   QHash<int, QHash<int, int> > *objectIndexToIdPerComponent);
+    QQmlComponentAndAliasResolver(const QUrl &url, const QStringList &stringTable,
+                                  const QList<QtQml::QmlObject*> &qmlObjects,
+                                  int indexOfRootObject,
+                                  const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                                  const QList<QQmlPropertyCache *> &propertyCaches,
+                                  QList<QByteArray> *vmeMetaObjectData,
+                                  QHash<int, int> *objectIndexToIdForRoot,
+                                  QHash<int, QHash<int, int> > *objectIndexToIdPerComponent);
 
     bool resolve();
 
@@ -101,6 +103,9 @@ protected:
 
     bool isComponentType(int typeNameIndex) const
     { return resolvedTypes.value(typeNameIndex).type == 0; }
+
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const int indexOfRootObject;
 
     // indices of objects that are of type QQmlComponent
     QVector<int> componentBoundaries;
@@ -134,6 +139,7 @@ private:
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
+    const QV4::CompiledData::QmlUnit *qmlUnit;
     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
     const QList<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
@@ -164,6 +170,7 @@ private:
     void setupFunctions();
 
     QQmlEngine *engine;
+    const QV4::CompiledData::QmlUnit *qmlUnit;
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *parentContext;
     QQmlContextData *context;

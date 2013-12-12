@@ -73,13 +73,13 @@ struct ActiveOCRestorer
 
 QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUnit *unit)
     : url(url)
-    , qmlUnit(unit)
+    , jsUnit(&unit->header)
 {
 }
 
 QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QStringList &stringTable)
     : url(url)
-    , qmlUnit(0)
+    , jsUnit(0)
     , stringTable(stringTable)
 {
 
@@ -480,6 +480,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     : QQmlCompilePass(compiledData->url, compiledData->qmlUnit)
     , componentAttached(0)
     , engine(parentContext->engine)
+    , qmlUnit(compiledData->qmlUnit)
     , jsUnit(compiledData->compilationUnit)
     , parentContext(parentContext)
     , context(0)
@@ -1468,12 +1469,14 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 }
 
 
-QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(const QUrl &url, const QStringList &stringTable, const QList<QmlObject *> &qmlObjects, int indexOfRootObject,
                                                                const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
                                                                const QList<QQmlPropertyCache *> &propertyCaches, QList<QByteArray> *vmeMetaObjectData,
                                                                QHash<int, int> *objectIndexToIdForRoot,
                                                                QHash<int, QHash<int, int> > *objectIndexToIdPerComponent)
-    : QQmlCompilePass(url, qmlUnit)
+    : QQmlCompilePass(url, stringTable)
+    , qmlObjects(qmlObjects)
+    , indexOfRootObject(indexOfRootObject)
     , _componentIndex(-1)
     , _objectIndexToIdInScope(0)
     , resolvedTypes(resolvedTypes)
@@ -1494,8 +1497,8 @@ bool QQmlComponentAndAliasResolver::resolve()
     // when someProperty _is_ a QQmlComponent. In that case the Item {}
     // should be implicitly surrounded by Component {}
 
-    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+    for (int i = 0; i < qmlObjects.count(); ++i) {
+        const QtQml::QmlObject *obj = qmlObjects.at(i);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
 
@@ -1507,18 +1510,18 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         componentRoots.append(i);
 
-        if (obj->nFunctions > 0)
+        if (obj->functions->count > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
-        if (obj->nProperties > 0)
+        if (obj->properties->count > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new properties."));
-        if (obj->nSignals > 0)
+        if (obj->qmlSignals->count > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new signals."));
 
-        if (obj->nBindings == 0)
+        if (obj->bindings->count == 0)
             COMPILE_EXCEPTION(obj, tr("Cannot create empty component specification"));
 
-        const QV4::CompiledData::Binding *rootBinding = obj->bindingTable();
-        if (obj->nBindings > 1 || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
+        const QtQml::Binding *rootBinding = obj->bindings->first;
+        if (rootBinding->next || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
             COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
 
         componentBoundaries.append(rootBinding->value.objectIndex);
@@ -1527,8 +1530,8 @@ bool QQmlComponentAndAliasResolver::resolve()
     std::sort(componentBoundaries.begin(), componentBoundaries.end());
 
     for (int i = 0; i < componentRoots.count(); ++i) {
-        const QV4::CompiledData::Object *component = qmlUnit->objectAt(componentRoots.at(i));
-        const QV4::CompiledData::Binding *rootBinding = component->bindingTable();
+        const QtQml::QmlObject *component  = qmlObjects.at(componentRoots.at(i));
+        const QtQml::Binding *rootBinding = component->bindings->first;
 
         _componentIndex = i;
         _idToObjectIndex.clear();
@@ -1550,7 +1553,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     _objectIndexToIdInScope = objectIndexToIdForRoot;
     _objectsWithAliases.clear();
 
-    collectIdsAndAliases(qmlUnit->indexOfRootObject);
+    collectIdsAndAliases(indexOfRootObject);
 
     resolveAliases();
 
@@ -1559,7 +1562,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
 bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 {
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
 
     QString id = stringAt(obj->idIndex);
     if (!id.isEmpty()) {
@@ -1571,15 +1574,14 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
         _objectIndexToIdInScope->insert(objectIndex, _objectIndexToIdInScope->count());
     }
 
-    const QV4::CompiledData::Property *property = obj->propertyTable();
-    for (quint32 i = 0; i < obj->nProperties; ++i, ++property)
+    for (QtQml::QmlProperty *property = obj->properties->first; property; property = property->next) {
         if (property->type == QV4::CompiledData::Property::Alias) {
             _objectsWithAliases.append(objectIndex);
             break;
         }
+    }
 
-    const QV4::CompiledData::Binding *binding = obj->bindingTable();
-    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+    for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
             && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
             && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
@@ -1599,7 +1601,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 bool QQmlComponentAndAliasResolver::resolveAliases()
 {
     foreach (int objectIndex, _objectsWithAliases) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+        const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
 
         QQmlPropertyCache *propertyCache = propertyCaches.value(objectIndex);
         Q_ASSERT(propertyCache);
@@ -1608,8 +1610,8 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
         int effectiveAliasIndex = 0;
 
-        const QV4::CompiledData::Property *p = obj->propertyTable();
-        for (quint32 propertyIndex = 0; propertyIndex < obj->nProperties; ++propertyIndex, ++p) {
+        const QtQml::QmlProperty *p = obj->properties->first;
+        for (int propertyIndex = 0; propertyIndex < obj->properties->count; ++propertyIndex, p = p->next) {
             if (p->type != QV4::CompiledData::Property::Alias)
                 continue;
 
@@ -1645,7 +1647,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             quint32 propertyFlags = QQmlPropertyData::IsAlias;
 
             if (property.isEmpty()) {
-                const QV4::CompiledData::Object *targetObject = qmlUnit->objectAt(targetObjectIndex);
+                const QtQml::QmlObject *targetObject = qmlObjects.at(targetObjectIndex);
                 QQmlCompiledData::TypeReference typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex);
 
                 if (typeRef.type)
@@ -1748,6 +1750,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::Compile
                                              const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent,
                                              QHash<int, QByteArray> *customParserData)
     : QQmlCompilePass(url, qmlUnit)
+    , qmlUnit(qmlUnit)
     , resolvedTypes(resolvedTypes)
     , propertyCaches(propertyCaches)
     , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
