@@ -47,7 +47,7 @@ Item {
     id: root
     width: 320
     height: 480
-    property var gameState: Logic.newGameState(canvas);
+    property var gameState
     property bool passedSplash: false
 
     Image {
@@ -230,4 +230,6 @@ Item {
     transitions: Transition {
         NumberAnimation { properties: "x,y"; duration: 1200; easing.type: Easing.OutQuad }
     }
+
+    Component.onCompleted: gameState = Logic.newGameState(canvas);
 }

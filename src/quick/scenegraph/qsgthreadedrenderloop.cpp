@@ -48,6 +48,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
+#include <QtGui/QOffscreenSurface>
 
 #include <QtQuick/QQuickWindow>
 #include <private/qquickwindow_p.h>
@@ -205,12 +206,14 @@ public:
 class WMTryReleaseEvent : public WMWindowEvent
 {
 public:
-    WMTryReleaseEvent(QQuickWindow *win, bool destroy)
+    WMTryReleaseEvent(QQuickWindow *win, bool destroy, QOffscreenSurface *fallback)
         : WMWindowEvent(win, WM_TryRelease)
         , inDestructor(destroy)
+        , fallbackSurface(fallback)
     {}
 
     bool inDestructor;
+    QOffscreenSurface *fallbackSurface;
 };
 
 class WMExposeEvent : public WMWindowEvent
@@ -295,7 +298,7 @@ public:
         delete sgrc;
     }
 
-    void invalidateOpenGL(QQuickWindow *window, bool inDestructor);
+    void invalidateOpenGL(QQuickWindow *window, bool inDestructor, QOffscreenSurface *backupSurface);
     void initializeOpenGL();
 
     bool event(QEvent *);
@@ -362,17 +365,9 @@ bool QSGRenderThread::event(QEvent *e)
     case WM_Expose: {
         QSG_RT_DEBUG("WM_Expose");
         WMExposeEvent *se = static_cast<WMExposeEvent *>(e);
-
-        pendingUpdate |= RepaintRequest;
-
         Q_ASSERT(!window || window == se->window);
-
+        pendingUpdate |= RepaintRequest;
         windowSize = se->size;
-        if (window) {
-            QSG_RT_DEBUG(" - window already added...");
-            return true;
-        }
-
         window = se->window;
         return true; }
 
@@ -383,7 +378,7 @@ bool QSGRenderThread::event(QEvent *e)
 
         mutex.lock();
         if (window) {
-            QSG_RT_DEBUG(" - removed one...");
+            QSG_RT_DEBUG(" - removed window...");
             window = 0;
         }
         waitCondition.wakeOne();
@@ -406,7 +401,7 @@ bool QSGRenderThread::event(QEvent *e)
         WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
         if (!window || wme->inDestructor) {
             QSG_RT_DEBUG(" - setting exit flag and invalidating GL");
-            invalidateOpenGL(wme->window, wme->inDestructor);
+            invalidateOpenGL(wme->window, wme->inDestructor, wme->fallbackSurface);
             active = gl;
             if (sleeping)
                 stopEventProcessing = true;
@@ -455,7 +450,7 @@ bool QSGRenderThread::event(QEvent *e)
     return QThread::event(e);
 }
 
-void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor)
+void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, QOffscreenSurface *fallback)
 {
     QSG_RT_DEBUG("invalidateOpenGL()");
 
@@ -471,7 +466,13 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor)
     bool wipeSG = inDestructor || !window->isPersistentSceneGraph();
     bool wipeGL = inDestructor || (wipeSG && !window->isPersistentOpenGLContext());
 
-    gl->makeCurrent(window);
+    bool current = gl->makeCurrent(fallback ? static_cast<QSurface *>(fallback) : static_cast<QSurface *>(window));
+    if (!current) {
+#ifndef QT_NO_DEBUG
+        qWarning() << "Scene Graph failed to acquire GL context during cleanup";
+#endif
+        return;
+    }
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {
@@ -479,6 +480,7 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor)
         dd->cleanupNodesOnShutdown();
     } else {
         QSG_RT_DEBUG(" - persistent SG, avoiding cleanup");
+        gl->doneCurrent();
         return;
     }
 
@@ -512,7 +514,6 @@ void QSGRenderThread::sync()
     if (windowSize.width() > 0 && windowSize.height() > 0)
         current = gl->makeCurrent(window);
     if (current) {
-        gl->makeCurrent(window);
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
         d->syncSceneGraph();
@@ -530,7 +531,6 @@ void QSGRenderThread::sync()
         QSG_RT_DEBUG(" - window has bad size, waiting...");
     }
 
-    QSG_RT_DEBUG(" - window has bad size, waiting...");
     waitCondition.wakeOne();
     mutex.unlock();
 }
@@ -1041,9 +1041,26 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
 
     w->thread->mutex.lock();
     if (w->thread->isRunning() && w->thread->active) {
+
+        // The platform window might have been destroyed before
+        // hide/release/windowDestroyed is called, so we need to have a
+        // fallback surface to perform the cleanup of the scene graph
+        // and the OpenGL resources.
+        // QOffscreenSurface must be created on the GUI thread, so we
+        // create it here and pass it on to QSGRenderThread::invalidateGL()
+        QOffscreenSurface *fallback = 0;
+        if (!window->handle()) {
+            QSG_GUI_DEBUG(w->window, " - using fallback surface");
+            fallback = new QOffscreenSurface();
+            fallback->setFormat(window->requestedFormat());
+            fallback->create();
+        }
+
         QSG_GUI_DEBUG(w->window, " - posting release request to render thread");
-        w->thread->postEvent(new WMTryReleaseEvent(window, inDestructor));
+        w->thread->postEvent(new WMTryReleaseEvent(window, inDestructor, fallback));
         w->thread->waitCondition.wait(&w->thread->mutex);
+
+        delete fallback;
     }
     w->thread->mutex.unlock();
 }

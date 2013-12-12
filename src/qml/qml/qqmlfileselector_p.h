@@ -54,8 +54,8 @@
 //
 
 #include "qqmlfileselector.h"
-#include "qqmlabstracturlinterceptor_p.h"
 #include <QSet>
+#include <QQmlAbstractUrlInterceptor>
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
 

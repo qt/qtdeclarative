@@ -124,6 +124,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void markDirtyTexture();
+    void invalidated();
 
 private:
     void grab();

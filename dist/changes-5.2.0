@@ -58,6 +58,14 @@ Third party components
    currentIndex was set to 0 regardless of the actual number of rows in the model
    when the model property was changed after the view's initialization.
 
+ - QtQuick.Window will now correctly use Window.AutomaticVisibility by
+   default, analogous to QWindow::show(), resulting in eg. maximized
+   windows by default on iOS/Android.
+
+ - QtQuick.Window will now warn when setting conflicting visible and visibility
+   properties, as this use-case is broken with the current QWindow implementation
+   of the two properties.
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************

@@ -1033,17 +1033,6 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     if (localFile.isEmpty()) 
         return 0;
 
-    // check for "retina" high-dpi and use @2x file if it exixts
-    if (qApp->devicePixelRatio() > 1) {
-        const int dotIndex = localFile.lastIndexOf(QLatin1Char('.'));
-        if (dotIndex != -1) {
-            QString retinaFile = localFile;
-            retinaFile.insert(dotIndex, QStringLiteral("@2x"));
-            if (QFile(retinaFile).exists())
-                localFile = retinaFile;
-        }
-    }
-
     QFile f(localFile);
     QSize readSize;
     QString errorString;

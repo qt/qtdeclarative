@@ -82,7 +82,7 @@ public:
         if (!m_complete)
             m_visibility = visibility;
         else
-            QQuickWindow::setVisibility(m_visibility);
+            QQuickWindow::setVisibility(visibility);
     }
 
 Q_SIGNALS:
