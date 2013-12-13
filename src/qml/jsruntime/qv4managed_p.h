@@ -53,8 +53,8 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 #define Q_MANAGED_CHECK \
-    template <typename T> inline void qt_check_for_QMANAGED_macro(const T &_q_argument) const \
-    { int i = qYouForgotTheQ_MANAGED_Macro(this, &_q_argument); i = i + 1; }
+    template <typename T> inline void qt_check_for_QMANAGED_macro(const T *_q_argument) const \
+    { int i = qYouForgotTheQ_MANAGED_Macro(this, _q_argument); i = i + 1; }
 
 template <typename T>
 inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
@@ -263,7 +263,7 @@ public:
         if (!this || !internalClass)
             return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
-        reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
+        static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
         return internalClass->vtable == &T::static_vtbl ? static_cast<T *>(this) : 0;
     }
@@ -273,7 +273,7 @@ public:
         if (!this)
             return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
-        reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(const_cast<Managed *>(this)));
+        static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
         return internalClass->vtable == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
