@@ -109,15 +109,18 @@ struct Q_QML_EXPORT Object: Managed {
     uint memberDataAlloc;
     Property *memberData;
 
-    union {
-        uint arrayFreeList;
-        uint arrayOffset;
+    struct ArrayData {
+        union {
+            uint freeList;
+            uint offset;
+        };
+        uint length;
+        uint alloc;
+        PropertyAttributes *attributes;
+        Property *data;
+        SparseArray *sparse;
     };
-    uint arrayDataLen;
-    uint arrayAlloc;
-    PropertyAttributes *arrayAttributes;
-    Property *arrayData;
-    SparseArray *sparseArray;
+    ArrayData arrayData;
 
     enum {
         InlinePropertySize = 4
@@ -177,42 +180,42 @@ struct Q_QML_EXPORT Object: Managed {
     // Array handling
 
     uint allocArrayValue() {
-        uint idx = arrayFreeList;
-        if (arrayAlloc <= arrayFreeList)
-            arrayReserve(arrayAlloc + 1);
-        arrayFreeList = arrayData[arrayFreeList].value.uint_32;
-        if (arrayAttributes)
-            arrayAttributes[idx].setType(PropertyAttributes::Data);
+        uint idx = arrayData.freeList;
+        if (arrayData.alloc <= arrayData.freeList)
+            arrayReserve(arrayData.alloc + 1);
+        arrayData.freeList = arrayData.data[arrayData.freeList].value.uint_32;
+        if (arrayData.attributes)
+            arrayData.attributes[idx].setType(PropertyAttributes::Data);
         return idx;
     }
 
     uint allocArrayValue(const ValueRef v) {
         uint idx = allocArrayValue();
-        Property *pd = &arrayData[idx];
+        Property *pd = &arrayData.data[idx];
         pd->value = *v;
         return idx;
     }
     void freeArrayValue(int idx) {
-        Property &pd = arrayData[idx];
+        Property &pd = arrayData.data[idx];
         pd.value.tag = Value::Empty_Type;
-        pd.value.int_32 = arrayFreeList;
-        arrayFreeList = idx;
-        if (arrayAttributes)
-            arrayAttributes[idx].clear();
+        pd.value.int_32 = arrayData.freeList;
+        arrayData.freeList = idx;
+        if (arrayData.attributes)
+            arrayData.attributes[idx].clear();
     }
 
     void getArrayHeadRoom() {
-        assert(!sparseArray && !arrayOffset);
-        arrayOffset = qMax(arrayDataLen >> 2, (uint)16);
-        Property *newArray = new Property[arrayOffset + arrayAlloc];
-        memcpy(newArray + arrayOffset, arrayData, arrayDataLen*sizeof(Property));
-        delete [] arrayData;
-        arrayData = newArray + arrayOffset;
-        if (arrayAttributes) {
-            PropertyAttributes *newAttrs = new PropertyAttributes[arrayOffset + arrayAlloc];
-            memcpy(newAttrs + arrayOffset, arrayAttributes, arrayDataLen*sizeof(PropertyAttributes));
-            delete [] arrayAttributes;
-            arrayAttributes = newAttrs + arrayOffset;
+        assert(!arrayData.sparse && !arrayData.offset);
+        arrayData.offset = qMax(arrayData.length >> 2, (uint)16);
+        Property *newArray = new Property[arrayData.offset + arrayData.alloc];
+        memcpy(newArray + arrayData.offset, arrayData.data, arrayData.length*sizeof(Property));
+        delete [] arrayData.data;
+        arrayData.data = newArray + arrayData.offset;
+        if (arrayData.attributes) {
+            PropertyAttributes *newAttrs = new PropertyAttributes[arrayData.offset + arrayData.alloc];
+            memcpy(newAttrs + arrayData.offset, arrayData.attributes, arrayData.length*sizeof(PropertyAttributes));
+            delete [] arrayData.attributes;
+            arrayData.attributes = newAttrs + arrayData.offset;
         }
     }
 
@@ -232,12 +235,12 @@ public:
 
     uint propertyIndexFromArrayIndex(uint index) const
     {
-        if (!sparseArray) {
-            if (index >= arrayDataLen)
+        if (!arrayData.sparse) {
+            if (index >= arrayData.length)
                 return UINT_MAX;
             return index;
         } else {
-            SparseArrayNode *n = sparseArray->findNode(index);
+            SparseArrayNode *n = arrayData.sparse->findNode(index);
             if (!n)
                 return UINT_MAX;
             return n->value;
@@ -248,25 +251,25 @@ public:
         uint pidx = propertyIndexFromArrayIndex(index);
         if (pidx == UINT_MAX)
             return 0;
-        return arrayData + pidx;
+        return arrayData.data + pidx;
     }
 
     Property *nonSparseArrayAt(uint index) const {
-        if (sparseArray)
+        if (arrayData.sparse)
             return 0;
-        if (index >= arrayDataLen)
+        if (index >= arrayData.length)
             return 0;
-        return arrayData + index;
+        return arrayData.data + index;
     }
 
     void push_back(const ValueRef v);
 
-    SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
-    SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
+    SparseArrayNode *sparseArrayBegin() { return arrayData.sparse ? arrayData.sparse->begin() : 0; }
+    SparseArrayNode *sparseArrayEnd() { return arrayData.sparse ? arrayData.sparse->end() : 0; }
 
     void arrayConcat(const ArrayObject *other);
-    void arraySort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint arrayDataLen);
-    ReturnedValue arrayIndexOf(const ValueRef v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
+    void arraySort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
+    ReturnedValue arrayIndexOf(const ValueRef v, uint fromIndex, uint dataLen, ExecutionContext *ctx, Object *o);
 
     void arrayReserve(uint n);
     void ensureArrayAttributes();
@@ -276,7 +279,7 @@ public:
         Scoped<Object> p(scope, this);
 
         while ((p = p->prototype()))
-            if (p->arrayDataLen)
+            if (p->arrayData.length)
                 return true;
 
         return false;
@@ -400,14 +403,14 @@ inline void Object::setArrayLengthUnchecked(uint l)
 inline void Object::push_back(const ValueRef v)
 {
     uint idx = arrayLength();
-    if (!sparseArray) {
-        if (idx >= arrayAlloc)
+    if (!arrayData.sparse) {
+        if (idx >= arrayData.alloc)
             arrayReserve(idx + 1);
-        arrayData[idx].value = *v;
-        arrayDataLen = idx + 1;
+        arrayData.data[idx].value = *v;
+        arrayData.length = idx + 1;
     } else {
         uint idx = allocArrayValue(v);
-        sparseArray->push_back(idx, arrayLength());
+        arrayData.sparse->push_back(idx, arrayLength());
     }
     setArrayLengthUnchecked(idx + 1);
 }
@@ -417,33 +420,33 @@ inline Property *Object::arrayInsert(uint index, PropertyAttributes attributes) 
         hasAccessorProperty = 1;
 
     Property *pd;
-    if (!sparseArray && (index < 0x1000 || index < arrayDataLen + (arrayDataLen >> 2))) {
-        if (index >= arrayAlloc)
+    if (!arrayData.sparse && (index < 0x1000 || index < arrayData.length + (arrayData.length >> 2))) {
+        if (index >= arrayData.alloc)
             arrayReserve(index + 1);
-        if (index >= arrayDataLen) {
+        if (index >= arrayData.length) {
             // mark possible hole in the array
-            for (uint i = arrayDataLen; i < index; ++i) {
-                arrayData[i].value = Primitive::emptyValue();
-                if (arrayAttributes)
-                    arrayAttributes[i].clear();
+            for (uint i = arrayData.length; i < index; ++i) {
+                arrayData.data[i].value = Primitive::emptyValue();
+                if (arrayData.attributes)
+                    arrayData.attributes[i].clear();
             }
-            arrayDataLen = index + 1;
+            arrayData.length = index + 1;
         }
-        pd = arrayData + index;
+        pd = arrayData.data + index;
     } else {
         initSparse();
-        SparseArrayNode *n = sparseArray->insert(index);
+        SparseArrayNode *n = arrayData.sparse->insert(index);
         if (n->value == UINT_MAX)
             n->value = allocArrayValue();
-        pd = arrayData + n->value;
+        pd = arrayData.data + n->value;
     }
     if (index >= arrayLength())
         setArrayLengthUnchecked(index + 1);
-    if (arrayAttributes || attributes != Attr_Data) {
-        if (!arrayAttributes)
+    if (arrayData.attributes || attributes != Attr_Data) {
+        if (!arrayData.attributes)
             ensureArrayAttributes();
         attributes.resolve();
-        arrayAttributes[pd - arrayData] = attributes;
+        arrayData.attributes[pd - arrayData.data] = attributes;
     }
     return pd;
 }

@@ -1069,12 +1069,12 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         // get data, ScratchRegister holds index
         addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
         _as->load64(addr, Assembler::ReturnValueRegister);
-        Address arrayDataLen(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayDataLen));
+        Address dataLen(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData) + qOffsetOf(Object::ArrayData, length));
         Assembler::Jump outOfRange;
         if (needNegativeCheck)
             outOfRange = _as->branch32(Assembler::LessThan, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
-        Assembler::Jump outOfRange2 = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, arrayDataLen);
-        Address arrayData(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData));
+        Assembler::Jump outOfRange2 = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, dataLen);
+        Address arrayData(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData) + qOffsetOf(Object::ArrayData, data));
         _as->load64(arrayData, Assembler::ReturnValueRegister);
         Q_ASSERT(sizeof(Property) == (1<<4));
         _as->lshift64(Assembler::TrustedImm32(4), Assembler::ScratchRegister);

@@ -591,9 +591,9 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
     if (idx < UINT_MAX) {
         uint pidx = o->propertyIndexFromArrayIndex(idx);
         if (pidx < UINT_MAX) {
-            if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
-                if (!o->arrayData[pidx].value.isEmpty())
-                    return o->arrayData[pidx].value.asReturnedValue();
+            if (!o->arrayData.attributes || o->arrayData.attributes[pidx].isData()) {
+                if (!o->arrayData.data[pidx].value.isEmpty())
+                    return o->arrayData.data[pidx].value.asReturnedValue();
             }
         }
 
@@ -617,19 +617,19 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
     if (idx < UINT_MAX) {
         uint pidx = o->propertyIndexFromArrayIndex(idx);
         if (pidx < UINT_MAX) {
-            if (o->arrayAttributes && !o->arrayAttributes[pidx].isEmpty() && !o->arrayAttributes[pidx].isWritable()) {
+            if (o->arrayData.attributes && !o->arrayData.attributes[pidx].isEmpty() && !o->arrayData.attributes[pidx].isWritable()) {
                 if (ctx->strictMode)
                     ctx->throwTypeError();
                 return;
             }
 
-            Property *p = o->arrayData + pidx;
-            if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
+            Property *p = o->arrayData.data + pidx;
+            if (!o->arrayData.attributes || o->arrayData.attributes[pidx].isData()) {
                 p->value = *value;
                 return;
             }
 
-            if (o->arrayAttributes[pidx].isAccessor()) {
+            if (o->arrayData.attributes[pidx].isAccessor()) {
                 FunctionObject *setter = p->setter();
                 if (!setter) {
                     if (ctx->strictMode)
@@ -1131,8 +1131,8 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
     // This should rather be done when required
     a->arrayReserve(length);
     if (length) {
-        a->arrayDataLen = length;
-        Property *pd = a->arrayData;
+        a->arrayData.length = length;
+        Property *pd = a->arrayData.data;
         for (uint i = 0; i < length; ++i) {
             pd->value = values[i];
             ++pd;

@@ -145,7 +145,7 @@ Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRe
             *index = it->arrayIndex;
             ++it->arrayIndex;
             if (attrs)
-                *attrs = s->arrayAttributes ? s->arrayAttributes[it->arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
+                *attrs = s->arrayData.attributes ? s->arrayData.attributes[it->arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
             return s->__getOwnProperty__(*index);
         }
         it->arrayNode = s->sparseArrayBegin();

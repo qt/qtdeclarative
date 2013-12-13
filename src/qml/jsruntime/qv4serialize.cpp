@@ -390,8 +390,8 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
-            array->arrayData[ii].value = value.asReturnedValue();
-            array->arrayDataLen = ii + 1;
+            array->arrayData.data[ii].value = value.asReturnedValue();
+            array->arrayData.length = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);
         QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);

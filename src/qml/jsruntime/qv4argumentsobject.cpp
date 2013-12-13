@@ -66,8 +66,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
 
         arrayReserve(context->callData->argc);
         for (int i = 0; i < context->callData->argc; ++i)
-            arrayData[i].value = context->callData->args[i];
-        arrayDataLen = context->callData->argc;
+            arrayData.data[i].value = context->callData->args[i];
+        arrayData.length = context->callData->argc;
         fullyCreated = true;
     } else {
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
@@ -97,14 +97,14 @@ void ArgumentsObject::fullyCreate()
     context->engine->requireArgumentsAccessors(numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments.append(context->callData->args[i]);
-        arrayData[i] = context->engine->argumentsAccessors.at(i);
-        arrayAttributes[i] = Attr_Accessor;
+        arrayData.data[i] = context->engine->argumentsAccessors.at(i);
+        arrayData.attributes[i] = Attr_Accessor;
     }
     for (uint i = numAccessors; i < argCount; ++i) {
-        arrayData[i] = Property::fromValue(context->callData->args[i]);
-        arrayAttributes[i] = Attr_Data;
+        arrayData.data[i] = Property::fromValue(context->callData->args[i]);
+        arrayData.attributes[i] = Attr_Data;
     }
-    arrayDataLen = argCount;
+    arrayData.length = argCount;
 
     fullyCreated = true;
 }
@@ -115,17 +115,17 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     Scope scope(ctx);
     uint pidx = propertyIndexFromArrayIndex(index);
-    Property *pd = arrayData + pidx;
+    Property *pd = arrayData.data + pidx;
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())
-        isMapped = arrayAttributes && arrayAttributes[pidx].isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
+        isMapped = arrayData.attributes && arrayData.attributes[pidx].isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
 
     if (isMapped) {
         map = *pd;
-        mapAttrs = arrayAttributes[pidx];
-        arrayAttributes[pidx] = Attr_Data;
+        mapAttrs = arrayData.attributes[pidx];
+        arrayData.attributes[pidx] = Attr_Data;
         pd->value = mappedArguments.at(index);
     }
 
@@ -142,7 +142,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
         if (attrs.isWritable()) {
             *pd = map;
-            arrayAttributes[pidx] = mapAttrs;
+            arrayData.attributes[pidx] = mapAttrs;
         }
     }
 

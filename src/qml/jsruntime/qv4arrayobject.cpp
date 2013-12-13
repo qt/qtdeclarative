@@ -73,8 +73,8 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
         len = callData->argc;
         a->arrayReserve(len);
         for (unsigned int i = 0; i < len; ++i)
-            a->arrayData[i].value = callData->args[i];
-        a->arrayDataLen = len;
+            a->arrayData.data[i].value = callData->args[i];
+        a->arrayData.length = len;
     }
     a->setArrayLengthUnchecked(len);
 
@@ -308,18 +308,18 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         return Encode(newLen);
     }
 
-    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayData.length <= len) {
         for (int i = 0; i < ctx->callData->argc; ++i) {
-            if (!instance->sparseArray) {
-                if (len >= instance->arrayAlloc)
+            if (!instance->arrayData.sparse) {
+                if (len >= instance->arrayData.alloc)
                     instance->arrayReserve(len + 1);
-                instance->arrayData[len].value = ctx->callData->args[i];
-                if (instance->arrayAttributes)
-                    instance->arrayAttributes[len] = Attr_Data;
-                instance->arrayDataLen = len + 1;
+                instance->arrayData.data[len].value = ctx->callData->args[i];
+                if (instance->arrayData.attributes)
+                    instance->arrayData.attributes[len] = Attr_Data;
+                instance->arrayData.length = len + 1;
             } else {
                 uint j = instance->allocArrayValue(ctx->callData->args[i]);
-                instance->sparseArray->push_back(j, len);
+                instance->arrayData.sparse->push_back(j, len);
             }
             ++len;
         }
@@ -384,23 +384,23 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     Property *front = 0;
     uint pidx = instance->propertyIndexFromArrayIndex(0);
-    if (pidx < UINT_MAX && !instance->arrayData[pidx].value.isEmpty())
-            front = instance->arrayData + pidx;
+    if (pidx < UINT_MAX && !instance->arrayData.data[pidx].value.isEmpty())
+            front = instance->arrayData.data + pidx;
 
-    ScopedValue result(scope, front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Encode::undefined());
+    ScopedValue result(scope, front ? instance->getValue(front, instance->arrayData.attributes ? instance->arrayData.attributes[pidx] : Attr_Data) : Encode::undefined());
 
-    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
-        if (!instance->sparseArray) {
-            if (instance->arrayDataLen) {
-                ++instance->arrayOffset;
-                ++instance->arrayData;
-                --instance->arrayDataLen;
-                --instance->arrayAlloc;
-                if (instance->arrayAttributes)
-                    ++instance->arrayAttributes;
+    if (!instance->protoHasArray() && instance->arrayData.length <= len) {
+        if (!instance->arrayData.sparse) {
+            if (instance->arrayData.length) {
+                ++instance->arrayData.offset;
+                ++instance->arrayData.data;
+                --instance->arrayData.length;
+                --instance->arrayData.alloc;
+                if (instance->arrayData.attributes)
+                    ++instance->arrayData.attributes;
             }
         } else {
-            uint idx = instance->sparseArray->pop_front();
+            uint idx = instance->arrayData.sparse->pop_front();
             instance->freeArrayValue(idx);
         }
     } else {
@@ -505,10 +505,10 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
 
     newArray->arrayReserve(deleteCount);
     for (uint i = 0; i < deleteCount; ++i) {
-        newArray->arrayData[i].value = instance->getIndexed(start + i);
+        newArray->arrayData.data[i].value = instance->getIndexed(start + i);
         if (scope.hasException())
             return Encode::undefined();
-        newArray->arrayDataLen = i + 1;
+        newArray->arrayData.length = i + 1;
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 
@@ -571,26 +571,26 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
     uint len = getLength(ctx, instance);
 
     ScopedValue v(scope);
-    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayData.length <= len) {
         for (int i = ctx->callData->argc - 1; i >= 0; --i) {
             v = ctx->argument(i);
 
-            if (!instance->sparseArray) {
-                if (!instance->arrayOffset)
+            if (!instance->arrayData.sparse) {
+                if (!instance->arrayData.offset)
                     instance->getArrayHeadRoom();
 
-                --instance->arrayOffset;
-                --instance->arrayData;
-                ++instance->arrayDataLen;
-                ++instance->arrayAlloc;
-                if (instance->arrayAttributes) {
-                    --instance->arrayAttributes;
-                    *instance->arrayAttributes = Attr_Data;
+                --instance->arrayData.offset;
+                --instance->arrayData.data;
+                ++instance->arrayData.length;
+                ++instance->arrayData.alloc;
+                if (instance->arrayData.attributes) {
+                    --instance->arrayData.attributes;
+                    *instance->arrayData.attributes = Attr_Data;
                 }
-                instance->arrayData->value = v.asReturnedValue();
+                instance->arrayData.data->value = v.asReturnedValue();
             } else {
                 uint idx = instance->allocArrayValue(v);
-                instance->sparseArray->push_front(idx);
+                instance->arrayData.sparse->push_front(idx);
             }
         }
     } else {

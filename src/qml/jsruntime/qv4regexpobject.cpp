@@ -347,8 +347,8 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        array->arrayData[i].value = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
-        array->arrayDataLen = i + 1;
+        array->arrayData.data[i].value = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        array->arrayData.length = i + 1;
     }
     array->setArrayLengthUnchecked(len);
 

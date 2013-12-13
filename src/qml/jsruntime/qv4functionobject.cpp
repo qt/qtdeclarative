@@ -353,9 +353,9 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            int alen = qMin(len, arr->arrayDataLen);
+            int alen = qMin(len, arr->arrayData.length);
             for (int i = 0; i < alen; ++i)
-                callData->args[i] = arr->arrayData[i].value;
+                callData->args[i] = arr->arrayData.data[i].value;
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

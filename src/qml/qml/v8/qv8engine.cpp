@@ -197,8 +197,8 @@ static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringLi
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        a->arrayData[ii].value = QV4::Encode(e->newString(list.at(ii)));
-        a->arrayDataLen = ii + 1;
+        a->arrayData.data[ii].value = QV4::Encode(e->newString(list.at(ii)));
+        a->arrayData.length = ii + 1;
     }
     a->setArrayLengthUnchecked(len);
     return a.asReturnedValue();
@@ -212,8 +212,8 @@ static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariant
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        a->arrayData[ii].value = engine->fromVariant(list.at(ii));
-        a->arrayDataLen = ii + 1;
+        a->arrayData.data[ii].value = engine->fromVariant(list.at(ii));
+        a->arrayData.length = ii + 1;
     }
     a->setArrayLengthUnchecked(len);
     return a.asReturnedValue();
@@ -326,8 +326,8 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
             a->arrayReserve(list.count());
             for (int ii = 0; ii < list.count(); ++ii) {
-                a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
-                a->arrayDataLen = ii + 1;
+                a->arrayData.data[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
+                a->arrayData.length = ii + 1;
             }
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
@@ -542,8 +542,8 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
     QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
     for (int i = 0; i < lst.size(); i++) {
-        a->arrayData[i].value = variantToJS(lst.at(i));
-        a->arrayDataLen = i + 1;
+        a->arrayData.data[i].value = variantToJS(lst.at(i));
+        a->arrayData.length = i + 1;
     }
     a->setArrayLengthUnchecked(lst.size());
     return a.asReturnedValue();

@@ -1690,8 +1690,8 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
         for (int ii = 0; ii < list.count(); ++ii) {
-            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
-            array->arrayDataLen = ii + 1;
+            array->arrayData.data[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
+            array->arrayData.length = ii + 1;
         }
         array->setArrayLengthUnchecked(list.count());
         return array.asReturnedValue();
