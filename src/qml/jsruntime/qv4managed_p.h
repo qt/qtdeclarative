@@ -278,15 +278,15 @@ public:
         return internalClass->vtable == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
 
-    String *asString() { return internalClass->vtable->type == Type_String ? reinterpret_cast<String *>(this) : 0; }
-    Object *asObject() { return internalClass->vtable->type != Type_String ? reinterpret_cast<Object *>(this) : 0; }
+    String *asString() { return internalClass->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
+    Object *asObject() { return internalClass->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
     ArrayObject *asArrayObject() { return internalClass->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
-    FunctionObject *asFunctionObject() { return internalClass->vtable->type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
+    FunctionObject *asFunctionObject() { return internalClass->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return internalClass->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
     NumberObject *asNumberObject() { return internalClass->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
     StringObject *asStringObject() { return internalClass->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
     DateObject *asDateObject() { return internalClass->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
-    ErrorObject *asErrorObject() { return internalClass->vtable->type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
+    ErrorObject *asErrorObject() { return internalClass->vtable->isErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return internalClass->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
     bool isListType() const { return internalClass->vtable->type == Type_QmlSequence; }

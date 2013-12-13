@@ -240,10 +240,9 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (t == o)
         return true;
 
-    if (o->internalClass->vtable->type != Type_String)
+    if (!o->internalClass->vtable->isString)
         return false;
 
-    Q_ASSERT(t->internalClass->vtable->type == Type_String);
     String *that = static_cast<String *>(t);
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())
