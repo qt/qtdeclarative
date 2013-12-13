@@ -969,7 +969,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     if (isArrayObject() && index >= arrayLength() && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
-    if (isNonStrictArgumentsObject)
+    if (ArgumentsObject::isNonStrictArgumentsObject(this))
         return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, p, attrs);
 
     // Clause 1

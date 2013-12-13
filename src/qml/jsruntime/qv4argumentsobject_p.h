@@ -84,6 +84,10 @@ struct ArgumentsObject: Object {
     ArgumentsObject(CallContext *context);
     ~ArgumentsObject() {}
 
+    static bool isNonStrictArgumentsObject(Managed *m) {
+        return m->internalClass->vtable->type == Type_ArgumentsObject &&
+                !static_cast<ArgumentsObject *>(m)->context->strictMode;
+    }
 
     enum {
         LengthPropertyIndex = 0,

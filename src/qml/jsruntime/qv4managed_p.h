@@ -351,7 +351,7 @@ public:
             uchar markBit :  1;
             uchar inUse   :  1;
             uchar extensible : 1; // used by Object
-            uchar isNonStrictArgumentsObject : 1;
+            uchar _unused : 1;
             uchar needsActivation : 1; // used by FunctionObject
             uchar strictMode : 1; // used by FunctionObject
             uchar bindingKeyFlag : 1;

@@ -157,7 +157,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (!O)
         return ctx->throwTypeError();
 
-    if (O->isNonStrictArgumentsObject)
+    if (ArgumentsObject::isNonStrictArgumentsObject(O.getPointer()))
         Scoped<ArgumentsObject>(scope, O)->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
@@ -287,7 +287,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    if (o->isNonStrictArgumentsObject)
+    if (ArgumentsObject::isNonStrictArgumentsObject(o.getPointer()))
         Scoped<ArgumentsObject>(scope, o)->fullyCreate();
 
     o->extensible = false;

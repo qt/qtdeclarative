@@ -58,7 +58,7 @@ ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
 
-    if (object && object->isNonStrictArgumentsObject) {
+    if (object && object->asArgumentsObject()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
@@ -76,7 +76,7 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
 
-    if (object && object->isNonStrictArgumentsObject) {
+    if (object && object->asArgumentsObject()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }

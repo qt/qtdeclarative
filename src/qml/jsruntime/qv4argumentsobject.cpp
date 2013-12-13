@@ -72,7 +72,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     } else {
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
-        isNonStrictArgumentsObject = true;
     }
     Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
@@ -130,12 +129,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         pd->value = mappedArguments.at(index);
     }
 
-    isNonStrictArgumentsObject = false;
     bool strict = ctx->strictMode;
     ctx->strictMode = false;
     bool result = Object::__defineOwnProperty__(ctx, index, desc, attrs);
     ctx->strictMode = strict;
-    isNonStrictArgumentsObject = true;
 
     if (isMapped && attrs.isData()) {
         ScopedCallData callData(scope, 1);
