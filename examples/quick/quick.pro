@@ -21,7 +21,6 @@ SUBDIRS =   quick-accessibility \
             customitems \
             imageprovider \
             window \
-            dialogs \
             particles \
             demos
 

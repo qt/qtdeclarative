@@ -11,11 +11,7 @@ qtHaveModule(quick) {
         qtquick2 \
         particles \
         window \
-        dialogs-private \
-        dialogs \
         testlib
 }
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel
-
-qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += widgets
