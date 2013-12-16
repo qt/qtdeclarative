@@ -47,7 +47,7 @@ QtObject {
     property SystemPalette palette: SystemPalette { }
 
     property var controlWindow: Window {
-        width: 400
+        width: visibilityLabel.implicitWidth * 1.2
         height: col.implicitHeight + defaultSpacing * 2
         color: palette.window
         title: "Control Window"
@@ -122,6 +122,7 @@ QtObject {
                 return "unknown";
             }
             Text {
+                id: visibilityLabel
                 text: "second window is " + (testWindow.visible ? "visible" : "invisible") +
                       " and has visibility " + parent.visibilityToString(testWindow.visibility)
             }
