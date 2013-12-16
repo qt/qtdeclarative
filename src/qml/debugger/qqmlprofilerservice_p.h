@@ -55,6 +55,7 @@
 
 #include <private/qqmldebugservice_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qv4function_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -254,10 +255,20 @@ struct QQmlHandlingSignalProfiler {
     QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
         if (QQmlProfilerService::enabled) {
-            QQmlProfilerService::instance->startRange(QQmlProfilerService::HandlingSignal);
-            QQmlProfilerService::instance->rangeLocation(QQmlProfilerService::HandlingSignal,
-                                   expression->sourceFile(), expression->lineNumber(),
-                                   expression->columnNumber());
+            QQmlProfilerService *service = QQmlProfilerService::instance;
+            service->startRange(QQmlProfilerService::HandlingSignal);
+            if (expression->sourceFile().isEmpty()) {
+                QV4::Function *function = expression->function();
+                if (function) {
+                    service->rangeLocation(QQmlProfilerService::HandlingSignal,
+                            function->sourceFile(), function->compiledFunction->location.line,
+                            function->compiledFunction->location.column);
+                }
+            } else {
+                service->rangeLocation(QQmlProfilerService::HandlingSignal,
+                        expression->sourceFile(), expression->lineNumber(),
+                        expression->columnNumber());
+            }
         }
     }
 
