@@ -46,6 +46,7 @@
 #include <QtCore/QDebug>
 #include "qv4global_p.h"
 #include "qv4value_def_p.h"
+#include "qv4internalclass_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -84,7 +85,6 @@ struct ManagedVTable
     void (*markObjects)(Managed *, ExecutionEngine *e);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
-    bool (*hasInstance)(Managed *, const ValueRef value);
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, const StringRef name, const ValueRef value);
@@ -108,7 +108,6 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     markObjects,                                \
     destroy,                                    \
     0,                                          \
-    hasInstance,                                \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
@@ -132,7 +131,6 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     markObjects,                                \
     destroy,                                    \
     collectDeletables,                          \
-    hasInstance,                                \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
@@ -158,11 +156,15 @@ private:
 
 protected:
     Managed(InternalClass *internal)
-        : _data(0), vtbl(&static_vtbl), internalClass(internal)
-    { inUse = 1; extensible = 1; }
+        : internalClass(internal), _data(0)
+    {
+        Q_ASSERT(!internalClass || internalClass->vtable);
+        inUse = 1; extensible = 1;
+    }
 
 public:
     void *operator new(size_t size, MemoryManager *mm);
+    void *operator new(size_t, Managed *m) { return m; }
     void operator delete(void *ptr);
     void operator delete(void *ptr, MemoryManager *mm);
 
@@ -194,12 +196,12 @@ public:
     template <typename T>
     T *as() {
         // ### FIXME:
-        if (!this)
+        if (!this || !internalClass)
             return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
 #endif
-        return vtbl == &T::static_vtbl ? static_cast<T *>(this) : 0;
+        return internalClass->vtable == &T::static_vtbl ? static_cast<T *>(this) : 0;
     }
     template <typename T>
     const T *as() const {
@@ -209,7 +211,7 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(const_cast<Managed *>(this)));
 #endif
-        return vtbl == &T::static_vtbl ? static_cast<const T *>(this) : 0;
+        return internalClass->vtable == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
 
     String *asString() { return type == Type_String ? reinterpret_cast<String *>(this) : 0; }
@@ -240,7 +242,8 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
-    bool hasInstance(const ValueRef v);
+    void setVTable(const ManagedVTable *vt);
+
     ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
     ReturnedValue get(const StringRef name, bool *hasProperty = 0);
@@ -249,21 +252,20 @@ public:
     void putIndexed(uint index, const ValueRef value);
     PropertyAttributes query(StringRef name) const;
     PropertyAttributes queryIndexed(uint index) const
-    { return vtbl->queryIndexed(this, index); }
+    { return internalClass->vtable->queryIndexed(this, index); }
 
     bool deleteProperty(const StringRef name);
     bool deleteIndexedProperty(uint index)
-    { return vtbl->deleteIndexedProperty(this, index); }
+    { return internalClass->vtable->deleteIndexedProperty(this, index); }
     ReturnedValue getLookup(Lookup *l)
-    { return vtbl->getLookup(this, l); }
+    { return internalClass->vtable->getLookup(this, l); }
     void setLookup(Lookup *l, const ValueRef v);
 
     bool isEqualTo(Managed *other)
-    { return vtbl->isEqualTo(this, other); }
+    { return internalClass->vtable->isEqualTo(this, other); }
     Property *advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
-    static bool hasInstance(Managed *that, const ValueRef value);
     static ReturnedValue construct(Managed *m, CallData *d);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue getLookup(Managed *m, Lookup *);
@@ -275,6 +277,9 @@ public:
     }
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
+
+
+    InternalClass *internalClass;
 
     enum {
         SimpleArray = 1
@@ -296,11 +301,6 @@ public:
             uchar flags;
         };
     };
-
-protected:
-    const ManagedVTable *vtbl;
-public:
-    InternalClass *internalClass;
 
 private:
     friend class MemoryManager;
@@ -337,10 +337,10 @@ inline FunctionObject *managed_cast(Managed *m)
 
 
 inline ReturnedValue Managed::construct(CallData *d) {
-    return vtbl->construct(this, d);
+    return internalClass->vtable->construct(this, d);
 }
 inline ReturnedValue Managed::call(CallData *d) {
-    return vtbl->call(this, d);
+    return internalClass->vtable->call(this, d);
 }
 
 }

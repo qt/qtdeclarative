@@ -74,6 +74,8 @@ class QOpenGLContext;
 
 class QQuickContext2D : public QQuickCanvasContext
 {
+    Q_OBJECT
+
 public:
     Q_DISABLE_COPY(QQuickContext2D)
 
@@ -171,8 +173,8 @@ public:
     void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     void flush();
     void sync();
-    QThread *thread() const {return m_thread;}
-    QSGDynamicTexture *texture() const;
+    QThread *thread() const { return m_thread; }
+    QQuickContext2DTexture *texture() const;
     QImage toImage(const QRectF& bounds);
 
     QV4::ReturnedValue v4value() const;

@@ -108,7 +108,7 @@ void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef stat
     if (!f)
         return;
 
-    QV4::ExecutionContext *ctx = v4->current;
+    QV4::ExecutionContext *ctx = v4->currentContext();
     QV4::ScopedCallData callData(scope, 1);
     callData->thisObject = v4->globalObject->asReturnedValue();
     callData->args[0] = status;
@@ -153,7 +153,7 @@ void QV4Include::finished()
         QV4::ScopedObject qmlglobal(scope, m_qmlglobal.value());
         QV4::Script script(v4, qmlglobal, code, m_url.toString());
 
-        QV4::ExecutionContext *ctx = v4->current;
+        QV4::ExecutionContext *ctx = v4->currentContext();
         QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
         script.parse();
         if (!scope.engine->hasException)
@@ -220,7 +220,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
 
             QV4::Script script(v4, qmlcontextobject, code, url.toString());
 
-            QV4::ExecutionContext *ctx = v4->current;
+            QV4::ExecutionContext *ctx = v4->currentContext();
             script.parse();
             if (!v4->hasException)
                 script.run();

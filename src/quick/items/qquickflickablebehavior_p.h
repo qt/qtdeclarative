@@ -39,29 +39,67 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLABSTRACTURLINTERCEPTOR_H
-#define QQMLABSTRACTURLINTERCEPTOR_H
+#ifndef QQUICKFLICKABLEBEHAVIOR_H
+#define QQUICKFLICKABLEBEHAVIOR_H
 
-#include <QtCore/qurl.h>
-#include <private/qtqmlglobal_p.h>
+/* ### Platform specific flickable mechanics are defined either here, or in
+       mkspec files. Long-term (QtQuick 3) Flickable needs to allow such
+       mechanic details to be controlled via QML so that platforms can easily
+       load custom behavior at QML compile time.
+*/
 
-QT_BEGIN_NAMESPACE
-
-class Q_QML_PRIVATE_EXPORT QQmlAbstractUrlInterceptor
-{
-    Q_FLAGS(InterceptionPoint)
-public:
-    enum DataType { //Matches QQmlDataBlob::Type
-        QmlFile = 0,
-        JavaScriptFile = 1,
-        QmldirFile = 2,
-        UrlString = 0x1000
-    };
-
-    QQmlAbstractUrlInterceptor() {}
-    virtual ~QQmlAbstractUrlInterceptor() {}
-    virtual QUrl intercept(const QUrl &path, DataType type) = 0;
-};
-
-QT_END_NAMESPACE
+// The maximum number of pixels a flick can overshoot
+#ifndef QML_FLICK_OVERSHOOT
+#define QML_FLICK_OVERSHOOT 150
 #endif
+
+// The number of samples to use in calculating the velocity of a flick
+#ifndef QML_FLICK_SAMPLEBUFFER
+#define QML_FLICK_SAMPLEBUFFER 3
+#endif
+
+// The number of samples to discard when calculating the flick velocity.
+// Touch panels often produce inaccurate results as the finger is lifted.
+#ifndef QML_FLICK_DISCARDSAMPLES
+#define QML_FLICK_DISCARDSAMPLES 0
+#endif
+
+// The default maximum velocity of a flick.
+#ifndef QML_FLICK_DEFAULTMAXVELOCITY
+#ifdef Q_OS_BLACKBERRY
+#define QML_FLICK_DEFAULTMAXVELOCITY 10000
+#else
+#define QML_FLICK_DEFAULTMAXVELOCITY 2500
+#endif
+#endif
+
+// The default deceleration of a flick.
+#ifndef QML_FLICK_DEFAULTDECELERATION
+#ifdef Q_OS_BLACKBERRY
+#define QML_FLICK_DEFAULTDECELERATION 5000
+#else
+#define QML_FLICK_DEFAULTDECELERATION 1500
+#endif
+#endif
+
+// How much faster to decelerate when overshooting
+#ifndef QML_FLICK_OVERSHOOTFRICTION
+#define QML_FLICK_OVERSHOOTFRICTION 8
+#endif
+
+// Multiflick acceleration minimum flick velocity threshold
+#ifndef QML_FLICK_MULTIFLICK_THRESHOLD
+#define QML_FLICK_MULTIFLICK_THRESHOLD 1250
+#endif
+
+// Multiflick acceleration minimum contentSize/viewSize ratio
+#ifndef QML_FLICK_MULTIFLICK_RATIO
+#define QML_FLICK_MULTIFLICK_RATIO 10
+#endif
+
+// Multiflick acceleration maximum velocity multiplier
+#ifndef QML_FLICK_MULTIFLICK_MAXBOOST
+#define QML_FLICK_MULTIFLICK_MAXBOOST 3.0
+#endif
+
+#endif //QQUICKFLICKABLEBEHAVIOR_H

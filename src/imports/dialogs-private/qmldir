@@ -1,3 +1,4 @@
 module QtQuick.Dialogs.Private
 plugin dialogsprivateplugin
 typeinfo plugins.qmltypes
+classname QtQuick2DialogsPrivatePlugin

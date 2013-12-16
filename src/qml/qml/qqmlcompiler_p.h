@@ -62,6 +62,7 @@
 #include "qqmlpropertycache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
+#include <private/qqmlcodegenerator_p.h>
 #include "private/qv4identifier_p.h"
 #include <private/qqmljsastfwd_p.h>
 
@@ -105,6 +106,7 @@ public:
             : type(0), typePropertyCache(0), component(0)
             , majorVersion(0)
             , minorVersion(0)
+            , isFullyDynamicType(false)
         {}
 
         QQmlType *type;
@@ -113,9 +115,14 @@ public:
 
         int majorVersion;
         int minorVersion;
+        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+        // therefore cannot have a property cache installed when instantiated.
+        bool isFullyDynamicType;
 
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+
+        void doDynamicTypeCheck();
     };
     // --- old compiler:
     QList<TypeReference> types;
@@ -150,6 +157,7 @@ public:
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
+    QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
     bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }
@@ -224,14 +232,15 @@ namespace QQmlCompilerTypes {
     struct JSBindingReference : public QQmlPool::Class,
                                 public BindingReference
     {
-        JSBindingReference() : nextReference(0) {}
+        JSBindingReference() : disableLookupAcceleration(false), nextReference(0) {}
 
         QQmlScript::Variant expression;
         QQmlScript::Property *property;
         QQmlScript::Value *value;
 
         int compiledIndex : 16;
-        int sharedIndex : 16;
+        int customParserBindingsIndex : 15;
+        int disableLookupAcceleration: 1;
 
         BindingContext bindingContext;
 
@@ -312,10 +321,9 @@ namespace QQmlCompilerTypes {
         QList<CompiledMetaMethod> compiledMetaMethods;
         struct PerObjectCompileData
         {
-            QList<QQmlJS::AST::Node*> functionsToCompile;
+            QList<QtQml::CompiledFunctionOrExpression> functionsToCompile;
             QVector<int> runtimeFunctionIndices;
             QVector<CompiledMetaMethod> compiledMetaMethods;
-            QHash<int, QString> expressionNames;
         };
         QHash<QQmlScript::Object *, PerObjectCompileData> jsCompileData;
     };
@@ -340,7 +348,7 @@ public:
 
     int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
-    int bindingIdentifier(const QQmlScript::Variant& value); // for QQmlCustomParser::bindingIndex
+    int bindingIdentifier(const QString &name, const QQmlScript::Variant& value, const QQmlCompilerTypes::BindingContext &ctxt); // for QQmlCustomParser::bindingIndex
 
 private:
     typedef QQmlCompiledData::Instruction Instruction;

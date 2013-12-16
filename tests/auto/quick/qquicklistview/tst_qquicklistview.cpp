@@ -217,6 +217,8 @@ private slots:
     void typedModel();
     void displayMargin();
 
+    void highlightItemGeometryChanges();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -1956,6 +1958,8 @@ void tst_QQuickListView::sections(const QUrl &source)
         QQuickText *next = findItem<QQuickText>(item, "nextSection");
         QCOMPARE(next->text().toInt(), (i+1)/5);
     }
+
+    QVERIFY(!listview->property("sectionsInvalidOnCompletion").toBool());
 
     QSignalSpy currentSectionChangedSpy(listview, SIGNAL(currentSectionChanged()));
 
@@ -7046,6 +7050,25 @@ void tst_QQuickListView::displayMargin()
     QCOMPARE(delegateVisible(item0), false);
 
     delete window;
+}
+
+void tst_QQuickListView::highlightItemGeometryChanges()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("HighlightResize.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(object.data());
+    QVERIFY(listview);
+
+    QCOMPARE(listview->count(), 5);
+
+    for (int i = 0; i < listview->count(); ++i) {
+        listview->setCurrentIndex(i);
+        QTRY_COMPARE(listview->highlightItem()->width(), qreal(100 + i * 20));
+        QTRY_COMPARE(listview->highlightItem()->height(), qreal(100 + i * 10));
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)

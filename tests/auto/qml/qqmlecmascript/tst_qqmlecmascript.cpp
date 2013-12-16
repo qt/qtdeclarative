@@ -319,6 +319,7 @@ private slots:
     void stackLimits();
     void idsAsLValues();
     void qtbug_34792();
+    void noCaptureWhenWritingProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -2267,7 +2268,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     program.inheritContext = true;
 
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->currentContext();
     QV4::Scope scope(ctx);
 
     QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
@@ -2295,7 +2296,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     program.inheritContext = true;
 
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->currentContext();
     QV4::Scope scope(ctx);
 
     QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
@@ -2324,7 +2325,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
 
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->currentContext();
     QV4::Scope scope(ctx);
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
@@ -7496,6 +7497,14 @@ void tst_qqmlecmascript::qtbug_34792()
         qDebug() << component.errorString();
     QVERIFY(object != 0);
     delete object;
+}
+
+void tst_qqmlecmascript::noCaptureWhenWritingProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("noCaptureWhenWritingProperty.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("somePropertyEvaluated").toBool(), false);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

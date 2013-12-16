@@ -80,17 +80,16 @@ public:
         Q_ASSERT(!value.isEmpty());
     }
     QJSValuePrivate(const QString &s)
-        : PersistentValuePrivate(QV4::Encode::undefined())
-        , string(0, s)
+        : PersistentValuePrivate(QV4::Primitive::emptyValue().asReturnedValue())
+        , string(s)
     {
-        value.val = QV4::Encode(string.asReturned<QV4::String>());
     }
 
     QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
 
-    QV4::String string;
+    QString string;
 };
 
 QT_END_NAMESPACE

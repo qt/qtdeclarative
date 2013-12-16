@@ -148,11 +148,20 @@ void IRDecoder::visitMove(V4IR::Move *s)
         } else if (V4IR::Member *m = s->source->asMember()) {
             if (m->property) {
                 bool captureRequired = true;
-                if (_function && m->attachedPropertiesId == 0) {
-                    captureRequired = !_function->contextObjectDependencies.contains(m->property)
-                                      && !_function->scopeObjectDependencies.contains(m->property);
+
+                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+
+                if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
+                    if (m->kind == V4IR::Member::MemberOfQmlContextObject) {
+                        _function->contextObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
+                        captureRequired = false;
+                    } else if (m->kind == V4IR::Member::MemberOfQmlScopeObject) {
+                        _function->scopeObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
+                        captureRequired = false;
+                    }
                 }
-                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, m->attachedPropertiesId, t);
+                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, attachedPropertiesId, t);
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
@@ -191,7 +200,9 @@ void IRDecoder::visitMove(V4IR::Move *s)
     } else if (V4IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                if (m->property && m->attachedPropertiesId == 0) {
+                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+                if (m->property && attachedPropertiesId == 0) {
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
                     return;
                 } else {
@@ -230,9 +241,7 @@ void IRDecoder::visitExp(V4IR::Exp *s)
             Q_ASSERT(member->base->asTemp());
             callProperty(member->base->asTemp(), *member->name, c->args, 0);
         } else if (Subscript *s = c->base->asSubscript()) {
-            Q_ASSERT(s->base->asTemp());
-            Q_ASSERT(s->index->asTemp());
-            callSubscript(s->base->asTemp(), s->index->asTemp(), c->args, 0);
+            callSubscript(s->base, s->index, c->args, 0);
         } else {
             Q_UNIMPLEMENTED();
         }

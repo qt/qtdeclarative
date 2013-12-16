@@ -349,7 +349,7 @@ DEFINE_MANAGED_VTABLE(EvalFunction);
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 }
 
@@ -379,15 +379,17 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     if (callData->argc < 1)
         return Encode::undefined();
 
-    ExecutionContext *parentContext = engine()->current;
-    ExecutionEngine *engine = parentContext->engine;
+    ExecutionEngine *v4 = engine();
+    ExecutionContext *parentContext = v4->currentContext();
+    ExecutionContextSaver ctxSaver(parentContext);
+
     ExecutionContext *ctx = parentContext;
     Scope scope(ctx);
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
         // context
-        ctx = engine->pushGlobalContext();
+        ctx = v4->pushGlobalContext();
     }
 
     if (!callData->args[0].isString())
@@ -418,7 +420,6 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
         return e->call(callData);
     }
 
-    ExecutionContextSaver ctxSaver(parentContext);
     ContextStateSaver stateSaver(ctx);
 
     ExecutionContext::EvalCode evalCode;
@@ -437,7 +438,6 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
-    // ### const_cast
     return static_cast<EvalFunction *>(that)->evalCall(callData, false);
 }
 

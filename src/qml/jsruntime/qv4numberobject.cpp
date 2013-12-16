@@ -54,7 +54,7 @@ DEFINE_MANAGED_VTABLE(NumberObject);
 NumberCtor::NumberCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Number"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)

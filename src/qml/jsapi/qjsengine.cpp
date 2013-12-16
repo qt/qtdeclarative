@@ -49,6 +49,7 @@
 #include "private/qv4mm_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
+#include "private/qv4runtime_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -260,7 +261,7 @@ void QJSEngine::collectGarbage()
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
     QV4::Scope scope(d->m_v4Engine);
-    QV4::ExecutionContext *ctx = d->m_v4Engine->current;
+    QV4::ExecutionContext *ctx = d->m_v4Engine->currentContext();
     QV4::ScopedValue result(scope);
 
     QV4::Script script(ctx, program, fileName, lineNumber);
@@ -376,6 +377,54 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
         QV4::Scope scope(engine->m_v4Engine);
         QV4::ScopedValue v(scope, vp->getValue(engine->m_v4Engine));
         return engine->metaTypeFromJS(v, type, ptr);
+    } else if (vp->value.isEmpty()) {
+        // have a string based value without engine. Do conversion manually
+        if (type == QMetaType::Bool) {
+            *reinterpret_cast<bool*>(ptr) = vp->string.length() != 0;
+            return true;
+        }
+        if (type == QMetaType::QString) {
+            *reinterpret_cast<QString*>(ptr) = vp->string;
+            return true;
+        }
+        double d = QV4::__qmljs_string_to_number(vp->string);
+        switch (type) {
+            case QMetaType::Int:
+                *reinterpret_cast<int*>(ptr) = QV4::Primitive::toInt32(d);
+                return true;
+            case QMetaType::UInt:
+                *reinterpret_cast<uint*>(ptr) = QV4::Primitive::toUInt32(d);
+                return true;
+            case QMetaType::LongLong:
+                *reinterpret_cast<qlonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                return true;
+            case QMetaType::ULongLong:
+                *reinterpret_cast<qulonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                return true;
+            case QMetaType::Double:
+                *reinterpret_cast<double*>(ptr) = d;
+                return true;
+            case QMetaType::Float:
+                *reinterpret_cast<float*>(ptr) = d;
+                return true;
+            case QMetaType::Short:
+                *reinterpret_cast<short*>(ptr) = QV4::Primitive::toInt32(d);
+                return true;
+            case QMetaType::UShort:
+                *reinterpret_cast<unsigned short*>(ptr) = QV4::Primitive::toUInt32(d);
+                return true;
+            case QMetaType::Char:
+                *reinterpret_cast<char*>(ptr) = QV4::Primitive::toInt32(d);
+                return true;
+            case QMetaType::UChar:
+                *reinterpret_cast<unsigned char*>(ptr) = QV4::Primitive::toUInt32(d);
+                return true;
+            case QMetaType::QChar:
+                *reinterpret_cast<QChar*>(ptr) = QV4::Primitive::toUInt32(d);
+                return true;
+            default:
+                return false;
+        }
     } else {
         switch (type) {
             case QMetaType::Bool:

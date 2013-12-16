@@ -590,14 +590,17 @@ void Element::computeBounds()
     }
     bounds.map(*node->matrix());
 
-    if (!qIsFinite(bounds.tl.x))
+    if (!qIsFinite(bounds.tl.x) || bounds.tl.x == FLT_MAX)
         bounds.tl.x = -FLT_MAX;
-    if (!qIsFinite(bounds.tl.y))
+    if (!qIsFinite(bounds.tl.y) || bounds.tl.y == FLT_MAX)
         bounds.tl.y = -FLT_MAX;
-    if (!qIsFinite(bounds.br.x))
+    if (!qIsFinite(bounds.br.x) || bounds.br.x == -FLT_MAX)
         bounds.br.x = FLT_MAX;
-    if (!qIsFinite(bounds.br.y))
+    if (!qIsFinite(bounds.br.y) || bounds.br.y == -FLT_MAX)
         bounds.br.y = FLT_MAX;
+
+    Q_ASSERT(bounds.tl.x <= bounds.br.x);
+    Q_ASSERT(bounds.tl.y <= bounds.br.y);
 
     boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
@@ -2111,6 +2114,9 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
             glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (void *) (qintptr) (offset + vOffset));
             offset += a.tupleSize * size_of_type(a.type);
         }
+
+        if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
+            glLineWidth(g->lineWidth());
 
         if (g->indexCount())
             glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), iOffset);

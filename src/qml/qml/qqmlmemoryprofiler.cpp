@@ -100,8 +100,7 @@ static bool openLibrary()
 QQmlMemoryScope::QQmlMemoryScope(const QUrl &url) : pushed(false)
 {
     if (openLibrary() && memprofile_is_enabled()) {
-        const char *location = url.path().toUtf8().constData();
-        memprofile_push_location(location, 0);
+        memprofile_push_location(url.path().toUtf8().constData(), 0);
         pushed = true;
     }
 }

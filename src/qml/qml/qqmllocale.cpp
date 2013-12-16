@@ -61,7 +61,7 @@ public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_Object;
     }
 
@@ -872,7 +872,7 @@ QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 {
-    engine->stringClass->prototype->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
+    engine->stringObjectClass->prototype->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
 }
 
 QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::CallContext *ctx)

@@ -1039,7 +1039,6 @@ public:
     static const BinaryOperationInfo &binaryOperation(V4IR::AluOp operation)
     { return binaryOperations[operation]; }
 
-
     Jump inline_add32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)

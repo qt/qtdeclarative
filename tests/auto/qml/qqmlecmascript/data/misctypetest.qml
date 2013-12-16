@@ -11,7 +11,7 @@ Item {
         return mtt.invalidUrl() == mtt.invalidUrl();
     }
 
-    function test_invalid_url_refequal()
+    function test_invalid_url_strictequal()
     {
         return mtt.invalidUrl() === mtt.invalidUrl();
     }
@@ -21,7 +21,7 @@ Item {
         return mtt.validUrl() == mtt.validUrl();
     }
 
-    function test_valid_url_refequal()
+    function test_valid_url_strictequal()
     {
         return mtt.validUrl() === mtt.validUrl();
     }

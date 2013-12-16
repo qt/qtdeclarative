@@ -432,7 +432,7 @@ public:
 
         QJsonArray scopes;
         // Only type and index are used by Qt Creator, so we keep it easy:
-        QVector<QV4::ExecutionContext::Type> scopeTypes = debugger->getScopeTypes(frameNr);
+        QVector<QV4::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
         for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
             int type = encodeScopeType(scopeTypes[i]);
             if (type == -1)
@@ -448,7 +448,7 @@ public:
         return frame;
     }
 
-    int encodeScopeType(QV4::ExecutionContext::Type scopeType)
+    int encodeScopeType(QV4::ExecutionContext::ContextType scopeType)
     {
         switch (scopeType) {
         case QV4::ExecutionContext::Type_GlobalContext:
@@ -480,7 +480,7 @@ public:
         QJsonObject anonymous;
         anonymous[QLatin1String("properties")] = properties;
 
-        QVector<QV4::ExecutionContext::Type> scopeTypes = debugger->getScopeTypes(frameNr);
+        QVector<QV4::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
         scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
         scope[QLatin1String("index")] = scopeNr;
         scope[QLatin1String("frameIndex")] = frameNr;
@@ -619,7 +619,7 @@ public:
         addRunning();
         QJsonObject body;
         body.insert(QStringLiteral("V8Version"),
-                    QStringLiteral("this is not V8, this is V4 in Qt %1").arg(QLatin1String(QT_VERSION_STR)));
+                    QLatin1String("this is not V8, this is V4 in Qt " QT_VERSION_STR));
         addBody(body);
     }
 };

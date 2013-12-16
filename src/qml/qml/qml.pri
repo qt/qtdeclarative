@@ -126,7 +126,7 @@ HEADERS += \
     $$PWD/qqmlplatform_p.h \
     $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlextensionplugin_p.h \
-    $$PWD/qqmlabstracturlinterceptor_p.h \
+    $$PWD/qqmlabstracturlinterceptor.h \
     $$PWD/qqmlapplicationengine_p.h \
     $$PWD/qqmlapplicationengine.h \
     $$PWD/qqmllistwrapper_p.h \

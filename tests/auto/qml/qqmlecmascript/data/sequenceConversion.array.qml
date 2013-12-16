@@ -140,6 +140,22 @@ Item {
         if (msco.intListProperty.toString() != expected.toString()) success = false;
         expected = 7;
         if (poppedVal != expected) success = false;
+
+        // concat
+        msco.stringListProperty = [ "one", "two" ]
+        stringList = [ "hello", "world" ]
+        stringList = stringList.concat(msco.stringListProperty)
+        expected = [ "hello", "world", "one", "two" ]
+        if (stringList.length != expected.length) {
+            success = false;
+        } else {
+            for (var i = 0; i < stringList.length; ++i) {
+                if (stringList[i] != expected[i]) {
+                    success = false;
+                    break;
+                }
+            }
+        }
     }
 
     property variant variantList: [ 1, 2, 3, 4, 5 ];

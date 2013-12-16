@@ -66,7 +66,7 @@
 #include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
-#include "qqmlabstracturlinterceptor_p.h"
+#include "qqmlabstracturlinterceptor.h"
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlboundsignal_p.h>
 
@@ -101,6 +101,9 @@
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
+#  if !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+#    include <shlobj.h>
+#  endif
 #include <qlibrary.h>
 #include <windows.h>
 
@@ -2285,6 +2288,28 @@ bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
     return typeLoader.isScriptLoaded(url);
 }
 
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+// Normalize a file name using Shell API. As opposed to converting it
+// to a short 8.3 name and back, this also works for drives where 8.3 notation
+// is disabled (see 8dot3name options of fsutil.exe).
+static inline QString shellNormalizeFileName(const QString &name)
+{
+    const QString nativeSeparatorName(QDir::toNativeSeparators(name));
+    const LPCTSTR nameC = reinterpret_cast<LPCTSTR>(nativeSeparatorName.utf16());
+    PIDLIST_ABSOLUTE file;
+    if (FAILED(SHParseDisplayName(nameC, NULL, &file, 0, NULL)))
+        return name;
+    TCHAR buffer[MAX_PATH];
+    if (!SHGetPathFromIDList(file, buffer))
+        return name;
+    QString canonicalName = QString::fromWCharArray(buffer);
+    // Upper case drive letter
+    if (canonicalName.size() > 2 && canonicalName.at(1) == QLatin1Char(':'))
+        canonicalName[0] = canonicalName.at(0).toUpper();
+    return QDir::cleanPath(canonicalName);
+}
+#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+
 bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 {
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN)
@@ -2294,14 +2319,7 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 #if defined(Q_OS_MAC) || defined(Q_OS_WINCE) || defined(Q_OS_WINRT)
     const QString canonical = info.canonicalFilePath();
 #elif defined(Q_OS_WIN)
-    wchar_t buffer[1024];
-
-    DWORD rv = ::GetShortPathName((wchar_t*)absolute.utf16(), buffer, 1024);
-    if (rv == 0 || rv >= 1024) return true;
-    rv = ::GetLongPathName(buffer, buffer, 1024);
-    if (rv == 0 || rv >= 1024) return true;
-
-    const QString canonical = QString::fromWCharArray(buffer);
+    const QString canonical = shellNormalizeFileName(absolute);
 #endif
 
     const int absoluteLength = absolute.length();

@@ -77,7 +77,6 @@ ErrorObject::ErrorObject(InternalClass *ic)
     , stack(0)
 {
     type = Type_ErrorObject;
-    vtbl = &static_vtbl;
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
@@ -91,7 +90,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     , stack(0)
 {
     type = Type_ErrorObject;
-    vtbl = &static_vtbl;
     subtype = t;
 
     Scope scope(engine());
@@ -116,7 +114,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
     , stack(0)
 {
     type = Type_ErrorObject;
-    vtbl = &static_vtbl;
     subtype = t;
 
     Scope scope(engine());
@@ -141,7 +138,6 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     , stack(0)
 {
     type = Type_ErrorObject;
-    vtbl = &static_vtbl;
     subtype = t;
 
     Scope scope(engine());
@@ -207,13 +203,11 @@ DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg)
     : ErrorObject(engine->syntaxErrorClass, msg, SyntaxError)
 {
-    vtbl = &static_vtbl;
 }
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
     : ErrorObject(engine->syntaxErrorClass, msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
-    vtbl = &static_vtbl;
 }
 
 EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const ValueRef message)
@@ -272,13 +266,13 @@ DEFINE_MANAGED_VTABLE(URIErrorCtor);
 ErrorCtor::ErrorCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Error"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ErrorCtor::ErrorCtor(ExecutionContext *scope, const QString &name)
     : FunctionObject(scope, name)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
@@ -296,7 +290,7 @@ ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
 EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("EvalError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
@@ -309,7 +303,7 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("RangeError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
@@ -322,7 +316,7 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("ReferenceError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
@@ -335,7 +329,7 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("SyntaxError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
@@ -348,7 +342,7 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("TypeError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
@@ -361,7 +355,7 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
     : ErrorCtor(scope, QStringLiteral("URIError"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)

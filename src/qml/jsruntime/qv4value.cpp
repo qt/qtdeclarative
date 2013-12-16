@@ -90,7 +90,7 @@ double Value::toNumberImpl() const
         if (isString())
             return __qmljs_string_to_number(stringValue()->toQString());
         {
-            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            ExecutionContext *ctx = objectValue()->internalClass->engine->currentContext();
             Scope scope(ctx);
             ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
             return prim->toNumber();
@@ -121,7 +121,7 @@ QString Value::toQStringNoThrow() const
         if (isString())
             return stringValue()->toQString();
         {
-            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            ExecutionContext *ctx = objectValue()->internalClass->engine->currentContext();
             Scope scope(ctx);
             ScopedValue ex(scope);
             bool caughtException = false;
@@ -174,7 +174,7 @@ QString Value::toQString() const
         if (isString())
             return stringValue()->toQString();
         {
-            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            ExecutionContext *ctx = objectValue()->internalClass->engine->currentContext();
             Scope scope(ctx);
             ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
             return prim->toQString();

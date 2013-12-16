@@ -66,7 +66,7 @@ QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context
       v8(engine), readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
       context(context), scopeObject(scopeObject), idObjectsWrapper(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 QmlContextWrapper::~QmlContextWrapper()
@@ -137,7 +137,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
     QV4::Scope scope(v4);
     QmlContextWrapper *resource = m->as<QmlContextWrapper>();
     if (!resource)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
@@ -246,7 +246,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
-            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject,
+            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, scopeObject,
                                                                                name.getPointer(), QV4::QObjectWrapper::CheckRevision, &hasProp));
             if (hasProp) {
                 if (hasProperty)
@@ -260,7 +260,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, &hasProp);
+            result = QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -284,7 +284,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         return;
     QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
     if (!wrapper) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return;
     }
 
@@ -292,8 +292,8 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         if (wrapper && wrapper->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
-            Scoped<String> e(scope, v4->current->engine->newString(error));
-            v4->current->throwError(e);
+            Scoped<String> e(scope, v4->currentContext()->engine->newString(error));
+            v4->currentContext()->throwError(e);
             return;
         }
 
@@ -327,13 +327,13 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 
         // Search scope object
         if (scopeObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
 
         context = context->parent;
@@ -344,7 +344,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
     if (wrapper->readOnly) {
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
-        v4->current->throwError(error);
+        v4->currentContext()->throwError(error);
         return;
     }
 
@@ -439,7 +439,7 @@ QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrappe
     : Object(engine)
     , contextWrapper(contextWrapper)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)

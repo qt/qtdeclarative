@@ -6572,15 +6572,7 @@ void QQuickItem::grabMouse()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    if (windowPriv->mouseGrabberItem == this)
-        return;
-
-    QQuickItem *oldGrabber = windowPriv->mouseGrabberItem;
-    windowPriv->mouseGrabberItem = this;
-    if (oldGrabber) {
-        QEvent ev(QEvent::UngrabMouse);
-        d->window->sendEvent(oldGrabber, &ev);
-    }
+    windowPriv->setMouseGrabber(this);
 }
 
 /*!
@@ -6960,7 +6952,10 @@ bool QQuickItem::event(QEvent *ev)
         touchEvent(static_cast<QTouchEvent*>(ev));
         break;
     case QEvent::StyleAnimationUpdate:
-        update();
+        if (isVisible()) {
+            ev->accept();
+            update();
+        }
         break;
     case QEvent::HoverEnter:
         hoverEnterEvent(static_cast<QHoverEvent*>(ev));

@@ -47,9 +47,10 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(CallContext *context)
-    : Object(context->engine), context(context), fullyCreated(false)
+    : Object(context->strictMode ? context->engine->strictArgumentsObjectClass : context->engine->argumentsObjectClass)
+    , context(context)
+    , fullyCreated(false)
 {
-    vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
     flags &= ~SimpleArray;
 
@@ -58,8 +59,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     ScopedObject protectThis(scope, this);
 
     if (context->strictMode) {
-        internalClass = v4->strictArgumentsObjectClass;
-
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         Q_ASSERT(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
@@ -72,7 +71,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         arrayDataLen = context->callData->argc;
         fullyCreated = true;
     } else {
-        internalClass = engine()->argumentsObjectClass;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
         isNonStrictArgumentsObject = true;
@@ -80,6 +78,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
     lp->value = Primitive::fromInt32(context->realArgumentCount);
+
+    Q_ASSERT(internalClass->vtable == &static_vtbl);
 }
 
 void ArgumentsObject::destroy(Managed *that)
@@ -215,7 +215,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     Q_ASSERT(g->index < static_cast<unsigned>(o->context->callData->argc));
     return o->context->argument(g->index);
@@ -230,7 +230,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     Q_ASSERT(s->index < static_cast<unsigned>(o->context->callData->argc));
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();

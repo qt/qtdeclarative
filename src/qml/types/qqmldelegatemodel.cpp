@@ -71,12 +71,12 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         , code(code)
         , flag(flag)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
     {
-        return m->engine()->current->throwTypeError();
+        return m->engine()->currentContext()->throwTypeError();
     }
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
@@ -86,7 +86,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         QV4::Scoped<DelegateModelGroupFunction> f(scope, that, QV4::Scoped<DelegateModelGroupFunction>::Cast);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
         if (!o)
-            return v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return v4->currentContext()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::ScopedValue v(scope, callData->argument(0));
         return f->code(o->item, f->flag, v);
@@ -3144,7 +3144,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3183,7 +3183,7 @@ public:
     QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}
@@ -3197,7 +3197,7 @@ public:
         QV4::Scope scope(v4);
         QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, m->as<QQmlDelegateModelGroupChangeArray>());
         if (!array)
-            return v4->current->throwTypeError();
+            return v4->currentContext()->throwTypeError();
 
         if (index >= array->count()) {
             if (hasProperty)
@@ -3221,7 +3221,7 @@ public:
     {
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)
-            return m->engine()->current->throwTypeError();
+            return m->engine()->currentContext()->throwTypeError();
 
         if (name->equals(m->engine()->id_length)) {
             if (hasProperty)

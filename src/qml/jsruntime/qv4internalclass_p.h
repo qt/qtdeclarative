@@ -53,6 +53,7 @@ struct String;
 struct ExecutionEngine;
 struct Object;
 struct Identifier;
+struct ManagedVTable;
 
 struct PropertyHashData;
 struct PropertyHash
@@ -198,9 +199,14 @@ struct InternalClassTransition
     union {
         Identifier *id;
         Object *prototype;
+        const ManagedVTable *vtable;
     };
     int flags;
-    enum { ProtoChange = 0x100 };
+    enum {
+        // range 0-0xff is reserved for attribute changes
+        ProtoChange = 0x100,
+        VTableChange = 0x200
+    };
 
     bool operator==(const InternalClassTransition &other) const
     { return id == other.id && flags == other.flags; }
@@ -210,6 +216,8 @@ uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 struct InternalClass {
     ExecutionEngine *engine;
     Object *prototype;
+    const ManagedVTable *vtable;
+
     PropertyHash propertyTable; // id to valueIndex
     SharedInternalClassData<String *> nameMap;
     SharedInternalClassData<PropertyAttributes> propertyData;
@@ -222,7 +230,9 @@ struct InternalClass {
 
     uint size;
 
+    static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto);
     InternalClass *changePrototype(Object *proto);
+    InternalClass *changeVTable(const ManagedVTable *vt);
     InternalClass *addMember(StringRef string, PropertyAttributes data, uint *index = 0);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
@@ -238,7 +248,7 @@ struct InternalClass {
 
 private:
     friend struct ExecutionEngine;
-    InternalClass(ExecutionEngine *engine) : engine(engine), prototype(0), m_sealed(0), m_frozen(0), size(0) {}
+    InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);
 };
 

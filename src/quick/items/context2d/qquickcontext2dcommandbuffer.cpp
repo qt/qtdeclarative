@@ -420,38 +420,8 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
             Q_ASSERT(!pix.isNull());
 
             const bool hasShadow = HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
-            if (p->paintEngine()->type() != QPaintEngine::OpenGL2 || hasShadow){
-                //TODO: generate shadow blur with shaders
-                qt_drawImage(p, state, pix->image(), sr, dr, hasShadow);
-            } else if (pix->texture()){
-                QSGTexture *tex = pix->texture();
-                QSGDynamicTexture *dynamicTexture = qobject_cast<QSGDynamicTexture *>(tex);
-                if (dynamicTexture)
-                    dynamicTexture->updateTexture();
-
-                if (tex->textureId()) {
-
-                    if (sr.width() < 0)
-                        sr.setWidth(tex->textureSize().width());
-                    if (sr.height() < 0)
-                        sr.setHeight(tex->textureSize().height());
-
-                    if (dr.width() < 0)
-                        dr.setWidth(sr.width());
-                    if (dr.height() < 0)
-                        dr.setHeight(sr.height());
-
-                    qreal srBottom = sr.bottom();
-                    sr.setBottom(sr.top());
-                    sr.setTop(srBottom);
-
-                    tex->bind();
-                    if (p->paintEngine()->type() == QPaintEngine::OpenGL2) {
-                        QOpenGL2PaintEngineEx *engine = static_cast<QOpenGL2PaintEngineEx *>(p->paintEngine());
-                        engine->drawTexture(dr, tex->textureId(), tex->textureSize(), sr);
-                    }
-                }
-            }
+            //TODO: generate shadow blur with shaders
+            qt_drawImage(p, state, pix->image(), sr, dr, hasShadow);
             break;
         }
         case QQuickContext2D::GetImageData:

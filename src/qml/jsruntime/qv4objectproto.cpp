@@ -77,7 +77,7 @@ DEFINE_MANAGED_VTABLE(ObjectCtor);
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Object"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
@@ -92,14 +92,14 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
             obj->setPrototype(proto.getPointer());
         return obj.asReturnedValue();
     }
-    return __qmljs_to_object(v4->current, ValueRef(&callData->args[0]));
+    return __qmljs_to_object(v4->currentContext(), ValueRef(&callData->args[0]));
 }
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 {
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return m->engine()->newObject()->asReturnedValue();
-    return __qmljs_to_object(m->engine()->current, ValueRef(&callData->args[0]));
+    return __qmljs_to_object(m->engine()->currentContext(), ValueRef(&callData->args[0]));
 }
 
 void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)

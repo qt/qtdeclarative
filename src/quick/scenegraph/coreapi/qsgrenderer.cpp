@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 //#define RENDERER_DEBUG
 //#define QT_GL_NO_SCISSOR_TEST
 
-
+static bool qsg_sanity_check = qgetenv("QSG_SANITY_CHECK").toInt();
 
 #ifndef QSG_NO_RENDER_TIMING
 static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
@@ -243,9 +243,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         bindTime = frameTimer.nsecsElapsed();
 #endif
 
-#ifndef QT_NO_DEBUG
     // Sanity check that attribute registers are disabled
-    {
+    if (qsg_sanity_check) {
         GLint count = 0;
         glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
         GLint enabled;
@@ -256,7 +255,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
             }
         }
     }
-#endif
 
     render();
 #ifndef QSG_NO_RENDER_TIMING

@@ -277,7 +277,7 @@ struct QV4ParticleData : public QV4::Object
     QV4ParticleData(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         this->datum = datum;
     }
 

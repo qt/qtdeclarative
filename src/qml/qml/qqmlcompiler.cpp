@@ -61,8 +61,7 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
-#include "qqmlabstracturlinterceptor_p.h"
-#include "qqmlcodegenerator_p.h"
+#include "qqmlabstracturlinterceptor.h"
 
 #include <QDebug>
 #include <QPointF>
@@ -848,6 +847,8 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
             }
         }
 
+        ref.doDynamicTypeCheck();
+
         out->types << ref;
     }
 
@@ -859,6 +860,19 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
         if (componentStats)
             dumpStats();
         Q_ASSERT(out->rootPropertyCache);
+
+        // Any QQmlPropertyMap instances for example need to have their property cache removed,
+        // because the class is too dynamic and allows adding properties at any point at run-time.
+        for (int i = 0; i < output->types.count(); ++i) {
+            QQmlCompiledData::TypeReference &tr = output->types[i];
+            if (!tr.typePropertyCache)
+                continue;
+
+            if (tr.isFullyDynamicType) {
+                tr.typePropertyCache->release();
+                tr.typePropertyCache = 0;
+            }
+        }
     } else {
         reset(out);
     }
@@ -1227,6 +1241,7 @@ void QQmlCompiler::genObject(QQmlScript::Object *obj, bool parentToSuper)
 
     // Setup the synthesized meta object if necessary
     if (!obj->synthdata.isEmpty()) {
+        Q_ASSERT(!output->types.at(obj->type).isFullyDynamicType);
         Instruction::StoreMetaObject meta;
         meta.aliasData = output->indexForByteArray(obj->synthdata);
         meta.propertyCache = output->propertyCaches.count();
@@ -2682,14 +2697,42 @@ const QMetaObject *QQmlCompiler::resolveType(const QString& name) const
     return qmltype->metaObject();
 }
 
-int QQmlCompiler::bindingIdentifier(const Variant &value)
+int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, const BindingContext &ctxt)
 {
-    return output->indexForString(value.asScript());
+    JSBindingReference *reference = pool->New<JSBindingReference>();
+    reference->expression = value;
+    reference->property = pool->New<Property>();
+    reference->property->setName(name);
+    reference->value = 0;
+    reference->bindingContext = ctxt;
+    reference->bindingContext.owner++;
+    // Unfortunately this is required for example for PropertyChanges where the bindings
+    // will be executed in the dynamic scope of the target, so we can't resolve any lookups
+    // at run-time.
+    reference->disableLookupAcceleration = true;
+
+    const int id = output->customParserBindings.count();
+    output->customParserBindings.append(0); // Filled in later.
+    reference->customParserBindingsIndex = id;
+
+    compileState->totalBindingsCount++;
+    compileState->bindings.prepend(reference);
+
+    return id;
 }
 
 // Ensures that the dynamic meta specification on obj is valid
 bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 {
+    if (output->types[obj->type].isFullyDynamicType) {
+        if (!obj->dynamicProperties.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully dynamic types cannot declare new properties."));
+        if (!obj->dynamicSignals.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully dynamic types cannot declare new signals."));
+        if (!obj->dynamicSlots.isEmpty())
+            COMPILE_EXCEPTION(obj, tr("Fully Dynamic types cannot declare new functions."));
+    }
+
     bool seenDefaultProperty = false;
 
     // We use a coarse grain, 31 bit hash to check if there are duplicates.
@@ -3644,11 +3687,14 @@ bool QQmlCompiler::completeComponentBuild()
         }
 
         ComponentCompileState::PerObjectCompileData *cd = &compileState->jsCompileData[b->bindingContext.object];
-        cd->functionsToCompile.append(node);
+        QtQml::CompiledFunctionOrExpression f;
+        f.node = node;
+        f.name = binding.property->name().toString().prepend(QStringLiteral("expression for "));
+        f.disableAcceleratedLookups = binding.disableLookupAcceleration;
+        cd->functionsToCompile.append(f);
         binding.compiledIndex = cd->functionsToCompile.count() - 1;
-        cd->expressionNames.insert(binding.compiledIndex, binding.property->name().toString().prepend(QStringLiteral("expression for ")));
 
-        if (componentStats)
+        if (componentStats && b->value)
             componentStats->componentStat.scriptBindings.append(b->value->location);
     }
 
@@ -3656,7 +3702,7 @@ bool QQmlCompiler::completeComponentBuild()
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
 
-        JSCodeGen jsCodeGen(enginePrivate, unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
+        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
 
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {
@@ -3679,7 +3725,7 @@ bool QQmlCompiler::completeComponentBuild()
 
             jsCodeGen.beginObjectScope(scopeObject->metatype);
 
-            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile, cd->expressionNames);
+            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile);
             QList<QQmlError> errors = jsCodeGen.errors();
             if (!errors.isEmpty()) {
                 exceptions << errors;
@@ -3697,6 +3743,10 @@ bool QQmlCompiler::completeComponentBuild()
         for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
             JSBindingReference &binding = *b;
             binding.compiledIndex = compileState->jsCompileData[binding.bindingContext.object].runtimeFunctionIndices[binding.compiledIndex];
+            if (!binding.value) { // Must be a binding requested from custom parser
+                Q_ASSERT(binding.customParserBindingsIndex >= 0 && binding.customParserBindingsIndex < output->customParserBindings.count());
+                output->customParserBindings[binding.customParserBindingsIndex] = binding.compiledIndex;
+            }
         }
     }
 

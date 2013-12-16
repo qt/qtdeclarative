@@ -58,8 +58,6 @@ public:
     void reset();
     void clear();
 
-    void lockQueue() { queueLock.lock(); }
-    void unlockQueue() { queueLock.unlock(); }
     inline int size() {return commands.size();}
     inline bool isEmpty() const {return commands.isEmpty(); }
     inline bool hasNext() const {return cmdIdx < commands.size(); }

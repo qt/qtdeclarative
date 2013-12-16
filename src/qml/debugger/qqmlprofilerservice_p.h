@@ -381,9 +381,9 @@ struct QQmlPixmapProfiler {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapReferenceCountChanged, pixmapUrl, referenceCount);
         }
     }
-    void setSize(const QUrl &pixmapUrl, int width, int height) {
-        if (enabled) {
-            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapSizeKnown, pixmapUrl, width, height);
+    void setSize(const QUrl &pixmapUrl, const QSize &size) {
+        if (enabled && size.width() > 0) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapSizeKnown, pixmapUrl, size.width(), size.height());
         }
     }
 

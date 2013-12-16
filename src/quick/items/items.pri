@@ -39,6 +39,7 @@ HEADERS += \
     $$PWD/qquickpincharea_p_p.h \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
+    $$PWD/qquickflickablebehavior_p.h \
     $$PWD/qquicklistview_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \

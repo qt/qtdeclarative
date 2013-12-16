@@ -90,7 +90,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_platform(0)
     , m_application(0)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope scope(v4);
     ScopedObject protectThis(scope, this);
@@ -1183,7 +1183,7 @@ struct BindingFunction : public QV4::FunctionObject
         : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
         , originalFunction(originalFunction)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         bindingKeyFlag = true;
     }
 
@@ -1608,7 +1608,7 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension
-    v4->stringClass->prototype->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
+    v4->stringObjectClass->prototype->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
 }
 
 
@@ -1726,7 +1726,9 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
 
     QString path = ctxt->url.toString();
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) : QString();
+    int lastDot = path.lastIndexOf(QLatin1Char('.'));
+    int length = lastDot - (lastSlash + 1);
+    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
 
     QString text = ctx->callData->args[0].toQStringNoThrow();
     QString comment;

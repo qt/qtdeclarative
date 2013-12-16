@@ -284,8 +284,13 @@ bool JsonParser::parseMember(ObjectRef o)
         return false;
 
     ScopedString s(scope, context->engine->newIdentifier(key));
-    Property *p = o->insertMember(s, Attr_Data);
-    p->value = val.asReturnedValue();
+    uint idx = s->asArrayIndex();
+    if (idx < UINT_MAX) {
+        o->putIndexed(idx, val);
+    } else {
+        Property *p = o->insertMember(s, Attr_Data);
+        p->value = val.asReturnedValue();
+    }
 
     END;
     return true;
@@ -960,7 +965,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return engine->current->engine->newString(value.toString())->asReturnedValue();
+        return engine->currentContext()->engine->newString(value.toString())->asReturnedValue();
     else if (value.isDouble())
         return Encode(value.toDouble());
     else if (value.isBool())

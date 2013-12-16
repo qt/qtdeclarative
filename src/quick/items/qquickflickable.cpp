@@ -41,6 +41,7 @@
 
 #include "qquickflickable_p.h"
 #include "qquickflickable_p_p.h"
+#include "qquickflickablebehavior_p.h"
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
 #include "qquickevents_p_p.h"
@@ -57,52 +58,6 @@
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
-
-// The maximum number of pixels a flick can overshoot
-#ifndef QML_FLICK_OVERSHOOT
-#define QML_FLICK_OVERSHOOT 150
-#endif
-
-// The number of samples to use in calculating the velocity of a flick
-#ifndef QML_FLICK_SAMPLEBUFFER
-#define QML_FLICK_SAMPLEBUFFER 3
-#endif
-
-// The number of samples to discard when calculating the flick velocity.
-// Touch panels often produce inaccurate results as the finger is lifted.
-#ifndef QML_FLICK_DISCARDSAMPLES
-#define QML_FLICK_DISCARDSAMPLES 0
-#endif
-
-// The default maximum velocity of a flick.
-#ifndef QML_FLICK_DEFAULTMAXVELOCITY
-#define QML_FLICK_DEFAULTMAXVELOCITY 2500
-#endif
-
-// The default deceleration of a flick.
-#ifndef QML_FLICK_DEFAULTDECELERATION
-#define QML_FLICK_DEFAULTDECELERATION 1500
-#endif
-
-// How much faster to decelerate when overshooting
-#ifndef QML_FLICK_OVERSHOOTFRICTION
-#define QML_FLICK_OVERSHOOTFRICTION 8
-#endif
-
-// Multiflick acceleration minimum flick velocity threshold
-#ifndef QML_FLICK_MULTIFLICK_THRESHOLD
-#define QML_FLICK_MULTIFLICK_THRESHOLD 1250
-#endif
-
-// Multiflick acceleration minimum contentSize/viewSize ratio
-#ifndef QML_FLICK_MULTIFLICK_RATIO
-#define QML_FLICK_MULTIFLICK_RATIO 10
-#endif
-
-// Multiflick acceleration maximum velocity multiplier
-#ifndef QML_FLICK_MULTIFLICK_MAXBOOST
-#define QML_FLICK_MULTIFLICK_MAXBOOST 3.0
-#endif
 
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
@@ -508,16 +463,27 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     data.vTime = timeline.time();
 }
 
+static bool fuzzyLessThanOrEqualTo(qreal a, qreal b)
+{
+    if (a == 0.0 || b == 0.0) {
+        // qFuzzyCompare is broken
+        a += 1.0;
+        b += 1.0;
+    }
+    return a <= b || qFuzzyCompare(a, b);
+}
+
 void QQuickFlickablePrivate::updateBeginningEnd()
 {
     Q_Q(QQuickFlickable);
     bool atBoundaryChange = false;
 
     // Vertical
-    const int maxyextent = int(-q->maxYExtent());
+    const qreal maxyextent = -q->maxYExtent();
+    const qreal minyextent = -q->minYExtent();
     const qreal ypos = -vData.move.value();
-    bool atBeginning = (ypos <= -q->minYExtent());
-    bool atEnd = (maxyextent <= ypos);
+    bool atBeginning = fuzzyLessThanOrEqualTo(ypos, minyextent);
+    bool atEnd = fuzzyLessThanOrEqualTo(maxyextent, ypos);
 
     if (atBeginning != vData.atBeginning) {
         vData.atBeginning = atBeginning;
@@ -529,10 +495,11 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     }
 
     // Horizontal
-    const int maxxextent = int(-q->maxXExtent());
+    const qreal maxxextent = -q->maxXExtent();
+    const qreal minxextent = -q->minXExtent();
     const qreal xpos = -hData.move.value();
-    atBeginning = (xpos <= -q->minXExtent());
-    atEnd = (maxxextent <= xpos);
+    atBeginning = fuzzyLessThanOrEqualTo(xpos, minxextent);
+    atEnd = fuzzyLessThanOrEqualTo(maxxextent, xpos);
 
     if (atBeginning != hData.atBeginning) {
         hData.atBeginning = atBeginning;
@@ -1046,17 +1013,20 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             // the estimate to be altered
             const qreal minY = vData.dragMinBound + vData.startMargin;
             const qreal maxY = vData.dragMaxBound - vData.endMargin;
-            if (newY > minY)
-                newY = minY + (newY - minY) / 2;
-            if (newY < maxY && maxY - minY <= 0)
-                newY = maxY + (newY - maxY) / 2;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && newY <= maxY) {
-                newY = maxY;
-                rejectY = vData.pressPos == maxY && dy < 0;
-            }
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && newY >= minY) {
-                newY = minY;
-                rejectY = vData.pressPos == minY && dy > 0;
+            if (boundsBehavior == QQuickFlickable::StopAtBounds) {
+                if (newY <= maxY) {
+                    newY = maxY;
+                    rejectY = vData.pressPos == maxY && vData.move.value() == maxY && dy < 0;
+                }
+                if (newY >= minY) {
+                    newY = minY;
+                    rejectY = vData.pressPos == minY && vData.move.value() == minY && dy > 0;
+                }
+            } else {
+                if (newY > minY)
+                    newY = minY + (newY - minY) / 2;
+                if (newY < maxY && maxY - minY <= 0)
+                    newY = maxY + (newY - maxY) / 2;
             }
             if (!rejectY && stealMouse && dy != 0.0) {
                 clearTimeline();
@@ -1077,17 +1047,20 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
-            if (newX > minX)
-                newX = minX + (newX - minX) / 2;
-            if (newX < maxX && maxX - minX <= 0)
-                newX = maxX + (newX - maxX) / 2;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && newX <= maxX) {
-                newX = maxX;
-                rejectX = hData.pressPos == maxX && dx < 0;
-            }
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && newX >= minX) {
-                newX = minX;
-                rejectX = hData.pressPos == minX && dx > 0;
+            if (boundsBehavior == QQuickFlickable::StopAtBounds) {
+                if (newX <= maxX) {
+                    newX = maxX;
+                    rejectX = hData.pressPos == maxX && hData.move.value() == maxX && dx < 0;
+                }
+                if (newX >= minX) {
+                    newX = minX;
+                    rejectX = hData.pressPos == minX && hData.move.value() == minX && dx > 0;
+                }
+            } else {
+                if (newX > minX)
+                    newX = minX + (newX - minX) / 2;
+                if (newX < maxX && maxX - minX <= 0)
+                    newX = maxX + (newX - maxX) / 2;
             }
 
             if (!rejectX && stealMouse && dx != 0.0) {
@@ -2075,12 +2048,13 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
         if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
             d->clearDelayedPress();
             grabMouse();
+        } else if (d->delayedPressEvent) {
+            grabMouse();
         }
 
-        // Do not accept this event when filtering, as this would force the mouse grab to the child
         const bool filtered = stealThisEvent || d->delayedPressEvent || grabberDisabled;
         if (filtered) {
-            event->setAccepted(false);
+            event->setAccepted(true);
         }
         return filtered;
     } else if (d->lastPosTime != -1) {

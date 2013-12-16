@@ -44,7 +44,6 @@
 #include "qv4global_p.h"
 #include "private/qv4isel_p.h"
 #include "qv4util_p.h"
-#include "qv4context_p.h"
 #include "qv4property_p.h"
 #include <private/qintrusivelist_p.h>
 
@@ -112,11 +111,12 @@ class RegExp;
 class RegExpCache;
 struct QmlExtensions;
 struct Exception;
+struct ExecutionContextSaver;
 
 #define CHECK_STACK_LIMITS(v4) \
     if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
     else \
-        return v4->current->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
+        return v4->currentContext()->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
 
 
 struct Q_QML_EXPORT ExecutionEngine
@@ -126,7 +126,13 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
 
+private:
+    friend struct ExecutionContextSaver;
+    friend struct ExecutionContext;
     ExecutionContext *current;
+public:
+    ExecutionContext *currentContext() const { return current; }
+
     GlobalContext *rootContext;
 
     SafeValue *jsStackTop;
@@ -183,12 +189,16 @@ struct Q_QML_EXPORT ExecutionEngine
     SafeValue syntaxErrorCtor;
     SafeValue typeErrorCtor;
     SafeValue uRIErrorCtor;
+    SafeValue sequencePrototype;
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
+    InternalClass *executionContextClass;
+    InternalClass *stringClass;
+
     InternalClass *objectClass;
     InternalClass *arrayClass;
-    InternalClass *stringClass;
+    InternalClass *stringObjectClass;
     InternalClass *booleanClass;
     InternalClass *numberClass;
     InternalClass *dateClass;
@@ -199,6 +209,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     InternalClass *regExpClass;
     InternalClass *regExpExecArrayClass;
+    InternalClass *regExpValueClass;
 
     InternalClass *errorClass;
     InternalClass *evalErrorClass;
@@ -211,7 +222,6 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *strictArgumentsObjectClass;
 
     InternalClass *variantClass;
-    InternalClass *sequenceClass;
 
     EvalFunction *evalFunction;
     FunctionObject *thrower;
@@ -354,35 +364,6 @@ struct Q_QML_EXPORT ExecutionEngine
 
 private:
     QmlExtensions *m_qmlExtensions;
-};
-
-inline void ExecutionEngine::pushContext(CallContext *context)
-{
-    context->parent = current;
-    current = context;
-    current->currentEvalCode = 0;
-}
-
-inline ExecutionContext *ExecutionEngine::popContext()
-{
-    current = current->parent;
-    return current;
-}
-
-struct ExecutionContextSaver
-{
-    ExecutionEngine *engine;
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(ExecutionContext *context)
-        : engine(context->engine)
-        , savedContext(context)
-    {
-    }
-    ~ExecutionContextSaver()
-    {
-        engine->current = savedContext;
-    }
 };
 
 inline

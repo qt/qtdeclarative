@@ -45,12 +45,50 @@
 #include <QtCore/QCoreApplication>
 #include <QtQml/QQmlEngine>
 
+#include <private/qguiapplication_p.h>
+#include <private/qqmlengine_p.h>
+#include <qpa/qplatformintegration.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
 {
     Q_INTERFACES(QQmlParserStatus)
     Q_OBJECT
+
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
+
+public:
+    QQuickWindowQmlImpl(QWindow *parent = 0)
+        : QQuickWindow(parent)
+        , m_complete(false)
+        , m_visible(isVisible())
+        , m_visibility(AutomaticVisibility)
+    {
+        connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
+        connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
+    }
+
+    void setVisible(bool visible) {
+        if (!m_complete)
+            m_visible = visible;
+        else
+            QQuickWindow::setVisible(visible);
+    }
+
+    void setVisibility(Visibility visibility)
+    {
+        if (!m_complete)
+            m_visibility = visibility;
+        else
+            QQuickWindow::setVisibility(visibility);
+    }
+
+Q_SIGNALS:
+    void visibleChanged(bool arg);
+    void visibilityChanged(QWindow::Visibility visibility);
+
 protected:
     void classBegin() {
         //Give QQuickView behavior when created from QML with QQmlApplicationEngine
@@ -61,7 +99,47 @@ protected:
         }
     }
 
-    void componentComplete() {}
+    void componentComplete() {
+        m_complete = true;
+
+        // We have deferred window creation until we have the full picture of what
+        // the user wanted in terms of window state, geometry, visibility, etc.
+
+        if ((m_visibility == Hidden && m_visible) || (m_visibility > AutomaticVisibility && !m_visible)) {
+            QQmlData *data = QQmlData::get(this);
+            Q_ASSERT(data && data->context);
+
+            QQmlError error;
+            error.setObject(this);
+
+            const QQmlContextData* urlContext = data->context;
+            while (urlContext && urlContext->url.isEmpty())
+                urlContext = urlContext->parent;
+            error.setUrl(urlContext ? urlContext->url : QUrl());
+
+            QString objectId = data->context->findObjectId(this);
+            if (!objectId.isEmpty())
+                error.setDescription(QCoreApplication::translate("QQuickWindowQmlImpl",
+                    "Conflicting properties 'visible' and 'visibility' for Window '%1'").arg(objectId));
+            else
+                error.setDescription(QCoreApplication::translate("QQuickWindowQmlImpl",
+                    "Conflicting properties 'visible' and 'visibility'"));
+
+            QQmlEnginePrivate::get(data->context->engine)->warning(error);
+        }
+
+        if (m_visibility == AutomaticVisibility) {
+            setWindowState(QGuiApplicationPrivate::platformIntegration()->defaultWindowState(flags()));
+            setVisible(m_visible);
+        } else {
+            setVisibility(m_visibility);
+        }
+    }
+
+private:
+    bool m_complete;
+    bool m_visible;
+    Visibility m_visibility;
 };
 
 void QQuickWindowModule::defineModule()

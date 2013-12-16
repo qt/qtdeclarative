@@ -51,7 +51,7 @@ DEFINE_MANAGED_VTABLE(ArrayCtor);
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Array"))
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
@@ -65,7 +65,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
         len = callData->args[0].asArrayLength(&ok);
 
         if (!ok)
-            return v4->current->throwRangeError(callData->args[0]);
+            return v4->currentContext()->throwRangeError(callData->args[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
@@ -174,12 +174,22 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
     }
 
     ScopedArrayObject elt(scope);
+    ScopedObject eltAsObj(scope);
+    ScopedValue entry(scope);
     for (int i = 0; i < ctx->callData->argc; ++i) {
+        eltAsObj = ctx->callData->args[i];
         elt = ctx->callData->args[i];
-        if (elt)
+        if (elt) {
             result->arrayConcat(elt.getPointer());
-        else
+        } else if (eltAsObj && eltAsObj->isListType()) {
+            const uint startIndex = getLength(ctx, result);
+            for (int i = 0, len = getLength(ctx, eltAsObj); i < len; ++i) {
+                entry = eltAsObj->getIndexed(i);
+                result->putIndexed(startIndex + i, entry);
+            }
+        } else {
             result->arraySet(getLength(ctx, result), ctx->callData->args[i]);
+        }
     }
 
     return result.asReturnedValue();

@@ -47,6 +47,7 @@
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4internalclass_p.h>
 
 #include <algorithm>
 
@@ -167,14 +168,13 @@ class QQmlSequence : public QV4::Object
     Q_MANAGED
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QV4::Object(engine->sequenceClass)
+        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
         , m_container(container)
         , m_object(0)
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
         type = Type_QmlSequence;
-        vtbl = &static_vtbl;
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
@@ -183,13 +183,12 @@ public:
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(engine->sequenceClass)
+        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
         , m_object(object)
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
         type = Type_QmlSequence;
-        vtbl = &static_vtbl;
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
@@ -207,7 +206,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
             return Encode::undefined();
@@ -238,7 +237,7 @@ public:
 
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed set"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed set"));
             return;
         }
 
@@ -276,7 +275,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->current, QLatin1String("Index out of range during indexed query"));
+            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
         }
         if (m_isReference) {

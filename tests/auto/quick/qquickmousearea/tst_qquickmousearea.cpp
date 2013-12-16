@@ -89,6 +89,7 @@ private slots:
     void dragThreshold();
     void invalidDrag_data() { rejectedButton_data(); }
     void invalidDrag();
+    void cancelDragging();
     void setDragOnPressed();
     void updateMouseAreaPosOnClick();
     void updateMouseAreaPosOnResize();
@@ -438,6 +439,57 @@ void tst_QQuickMouseArea::invalidDrag()
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 50.0);
     QCOMPARE(blackRect->y(), 50.0);
+}
+
+void tst_QQuickMouseArea::cancelDragging()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != 0);
+
+    QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseRegion->drag();
+    QVERIFY(mouseRegion != 0);
+    QVERIFY(drag != 0);
+
+    mouseRegion->setAcceptedButtons(Qt::LeftButton);
+
+    // target
+    QQuickItem *blackRect = window.rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+
+    QVERIFY(!drag->active());
+
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    QTest::mouseMove(&window, QPoint(111,111), 50);
+    QTest::mouseMove(&window, QPoint(116,116), 50);
+    QTest::mouseMove(&window, QPoint(122,122), 50);
+
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
+
+    mouseRegion->QQuickItem::ungrabMouse();
+    QTRY_VERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
+
+    QTest::mouseMove(&window, QPoint(132,132), 50);
+    QTRY_VERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(122,122));
 }
 
 void tst_QQuickMouseArea::setDragOnPressed()

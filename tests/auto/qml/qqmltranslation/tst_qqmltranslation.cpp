@@ -52,19 +52,32 @@ public:
     tst_qqmltranslation() {}
 
 private slots:
+    void translation_data();
     void translation();
     void idTranslation();
-    void translationInQrc();
 };
+
+void tst_qqmltranslation::translation_data()
+{
+    QTest::addColumn<QString>("translation");
+    QTest::addColumn<QUrl>("testFile");
+
+    QTest::newRow("qml") << QStringLiteral("qml_fr") << testFileUrl("translation.qml");
+    QTest::newRow("qrc") << QStringLiteral(":/qml_fr.qm") << QUrl("qrc:/translation.qml");
+    QTest::newRow("js") << QStringLiteral("qml_fr") << testFileUrl("jstranslation.qml");
+}
 
 void tst_qqmltranslation::translation()
 {
+    QFETCH(QString, translation);
+    QFETCH(QUrl, testFile);
+
     QTranslator translator;
-    translator.load(QLatin1String("qml_fr"), dataDirectory());
+    translator.load(translation, dataDirectory());
     QCoreApplication::installTranslator(&translator);
 
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("translation.qml"));
+    QQmlComponent component(&engine, testFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -99,34 +112,6 @@ void tst_qqmltranslation::idTranslation()
     QCOMPARE(object->property("idTranslation").toString(), QLatin1String("bonjour tout le monde"));
     QCOMPARE(object->property("idTranslation2").toString(), QLatin1String("bonjour tout le monde"));
     QCOMPARE(object->property("idTranslation3").toString(), QLatin1String("bonjour tout le monde"));
-
-    QCoreApplication::removeTranslator(&translator);
-    delete object;
-}
-
-void tst_qqmltranslation::translationInQrc()
-{
-    QTranslator translator;
-    translator.load(":/qml_fr.qm");
-    QCoreApplication::installTranslator(&translator);
-
-    QQmlEngine engine;
-    QQmlComponent component(&engine, QUrl("qrc:/translation.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != 0);
-
-    QCOMPARE(object->property("basic").toString(), QLatin1String("bonjour"));
-    QCOMPARE(object->property("basic2").toString(), QLatin1String("au revoir"));
-    QCOMPARE(object->property("basic3").toString(), QLatin1String("bonjour"));
-    QCOMPARE(object->property("disambiguation").toString(), QLatin1String("salut"));
-    QCOMPARE(object->property("disambiguation2").toString(), QString::fromUtf8("\xc3\xa0 plus tard"));
-    QCOMPARE(object->property("disambiguation3").toString(), QLatin1String("salut"));
-    QCOMPARE(object->property("noop").toString(), QLatin1String("bonjour"));
-    QCOMPARE(object->property("noop2").toString(), QLatin1String("au revoir"));
-    QCOMPARE(object->property("singular").toString(), QLatin1String("1 canard"));
-    QCOMPARE(object->property("singular2").toString(), QLatin1String("1 canard"));
-    QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
-    QCOMPARE(object->property("plural2").toString(), QLatin1String("2 canards"));
 
     QCoreApplication::removeTranslator(&translator);
     delete object;

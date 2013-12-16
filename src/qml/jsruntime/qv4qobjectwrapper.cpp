@@ -241,7 +241,7 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
@@ -668,7 +668,7 @@ QV4::ReturnedValue QObjectWrapper::get(Managed *m, const StringRef name, bool *h
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->current, qmlContext, name.getPointer(), IgnoreRevision, hasProperty, /*includeImports*/ true);
+    return that->getQmlProperty(v4->currentContext(), qmlContext, name.getPointer(), IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
@@ -680,10 +680,10 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    if (!setQmlProperty(v4->current, qmlContext, that->m_object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value)) {
+    if (!setQmlProperty(v4->currentContext(), qmlContext, that->m_object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value)) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
                         name->toQString() + QLatin1Char('\"');
-        v4->current->throwError(error);
+        v4->currentContext()->throwError(error);
     }
 }
 
@@ -763,7 +763,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             Q_ASSERT(v4);
             QV4::Scope scope(v4);
             QV4::ScopedFunctionObject f(scope, This->function.value());
-            QV4::ExecutionContext *ctx = v4->current;
+            QV4::ExecutionContext *ctx = v4->currentContext();
 
             QV4::ScopedCallData callData(scope, argCount);
             callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
@@ -1337,7 +1337,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
         QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
-        return QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->currentContext()->throwError(error);
     }
 
     if (data.hasArguments()) {
@@ -1351,12 +1351,12 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
             QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
-            return QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->currentContext()->throwError(error);
         }
 
         if (args[0] > callArgs->argc) {
             QString error = QLatin1String("Insufficient arguments");
-            return QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->currentContext()->throwError(error);
         }
 
         return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
@@ -1455,7 +1455,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
-        return QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->currentContext()->throwError(error);
     }
 }
 
@@ -1726,7 +1726,7 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     , m_object(object)
     , m_index(index)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
     subtype = WrappedQtMethod;
     m_qmlGlobal = qmlGlobal;
 }
@@ -1782,7 +1782,7 @@ ReturnedValue QObjectMethod::call(Managed *m, CallData *callData)
 
 ReturnedValue QObjectMethod::callInternal(CallData *callData)
 {
-    ExecutionContext *context = engine()->current;
+    ExecutionContext *context = engine()->currentContext();
     if (m_index == DestroyMethod)
         return method_destroy(context, callData->args, callData->argc);
     else if (m_index == ToStringMethod)
@@ -1847,7 +1847,7 @@ QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int
     , m_object(object)
     , m_signalIndex(signalIndex)
 {
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 DEFINE_MANAGED_VTABLE(QmlSignalHandler);

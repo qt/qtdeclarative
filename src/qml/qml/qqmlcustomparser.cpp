@@ -313,8 +313,7 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 */
 QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QQmlScript::Variant &value, const QString& name)
 {
-    Q_UNUSED(name);
-    return compiler->bindingIdentifier(value);
+    return compiler->bindingIdentifier(name, value, QQmlCompilerTypes::BindingContext(object));
 }
 
 QT_END_NAMESPACE

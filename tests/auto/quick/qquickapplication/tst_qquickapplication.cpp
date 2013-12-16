@@ -184,7 +184,6 @@ void tst_qquickapplication::layoutDirection()
 
     // mirrored
     QGuiApplication::setLayoutDirection(Qt::RightToLeft);
-    QEXPECT_FAIL("", "QTBUG-21573", Abort);
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::RightToLeft);
 
     // not mirrored again

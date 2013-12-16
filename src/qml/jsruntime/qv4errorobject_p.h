@@ -184,37 +184,37 @@ struct ErrorPrototype: ErrorObject
 
 struct EvalErrorPrototype: ErrorObject
 {
-    EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct RangeErrorPrototype: ErrorObject
 {
-    RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ErrorObject
 {
-    ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: ErrorObject
 {
-    SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct TypeErrorPrototype: ErrorObject
 {
-    TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct URIErrorPrototype: ErrorObject
 {
-    URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
+    URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 

@@ -89,6 +89,8 @@ void registerTypes()
 
     qmlRegisterUncreatableType<MyUncreateableBaseClass,1>("Test", 1, 1, "MyUncreateableBaseClass", "Cannot create MyUncreateableBaseClass");
     qmlRegisterType<MyCreateableDerivedClass,1>("Test", 1, 1, "MyCreateableDerivedClass");
+
+    qmlRegisterCustomType<CustomBinding>("Test", 1, 0, "CustomBinding", new CustomBindingParser);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -96,4 +98,62 @@ QVariant myCustomVariantTypeConverter(const QString &data)
     MyCustomVariantType rv;
     rv.a = data.toInt();
     return QVariant::fromValue(rv);
+}
+
+
+QByteArray CustomBindingParser::compile(const QList<QQmlCustomParserProperty> &properties)
+{
+    QByteArray result;
+    QDataStream ds(&result, QIODevice::WriteOnly);
+
+    ds << properties.count();
+    for (int i = 0; i < properties.count(); ++i) {
+        const QQmlCustomParserProperty &prop = properties.at(i);
+        ds << prop.name();
+
+        Q_ASSERT(prop.assignedValues().count() == 1);
+        QVariant value = prop.assignedValues().first();
+
+        Q_ASSERT(value.userType() == qMetaTypeId<QQmlScript::Variant>());
+        QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
+        Q_ASSERT(v.type() == QQmlScript::Variant::Script);
+        int bindingId = bindingIdentifier(v, prop.name());
+        ds << bindingId;
+
+        ds << prop.location().line;
+    }
+
+    return result;
+}
+
+void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data)
+{
+    CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
+    Q_ASSERT(customBinding);
+    customBinding->m_bindingData = data;
+}
+
+void CustomBinding::componentComplete()
+{
+    Q_ASSERT(m_target);
+
+    QDataStream ds(m_bindingData);
+    int count;
+    ds >> count;
+    for (int i = 0; i < count; ++i) {
+        QString name;
+        ds >> name;
+
+        int bindingId;
+        ds >> bindingId;
+
+        int line;
+        ds >> line;
+
+        QQmlBinding *binding = QQmlBinding::createBinding(QQmlBinding::Identifier(bindingId), m_target, qmlContext(this), QString(), line);
+
+        QQmlProperty property(m_target, name, qmlContext(this));
+        binding->setTarget(property);
+        QQmlPropertyPrivate::setBinding(property, binding);
+    }
 }

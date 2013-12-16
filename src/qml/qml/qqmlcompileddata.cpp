@@ -45,6 +45,7 @@
 #include "qqmlcomponent_p.h"
 #include "qqmlcontext.h"
 #include "qqmlcontext_p.h"
+#include "qqmlpropertymap.h"
 #ifdef QML_THREADED_VME_INTERPRETER
 #include "qqmlvme_p.h"
 #endif
@@ -173,6 +174,27 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngi
     }
 }
 
+template <typename T>
+bool qtTypeInherits(const QMetaObject *mo) {
+    while (mo) {
+        if (mo == &T::staticMetaObject)
+            return true;
+        mo = mo->superClass();
+    }
+    return false;
+}
+
+void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
+{
+    const QMetaObject *mo = 0;
+    if (typePropertyCache)
+        mo = typePropertyCache->firstCppMetaObject();
+    else if (type)
+        mo = type->metaObject();
+    else
+        mo = component->rootPropertyCache->firstCppMetaObject();
+    isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
+}
 
 void QQmlCompiledData::dumpInstructions()
 {

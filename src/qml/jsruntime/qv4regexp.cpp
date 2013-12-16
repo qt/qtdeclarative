@@ -92,14 +92,13 @@ RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ign
 }
 
 RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : Managed(engine->emptyClass)
+    : Managed(engine->regExpValueClass)
     , m_pattern(pattern)
     , m_cache(0)
     , m_subPatternCount(0)
     , m_ignoreCase(ignoreCase)
     , m_multiLine(multiline)
 {
-    vtbl = &static_vtbl;
     type = Type_RegExpObject;
 
     if (!engine)

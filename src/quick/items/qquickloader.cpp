@@ -106,6 +106,7 @@ void QQuickLoaderPrivate::clear()
         component->deleteLater();
         component = 0;
     }
+    componentStrongReference.clear();
     source = QUrl();
 
     if (item) {
@@ -472,6 +473,10 @@ void QQuickLoader::setSourceComponent(QQmlComponent *comp)
     d->clear();
 
     d->component = comp;
+    if (comp) {
+        if (QQmlData *ddata = QQmlData::get(comp))
+            d->componentStrongReference = ddata->jsWrapper.value();
+    }
     d->loadingFromSource = false;
 
     if (d->active)

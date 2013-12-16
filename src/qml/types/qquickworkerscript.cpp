@@ -252,7 +252,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
 
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, createsend.value());
-    QV4::ExecutionContext *ctx = v4->current;
+    QV4::ExecutionContext *ctx = v4->currentContext();
 
     QV4::ScopedValue v(scope);
     QV4::ScopedCallData callData(scope, 1);
@@ -356,7 +356,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
-    QV4::ExecutionContext *ctx = v4->current;
+    QV4::ExecutionContext *ctx = v4->currentContext();
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
@@ -398,7 +398,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 
         QV4::Script program(v4, activation, sourceCode, url.toString());
 
-        QV4::ExecutionContext *ctx = v4->current;
+        QV4::ExecutionContext *ctx = v4->currentContext();
         program.parse();
         if (!v4->hasException)
             program.run();

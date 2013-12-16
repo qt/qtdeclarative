@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 Rectangle {
+    property bool sectionsInvalidOnCompletion
     width: 240
     height: 320
     color: "#ffffff"
@@ -9,6 +10,26 @@ Rectangle {
             id: myDelegate
             Item {
                 id: wrapper
+
+                function validateInitialSections() {
+                    var invalid = false
+                    if (index == 0) {
+                        invalid |= wrapper.ListView.previousSection != ""
+                    }
+                    if (index == model.count - 1) {
+                        invalid |= wrapper.ListView.nextSection != ""
+                    }
+                    if (index % 5 == 0 && index > 0) {
+                        invalid |= wrapper.ListView.previousSection != Number(wrapper.ListView.section) - 1
+                    } else if ((index + 1) % 5 == 0 && index < model.count - 1) {
+                        invalid |= wrapper.ListView.nextSection != Number(wrapper.ListView.section) + 1
+                    } else if (index > 0 && index < model.count - 1) {
+                        invalid |= wrapper.ListView.previousSection != wrapper.ListView.section
+                        invalid |= wrapper.ListView.nextSection != wrapper.ListView.section
+                    }
+                    sectionsInvalidOnCompletion |= invalid
+                }
+
                 objectName: "wrapper"
                 height: ListView.previousSection != ListView.section ? 40 : 20;
                 width: 240
@@ -49,6 +70,10 @@ Rectangle {
                     visible: wrapper.ListView.previousSection != wrapper.ListView.section ? true : false
                     Text { text: wrapper.ListView.section }
                 }
+                ListView.onPreviousSectionChanged: validateInitialSections()
+                ListView.onNextSectionChanged: validateInitialSections()
+                ListView.onSectionChanged: validateInitialSections()
+                Component.onCompleted: validateInitialSections()
             }
         }
     ]

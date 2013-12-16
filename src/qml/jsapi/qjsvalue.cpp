@@ -58,20 +58,22 @@
 
 QV4::ReturnedValue QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
 {
-    if (!this->engine)
+    if (!this->engine) {
         this->engine = e;
-    else if (this->engine != e) {
+    } else if (this->engine != e) {
         qWarning("JSValue can't be reassigned to another engine.");
         return QV4::Encode::undefined();
     }
-    if (value.asString() == &string) {
-        value = QV4::Encode(engine->newString(string.toQString()));
+
+    if (value.isEmpty()) {
+        value = QV4::Encode(engine->newString(string));
         PersistentValuePrivate **listRoot = &engine->memoryManager->m_persistentValues;
         prev = listRoot;
         next = *listRoot;
         *prev = this;
         if (next)
             next->prev = &this->next;
+        string = QString();
     }
     return value.asReturnedValue();
 }
@@ -210,7 +212,7 @@ QJSValue::QJSValue(const QLatin1String &value)
 */
 #ifndef QT_NO_CAST_FROM_ASCII
 QJSValue::QJSValue(const char *value)
-    : d(new QJSValuePrivate(QString::fromLatin1(value)))
+    : d(new QJSValuePrivate(QString::fromUtf8(value)))
 {
 }
 #endif
@@ -275,7 +277,7 @@ bool QJSValue::isNull() const
 */
 bool QJSValue::isString() const
 {
-    return d->value.isString();
+    return d->value.isEmpty() || d->value.isString();
 }
 
 /*!
@@ -359,6 +361,8 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
+    if (d->value.isEmpty())
+        return d->string;
     return d->value.toQStringNoThrow();
 }
 
@@ -376,7 +380,10 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    if (d->value.isEmpty())
+        return __qmljs_string_to_number(d->string);
+
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -399,7 +406,10 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    if (d->value.isEmpty())
+        return d->string.length() > 0;
+
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     bool b = d->value.toBoolean();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -422,7 +432,10 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    if (d->value.isEmpty())
+        return QV4::Primitive::toInt32(__qmljs_string_to_number(d->string));
+
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -445,7 +458,10 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    if (d->value.isEmpty())
+        return QV4::Primitive::toUInt32(__qmljs_string_to_number(d->string));
+
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
     if (ctx && ctx->engine->hasException) {
         ctx->catchException();
@@ -478,6 +494,9 @@ quint32 QJSValue::toUInt() const
 */
 QVariant QJSValue::toVariant() const
 {
+    if (d->value.isEmpty())
+        return QVariant(d->string);
+
     return QV4::VariantObject::toVariant(d->value);
 }
 
@@ -517,7 +536,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->call(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -571,7 +590,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->call(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -617,7 +636,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     }
 
     ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     result = f->construct(callData);
     if (scope.hasException())
         result = ctx->catchException();
@@ -720,6 +739,22 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
     return *this;
 }
 
+static bool js_equal(const QString &string, QV4::ValueRef value)
+{
+    if (value->isString())
+        return string == value->stringValue()->toQString();
+    if (value->isNumber())
+        return __qmljs_string_to_number(string) == value->asDouble();
+    if (value->isBoolean())
+        return __qmljs_string_to_number(string) == value->booleanValue();
+    if (value->isObject()) {
+        Scope scope(value->objectValue()->engine());
+        ScopedValue p(scope, __qmljs_to_primitive(value, PREFERREDTYPE_HINT));
+        return js_equal(string, p);
+    }
+    return false;
+}
+
 /*!
   Returns true if this QJSValue is equal to \a other, otherwise
   returns false. The comparison follows the behavior described in
@@ -746,6 +781,14 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
+    if (d->value.isEmpty()) {
+        if (other.d->value.isEmpty())
+            return d->string == other.d->string;
+        return js_equal(d->string, QV4::ValueRef(other.d->value));
+    }
+    if (other.d->value.isEmpty())
+        return other.equals(*this);
+
     return __qmljs_cmp_eq(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
@@ -773,6 +816,16 @@ bool QJSValue::equals(const QJSValue& other) const
 */
 bool QJSValue::strictlyEquals(const QJSValue& other) const
 {
+    if (d->value.isEmpty()) {
+        if (other.d->value.isEmpty())
+            return d->string == other.d->string;
+        if (other.d->value.isString())
+            return d->string == other.d->value.stringValue()->toQString();
+        return false;
+    }
+    if (other.d->value.isEmpty())
+        return other.strictlyEquals(*this);
+
     return __qmljs_strict_equal(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
@@ -806,7 +859,7 @@ QJSValue QJSValue::property(const QString& name) const
         return property(idx);
 
     s->makeIdentifier();
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
     result = o->get(s);
     if (scope.hasException())
@@ -838,7 +891,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
     result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
     if (scope.hasException())
@@ -880,7 +933,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     s->makeIdentifier();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     o->put(s, v);
@@ -911,7 +964,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    QV4::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     if (arrayIndex != UINT_MAX)
         o->putIndexed(arrayIndex, v);
@@ -944,7 +997,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 bool QJSValue::deleteProperty(const QString &name)
 {
     ExecutionEngine *engine = d->engine;
-    ExecutionContext *ctx = engine->current;
+    ExecutionContext *ctx = engine->currentContext();
     Scope scope(engine);
     ScopedObject o(scope, d->value.asObject());
     if (!o)

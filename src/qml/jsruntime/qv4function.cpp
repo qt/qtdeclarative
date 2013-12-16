@@ -54,7 +54,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
         : compiledFunction(function)
         , compilationUnit(unit)
-        , codePtr(codePtr)
+        , code(codePtr)
         , codeData(0)
         , codeSize(_codeSize)
 {
@@ -62,18 +62,29 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 
     name = compilationUnit->runtimeStrings[compiledFunction->nameIndex].asString();
 
-    formals.resize(compiledFunction->nFormals);
-    formals.fill(0);
+    nArguments = compiledFunction->nFormals;
+
+    internalClass = engine->emptyClass;
     const quint32 *formalsIndices = compiledFunction->formalsTable();
-    for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
-        formals[i] = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
+    // iterate backwards, so we get the right ordering for duplicate names
+    for (int i = static_cast<int>(compiledFunction->nFormals - 1); i >= 0; --i) {
+        String *arg = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
+        while (1) {
+            InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
+            if (newClass != internalClass) {
+                internalClass = newClass;
+                break;
+            }
+            // duplicate arguments, need some trick to store them
+            arg = new (engine->memoryManager) String(engine, arg, engine->newString(QString(0xfffe))->getPointer());
+        }
+    }
 
-
-    locals.resize(compiledFunction->nLocals);
-    locals.fill(0);
     const quint32 *localsIndices = compiledFunction->localsTable();
-    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        locals[i] = compilationUnit->runtimeStrings[localsIndices[i]].asString();
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
+        String *local = compilationUnit->runtimeStrings[localsIndices[i]].asString();
+        internalClass = internalClass->addMember(local, Attr_NotConfigurable);
+    }
 }
 
 Function::~Function()
@@ -84,10 +95,6 @@ Function::~Function()
 void Function::mark(ExecutionEngine *e)
 {
     name.mark(e);
-    for (int i = 0; i < formals.size(); ++i)
-        formals.at(i)->mark(e);
-    for (int i = 0; i < locals.size(); ++i)
-        locals.at(i)->mark(e);
 }
 
 namespace QV4 {

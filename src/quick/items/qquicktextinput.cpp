@@ -1679,6 +1679,7 @@ bool QQuickTextInput::event(QEvent* ev)
             || ke == QKeySequence::SelectAll
             || ke == QKeySequence::SelectEndOfDocument) {
             ke->accept();
+            return true;
         } else if (ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier
                    || ke->modifiers() == Qt::KeypadModifier) {
             if (ke->key() < Qt::Key_Escape) {
@@ -1692,6 +1693,7 @@ bool QQuickTextInput::event(QEvent* ev)
                 case Qt::Key_Backspace:
                 case Qt::Key_Left:
                 case Qt::Key_Right:
+                    ke->accept();
                     return true;
                 default:
                     break;

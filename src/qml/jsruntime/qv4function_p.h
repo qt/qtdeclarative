@@ -85,16 +85,14 @@ struct Function {
 
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
-    inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
-        return codePtr(ctx, data);
-    }
 
-    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *);
+    ReturnedValue (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     quint32 codeSize;
 
-    QVector<String *> formals;
-    QVector<String *> locals;
+    // first nArguments names in internalClass are the actual arguments
+    int nArguments;
+    InternalClass *internalClass;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
              ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);

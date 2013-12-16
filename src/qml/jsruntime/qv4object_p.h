@@ -280,13 +280,13 @@ public:
     void ensureMemberIndex(uint idx);
 
     inline ReturnedValue get(const StringRef name, bool *hasProperty = 0)
-    { return vtbl->get(this, name, hasProperty); }
+    { return internalClass->vtable->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
-    { return vtbl->getIndexed(this, idx, hasProperty); }
+    { return internalClass->vtable->getIndexed(this, idx, hasProperty); }
     inline void put(const StringRef name, const ValueRef v)
-    { vtbl->put(this, name, v); }
+    { internalClass->vtable->put(this, name, v); }
     inline void putIndexed(uint idx, const ValueRef v)
-    { vtbl->putIndexed(this, idx, v); }
+    { internalClass->vtable->putIndexed(this, idx, v); }
     using Managed::get;
     using Managed::getIndexed;
     using Managed::put;
@@ -331,14 +331,13 @@ struct BooleanObject: Object {
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
-        vtbl = &static_vtbl;
         type = Type_BooleanObject;
         value = val;
     }
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_BooleanObject;
         value = Encode(false);
     }
@@ -349,14 +348,13 @@ struct NumberObject: Object {
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
-        vtbl = &static_vtbl;
         type = Type_NumberObject;
         value = val;
     }
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_NumberObject;
         value = Encode((int)0);
     }

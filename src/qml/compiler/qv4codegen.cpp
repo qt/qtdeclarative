@@ -1632,7 +1632,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     if (!valueMap.isEmpty()) {
         V4IR::ExprList *current;
         for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
-            if (QV4::String(0, it.key()).asArrayIndex() != UINT_MAX) {
+            if (QV4::String::toArrayIndex(it.key()) != UINT_MAX) {
                 ++it;
                 continue;
             }

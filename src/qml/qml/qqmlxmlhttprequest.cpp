@@ -192,7 +192,7 @@ public:
         , list(list)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -226,7 +226,7 @@ public:
         : Object(engine)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -258,7 +258,7 @@ public:
     NodePrototype(ExecutionEngine *engine)
         : Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         Scope scope(engine);
         ScopedObject protectThis(scope, this);
@@ -312,7 +312,7 @@ class Node : public Object
         : Object(engine)
         , d(data)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
 
         if (d)
             d->addref();
@@ -906,7 +906,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
     if (!r)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -925,7 +925,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     name->makeIdentifier();
     if (name->equals(v4->id_length))
@@ -961,7 +961,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -980,7 +980,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     name->makeIdentifier();
 
@@ -1535,7 +1535,7 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 
 void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 {
-    ExecutionContext *ctx = v4->current;
+    ExecutionContext *ctx = v4->currentContext();
     QV4::Scope scope(v4);
     Scoped<Object> o(scope, me);
     if (!o) {
@@ -1560,7 +1560,7 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
     s = v4->newString(QStringLiteral("ActivationObject"));
     Scoped<Object> activationObject(scope, o->get(s));
     if (!activationObject) {
-        v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
+        v4->currentContext()->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
         return;
     }
 
@@ -1580,7 +1580,7 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 
 void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
 {
-    ExecutionContext *ctx = v4->current;
+    ExecutionContext *ctx = v4->currentContext();
     dispatchCallbackImpl(me);
     if (v4->hasException) {
         QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
@@ -1605,7 +1605,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
         : Object(engine)
         , request(request)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     ~QQmlXMLHttpRequestWrapper() {
         delete request;
@@ -1626,7 +1626,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
         : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         Scope scope(engine);
         ScopedValue protectThis(scope, this);
 
@@ -1656,7 +1656,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Scope scope(that->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
-            return that->engine()->current->throwTypeError();
+            return that->engine()->currentContext()->throwTypeError();
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());

@@ -50,6 +50,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QtCore/QThread>
+#include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,7 +91,6 @@ struct GLAcquireContext {
 QQuickContext2DTexture::QQuickContext2DTexture()
     : m_context(0)
     , m_item(0)
-    , m_dirtyCanvas(false)
     , m_canvasWindowChanged(false)
     , m_dirtyTexture(false)
     , m_smooth(true)
@@ -105,23 +105,20 @@ QQuickContext2DTexture::~QQuickContext2DTexture()
    clearTiles();
 }
 
-QSize QQuickContext2DTexture::textureSize() const
-{
-    return m_canvasWindow.size();
-}
-
 void QQuickContext2DTexture::markDirtyTexture()
 {
+    if (m_onCustomThread)
+        m_mutex.lock();
     m_dirtyTexture = true;
-    updateTexture();
     emit textureChanged();
+    if (m_onCustomThread)
+        m_mutex.unlock();
 }
 
 bool QQuickContext2DTexture::setCanvasSize(const QSize &size)
 {
     if (m_canvasSize != size) {
         m_canvasSize = size;
-        m_dirtyCanvas = true;
         return true;
     }
     return false;
@@ -131,7 +128,6 @@ bool QQuickContext2DTexture::setTileSize(const QSize &size)
 {
     if (m_tileSize != size) {
         m_tileSize = size;
-        m_dirtyCanvas = true;
         return true;
     }
     return false;
@@ -195,7 +191,6 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
 
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;
-        m_dirtyCanvas = false;
     } else {
         m_tiledCanvas = true;
     }
@@ -309,7 +304,6 @@ QRect QQuickContext2DTexture::createTiles(const QRect& window)
     m_tiles.clear();
 
     if (window.isEmpty()) {
-        m_dirtyCanvas = false;
         return QRect();
     }
 
@@ -351,7 +345,6 @@ QRect QQuickContext2DTexture::createTiles(const QRect& window)
 
     qDeleteAll(oldTiles);
 
-    m_dirtyCanvas = false;
     return r;
 }
 
@@ -364,6 +357,20 @@ void QQuickContext2DTexture::clearTiles()
 QSize QQuickContext2DTexture::adjustedTileSize(const QSize &ts)
 {
     return ts;
+}
+
+bool QQuickContext2DTexture::event(QEvent *e)
+{
+    if ((int) e->type() == QEvent::User + 1) {
+        PaintEvent *pe = static_cast<PaintEvent *>(e);
+        paint(pe->buffer);
+        return true;
+    } else if ((int) e->type() == QEvent::User + 2) {
+        CanvasChangeEvent *ce = static_cast<CanvasChangeEvent *>(e);
+        canvasChanged(ce->canvasSize, ce->tileSize, ce->canvasWindow, ce->dirtyRect, ce->smooth, ce->antialiasing);
+        return true;
+    }
+    return QObject::event(e);
 }
 
 static inline QSize npotAdjustedSize(const QSize &size)
@@ -391,6 +398,9 @@ QQuickContext2DFBOTexture::QQuickContext2DFBOTexture()
     , m_multisampledFbo(0)
     , m_paint_device(0)
 {
+    m_displayTextures[0] = 0;
+    m_displayTextures[1] = 0;
+    m_displayTexture = -1;
 }
 
 QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
@@ -403,17 +413,52 @@ QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
     delete m_fbo;
     delete m_multisampledFbo;
     delete m_paint_device;
+
+    glDeleteTextures(2, m_displayTextures);
+}
+
+QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture)
+{
+    QSGPlainTexture *texture = static_cast<QSGPlainTexture *>(lastTexture);
+
+    if (m_onCustomThread)
+        m_mutex.lock();
+
+    if (m_fbo) {
+        if (!texture) {
+            texture = new QSGPlainTexture();
+            texture->setHasMipmaps(false);
+            texture->setHasAlphaChannel(true);
+            texture->setOwnsTexture(false);
+            m_dirtyTexture = true;
+        }
+
+        if (m_dirtyTexture) {
+            if (!m_context->glContext()) {
+                // on a rendering thread, use the fbo directly...
+                texture->setTextureId(m_fbo->texture());
+            } else {
+                // on GUI or custom thread, use display textures...
+                m_displayTexture = m_displayTexture == 0 ? 1 : 0;
+                texture->setTextureId(m_displayTextures[m_displayTexture]);
+            }
+            texture->setTextureSize(m_fbo->size());
+            m_dirtyTexture = false;
+        }
+
+    }
+
+    if (m_onCustomThread) {
+        m_condition.wakeOne();
+        m_mutex.unlock();
+    }
+
+    return texture;
 }
 
 QSize QQuickContext2DFBOTexture::adjustedTileSize(const QSize &ts)
 {
     return npotAdjustedSize(ts);
-}
-
-void QQuickContext2DFBOTexture::bind()
-{
-    glBindTexture(GL_TEXTURE_2D, textureId());
-    updateBindOptions();
 }
 
 QRectF QQuickContext2DFBOTexture::normalizedTextureSubRect() const
@@ -422,20 +467,6 @@ QRectF QQuickContext2DFBOTexture::normalizedTextureSubRect() const
                 , 0
                 , qreal(m_canvasWindow.width()) / m_fboSize.width()
                 , qreal(m_canvasWindow.height()) / m_fboSize.height());
-}
-
-
-int QQuickContext2DFBOTexture::textureId() const
-{
-    return m_fbo? m_fbo->texture() : 0;
-}
-
-
-bool QQuickContext2DFBOTexture::updateTexture()
-{
-    bool textureUpdated = m_dirtyTexture;
-    m_dirtyTexture = false;
-    return textureUpdated;
 }
 
 QQuickContext2DTile* QQuickContext2DFBOTexture::createTile() const
@@ -461,7 +492,6 @@ bool QQuickContext2DFBOTexture::doMultisampling() const
 void QQuickContext2DFBOTexture::grabImage(const QRectF& rf)
 {
     Q_ASSERT(rf.isValid());
-
     if (!m_fbo) {
         m_context->setGrabbedImage(QImage());
         return;
@@ -531,7 +561,6 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         } else {
             QOpenGLFramebufferObjectFormat format;
             format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-
             m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
         }
     }
@@ -540,7 +569,6 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         m_multisampledFbo->bind();
     else
         m_fbo->bind();
-
 
     if (!m_paint_device) {
         QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
@@ -557,46 +585,52 @@ void QQuickContext2DFBOTexture::endPainting()
     QQuickContext2DTexture::endPainting();
     if (m_multisampledFbo)
         QOpenGLFramebufferObject::blitFramebuffer(m_fbo, m_multisampledFbo);
+
+    if (m_context->glContext()) {
+        /* When rendering happens on the render thread, the fbo's texture is
+         * used directly for display. If we are on the GUI thread or a
+         * dedicated Canvas render thread, we need to decouple the FBO from
+         * the texture we are displaying in the SG rendering thread to avoid
+         * stalls and read/write issues in the GL pipeline as the FBO's texture
+         * could then potentially be used in different threads.
+         *
+         * We could have gotten away with only one display texture, but this
+         * would have implied that beginPainting would have to wait for SG
+         * to release that texture.
+         */
+
+        if (m_onCustomThread)
+            m_mutex.lock();
+
+        if (m_displayTextures[0] == 0) {
+            m_displayTexture = 1;
+            glGenTextures(2, m_displayTextures);
+        }
+
+        m_fbo->bind();
+        GLuint target = m_displayTexture == 0 ? 1 : 0;
+        glBindTexture(GL_TEXTURE_2D, m_displayTextures[target]);
+        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, m_fbo->width(), m_fbo->height(), 0);
+
+        if (m_onCustomThread)
+            m_mutex.unlock();
+    }
+
+    m_fbo->bindDefault();
 }
 
 QQuickContext2DImageTexture::QQuickContext2DImageTexture()
     : QQuickContext2DTexture()
-    , m_texture(0)
 {
 }
 
 QQuickContext2DImageTexture::~QQuickContext2DImageTexture()
 {
-    if (m_texture && m_texture->thread() != QThread::currentThread())
-        m_texture->deleteLater();
-    else
-        delete m_texture;
-}
-
-int QQuickContext2DImageTexture::textureId() const
-{
-    return imageTexture()->textureId();
 }
 
 QQuickCanvasItem::RenderTarget QQuickContext2DImageTexture::renderTarget() const
 {
     return QQuickCanvasItem::Image;
-}
-
-void QQuickContext2DImageTexture::bind()
-{
-    imageTexture()->setFiltering(filtering());
-    imageTexture()->bind();
-}
-
-bool QQuickContext2DImageTexture::updateTexture()
-{
-    bool textureUpdated = m_dirtyTexture;
-    if (m_dirtyTexture) {
-        imageTexture()->setImage(m_image);
-        m_dirtyTexture = false;
-    }
-    return textureUpdated;
 }
 
 QQuickContext2DTile* QQuickContext2DImageTexture::createTile() const
@@ -608,19 +642,32 @@ void QQuickContext2DImageTexture::grabImage(const QRectF& rf)
 {
     Q_ASSERT(rf.isValid());
     Q_ASSERT(m_context);
-    QImage grabbed = m_image.copy(rf.toRect());
+    QImage grabbed = m_displayImage.copy(rf.toRect());
     m_context->setGrabbedImage(grabbed);
 }
 
-QSGPlainTexture *QQuickContext2DImageTexture::imageTexture() const
+QSGTexture *QQuickContext2DImageTexture::textureForNextFrame(QSGTexture *last)
 {
-    if (!m_texture) {
-        QQuickContext2DImageTexture *that = const_cast<QQuickContext2DImageTexture *>(this);
-        that->m_texture = new QSGPlainTexture;
-        that->m_texture->setOwnsTexture(true);
-        that->m_texture->setHasMipmaps(false);
+    QSGPlainTexture *texture = static_cast<QSGPlainTexture *>(last);
+
+    if (m_onCustomThread)
+        m_mutex.lock();
+
+    if (!texture) {
+        texture = new QSGPlainTexture();
+        texture->setHasMipmaps(false);
+        texture->setHasAlphaChannel(true);
+        m_dirtyTexture = true;
     }
-    return m_texture;
+    if (m_dirtyTexture) {
+        texture->setImage(m_displayImage);
+        m_dirtyTexture = false;
+    }
+
+    if (m_onCustomThread)
+        m_mutex.unlock();
+
+    return texture;
 }
 
 QPaintDevice* QQuickContext2DImageTexture::beginPainting()
@@ -637,6 +684,16 @@ QPaintDevice* QQuickContext2DImageTexture::beginPainting()
     }
 
     return &m_image;
+}
+
+void QQuickContext2DImageTexture::endPainting()
+{
+    QQuickContext2DTexture::endPainting();
+    if (m_onCustomThread)
+        m_mutex.lock();
+    m_displayImage = m_image;
+    if (m_onCustomThread)
+        m_mutex.unlock();
 }
 
 void QQuickContext2DImageTexture::compositeTile(QQuickContext2DTile* tile)

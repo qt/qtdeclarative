@@ -108,7 +108,7 @@ public:
     QQmlSqlDatabaseWrapper(QV8Engine *e)
         : Object(QV8Engine::getV4(e)), type(Database), inTransaction(false), readonly(false), forwardOnly(false)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     ~QQmlSqlDatabaseWrapper() {
@@ -659,7 +659,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV8Engine *engine = args->engine();
-    QV4::ExecutionContext *ctx = args->v4engine()->current;
+    QV4::ExecutionContext *ctx = args->v4engine()->currentContext();
     QV4::Scope scope(ctx);
     if (engine->engine()->offlineStoragePath().isEmpty())
         V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));

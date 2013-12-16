@@ -79,7 +79,7 @@ QmlValueTypeWrapper::QmlValueTypeWrapper(QV8Engine *engine, ObjectType objectTyp
     : Object(QV8Engine::getV4(engine)), objectType(objectType)
 {
     v8 = engine;
-    vtbl = &static_vtbl;
+    setVTable(&static_vtbl);
 }
 
 QmlValueTypeWrapper::~QmlValueTypeWrapper()
@@ -209,7 +209,7 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, StringRef name)
     const QmlValueTypeWrapper *r = m->as<const QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return PropertyAttributes();
     }
 
@@ -273,7 +273,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        return v4->current->throwTypeError();
+        return v4->currentContext()->throwTypeError();
 
     // Note: readReferenceValue() can change the reference->type.
     if (r->objectType == QmlValueTypeWrapper::Reference) {
@@ -306,7 +306,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision);
+        return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), qmlContext, r->type, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
@@ -339,7 +339,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
 
     Scoped<QmlValueTypeWrapper> r(scope, m->as<QmlValueTypeWrapper>());
     if (!r) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return;
     }
 
@@ -365,7 +365,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
                 Scoped<String> e(scope, r->v8->toString(error));
-                v4->current->throwError(e);
+                v4->currentContext()->throwError(e);
                 return;
             }
 

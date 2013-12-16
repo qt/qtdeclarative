@@ -119,6 +119,8 @@ struct Object;
 struct ObjectPrototype;
 struct ObjectIterator;
 struct ExecutionContext;
+struct GlobalContext;
+struct CallContext;
 struct ScriptFunction;
 struct InternalClass;
 struct Property;

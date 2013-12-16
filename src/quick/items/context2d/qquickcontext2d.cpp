@@ -484,7 +484,7 @@ public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     QQuickContext2D* context;
 
@@ -653,7 +653,7 @@ public:
       , patternRepeatX(false)
       , patternRepeatY(false)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
     QBrush brush;
     bool patternRepeatX:1;
@@ -870,7 +870,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         flags &= ~SimpleArray;
     }
 
@@ -893,7 +893,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         pixelData = QV4::Primitive::undefinedValue();
 
         QV4::Scope scope(engine);
@@ -2985,14 +2985,14 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
             } else if (QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object())) {
                 QImage img = canvas->toImage();
                 if (!img.isNull())
-                    pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
+                    pixmap.take(new QQuickCanvasPixmap(img));
             } else {
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
         } else if (QV4::Referenced<QQuickJSContext2DImageData> imageData = arg->asRef<QQuickJSContext2DImageData>()) {
             QV4::Scoped<QQuickJSContext2DPixelData> pix(scope, imageData->pixelData.as<QQuickJSContext2DPixelData>());
             if (pix && !pix->image.isNull()) {
-                pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
+                pixmap.take(new QQuickCanvasPixmap(pix->image));
             } else {
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
@@ -3165,7 +3165,7 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint 
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!m)
-        return m->engine()->current->throwTypeError();
+        return m->engine()->currentContext()->throwTypeError();
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
         if (hasProperty)
@@ -3200,7 +3200,7 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
 
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!r) {
-        v4->current->throwTypeError();
+        v4->currentContext()->throwTypeError();
         return;
     }
 
@@ -4084,6 +4084,15 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     QQuickWindow *window = canvasItem->window();
     m_renderStrategy = canvasItem->renderStrategy();
 
+#ifdef Q_OS_WIN
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject
+            && (m_renderStrategy != QQuickCanvasItem::Cooperative)) {
+        // On windows a context needs to be unbound set up sharing, so
+        // for simplicity we disallow FBO + !coop here.
+        m_renderTarget = QQuickCanvasItem::Image;
+    }
+#endif
+
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
         m_texture = new QQuickContext2DImageTexture;
@@ -4099,6 +4108,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_texture->setCanvasSize(canvasItem->canvasSize().toSize());
     m_texture->setSmooth(canvasItem->smooth());
     m_texture->setAntialiasing(canvasItem->antialiasing());
+    m_texture->setOnCustomThread(m_renderStrategy == QQuickCanvasItem::Threaded);
     m_thread = QThread::currentThread();
 
     QThread *renderThread = m_thread;
@@ -4129,28 +4139,31 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
 void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing)
 {
-    QMetaObject::invokeMethod(m_texture
-                                                , "canvasChanged"
-                                                , Qt::AutoConnection
-                                                , Q_ARG(QSize, canvasSize)
-                                                , Q_ARG(QSize, tileSize)
-                                                , Q_ARG(QRect, canvasWindow)
-                                                , Q_ARG(QRect, dirtyRect)
-                                                , Q_ARG(bool, smooth)
-                                                , Q_ARG(bool, antialiasing));
+    if (m_texture->thread() == QThread::currentThread()) {
+        m_texture->canvasChanged(canvasSize, tileSize, canvasWindow, dirtyRect, smooth, antialiasing);
+    } else {
+        QEvent *e =  new QQuickContext2DTexture::CanvasChangeEvent(canvasSize,
+                                                                   tileSize,
+                                                                   canvasWindow,
+                                                                   dirtyRect,
+                                                                   smooth,
+                                                                   antialiasing);
+        QCoreApplication::postEvent(m_texture, e);
+    }
 }
 
 void QQuickContext2D::flush()
 {
-    if (m_buffer)
-        QMetaObject::invokeMethod(m_texture,
-                                                                   "paint",
-                                                                   Qt::AutoConnection,
-                                                                   Q_ARG(QQuickContext2DCommandBuffer*, m_buffer));
+    if (m_buffer) {
+        if (m_texture->thread() == QThread::currentThread())
+            m_texture->paint(m_buffer);
+        else
+            QCoreApplication::postEvent(m_texture, new QQuickContext2DTexture::PaintEvent(m_buffer));
+    }
     m_buffer = new QQuickContext2DCommandBuffer();
 }
 
-QSGDynamicTexture *QQuickContext2D::texture() const
+QQuickContext2DTexture *QQuickContext2D::texture() const
 {
     return m_texture;
 }
@@ -4164,6 +4177,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
         qWarning() << "Pixel readback is not supported in Cooperative mode, please try Threaded or Immediate mode";
         return QImage();
     } else {
+        QCoreApplication::postEvent(m_texture, new QEvent(QEvent::Type(QEvent::User + 10)));
         QMetaObject::invokeMethod(m_texture,
                                   "grabImage",
                                   Qt::BlockingQueuedConnection,

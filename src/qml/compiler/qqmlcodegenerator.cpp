@@ -281,7 +281,7 @@ bool QQmlCodeGenerator::sanityCheckFunctionNames()
 {
     QSet<QString> functionNames;
     for (Function *f = _object->functions->first; f; f = f->next) {
-        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(_functions.at(f->index));
+        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(_functions.at(f->index).node);
         Q_ASSERT(function);
         QString name = function->name.toString();
         if (functionNames.contains(name))
@@ -1204,13 +1204,13 @@ int QmlUnitGenerator::getStringId(const QString &str) const
     return jsUnitGenerator->getStringId(str);
 }
 
-JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule, Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports)
+JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule, Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports)
     : QQmlJS::Codegen(/*strict mode*/false)
-    , engine(enginePrivate)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
     , imports(imports)
+    , _disableAcceleratedLookups(false)
     , _contextObject(0)
     , _scopeObject(0)
     , _contextObjectTemp(-1)
@@ -1235,23 +1235,23 @@ void JSCodeGen::beginObjectScope(QQmlPropertyCache *scopeObject)
     _scopeObject = scopeObject;
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames)
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions)
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
     ScanFunctions scan(this, sourceCode, GlobalCode);
     scan.enterEnvironment(0, QmlBinding);
     scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
-    foreach (AST::Node *node, functions) {
-        Q_ASSERT(node != qmlRoot);
-        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
+    foreach (const CompiledFunctionOrExpression &f, functions) {
+        Q_ASSERT(f.node != qmlRoot);
+        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(f.node);
 
         if (function)
             scan.enterQmlFunction(function);
         else
-            scan.enterEnvironment(node, QmlBinding);
+            scan.enterEnvironment(f.node, QmlBinding);
 
-        scan(function ? function->body : node);
+        scan(function ? function->body : f.node);
         scan.leaveEnvironment();
     }
     scan.leaveEnvironment();
@@ -1261,7 +1261,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
     _function = _module->functions.at(defineFunction(QStringLiteral("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {
-        AST::Node *node = functions.at(i);
+        const CompiledFunctionOrExpression &qmlFunction = functions.at(i);
+        AST::Node *node = qmlFunction.node;
         Q_ASSERT(node != qmlRoot);
 
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
@@ -1269,8 +1270,10 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
         QString name;
         if (function)
             name = function->name.toString();
+        else if (!qmlFunction.name.isEmpty())
+            name = qmlFunction.name;
         else
-            name = functionNames.value(i, QStringLiteral("%qml-expression-entry"));
+            name = QStringLiteral("%qml-expression-entry");
 
         AST::SourceElements *body;
         if (function)
@@ -1290,6 +1293,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
             body = body->finish();
         }
 
+        _disableAcceleratedLookups = qmlFunction.disableAcceleratedLookups;
         int idx = defineFunction(name, node,
                                  function ? function->formals : 0,
                                  body);
@@ -1365,15 +1369,14 @@ static V4IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpre
             bool ok = false;
             int value = type->enumValue(*member->name, &ok);
             if (ok) {
-                member->memberIsEnum = true;
-                member->enumValue = value;
+                member->setEnumValue(value);
                 resolver->clear();
                 return V4IR::SInt32Type;
             }
         } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
             QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
             initMetaObjectResolver(resolver, cache);
-            member->attachedPropertiesId = type->attachedPropertiesId();
+            member->setAttachedPropertiesId(type->attachedPropertiesId());
             return resolver->resolveMember(qmlEngine, resolver, member);
         }
     }
@@ -1440,8 +1443,7 @@ static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::
             bool ok;
             int value = metaEnum.keyToValue(enumName.constData(), &ok);
             if (ok) {
-                member->memberIsEnum = true;
-                member->enumValue = value;
+                member->setEnumValue(value);
                 resolver->clear();
                 return V4IR::SInt32Type;
             }
@@ -1533,6 +1535,9 @@ void JSCodeGen::beginFunctionBodyHook()
 
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 {
+    if (_disableAcceleratedLookups)
+        return 0;
+
     Q_UNUSED(line)
     Q_UNUSED(col)
     // Implement QML lookup semantics in the current file context.
@@ -1595,11 +1600,9 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            if (!pd->isConstant())
-                _function->scopeObjectDependencies.insert(pd);
             V4IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
-            return _block->MEMBER(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd, V4IR::Member::MemberOfQmlScopeObject);
         }
     }
 
@@ -1609,11 +1612,9 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            if (!pd->isConstant())
-                _function->contextObjectDependencies.insert(pd);
             V4IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
-            return _block->MEMBER(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd, V4IR::Member::MemberOfQmlContextObject);
         }
     }
 
@@ -1753,7 +1754,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (paramList)
             paramList = paramList->finish();
 
-        AST::Statement *statement = static_cast<AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex]);
+        AST::Statement *statement = static_cast<AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex].node);
         AST::SourceElement *sourceElement = new (pool) AST::StatementSourceElement(statement);
         AST::SourceElements *elements = new (pool) AST::SourceElements(sourceElement);
         elements = elements->finish();

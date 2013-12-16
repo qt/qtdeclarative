@@ -448,6 +448,7 @@ QSGTexture *Texture::removedFromAtlas() const
     if (!m_nonatlas_texture) {
         m_nonatlas_texture = new QSGPlainTexture();
         m_nonatlas_texture->setImage(m_image);
+        m_nonatlas_texture->setFiltering(filtering());
     }
     return m_nonatlas_texture;
 }

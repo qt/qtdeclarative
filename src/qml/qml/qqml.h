@@ -467,7 +467,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
-static const int CurrentSingletonTypeRegistrationVersion = 2;
+enum { QmlCurrentSingletonTypeRegistrationVersion = 2 };
 template <typename T>
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))
@@ -475,7 +475,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
     QML_GETTYPENAMES
 
     QQmlPrivate::RegisterSingletonType api = {
-        CurrentSingletonTypeRegistrationVersion,
+        QmlCurrentSingletonTypeRegistrationVersion,
 
         uri, versionMajor, versionMinor, typeName,
 

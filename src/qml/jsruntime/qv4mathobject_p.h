@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #ifndef QV4MATHOBJECT_H
-#define QV$MATHOBJECT_H
+#define QV4MATHOBJECT_H
 
 #include "qv4object_p.h"
 

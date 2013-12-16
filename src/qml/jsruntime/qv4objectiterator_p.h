@@ -89,7 +89,7 @@ struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
         : Object(ctx->engine), it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
         type = Type_ForeachIteratorObject;
     }
 

@@ -300,12 +300,34 @@ ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, const StringRef name)
 
 QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
-    Object *o = right->asObject();
-    if (!o)
+    FunctionObject *f = right->asFunctionObject();
+    if (!f)
         return ctx->throwTypeError();
 
-    bool r = o->hasInstance(left);
-    return Encode(r);
+    if (f->subtype == FunctionObject::BoundFunction)
+        f = static_cast<BoundFunction *>(f)->target;
+
+    Scope scope(ctx->engine);
+    ScopedObject v(scope, left);
+    if (!v)
+        return Encode(false);
+
+    Scoped<Object> o(scope, f->protoProperty());
+    if (!o) {
+        scope.engine->currentContext()->throwTypeError();
+        return Encode(false);
+    }
+
+    while (v) {
+        v = v->prototype();
+
+        if (! v)
+            break;
+        else if (o.getPointer() == v)
+            return Encode(true);
+    }
+
+    return Encode(false);
 }
 
 QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -367,7 +389,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    ExecutionContext *ctx = engine->current;
+    ExecutionContext *ctx = engine->currentContext();
     Scope scope(ctx);
     ScopedCallData callData(scope, 0);
     callData->thisObject = object;

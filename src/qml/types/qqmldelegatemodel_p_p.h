@@ -165,7 +165,7 @@ struct QQmlDelegateModelItemObject : QV4::Object
     QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
         : Object(engine)
         , item(item)
-    { vtbl = &static_vtbl; }
+    { setVTable(&static_vtbl); }
     ~QQmlDelegateModelItemObject();
 
     static void destroy(Managed *that);

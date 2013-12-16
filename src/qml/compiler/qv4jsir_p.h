@@ -554,42 +554,49 @@ struct Subscript: Expr {
 };
 
 struct Member: Expr {
+    // Used for property dependency tracking
+    enum MemberKind {
+        UnspecifiedMember,
+        MemberOfEnum,
+        MemberOfQmlScopeObject,
+        MemberOfQmlContextObject
+    };
+
     Expr *base;
     const QString *name;
     QQmlPropertyData *property;
-    int attachedPropertiesId;
-    int enumValue;
-    bool memberIsEnum : 1;
-    bool freeOfSideEffects : 1;
+    int attachedPropertiesIdOrEnumValue; // depending on kind
+    uchar memberIsEnum : 1;
+    uchar freeOfSideEffects : 1;
 
     // This is set for example for for QObject properties. All sorts of extra behavior
     // is defined when writing to them, for example resettable properties are reset
     // when writing undefined to them, and an exception is thrown when they're missing
     // a reset function. And then there's also Qt.binding().
-    bool inhibitTypeConversionOnWrite: 1;
+    uchar inhibitTypeConversionOnWrite: 1;
 
-    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, int attachedPropertiesId = 0)
+    uchar kind: 3; // MemberKind
+
+    void setEnumValue(int value) {
+        kind = MemberOfEnum;
+        attachedPropertiesIdOrEnumValue = value;
+    }
+
+    void setAttachedPropertiesId(int id) {
+        Q_ASSERT(kind != MemberOfEnum);
+        attachedPropertiesIdOrEnumValue = id;
+    }
+
+    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, uchar kind = UnspecifiedMember, int attachedPropertiesIdOrEnumValue = 0)
     {
         this->base = base;
         this->name = name;
         this->property = property;
-        this->attachedPropertiesId = attachedPropertiesId;
-        this->enumValue = 0;
+        this->attachedPropertiesIdOrEnumValue = attachedPropertiesIdOrEnumValue;
         this->memberIsEnum = false;
         this->freeOfSideEffects = false;
         this->inhibitTypeConversionOnWrite = property != 0;
-    }
-
-    void init(Expr *base, const QString *name, int enumValue)
-    {
-        this->base = base;
-        this->name = name;
-        this->property = 0;
-        this->attachedPropertiesId = 0;
-        this->enumValue = enumValue;
-        this->memberIsEnum = true;
-        this->freeOfSideEffects = false;
-        this->inhibitTypeConversionOnWrite = false;
+        this->kind = kind;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -752,6 +759,9 @@ struct Q_QML_EXPORT Module {
     void setFileName(const QString &name);
 };
 
+// Map from meta property index (existence implies dependency) to notify signal index
+typedef QHash<int, int> PropertyDependencyMap;
+
 struct Function {
     Module *module;
     MemoryPool *pool;
@@ -782,10 +792,8 @@ struct Function {
 
     // Qml extension:
     QSet<int> idObjectDependencies;
-    QSet<QQmlPropertyData*> contextObjectDependencies;
-    QSet<QQmlPropertyData*> scopeObjectDependencies;
-
-    bool hasQmlDependencies() const { return !idObjectDependencies.isEmpty() || !contextObjectDependencies.isEmpty() || !scopeObjectDependencies.isEmpty(); }
+    PropertyDependencyMap contextObjectPropertyDependencies;
+    PropertyDependencyMap scopeObjectPropertyDependencies;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -895,8 +903,7 @@ struct BasicBlock {
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
-    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0, int attachedPropertiesId = 0);
-    Expr *MEMBER(Expr *base, const QString *name, int enumValue);
+    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0, uchar kind = Member::UnspecifiedMember, int attachedPropertiesIdOrEnumValue = 0);
 
     Stmt *EXP(Expr *expr);
 

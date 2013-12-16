@@ -163,7 +163,7 @@ public:
     bool collectThisInContext(Collector *collector, int frame = 0);
     void collectThrownValue(Collector *collector);
     void collectReturnedValue(Collector *collector) const;
-    QVector<ExecutionContext::Type> getScopeTypes(int frame = 0) const;
+    QVector<ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
 public: // compile-time interface
     void maybeBreakAtInstruction(const uchar *code, bool breakPointHit);

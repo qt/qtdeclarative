@@ -58,6 +58,8 @@ private slots:
 
     void render_data();
     void render();
+
+    void hideWithOtherContext();
 };
 
 template <typename T> class ScopedList : public QList<T> {
@@ -400,6 +402,40 @@ void tst_SceneGraph::render()
         QVERIFY2(sample.check(content), qPrintable(sample.toString(content)));
     }
 }
+
+// Testcase for QTBUG-34898. We make another context current on another surface
+// in the GUI thread and hide the QQuickWindow while the other context is
+// current on the other window.
+void tst_SceneGraph::hideWithOtherContext()
+{
+    QWindow window;
+    window.setSurfaceType(QWindow::OpenGLSurface);
+    window.resize(100, 100);
+    window.create();
+    QOpenGLContext context;
+    context.create();
+    bool renderingOnMainThread = false;
+
+    {
+        QQuickView view;
+        view.setSource(QUrl::fromLocalFile("data/simple.qml"));
+        view.setResizeMode(QQuickView::SizeViewToRootObject);
+        view.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+        renderingOnMainThread = view.openglContext()->thread() == QGuiApplication::instance()->thread();
+
+        // Make the local context current on the local window...
+        context.makeCurrent(&window);
+    }
+
+    // The local context should no longer be the current one. It is not
+    // rebound because all well behaving Qt/OpenGL applications are
+    // required to makeCurrent their context again before making any
+    // GL calls to a new frame (see QOpenGLContext docs).
+    QVERIFY(!renderingOnMainThread || QOpenGLContext::currentContext() != &context);
+}
+
 
 #include "tst_scenegraph.moc"
 

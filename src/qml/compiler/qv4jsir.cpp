@@ -554,8 +554,8 @@ void Subscript::dump(QTextStream &out) const
 
 void Member::dump(QTextStream &out) const
 {
-    if (attachedPropertiesId != 0 && !base->asTemp())
-        out << "[[attached property from " << attachedPropertiesId << "]]";
+    if (kind != MemberOfEnum && attachedPropertiesIdOrEnumValue != 0 && !base->asTemp())
+        out << "[[attached property from " << attachedPropertiesIdOrEnumValue << "]]";
     else
         base->dump(out);
     out << '.' << *name;
@@ -843,17 +843,10 @@ Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property, int attachedPropertiesId)
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property, uchar kind, int attachedPropertiesIdOrEnumValue)
 {
     Member*e = function->New<Member>();
-    e->init(base, name, property, attachedPropertiesId);
-    return e;
-}
-
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name, int enumValue)
-{
-    Member*e = function->New<Member>();
-    e->init(base, name, enumValue);
+    e->init(base, name, property, kind, attachedPropertiesIdOrEnumValue);
     return e;
 }
 
@@ -1044,10 +1037,7 @@ void CloneExpr::visitSubscript(Subscript *e)
 void CloneExpr::visitMember(Member *e)
 {
     Expr *clonedBase = clone(e->base);
-    if (e->memberIsEnum)
-        cloned = block->MEMBER(clonedBase, e->name, e->enumValue);
-    else
-        cloned = block->MEMBER(clonedBase, e->name, e->property, e->attachedPropertiesId);
+    cloned = block->MEMBER(clonedBase, e->name, e->property, e->kind, e->attachedPropertiesIdOrEnumValue);
 }
 
 } // end of namespace IR

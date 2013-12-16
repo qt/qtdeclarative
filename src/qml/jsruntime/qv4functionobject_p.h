@@ -97,7 +97,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     // Used with Managed::subType
     enum FunctionType {
         RegularFunction = 0,
-        WrappedQtMethod = 1
+        WrappedQtMethod = 1,
+        BoundFunction
     };
 
     enum {
@@ -107,11 +108,13 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ExecutionContext *scope;
     SafeString name;
-    String * const *formalParameterList;
-    String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
     Function *function;
+    InternalClass *protoCacheClass;
+    uint protoCacheIndex;
+    ReturnedValue protoValue;
+    InternalClass *classForConstructor;
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
@@ -124,10 +127,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue construct(Managed *that, CallData *);
     static ReturnedValue call(Managed *that, CallData *d);
     inline ReturnedValue construct(CallData *callData) {
-        return vtbl->construct(this, callData);
+        return internalClass->vtable->construct(this, callData);
     }
     inline ReturnedValue call(CallData *callData) {
-        return vtbl->call(this, callData);
+        return internalClass->vtable->call(this, callData);
     }
 
     static FunctionObject *cast(const Value &v) {
@@ -136,11 +139,13 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
 
+    ReturnedValue protoProperty();
+    InternalClass *internalClassForConstructor();
+
 protected:
     FunctionObject(InternalClass *ic);
 
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static bool hasInstance(Managed *that, const ValueRef value);
     static void destroy(Managed *that)
     { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
@@ -192,12 +197,12 @@ struct IndexedBuiltinFunction: FunctionObject
         , code(code)
         , index(index)
     {
-        vtbl = &static_vtbl;
+        setVTable(&static_vtbl);
     }
 
     static ReturnedValue construct(Managed *m, CallData *)
     {
-        return m->engine()->current->throwTypeError();
+        return m->engine()->currentContext()->throwTypeError();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -235,7 +240,6 @@ struct BoundFunction: FunctionObject {
 
     static void destroy(Managed *);
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static bool hasInstance(Managed *that, const ValueRef value);
 };
 
 }

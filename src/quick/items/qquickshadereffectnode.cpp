@@ -146,7 +146,6 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         continue;
                     }
                 }
-                qWarning("ShaderEffect: source or provider missing when binding textures");
                 glBindTexture(GL_TEXTURE_2D, 0);
             } else if (d.specialType == UniformData::Opacity) {
                 program()->setUniformValue(loc, state.opacity());

@@ -94,13 +94,6 @@ struct Q_QML_EXPORT JSUnitGenerator {
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
     uint headerSize;
-
-    typedef QHash<QQmlJS::V4IR::Function *, QSet<int> > IdDependencyHash;
-    IdDependencyHash qmlIdObjectDependenciesPerFunction;
-
-    typedef QHash<QQmlJS::V4IR::Function *, QSet<QQmlPropertyData*> > PropertyDependencyHash;
-    PropertyDependencyHash qmlContextPropertyDependenciesPerFunction;
-    PropertyDependencyHash qmlScopePropertyDependenciesPerFunction;
 };
 
 }

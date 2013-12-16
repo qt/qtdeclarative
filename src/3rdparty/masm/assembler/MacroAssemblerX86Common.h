@@ -146,6 +146,16 @@ public:
         m_assembler.andl_rr(src, dest);
     }
 
+    void add32(RegisterID op1, RegisterID op2, RegisterID dest)
+    {
+        if (op2 == dest) {
+            add32(op1, dest);
+        } else {
+            move(op1, dest);
+            add32(op2, dest);
+        }
+    }
+
     void and32(TrustedImm32 imm, RegisterID dest)
     {
         m_assembler.andl_ir(imm.m_value, dest);
@@ -224,6 +234,16 @@ public:
     void mul32(RegisterID src, RegisterID dest)
     {
         m_assembler.imull_rr(src, dest);
+    }
+
+    void mul32(RegisterID op1, RegisterID op2, RegisterID dest)
+    {
+        if (op2 == dest) {
+            mul32(op1, dest);
+        } else {
+            move(op1, dest);
+            mul32(op2, dest);
+        }
     }
 
     void mul32(Address src, RegisterID dest)

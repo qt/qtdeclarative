@@ -63,7 +63,7 @@ struct Q_QML_EXPORT String : public Managed {
     String()
         : Managed(0), _text(QStringData::sharedNull()), identifier(0)
         , stringHash(UINT_MAX), largestSubLength(0), len(0)
-    { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
+    { type = Type_String; subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {
@@ -139,6 +139,8 @@ struct Q_QML_EXPORT String : public Managed {
         Q_ASSERT((largestSubLength && (len == left->len + right->len)) || len == (uint)_text->size);
         return len;
     }
+
+    static uint toArrayIndex(const QString &str);
 
     union {
         mutable QStringData *_text;
