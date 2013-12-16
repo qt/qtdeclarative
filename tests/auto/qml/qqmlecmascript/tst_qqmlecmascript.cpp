@@ -3910,7 +3910,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         QV4::Scope scope(v4);
         QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts);
         QV4::ScopedValue qml(scope);
-        for (quint32 i = 0; i < scripts->arrayLength(); ++i) {
+        for (quint32 i = 0; i < scripts->getLength(); ++i) {
             QQmlContextData *scriptContext, *newContext;
             qml = scripts->getIndexed(i);
 

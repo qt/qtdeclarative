@@ -91,6 +91,7 @@ struct Q_QML_EXPORT String : public Managed {
 
         return toQString() == other->toQString();
     }
+
     inline bool compare(const String *other) {
         return toQString() < other->toQString();
     }
@@ -172,6 +173,7 @@ protected:
     static bool deleteProperty(Managed *, const StringRef);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
+    static uint getLength(const Managed *m);
 
 private:
     QChar *recursiveAppend(QChar *ch) const;

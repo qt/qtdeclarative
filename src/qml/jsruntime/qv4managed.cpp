@@ -71,6 +71,7 @@ const ManagedVTable Managed::static_vtbl =
     0,
     isEqualTo,
     0,
+    0,
     "Managed",
 };
 

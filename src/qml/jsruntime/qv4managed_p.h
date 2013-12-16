@@ -106,6 +106,7 @@ struct ManagedVTable
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     bool (*isEqualTo)(Managed *m, Managed *other);
+    uint (*getLength)(const Managed *m);
     Property *(*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
     const char *className;
 };
@@ -136,6 +137,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     isEqualTo,                                  \
+    getLength,                                  \
     advanceIterator,                            \
     #classname                                  \
 }
@@ -166,6 +168,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     isEqualTo,                                  \
+    getLength,                                  \
     advanceIterator,                            \
     #name                                       \
 }
@@ -196,6 +199,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     isEqualTo,                                  \
+    getLength,                                  \
     advanceIterator,                            \
     #classname                                  \
 }
@@ -327,6 +331,7 @@ public:
 
     bool isEqualTo(Managed *other)
     { return internalClass->vtable->isEqualTo(this, other); }
+    uint getLength() const { return internalClass->vtable->getLength(this); }
     Property *advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
@@ -335,15 +340,12 @@ public:
     static ReturnedValue getLookup(Managed *m, Lookup *);
     static void setLookup(Managed *m, Lookup *l, const ValueRef v);
     static bool isEqualTo(Managed *m, Managed *other);
+    static uint getLength(const Managed *) { return 0; }
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
 
     InternalClass *internalClass;
-
-    enum {
-        SimpleArray = 1
-    };
 
     union {
         uint _data;
@@ -358,7 +360,7 @@ public:
             uchar hasAccessorProperty : 1;
             uchar _type;
             mutable uchar subtype;
-            uchar flags;
+            uchar _flags;
         };
     };
 

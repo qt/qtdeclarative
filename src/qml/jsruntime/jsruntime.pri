@@ -14,6 +14,7 @@ SOURCES += \
     $$PWD/qv4managed.cpp \
     $$PWD/qv4internalclass.cpp \
     $$PWD/qv4sparsearray.cpp \
+    $$PWD/qv4arraydata.cpp \
     $$PWD/qv4arrayobject.cpp \
     $$PWD/qv4argumentsobject.cpp \
     $$PWD/qv4booleanobject.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     $$PWD/qv4managed_p.h \
     $$PWD/qv4internalclass_p.h \
     $$PWD/qv4sparsearray_p.h \
+    $$PWD/qv4arraydata_p.h \
     $$PWD/qv4arrayobject_p.h \
     $$PWD/qv4argumentsobject_p.h \
     $$PWD/qv4booleanobject_p.h \

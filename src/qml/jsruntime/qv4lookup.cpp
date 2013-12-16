@@ -316,6 +316,15 @@ ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
     return getterGeneric(l, object);
 }
 
+ReturnedValue Lookup::arrayLengthGetter(Lookup *l, const ValueRef object)
+{
+    if (ArrayObject *a = object->asArrayObject())
+        return a->memberData[ArrayObject::LengthPropertyIndex].value.asReturnedValue();
+
+    l->getter = getterGeneric;
+    return getterGeneric(l, object);
+}
+
 
 ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
 {

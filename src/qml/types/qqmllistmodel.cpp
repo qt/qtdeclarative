@@ -441,7 +441,7 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
-            int arrayLength = a->arrayLength();
+            int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
                 o = a->getIndexed(j);
                 subModel->append(o, eng);
@@ -517,7 +517,7 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QV8Engine *eng)
             if (r.type == ListLayout::Role::List) {
                 ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
-                int arrayLength = a->arrayLength();
+                int arrayLength = a->getLength();
                 for (int j=0 ; j < arrayLength ; ++j) {
                     o = a->getIndexed(j);
                     subModel->append(o, eng);
@@ -1188,7 +1188,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::ValueRef
             QV4::Scoped<QV4::Object> o(scope);
 
             ListModel *subModel = new ListModel(role.subLayout, 0, -1);
-            int arrayLength = a->arrayLength();
+            int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
                 o = a->getIndexed(j);
                 subModel->append(o, eng);
@@ -1953,7 +1953,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
         if (objectArray) {
             QV4::ScopedObject argObject(scope);
 
-            int objectArrayLength = objectArray->arrayLength();
+            int objectArrayLength = objectArray->getLength();
             for (int i=0 ; i < objectArrayLength ; ++i) {
                 argObject = objectArray->getIndexed(i);
 
@@ -2055,7 +2055,7 @@ void QQmlListModel::append(QQmlV4Function *args)
         if (objectArray) {
             QV4::Scoped<QV4::Object> argObject(scope);
 
-            int objectArrayLength = objectArray->arrayLength();
+            int objectArrayLength = objectArray->getLength();
 
             int index = count();
             for (int i=0 ; i < objectArrayLength ; ++i) {

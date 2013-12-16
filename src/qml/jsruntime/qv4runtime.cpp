@@ -589,12 +589,10 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
     }
 
     if (idx < UINT_MAX) {
-        uint pidx = o->propertyIndexFromArrayIndex(idx);
-        if (pidx < UINT_MAX) {
-            if (!o->arrayData.attributes || o->arrayData.attributes[pidx].isData()) {
-                if (!o->arrayData.data[pidx].value.isEmpty())
-                    return o->arrayData.data[pidx].value.asReturnedValue();
-            }
+        if (!o->arrayData->hasAttributes()) {
+            ScopedValue v(scope, o->arrayData->get(idx));
+            if (!v->isEmpty())
+                return v->asReturnedValue();
         }
 
         return o->getIndexed(idx);
@@ -615,36 +613,10 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
-        uint pidx = o->propertyIndexFromArrayIndex(idx);
-        if (pidx < UINT_MAX && !o->asArgumentsObject()) {
-            if (o->arrayData.attributes && !o->arrayData.attributes[pidx].isEmpty() && !o->arrayData.attributes[pidx].isWritable()) {
-                if (ctx->strictMode)
-                    ctx->throwTypeError();
-                return;
-            }
-
-            Property *p = o->arrayData.data + pidx;
-            if (!o->arrayData.attributes || o->arrayData.attributes[pidx].isData()) {
-                p->value = *value;
-                return;
-            }
-
-            if (o->arrayData.attributes[pidx].isAccessor()) {
-                FunctionObject *setter = p->setter();
-                if (!setter) {
-                    if (ctx->strictMode)
-                        ctx->throwTypeError();
-                    return;
-                }
-
-                ScopedCallData callData(scope, 1);
-                callData->thisObject = o;
-                callData->args[0] = *value;
-                setter->call(callData);
-                return;
-            }
-        }
-        o->putIndexed(idx, value);
+        if (idx < o->arrayData->length() && o->arrayType() == ArrayData::Simple)
+            o->arrayData->put(idx, value);
+        else
+            o->putIndexed(idx, value);
         return;
     }
 
@@ -1118,25 +1090,23 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
     assert(o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
-    pd->value = val ? *val : Primitive::undefinedValue();
+    if (idx != UINT_MAX) {
+        o->arraySet(idx, val);
+    } else {
+        Property *pd = o->insertMember(name, Attr_Data);
+        pd->value = val ? *val : Primitive::undefinedValue();
+    }
 }
 
-ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
+ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, SafeValue *values, uint length)
 {
     Scope scope(ctx);
     Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
-    // ### FIXME: We need to allocate the array data to avoid crashes other places
-    // This should rather be done when required
-    a->arrayReserve(length);
     if (length) {
-        a->arrayData.length = length;
-        Property *pd = a->arrayData.data;
-        for (uint i = 0; i < length; ++i) {
-            pd->value = values[i];
-            ++pd;
-        }
+        a->arrayReserve(length);
+        a->arrayData->setLength(length);
+        a->arrayData->put(0, values, length);
         a->setArrayLengthUnchecked(length);
     }
     return a.asReturnedValue();
@@ -1149,9 +1119,16 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
     Q_ASSERT(!!o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(name, Attr_Accessor);
-    pd->setGetter(getter ? getter->asFunctionObject() : 0);
-    pd->setSetter(setter ? setter->asFunctionObject() : 0);
+    if (idx != UINT_MAX) {
+        Property pd;
+        pd.setGetter(getter ? getter->asFunctionObject() : 0);
+        pd.setSetter(setter ? setter->asFunctionObject() : 0);
+        o->arraySet(idx, pd, Attr_Accessor);
+    } else {
+        Property *pd = o->insertMember(name, Attr_Accessor);
+        pd->setGetter(getter ? getter->asFunctionObject() : 0);
+        pd->setSetter(setter ? setter->asFunctionObject() : 0);
+    }
 }
 
 ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)

@@ -141,7 +141,7 @@ QV4::ExecutionContext *__qmljs_builtin_pop_scope(QV4::ExecutionContext *ctx);
 ReturnedValue __qmljs_builtin_unwind_exception(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, const QV4::StringRef name);
 void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, QV4::ValueRef val);
-QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::Value *values, uint length);
+QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, SafeValue *values, uint length);
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, const QV4::ValueRef getter, const QV4::ValueRef setter);
 QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId);
 QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx);

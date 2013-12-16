@@ -871,7 +871,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
         : QV4::Object(engine)
     {
         setVTable(&static_vtbl);
-        flags &= ~SimpleArray;
+        setArrayType(QV4::ArrayData::Custom);
     }
 
     static void destroy(QV4::Managed *that) {

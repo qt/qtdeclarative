@@ -77,6 +77,7 @@ const ManagedVTable ExecutionContext::static_vtbl =
     0,
     isEqualTo,
     0,
+    0,
     "ExecutionContext",
 };
 

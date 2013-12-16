@@ -51,7 +51,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     , context(context)
     , fullyCreated(false)
 {
-    flags &= ~SimpleArray;
+    setArrayType(ArrayData::Complex);
 
     ExecutionEngine *v4 = context->engine;
     Scope scope(v4);
@@ -65,9 +65,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         memberData[CallerPropertyIndex] = pd;
 
         arrayReserve(context->callData->argc);
-        for (int i = 0; i < context->callData->argc; ++i)
-            arrayData.data[i].value = context->callData->args[i];
-        arrayData.length = context->callData->argc;
+        arrayData->put(0, context->callData->args, context->callData->argc);
+        arrayData->setLength(context->callData->argc);
         fullyCreated = true;
     } else {
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
@@ -93,18 +92,18 @@ void ArgumentsObject::fullyCreate()
     uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
     uint argCount = qMin(context->realArgumentCount, context->callData->argc);
     arrayReserve(argCount);
-    ensureArrayAttributes();
+    arrayData->ensureAttributes();
     context->engine->requireArgumentsAccessors(numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments.append(context->callData->args[i]);
-        arrayData.data[i] = context->engine->argumentsAccessors.at(i);
-        arrayData.attributes[i] = Attr_Accessor;
+        arrayData->data[i] = context->engine->argumentsAccessors.at(i);
+        arrayData->setAttributes(i, Attr_Accessor);
     }
-    for (uint i = numAccessors; i < argCount; ++i) {
-        arrayData.data[i] = Property::fromValue(context->callData->args[i]);
-        arrayData.attributes[i] = Attr_Data;
-    }
-    arrayData.length = argCount;
+    arrayData->setLength(numAccessors);
+    arrayData->put(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
+    for (uint i = numAccessors; i < argCount; ++i)
+        arrayData->setAttributes(i, Attr_Data);
+    arrayData->setLength(argCount);
 
     fullyCreated = true;
 }
@@ -114,18 +113,17 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     fullyCreate();
 
     Scope scope(ctx);
-    uint pidx = propertyIndexFromArrayIndex(index);
-    Property *pd = arrayData.data + pidx;
+    Property *pd = arrayData->getProperty(index);
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())
-        isMapped = arrayData.attributes && arrayData.attributes[pidx].isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
+        isMapped = arrayData->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
 
     if (isMapped) {
         map = *pd;
-        mapAttrs = arrayData.attributes[pidx];
-        arrayData.attributes[pidx] = Attr_Data;
+        mapAttrs = arrayData->attributes(index);
+        arrayData->setAttributes(index, Attr_Data);
         pd->value = mappedArguments.at(index);
     }
 
@@ -142,7 +140,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
         if (attrs.isWritable()) {
             *pd = map;
-            arrayData.attributes[pidx] = mapAttrs;
+            arrayData->setAttributes(index, mapAttrs);
         }
     }
 

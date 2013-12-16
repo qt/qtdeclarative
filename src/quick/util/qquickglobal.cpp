@@ -398,7 +398,7 @@ public:
         if (!array)
             return QMatrix4x4();
 
-        if (array->arrayLength() != 16)
+        if (array->getLength() != 16)
             return QMatrix4x4();
 
         float matVals[16];

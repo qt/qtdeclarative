@@ -343,19 +343,19 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
         if (!arg->isNullOrUndefined())
             return ctx->throwTypeError();
     } else {
-        len = ArrayPrototype::getLength(ctx, arr);
+        len = arr->getLength();
     }
 
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (!(arr->flags & SimpleArray) || arr->protoHasArray() || arr->hasAccessorProperty) {
+        if (arr->arrayType() != ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            int alen = qMin(len, arr->arrayData.length);
+            int alen = qMin(len, arr->arrayData->length());
             for (int i = 0; i < alen; ++i)
-                callData->args[i] = arr->arrayData.data[i].value;
+                callData->args[i] = arr->arrayData->data[i].value;
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

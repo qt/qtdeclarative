@@ -281,7 +281,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             ScopedValue values(scope, ctx->callData->args[1]);
             if (values->asArrayObject()) {
                 ScopedArrayObject array(scope, values);
-                quint32 size = array->arrayLength();
+                quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii)
                     query.bindValue(ii, engine->toVariant((v = array->getIndexed(ii)), -1));

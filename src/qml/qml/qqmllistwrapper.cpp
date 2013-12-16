@@ -57,7 +57,7 @@ QmlListWrapper::QmlListWrapper(QV8Engine *engine)
       v8(engine)
 {
     setVTable(&static_vtbl);
-    flags &= ~SimpleArray;
+    setArrayType(ArrayData::Custom);
 }
 
 QmlListWrapper::~QmlListWrapper()

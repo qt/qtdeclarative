@@ -53,7 +53,7 @@ struct FunctionObject;
 
 struct Property {
     union {
-        Value value;
+        SafeValue value;
         struct {
             FunctionObject *get;
             FunctionObject *set;

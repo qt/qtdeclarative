@@ -1592,7 +1592,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         if (array) {
             Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
 
-            uint32_t length = array->arrayLength();
+            uint32_t length = array->getLength();
             for (uint32_t ii = 0; ii < length; ++ii)  {
                 QObject *o = 0;
                 qobjectWrapper = array->getIndexed(ii);
@@ -1689,9 +1689,10 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         QList<QObject *> &list = *qlistPtr;
         QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
+        QV4::ScopedValue v(scope);
         for (int ii = 0; ii < list.count(); ++ii) {
-            array->arrayData.data[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
-            array->arrayData.length = ii + 1;
+            array->arrayData->put(ii, (v = QV4::QObjectWrapper::wrap(v4, list.at(ii))));
+            array->arrayData->setLength(ii + 1);
         }
         array->setArrayLengthUnchecked(list.count());
         return array.asReturnedValue();

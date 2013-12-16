@@ -175,7 +175,7 @@ public:
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
-        flags &= ~SimpleArray;
+        setArrayType(ArrayData::Custom);
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
         Q_UNUSED(protectThis);
@@ -188,7 +188,7 @@ public:
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
-        flags &= ~SimpleArray;
+        setArrayType(ArrayData::Custom);
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
         Q_UNUSED(protectThis);
@@ -468,7 +468,7 @@ public:
     {
         QV4::Scope scope(array->engine());
         Container result;
-        quint32 length = array->arrayLength();
+        quint32 length = array->getLength();
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i)
             result << convertValueToElement<typename Container::value_type>((v = array->getIndexed(i)));

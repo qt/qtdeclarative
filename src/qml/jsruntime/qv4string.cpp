@@ -126,6 +126,7 @@ const ManagedVTable String::static_vtbl =
     0 /*getLookup*/,
     0 /*setLookup*/,
     isEqualTo,
+    0,
     0 /*advanceIterator*/,
     "String",
 };
@@ -421,4 +422,9 @@ uint String::toArrayIndex(const QString &str)
 {
     bool ok;
     return ::toArrayIndex(str.constData(), str.constData() + str.length(), &ok);
+}
+
+uint String::getLength(const Managed *m)
+{
+    return static_cast<const String *>(m)->length();
 }

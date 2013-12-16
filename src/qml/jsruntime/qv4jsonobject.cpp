@@ -339,7 +339,7 @@ ReturnedValue JsonParser::parseArray()
         }
     }
 
-    DEBUG << "size =" << array->arrayLength();
+    DEBUG << "size =" << array->getLength();
     END;
 
     --nestingLevel;
@@ -855,7 +855,7 @@ QString Stringify::JA(ArrayObjectRef a)
     indent += gap;
 
     QStringList partial;
-    uint len = a->arrayLength();
+    uint len = a->getLength();
     ScopedValue v(scope);
     for (uint i = 0; i < len; ++i) {
         bool exists;
@@ -925,7 +925,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
-            uint arrayLen = o->arrayLength();
+            uint arrayLen = o->getLength();
             ScopedValue v(scope);
             for (uint i = 0; i < arrayLen; ++i) {
                 v = o->getIndexed(i);
@@ -1057,9 +1057,10 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     int size = array.size();
     Scoped<ArrayObject> a(scope, engine->newArrayObject());
     a->arrayReserve(size);
+    ScopedValue v(scope);
     for (int i = 0; i < size; i++) {
-        a->arrayData.data[i].value = fromJsonValue(engine, array.at(i));
-        a->arrayData.length = i + 1;
+        a->arrayData->put(i, (v = fromJsonValue(engine, array.at(i))));
+        a->arrayData->setLength(i + 1);
     }
     a->setArrayLengthUnchecked(size);
     return a.asReturnedValue();
@@ -1083,7 +1084,7 @@ QJsonArray JsonObject::toJsonArray(ArrayObjectRef a, V4ObjectSet &visitedObjects
     visitedObjects.insert(a);
 
     ScopedValue v(scope);
-    quint32 length = a->arrayLength();
+    quint32 length = a->getLength();
     for (quint32 i = 0; i < length; ++i) {
         v = a->getIndexed(i);
         if (v->asFunctionObject())

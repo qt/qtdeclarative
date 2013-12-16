@@ -183,7 +183,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         push(data, valueheader(WorkerUndefined));
     } else if (v->asArrayObject()) {
         QV4::ScopedArrayObject array(scope, v);
-        uint32_t length = array->arrayLength();
+        uint32_t length = array->getLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
             return;
@@ -266,7 +266,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         // regular object
         QV4::ScopedValue val(scope, *v);
         QV4::ScopedArrayObject properties(scope, QV4::ObjectPrototype::getOwnPropertyNames(v4, val));
-        quint32 length = properties->arrayLength();
+        quint32 length = properties->getLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
             return;
@@ -390,8 +390,8 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
-            array->arrayData.data[ii].value = value.asReturnedValue();
-            array->arrayData.length = ii + 1;
+            array->arrayData->put(ii, value);
+            array->arrayData->setLength(ii + 1);
         }
         array->setArrayLengthUnchecked(seqLength);
         QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);

@@ -344,11 +344,13 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject(ctx->engine->regExpExecArrayClass));
     int len = r->value->captureCount();
     array->arrayReserve(len);
+    ScopedValue v(scope);
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        array->arrayData.data[i].value = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
-        array->arrayData.length = i + 1;
+        v = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        array->arrayData->put(i, v);
+        array->arrayData->setLength(i + 1);
     }
     array->setArrayLengthUnchecked(len);
 

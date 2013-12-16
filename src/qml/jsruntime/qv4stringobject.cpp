@@ -144,14 +144,20 @@ Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRe
         while (it->arrayIndex < slen) {
             *index = it->arrayIndex;
             ++it->arrayIndex;
-            if (attrs)
-                *attrs = s->arrayData.attributes ? s->arrayData.attributes[it->arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
-            return s->__getOwnProperty__(*index);
+            PropertyAttributes a;
+            Property *p = s->__getOwnProperty__(*index, &a);
+            if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
+                if (attrs)
+                    *attrs = a;
+                return p;
+            }
         }
-        it->arrayNode = s->sparseArrayBegin();
-        // iterate until we're past the end of the string
-        while (it->arrayNode && it->arrayNode->key() < slen)
-            it->arrayNode = it->arrayNode->nextNode();
+        if (s->arrayData) {
+            it->arrayNode = s->sparseBegin();
+            // iterate until we're past the end of the string
+            while (it->arrayNode && it->arrayNode->key() < slen)
+                it->arrayNode = it->arrayNode->nextNode();
+        }
     }
 
     return Object::advanceIterator(m, it, name, index, attrs);
@@ -692,18 +698,18 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
             array->push_back((s = ctx->engine->newString(text.mid(offset, matchOffsets[0] - offset))));
             offset = qMax(offset + 1, matchOffsets[1]);
 
-            if (array->arrayLength() >= limit)
+            if (array->getLength() >= limit)
                 break;
 
             for (int i = 1; i < re->value->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
                 array->push_back((s = ctx->engine->newString(text.mid(start, end - start))));
-                if (array->arrayLength() >= limit)
+                if (array->getLength() >= limit)
                     break;
             }
         }
-        if (array->arrayLength() < limit)
+        if (array->getLength() < limit)
             array->push_back((s = ctx->engine->newString(text.mid(offset))));
     } else {
         QString separator = separatorValue->toString(ctx)->toQString();
@@ -718,10 +724,10 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
         while ((end = text.indexOf(separator, start)) != -1) {
             array->push_back((s = ctx->engine->newString(text.mid(start, end - start))));
             start = end + separator.size();
-            if (array->arrayLength() >= limit)
+            if (array->getLength() >= limit)
                 break;
         }
-        if (array->arrayLength() < limit && start != -1)
+        if (array->getLength() < limit && start != -1)
             array->push_back((s = ctx->engine->newString(text.mid(start))));
     }
     return array.asReturnedValue();

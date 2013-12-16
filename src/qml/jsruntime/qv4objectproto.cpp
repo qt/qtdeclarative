@@ -271,10 +271,12 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
 
     o->internalClass = o->internalClass->sealed();
 
-    o->ensureArrayAttributes();
-    for (uint i = 0; i < o->arrayData.length; ++i) {
-        if (!(o->arrayData.attributes[i].isGeneric() || o->arrayData.data[i].value.isEmpty()))
-            o->arrayData.attributes[i].setConfigurable(false);
+    if (o->arrayData) {
+        o->arrayData->ensureAttributes();
+        for (uint i = 0; i < o->arrayData->length(); ++i) {
+            if (!o->arrayData->isEmpty(i))
+                o->arrayData->attrs[i].setConfigurable(false);
+        }
     }
 
     return o.asReturnedValue();
@@ -294,12 +296,14 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
 
     o->internalClass = o->internalClass->frozen();
 
-    o->ensureArrayAttributes();
-    for (uint i = 0; i < o->arrayData.length; ++i) {
-        if (!(o->arrayData.attributes[i].isGeneric() || o->arrayData.data[i].value.isEmpty()))
-            o->arrayData.attributes[i].setConfigurable(false);
-        if (o->arrayData.attributes[i].isData())
-            o->arrayData.attributes[i].setWritable(false);
+    if (o->arrayData) {
+        o->arrayData->ensureAttributes();
+        for (uint i = 0; i < o->arrayData->length(); ++i) {
+            if (!o->arrayData->isEmpty(i))
+                o->arrayData->attrs[i].setConfigurable(false);
+            if (o->arrayData->attrs[i].isData())
+                o->arrayData->attrs[i].setWritable(false);
+        }
     }
     return o.asReturnedValue();
 }
@@ -328,15 +332,16 @@ ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
     if (o->internalClass != o->internalClass->sealed())
         return Encode(false);
 
-    if (!o->arrayData.length)
+    if (!o->arrayData || !o->arrayData->length())
         return Encode(true);
 
-    if (!o->arrayData.attributes)
+    if (o->arrayData->length() && !o->arrayData->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData.length; ++i) {
-        if (!(o->arrayData.attributes[i].isGeneric() || o->arrayData.data[i].value.isEmpty()))
-            if (o->arrayData.attributes[i].isConfigurable())
+    for (uint i = 0; i < o->arrayData->length(); ++i) {
+        // ### Fix for sparse arrays
+        if (!o->arrayData->isEmpty(i))
+            if (o->arrayData->attributes(i).isConfigurable())
                 return Encode(false);
     }
 
@@ -356,15 +361,16 @@ ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
     if (o->internalClass != o->internalClass->frozen())
         return Encode(false);
 
-    if (!o->arrayData.length)
+    if (!o->arrayData->length())
         return Encode(true);
 
-    if (!o->arrayData.attributes)
+    if (o->arrayData->length() && !o->arrayData->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData.length; ++i) {
-        if (!(o->arrayData.attributes[i].isGeneric() || o->arrayData.data[i].value.isEmpty()))
-            if (o->arrayData.attributes[i].isConfigurable() || o->arrayData.attributes[i].isWritable())
+    for (uint i = 0; i < o->arrayData->length(); ++i) {
+        // ### Fix for sparse arrays
+        if (!o->arrayData->isEmpty(i))
+            if (o->arrayData->attributes(i).isConfigurable() || o->arrayData->attributes(i).isWritable())
                 return Encode(false);
     }
 

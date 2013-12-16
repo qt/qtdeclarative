@@ -1692,7 +1692,7 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::ValueRef groups) const
     QV4::ScopedArrayObject array(scope, groups);
     if (array) {
         QV4::ScopedValue v(scope);
-        uint arrayLength = array->arrayLength();
+        uint arrayLength = array->getLength();
         for (uint i = 0; i < arrayLength; ++i) {
             v = array->getIndexed(i);
             const QString groupName = v->toQString();
@@ -3189,7 +3189,7 @@ public:
         : Object(engine)
     {
         setVTable(&static_vtbl);
-        flags &= ~SimpleArray;
+        setArrayType(QV4::ArrayData::Custom);
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}
 

@@ -85,6 +85,7 @@ struct Lookup {
     static ReturnedValue primitiveGetterAccessor0(Lookup *l, const ValueRef object);
     static ReturnedValue primitiveGetterAccessor1(Lookup *l, const ValueRef object);
     static ReturnedValue stringLengthGetter(Lookup *l, const ValueRef object);
+    static ReturnedValue arrayLengthGetter(Lookup *l, const ValueRef object);
 
     static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionContext *ctx);
     static ReturnedValue globalGetter0(Lookup *l, ExecutionContext *ctx);
