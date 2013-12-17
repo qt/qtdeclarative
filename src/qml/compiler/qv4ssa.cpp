@@ -1636,7 +1636,8 @@ public:
             BasicBlock *bb = function->basicBlocks[i];
             if (i == 0 || !bb->in.isEmpty())
                 foreach (Stmt *s, bb->statements)
-                    _worklist.insert(s);
+                    if (!s->asJump())
+                        _worklist.insert(s);
         }
 
         while (!_worklist.isEmpty()) {
@@ -2886,6 +2887,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
     foreach (BasicBlock *bb, function->basicBlocks) {
         for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
             Stmt **s = &bb->statements[i];
+            if ((*s)->asJump())
+                continue; // nothing do do there
             W.append(*s);
             ref.insert(*s, s);
         }
