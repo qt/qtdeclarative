@@ -10,6 +10,7 @@ HEADERS += \
     $$PWD/qquickrectangle_p_p.h \
     $$PWD/qquickwindow.h \
     $$PWD/qquickwindow_p.h \
+    $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickfocusscope_p.h \
     $$PWD/qquickitemsmodule_p.h \
     $$PWD/qquickpainteditem.h \
@@ -82,6 +83,7 @@ SOURCES += \
     $$PWD/qquickitem.cpp \
     $$PWD/qquickrectangle.cpp \
     $$PWD/qquickwindow.cpp \
+    $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickfocusscope.cpp \
     $$PWD/qquickitemsmodule.cpp \
     $$PWD/qquickpainteditem.cpp \

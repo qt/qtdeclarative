@@ -74,6 +74,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAnimatorController;
 class QSGRenderLoop;
+class QQuickRenderControl;
 class QQuickDragGrabber;
 
 class QQuickRootItem : public QQuickItem
@@ -103,7 +104,7 @@ public:
     QQuickWindowPrivate();
     virtual ~QQuickWindowPrivate();
 
-    void init(QQuickWindow *);
+    void init(QQuickWindow *, QQuickRenderControl *control = 0);
     void initContentItem();//Currently only used if items added in QML
 
     QQuickRootItem *contentItem;
@@ -204,6 +205,7 @@ public:
     QByteArray customRenderMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.
 
     QSGRenderLoop *windowManager;
+    QQuickRenderControl *renderControl;
     QQuickAnimatorController *animationController;
 
     QColor clearColor;
@@ -217,6 +219,7 @@ public:
 
     uint lastWheelEventAccepted : 1;
     bool componentCompleted : 1;
+    bool forceRendering : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;

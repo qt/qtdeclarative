@@ -51,6 +51,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgrenderloop_p.h>
+#include <private/qquickrendercontrol_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qguiapplication_p.h>
@@ -210,25 +211,32 @@ QQuickRootItem::QQuickRootItem()
 void QQuickWindow::exposeEvent(QExposeEvent *)
 {
     Q_D(QQuickWindow);
-    d->windowManager->exposureChanged(this);
+    if (d->windowManager)
+        d->windowManager->exposureChanged(this);
 }
 
 /*! \reimp */
 void QQuickWindow::resizeEvent(QResizeEvent *)
 {
-    d_func()->windowManager->resize(this);
+    Q_D(QQuickWindow);
+    if (d->windowManager)
+        d->windowManager->resize(this);
 }
 
 /*! \reimp */
 void QQuickWindow::showEvent(QShowEvent *)
 {
-    d_func()->windowManager->show(this);
+    Q_D(QQuickWindow);
+    if (d->windowManager)
+        d->windowManager->show(this);
 }
 
 /*! \reimp */
 void QQuickWindow::hideEvent(QHideEvent *)
 {
-    d_func()->windowManager->hide(this);
+    Q_D(QQuickWindow);
+    if (d->windowManager)
+        d->windowManager->hide(this);
 }
 
 /*! \reimp */
@@ -284,7 +292,10 @@ void QQuickWindowPrivate::polishItems()
 void QQuickWindow::update()
 {
     Q_D(QQuickWindow);
-    d->windowManager->update(this);
+    if (d->windowManager)
+        d->windowManager->update(this);
+    else
+        d->renderControl->update();
 }
 
 void forcePolishHelper(QQuickItem *item)
@@ -391,12 +402,14 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , context(0)
     , renderer(0)
     , windowManager(0)
+    , renderControl(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , persistentGLContext(true)
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
     , componentCompleted(true)
+    , forceRendering(false)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -410,7 +423,7 @@ QQuickWindowPrivate::~QQuickWindowPrivate()
 {
 }
 
-void QQuickWindowPrivate::init(QQuickWindow *c)
+void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 {
     q_ptr = c;
 
@@ -424,9 +437,24 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
     customRenderMode = qgetenv("QSG_VISUALIZE");
-    windowManager = QSGRenderLoop::instance();
-    QSGContext *sg = windowManager->sceneGraphContext();
-    context = windowManager->createRenderContext(sg);
+    renderControl = control;
+    if (renderControl)
+        renderControl->setWindow(q);
+
+    if (!renderControl)
+        windowManager = QSGRenderLoop::instance();
+
+    Q_ASSERT(windowManager || renderControl);
+
+    QSGContext *sg;
+    if (renderControl) {
+        sg = renderControl->sceneGraphContext();
+        context = renderControl->renderContext(sg);
+    } else {
+        sg = windowManager->sceneGraphContext();
+        context = windowManager->createRenderContext(sg);
+    }
+
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
 
@@ -1040,6 +1068,18 @@ QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent)
 }
 
 /*!
+    \internal
+*/
+QQuickWindow::QQuickWindow(QQuickRenderControl *control)
+    : QWindow(*(new QQuickWindowPrivate), 0)
+{
+    Q_D(QQuickWindow);
+    d->init(this, control);
+}
+
+
+
+/*!
     Destroys the window.
 */
 QQuickWindow::~QQuickWindow()
@@ -1047,7 +1087,10 @@ QQuickWindow::~QQuickWindow()
     Q_D(QQuickWindow);
 
     d->animationController->deleteLater();
-    d->windowManager->windowDestroyed(this);
+    if (d->renderControl)
+        d->renderControl->windowDestroyed();
+    else
+        d->windowManager->windowDestroyed(this);
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
@@ -1075,7 +1118,8 @@ QQuickWindow::~QQuickWindow()
 void QQuickWindow::releaseResources()
 {
     Q_D(QQuickWindow);
-    d->windowManager->releaseResources(this);
+    if (d->windowManager)
+        d->windowManager->releaseResources(this);
     QQuickPixmap::purgeCache();
 }
 
@@ -2267,7 +2311,7 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
 bool QQuickWindowPrivate::isRenderable() const
 {
     Q_Q(const QQuickWindow);
-    return q->isExposed() && q->isVisible() && q->geometry().isValid();
+    return (forceRendering || (q->isExposed() && q->isVisible())) && q->geometry().isValid();
 }
 
 /*!
@@ -2638,7 +2682,10 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 void QQuickWindow::maybeUpdate()
 {
     Q_D(QQuickWindow);
-    d->windowManager->maybeUpdate(this);
+    if (d->renderControl)
+        d->renderControl->maybeUpdate();
+    else
+        d->windowManager->maybeUpdate(this);
 }
 
 void QQuickWindow::cleanupSceneGraph()
@@ -2897,7 +2944,7 @@ QImage QQuickWindow::grabWindow()
         return image;
     }
 
-    return d->windowManager->grab(this);
+    return d->renderControl ? d->renderControl->grab() : d->windowManager->grab(this);
 }
 
 /*!
@@ -2911,6 +2958,9 @@ QImage QQuickWindow::grabWindow()
 QQmlIncubationController *QQuickWindow::incubationController() const
 {
     Q_D(const QQuickWindow);
+
+    if (!d->windowManager)
+        return 0; // TODO: make sure that this is safe
 
     if (!d->incubationController)
         d->incubationController = new QQuickWindowIncubationController(d->windowManager);

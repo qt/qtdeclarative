@@ -58,6 +58,7 @@ class QOpenGLFramebufferObject;
 class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
+class QQuickRenderControl;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -177,7 +178,10 @@ private Q_SLOTS:
 
 private:
     friend class QQuickItem;
+    friend class QQuickWidget;
+    friend class QQuickWidgetPrivate;
     friend class QQuickAnimatorController;
+    explicit QQuickWindow(QQuickRenderControl*);
     Q_DISABLE_COPY(QQuickWindow)
 };
 

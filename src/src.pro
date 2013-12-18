@@ -15,4 +15,6 @@ SUBDIRS += \
     imports \
     qmldevtools
 
+qtHaveModule(widgets):SUBDIRS += quickwidgets
+
 qmldevtools.CONFIG = host_build
