@@ -954,6 +954,7 @@ void QQuickAnchorChanges::setObject(QQuickItem *target)
 }
 
 /*!
+    \qmlpropertygroup QtQuick::AnchorChanges::anchors
     \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.left
     \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.right
     \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.horizontalCenter

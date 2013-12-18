@@ -2083,6 +2083,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
 }
 
 /*!
+    \qmlpropertygroup QtQuick::PropertyAnimation::easing
     \qmlproperty enumeration QtQuick::PropertyAnimation::easing.type
     \qmlproperty real QtQuick::PropertyAnimation::easing.amplitude
     \qmlproperty real QtQuick::PropertyAnimation::easing.overshoot

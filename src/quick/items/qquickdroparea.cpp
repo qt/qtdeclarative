@@ -193,6 +193,7 @@ QObject *QQuickDropAreaDrag::source() const
 }
 
 /*!
+    \qmlpropertygroup QtQuick::DropArea::drag
     \qmlproperty qreal QtQuick::DropArea::drag.x
     \qmlproperty qreal QtQuick::DropArea::drag.y
 

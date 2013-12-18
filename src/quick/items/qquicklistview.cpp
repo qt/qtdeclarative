@@ -2149,6 +2149,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
 
 /*!
+    \qmlpropertygroup QtQuick::ListView::section
     \qmlproperty string QtQuick::ListView::section.property
     \qmlproperty enumeration QtQuick::ListView::section.criteria
     \qmlproperty Component QtQuick::ListView::section.delegate

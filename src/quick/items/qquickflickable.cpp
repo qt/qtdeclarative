@@ -646,6 +646,7 @@ is finished.
 */
 
 /*!
+    \qmlpropertygroup QtQuick::Flickable::visibleArea
     \qmlproperty real QtQuick::Flickable::visibleArea.xPosition
     \qmlproperty real QtQuick::Flickable::visibleArea.widthRatio
     \qmlproperty real QtQuick::Flickable::visibleArea.yPosition
