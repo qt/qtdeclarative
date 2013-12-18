@@ -273,6 +273,7 @@ class DominatorTree {
     std::vector<BasicBlockIndex> semi; // BasicBlock index -> semi dominator BasicBlock index
     std::vector<BasicBlockIndex> idom; // BasicBlock index -> immediate dominator BasicBlock index
     std::vector<BasicBlockIndex> samedom; // BasicBlock index -> same dominator BasicBlock index
+    std::vector<QSet<BasicBlock *> > DF; // BasicBlock index -> dominator frontier
 
     struct DFSTodo {
         BasicBlockIndex node, parent;
@@ -432,11 +433,24 @@ class DominatorTree {
     }
 
     struct NodeProgress {
-        QSet<BasicBlockIndex> children;
-        QSet<BasicBlockIndex> todo;
+        std::vector<BasicBlockIndex> children;
+        std::vector<BasicBlockIndex> todo;
     };
 
     void computeDF() {
+        // compute children of each node in the dominator tree
+        std::vector<std::vector<BasicBlockIndex> > children; // BasicBlock index -> children
+        children.resize(nodes.size());
+        foreach (BasicBlock *n, nodes) {
+            const BasicBlockIndex nodeIndex = n->index;
+            Q_ASSERT(nodes.at(nodeIndex) == n);
+            const BasicBlockIndex nodeDominator = idom[nodeIndex];
+            if (nodeDominator == InvalidBasicBlockIndex)
+                continue; // there is no dominator to add this node to as a child (e.g. the start node)
+            children[nodeDominator].push_back(nodeIndex);
+        }
+
+        // Fill the worklist and initialize the node status for each basic-block
         QHash<BasicBlockIndex, NodeProgress> nodeStatus;
         nodeStatus.reserve(nodes.size());
         std::vector<BasicBlockIndex> worklist;
@@ -460,7 +474,7 @@ class DominatorTree {
             }
 
             NodeProgress &np = nodeStatus[node];
-            QSet<BasicBlockIndex>::iterator it = np.todo.begin();
+            std::vector<BasicBlockIndex>::iterator it = np.todo.begin();
             while (it != np.todo.end()) {
                 if (DF_done[*it]) {
                     it = np.todo.erase(it);
@@ -470,7 +484,7 @@ class DominatorTree {
                 }
             }
 
-            if (np.todo.isEmpty()) {
+            if (np.todo.empty()) {
                 QSet<BasicBlock *> S;
                 foreach (BasicBlock *y, nodes[node]->out)
                     if (idom[y->index] != node)
@@ -521,30 +535,13 @@ class DominatorTree {
 #endif // !QT_NO_DEBUG
     }
 
-    std::vector<QSet<BasicBlockIndex> > children; // BasicBlock index -> children
-    std::vector<QSet<BasicBlock *> > DF; // BasicBlock index -> dominator frontier
-
 public:
     DominatorTree(const QVector<BasicBlock *> &nodes)
         : nodes(nodes)
         , N(0)
     {
         DF.resize(nodes.size());
-        children.resize(nodes.size());
         calculateIDoms();
-
-        // compute children of n
-        foreach (BasicBlock *n, nodes) {
-            const BasicBlockIndex nodeIndex = n->index;
-            Q_ASSERT(nodes.at(nodeIndex) == n);
-            const BasicBlockIndex nodeDominator = idom[nodeIndex];
-            if (nodeDominator == InvalidBasicBlockIndex)
-                continue; // there is no dominator to add this node to as a child (e.g. the start node)
-            QSet<BasicBlockIndex> &c = children[nodeDominator];
-            if (!c.contains(nodeIndex))
-                c.insert(nodeIndex);
-        }
-
         computeDF();
     }
 
