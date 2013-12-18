@@ -88,9 +88,6 @@ public:
 
 Q_SIGNALS:
     void timeToIncubate();
-
-private:
-    static QSGRenderLoop *s_instance;
 };
 
 QT_END_NAMESPACE

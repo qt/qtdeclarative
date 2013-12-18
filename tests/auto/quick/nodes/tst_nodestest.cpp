@@ -98,7 +98,6 @@ void NodesTest::initTestCase()
 void NodesTest::cleanupTestCase()
 {
     renderContext->invalidate();
-    delete renderContext;
     context->doneCurrent();
     delete context;
     delete surface;
