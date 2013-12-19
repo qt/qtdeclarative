@@ -246,8 +246,8 @@ QML Lists and Models
 The \l{Qt QML Models QML Types}{Qt QML Models} submodule provides the types for
 structuring data with models and lists.
 \list
-\li \l ListModel - Defines a list of data
-\li \l ListElement - Defines a data item in a \l ListModel
+\li \l{ListModel} - Defines a list of data
+\li \l{ListElement} - Defines a data item in a \l{ListModel}
 \endlist
 
 These QML types are part of Qt Quick for backwards compatibility, but for
