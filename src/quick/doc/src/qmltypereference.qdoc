@@ -42,11 +42,11 @@ by this module, organized according to category and purpose.
 The types provided by the \l {Qt Quick} module are only available in a QML document
 if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version 2.0, and thus it may be
+The current version of the \c QtQuick module is version 2.2, and thus it may be
 imported via the following statement:
 
 \qml
-import QtQuick 2.0
+import QtQuick 2.2
 \endqml
 
 See the \l {Qt Quick} module documentation for more
