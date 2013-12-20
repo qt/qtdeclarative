@@ -68,6 +68,8 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
 
+#include <QtCore/QTextStream>
+
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
 #endif // V4_ENABLE_JIT
@@ -729,6 +731,39 @@ StackFrame ExecutionEngine::currentStackFrame() const
         frame = trace.first();
 
     return frame;
+}
+
+/* Helper and "C" linkage exported function to format a GDBMI stacktrace for
+ * invocation by a debugger.
+ * Sample GDB invocation: print qt_v4StackTrace((void*)0x7fffffffb290)
+ * Sample CDB invocation: .call Qt5Qmld!qt_v4StackTrace(0x7fffffffb290) ; gh
+ * Note: The helper is there to suppress MSVC warning 4190 about anything
+ * with UDT return types in a "C" linkage function. */
+
+static inline char *v4StackTrace(const ExecutionContext *context)
+{
+    QString result;
+    QTextStream str(&result);
+    str << "stack=[";
+    if (context && context->engine) {
+        const QVector<StackFrame> stackTrace = context->engine->stackTrace(20);
+        for (int i = 0; i < stackTrace.size(); ++i) {
+            if (i)
+                str << ',';
+            const QUrl url(stackTrace.at(i).source);
+            const QString fileName = url.isLocalFile() ? url.toLocalFile() : url.toString();
+            str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function
+                << "\",file=\"" << fileName << "\",fullname=\"" << fileName
+                << "\",line=\"" << stackTrace.at(i).line << "\",language=\"js\"}";
+        }
+    }
+    str << ']';
+    return qstrdup(result.toLocal8Bit().constData());
+}
+
+extern "C" Q_QML_EXPORT char *qt_v4StackTrace(void *executionContext)
+{
+    return v4StackTrace(reinterpret_cast<const ExecutionContext *>(executionContext));
 }
 
 QUrl ExecutionEngine::resolvedUrl(const QString &file)
