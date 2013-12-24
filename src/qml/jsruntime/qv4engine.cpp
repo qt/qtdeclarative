@@ -76,6 +76,7 @@
 
 #if USE(PTHREADS)
 #  include <pthread.h>
+#  include <sys/resource.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -112,6 +113,15 @@ quintptr getStackLimit()
     size_t stackSize = 0;
     pthread_attr_getstack(&attr, &stackBottom, &stackSize);
     pthread_attr_destroy(&attr);
+
+#    if defined(Q_OS_ANDROID)
+    // Bionic pretends that the main thread has a tiny stack; work around it
+    if (gettid() == getpid()) {
+        rlimit limit;
+        getrlimit(RLIMIT_STACK, &limit);
+        stackBottom = reinterpret_cast<void*>(reinterpret_cast<quintptr>(stackBottom) + stackSize - limit.rlim_cur);
+    }
+#    endif
 
     stackLimit = reinterpret_cast<quintptr>(stackBottom);
 #  endif

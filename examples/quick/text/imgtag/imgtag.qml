@@ -78,10 +78,10 @@ Rectangle {
                 text: "Some hearts<img src=\"images/heart200.png\" width=\"20\" height=\"20\" align=\"bottom\"><img src=\"images/heart200.png\" width=\"30\" height=\"30\" align=\"bottom\"> <img src=\"images/heart200.png\" width=\"40\" height=\"40\"><img src=\"images/heart200.png\" width=\"50\" height=\"50\" align=\"bottom\">with different sizes."
             }
             TextWithImage {
-                text: "Resized image<img width=\"80\" height=\"76\" align=\"middle\" src=\"http://files.app4mobile.com/wp-content/uploads/2011/08/nokia-n9-price-specification-features-us-europe-india.jpg\">from the internet."
+                text: "Resized image<img width=\"48\" height=\"48\" align=\"middle\" src=\"http://qt-project.org/images/qt13a/Qt-logo.png\">from the internet."
             }
             TextWithImage {
-                text: "Image<img align=\"middle\" src=\"http://qt.gitorious.org/images/sites/qt/logo.png\">from the internet."
+                text: "Image<img align=\"middle\" src=\"http://qt-project.org/images/qt13a/Qt-logo.png\">from the internet."
             }
             TextWithImage {
                 height: 120

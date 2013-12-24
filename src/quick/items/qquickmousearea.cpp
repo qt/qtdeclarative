@@ -1183,6 +1183,7 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 #endif
 
 /*!
+    \qmlpropertygroup QtQuick::MouseArea::drag
     \qmlproperty Item QtQuick::MouseArea::drag.target
     \qmlproperty bool QtQuick::MouseArea::drag.active
     \qmlproperty enumeration QtQuick::MouseArea::drag.axis

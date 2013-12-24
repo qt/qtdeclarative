@@ -2101,7 +2101,7 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Re
 {
     if (removeResult->visiblePos.isValid()) {
         if (item->position() < removeResult->visiblePos)
-            removeResult->sizeChangesBeforeVisiblePos += item->size();
+            updateSizeChangesBeforeVisiblePos(item, removeResult);
         else
             removeResult->sizeChangesAfterVisiblePos += item->size();
     }
@@ -2114,6 +2114,11 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Re
     }
     if (!removeResult->changedFirstItem && item == *visibleItems.constBegin())
         removeResult->changedFirstItem = true;
+}
+
+void QQuickItemViewPrivate::updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult)
+{
+    removeResult->sizeChangesBeforeVisiblePos += item->size();
 }
 
 void QQuickItemViewPrivate::repositionFirstItem(FxViewItem *prevVisibleItemsFirst,

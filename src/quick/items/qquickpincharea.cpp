@@ -221,6 +221,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
 
 /*!
+    \qmlpropertygroup QtQuick::PinchArea::pinch
     \qmlproperty Item QtQuick::PinchArea::pinch.target
     \qmlproperty bool QtQuick::PinchArea::pinch.active
     \qmlproperty real QtQuick::PinchArea::pinch.minimumScale

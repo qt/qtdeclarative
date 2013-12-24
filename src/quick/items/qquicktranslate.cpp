@@ -198,6 +198,7 @@ QQuickScale::~QQuickScale()
 }
 
 /*!
+    \qmlpropertygroup QtQuick::Scale::origin
     \qmlproperty real QtQuick::Scale::origin.x
     \qmlproperty real QtQuick::Scale::origin.y
 
@@ -347,6 +348,7 @@ QQuickRotation::~QQuickRotation()
 }
 
 /*!
+    \qmlpropertygroup QtQuick::Rotation::origin
     \qmlproperty real QtQuick::Rotation::origin.x
     \qmlproperty real QtQuick::Rotation::origin.y
 
@@ -391,6 +393,7 @@ void QQuickRotation::setAngle(qreal angle)
 }
 
 /*!
+    \qmlpropertygroup QtQuick::Rotation::axis
     \qmlproperty real QtQuick::Rotation::axis.x
     \qmlproperty real QtQuick::Rotation::axis.y
     \qmlproperty real QtQuick::Rotation::axis.z
