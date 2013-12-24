@@ -80,10 +80,10 @@ Item {
         Text { text: Screen.width + "x" + Screen.height }
 
         Text { text: "pixel density" }
-        Text { text: Screen.pixelDensity.toFixed(2) + " dots/mm" }
+        Text { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
         Text { text: "logical pixel density" }
-        Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm" }
+        Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
         Text { text: "available virtual desktop" }
         Text { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }

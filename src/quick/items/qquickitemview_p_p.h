@@ -211,6 +211,7 @@ public:
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);
     bool applyRemovalChange(const QQmlChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
     void removeItem(FxViewItem *item, const QQmlChangeSet::Remove &removal, ChangeResult *removeResult);
+    virtual void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult);
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
             FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 

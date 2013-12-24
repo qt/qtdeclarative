@@ -13,7 +13,7 @@ MODULE_PLUGIN_TYPES = \
 
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
-    LIBS += -lgcov
+    LIBS_PRIVATE += -lgcov
 }
 
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf

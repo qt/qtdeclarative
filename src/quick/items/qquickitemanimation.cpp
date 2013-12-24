@@ -486,6 +486,7 @@ void QQuickAnchorAnimation::setDuration(int duration)
 }
 
 /*!
+    \qmlpropertygroup QtQuick::AnchorAnimation::easing
     \qmlproperty enumeration QtQuick::AnchorAnimation::easing.type
     \qmlproperty real QtQuick::AnchorAnimation::easing.amplitude
     \qmlproperty real QtQuick::AnchorAnimation::easing.overshoot
@@ -622,6 +623,7 @@ void QQuickPathAnimation::setDuration(int duration)
 }
 
 /*!
+    \qmlpropertygroup QtQuick::PathAnimation::easing
     \qmlproperty enumeration QtQuick::PathAnimation::easing.type
     \qmlproperty real QtQuick::PathAnimation::easing.amplitude
     \qmlproperty list<real> QtQuick::PathAnimation::easing.bezierCurve

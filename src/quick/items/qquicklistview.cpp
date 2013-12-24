@@ -98,6 +98,7 @@ public:
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
     virtual void resetFirstItemPosition(qreal pos = 0.0);
     virtual void adjustFirstItem(qreal forwards, qreal backwards, int);
+    virtual void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -844,6 +845,12 @@ void QQuickListViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
         return;
     qreal diff = forwards - backwards;
     static_cast<FxListItemSG*>(visibleItems.first())->setPosition(visibleItems.first()->position() + diff);
+}
+
+void QQuickListViewPrivate::updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult)
+{
+    if (item != visibleItems.first())
+        QQuickItemViewPrivate::updateSizeChangesBeforeVisiblePos(item, removeResult);
 }
 
 void QQuickListViewPrivate::createHighlight()
@@ -2167,6 +2174,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 */
 
 /*!
+    \qmlpropertygroup QtQuick::ListView::section
     \qmlproperty string QtQuick::ListView::section.property
     \qmlproperty enumeration QtQuick::ListView::section.criteria
     \qmlproperty Component QtQuick::ListView::section.delegate

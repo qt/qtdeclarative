@@ -9,7 +9,7 @@ solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
-    LIBS += -lgcov
+    LIBS_PRIVATE += -lgcov
 }
 
 QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
@@ -40,17 +40,3 @@ SOURCES += qtquick2.cpp
 
 # To make #include "qquickcontext2d_jsclass.cpp" work
 INCLUDEPATH += $$PWD
-
-mac {
-    # FIXME: this is a workaround for broken qmake logic in qtAddModule()
-    # This function refuses to use frameworks unless the framework exists on
-    # the filesystem at the time qmake is run, resulting in a build failure
-    # if QtQuick is qmaked before QtQml is built and frameworks are
-    # in use. qtAddLibrary() contains correct logic to deal with this, so
-    # we'll explicitly call that for now.
-    load(qt)
-    LIBS -= -lQtQml        # in non-framework builds, these should be re-added
-    LIBS -= -lQtQml_debug  # within the qtAddLibrary if appropriate, so no
-    qtAddLibrary(QtQml)    # harm done :)
-}
-

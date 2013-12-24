@@ -4,6 +4,10 @@ DEFINES += QT_NO_URL_CAST_FROM_STRING
 QT = core
 QT_PRIVATE = testlib-private quick qml-private  gui core-private
 
+# Testlib is only a private dependency, which results in our users not
+# inheriting CONFIG+=console transitively. Make it explicit.
+MODULE_CONFIG = console
+
 !contains(QT_CONFIG, no-widgets) {
     QT += widgets
     DEFINES += QT_QMLTEST_WITH_WIDGETS

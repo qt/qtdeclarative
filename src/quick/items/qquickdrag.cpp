@@ -507,24 +507,23 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
 }
 
 /*!
- \qmlattachedproperty enumeration QtQuick::Drag::dragType
- \since 5.2
+    \qmlattachedproperty enumeration QtQuick::Drag::dragType
+    \since 5.2
 
- This property indicates whether to automatically start drags, do nothing, or
- to use backwards compatible internal drags. The default is to use backwards
- compatible internal drags.
+    This property indicates whether to automatically start drags, do nothing, or
+    to use backwards compatible internal drags. The default is to use backwards
+    compatible internal drags.
 
- A drag can also be started manually using \l startDrag.
+    A drag can also be started manually using \l startDrag.
 
- \list
- \li Drag.None - do not start drags automatically
- \li Drag.Automatic - start drags automatically
- \li Drag.Internal (default) - start backwards compatible drags automatically
- \endlist
+    \list
+    \li Drag.None - do not start drags automatically
+    \li Drag.Automatic - start drags automatically
+    \li Drag.Internal (default) - start backwards compatible drags automatically
+    \endlist
 
- When using \l Drag.Automatic you should also define \l mimeData and bind the
- \active property to the active property of \l MouseArea.drag.
-
+    When using \l Drag.Automatic you should also define \l mimeData and bind the
+    \active property to the active property of \l MouseArea.drag.
  */
 
 QQuickDrag::DragType QQuickDragAttached::dragType() const
@@ -622,7 +621,6 @@ void QQuickDragAttached::start(QQmlV4Function *args)
     \li Qt.LinkAction Create a link from the source to the target.
     \li Qt.IgnoreAction Ignore the action (do nothing with the data).
     \endlist
-
 */
 
 int QQuickDragAttached::drop()
@@ -696,17 +694,17 @@ void QQuickDragAttached::cancel()
 }
 
 /*!
- \qmlsignal QtQuick::DropArea::onDragStarted()
+    \qmlattachedsignal QtQuick::Drag::onDragStarted()
 
- This handler is called when a drag is started with the \l startDrag method
- or when it is started automatically using the \l dragType property.
+    This handler is called when a drag is started with the \l startDrag method
+    or when it is started automatically using the \l dragType property.
  */
 
 /*!
- \qmlsignal QtQuick::DropArea::onDragFinished(DropAction action)
+    \qmlattachedsignal QtQuick::Drag::onDragFinished(DropAction action)
 
- This handler is called when a drag finishes and the drag was started with the
- \l startDrag method or started automatically using the \l dragType property.
+    This handler is called when a drag finishes and the drag was started with the
+    \l startDrag method or started automatically using the \l dragType property.
  */
 
 Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)

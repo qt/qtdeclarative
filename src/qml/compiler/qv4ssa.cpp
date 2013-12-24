@@ -2330,7 +2330,7 @@ void splitCriticalEdges(Function *f)
 // (see for example section 4 (Lifetime Analysis) of [Wimmer1]). This algorithm makes sure that the
 // blocks of a group are scheduled together, with no non-loop blocks in between. This applies
 // recursively for nested loops. It also schedules groups of if-then-else-endif blocks together for
-// the smae reason.
+// the same reason.
 class BlockScheduler
 {
     Function *function;
@@ -2357,15 +2357,15 @@ class BlockScheduler
             if (emitted.alreadyProcessed(in))
                 continue;
 
-            // this is a loop, where there in -> candidate edge is the jump back to the top of the loop.
             if (dominatorTree.dominates(candidate, in))
+                // this is a loop, where there in -> candidate edge is the jump back to the top of the loop.
                 continue;
 
             return false; // an incoming edge that is not yet emitted, and is not a back-edge
         }
 
-        // postpone everything, and schedule the loop first.
         if (candidate->isGroupStart()) {
+            // postpone everything, and schedule the loop first.
             postponedGroups.push(currentGroup);
             currentGroup = WorkForGroup(candidate);
         }
@@ -2389,6 +2389,7 @@ class BlockScheduler
                 return next;
         }
 
+        Q_UNREACHABLE();
         return 0;
     }
 
@@ -3476,11 +3477,11 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         // block scheduling, so remove those now.
 //        qout << "Cleaning up unreachable basic blocks..." << endl;
         cleanupBasicBlocks(function, false);
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
         startEndLoops = BlockScheduler(function, df).go();
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
 #ifndef QT_NO_DEBUG
         checkCriticalEdges(function->basicBlocks);
@@ -3750,3 +3751,10 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
 // References:
 //  [Wimmer1] C. Wimmer and M. Franz. Linear Scan Register Allocation on SSA Form. In Proceedings of
 //            CGO’10, ACM Press, 2010
+//  [Wimmer2] C. Wimmer and H. Mossenbock. Optimized Interval Splitting in a Linear Scan Register
+//            Allocator. In Proceedings of the ACM/USENIX International Conference on Virtual
+//            Execution Environments, pages 132–141. ACM Press, 2005.
+//  [Briggs]  P. Briggs, K.D. Cooper, T.J. Harvey, and L.T. Simpson. Practical Improvements to the
+//            Construction and Destruction of Static Single Assignment Form.
+//  [Appel]   A.W. Appel. Modern Compiler Implementation in Java. Second edition, Cambridge
+//            University Press.

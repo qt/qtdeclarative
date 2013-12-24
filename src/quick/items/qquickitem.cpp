@@ -3052,6 +3052,7 @@ void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
 }
 
 /*!
+  \qmlpropertygroup QtQuick::Item::anchors
   \qmlproperty AnchorLine QtQuick::Item::anchors.top
   \qmlproperty AnchorLine QtQuick::Item::anchors.bottom
   \qmlproperty AnchorLine QtQuick::Item::anchors.left
@@ -3175,6 +3176,7 @@ QQmlListProperty<QObject> QQuickItemPrivate::data()
 }
 
 /*!
+    \qmlpropertygroup QtQuick::Item::childrenRect
     \qmlproperty real QtQuick::Item::childrenRect.x
     \qmlproperty real QtQuick::Item::childrenRect.y
     \qmlproperty real QtQuick::Item::childrenRect.width

@@ -350,6 +350,7 @@ void QQuickBorderImage::load()
 }
 
 /*!
+    \qmlpropertygroup QtQuick::BorderImage::border
     \qmlproperty int QtQuick::BorderImage::border.left
     \qmlproperty int QtQuick::BorderImage::border.right
     \qmlproperty int QtQuick::BorderImage::border.top

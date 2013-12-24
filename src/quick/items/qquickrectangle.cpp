@@ -331,6 +331,7 @@ void QQuickRectangle::doUpdate()
 */
 
 /*!
+    \qmlpropertygroup QtQuick::Rectangle::border
     \qmlproperty int QtQuick::Rectangle::border.width
     \qmlproperty color QtQuick::Rectangle::border.color
 

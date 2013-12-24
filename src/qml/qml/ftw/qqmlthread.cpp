@@ -179,15 +179,17 @@ void QQmlThreadPrivate::threadEvent()
 {
     lock();
 
-    if (m_shutdown) {
-        quit();
-        wakeOne();
-        unlock();
-        q->shutdownThread();
-    } else {
-        m_threadProcessing = true;
+    for (;;) {
+        if (m_shutdown) {
+            quit();
+            wakeOne();
+            unlock();
+            q->shutdownThread();
 
-        while (!threadList.isEmpty()) {
+            return;
+        } else if (!threadList.isEmpty()) {
+            m_threadProcessing = true;
+
             QQmlThread::Message *message = threadList.first();
 
             unlock();
@@ -197,13 +199,15 @@ void QQmlThreadPrivate::threadEvent()
             lock();
 
             delete threadList.takeFirst();
+        } else {
+            wakeOne();
+
+            m_threadProcessing = false;
+
+            unlock();
+
+            return;
         }
-
-        wakeOne();
-
-        m_threadProcessing = false;
-
-        unlock();
     }
 }
 
@@ -228,8 +232,11 @@ void QQmlThread::shutdown()
     d->lock();
     Q_ASSERT(!d->m_shutdown);
     d->m_shutdown = true;
-    if (d->threadList.isEmpty() && d->m_threadProcessing == false)
+    if (d->threadList.isEmpty() && d->m_threadProcessing == false) {
         d->triggerThreadEvent();
+    } else if (d->mainSync) {
+        d->wakeOne();
+    }
     d->wait();
     d->unlock();
     d->QThread::wait();
@@ -333,8 +340,14 @@ void QQmlThread::internalCallMethodInMain(Message *message)
         d->triggerMainEvent();
     }
 
-    while (d->mainSync && !d->m_shutdown)
+    while (d->mainSync) {
+        if (d->m_shutdown) {
+            delete d->mainSync;
+            d->mainSync = 0;
+            break;
+        }
         d->wait();
+    }
 
     d->unlock();
 }

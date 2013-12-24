@@ -42,7 +42,7 @@ Rectangle {
         topMargin: 30
         bottomMargin: 50
         highlightMoveVelocity: 100000
-        cacheBuffer: 0
+        cacheBuffer: 60
         model: testModel
         delegate: myDelegate
     }

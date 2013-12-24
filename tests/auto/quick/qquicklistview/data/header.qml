@@ -26,7 +26,6 @@ Rectangle {
         focus: true
         width: initialViewWidth
         height: initialViewHeight
-        cacheBuffer: 0
         snapMode: ListView.SnapToItem
         model: testModel
         delegate: myDelegate
