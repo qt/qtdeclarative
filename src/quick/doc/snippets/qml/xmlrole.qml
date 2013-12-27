@@ -65,6 +65,9 @@ XmlListModel {
 
     // query the book's first listed author (note in XPath the first index is 1, not 0)
     XmlRole { name: "first_author"; query: "author[1]/string()" }
+
+    // query the wanted attribute as a boolean
+    XmlRole { name: "wanted"; query: "boolean(@wanted)" }
 }
 //![1]
 
