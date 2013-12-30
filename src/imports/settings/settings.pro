@@ -1,3 +1,6 @@
+load(qfeatures)
+requires(!contains(QT_DISABLED_FEATURES, settings))
+
 CXX_MODULE = qml
 TARGET  = qmlsettingsplugin
 TARGETPATH = Qt/labs/settings
