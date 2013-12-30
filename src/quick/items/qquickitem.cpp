@@ -1819,7 +1819,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \value Bottom The center point of the bottom of the item.
     \value BottomRight The bottom-right corner of the item.
 
-    \sa transformOrigin
+    \sa transformOrigin(), setTransformOrigin()
 */
 
 /*!
@@ -2425,7 +2425,7 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
   Returns the window in which this item is rendered.
 
   The item does not have a window until it has been assigned into a scene. The
-  \l windowChanged signal provides a notification both when the item is entered
+  \l windowChanged() signal provides a notification both when the item is entered
   into a scene and when it is removed from a scene.
   */
 QQuickWindow *QQuickItem::window() const
@@ -4575,7 +4575,7 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
     QQuickItem::itemChange(change, value);
     \endcode
     typically at the end of your implementation, to ensure the
-    \l windowChanged signal will be emitted.
+    \l windowChanged() signal will be emitted.
   */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {

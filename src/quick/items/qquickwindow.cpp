@@ -3299,7 +3299,7 @@ void QQuickWindow::resetOpenGLState()
     additional content like popups, dialogs, status bars, or similar
     in relation to the window.
 
-    The recommended orientation is \l Screen.orientation, but
+    The recommended orientation is \l {Screen::orientation}{Screen.orientation}, but
     an application doesn't have to support all possible orientations,
     and thus can opt to ignore the current screen orientation.
 

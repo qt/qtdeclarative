@@ -79,7 +79,7 @@ with local variables declared in another.
 \l {QML Documents} include import statements that define the type names
 and JavaScript files visible to the document.  In addition to their use in the
 QML declaration itself, type names are used by JavaScript code when accessing
-\l {Attached Properties} and enumeration values.
+\l {Attached Properties and Attached Signal Handlers}{attached properties} and enumeration values.
 
 The effect of an import applies to every property binding, and JavaScript
 function in the QML document, even those in nested inline components.  The
@@ -123,7 +123,8 @@ directly, without needing any form of object prefix.  QML introduces a more
 structured, object-oriented approach to JavaScript, and consequently does not
 require the use of the JavaScript \c this property.
 
-Care must be used when accessing \l {Attached Properties} from bindings due
+Care must be used when accessing \l {Attached Properties and Attached Signal Handlers}
+{attached properties} from bindings due
 to their interaction with the scope object.  Conceptually attached properties
 exist on \e all objects, even if they only have an effect on a subset of those.
 Consequently unqualified attached property reads will always resolve to an

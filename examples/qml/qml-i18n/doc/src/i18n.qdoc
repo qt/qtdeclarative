@@ -40,7 +40,7 @@
 \endcode
 
  Translations for new languages are created by copying \e i18n/base.ts to \e i18n/qml_<lang>.ts
- The .ts files can then be edited with \lÂ {Qt Linguist}:
+ The .ts files can then be edited with \l {Qt Linguist}:
 
 \code
    linguist i18n/qml_fr.ts

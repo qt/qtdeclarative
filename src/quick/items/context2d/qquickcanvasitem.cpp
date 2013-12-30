@@ -845,7 +845,7 @@ void QQuickCanvasItem::requestPaint()
     canvas renderer will redraw it. This will trigger the onPaint signal
     handler function.
 
-    \sa paint, requestPaint()
+    \sa onPaint, requestPaint()
 */
 
 void QQuickCanvasItem::markDirty(const QRectF& rect)

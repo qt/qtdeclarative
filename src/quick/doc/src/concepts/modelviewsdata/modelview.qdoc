@@ -193,8 +193,7 @@ To visualize data, bind the view's \c model property to a model and the
     and \l{qtqml-typesystem-topic.html#qml-object-types}
     {creating QML types} articles.
 
-    The use of positioner items to arrange items from a model is covered in
-    \l{Generating Items with Repeaters}.
+    Positioning of items from a model can be achieved using a \l{Repeater}.
 
     \section2 ListModel
 

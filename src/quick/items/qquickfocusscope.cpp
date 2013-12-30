@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     components.  All the details are covered in the
     \l {Keyboard Focus in Qt Quick}{keyboard focus documentation}.
 
-    \sa {declarative/keyinteraction/focus}{Keyboard focus example}
+    \sa {Qt Quick Examples - Key Interaction}
 */
 QQuickFocusScope::QQuickFocusScope(QQuickItem *parent)
 : QQuickItem(parent)

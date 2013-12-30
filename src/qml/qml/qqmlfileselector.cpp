@@ -92,7 +92,7 @@ Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
   trigger this feature unless you have directories with such names inside your project.
 
   If a new QQmlFileSelector is set on the engine, the old one will be replaced. Use
-  \l QQmlFileSelector::get to query or use the existing instance.
+  \l QQmlFileSelector::get() to query or use the existing instance.
  */
 
 /*!

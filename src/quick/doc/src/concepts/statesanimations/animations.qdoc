@@ -72,7 +72,7 @@ animations provide timing controls and allows different interpolations through
 
 \snippet qml/animation.qml property animation
 
-Specialized \l{qml-property-animation-types}{property animation types}
+Specialized property animation types
 have more efficient implementations than the \l{PropertyAnimation} type. They
 are for setting animations to different QML types such as \c int, \c color, and
 rotations. Similarly, the \l{ParentAnimation} can animate parent changes.
@@ -145,8 +145,7 @@ values.
 abrupt property changes; animations smooth transitions to produce visually
 appealing state changes.
 
-The \l{Transition} type can contain
-\l{qml-animation-types}{animation types} to interpolate property changes
+The \l{Transition} type can contain animation types to interpolate property changes
 caused by state changes. To assign the transition to an object, bind it to the
 \c transitions property.
 

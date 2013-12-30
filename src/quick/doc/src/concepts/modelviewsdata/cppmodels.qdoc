@@ -174,8 +174,8 @@ with list models of QAbstractItemModel type:
 The above examples use QQmlContext::setContextProperty() to set
 model values directly in QML components. An alternative to this is to
 register the C++ model class as a QML type (either
-\l{qtqml-registercpptypes.html}{directly} from a C++ entry-point, or within
-the initialization function of a \l{qtqml-modules-cppplugins.html}
+\l{Defining QML Types from C++}{directly} from a C++ entry-point, or within
+the initialization function of a \l{Creating C++ Plugins for QML}
 {QML C++ plugin}, as shown below).  This would allow the model classes to be
 created directly as types within QML:
 
@@ -215,7 +215,7 @@ ListView {
 
 \endtable
 
-See \l {Tutorial: Extending QML with C++} for details on writing QML C++
+See \l {Writing QML Extensions with C++} for details on writing QML C++
 plugins.
 
 

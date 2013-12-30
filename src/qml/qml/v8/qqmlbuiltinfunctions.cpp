@@ -1157,7 +1157,7 @@ ReturnedValue QtObject::method_createComponent(CallContext *ctx)
     is not present, or is not a valid ISO 3166 code, the most
     appropriate country is chosen for the specified language.
 
-    \sa QtQuick::Locale
+    \sa Locale
 */
 ReturnedValue QtObject::method_locale(CallContext *ctx)
 {
@@ -1801,7 +1801,7 @@ ReturnedValue GlobalExtensions::method_qsTrNoOp(CallContext *ctx)
     Creating binary translation (QM) files suitable for use with this function requires passing
     the \c -idbased option to the \c lrelease tool.
 
-    \sa QT_TRID_NOOP, {Internationalization and Localization with Qt Quick}
+    \sa QT_TRID_NOOP(), {Internationalization and Localization with Qt Quick}
 */
 ReturnedValue GlobalExtensions::method_qsTrId(CallContext *ctx)
 {

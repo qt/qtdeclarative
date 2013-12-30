@@ -46,7 +46,7 @@
     \page qtquick-effects-particles.html
     \title Using the Qt Quick Particle System
 
-    Documentation for all Particle System types can be found on the \l{QtQuick.Particles 2}{QtQuick.Particles} module page.
+    Documentation for all Particle System types can be found on the \l QtQuick.Particles module page.
 
   Note that to use types from the particles module, you will need to import the types with the following line:
   \code

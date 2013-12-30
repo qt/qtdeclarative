@@ -89,7 +89,7 @@ views that takes the mirroring into account can be read from the \c effectiveLay
 
 The attached property \l LayoutMirroring is provided as a convenience for easily implementing right-to-left
 support for existing left-to-right Qt Quick applications. It mirrors the behavior of \l {anchor-layout}
-{Item anchors}, the layout direction of \l{Composing User Interfaces with QML#Positioners}{positioners} and
+{Item anchors}, the layout direction of \l{Item Positioners}{positioners} and
 \l{qtquick-modelviewsdata-modelview.html}{model views}, and the explicit text alignment of QML text types.
 
 You can enable layout mirroring for a particular \l Item:

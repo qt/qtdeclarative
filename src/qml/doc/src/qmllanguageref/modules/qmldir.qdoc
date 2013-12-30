@@ -62,7 +62,7 @@ module <ModuleIdentifier>
             The <ModuleIdentifier> is the (dotted URI notation) identifier
             for the module, which must match the module's install path.
 
-            The \l{qtqml-modules-topic.html#the-module-identifier-directive}
+            The \l{Identified Modules#Semantics of Identified Modules}
             {module identifier directive} must be the first line of the file.
             Exactly one module identifier directive may exist in the \c qmldir
             file.
@@ -113,7 +113,8 @@ internal MyPrivateType MyPrivateType.qml
          \endcode
 
             This is necessary if the module may be imported remotely (see
-            \l{Remotely Installed Modules}) because if an exported type depends
+            \l{Identified Modules#Remotely Installed Identified Modules}
+            {Remotely Installed Identified Modules}) because if an exported type depends
             on an non-exported type within the module, the engine must also
             load the non-exported type.
 

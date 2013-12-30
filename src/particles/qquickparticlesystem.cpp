@@ -193,7 +193,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
     Stops the simulation if it is running, and then starts it.
 
-    \sa stop, restart, running
+    \sa start, stop, running
 */
 /*!
     \qmlmethod QtQuick.Particles::ParticleSystem::reset()

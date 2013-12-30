@@ -49,7 +49,7 @@ see the page titled \l{qtquick-modelviewsdata-modelview.html}
 
 Databases are commonly used to store information in applications.  Qt Quick
 provides simplified access to relational databases via the
-\l{QtQuick.LocalStorage 2}{Qt Quick local storage module}.
+\l QtQuick.LocalStorage module.
 
 */
 

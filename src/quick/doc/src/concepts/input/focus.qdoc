@@ -168,7 +168,7 @@ When a QML \l Item explicitly relinquishes focus (by setting its
 system does not automatically select another type to receive focus. That is,
 it is possible for there to be no currently active focus.
 
-See the \l{declarative/keyinteraction/focus}{Keyboard Focus example} for a
+See \l{Qt Quick Examples - Key Interaction} for a
 demonstration of moving keyboard focus between multiple areas using FocusScope
 types.
 
