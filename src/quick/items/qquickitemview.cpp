@@ -686,7 +686,8 @@ void QQuickItemView::setPreferredHighlightBegin(qreal start)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        d->fixupPosition();
+        if (!isMoving() && !isFlicking())
+            d->fixupPosition();
     }
     emit preferredHighlightBeginChanged();
 }
@@ -700,7 +701,8 @@ void QQuickItemView::resetPreferredHighlightBegin()
     d->highlightRangeStart = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        d->fixupPosition();
+        if (!isMoving() && !isFlicking())
+            d->fixupPosition();
     }
     emit preferredHighlightBeginChanged();
 }
@@ -721,7 +723,8 @@ void QQuickItemView::setPreferredHighlightEnd(qreal end)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        d->fixupPosition();
+        if (!isMoving() && !isFlicking())
+            d->fixupPosition();
     }
     emit preferredHighlightEndChanged();
 }
@@ -735,7 +738,8 @@ void QQuickItemView::resetPreferredHighlightEnd()
     d->highlightRangeEnd = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        d->fixupPosition();
+        if (!isMoving() && !isFlicking())
+            d->fixupPosition();
     }
     emit preferredHighlightEndChanged();
 }

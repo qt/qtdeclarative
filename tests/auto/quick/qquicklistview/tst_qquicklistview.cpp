@@ -221,6 +221,7 @@ private slots:
     void highlightItemGeometryChanges();
 
     void QTBUG_36481();
+    void QTBUG_35920();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -7150,6 +7151,36 @@ void tst_QQuickListView::QTBUG_36481()
 
     // just testing that we don't crash when creating
     QScopedPointer<QObject> object(component.create());
+}
+
+void tst_QQuickListView::QTBUG_35920()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug35920.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(10,0));
+    for (int i = 0; i < 100; ++i) {
+        QTest::mouseMove(window.data(), QPoint(10,i));
+        if (listview->isMoving()) {
+            // do not fixup() the position while in movement to avoid flicker
+            const qreal contentY = listview->contentY();
+            listview->setPreferredHighlightBegin(i);
+            QCOMPARE(listview->contentY(), contentY);
+            listview->resetPreferredHighlightBegin();
+            QCOMPARE(listview->contentY(), contentY);
+
+            listview->setPreferredHighlightEnd(i+10);
+            QCOMPARE(listview->contentY(), contentY);
+            listview->resetPreferredHighlightEnd();
+            QCOMPARE(listview->contentY(), contentY);
+        }
+    }
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(10,100));
 }
 
 QTEST_MAIN(tst_QQuickListView)
