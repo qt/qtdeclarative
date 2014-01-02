@@ -237,32 +237,25 @@ private:
 struct QQmlBindingProfiler {
     QQmlBindingProfiler(const QString &url, int line, int column, QQmlProfilerService::BindingType bindingType)
     {
-        QQmlProfilerService *instance = QQmlProfilerService::instance;
-        enabled = instance ? instance->profilingEnabled() : false;
-        if (enabled) {
-            instance->startRange(QQmlProfilerService::Binding, bindingType);
-            instance->rangeLocation(QQmlProfilerService::Binding, url, line, column);
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Binding, bindingType);
+            QQmlProfilerService::instance->rangeLocation(QQmlProfilerService::Binding, url, line, column);
         }
     }
 
     ~QQmlBindingProfiler()
     {
-        if (enabled)
+        if (QQmlProfilerService::enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Binding);
     }
-
-    bool enabled;
 };
 
 struct QQmlHandlingSignalProfiler {
     QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
-        enabled = QQmlProfilerService::instance
-                ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled) {
-            QQmlProfilerService *service = QQmlProfilerService::instance;
-            service->startRange(QQmlProfilerService::HandlingSignal);
-            service->rangeLocation(QQmlProfilerService::HandlingSignal,
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::HandlingSignal);
+            QQmlProfilerService::instance->rangeLocation(QQmlProfilerService::HandlingSignal,
                                    expression->sourceFile(), expression->lineNumber(),
                                    expression->columnNumber());
         }
@@ -270,38 +263,30 @@ struct QQmlHandlingSignalProfiler {
 
     ~QQmlHandlingSignalProfiler()
     {
-        if (enabled)
+        if (QQmlProfilerService::enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::HandlingSignal);
     }
-
-    bool enabled;
 };
 
 struct QQmlCompilingProfiler {
     QQmlCompilingProfiler(const QString &name)
     {
-        QQmlProfilerService *instance = QQmlProfilerService::instance;
-        enabled = instance ?
-                    instance->profilingEnabled() : false;
-        if (enabled) {
-            instance->startRange(QQmlProfilerService::Compiling);
-            instance->rangeLocation(QQmlProfilerService::Compiling, name, 1, 1);
-            instance->rangeData(QQmlProfilerService::Compiling, name);
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Compiling);
+            QQmlProfilerService::instance->rangeLocation(QQmlProfilerService::Compiling, name, 1, 1);
+            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Compiling, name);
         }
     }
 
     ~QQmlCompilingProfiler()
     {
-        if (enabled)
+        if (QQmlProfilerService::enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Compiling);
     }
-
-    bool enabled;
 };
 
 struct QQmlVmeProfiler {
 public:
-    const bool enabled;
 
     struct Data {
         Data() : line(0), column(0) {}
@@ -313,20 +298,18 @@ public:
     };
 
     QQmlVmeProfiler() :
-        enabled(QQmlProfilerService::instance ? QQmlProfilerService::instance->profilingEnabled() : false),
         running(false)
     {}
 
     ~QQmlVmeProfiler()
     {
-        if (enabled)
+        if (QQmlProfilerService::enabled)
             clear();
     }
 
     void clear();
 
-    void start(const QUrl &url, int line, int column, const QString &typeName);
-    void start();
+    bool start();
     void stop();
 
     void updateLocation(const QUrl &url, int line, int column);
@@ -336,10 +319,9 @@ public:
     void push();
 
     void background();
-    void foreground();
+    bool foreground();
 
 private:
-    void switchRange();
 
     Data currentRange;
     QStack<Data> ranges;
@@ -348,46 +330,36 @@ private:
 };
 
 struct QQmlPixmapProfiler {
-    QQmlPixmapProfiler() {
-        QQmlProfilerService *instance = QQmlProfilerService::instance;
-        enabled = instance ?
-                    instance->profilingEnabled() : false;
-    }
-
-    ~QQmlPixmapProfiler() {}
-
     void startLoading(const QUrl &pixmapUrl) {
-        if (enabled) {
+        if (QQmlProfilerService::enabled) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingStarted, pixmapUrl);
         }
     }
     void finishLoading(const QUrl &pixmapUrl) {
-        if (enabled) {
+        if (QQmlProfilerService::enabled) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingFinished, pixmapUrl);
         }
     }
     void errorLoading(const QUrl &pixmapUrl) {
-        if (enabled) {
+        if (QQmlProfilerService::enabled) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingError, pixmapUrl);
         }
     }
     void cacheCountChanged(const QUrl &pixmapUrl, int cacheCount) {
-        if (enabled) {
+        if (QQmlProfilerService::enabled) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapCacheCountChanged, pixmapUrl, cacheCount);
         }
     }
     void referenceCountChanged(const QUrl &pixmapUrl, int referenceCount) {
-        if (enabled) {
+        if (QQmlProfilerService::enabled) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapReferenceCountChanged, pixmapUrl, referenceCount);
         }
     }
     void setSize(const QUrl &pixmapUrl, const QSize &size) {
-        if (enabled && size.width() > 0) {
+        if (QQmlProfilerService::enabled && size.width() > 0) {
             QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapSizeKnown, pixmapUrl, size.width(), size.height());
         }
     }
-
-    bool enabled;
 };
 
 QT_END_NAMESPACE
