@@ -131,6 +131,7 @@ QQmlProfilerService::QQmlProfilerService()
 
 QQmlProfilerService::~QQmlProfilerService()
 {
+    enabled = false;
     instance = 0;
 }
 
