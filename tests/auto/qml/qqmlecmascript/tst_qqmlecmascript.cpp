@@ -320,6 +320,7 @@ private slots:
     void idsAsLValues();
     void qtbug_34792();
     void noCaptureWhenWritingProperty();
+    void singletonWithEnum();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7505,6 +7506,18 @@ void tst_qqmlecmascript::noCaptureWhenWritingProperty()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("somePropertyEvaluated").toBool(), false);
+}
+
+void tst_qqmlecmascript::singletonWithEnum()
+{
+    QQmlComponent component(&engine, testFileUrl("singletontype/singletonWithEnum.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
+        qDebug() << component.errors().first().toString();
+    QVERIFY(!obj.isNull());
+    QVariant prop = obj->property("testValue");
+    QVERIFY(prop.type() == QVariant::Int);
+    QCOMPARE(prop.toInt(), int(SingletonWithEnum::TestValue));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

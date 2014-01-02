@@ -1651,6 +1651,16 @@ public:
 QML_DECLARE_TYPEINFO(FallbackBindingsTypeObject, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPEINFO(FallbackBindingsTypeDerived, QML_HAS_ATTACHED_PROPERTIES)
 
+class SingletonWithEnum : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(TestEnum)
+public:
+    enum TestEnum {
+        TestValue = 42
+    };
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
