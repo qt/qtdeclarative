@@ -427,153 +427,68 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
 }
 
 /*!
- * \brief QQmlVmeProfiler::Data::clear Reset to defaults
- * Reset the profiling data to defaults.
+ * \fn void QQmlVmeProfiler::Data::clear()
+ * Resets the profiling data to defaults.
  */
-void QQmlVmeProfiler::Data::clear()
-{
-    url.clear();
-    line = 0;
-    column = 0;
-    typeName.clear();
-}
 
 /*!
- * \brief QQmlVmeProfiler::start Start profiler without data
+ * \fn bool QQmlVmeProfiler::start()
  * Clears the current range data, then stops the profiler previously running in the
- * foreground if any, then starts a new one.
+ * foreground if any, then starts a new one if profiling is enabled.
+ * Returns whether the new profiler was actually started.
  */
-bool QQmlVmeProfiler::start()
-{
-    if (QQmlProfilerService::enabled) {
-        currentRange.clear();
-        if (running)
-            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-        else
-            running = true;
-        QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating);
-        return true;
-    }
-    return false;
-}
 
 /*!
- * \brief QQmlVmeProfiler::updateLocation Update current location information
- * \param url URL of file being executed
- * \param line line Curent line in file
- * \param column column Current column in file
- * Updates the current profiler's location information.
+ * \fn void QQmlVmeProfiler::updateLocation(const QUrl &url, int line, int column)
+ * Updates the current profiler's location information. \a url is the URL of
+ * file being executed, \line line is the current line in in that file, and
+ * \a column is the current column in that file.
  */
-void QQmlVmeProfiler::updateLocation(const QUrl &url, int line, int column)
-{
-    if (QQmlProfilerService::enabled && running) {
-        currentRange.url = url;
-        currentRange.line = line;
-        currentRange.column = column;
-        QQmlProfilerService::instance->rangeLocation(
-                QQmlProfilerService::Creating, url, line, column);
-    }
-}
 
 /*!
- * \brief QQmlVmeProfiler::updateTypeName Update current type information
- * \param typeName Type of object being created
- * Updates the current profiler's type information.
+ * \fn void QQmlVmeProfiler::updateTypeName(const QString &typename)
+ * Updates the current profiler's type information. \a typeName is the type of
+ * object being created.
  */
-void QQmlVmeProfiler::updateTypeName(const QString &typeName)
-{
-    if (QQmlProfilerService::enabled && running) {
-        currentRange.typeName = typeName;
-        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
-    }
-}
 
 /*!
- * \brief QQmlVmeProfiler::pop Pops a paused profiler from the stack and restarts it
+ * \fn bool QQmlVmeProfiler::pop()
  * Stops the currently running profiler, if any, then retrieves an old one from the stack
- * of paused profilers and starts that.
+ * of paused profilers and starts that if possible.
+ * Returns whether there actually is a running profiler after that.
  */
-void QQmlVmeProfiler::pop()
-{
-    if (QQmlProfilerService::enabled && ranges.count() > 0) {
-        start();
-        currentRange = ranges.pop();
-        QQmlProfilerService::instance->rangeLocation(
-                QQmlProfilerService::Creating, currentRange.url, currentRange.line, currentRange.column);
-        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, currentRange.typeName);
-    }
-}
 
 /*!
- * \brief QQmlVmeProfiler::push Pushes the currently running profiler on the stack.
+ * \fn void QQmlVmeProfiler::push()
  * Pushes the currently running profiler on the stack of paused profilers. Note: The profiler
  * isn't paused here. That's a separate step. If it's never paused, but pop()'ed later that
  * won't do any harm, though.
  */
-void QQmlVmeProfiler::push()
-{
-    if (QQmlProfilerService::enabled && running)
-        ranges.push(currentRange);
-}
 
 /*!
- * \brief QQmlVmeProfiler::clear Stop all running profilers and clear all data.
+ * \fn void QQmlVmeProfiler::clear()
  * Stops the currently running (foreground and background) profilers and removes all saved
  * data about paused profilers.
  */
-void QQmlVmeProfiler::clear()
-{
-    stop();
-    ranges.clear();
-    if (QQmlProfilerService::enabled) {
-        for (int i = 0; i < backgroundRanges.count(); ++i) {
-            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-        }
-    }
-    backgroundRanges.clear();
-    running = false;
-}
 
 /*!
- * \brief QQmlVmeProfiler::stop Stop profiler running in the foreground, if any.
+ * \fn void QQmlVmeProfiler::stop()
+ * Stop profiler running in the foreground, if any.
  */
-void QQmlVmeProfiler::stop()
-{
-    if (QQmlProfilerService::enabled && running) {
-        QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-        currentRange.clear();
-        running = false;
-    }
-}
+
 
 /*!
- * \brief QQmlVmeProfiler::background Push the current profiler to the background.
- * Push the profiler currently running in the foreground to the background so that it
+ * \fn void QQmlVmeProfiler::background()
+ * Pushes the profiler currently running in the foreground to the background so that it
  * won't be stopped by stop() or start(). There can be multiple profilers in the background.
  * You can retrieve them in reverse order by calling foreground().
  */
-void QQmlVmeProfiler::background()
-{
-    if (QQmlProfilerService::enabled && running) {
-        backgroundRanges.push(currentRange);
-        running = false;
-    }
-}
 
 /*!
- * \brief QQmlVmeProfiler::foreground Retrieve a profiler from the background
- * Stop the profiler currently running in the foreground, if any and put the next profiler
- * from the background in its place.
+ * \fn bool QQmlVmeProfiler::foreground()
+ * Stops the profiler currently running in the foreground, if any and puts the next profiler
+ * from the background in its place if there are any profiles in the background.
+ * Returns Whethere there actually is a valid running profiler afterwards.
  */
-bool QQmlVmeProfiler::foreground()
-{
-    if (QQmlProfilerService::enabled && backgroundRanges.count() > 0) {
-        stop();
-        currentRange = backgroundRanges.pop();
-        running = true;
-        return true;
-    }
-    return false;
-}
 
 QT_END_NAMESPACE

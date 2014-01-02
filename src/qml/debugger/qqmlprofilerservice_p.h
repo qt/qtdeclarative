@@ -294,7 +294,13 @@ public:
         int line;
         int column;
         QString typeName;
-        void clear();
+        void clear()
+        {
+            url.clear();
+            line = 0;
+            column = 0;
+            typeName.clear();
+        }
     };
 
     QQmlVmeProfiler() :
@@ -307,19 +313,98 @@ public:
             clear();
     }
 
-    void clear();
+    void clear()
+    {
+        stop();
+        ranges.clear();
+        if (QQmlProfilerService::enabled) {
+            for (int i = 0; i < backgroundRanges.count(); ++i) {
+                QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+            }
+        }
+        backgroundRanges.clear();
+        running = false;
+    }
 
-    bool start();
-    void stop();
+    bool start()
+    {
+        if (QQmlProfilerService::enabled) {
+            currentRange.clear();
+            if (running)
+                QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+            else
+                running = true;
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating);
+            return true;
+        }
+        return false;
+    }
 
-    void updateLocation(const QUrl &url, int line, int column);
-    void updateTypeName(const QString &typeName);
+    void stop()
+    {
+        if (QQmlProfilerService::enabled && running) {
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+            currentRange.clear();
+            running = false;
+        }
+    }
 
-    void pop();
-    void push();
+    void updateLocation(const QUrl &url, int line, int column)
+    {
+        if (QQmlProfilerService::enabled && running) {
+            currentRange.url = url;
+            currentRange.line = line;
+            currentRange.column = column;
+            QQmlProfilerService::instance->rangeLocation(
+                    QQmlProfilerService::Creating, url, line, column);
+        }
+    }
 
-    void background();
-    bool foreground();
+    void updateTypeName(const QString &typeName)
+    {
+        if (QQmlProfilerService::enabled && running) {
+            currentRange.typeName = typeName;
+            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
+        }
+    }
+
+    bool pop()
+    {
+        if (QQmlProfilerService::enabled && ranges.count() > 0) {
+            start();
+            currentRange = ranges.pop();
+            QQmlProfilerService::instance->rangeLocation(
+                    QQmlProfilerService::Creating, currentRange.url, currentRange.line, currentRange.column);
+            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, currentRange.typeName);
+            return true;
+        }
+        return false;
+    }
+
+    void push()
+    {
+        if (QQmlProfilerService::enabled && running)
+            ranges.push(currentRange);
+    }
+
+    void background()
+    {
+        if (QQmlProfilerService::enabled && running) {
+            backgroundRanges.push(currentRange);
+            running = false;
+        }
+    }
+
+    bool foreground()
+    {
+        if (QQmlProfilerService::enabled && backgroundRanges.count() > 0) {
+            stop();
+            currentRange = backgroundRanges.pop();
+            running = true;
+            return true;
+        }
+        return false;
+    }
 
 private:
 
