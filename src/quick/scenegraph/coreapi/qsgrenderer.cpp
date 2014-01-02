@@ -287,14 +287,12 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
                int(renderTime / 1000000));
     }
 
-    if (QQmlProfilerService::enabled) {
-        QQmlProfilerService::sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphRendererFrame,
-                    preprocessTime,
-                    updatePassTime - preprocessTime,
-                    bindTime - updatePassTime,
-                    renderTime - bindTime);
-    }
+    Q_QML_PROFILE(sceneGraphFrame(
+            QQmlProfilerService::SceneGraphRendererFrame,
+            preprocessTime,
+            updatePassTime - preprocessTime,
+            bindTime - updatePassTime,
+            renderTime - bindTime));
 
 #endif
 }

@@ -381,15 +381,13 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
                    (int) (qsg_renderer_timer.elapsed()));
         }
 
-        if (QQmlProfilerService::enabled) {
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphTexturePrepare,
-                        0,  // bind (not relevant)
-                        0,  // convert (not relevant)
-                        0,  // swizzle (not relevant)
-                        qsg_renderer_timer.nsecsElapsed(), // (upload all of the above)
-                        0); // mipmap (not used ever...)
-        }
+        Q_QML_PROFILE(sceneGraphFrame(
+                QQmlProfilerService::SceneGraphTexturePrepare,
+                0,  // bind (not relevant)
+                0,  // convert (not relevant)
+                0,  // swizzle (not relevant)
+                qsg_renderer_timer.nsecsElapsed(), // (upload all of the above)
+                0)); // mipmap (not used ever...)
 #endif
     }
 

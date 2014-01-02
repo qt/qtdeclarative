@@ -342,13 +342,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         lastFrameTime = QTime::currentTime();
     }
 
-    if (QQmlProfilerService::enabled) {
-        QQmlProfilerService::sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphRenderLoopFrame,
-                    syncTime,
-                    renderTime,
-                    swapTime);
-    }
+    Q_QML_PROFILE(sceneGraphFrame(
+            QQmlProfilerService::SceneGraphRenderLoopFrame,
+            syncTime,
+            renderTime,
+            swapTime));
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)

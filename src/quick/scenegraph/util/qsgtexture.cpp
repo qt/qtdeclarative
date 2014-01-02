@@ -634,11 +634,9 @@ void QSGPlainTexture::bind()
                        m_texture_size.width(),
                        m_texture_size.height());
             }
-            if (QQmlProfilerService::enabled) {
-                QQmlProfilerService::sceneGraphFrame(
-                            QQmlProfilerService::SceneGraphTextureDeletion,
-                            qsg_renderer_timer.nsecsElapsed());
-            }
+            Q_QML_PROFILE(sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphTextureDeletion,
+                    qsg_renderer_timer.nsecsElapsed()));
 #endif
         }
         m_texture_id = 0;
@@ -738,17 +736,13 @@ void QSGPlainTexture::bind()
 
     }
 
-    if (QQmlProfilerService::enabled) {
-        mipmapTime = qsg_renderer_timer.nsecsElapsed();
-
-        QQmlProfilerService::sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphTexturePrepare,
-                    bindTime,
-                    convertTime - bindTime,
-                    swizzleTime - convertTime,
-                    uploadTime - swizzleTime,
-                    mipmapTime - uploadTime);
-    }
+    Q_QML_PROFILE(sceneGraphFrame(
+            QQmlProfilerService::SceneGraphTexturePrepare,
+            bindTime,
+            convertTime - bindTime,
+            swizzleTime - convertTime,
+            uploadTime - swizzleTime,
+            qsg_renderer_timer.nsecsElapsed() - uploadTime));
 
 #endif
 

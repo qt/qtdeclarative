@@ -609,13 +609,11 @@ void QSGRenderThread::syncAndRender()
                    int((renderTime - syncTime)/1000000),
                    int(threadTimer.elapsed() - renderTime/1000000));
 
-        if (QQmlProfilerService::enabled) {
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphRenderLoopFrame,
-                        syncTime,
-                        renderTime - syncTime,
-                        threadTimer.nsecsElapsed() - renderTime);
-        }
+        Q_QML_PROFILE(sceneGraphFrame(
+                QQmlProfilerService::SceneGraphRenderLoopFrame,
+                syncTime,
+                renderTime - syncTime,
+                threadTimer.nsecsElapsed() - renderTime));
 #endif
 }
 
@@ -1143,14 +1141,12 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w)
                int((syncTime - waitTime)/1000000),
                int((timer.nsecsElapsed() - syncTime)/1000000));
 
-    if (QQmlProfilerService::enabled) {
-        QQmlProfilerService::sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphPolishAndSync,
-                    polishTime,
-                    waitTime - polishTime,
-                    syncTime - waitTime,
-                    timer.nsecsElapsed() - syncTime);
-    }
+    Q_QML_PROFILE(sceneGraphFrame(
+            QQmlProfilerService::SceneGraphPolishAndSync,
+            polishTime,
+            waitTime - polishTime,
+            syncTime - waitTime,
+            timer.nsecsElapsed() - syncTime));
 #endif
 }
 

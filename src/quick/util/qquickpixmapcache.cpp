@@ -519,8 +519,7 @@ void QQuickPixmapReader::processJobs()
             runningJob->loading = true;
 
             QUrl url = runningJob->url;
-            QQmlPixmapProfiler pixmapProfiler;
-            pixmapProfiler.startLoading(url);
+            Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingStarted, url));
 
             QSize requestSize = runningJob->requestSize;
             locker.unlock();
@@ -895,14 +894,14 @@ bool QQuickPixmapReply::event(QEvent *event)
         if (data) {
             Event *de = static_cast<Event *>(event);
             data->pixmapStatus = (de->error == NoError) ? QQuickPixmap::Ready : QQuickPixmap::Error;
-            QQmlPixmapProfiler pixmapProfiler;
             if (data->pixmapStatus == QQuickPixmap::Ready) {
-                pixmapProfiler.finishLoading(data->url);
                 data->textureFactory = de->textureFactory;
                 data->implicitSize = de->implicitSize;
-                pixmapProfiler.setSize(url, data->requestSize.width() > 0 ? data->requestSize : data->implicitSize);
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingFinished, data->url));
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapSizeKnown, url,
+                        data->requestSize.width() > 0 ? data->requestSize : data->implicitSize));
             } else {
-                pixmapProfiler.errorLoading(data->url);
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingError, data->url));
                 data->errorString = de->errorString;
                 data->removeFromCache(); // We don't continue to cache error'd pixmaps
             }
@@ -928,7 +927,7 @@ int QQuickPixmapData::cost() const
 void QQuickPixmapData::addref()
 {
     ++refCount;
-    QQmlPixmapProfiler().referenceCountChanged(url, refCount);
+    Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapReferenceCountChanged, url, refCount));
     if (prevUnreferencedPtr) 
         pixmapStore()->referencePixmap(this);
 }
@@ -937,7 +936,7 @@ void QQuickPixmapData::release()
 {
     Q_ASSERT(refCount > 0);
     --refCount;
-    QQmlPixmapProfiler().referenceCountChanged(url, refCount);
+    Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapReferenceCountChanged, url, refCount));
     if (refCount == 0) {
         if (reply) {
             QQuickPixmapReply *cancelReply = reply;
@@ -968,8 +967,8 @@ void QQuickPixmapData::addToCache()
         QQuickPixmapKey key = { &url, &requestSize };
         pixmapStore()->m_cache.insert(key, this);
         inCache = true;
-        QQmlPixmapProfiler pixmapProfiler;
-        pixmapProfiler.cacheCountChanged(url, pixmapStore()->m_cache.count());
+        Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapCacheCountChanged,
+                url, pixmapStore()->m_cache.count()));
     }
 }
 
@@ -977,7 +976,8 @@ void QQuickPixmapData::removeFromCache()
 {
     if (inCache) {
         QQuickPixmapKey key = { &url, &requestSize };
-        QQmlPixmapProfiler().cacheCountChanged(url, pixmapStore()->m_cache.count());
+        Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapCacheCountChanged,
+                url, pixmapStore()->m_cache.count()));
         pixmapStore()->m_cache.remove(key);
         inCache = false;
     }
@@ -1240,18 +1240,18 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
 
         if (!(options & QQuickPixmap::Asynchronous)) {
             bool ok = false;
-            QQmlPixmapProfiler pixmapProfiler;
-            pixmapProfiler.startLoading(url);
+            Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingStarted, url));
             d = createPixmapDataSync(this, engine, url, requestSize, &ok);
             if (ok) {
-                pixmapProfiler.finishLoading(url);
-                pixmapProfiler.setSize(url, d->requestSize.width() > 0 ? d->requestSize : d->implicitSize);
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingFinished, url));
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapSizeKnown, url,
+                        d->requestSize.width() > 0 ? d->requestSize : d->implicitSize));
                 if (options & QQuickPixmap::Cache)
                     d->addToCache();
                 return;
             }
             if (d) { // loadable, but encountered error while loading
-                pixmapProfiler.errorLoading(url);
+                Q_QML_PROFILE(pixmapEvent(QQmlProfilerService::PixmapLoadingError, url));
                 return;
             }
         } 

@@ -47,9 +47,6 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qcoreapplication.h>
 
-// this contains QUnifiedTimer
-#include <private/qabstractanimation_p.h>
-
 QT_BEGIN_NAMESPACE
 
 // instance will be set, unset in constructor. Allows static methods to be inlined.
@@ -114,6 +111,11 @@ QByteArray QQmlProfilerData::toByteArray() const
     return data;
 }
 
+void QQmlProfilerService::animationTimerCallback(qint64 delta)
+{
+    Q_QML_PROFILE(animationFrame(delta));
+}
+
 QQmlProfilerService::QQmlProfilerService()
     : QQmlDebugService(QStringLiteral("CanvasFrameRate"), 1)
 {
@@ -123,7 +125,7 @@ QQmlProfilerService::QQmlProfilerService()
     QMutexLocker lock(&m_initializeMutex);
 
     if (registerService() == Enabled) {
-        QUnifiedTimer::instance()->registerProfilerCallback(&animationFrame);
+        QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
         if (blockingMode())
             m_initializeCondition.wait(&m_initializeMutex);
     }
@@ -151,26 +153,6 @@ bool QQmlProfilerService::stopProfiling()
     return profilerInstance()->stopProfilingImpl();
 }
 
-void QQmlProfilerService::sendStartedProfilingMessage()
-{
-    profilerInstance()->sendStartedProfilingMessageImpl();
-}
-
-void QQmlProfilerService::addEvent(EventType t)
-{
-    profilerInstance()->addEventImpl(t);
-}
-
-void QQmlProfilerService::animationFrame(qint64 delta)
-{
-    profilerInstance()->animationFrameImpl(delta);
-}
-
-void QQmlProfilerService::sceneGraphFrame(SceneGraphFrameType frameType, qint64 value1, qint64 value2, qint64 value3, qint64 value4, qint64 value5)
-{
-    profilerInstance()->sceneGraphFrameImpl(frameType, value1, value2, value3, value4, value5);
-}
-
 void QQmlProfilerService::sendProfilingData()
 {
     profilerInstance()->sendMessages();
@@ -178,190 +160,32 @@ void QQmlProfilerService::sendProfilingData()
 
 bool QQmlProfilerService::startProfilingImpl()
 {
-    bool success = false;
-    if (QQmlDebugService::isDebuggingEnabled() && !profilingEnabled()) {
-        setProfilingEnabled(true);
-        sendStartedProfilingMessageImpl();
-        success = true;
+    if (QQmlDebugService::isDebuggingEnabled() && !enabled) {
+        enabled = true;
+        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace,
+                               QString(), -1, -1, 0, 0, 0,
+                               0, 0, 0, 0, 0};
+        QQmlDebugService::sendMessage(ed.toByteArray());
+        return true;
+    } else {
+        return false;
     }
-    return success;
 }
 
 bool QQmlProfilerService::stopProfilingImpl()
 {
-    bool success = false;
-    if (profilingEnabled()) {
-        addEventImpl(EndTrace);
-        setProfilingEnabled(false);
-        success = true;
-    }
-    return success;
-}
-
-void QQmlProfilerService::sendStartedProfilingMessageImpl()
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace,
-                           QString(), -1, -1, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    QQmlDebugService::sendMessage(ed.toByteArray());
-}
-
-void QQmlProfilerService::addEventImpl(EventType event)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event,
-                           QString(), -1, -1, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(ed);
-}
-
-void QQmlProfilerService::startRange(RangeType range, BindingType bindingType)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range,
-                           QString(), -1, -1, 0, 0, (int)bindingType,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::rangeData(RangeType range, const QString &rData)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range,
-                           rData, -1, -1, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::rangeData(RangeType range, const QUrl &rData)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range,
-                           rData.toString(), -1, -1, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::rangeLocation(RangeType range, const QString &fileName, int line, int column)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
-                           fileName, line, column, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::rangeLocation(RangeType range, const QUrl &fileName, int line, int column)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
-                           fileName.toString(), line, column, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::endRange(RangeType range)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range,
-                           QString(), -1, -1, 0, 0, 0,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url)
-{
-    // assuming enabled checked by caller
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
-                           url.toString(), -1, -1, -1, -1, -1,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int width, int height)
-{
-    // assuming enabled checked by caller
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
-                           url.toString(), width, height, -1, -1, -1,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int count)
-{
-    // assuming enabled checked by caller
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
-                           url.toString(), -1, -1, -1, count, -1,
-                           0, 0, 0, 0, 0};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::sceneGraphFrameImpl(SceneGraphFrameType frameType, qint64 value1, qint64 value2, qint64 value3, qint64 value4, qint64 value5)
-{
-    if (!QQmlDebugService::isDebuggingEnabled() || !enabled)
-        return;
-
-    // because I already have some space to store ints in the struct, I'll use it to store the frame data
-    // even though the field names do not match
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)SceneGraphFrame, (int)frameType, QString(),
-                           -1, -1, -1, -1, -1,
-                           value1, value2, value3, value4, value5};
-    processMessage(rd);
-}
-
-void QQmlProfilerService::animationFrameImpl(qint64 delta)
-{
-    Q_ASSERT(QQmlDebugService::isDebuggingEnabled());
-    if (!enabled)
-        return;
-
-    int animCount = QUnifiedTimer::instance()->runningAnimationCount();
-
-    if (animCount > 0 && delta > 0) {
-        // trim fps to integer
-        int fps = 1000 / delta;
-        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame,
-                               QString(), -1, -1, fps, animCount, 0,
+    if (enabled) {
+        enabled = false;
+        // We cannot use instance here as this is called from the debugger thread.
+        // It may be called before the QML engine (and the profiler) is ready.
+        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)EndTrace,
+                               QString(), -1, -1, 0, 0, 0,
                                0, 0, 0, 0, 0};
         processMessage(ed);
+        return true;
+    } else {
+        return false;
     }
-}
-
-/*
-    Either send the message directly, or queue up
-    a list of messages to send later (via sendMessages)
-*/
-void QQmlProfilerService::processMessage(const QQmlProfilerData &message)
-{
-    QMutexLocker locker(&m_dataMutex);
-    m_data.append(message);
-}
-
-bool QQmlProfilerService::profilingEnabled()
-{
-    return enabled;
-}
-
-void QQmlProfilerService::setProfilingEnabled(bool enable)
-{
-    enabled = enable;
 }
 
 /*

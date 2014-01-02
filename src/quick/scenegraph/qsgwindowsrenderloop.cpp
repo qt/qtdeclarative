@@ -202,13 +202,11 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
                    int((time_current - time_created)/1000000),
                    int((qsg_render_timer.nsecsElapsed() - time_current)/1000000));
         }
-        if (QQmlProfilerService::enabled) {
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphWindowsRenderShow,
-                        time_created - time_start,
-                        time_current - time_created,
-                        qsg_render_timer.nsecsElapsed() - time_current);
-        }
+        Q_QML_PROFILE(sceneGraphFrame(
+                QQmlProfilerService::SceneGraphWindowsRenderShow,
+                time_created - time_start,
+                time_current - time_created,
+                qsg_render_timer.nsecsElapsed() - time_current));
 #endif
 
     }
@@ -407,11 +405,9 @@ void QSGWindowsRenderLoop::render()
             qDebug("WindowsRenderLoop: animations=%d ms",
                    int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
         }
-        if (QQmlProfilerService::Enabled) {
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphWindowsAnimations,
-                        qsg_render_timer.nsecsElapsed() - time_start);
-        }
+        Q_QML_PROFILE(sceneGraphFrame(
+                QQmlProfilerService::SceneGraphWindowsAnimations,
+                qsg_render_timer.nsecsElapsed() - time_start));
 #endif
 
         // It is not given that animations triggered another maybeUpdate()
@@ -473,19 +469,12 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
                    int((time_rendered - time_synced)/1000000),
                    int((time_swapped - time_rendered)/1000000));
         }
-        if (QQmlProfilerService::enabled) {
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphWindowsPolishFrame,
-                        time_polished - time_start
-                        );
-
-            QQmlProfilerService::sceneGraphFrame(
-                        QQmlProfilerService::SceneGraphRenderLoopFrame,
-                        time_synced - time_polished,
-                        time_rendered - time_synced,
-                        time_swapped - time_rendered
-                        );
-        }
+        Q_QML_PROFILE(sceneGraphFrame(QQmlProfilerService::SceneGraphWindowsPolishFrame,
+                time_polished - time_start));
+        Q_QML_PROFILE(sceneGraphFrame(QQmlProfilerService::SceneGraphRenderLoopFrame,
+                time_synced - time_polished,
+                time_rendered - time_synced,
+                time_swapped - time_rendered));
 #endif
 }
 
