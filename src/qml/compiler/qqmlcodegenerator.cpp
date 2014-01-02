@@ -1550,8 +1550,10 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             V4IR::Temp *result = _block->TEMP(_block->newTemp());
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);
-            initMetaObjectResolver(&result->memberResolver, mapping.type);
-            result->memberResolver.flags |= AllPropertiesAreFinal;
+            if (mapping.type) {
+                initMetaObjectResolver(&result->memberResolver, mapping.type);
+                result->memberResolver.flags |= AllPropertiesAreFinal;
+            }
             result->isReadOnly = true; // don't allow use as lvalue
             return result;
         }
