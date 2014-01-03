@@ -19,7 +19,9 @@ exists("qqml_enable_gcov") {
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
 
 # 2415: variable "xx" of static storage duration was declared but never referenced
+# unused variable 'xx' [-Werror,-Wunused-const-variable]
 intel_icc: WERROR += -ww2415
+clang: WERROR += -Wno-error=unused-const-variable
 
 load(qt_module)
 
