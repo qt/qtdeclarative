@@ -150,6 +150,7 @@ struct Q_QML_EXPORT Object: Managed {
     bool __defineOwnProperty__(ExecutionContext *ctx, const StringRef name, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs);
+    bool defineOwnProperty2(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
 
     //
     // helpers

@@ -131,7 +131,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     bool strict = ctx->strictMode;
     ctx->strictMode = false;
-    bool result = Object::__defineOwnProperty__(ctx, index, desc, attrs);
+    bool result = Object::defineOwnProperty2(ctx, index, desc, attrs);
     ctx->strictMode = strict;
 
     if (isMapped && attrs.isData()) {

@@ -973,14 +973,23 @@ reject:
 
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
 {
-    Property *current = 0;
-
     // 15.4.5.1, 4b
     if (isArrayObject() && index >= arrayLength() && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (ArgumentsObject::isNonStrictArgumentsObject(this))
         return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, p, attrs);
+
+    return defineOwnProperty2(ctx, index, p, attrs);
+reject:
+  if (ctx->strictMode)
+      ctx->throwTypeError();
+  return false;
+}
+
+bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
+{
+    Property *current = 0;
 
     // Clause 1
     {

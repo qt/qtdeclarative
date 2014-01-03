@@ -616,7 +616,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         uint pidx = o->propertyIndexFromArrayIndex(idx);
-        if (pidx < UINT_MAX) {
+        if (pidx < UINT_MAX && !o->asArgumentsObject()) {
             if (o->arrayData.attributes && !o->arrayData.attributes[pidx].isEmpty() && !o->arrayData.attributes[pidx].isWritable()) {
                 if (ctx->strictMode)
                     ctx->throwTypeError();
