@@ -51,11 +51,16 @@
 #include <QtCore/QWeakPointer>
 
 #include <QtQml/qqmlengine.h>
+#include <private/qv4object_p.h>
 #include "qquickwindow_p.h"
 
 #include "qquickitemchangelistener_p.h"
 
 QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+struct ExecutionEngine;
+}
 
 class QQmlContext;
 class QQmlError;
@@ -94,6 +99,23 @@ public:
     QQuickView::ResizeMode resizeMode;
     QSize initialSize;
     QElapsedTimer frameTimer;
+    QV4::PersistentValue rootItemMarker;
+};
+
+struct QQuickRootItemMarker : public QV4::Object
+{
+    Q_MANAGED
+
+    QQuickRootItemMarker(QQuickViewPrivate *view);
+
+    static void destroy(Managed *that)
+    {
+        static_cast<QQuickRootItemMarker*>(that)->~QQuickRootItemMarker();
+    }
+
+    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
+
+    QQuickViewPrivate *view;
 };
 
 QT_END_NAMESPACE

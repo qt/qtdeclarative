@@ -56,6 +56,26 @@
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_MANAGED_VTABLE(QQuickRootItemMarker);
+
+QQuickRootItemMarker::QQuickRootItemMarker(QQuickViewPrivate *view)
+    : QV4::Object(QQmlEnginePrivate::getV4Engine(view->engine.data()))
+    , view(view)
+{
+    setVTable(&static_vtbl);
+}
+
+void QQuickRootItemMarker::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
+{
+    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->view->root;
+    if (root) {
+        QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
+        rootPrivate->markObjects(e);
+    }
+
+    QV4::Object::markObjects(that, e);
+}
+
 void QQuickViewPrivate::init(QQmlEngine* e)
 {
     Q_Q(QQuickView);
@@ -67,6 +87,13 @@ void QQuickViewPrivate::init(QQmlEngine* e)
 
     if (!engine.data()->incubationController())
         engine.data()->setIncubationController(q->incubationController());
+
+    {
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine.data());
+        QV4::Scope scope(v4);
+        QV4::Scoped<QQuickRootItemMarker> v(scope, new (v4->memoryManager) QQuickRootItemMarker(this));
+        rootItemMarker = v;
+    }
 
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->addView(q);

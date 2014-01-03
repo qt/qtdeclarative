@@ -49,6 +49,7 @@
 #include <qpa/qwindowsysteminterface.h>
 #include <QDebug>
 #include <QTimer>
+#include <QQmlEngine>
 #include "../../shared/util.h"
 
 class TestItem : public QQuickItem
@@ -166,6 +167,8 @@ private slots:
     void paintOrder();
 
     void acceptedMouseButtons();
+
+    void visualParentOwnership();
 
 private:
 
@@ -1754,6 +1757,68 @@ void tst_qquickitem::acceptedMouseButtons()
     QCOMPARE(item.releaseCount, 3);
 }
 
+static void gc(QQmlEngine &engine)
+{
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
+void tst_qquickitem::visualParentOwnership()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("visualParentOwnership.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+
+    QVariant newObject;
+    {
+        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> newItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!newItem.isNull());
+
+        QVERIFY(!newItem->parent());
+        QVERIFY(!newItem->parentItem());
+
+        newItem->setParentItem(root);
+
+        gc(*view.engine());
+
+        QVERIFY(!newItem.isNull());
+        newItem->setParentItem(0);
+
+        gc(*view.engine());
+        QVERIFY(newItem.isNull());
+    }
+    {
+        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> firstItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!firstItem.isNull());
+
+        firstItem->setParentItem(root);
+
+        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> secondItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!firstItem.isNull());
+
+        secondItem->setParentItem(firstItem);
+
+        gc(*view.engine());
+
+        delete firstItem;
+
+        root->setProperty("keepAliveProperty", newObject);
+
+        gc(*view.engine());
+        QVERIFY(!secondItem.isNull());
+
+        root->setProperty("keepAliveProperty", QVariant());
+
+        gc(*view.engine());
+        QVERIFY(secondItem.isNull());
+    }
+}
 
 QTEST_MAIN(tst_qquickitem)
 
