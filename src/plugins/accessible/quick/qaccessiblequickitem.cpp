@@ -157,7 +157,7 @@ QAccessible::State QAccessibleQuickItem::state() const
     if (item()->hasActiveFocus())
         state.focused = true;
 
-    if (!item()->window() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
+    if (!item()->window() || !item()->window()->isVisible() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
         state.invisible = true;
 
     QAccessible::Role r = role();
