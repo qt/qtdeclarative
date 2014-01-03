@@ -199,7 +199,7 @@ public:
         if (!this || !internalClass)
             return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
-        reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
+        static_cast<T *>(this)->qt_check_for_QMANAGED_macro(*static_cast<T *>(this));
 #endif
         return internalClass->vtable == &T::static_vtbl ? static_cast<T *>(this) : 0;
     }
