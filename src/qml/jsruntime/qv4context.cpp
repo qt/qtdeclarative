@@ -362,16 +362,9 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             }
 
             if (activation) {
-                if (ctx->type == Type_QmlContext) {
+                if (ctx->type == Type_QmlContext || activation->hasOwnProperty(name)) {
                     activation->put(name, value);
                     return;
-                } else {
-                    PropertyAttributes attrs;
-                    Property *p = activation->__getOwnProperty__(name, &attrs);
-                    if (p) {
-                        activation->putValue(p, attrs, value);
-                        return;
-                    }
                 }
             }
         }

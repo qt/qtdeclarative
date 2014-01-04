@@ -1049,7 +1049,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
         return false;
 
     ScopedString s(scope, engine->newIdentifier(name));
-    return o->__getOwnProperty__(s);
+    return o->hasOwnProperty(s);
 }
 
 /*!

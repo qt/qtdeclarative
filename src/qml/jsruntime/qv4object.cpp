@@ -420,6 +420,16 @@ bool Object::__hasProperty__(uint index) const
     return false;
 }
 
+bool Object::hasOwnProperty(const StringRef name) const
+{
+    return const_cast<Object *>(this)->__getOwnProperty__(name) != 0;
+}
+
+bool Object::hasOwnProperty(uint index) const
+{
+    return const_cast<Object *>(this)->__getOwnProperty__(index) != 0;
+}
+
 ReturnedValue Object::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(name, hasProperty);

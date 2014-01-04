@@ -448,7 +448,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
     Scoped<Object> O(scope, ctx->callData->thisObject, Scoped<Object>::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
-    bool r = O->__getOwnProperty__(P) != 0;
+    bool r = O->hasOwnProperty(P);
     if (!r)
         r = !O->query(P).isEmpty();
     return Encode(r);
