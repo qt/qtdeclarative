@@ -827,6 +827,9 @@ static void qsg_wipeBuffer(Buffer *buffer, QOpenGLFunctions *funcs)
 static void qsg_wipeBatch(Batch *batch, QOpenGLFunctions *funcs)
 {
     qsg_wipeBuffer(&batch->vbo, funcs);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    qsg_wipeBuffer(&batch->ibo, funcs);
+#endif
     delete batch;
 }
 
@@ -879,12 +882,13 @@ void Renderer::map(Buffer *buffer, int byteSize)
     }
 }
 
-void Renderer::unmap(Buffer *buffer)
+void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
 {
     if (buffer->id == 0)
         glGenBuffers(1, &buffer->id);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer->id);
-    glBufferData(GL_ARRAY_BUFFER, buffer->size, buffer->data, m_bufferStrategy);
+    GLenum target = isIndexBuf ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER;
+    glBindBuffer(target, buffer->id);
+    glBufferData(target, buffer->size, buffer->data, m_bufferStrategy);
 }
 
 BatchRootInfo *Renderer::batchRootInfo(Node *node)
@@ -1753,10 +1757,19 @@ void Renderer::uploadBatch(Batch *b)
               non-merged.
          */
         int bufferSize =  b->vertexCount * g->sizeOfVertex();
-        if (b->merged)
-            bufferSize += b->vertexCount * sizeof(float) + b->indexCount * sizeof(quint16);
-        else
-            bufferSize += unmergedIndexSize;
+        int ibufferSize = 0;
+        if (b->merged) {
+            bufferSize += b->vertexCount * sizeof(float);
+            ibufferSize = b->indexCount * sizeof(quint16);
+        } else {
+            ibufferSize = unmergedIndexSize;
+        }
+
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        map(&b->ibo, ibufferSize);
+#else
+        bufferSize += ibufferSize;
+#endif
         map(&b->vbo, bufferSize);
 
         if (Q_UNLIKELY(debug_upload)) qDebug() << " - batch" << b << " first:" << b->first << " root:"
@@ -1766,21 +1779,35 @@ void Renderer::uploadBatch(Batch *b)
         if (b->merged) {
             char *vertexData = b->vbo.data;
             char *zData = vertexData + b->vertexCount * g->sizeOfVertex();
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+            char *indexData = b->ibo.data;
+#else
             char *indexData = zData + b->vertexCount * sizeof(float);
+#endif
 
             quint16 iOffset = 0;
             e = b->first;
             int verticesInSet = 0;
             int indicesInSet = 0;
             b->drawSets.reset();
-            b->drawSets << DrawSet(0, zData - vertexData, indexData - vertexData);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+            int drawSetIndices = 0;
+#else
+            int drawSetIndices = indexData - vertexData;
+#endif
+            b->drawSets << DrawSet(0, zData - vertexData, drawSetIndices);
             while (e) {
                 verticesInSet  += e->node->geometry()->vertexCount();
                 if (verticesInSet > 0xffff) {
                     b->drawSets.last().indexCount = indicesInSet;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+                    drawSetIndices = indexData - b->ibo.data;
+#else
+                    drawSetIndices = indexData - b->vbo.data;
+#endif
                     b->drawSets << DrawSet(vertexData - b->vbo.data,
                                            zData - b->vbo.data,
-                                           indexData - b->vbo.data);
+                                           drawSetIndices);
                     iOffset = 0;
                     verticesInSet = e->node->geometry()->vertexCount();
                     indicesInSet = 0;
@@ -1791,7 +1818,11 @@ void Renderer::uploadBatch(Batch *b)
             b->drawSets.last().indexCount = indicesInSet;
         } else {
             char *vboData = b->vbo.data;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+            char *iboData = b->ibo.data;
+#else
             char *iboData = vboData + b->vertexCount * g->sizeOfVertex();
+#endif
             Element *e = b->first;
             while (e) {
                 QSGGeometry *g = e->node->geometry();
@@ -1858,6 +1889,9 @@ void Renderer::uploadBatch(Batch *b)
         }
 
         unmap(&b->vbo);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        unmap(&b->ibo, true);
+#endif
 
         if (Q_UNLIKELY(debug_upload)) qDebug() << "  --- vertex/index buffers unmapped, batch upload completed...";
 
@@ -1982,11 +2016,16 @@ void Renderer::renderMergedBatch(const Batch *batch)
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
 
     char *indexBase = 0;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    const Buffer *indexBuf = &batch->ibo;
+#else
+    const Buffer *indexBuf = &batch->vbo;
+#endif
     if (m_context->hasBrokenIndexBufferObjects()) {
-        indexBase = batch->vbo.data;
+        indexBase = indexBuf->data;
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf->id);
     }
 
 
@@ -2056,12 +2095,17 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
     char *indexBase = 0;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    const Buffer *indexBuf = &batch->ibo;
+#else
+    const Buffer *indexBuf = &batch->vbo;
+#endif
     if (batch->indexCount) {
         if (m_context->hasBrokenIndexBufferObjects()) {
-            indexBase = batch->vbo.data;
+            indexBase = indexBuf->data;
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         } else {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf->id);
         }
     }
 
@@ -2082,7 +2126,11 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     }
 
     int vOffset = 0;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    char *iOffset = indexBase;
+#else
     char *iOffset = indexBase + batch->vertexCount * gn->geometry()->sizeOfVertex();
+#endif
 
     QMatrix4x4 rootMatrix = batch->root ? matrixForRoot(batch->root) : QMatrix4x4();
 

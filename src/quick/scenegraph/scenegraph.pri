@@ -1,5 +1,7 @@
 !contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
 
+# DEFINES += QSG_SEPARATE_INDEX_BUFFER
+
 # Core API
 HEADERS += \
     $$PWD/coreapi/qsgbatchrenderer_p.h \
