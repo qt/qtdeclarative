@@ -295,6 +295,11 @@ bool MyInheritedQmlObject::isItYouMyInheritedQmlObject(MyInheritedQmlObject *o)
     return o && o == theSingletonObject;
 }
 
+static QObject *create_singletonWithEnum(QQmlEngine *, QJSEngine *)
+{
+    return new SingletonWithEnum;
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -374,6 +379,8 @@ void registerTypes()
     qmlRegisterSingletonType<testImportOrderApi>("NamespaceAndType",1,0,"NamespaceAndType",testImportOrder_api);
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi1",1,0,"Data",testImportOrder_api1);
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi2",1,0,"Data",testImportOrder_api2);
+
+    qmlRegisterSingletonType<SingletonWithEnum>("Qt.test.singletonWithEnum", 1, 0, "SingletonWithEnum", create_singletonWithEnum);
 }
 
 #include "testtypes.moc"

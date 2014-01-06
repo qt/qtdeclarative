@@ -38,7 +38,7 @@ additional imports:
 \li The \l{QmlGlobalQtObject}{Qt object}: This object is specific to QML, and provides helper methods
     and properties specific to the QML environment.
 \li qsTr(), qsTranslate(), qsTrId(), QT_TR_NOOP(), QT_TRANSLATE_NOOP(), and QT_TRID_NOOP() functions:
-    These functions are specific to QML, and provide \l{Translation}{translation capabilities} to the QML environment.
+    These functions are specific to QML, and provide \l{Overview of the Translation Process}{translation capabilities} to the QML environment.
 \li gc() function: This function is specific to QML, and provides a way to manually trigger garbage collection.
 \li print() function: This function is specific to QML, and provides a simple way to output information to the console.
 \li The \l{Console API}{console object}: This object implements a subset of the \l{http://getfirebug.com/wiki/index.php/Console_API}{FireBug Console API}.

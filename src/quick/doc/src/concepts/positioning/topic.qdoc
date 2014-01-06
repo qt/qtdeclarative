@@ -51,7 +51,7 @@ the position manually than to use the more dynamic positioning methods
 documented in proceeding sections.
 
 In Qt Quick, every visual object is positioned within the
-\l{qtquick-visual-coordinates.html}{coordinate system}
+\l{Concepts - Visual Coordinates in Qt Quick}{coordinate system}
 provided by the Qt Quick visual canvas.  As described in that document, the
 x and y coordinates of a visual object are relative to those of its visual
 parent, with the top-left corner having the coordinate (0, 0).

@@ -107,7 +107,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
     The \l keys property can be used to filter drag events which don't include
     a matching key.
 
-    The \l source property is communicated to the source of a drag event as
+    The \l drag.source property is communicated to the source of a drag event as
     the recipient of a drop on the drag target.
 
     The \l delegate property provides a means to specify a component to be
@@ -337,7 +337,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 
     The position of the drag event can be obtained from the \l x and \l y
     properties, and the \l keys property identifies the drag keys of the event
-    \l source.
+    \l {drag.source}{source}.
 
     The existence of specific drag types can be determined using the \l hasColor,
     \l hasHtml, \l hasText, and \l hasUrls properties.
@@ -378,7 +378,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 /*!
     \qmlproperty enumeration QtQuick::DragEvent::action
 
-    This property holds the action that the \l source is to perform on an accepted drop.
+    This property holds the action that the \l {drag.source}{source} is to perform on an accepted drop.
 
     The drop action may be one of:
 

@@ -64,15 +64,15 @@ The directory can then be installed into the
 \l{qtqml-syntax-imports.html#qml-import-path}{QML import path} as a module.
 
 Note that defining a module is not the only way to share common QML types
-within a project - a simple \l{qtqml-syntax-imports.html#directory-import}
+within a project - a simple \l{Importing QML Document Directories}
 {QML document directory import} may also be used for this purpose.
 
 \section1 Supported QML Module Types
 
 There are two different types of modules supported by QML:
 \list
-\li \l{qtqml-modules-identifiedmodules.html}{Identified Modules}
-\li \l{qtqml-modules-legacymodules.html}{Legacy Modules} (deprecated)
+\li \l{Identified Modules}
+\li \l{Legacy Modules} (deprecated)
 \endlist
 
 Identified modules explicitly define their identifier and are installed into

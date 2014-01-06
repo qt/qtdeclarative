@@ -34,7 +34,7 @@ qhp.QtQml.subprojects.qmltypes.sortPages = true
 
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
-depends += qtcore qtxmlpatterns qtgui qtquick qtdoc
+depends += qtcore qtxmlpatterns qtgui qtquick qtdoc qtlinguist
 
 headerdirs  += .. \
                ../../imports/models

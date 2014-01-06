@@ -85,7 +85,7 @@ In addition, the \c QtQuick module provides the following basic types:
 \section1 Object Types
 
 All of the object types provided by \c QtQuick are based on the \l{Item} type,
-which itself derives from \l{QtQml::QtObject}{QtObject}.  \l{qtqml-typereference-topic.html#object-types}
+which itself derives from \l{QtQml::QtObject}{QtObject}.  \l{Qt QML QML Types#Object Types}
 {QML object types} provided by the Qt QML module
 (such as \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also available when
 you import \c QtQuick.
@@ -269,7 +269,7 @@ Views
 \list
 \li \l {ListView} - Provides a list visualization of a model
 \li \l {GridView} - Provides a grid visualization of a model
-\li \l {PathView} - Visualizes a model's contents along a path. See \l {Path Definition}{Path Elements} for more information.
+\li \l {PathView} - Visualizes a model's contents along a path. See \l Path for more information.
 \li \l {Package} - Collection that enables sharing of items within different views
 \endlist
 

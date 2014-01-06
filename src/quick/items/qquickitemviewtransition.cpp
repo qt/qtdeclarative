@@ -901,7 +901,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \note The targetIndexes list only contains the indexes of items that are actually
     in view, or will be in the view once the relevant operation completes.
 
-    \sa QtQuick::ViewTransition::targetIndexes
+    \sa QtQuick::ViewTransition::targetItems
 */
 
 /*!

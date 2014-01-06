@@ -1103,7 +1103,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(QV4::CallContext *ct
     rotating, and translating transformations in a single step.
 
     Each point on the canvas is multiplied by the matrix before anything is
-    drawn. The \l{HTML5 Canvas API} defines the transformation matrix as:
+    drawn. The \l{http://www.w3.org/TR/2dcontext/#transformations}{HTML Canvas 2D Context specification}
+    defines the transformation matrix as:
 
     \image qml-item-canvas-math.png
     where:

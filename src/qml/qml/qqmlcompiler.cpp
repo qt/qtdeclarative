@@ -3711,7 +3711,10 @@ bool QQmlCompiler::completeComponentBuild()
                 JSCodeGen::IdMapping m;
                 m.name = o->id;
                 m.idIndex = o->idIndex;
-                m.type = o->metatype;
+                if (output->types[o->type].isFullyDynamicType)
+                    m.type = 0;
+                else
+                    m.type = o->metatype;
                 idMapping << m;
             }
         }

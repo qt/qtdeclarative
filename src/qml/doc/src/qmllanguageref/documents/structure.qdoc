@@ -57,8 +57,8 @@ presentation to the \l{QQmlEngine}{QML engine}, unlike C or C++.
 The \c import statements do not copy and prepend the code in the document, but
 instead instruct the QML engine on how to resolve type references found
 in the document. Any type reference present in a QML document - such as \c
-Rectangle and \c ListView - including those made within an \l {Inline
-JavaScript}{JavaScript block} or \l {Property Binding}{property
+Rectangle and \c ListView - including those made within a \l {JavaScript
+Expressions in QML Documents}{JavaScript block} or \l {Property Binding}{property
 bindings}, are \e resolved based exclusively on the import statements. At least
 one \c import statement must be present such as \c{import QtQuick 2.0}.
 

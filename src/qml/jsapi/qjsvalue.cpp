@@ -1089,8 +1089,6 @@ QDateTime QJSValue::toDateTime() const
 /*!
   Returns true if this QJSValue is an object of the Date class;
   otherwise returns false.
-
-  \sa QJSEngine::newDate()
 */
 bool QJSValue::isDate() const
 {

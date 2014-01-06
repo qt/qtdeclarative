@@ -177,8 +177,8 @@ QT_BEGIN_NAMESPACE
     automatically rotates all content which is displayed, depending on how you
     hold it. But if orientation changes while primaryOrientation does NOT
     change, then probably you are using a device which does not rotate its own
-    display. In that case you may need to use \l Item.rotation or
-    \l Item.transform to rotate your content.
+    display. In that case you may need to use \l {Item::rotation}{Item.rotation} or
+    \l {Item::transform}{Item.transform} to rotate your content.
 */
 /*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)

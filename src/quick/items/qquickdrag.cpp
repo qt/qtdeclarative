@@ -522,7 +522,7 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
     \li Drag.Internal (default) - start backwards compatible drags automatically
     \endlist
 
-    When using \l Drag.Automatic you should also define \l mimeData and bind the
+    When using \c Drag.Automatic you should also define \l mimeData and bind the
     \active property to the active property of \l MouseArea.drag.
  */
 

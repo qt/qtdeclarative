@@ -103,34 +103,6 @@ public:
 };
 V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 
-/*
-    Try to do what's necessary for a reasonable display of the type
-    name, but no more (just enough for the client to do more extensive cleanup).
-
-    Should only be called when debugging is enabled.
-*/
-static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
-{
-    static const QString qmlMarker(QLatin1String("_QML"));
-    static const QChar underscore(QLatin1Char('_'));
-    static const QChar asterisk(QLatin1Char('*'));
-    QQmlType *type = QQmlMetaType::qmlType(metaObject);
-    QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(metaObject->className());
-    if (!type) {
-        //### optimize further?
-        int marker = typeName.indexOf(qmlMarker);
-        if (marker != -1 && marker < typeName.count() - 1) {
-            if (typeName[marker + 1] == underscore) {
-                const QString className = typeName.left(marker) + asterisk;
-                type = QQmlMetaType::qmlType(QMetaType::type(className.toUtf8()));
-                if (type)
-                    typeName = type->qmlTypeName();
-            }
-        }
-    }
-    return typeName;
-}
-
 /*!
     \class QQmlComponent
     \since 5.0

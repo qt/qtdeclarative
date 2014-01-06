@@ -154,15 +154,21 @@ QAccessible::State QAccessibleQuickItem::state() const
 {
     QAccessible::State state;
 
-    if (item()->hasActiveFocus())
+    if (item()->hasActiveFocus()) {
+        state.focusable = true;
         state.focused = true;
+    }
 
-    if (!item()->window() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
+    if (item()->activeFocusOnTab())
+        state.focusable = true;
+
+    if (!item()->window() || !item()->window()->isVisible() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
         state.invisible = true;
 
     QAccessible::Role r = role();
     switch (r) {
     case QAccessible::Button: {
+        state.focusable = true;
         QVariant checkable = item()->property("checkable");
         if (!checkable.toBool())
             break;
@@ -170,10 +176,20 @@ QAccessible::State QAccessibleQuickItem::state() const
     }
     case QAccessible::CheckBox:
     case QAccessible::RadioButton: {
+        state.focusable = true;
         state.checkable = true;
         state.checked = item()->property("checked").toBool();
         break;
     }
+    case QAccessible::MenuItem:
+    case QAccessible::PageTab:
+    case QAccessible::EditableText:
+    case QAccessible::SpinBox:
+    case QAccessible::ComboBox:
+    case QAccessible::Terminal:
+    case QAccessible::ScrollBar:
+        state.focusable = true;
+        break;
     default:
         break;
     }

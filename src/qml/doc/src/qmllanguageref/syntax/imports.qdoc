@@ -281,7 +281,7 @@ JavaScript resources, please see the in-depth documentation about
 
 \section1 QML Import Path
 
-When an \l{qtqml-modules-installedmodules.html}{installed module} is imported,
+When an \l{Identified Modules}{identified module} is imported,
 the QML engine searches the \e{import path} for a matching module.
 
 This import path, as returned by QQmlEngine::importPathList(), defines the

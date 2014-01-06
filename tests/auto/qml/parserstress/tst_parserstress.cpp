@@ -93,16 +93,8 @@ void tst_parserstress::ecmascript_data()
     QStringList files = findJSFiles(dir);
 
     QTest::addColumn<QString>("file");
-    foreach (const QString &file, files) {
-        // Skip, QTBUG-34047
-        if (file.endsWith(QStringLiteral("tests/ecma_3/Statements/regress-324650.js")))
-            continue;
-        if (file.endsWith(QStringLiteral("tests/ecma_3/Statements/regress-74474-002.js")))
-            continue;
-        if (file.endsWith(QStringLiteral("tests/ecma_3/Statements/regress-74474-003.js")))
-            continue;
+    foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
-    }
 }
 
 void tst_parserstress::ecmascript()

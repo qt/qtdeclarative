@@ -72,6 +72,7 @@ private slots:
     void QTBUG_29836();
     void QTBUG_35233();
     void disallowExtending();
+    void QTBUG_35906();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -79,7 +80,7 @@ class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
 
-    Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty)
+    Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty NOTIFY someFixedPropertyChanged)
 public:
     LazyPropertyMap()
         : QQmlPropertyMap(this, /*parent*/0)
@@ -92,7 +93,10 @@ public:
     }
 
     int someFixedProperty() const { return value; }
-    void setSomeFixedProperty(int v) { value = v; }
+    void setSomeFixedProperty(int v) { value = v; emit someFixedPropertyChanged(); }
+
+signals:
+    void someFixedPropertyChanged();
 
 private:
     int value;
@@ -448,6 +452,27 @@ void tst_QQmlPropertyMap::disallowExtending()
     QVERIFY(obj.isNull());
     QCOMPARE(component.errors().count(), 1);
     QCOMPARE(component.errors().at(0).toString(), QStringLiteral("<Unknown File>: Fully dynamic types cannot declare new properties."));
+}
+
+void tst_QQmlPropertyMap::QTBUG_35906()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0\n"
+                      "import QTBUG_35233 1.0\n"
+                      "QtObject {\n"
+                      "    property int testValue: mapById.someFixedProperty\n"
+                      "\n"
+                      "    property QtObject maProperty: LazyPropertyMap {\n"
+                      "        id: mapById\n"
+                      "        someFixedProperty: 42\n"
+                      "    }\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QVariant value = obj->property("testValue");
+    QVERIFY(value.type() == QVariant::Int);
+    QCOMPARE(value.toInt(), 42);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)

@@ -431,24 +431,23 @@ to \l {Qt Quick}{Qt Quick 2}; the other functions are all new in \l {Qt Quick}{Q
 \section2 QtQuick.Particles
 
 This new module provides particle system support for creating a variety of 2D particle systems. See
-the \l{QtQuick.Particles 2}{QtQuick.Particles} documentation for comprehensive details.
+the \l QtQuick.Particles documentation for comprehensive details.
 
 This obsoletes the experimental \c Qt.labs.particles module.
 
 \section2 QtQuick.Window
 
 This new module contains the \l Window type for creating a basic window and the \l Screen type for
-accessing a screen's resolution and other details. See the \l{QtQuick.Window 2}{QtQuick.Window}
+accessing a screen's resolution and other details. See the \l QtQuick.Window
 documentation for comprehensive details.
 
 \section2 QtQuick.XmlListModel
 
 This new module contains XmlListModel and associated types, which were previously in the \c QtQuick
-module. See the \l{QtQuick.XmlListModel 2}{QtQuick.XmlListModel} documentation for details.
+module. See the \l QtQuick.XmlListModel documentation for details.
 
 \section2 QtQuick.LocalStorage
 
 This new module provides access to the SQL Local Storage API that was previously accessible from the
-\l {QML Global Object}. See the \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} documentation for details.
-
+\l {QML Global Object}. See the \l QtQuick.LocalStorage documentation for details.
 */

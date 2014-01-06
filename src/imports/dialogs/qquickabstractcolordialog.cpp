@@ -70,6 +70,11 @@ void QQuickAbstractColorDialog::setVisible(bool v)
         m_dlgHelper->setCurrentColor(m_color);
     }
     QQuickAbstractDialog::setVisible(v);
+    // QTBUG-35206
+#if defined(Q_OS_WIN)
+    if (m_dialogWindow)
+        m_dialogWindow->setWidth(m_dialogWindow->width() + 1);
+#endif
 }
 
 void QQuickAbstractColorDialog::setModality(Qt::WindowModality m)

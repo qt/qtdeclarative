@@ -477,7 +477,7 @@ MessageBoard {
 
 As with property values and method parameters, a signal parameter must have a
 type that is supported by the QML engine; see
-\l {Semantics of Data Transfer from C++ to QML}. (Using an
+\l {Data Type Conversion Between QML and C++}. (Using an
 unregistered type will not generate an error, but the parameter value will
 not be accessible from the handler.)
 

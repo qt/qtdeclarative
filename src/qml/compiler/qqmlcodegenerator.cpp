@@ -1347,38 +1347,29 @@ static V4IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpre
     V4IR::Type result = V4IR::VarType;
 
     QQmlType *type = static_cast<QQmlType*>(resolver->data);
-    if (type->isSingleton()) {
-        if (type->isCompositeSingleton()) {
-            QQmlTypeData *tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
-            Q_ASSERT(tdata);
-            Q_ASSERT(tdata->isComplete());
-            initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
-            resolver->flags |= AllPropertiesAreFinal;
-        } else {
-            const QMetaObject *singletonMo = type->singletonInstanceInfo()->instanceMetaObject;
-            if (!singletonMo) { // We can only accelerate C++ singletons that were registered with their meta-type
-                resolver->clear();
-                return result;
-            }
-            initMetaObjectResolver(resolver, qmlEngine->cache(singletonMo));
-            resolver->flags |= LookupsIncludeEnums;
+
+    if (member->name->constData()->isUpper()) {
+        bool ok = false;
+        int value = type->enumValue(*member->name, &ok);
+        if (ok) {
+            member->setEnumValue(value);
+            resolver->clear();
+            return V4IR::SInt32Type;
         }
+    }
+
+    if (type->isCompositeSingleton()) {
+        QQmlTypeData *tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+        Q_ASSERT(tdata);
+        Q_ASSERT(tdata->isComplete());
+        initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+        resolver->flags |= AllPropertiesAreFinal;
         return resolver->resolveMember(qmlEngine, resolver, member);
-    } else {
-        if (member->name->constData()->isUpper()) {
-            bool ok = false;
-            int value = type->enumValue(*member->name, &ok);
-            if (ok) {
-                member->setEnumValue(value);
-                resolver->clear();
-                return V4IR::SInt32Type;
-            }
-        } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
-            QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
-            initMetaObjectResolver(resolver, cache);
-            member->setAttachedPropertiesId(type->attachedPropertiesId());
-            return resolver->resolveMember(qmlEngine, resolver, member);
-        }
+    } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
+        QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
+        initMetaObjectResolver(resolver, cache);
+        member->setAttachedPropertiesId(type->attachedPropertiesId());
+        return resolver->resolveMember(qmlEngine, resolver, member);
     }
 
     resolver->clear();
@@ -1559,8 +1550,10 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             V4IR::Temp *result = _block->TEMP(_block->newTemp());
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);
-            initMetaObjectResolver(&result->memberResolver, mapping.type);
-            result->memberResolver.flags |= AllPropertiesAreFinal;
+            if (mapping.type) {
+                initMetaObjectResolver(&result->memberResolver, mapping.type);
+                result->memberResolver.flags |= AllPropertiesAreFinal;
+            }
             result->isReadOnly = true; // don't allow use as lvalue
             return result;
         }
@@ -1573,14 +1566,14 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
             } else if (r.type) {
                 V4IR::Name *typeName = _block->NAME(name, line, col);
                 // Make sure the run-time loads this through the more efficient singleton getter.
-                typeName->qmlSingleton = r.type->isSingleton();
+                typeName->qmlSingleton = r.type->isCompositeSingleton();
                 typeName->freeOfSideEffects = true;
-
                 V4IR::Temp *result = _block->TEMP(_block->newTemp());
-                initQmlTypeResolver(&result->memberResolver, r.type);
-
                 _block->MOVE(result, typeName);
-                return _block->TEMP(result->index);
+
+                result = _block->TEMP(result->index);
+                initQmlTypeResolver(&result->memberResolver, r.type);
+                return result;
             } else {
                 Q_ASSERT(r.importNamespace);
                 V4IR::Name *namespaceName = _block->NAME(name, line, col);

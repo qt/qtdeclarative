@@ -36,10 +36,10 @@ a summary of the new changes:
 \list
 \li New QQmlApplicationEngine convenience class for QML applications.
 \li New Instantiatior type for generic, dynamic object creation.
-\li New properties for \l Qt.application: arguments, name, and version.
+\li New properties for \l {Qt::application}{Qt.application}: arguments, name, and version.
 \li The 'with' statement has been deprecated and is slated for removal in a
     future version of the language.
-\li New \l Qt.platform object with an os property
+\li New \l {Qt::platform}{Qt.platform} object with an \c os property
 \li New \l qmlClearTypeRegistrations() function drops all data from qmlRegisterType() calls
 \li New \l qmlRegisterType() function for registering composite types.
 \endlist
@@ -48,7 +48,7 @@ a summary of the new changes:
 
 The \l{Qt QML Models QML Types}{Qt QML Models} is a new submodule in Qt 5.1 and
 provides several QML types for handling data with models and lists. These types
-replace types such as \l VisualItem, \l VisualDataModel, and \l VisualDataGroup.
+replace types such as \l VisualItemModel, \l VisualDataModel, and \l VisualDataGroup.
 
 \list
 \li \l{Qt QML Models QML Types}{Models}

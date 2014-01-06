@@ -42,7 +42,8 @@
   specified \a Flags.
 
   Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
-  declares that the \a Type supports \l {Attached Properties}.
+  declares that the \a Type supports \l {Attached Properties and Attached Signal Handlers}
+  {attached properties}.
 
   #include <QtQml> to use this macro.
 */
@@ -51,7 +52,7 @@
   \fn void qmlClearTypeRegistrations()
   \relates QQmlEngine
 
-  Clears all stored type registrations, such as those produced with \l qmlRegisterType.
+  Clears all stored type registrations, such as those produced with \l qmlRegisterType().
 
   Do not call this function while a QQmlEngine exists or behavior will be undefined.
   Any existing QQmlEngines must be deleted before calling this function.  This function
