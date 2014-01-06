@@ -73,27 +73,79 @@
 
 QT_BEGIN_NAMESPACE
 
+// This struct is somewhat dangerous to use:
+// You can save values either with 32 or 64 bit precision. toByteArrays will
+// guess the precision from messageType. If you state the wrong messageType
+// you will get undefined results.
+// The messageType is itself a bit field. You can pack multiple messages into
+// one object, e.g. RangeStart and RangeLocation. Each one will be read
+// independently by toByteArrays. Thus you can only pack messages if their data
+// doesn't overlap. Again, it's up to you to figure that out.
 struct Q_AUTOTEST_EXPORT QQmlProfilerData
 {
+    QQmlProfilerData() {}
+
+    QQmlProfilerData(qint64 time, int messageType, int detailType, const QUrl &url,
+                     int x = 0, int y = 0, int framerate = 0, int count = 0, int bindingType = 0) :
+        time(time), messageType(messageType), detailType(detailType), detailUrl(url),
+        x(x), y(y), framerate(framerate), count(count), bindingType(bindingType) {}
+
+    QQmlProfilerData(qint64 time, int messageType, int detailType, const QString &str,
+                     int x = 0, int y = 0, int framerate = 0, int count = 0, int bindingType = 0) :
+        time(time), messageType(messageType), detailType(detailType),detailString(str),
+        x(x), y(y), framerate(framerate), count(count), bindingType(bindingType) {}
+
+    QQmlProfilerData(qint64 time, int messageType, int detailType, const QString &str,
+                     const QUrl &url, int x = 0, int y = 0, int framerate = 0, int count = 0,
+                     int bindingType = 0) :
+        time(time), messageType(messageType), detailType(detailType), detailString(str),
+        detailUrl(url), x(x), y(y), framerate(framerate), count(count), bindingType(bindingType) {}
+
+
+    QQmlProfilerData(qint64 time, int messageType, int detailType) :
+        time(time), messageType(messageType), detailType(detailType) {}
+
+    // Special ctor for scenegraph frames. Note that it's missing the QString/QUrl params.
+    // This is slightly ugly, but makes it easier to disambiguate between int and qint64 params.
+    QQmlProfilerData(qint64 time, int messageType, int detailType,
+                     qint64 d1, qint64 d2, qint64 d3, qint64 d4, qint64 d5) :
+        time(time), messageType(messageType), detailType(detailType),
+        subtime_1(d1), subtime_2(d2), subtime_3(d3), subtime_4(d4), subtime_5(d5) {}
+
+
     qint64 time;
-    int messageType;
+    int messageType;        //bit field of QQmlProfilerService::Message
     int detailType;
 
-    //###
-    QString detailData; //used by RangeData and RangeLocation
-    int line;           //used by RangeLocation, also as "width" for pixmaps
-    int column;         //used by RangeLocation, also as "height" for pixmaps
-    int framerate;      //used by animation events
-    int animationcount; //used by animation events, also as "cache/reference count" for pixmaps
-    int bindingType;
+    QString detailString;   //used by RangeData and possibly by RangeLocation
+    QUrl detailUrl;         //used by RangeLocation, overrides detailString
 
-    qint64 subtime_1;
-    qint64 subtime_2;
-    qint64 subtime_3;
-    qint64 subtime_4;
-    qint64 subtime_5;
+    union {
+        qint64 subtime_1;
+        int x;              //used by RangeLocation and for pixmaps
+    };
 
-    QByteArray toByteArray() const;
+    union {
+        qint64 subtime_2;
+        int y;              //used by RangeLocation and for pixmaps
+    };
+
+    union {
+        qint64 subtime_3;
+        int framerate;      //used by animation events
+    };
+
+    union {
+        qint64 subtime_4;
+        int count;          //used by animation events and for pixmaps
+    };
+
+    union {
+        qint64 subtime_5;
+        int bindingType;
+    };
+
+    void toByteArrays(QList<QByteArray> &messages) const;
 };
 
 Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
@@ -180,10 +232,7 @@ public:
 
     static void addEvent(EventType event)
     {
-        QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)Event, (int)event,
-                               QString(), -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(ed);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << Event, event));
     }
 
     static void animationFrame(qint64 delta)
@@ -191,51 +240,42 @@ public:
         int animCount = QUnifiedTimer::instance()->runningAnimationCount();
 
         if (animCount > 0 && delta > 0) {
-            QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)Event,
-                                   (int)AnimationFrame, QString(), -1, -1,
-                                   1000 / (int)delta /* trim fps to integer */, animCount, 0, 0, 0,
-                                   0, 0, 0};
-            instance->processMessage(ed);
+            instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << Event,
+                                                      AnimationFrame, QString(), 0, 0,
+                                                      1000 / (int)delta /* trim fps to integer */,
+                                                      animCount));
         }
     }
 
     static void sceneGraphFrame(SceneGraphFrameType frameType, qint64 value1, qint64 value2 = -1,
                                 qint64 value3 = -1, qint64 value4 = -1, qint64 value5 = -1)
     {
-        // because I already have some space to store ints in the struct, I'll use it to store the
-        // frame data even though the field names do not match
-        QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)SceneGraphFrame,
-                               (int)frameType, QString(), -1, -1, -1, -1, -1,
-                               value1, value2, value3, value4, value5};
-        instance->processMessage(ed);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << SceneGraphFrame,
+                                                  frameType, value1, value2, value3, value4,
+                                                  value5));
     }
 
     static void pixmapEvent(PixmapEventType eventType, const QUrl &url)
     {
-        QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)PixmapCacheEvent,
-                               (int)eventType, url.toString(), -1, -1, -1, -1, -1,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(ed);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+                                                  eventType, url));
     }
 
     static void pixmapEvent(PixmapEventType eventType, const QUrl &url, int count)
     {
-        QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)PixmapCacheEvent,
-                               (int)eventType, url.toString(), -1, -1, -1, count, -1,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(ed);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+                                                  eventType, url, 0, 0, 0, count));
     }
 
     static void pixmapEvent(PixmapEventType eventType, const QUrl &url, const QSize &size)
     {
         if (size.width() > 0 && size.height() > 0) {
-            QQmlProfilerData ed = {instance->m_timer.nsecsElapsed(), (int)PixmapCacheEvent,
-                                   (int)eventType, url.toString(),
-                                   size.width(), size.height(), -1, -1, -1,
-                                   0, 0, 0, 0, 0};
-            instance->processMessage(ed);
+            instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+                                                      eventType, url, size.width(), size.height()));
         }
     }
+
+    qint64 timestamp() {return m_timer.nsecsElapsed();}
 
     static void sendProfilingData();
 
@@ -250,52 +290,57 @@ private:
     bool startProfilingImpl();
     bool stopProfilingImpl();
 
-    static void startRange(RangeType range, BindingType bindingType = QmlBinding)
+    static void startRange(RangeType range, const QString &fileName, int line, int column,
+                           BindingType bindingType = QmlBinding)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeStart, (int)range,
-                               QString(), -1, -1, 0, 0, (int)bindingType,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+                                                  (1 << RangeStart | 1 << RangeLocation), range,
+                                                  fileName, line, column, 0, 0, bindingType));
     }
 
-    static void rangeData(RangeType range, const QString &rData)
+    // Have toByteArrays() construct another RangeData event from the same QString later.
+    // This is somewhat pointless but important for backwards compatibility.
+    static void startRangeWithData(RangeType range, const QString &name, int line, int column,
+                                   BindingType bindingType = QmlBinding)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeData, (int)range,
-                               rData, -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
+                                                  range, name, line, column, 0, 0, bindingType));
     }
 
-    static void rangeData(RangeType range, const QUrl &rData)
+    static void startRange(RangeType range, const QUrl &fileName, int line, int column,
+                           BindingType bindingType = QmlBinding)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeData, (int)range,
-                               rData.toString(), -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+                                                  (1 << RangeStart | 1 << RangeLocation),
+                                                  range, fileName, line, column, 0, 0,
+                                                  bindingType));
     }
 
-    static void rangeLocation(RangeType range, const QString &fileName, int line, int column)
+    static void startRange(RangeType range, const QString &rData, const QUrl &fileName, int line,
+                           int column, BindingType bindingType = QmlBinding)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
-                               fileName, line, column, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
+                                                  range, rData, fileName, line, column, 0, 0,
+                                                  bindingType));
+    }
+
+    static void startRange(RangeType range, const QString &rData,
+                           BindingType bindingType = QmlBinding)
+    {
+        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+                                                  (1 << RangeStart | 1 << RangeData), range,
+                                                  rData, 0, 0, 0, 0, bindingType));
     }
 
     static void rangeLocation(RangeType range, const QUrl &fileName, int line, int column)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
-                               fileName.toString(), line, column, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << RangeLocation, range,
+                                        fileName, line, column));
     }
 
     static void endRange(RangeType range)
     {
-        QQmlProfilerData rd = {instance->m_timer.nsecsElapsed(), (int)RangeEnd, (int)range,
-                               QString(), -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        instance->processMessage(rd);
+        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << RangeEnd, range));
     }
 
     void sendMessages();
@@ -332,8 +377,7 @@ private:
 struct QQmlBindingProfiler {
     QQmlBindingProfiler(const QString &url, int line, int column, QQmlProfilerService::BindingType bindingType)
     {
-        Q_QML_PROFILE(startRange(QQmlProfilerService::Binding, bindingType));
-        Q_QML_PROFILE(rangeLocation(QQmlProfilerService::Binding, url, line, column));
+        Q_QML_PROFILE(startRange(QQmlProfilerService::Binding, url, line, column, bindingType));
     }
 
     ~QQmlBindingProfiler()
@@ -345,10 +389,8 @@ struct QQmlBindingProfiler {
 struct QQmlHandlingSignalProfiler {
     QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
-        Q_QML_PROFILE(startRange(QQmlProfilerService::HandlingSignal));
-        Q_QML_PROFILE(rangeLocation(QQmlProfilerService::HandlingSignal,
-                expression->sourceFile(), expression->lineNumber(),
-                expression->columnNumber()));
+        Q_QML_PROFILE(startRange(QQmlProfilerService::HandlingSignal,
+                expression->sourceFile(), expression->lineNumber(), expression->columnNumber()));
     }
 
     ~QQmlHandlingSignalProfiler()
@@ -360,9 +402,7 @@ struct QQmlHandlingSignalProfiler {
 struct QQmlCompilingProfiler {
     QQmlCompilingProfiler(const QString &name)
     {
-        Q_QML_PROFILE(startRange(QQmlProfilerService::Compiling));
-        Q_QML_PROFILE(rangeLocation(QQmlProfilerService::Compiling, name, 1, 1));
-        Q_QML_PROFILE(rangeData(QQmlProfilerService::Compiling, name));
+        Q_QML_PROFILE(startRangeWithData(QQmlProfilerService::Compiling, name, 1, 1));
     }
 
     ~QQmlCompilingProfiler()
@@ -380,30 +420,16 @@ public:
         int line;
         int column;
         QString typeName;
-        void clear()
-        {
-            url.clear();
-            line = 0;
-            column = 0;
-            typeName.clear();
-        }
     };
 
-    QQmlVmeProfiler() :
-        running(false)
-    {}
-
-    ~QQmlVmeProfiler()
-    {
-        if (QQmlProfilerService::enabled)
-            clear();
-    }
+    QQmlVmeProfiler() : running(false) {}
 
     void clear()
     {
-        stop();
         ranges.clear();
         if (QQmlProfilerService::enabled) {
+            if (running)
+                QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
             for (int i = 0; i < backgroundRanges.count(); ++i) {
                 QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
             }
@@ -412,59 +438,45 @@ public:
         running = false;
     }
 
-    bool start()
+    void startBackground(const QString &typeName)
     {
         if (QQmlProfilerService::enabled) {
-            currentRange.clear();
-            if (running)
+            if (running) {
                 QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-            else
-                running = true;
-            QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating);
-            return true;
+                running = false;
+            }
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating, typeName);
+            backgroundRanges.push(typeName);
         }
-        return false;
+    }
+
+    void start(const QString &typeName, const QUrl &url, int line, int column)
+    {
+        if (QQmlProfilerService::enabled) {
+            switchRange();
+            setCurrentRange(typeName, url, line, column);
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating, typeName, url,
+                                                      line, column);
+        }
     }
 
     void stop()
     {
         if (QQmlProfilerService::enabled && running) {
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
-            currentRange.clear();
             running = false;
         }
     }
 
-    void updateLocation(const QUrl &url, int line, int column)
-    {
-        if (QQmlProfilerService::enabled && running) {
-            currentRange.url = url;
-            currentRange.line = line;
-            currentRange.column = column;
-            QQmlProfilerService::instance->rangeLocation(
-                    QQmlProfilerService::Creating, url, line, column);
-        }
-    }
-
-    void updateTypeName(const QString &typeName)
-    {
-        if (QQmlProfilerService::enabled && running) {
-            currentRange.typeName = typeName;
-            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
-        }
-    }
-
-    bool pop()
+    void pop()
     {
         if (QQmlProfilerService::enabled && ranges.count() > 0) {
-            start();
+            switchRange();
             currentRange = ranges.pop();
-            QQmlProfilerService::instance->rangeLocation(
-                    QQmlProfilerService::Creating, currentRange.url, currentRange.line, currentRange.column);
-            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, currentRange.typeName);
-            return true;
+            QQmlProfilerService::instance->startRange(QQmlProfilerService::Creating,
+                                                      currentRange.typeName, currentRange.url,
+                                                      currentRange.line, currentRange.column);
         }
-        return false;
     }
 
     void push()
@@ -473,30 +485,37 @@ public:
             ranges.push(currentRange);
     }
 
-    void background()
-    {
-        if (QQmlProfilerService::enabled && running) {
-            backgroundRanges.push(currentRange);
-            running = false;
-        }
-    }
-
-    bool foreground()
+    void foreground(const QUrl &url, int line, int column)
     {
         if (QQmlProfilerService::enabled && backgroundRanges.count() > 0) {
-            stop();
-            currentRange = backgroundRanges.pop();
-            running = true;
-            return true;
+            switchRange();
+            setCurrentRange(backgroundRanges.pop(), url, line, column);
+            QQmlProfilerService::instance->rangeLocation(
+                    QQmlProfilerService::Creating, url, line, column);
         }
-        return false;
     }
 
 private:
 
+    void switchRange()
+    {
+        if (running)
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+        else
+            running = true;
+    }
+
+    void setCurrentRange(const QString &typeName, const QUrl &url, int line, int column)
+    {
+        currentRange.typeName = typeName;
+        currentRange.url = url;
+        currentRange.line = line;
+        currentRange.column = column;
+    }
+
     Data currentRange;
     QStack<Data> ranges;
-    QStack<Data> backgroundRanges;
+    QStack<QString> backgroundRanges;
     bool running;
 };
 

@@ -503,10 +503,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.component);
 
-            if (profiler.start()) {
-                profiler.updateTypeName(type.component->name);
-                profiler.background();
-            }
+            profiler.startBackground(type.component->name);
 
             states.push(State());
 
@@ -529,8 +526,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(CreateQMLObject)
 
         QML_BEGIN_INSTR(CompleteQMLObject)
-            if (profiler.foreground())
-                profiler.updateLocation(CTXT->url, instr.line, instr.column);
+            profiler.foreground(CTXT->url, instr.line, instr.column);
 
             QObject *o = objects.top();
             Q_ASSERT(o);
@@ -574,10 +570,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(CreateCppObject)
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.type);
-            if (profiler.start()) {
-                profiler.updateLocation(CTXT->url, instr.line, instr.column);
-                profiler.updateTypeName(type.type->qmlTypeName());
-            }
+            profiler.start(type.type->qmlTypeName(), CTXT->url, instr.line, instr.column);
 
             QObject *o = 0;
             void *memory = 0;
@@ -650,10 +643,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CreateSimpleObject)
             const QQmlCompiledData::TypeReference &ref = TYPES.at(instr.type);
-            if (profiler.start()) {
-                profiler.updateLocation(CTXT->url, instr.line, instr.column);
-                profiler.updateTypeName(ref.type->qmlTypeName());
-            }
+            profiler.start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column);
             QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));   
             ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);

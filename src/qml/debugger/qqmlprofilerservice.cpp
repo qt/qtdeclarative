@@ -54,61 +54,74 @@ QQmlProfilerService *QQmlProfilerService::instance = 0;
 Q_GLOBAL_STATIC(QQmlProfilerService, profilerInstance)
 bool QQmlProfilerService::enabled = false;
 
-// convert to a QByteArray that can be sent to the debug client
+// convert to QByteArrays that can be sent to the debug client
 // use of QDataStream can skew results
 //     (see tst_qqmldebugtrace::trace() benchmark)
-QByteArray QQmlProfilerData::toByteArray() const
+void QQmlProfilerData::toByteArrays(QList<QByteArray> &messages) const
 {
     QByteArray data;
     //### using QDataStream is relatively expensive
-    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-    ds << time << messageType << detailType;
-    if (messageType == (int)QQmlProfilerService::RangeStart &&
-            detailType == (int)QQmlProfilerService::Binding)
-        ds << bindingType;
-    if (messageType == (int)QQmlProfilerService::RangeData)
-        ds << detailData;
-    if (messageType == (int)QQmlProfilerService::RangeLocation)
-        ds << detailData << line << column;
-    if (messageType == (int)QQmlProfilerService::Event &&
-            detailType == (int)QQmlProfilerService::AnimationFrame)
-        ds << framerate << animationcount;
-    if (messageType == (int)QQmlProfilerService::PixmapCacheEvent) {
-        ds << detailData;
-        switch (detailType) {
-        case QQmlProfilerService::PixmapSizeKnown: ds << line << column; break;
-        case QQmlProfilerService::PixmapReferenceCountChanged: ds << animationcount; break;
-        case QQmlProfilerService::PixmapCacheCountChanged: ds << animationcount; break;
-        default: break;
-        }
-    }
-    if (messageType == (int)QQmlProfilerService::SceneGraphFrame) {
-        switch (detailType) {
-        // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
-        case QQmlProfilerService::SceneGraphRendererFrame: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
-        // AdaptationLayerFrame: glyphCount (which is an integer), glyphRenderTime, glyphStoreTime
-        case QQmlProfilerService::SceneGraphAdaptationLayerFrame: ds << (int)subtime_1 << subtime_2 << subtime_3; break;
-        // ContextFrame: compiling material time
-        case QQmlProfilerService::SceneGraphContextFrame: ds << subtime_1; break;
-        // RenderLoop: syncTime, renderTime, swapTime
-        case QQmlProfilerService::SceneGraphRenderLoopFrame: ds << subtime_1 << subtime_2 << subtime_3; break;
-        // TexturePrepare: bind, convert, swizzle, upload, mipmap
-        case QQmlProfilerService::SceneGraphTexturePrepare: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4 << subtime_5; break;
-        // TextureDeletion: deletionTime
-        case QQmlProfilerService::SceneGraphTextureDeletion: ds << subtime_1; break;
-        // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
-        case QQmlProfilerService::SceneGraphPolishAndSync: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
-        // WindowsRenderLoop: GL time, make current time, SceneGraph time
-        case QQmlProfilerService::SceneGraphWindowsRenderShow: ds << subtime_1 << subtime_2 << subtime_3; break;
-        // WindowsAnimations: update time
-        case QQmlProfilerService::SceneGraphWindowsAnimations: ds << subtime_1; break;
-        // WindowsRenderWindow: polish time
-        case QQmlProfilerService::SceneGraphWindowsPolishFrame: ds << subtime_1; break;
-        default:break;
-        }
-    }
+    for (int i = 0; i < QQmlProfilerService::MaximumMessage; ++i) {
+        if ((messageType & (1 << i)) == 0)
+            continue;
 
-    return data;
+        QQmlDebugStream ds(&data, QIODevice::WriteOnly);
+        ds << time << i << detailType;
+        switch (i) {
+        case QQmlProfilerService::Event:
+            if (detailType == (int)QQmlProfilerService::AnimationFrame)
+                ds << framerate << count;
+            break;
+        case QQmlProfilerService::RangeStart:
+            if (detailType == (int)QQmlProfilerService::Binding)
+                ds << bindingType;
+            break;
+        case QQmlProfilerService::RangeData:
+            ds << detailString;
+            break;
+        case QQmlProfilerService::RangeLocation:
+            ds << (detailUrl.isEmpty() ? detailString : detailUrl.toString()) << x << y;
+            break;
+        case QQmlProfilerService::RangeEnd: break;
+        case QQmlProfilerService::PixmapCacheEvent:
+            ds << detailUrl.toString();
+            switch (detailType) {
+                case QQmlProfilerService::PixmapSizeKnown: ds << x << y; break;
+                case QQmlProfilerService::PixmapReferenceCountChanged: ds << count; break;
+                case QQmlProfilerService::PixmapCacheCountChanged: ds << count; break;
+                default: break;
+            }
+            break;
+        case QQmlProfilerService::SceneGraphFrame:
+            switch (detailType) {
+                // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
+                case QQmlProfilerService::SceneGraphRendererFrame: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
+                // AdaptationLayerFrame: glyphCount (which is an integer), glyphRenderTime, glyphStoreTime
+                case QQmlProfilerService::SceneGraphAdaptationLayerFrame: ds << (int)subtime_1 << subtime_2 << subtime_3; break;
+                // ContextFrame: compiling material time
+                case QQmlProfilerService::SceneGraphContextFrame: ds << subtime_1; break;
+                // RenderLoop: syncTime, renderTime, swapTime
+                case QQmlProfilerService::SceneGraphRenderLoopFrame: ds << subtime_1 << subtime_2 << subtime_3; break;
+                // TexturePrepare: bind, convert, swizzle, upload, mipmap
+                case QQmlProfilerService::SceneGraphTexturePrepare: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4 << subtime_5; break;
+                // TextureDeletion: deletionTime
+                case QQmlProfilerService::SceneGraphTextureDeletion: ds << subtime_1; break;
+                // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
+                case QQmlProfilerService::SceneGraphPolishAndSync: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
+                // WindowsRenderLoop: GL time, make current time, SceneGraph time
+                case QQmlProfilerService::SceneGraphWindowsRenderShow: ds << subtime_1 << subtime_2 << subtime_3; break;
+                // WindowsAnimations: update time
+                case QQmlProfilerService::SceneGraphWindowsAnimations: ds << subtime_1; break;
+                // WindowsRenderWindow: polish time
+                case QQmlProfilerService::SceneGraphWindowsPolishFrame: ds << subtime_1; break;
+                default:break;
+            }
+            break;
+        case QQmlProfilerService::Complete: break;
+        }
+        messages << data;
+        data.clear();
+    }
 }
 
 void QQmlProfilerService::animationTimerCallback(qint64 delta)
@@ -162,10 +175,9 @@ bool QQmlProfilerService::startProfilingImpl()
 {
     if (QQmlDebugService::isDebuggingEnabled() && !enabled) {
         enabled = true;
-        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace,
-                               QString(), -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        QQmlDebugService::sendMessage(ed.toByteArray());
+        QList<QByteArray> messages;
+        QQmlProfilerData(m_timer.nsecsElapsed(), 1 << Event, StartTrace).toByteArrays(messages);
+        QQmlDebugService::sendMessages(messages);
         return true;
     } else {
         return false;
@@ -178,10 +190,7 @@ bool QQmlProfilerService::stopProfilingImpl()
         enabled = false;
         // We cannot use instance here as this is called from the debugger thread.
         // It may be called before the QML engine (and the profiler) is ready.
-        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)EndTrace,
-                               QString(), -1, -1, 0, 0, 0,
-                               0, 0, 0, 0, 0};
-        processMessage(ed);
+        processMessage(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << Event, EndTrace));
         return true;
     } else {
         return false;
@@ -197,7 +206,7 @@ void QQmlProfilerService::sendMessages()
 
     QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        messages << m_data.at(i).toByteArray();
+        m_data.at(i).toByteArrays(messages);
     m_data.clear();
 
     //indicate completion
@@ -256,30 +265,26 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
  */
 
 /*!
- * \fn bool QQmlVmeProfiler::start()
- * Clears the current range data, then stops the profiler previously running in the
- * foreground if any, then starts a new one if profiling is enabled.
- * Returns whether the new profiler was actually started.
+ * \fn bool QQmlVmeProfiler::startBackground(const QString &typeName)
+ * If profiling is enabled clears the current range data, then stops the
+ * profiler previously running in the foreground if any, then starts a new one
+ * in the background, setting the given typeName. \a typeName is the type of
+ * object being created.
  */
 
 /*!
- * \fn void QQmlVmeProfiler::updateLocation(const QUrl &url, int line, int column)
- * Updates the current profiler's location information. \a url is the URL of
+ * \fn bool QQmlVmeProfiler::start(const QString &typeName, const QUrl &url, int line, int column)
+ * If profiling is enabled clears the current range data, then stops the
+ * profiler previously running in the foreground if any, then starts a new one
+ * in the foreground, setting the given location. \a url is the URL of
  * file being executed, \line line is the current line in in that file, and
  * \a column is the current column in that file.
- */
-
-/*!
- * \fn void QQmlVmeProfiler::updateTypeName(const QString &typename)
- * Updates the current profiler's type information. \a typeName is the type of
- * object being created.
  */
 
 /*!
  * \fn bool QQmlVmeProfiler::pop()
  * Stops the currently running profiler, if any, then retrieves an old one from the stack
  * of paused profilers and starts that if possible.
- * Returns whether there actually is a running profiler after that.
  */
 
 /*!
@@ -300,19 +305,13 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
  * Stop profiler running in the foreground, if any.
  */
 
-
 /*!
- * \fn void QQmlVmeProfiler::background()
- * Pushes the profiler currently running in the foreground to the background so that it
- * won't be stopped by stop() or start(). There can be multiple profilers in the background.
- * You can retrieve them in reverse order by calling foreground().
- */
-
-/*!
- * \fn bool QQmlVmeProfiler::foreground()
- * Stops the profiler currently running in the foreground, if any and puts the next profiler
- * from the background in its place if there are any profiles in the background.
- * Returns Whethere there actually is a valid running profiler afterwards.
+ * \fn bool QQmlVmeProfiler::foreground(const QUrl &url, int line, int column)
+ * Stops the profiler currently running in the foreground, if any and puts the
+ * next profiler from the background in its place if there are any profilers in
+ * the background. Additionally the rangeLocation is set. \a url is the URL of
+ * file being executed, \line line is the current line in in that file, and
+ * \a column is the current column in that file.
  */
 
 QT_END_NAMESPACE
