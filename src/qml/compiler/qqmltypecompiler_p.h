@@ -43,6 +43,8 @@
 
 #include <qglobal.h>
 #include <qqmlerror.h>
+#include <qhash.h>
+#include <private/qqmlcompiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,9 +52,17 @@ class QQmlEnginePrivate;
 class QQmlCompiledData;
 class QQmlError;
 class QQmlTypeData;
+class QQmlImports;
 
 namespace QtQml {
 struct ParsedQML;
+}
+
+namespace QV4 {
+namespace CompiledData {
+struct QmlUnit;
+struct Location;
+}
 }
 
 struct QQmlTypeCompiler
@@ -61,13 +71,43 @@ struct QQmlTypeCompiler
 
     bool compile();
 
-    QList<QQmlError> errors;
+    QList<QQmlError> compilationErrors() const { return errors; }
+    void recordError(const QQmlError &error);
+
+    QString stringAt(int idx) const;
+
+    const QV4::CompiledData::QmlUnit *qmlUnit() const;
+
+    QQmlEnginePrivate *enginePrivate() const { return engine; }
+    const QQmlImports *imports() const;
+    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes();
+    QList<QtQml::QmlObject*> *qmlObjects();
+    int rootObjectIndex() const;
+    const QList<QQmlPropertyCache *> &propertyCaches() const;
+    QList<QByteArray> *vmeMetaObjects() const;
+    QHash<int, int> *objectIndexToIdForRoot();
+    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
+    QHash<int, QByteArray> *customParserData();
 
 private:
+    QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
     QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
     QtQml::ParsedQML *parsedQML;
+};
+
+struct QQmlCompilePass
+{
+    QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
+    QList<QQmlError> errors;
+
+    QString stringAt(int idx) const { return compiler->stringAt(idx); }
+protected:
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
+    const QUrl url;
+    QQmlTypeCompiler *compiler;
 };
 
 QT_END_NAMESPACE

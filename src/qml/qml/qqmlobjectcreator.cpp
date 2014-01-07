@@ -71,28 +71,18 @@ struct ActiveOCRestorer
 };
 }
 
-QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUnit *unit)
-    : url(url)
-    , jsUnit(&unit->header)
+QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
+    : compiler(typeCompiler)
 {
-}
-
-QQmlCompilePass::QQmlCompilePass(const QUrl &url, const QStringList &stringTable)
-    : url(url)
-    , jsUnit(0)
-    , stringTable(stringTable)
-{
-
 }
 
 void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setUrl(url);
     error.setLine(location.line);
     error.setColumn(location.column);
     error.setDescription(description);
-    errors << error;
+    compiler->recordError(error);
 }
 
 #define COMPILE_EXCEPTION(token, desc) \
@@ -103,12 +93,11 @@ void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, c
 
 static QAtomicInt classIndexCounter(0);
 
-QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QStringList &stringTable, const QUrl &url, const QQmlImports *imports,
-                                                   QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes)
-    : QQmlCompilePass(url, stringTable)
-    , enginePrivate(enginePrivate)
-    , imports(imports)
-    , resolvedTypes(resolvedTypes)
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , enginePrivate(typeCompiler->enginePrivate())
+    , imports(typeCompiler->imports())
+    , resolvedTypes(typeCompiler->resolvedTypes())
 {
 }
 
@@ -477,8 +466,8 @@ static void removeBindingOnProperty(QObject *o, int index)
 }
 
 QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData)
-    : QQmlCompilePass(compiledData->url, compiledData->qmlUnit)
-    , componentAttached(0)
+    : componentAttached(0)
+    , url(compiledData->url)
     , engine(parentContext->engine)
     , qmlUnit(compiledData->qmlUnit)
     , jsUnit(compiledData->compilationUnit)
@@ -1241,6 +1230,16 @@ void QmlObjectCreator::setupFunctions()
     }
 }
 
+void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
+{
+    QQmlError error;
+    error.setUrl(url);
+    error.setLine(location.line);
+    error.setColumn(location.column);
+    error.setDescription(description);
+    errors << error;
+}
+
 QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 {
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
@@ -1469,21 +1468,17 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 }
 
 
-QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(const QUrl &url, const QStringList &stringTable, const QList<QmlObject *> &qmlObjects, int indexOfRootObject,
-                                                               const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                                               const QList<QQmlPropertyCache *> &propertyCaches, QList<QByteArray> *vmeMetaObjectData,
-                                                               QHash<int, int> *objectIndexToIdForRoot,
-                                                               QHash<int, QHash<int, int> > *objectIndexToIdPerComponent)
-    : QQmlCompilePass(url, stringTable)
-    , qmlObjects(qmlObjects)
-    , indexOfRootObject(indexOfRootObject)
+QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , indexOfRootObject(typeCompiler->rootObjectIndex())
     , _componentIndex(-1)
     , _objectIndexToIdInScope(0)
-    , resolvedTypes(resolvedTypes)
-    , propertyCaches(propertyCaches)
-    , vmeMetaObjectData(vmeMetaObjectData)
-    , objectIndexToIdForRoot(objectIndexToIdForRoot)
-    , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
+    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , propertyCaches(typeCompiler->propertyCaches())
+    , vmeMetaObjectData(typeCompiler->vmeMetaObjects())
+    , objectIndexToIdForRoot(typeCompiler->objectIndexToIdForRoot())
+    , objectIndexToIdPerComponent(typeCompiler->objectIndexToIdPerComponent())
 {
 }
 
@@ -1745,16 +1740,13 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 }
 
 
-QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
-                                             const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                             const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent,
-                                             QHash<int, QByteArray> *customParserData)
-    : QQmlCompilePass(url, qmlUnit)
-    , qmlUnit(qmlUnit)
-    , resolvedTypes(resolvedTypes)
-    , propertyCaches(propertyCaches)
-    , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
-    , customParserData(customParserData)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlUnit(typeCompiler->qmlUnit())
+    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , propertyCaches(typeCompiler->propertyCaches())
+    , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
+    , customParserData(typeCompiler->customParserData())
 {
 }
 

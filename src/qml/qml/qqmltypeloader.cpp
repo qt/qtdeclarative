@@ -2309,7 +2309,7 @@ void QQmlTypeData::compile()
     if (m_useNewCompiler) {
         QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, parsedQML.data());
         if (!compiler.compile()) {
-            setError(compiler.errors);
+            setError(compiler.compilationErrors());
             m_compiledData->release();
             m_compiledData = 0;
         }

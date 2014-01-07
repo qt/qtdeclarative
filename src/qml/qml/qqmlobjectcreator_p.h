@@ -45,34 +45,19 @@
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlcompiler_p.h>
+#include <private/qqmltypecompiler_p.h>
 #include <QLinkedList>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
-
-struct QQmlCompilePass
-{
-    QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUnit *unit);
-    QQmlCompilePass(const QUrl &url, const QStringList &stringTable);
-    QList<QQmlError> errors;
-
-    QString stringAt(int idx) const { return jsUnit ? jsUnit->stringAt(idx): stringTable.at(idx); }
-protected:
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
-
-    const QUrl url;
-    const QV4::CompiledData::Unit *jsUnit;
-    const QStringList stringTable;
-};
+struct QQmlTypeCompiler;
 
 class QQmlPropertyCacheCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
-    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QStringList &stringTable,
-                             const QUrl &url, const QQmlImports *imports,
-                             QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes);
+    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
 
     bool create(const QtQml::QmlObject *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
 
@@ -86,14 +71,7 @@ class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
 public:
-    QQmlComponentAndAliasResolver(const QUrl &url, const QStringList &stringTable,
-                                  const QList<QtQml::QmlObject*> &qmlObjects,
-                                  int indexOfRootObject,
-                                  const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                  const QList<QQmlPropertyCache *> &propertyCaches,
-                                  QList<QByteArray> *vmeMetaObjectData,
-                                  QHash<int, int> *objectIndexToIdForRoot,
-                                  QHash<int, QHash<int, int> > *objectIndexToIdPerComponent);
+    QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler);
 
     bool resolve();
 
@@ -126,11 +104,7 @@ class QQmlPropertyValidator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
-                          const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                          const QList<QQmlPropertyCache *> &propertyCaches,
-                          const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent,
-                          QHash<int, QByteArray> *customParserData);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
 
     bool validate();
 
@@ -146,7 +120,7 @@ private:
     QHash<int, QByteArray> *customParserData;
 };
 
-class QmlObjectCreator : public QQmlCompilePass
+class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
@@ -157,6 +131,8 @@ public:
 
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+
+    QList<QQmlError> errors;
 
 private:
     QObject *createInstance(int index, QObject *parent = 0);
@@ -169,6 +145,10 @@ private:
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
+    QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
+    QUrl url;
     QQmlEngine *engine;
     const QV4::CompiledData::QmlUnit *qmlUnit;
     const QV4::CompiledData::CompilationUnit *jsUnit;

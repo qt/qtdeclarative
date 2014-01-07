@@ -90,9 +90,7 @@ bool QQmlTypeCompiler::compile()
     compiledData->datas.reserve(objectCount);
     compiledData->propertyCaches.reserve(objectCount);
 
-    QQmlPropertyCacheCreator propertyCacheBuilder(engine,
-                                                  parsedQML->jsGenerator.strings, compiledData->url,
-                                                  &typeData->imports(), &compiledData->resolvedTypes);
+    QQmlPropertyCacheCreator propertyCacheBuilder(this);
 
     for (int i = 0; i < objectCount; ++i) {
         const QtQml::QmlObject *obj = parsedQML->objects.at(i);
@@ -155,8 +153,7 @@ bool QQmlTypeCompiler::compile()
 
     {
         // Scan for components, determine their scopes and resolve aliases within the scope.
-        QQmlComponentAndAliasResolver resolver(compiledData->url, parsedQML->jsGenerator.strings, parsedQML->objects, parsedQML->indexOfRootObject, compiledData->resolvedTypes, compiledData->propertyCaches,
-                                               &compiledData->datas, &compiledData->objectIndexToIdForRoot, &compiledData->objectIndexToIdPerComponent);
+        QQmlComponentAndAliasResolver resolver(this);
         if (!resolver.resolve()) {
             errors << resolver.errors;
             return false;
@@ -206,15 +203,75 @@ bool QQmlTypeCompiler::compile()
     }
 
     // Sanity check property bindings
-    QQmlPropertyValidator validator(compiledData->url, compiledData->qmlUnit, compiledData->resolvedTypes,
-                                    compiledData->propertyCaches, compiledData->objectIndexToIdPerComponent,
-                                    &compiledData->customParserData);
+    QQmlPropertyValidator validator(this);
     if (!validator.validate()) {
         errors << validator.errors;
         return false;
     }
 
     return errors.isEmpty();
+}
+
+void QQmlTypeCompiler::recordError(const QQmlError &error)
+{
+    QQmlError e = error;
+    e.setUrl(compiledData->url);
+    errors << e;
+}
+
+QString QQmlTypeCompiler::stringAt(int idx) const
+{
+    return parsedQML->stringAt(idx);
+}
+
+const QV4::CompiledData::QmlUnit *QQmlTypeCompiler::qmlUnit() const
+{
+    return compiledData->qmlUnit;
+}
+
+const QQmlImports *QQmlTypeCompiler::imports() const
+{
+    return &typeData->imports();
+}
+
+QHash<int, QQmlCompiledData::TypeReference> *QQmlTypeCompiler::resolvedTypes()
+{
+    return &compiledData->resolvedTypes;
+}
+
+QList<QmlObject *> *QQmlTypeCompiler::qmlObjects()
+{
+    return &parsedQML->objects;
+}
+
+int QQmlTypeCompiler::rootObjectIndex() const
+{
+    return parsedQML->indexOfRootObject;
+}
+
+const QList<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
+{
+    return compiledData->propertyCaches;
+}
+
+QList<QByteArray> *QQmlTypeCompiler::vmeMetaObjects() const
+{
+    return &compiledData->datas;
+}
+
+QHash<int, int> *QQmlTypeCompiler::objectIndexToIdForRoot()
+{
+    return &compiledData->objectIndexToIdForRoot;
+}
+
+QHash<int, QHash<int, int> > *QQmlTypeCompiler::objectIndexToIdPerComponent()
+{
+    return &compiledData->objectIndexToIdPerComponent;
+}
+
+QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
+{
+    return &compiledData->customParserData;
 }
 
 QT_END_NAMESPACE
