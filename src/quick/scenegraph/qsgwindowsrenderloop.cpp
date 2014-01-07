@@ -61,7 +61,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 #ifdef QSG_RENDER_LOOP_DEBUG
 static QElapsedTimer qsg_debug_timer;
-#  define RLDEBUG(x) printf("(%6d) %s : %4d - %s\n", (int) qsg_debug_timer.elapsed(), __FILE__, __LINE__, x)
+#  define RLDEBUG(x) qDebug("(%6d) %s : %4d - %s", (int) qsg_debug_timer.elapsed(), __FILE__, __LINE__, x)
 #else
 #  define RLDEBUG(x)
 #endif

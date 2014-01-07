@@ -279,7 +279,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing) {
-        printf(" - Breakdown of render time: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
+        qDebug(" - Breakdown of render time: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d",
                int(preprocessTime / 1000000),
                int((updatePassTime - preprocessTime) / 1000000),
                int((bindTime - updatePassTime) / 1000000),

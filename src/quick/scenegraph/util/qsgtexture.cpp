@@ -629,7 +629,7 @@ void QSGPlainTexture::bind()
             glDeleteTextures(1, &m_texture_id);
 #ifndef QSG_NO_RENDER_TIMING
             if (qsg_render_timing) {
-                printf("   - texture deleted in %dms (size: %dx%d)\n",
+                qDebug("   - texture deleted in %dms (size: %dx%d)",
                        (int) qsg_renderer_timer.elapsed(),
                        m_texture_size.width(),
                        m_texture_size.height());
@@ -725,7 +725,7 @@ void QSGPlainTexture::bind()
     if (qsg_render_timing) {
         mipmapTime = qsg_renderer_timer.nsecsElapsed();
 
-        printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d, total=%d\n",
+        qDebug("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d, total=%d",
                m_texture_size.width(), m_texture_size.height(),
                int(bindTime/1000000),
                int((convertTime - bindTime)/1000000),

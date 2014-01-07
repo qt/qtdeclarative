@@ -169,7 +169,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
-        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+        qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
     if (QQmlProfilerService::enabled) {
         QQmlProfilerService::sceneGraphFrame(
@@ -208,7 +208,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
-        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+        qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
     if (QQmlProfilerService::enabled) {
         QQmlProfilerService::sceneGraphFrame(
@@ -2249,7 +2249,7 @@ void Renderer::preprocess()
 void Renderer::render()
 {
     if (Q_UNLIKELY(debug_dump)) {
-        printf("\n\n");
+        qDebug("\n");
         QSGNodeDumper::dump(rootNode());
     }
 
