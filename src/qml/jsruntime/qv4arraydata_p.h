@@ -224,7 +224,7 @@ inline Property *ArrayData::getProperty(uint index) const
     if (!this)
         return 0;
     if (type != Sparse) {
-        if (index >= len)
+        if (index >= len || data[index].value.isEmpty())
             return 0;
         return data + index;
     } else {

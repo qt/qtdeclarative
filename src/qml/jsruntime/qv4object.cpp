@@ -301,11 +301,9 @@ Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
 {
     Property *p = arrayData->getProperty(index);
     if (p) {
-        if (!p->value.isEmpty()) {
-            if (attrs)
-                *attrs = arrayData->attributes(index);
-            return p;
-        }
+        if (attrs)
+            *attrs = arrayData->attributes(index);
+        return p;
     }
     if (isStringObject()) {
         if (attrs)
@@ -348,11 +346,9 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     while (o) {
         Property *p = o->arrayData->getProperty(index);
         if (p) {
-            if (!p->value.isEmpty()) {
-                if (attrs)
-                    *attrs = o->arrayData->attributes(index);
-                return p;
-            }
+            if (attrs)
+                *attrs = o->arrayData->attributes(index);
+            return p;
         }
         if (o->isStringObject()) {
             Property *p = static_cast<const StringObject *>(o)->getIndex(index);
@@ -639,11 +635,9 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
     while (o) {
         Property *p = o->arrayData->getProperty(index);
         if (p) {
-            if (!p->value.isEmpty()) {
-                pd = p;
-                attrs = o->arrayData->attributes(index);
-                break;
-            }
+            pd = p;
+            attrs = o->arrayData->attributes(index);
+            break;
         }
         if (o->isStringObject()) {
             pd = static_cast<StringObject *>(o)->getIndex(index);
@@ -760,14 +754,11 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
     if (internalClass->engine->hasException)
         return;
 
-    Property *pd = 0;
     PropertyAttributes attrs;
 
-    Property *p = arrayData->getProperty(index);
-    if (p && !p->value.isEmpty()) {
-        pd = p;
+    Property *pd = arrayData->getProperty(index);
+    if (pd)
         attrs = arrayData->attributes(index);
-    }
 
     if (!pd && isStringObject()) {
         pd = static_cast<StringObject *>(this)->getIndex(index);
@@ -954,9 +945,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
 
     // Clause 1
     {
-        Property *p = arrayData->getProperty(index);
-        if (p && !p->value.isEmpty())
-            current = p;
+        current = arrayData->getProperty(index);
         if (!current && isStringObject())
             current = static_cast<StringObject *>(this)->getIndex(index);
     }
