@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
+ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs)
 {
     int i = 0;
     while (i < Size && obj) {
@@ -56,7 +56,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            return obj->memberData + index;
+            return !attrs->isAccessor() ? obj->memberData[index].value.asReturnedValue() : obj->getValue(thisObject, obj->memberData + index, *attrs);
         }
 
         obj = obj->prototype();
@@ -68,12 +68,43 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            return obj->memberData + index;
+            return !attrs->isAccessor() ? obj->memberData[index].value.asReturnedValue() : obj->getValue(thisObject, obj->memberData + index, *attrs);
         }
 
         obj = obj->prototype();
     }
-    return 0;
+    return Primitive::emptyValue().asReturnedValue();
+}
+
+ReturnedValue Lookup::lookup(Object *obj, PropertyAttributes *attrs)
+{
+    Object *thisObject = obj;
+    int i = 0;
+    while (i < Size && obj) {
+        classList[i] = obj->internalClass;
+
+        index = obj->internalClass->find(name);
+        if (index != UINT_MAX) {
+            level = i;
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData[index].value.asReturnedValue() : thisObject->getValue(obj->memberData + index, *attrs);
+        }
+
+        obj = obj->prototype();
+        ++i;
+    }
+    level = Size;
+
+    while (obj) {
+        index = obj->internalClass->find(name);
+        if (index != UINT_MAX) {
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData[index].value.asReturnedValue() : thisObject->getValue(obj->memberData + index, *attrs);
+        }
+
+        obj = obj->prototype();
+    }
+    return Primitive::emptyValue().asReturnedValue();
 }
 
 
@@ -106,8 +137,8 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     }
 
     PropertyAttributes attrs;
-    Property *p = l->lookup(proto, &attrs);
-    if (p) {
+    ReturnedValue v = l->lookup(object, proto, &attrs);
+    if (v != Primitive::emptyValue().asReturnedValue()) {
         l->type = object->type();
         l->proto = proto;
         if (attrs.isData()) {
@@ -115,13 +146,13 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
                 l->getter = Lookup::primitiveGetter0;
             else if (l->level == 1)
                 l->getter = Lookup::primitiveGetter1;
-            return p->value.asReturnedValue();
+            return v;
         } else {
             if (l->level == 0)
                 l->getter = Lookup::primitiveGetterAccessor0;
             else if (l->level == 1)
                 l->getter = Lookup::primitiveGetterAccessor1;
-            return proto->getValue(object, p, attrs);
+            return v;
         }
     }
 
@@ -330,8 +361,8 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
 {
     Object *o = ctx->engine->globalObject;
     PropertyAttributes attrs;
-    Property *p = l->lookup(o, &attrs);
-    if (p) {
+    ReturnedValue v = l->lookup(o, &attrs);
+    if (v != Primitive::emptyValue().asReturnedValue()) {
         if (attrs.isData()) {
             if (l->level == 0)
                 l->globalGetter = globalGetter0;
@@ -339,7 +370,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
                 l->globalGetter = globalGetter1;
             else if (l->level == 2)
                 l->globalGetter = globalGetter2;
-            return p->value.asReturnedValue();
+            return v;
         } else {
             if (l->level == 0)
                 l->globalGetter = globalGetterAccessor0;
@@ -347,7 +378,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
                 l->globalGetter = globalGetterAccessor1;
             else if (l->level == 2)
                 l->globalGetter = globalGetterAccessor2;
-            return o->getValue(p, attrs);
+            return v;
         }
     }
     Scope scope(ctx);

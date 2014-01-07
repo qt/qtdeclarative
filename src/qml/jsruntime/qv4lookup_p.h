@@ -101,7 +101,8 @@ struct Lookup {
     static void setterInsert1(Lookup *l, const ValueRef object, const ValueRef value);
     static void setterInsert2(Lookup *l, const ValueRef object, const ValueRef value);
 
-    Property *lookup(Object *obj, PropertyAttributes *attrs);
+    ReturnedValue lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs);
+    ReturnedValue lookup(Object *obj, PropertyAttributes *attrs);
 
 };
 

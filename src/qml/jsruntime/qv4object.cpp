@@ -458,8 +458,8 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
 {
     Object *o = static_cast<Object *>(m);
     PropertyAttributes attrs;
-    Property *p = l->lookup(o, &attrs);
-    if (p) {
+    ReturnedValue v = l->lookup(o, &attrs);
+    if (v != Primitive::emptyValue().asReturnedValue()) {
         if (attrs.isData()) {
             if (l->level == 0)
                 l->getter = Lookup::getter0;
@@ -467,7 +467,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)
                 l->getter = Lookup::getter2;
-            return p->value.asReturnedValue();
+            return v;
         } else {
             if (l->level == 0)
                 l->getter = Lookup::getterAccessor0;
@@ -475,7 +475,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
                 l->getter = Lookup::getterAccessor1;
             else if (l->level == 2)
                 l->getter = Lookup::getterAccessor2;
-            return o->getValue(p, attrs);
+            return v;
         }
     }
     return Encode::undefined();
