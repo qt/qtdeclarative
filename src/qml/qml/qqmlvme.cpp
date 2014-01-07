@@ -503,7 +503,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.component);
 
-            profiler.startBackground(type.component->name);
+            Q_QML_VME_PROFILE(profiler.startBackground(type.component->name));
 
             states.push(State());
 
@@ -526,7 +526,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(CreateQMLObject)
 
         QML_BEGIN_INSTR(CompleteQMLObject)
-            profiler.foreground(CTXT->url, instr.line, instr.column);
+            Q_QML_VME_PROFILE(profiler.foreground(CTXT->url, instr.line, instr.column));
 
             QObject *o = objects.top();
             Q_ASSERT(o);
@@ -570,7 +570,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(CreateCppObject)
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.type);
-            profiler.start(type.type->qmlTypeName(), CTXT->url, instr.line, instr.column);
+            Q_QML_VME_PROFILE(profiler.start(type.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
 
             QObject *o = 0;
             void *memory = 0;
@@ -643,7 +643,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CreateSimpleObject)
             const QQmlCompiledData::TypeReference &ref = TYPES.at(instr.type);
-            profiler.start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column);
+            Q_QML_VME_PROFILE(profiler.start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
             QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));   
             ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);
@@ -823,7 +823,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreScriptString)
 
         QML_BEGIN_INSTR(BeginObject)
-            profiler.push();
+            Q_QML_VME_PROFILE(profiler.push());
             QObject *target = objects.top();
             QQmlParserStatus *status = reinterpret_cast<QQmlParserStatus *>(reinterpret_cast<char *>(target) + instr.castValue);
             parserStatus.push(status);
@@ -1081,7 +1081,7 @@ normalExit:
     objects.deallocate();
     lists.deallocate();
     states.clear();
-    profiler.stop();
+    Q_QML_VME_PROFILE(profiler.stop());
 
     return rv;
 }
@@ -1119,7 +1119,13 @@ void QQmlVME::reset()
     states.clear();
     rootContext = 0;
     creationContext = 0;
-    profiler.clear();
+
+    // If profiling is switched off during a VME run and then switched back on
+    // before or during the next run background ranges from the first run will
+    // be reported in the second run because we don't clear() here. We accept
+    // that as the collected data will be incomplete anyway and because not
+    // calling clear() here is benefitial for the non-profiling case.
+    Q_QML_VME_PROFILE(profiler.clear());
 }
 
 #ifdef QML_THREADED_VME_INTERPRETER
@@ -1179,7 +1185,7 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
     if (componentCompleteEnabled()) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!parserStatus.isEmpty()) {
-            profiler.pop();
+            Q_QML_VME_PROFILE(profiler.pop());
             QQmlParserStatus *status = parserStatus.pop();
 #ifdef QML_ENABLE_TRACE
             QQmlData *data = parserStatusData.pop();
@@ -1199,7 +1205,7 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
                 return 0;
         }
         parserStatus.deallocate();
-        profiler.clear();
+        Q_QML_VME_PROFILE(profiler.clear());
     }
 
     {
