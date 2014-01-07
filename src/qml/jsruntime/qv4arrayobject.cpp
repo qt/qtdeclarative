@@ -276,7 +276,7 @@ ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
     if (scope.hasException())
         return Encode::undefined();
     if (instance->isArrayObject())
-        instance->setArrayLengthUnchecked(len - 1);
+        instance->setArrayLength(len - 1);
     else
         instance->put(ctx->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - 1)));
     return result.asReturnedValue();
