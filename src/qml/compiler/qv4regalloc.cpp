@@ -60,6 +60,9 @@ struct Use {
 }
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_TYPEINFO(Use, Q_MOVABLE_TYPE);
+
 using namespace QQmlJS::V4IR;
 
 namespace QQmlJS {
