@@ -112,6 +112,77 @@ protected:
     QQmlTypeCompiler *compiler;
 };
 
+class QQmlPropertyCacheCreator : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
+public:
+    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
+
+    bool create(const QtQml::QmlObject *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
+
+protected:
+    QQmlEnginePrivate *enginePrivate;
+    const QQmlImports *imports;
+    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
+};
+
+class QQmlComponentAndAliasResolver : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
+public:
+    QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler);
+
+    bool resolve();
+
+protected:
+    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex);
+    bool collectIdsAndAliases(int objectIndex);
+    bool resolveAliases();
+
+    QQmlEnginePrivate *enginePrivate;
+    QQmlJS::MemoryPool *pool;
+
+    QList<QtQml::QmlObject*> *qmlObjects;
+    const int indexOfRootObject;
+
+    // indices of the objects that are actually Component {}
+    QVector<int> componentRoots;
+    // indices of objects that are the beginning of a new component
+    // scope. This is sorted and used for binary search.
+    QVector<int> componentBoundaries;
+
+    int _componentIndex;
+    QHash<int, int> _idToObjectIndex;
+    QHash<int, int> *_objectIndexToIdInScope;
+    QList<int> _objectsWithAliases;
+
+    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
+    const QList<QQmlPropertyCache *> propertyCaches;
+    QList<QByteArray> *vmeMetaObjectData;
+    QHash<int, int> *objectIndexToIdForRoot;
+    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
+};
+
+class QQmlPropertyValidator : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
+public:
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
+
+    bool validate();
+
+private:
+    bool validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache);
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+
+    const QV4::CompiledData::QmlUnit *qmlUnit;
+    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
+    const QList<QQmlPropertyCache *> &propertyCaches;
+    const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
+    QHash<int, QByteArray> *customParserData;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLTYPECOMPILER_P_H
