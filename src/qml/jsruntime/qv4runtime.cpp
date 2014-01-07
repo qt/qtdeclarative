@@ -1093,8 +1093,8 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
     if (idx != UINT_MAX) {
         o->arraySet(idx, val);
     } else {
-        Property *pd = o->insertMember(name, Attr_Data);
-        pd->value = val ? *val : Primitive::undefinedValue();
+        ScopedValue v(scope, val ? *val : Primitive::undefinedValue());
+        o->insertMember(name, v);
     }
 }
 
@@ -1119,15 +1119,13 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
     Q_ASSERT(!!o);
 
     uint idx = name->asArrayIndex();
+    Property pd;
+    pd.setGetter(getter ? getter->asFunctionObject() : 0);
+    pd.setSetter(setter ? setter->asFunctionObject() : 0);
     if (idx != UINT_MAX) {
-        Property pd;
-        pd.setGetter(getter ? getter->asFunctionObject() : 0);
-        pd.setSetter(setter ? setter->asFunctionObject() : 0);
         o->arraySet(idx, pd, Attr_Accessor);
     } else {
-        Property *pd = o->insertMember(name, Attr_Accessor);
-        pd->setGetter(getter ? getter->asFunctionObject() : 0);
-        pd->setSetter(setter ? setter->asFunctionObject() : 0);
+        o->insertMember(name, pd, Attr_Accessor);
     }
 }
 

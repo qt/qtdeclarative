@@ -149,8 +149,8 @@ void RegExpObject::init(ExecutionEngine *engine)
     ScopedObject protectThis(scope, this);
 
     ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
-    Property *lastIndexProperty = insertMember(lastIndex, Attr_NotEnumerable|Attr_NotConfigurable);
-    lastIndexProperty->value = Primitive::fromInt32(0);
+    ScopedValue v(scope, Primitive::fromInt32(0));
+    insertMember(lastIndex, v, Attr_NotEnumerable|Attr_NotConfigurable);
     if (!this->value)
         return;
 
@@ -162,7 +162,6 @@ void RegExpObject::init(ExecutionEngine *engine)
         p.replace('/', QLatin1String("\\/"));
     }
 
-    ScopedValue v(scope);
     defineReadonlyProperty(QStringLiteral("source"), (v = engine->newString(p)));
     defineReadonlyProperty(QStringLiteral("global"), Primitive::fromBoolean(global));
     defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value->ignoreCase()));

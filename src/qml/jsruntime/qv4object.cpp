@@ -162,12 +162,6 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
         engine()->currentContext()->throwTypeError();
 }
 
-void Object::defineDefaultProperty(const StringRef name, ValueRef value)
-{
-    Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
-    pd->value = *value;
-}
-
 void Object::defineDefaultProperty(const QString &name, ValueRef value)
 {
     ExecutionEngine *e = engine();
@@ -206,12 +200,10 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
 void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
 {
     ExecutionEngine *v4 = engine();
-    Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-
-    if (getter)
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter)->getPointer());
-    if (setter)
-        p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
+    Property p;
+    p.setGetter(getter ? v4->newBuiltinFunction(v4->rootContext, name, getter)->getPointer() : 0);
+    p.setSetter(setter ? v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer() : 0);
+    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
 void Object::defineReadonlyProperty(const QString &name, ValueRef value)
@@ -224,8 +216,7 @@ void Object::defineReadonlyProperty(const QString &name, ValueRef value)
 
 void Object::defineReadonlyProperty(const StringRef name, ValueRef value)
 {
-    Property *pd = insertMember(name, Attr_ReadOnly);
-    pd->value = *value;
+    insertMember(name, value, Attr_ReadOnly);
 }
 
 void Object::markObjects(Managed *that, ExecutionEngine *e)
@@ -265,7 +256,7 @@ void Object::ensureMemberIndex(uint idx)
     }
 }
 
-Property *Object::insertMember(const StringRef s, PropertyAttributes attributes)
+void Object::insertMember(const StringRef s, const Property &p, PropertyAttributes attributes)
 {
     uint idx;
     internalClass = internalClass->addMember(s.getPointer(), attributes, &idx);
@@ -275,7 +266,7 @@ Property *Object::insertMember(const StringRef s, PropertyAttributes attributes)
 
     ensureMemberIndex(idx);
 
-    return memberData + idx;
+    memberData[idx] = p;
 }
 
 // Section 8.12.1
@@ -734,11 +725,8 @@ void Object::internalPut(const StringRef name, const ValueRef value)
         return;
     }
 
-    {
-        Property *p = insertMember(name, Attr_Data);
-        p->value = *value;
-        return;
-    }
+    insertMember(name, value);
+    return;
 
   reject:
     if (engine()->currentContext()->strictMode) {
@@ -910,9 +898,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         if (!extensible)
             goto reject;
         // clause 4
-        Property *pd = insertMember(name, attrs);
-        *pd = p;
-        pd->fullyPopulated(&attrs);
+        Property pd = p;
+        pd.fullyPopulated(&attrs);
+        insertMember(name, pd, attrs);
         return true;
     }
 

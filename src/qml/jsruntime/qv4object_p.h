@@ -157,7 +157,9 @@ struct Q_QML_EXPORT Object: Managed {
     void putValue(Property *pd, PropertyAttributes attrs, const ValueRef value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(const StringRef name, ValueRef value);
+    void defineDefaultProperty(const StringRef name, ValueRef value) {
+        insertMember(name, value, Attr_Data|Attr_NotEnumerable);
+    }
     void defineDefaultProperty(const QString &name, ValueRef value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(const StringRef name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
@@ -167,7 +169,10 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyProperty(const QString &name, ValueRef value);
     void defineReadonlyProperty(const StringRef name, ValueRef value);
 
-    Property *insertMember(const StringRef s, PropertyAttributes attributes);
+    void insertMember(const StringRef s, const ValueRef v, PropertyAttributes attributes = Attr_Data) {
+        insertMember(s, Property::fromValue(*v), attributes);
+    }
+    void insertMember(const StringRef s, const Property &p, PropertyAttributes attributes);
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 

@@ -290,8 +290,7 @@ bool JsonParser::parseMember(ObjectRef o)
     if (idx < UINT_MAX) {
         o->putIndexed(idx, val);
     } else {
-        Property *p = o->insertMember(s, Attr_Data);
-        p->value = val.asReturnedValue();
+        o->insertMember(s, val);
     }
 
     END;

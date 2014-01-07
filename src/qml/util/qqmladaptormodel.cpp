@@ -226,9 +226,10 @@ public:
             const QByteArray &propertyName = it.key();
 
             QV4::ScopedString name(scope, v4->newString(QString::fromUtf8(propertyName)));
-            QV4::Property *p = proto->insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
-            p->setGetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::get_property));
-            p->setSetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::set_property));
+            QV4::Property p;
+            p.setGetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::get_property));
+            p.setSetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::set_property));
+            proto->insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
         }
         prototype = proto;
     }

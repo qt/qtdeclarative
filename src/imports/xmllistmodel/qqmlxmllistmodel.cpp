@@ -925,10 +925,12 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
     ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
     Scope scope(v4engine);
     Scoped<Object> o(scope, v4engine->newObject());
+    ScopedString name(scope);
+    ScopedValue value(scope);
     for (int ii = 0; ii < d->roleObjects.count(); ++ii) {
-        ScopedString name(scope, v4engine->newIdentifier(d->roleObjects[ii]->name()));
-        Property *p = o->insertMember(name, PropertyAttributes());
-        p->value = v8engine->fromVariant(d->data.value(ii).value(index));
+        name = v4engine->newIdentifier(d->roleObjects[ii]->name());
+        value = v8engine->fromVariant(d->data.value(ii).value(index));
+        o->insertMember(name, value);
     }
 
     return QQmlV4Handle(o);

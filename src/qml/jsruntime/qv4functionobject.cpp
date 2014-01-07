@@ -427,8 +427,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     if (scope->strictMode) {
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
-        *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
-        *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
+        insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -509,8 +509,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
     if (scope->strictMode) {
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
-        *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
-        *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
+        insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -668,8 +668,8 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
     ExecutionEngine *v4 = scope->engine;
 
     Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
-    *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
-    *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
+    insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
 void BoundFunction::destroy(Managed *that)

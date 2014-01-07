@@ -593,10 +593,11 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
     QV4::Scoped<QV4::Object> o(scope, m_v4Engine->newObject());
     QVariantMap::const_iterator it;
     QV4::ScopedString s(scope);
+    QV4::ScopedValue v(scope);
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
         s = m_v4Engine->newIdentifier(it.key());
-        QV4::Property *p = o->insertMember(s, QV4::Attr_Data);
-        p->value = variantToJS(it.value());
+        v = variantToJS(it.value());
+        o->insertMember(s, v);
     }
     return o.asReturnedValue();
 }
