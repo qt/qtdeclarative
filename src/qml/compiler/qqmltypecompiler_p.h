@@ -75,6 +75,7 @@ struct QQmlTypeCompiler
     void recordError(const QQmlError &error);
 
     QString stringAt(int idx) const;
+    int registerString(const QString &str);
 
     const QV4::CompiledData::QmlUnit *qmlUnit() const;
 
@@ -88,6 +89,7 @@ struct QQmlTypeCompiler
     QHash<int, int> *objectIndexToIdForRoot();
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
     QHash<int, QByteArray> *customParserData();
+    QQmlJS::MemoryPool *memoryPool();
 
 private:
     QList<QQmlError> errors;

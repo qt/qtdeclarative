@@ -155,6 +155,8 @@ struct QmlObject
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
 
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const AST::SourceLocation &location = AST::SourceLocation());
+
     void dump(DebugStream &out);
 };
 
@@ -274,7 +276,7 @@ public:
     static QQmlScript::LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
 
     int registerString(const QString &str) const { return jsGenerator->registerString(str); }
-    template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
+    template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
 
     QString stringAt(int index) const { return jsGenerator->strings.at(index); }
 

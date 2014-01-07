@@ -1470,11 +1470,13 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 
 QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
-    , qmlObjects(*typeCompiler->qmlObjects())
+    , enginePrivate(typeCompiler->enginePrivate())
+    , pool(typeCompiler->memoryPool())
+    , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
     , _componentIndex(-1)
     , _objectIndexToIdInScope(0)
-    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , resolvedTypes(typeCompiler->resolvedTypes())
     , propertyCaches(typeCompiler->propertyCaches())
     , vmeMetaObjectData(typeCompiler->vmeMetaObjects())
     , objectIndexToIdForRoot(typeCompiler->objectIndexToIdForRoot())
@@ -1482,26 +1484,88 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
 {
 }
 
+void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex)
+{
+    QQmlPropertyCache *propertyCache = propertyCaches.value(objectIndex);
+    Q_ASSERT(propertyCache);
+
+    PropertyResolver propertyResolver(propertyCache);
+
+    for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+        if (binding->type != QV4::CompiledData::Binding::Type_Object)
+            continue;
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            continue;
+
+        const QtQml::QmlObject *targetObject = qmlObjects->at(binding->value.objectIndex);
+        QQmlType *targetType = resolvedTypes->value(targetObject->inheritedTypeNameIndex).type;
+        if (targetType && targetType->metaObject() == &QQmlComponent::staticMetaObject)
+            continue;
+
+        QString propertyName = stringAt(binding->propertyNameIndex);
+        bool notInRevision = false;
+        QQmlPropertyData *pd = propertyResolver.property(propertyName, &notInRevision);
+        if (!pd || !pd->isQObject())
+            continue;
+
+        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType);
+        const QMetaObject *mo = pc->firstCppMetaObject();
+        while (mo) {
+            if (mo == &QQmlComponent::staticMetaObject)
+                break;
+            mo = mo->superClass();
+        }
+
+        if (!mo)
+            continue;
+
+        static QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+        Q_ASSERT(componentType);
+
+        QtQml::QmlObject *syntheticComponent = pool->New<QtQml::QmlObject>();
+        syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
+
+        if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
+            QQmlCompiledData::TypeReference typeRef;
+            typeRef.type = componentType;
+            typeRef.majorVersion = componentType->majorVersion();
+            typeRef.minorVersion = componentType->minorVersion();
+            resolvedTypes->insert(syntheticComponent->inheritedTypeNameIndex, typeRef);
+        }
+
+        qmlObjects->append(syntheticComponent);
+        const int componentIndex = qmlObjects->count() - 1;
+
+        QtQml::Binding *syntheticBinding = pool->New<QtQml::Binding>();
+        *syntheticBinding = *binding;
+        syntheticBinding->type = QV4::CompiledData::Binding::Type_Object;
+        syntheticComponent->bindings->append(syntheticBinding);
+
+        binding->value.objectIndex = componentIndex;
+
+        componentRoots.append(componentIndex);
+        componentBoundaries.append(syntheticBinding->value.objectIndex);
+    }
+}
+
 bool QQmlComponentAndAliasResolver::resolve()
 {
-    QVector<int> componentRoots;
-
-    // Find objects that are Components. This is missing an extra pass
-    // that finds implicitly defined components, i.e.
-    //    someProperty: Item { ... }
-    // when someProperty _is_ a QQmlComponent. In that case the Item {}
-    // should be implicitly surrounded by Component {}
-
-    for (int i = 0; i < qmlObjects.count(); ++i) {
-        const QtQml::QmlObject *obj = qmlObjects.at(i);
+    // Detect real Component {} objects as well as implicitly defined components, such as
+    //     someItemDelegate: Item {}
+    // In the implicit case Item is surrounded by a synthetic Component {} because the property
+    // on the left hand side is of QQmlComponent type.
+    for (int i = 0; i < qmlObjects->count(); ++i) {
+        const QtQml::QmlObject *obj = qmlObjects->at(i);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
 
-        QQmlCompiledData::TypeReference tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        QQmlCompiledData::TypeReference tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
         if (!tref.type)
             continue;
-        if (tref.type->metaObject() != &QQmlComponent::staticMetaObject)
+        if (tref.type->metaObject() != &QQmlComponent::staticMetaObject) {
+            findAndRegisterImplicitComponents(obj, i);
             continue;
+        }
 
         componentRoots.append(i);
 
@@ -1525,7 +1589,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     std::sort(componentBoundaries.begin(), componentBoundaries.end());
 
     for (int i = 0; i < componentRoots.count(); ++i) {
-        const QtQml::QmlObject *component  = qmlObjects.at(componentRoots.at(i));
+        const QtQml::QmlObject *component  = qmlObjects->at(componentRoots.at(i));
         const QtQml::Binding *rootBinding = component->bindings->first;
 
         _componentIndex = i;
@@ -1557,7 +1621,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
 bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 {
-    const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
+    const QtQml::QmlObject *obj = qmlObjects->at(objectIndex);
 
     QString id = stringAt(obj->idIndex);
     if (!id.isEmpty()) {
@@ -1596,7 +1660,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 bool QQmlComponentAndAliasResolver::resolveAliases()
 {
     foreach (int objectIndex, _objectsWithAliases) {
-        const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
+        const QtQml::QmlObject *obj = qmlObjects->at(objectIndex);
 
         QQmlPropertyCache *propertyCache = propertyCaches.value(objectIndex);
         Q_ASSERT(propertyCache);
@@ -1642,8 +1706,8 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             quint32 propertyFlags = QQmlPropertyData::IsAlias;
 
             if (property.isEmpty()) {
-                const QtQml::QmlObject *targetObject = qmlObjects.at(targetObjectIndex);
-                QQmlCompiledData::TypeReference typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex);
+                const QtQml::QmlObject *targetObject = qmlObjects->at(targetObjectIndex);
+                QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
 
                 if (typeRef.type)
                     type = typeRef.type->typeId();

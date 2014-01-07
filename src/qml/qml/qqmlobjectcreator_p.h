@@ -76,16 +76,20 @@ public:
     bool resolve();
 
 protected:
+    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex);
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
-    bool isComponentType(int typeNameIndex) const
-    { return resolvedTypes.value(typeNameIndex).type == 0; }
+    QQmlEnginePrivate *enginePrivate;
+    QQmlJS::MemoryPool *pool;
 
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    QList<QtQml::QmlObject*> *qmlObjects;
     const int indexOfRootObject;
 
-    // indices of objects that are of type QQmlComponent
+    // indices of the objects that are actually Component {}
+    QVector<int> componentRoots;
+    // indices of objects that are the beginning of a new component
+    // scope. This is sorted and used for binary search.
     QVector<int> componentBoundaries;
 
     int _componentIndex;
@@ -93,7 +97,7 @@ protected:
     QHash<int, int> *_objectIndexToIdInScope;
     QList<int> _objectsWithAliases;
 
-    const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
+    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
     const QList<QQmlPropertyCache *> propertyCaches;
     QList<QByteArray> *vmeMetaObjectData;
     QHash<int, int> *objectIndexToIdForRoot;

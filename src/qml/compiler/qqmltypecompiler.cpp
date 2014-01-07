@@ -224,6 +224,11 @@ QString QQmlTypeCompiler::stringAt(int idx) const
     return parsedQML->stringAt(idx);
 }
 
+int QQmlTypeCompiler::registerString(const QString &str)
+{
+    return parsedQML->jsGenerator.registerString(str);
+}
+
 const QV4::CompiledData::QmlUnit *QQmlTypeCompiler::qmlUnit() const
 {
     return compiledData->qmlUnit;
@@ -272,6 +277,11 @@ QHash<int, QHash<int, int> > *QQmlTypeCompiler::objectIndexToIdPerComponent()
 QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
 {
     return &compiledData->customParserData;
+}
+
+MemoryPool *QQmlTypeCompiler::memoryPool()
+{
+    return parsedQML->jsParserEngine.pool();
 }
 
 QT_END_NAMESPACE

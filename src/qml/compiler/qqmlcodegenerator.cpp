@@ -64,6 +64,21 @@ using namespace QtQml;
         return false; \
     }
 
+void QmlObject::init(MemoryPool *pool, int typeNameIndex, int id, const AST::SourceLocation &loc)
+{
+    inheritedTypeNameIndex = typeNameIndex;
+
+    location.line = loc.startLine;
+    location.column = loc.startColumn;
+
+    idIndex = id;
+    indexOfDefaultProperty = -1;
+    properties = pool->New<PoolList<QmlProperty> >();
+    qmlSignals = pool->New<PoolList<Signal> >();
+    bindings = pool->New<PoolList<Binding> >();
+    functions = pool->New<PoolList<Function> >();
+}
+
 void QmlObject::dump(DebugStream &out)
 {
     out << inheritedTypeNameIndex << " {" << endl;
@@ -306,20 +321,10 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     const int objectIndex = _objects.size() - 1;
     qSwap(_object, obj);
 
-    _object->inheritedTypeNameIndex = registerString(asString(qualifiedTypeNameId));
-
     AST::SourceLocation loc;
     if (qualifiedTypeNameId)
         loc = qualifiedTypeNameId->firstSourceLocation();
-    _object->location.line = loc.startLine;
-    _object->location.column = loc.startColumn;
-
-    _object->idIndex = emptyStringIndex;
-    _object->indexOfDefaultProperty = -1;
-    _object->properties = New<PoolList<QmlProperty> >();
-    _object->qmlSignals = New<PoolList<Signal> >();
-    _object->bindings = New<PoolList<Binding> >();
-    _object->functions = New<PoolList<Function> >();
+    _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, loc);
 
     QSet<QString> propertyNames;
     qSwap(_propertyNames, propertyNames);

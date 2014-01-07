@@ -108,6 +108,8 @@ public:
         _ptr = _end = 0;
     }
 
+    template <typename _Tp> _Tp *New() { return new (this->allocate(sizeof(_Tp))) _Tp(); }
+
 private:
     void *allocate_helper(size_t size)
     {
