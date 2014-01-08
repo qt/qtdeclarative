@@ -516,6 +516,8 @@ protected:
 
 }
 
+Q_DECLARE_TYPEINFO(QV4::CompiledData::JSClassMember, Q_PRIMITIVE_TYPE);
+
 QT_END_NAMESPACE
 
 #endif

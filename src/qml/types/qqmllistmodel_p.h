@@ -188,7 +188,11 @@ private:
         ListModel *model;
         int elementIndex;
     };
+
+    friend class QTypeInfo<QQmlListModelParser::ListInstruction>;
 };
+
+Q_DECLARE_TYPEINFO(QQmlListModelParser::ListInstruction, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
