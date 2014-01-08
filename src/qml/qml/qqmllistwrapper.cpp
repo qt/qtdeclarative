@@ -150,21 +150,20 @@ void QmlListWrapper::destroy(Managed *that)
     w->~QmlListWrapper();
 }
 
-Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
+void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name = (String *)0;
     *index = UINT_MAX;
     QmlListWrapper *w = m->as<QmlListWrapper>();
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
     if (it->arrayIndex < count) {
-        if (attrs)
-            *attrs = QV4::Attr_Data;
         *index = it->arrayIndex;
         ++it->arrayIndex;
-        it->tmpDynamicProperty.value = QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index));
-        return &it->tmpDynamicProperty;
+        *attrs = QV4::Attr_Data;
+        p->value = QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index));
+        return;
     }
-    return QV4::Object::advanceIterator(m, it, name, index, attrs);
+    return QV4::Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
 QT_END_NAMESPACE

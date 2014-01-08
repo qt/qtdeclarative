@@ -700,36 +700,33 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
         return QV4::Object::query(m, name);
 }
 
-Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
+void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     name = (String *)0;
     *index = UINT_MAX;
 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
-    if (!that->m_object)
-        return QV4::Object::advanceIterator(m, it, name, index, attributes);
-
-    const QMetaObject *mo = that->m_object->metaObject();
-    const int propertyCount = mo->propertyCount();
-    if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-        name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
-        ++it->arrayIndex;
-        if (attributes)
+    if (that->m_object) {
+        const QMetaObject *mo = that->m_object->metaObject();
+        const int propertyCount = mo->propertyCount();
+        if (it->arrayIndex < static_cast<uint>(propertyCount)) {
+            name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
+            ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(name);
-        return &it->tmpDynamicProperty;
-    }
-    const int methodCount = mo->methodCount();
-    if (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
-        name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
-        ++it->arrayIndex;
-        if (attributes)
+            p->value = that->get(name);
+            return;
+        }
+        const int methodCount = mo->methodCount();
+        if (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
+            name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
+            ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(name);
-        return &it->tmpDynamicProperty;
+            p->value = that->get(name);
+            return;
+        }
     }
-    return QV4::Object::advanceIterator(m, it, name, index, attributes);
+    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
 }
 
 namespace QV4 {

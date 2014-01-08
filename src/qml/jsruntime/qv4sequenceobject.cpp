@@ -286,26 +286,27 @@ public:
         return (signedIdx < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
-    Property *containerAdvanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
+    void containerAdvanceIterator(ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs)
     {
         name = (String *)0;
         *index = UINT_MAX;
 
         if (m_isReference) {
-            if (!m_object)
-                return QV4::Object::advanceIterator(this, it, name, index, attrs);
+            if (!m_object) {
+                QV4::Object::advanceIterator(this, it, name, index, p, attrs);
+                return;
+            }
             loadReference();
         }
 
         if (it->arrayIndex < static_cast<uint>(m_container.count())) {
-            if (attrs)
-                *attrs = QV4::Attr_Data;
             *index = it->arrayIndex;
             ++it->arrayIndex;
-            it->tmpDynamicProperty.value = convertElementToValue(engine(), m_container.at(*index));
-            return &it->tmpDynamicProperty;
+            *attrs = QV4::Attr_Data;
+            p->value = convertElementToValue(engine(), m_container.at(*index));
+            return;
         }
-        return QV4::Object::advanceIterator(this, it, name, index, attrs);
+        QV4::Object::advanceIterator(this, it, name, index, p, attrs);
     }
 
     bool containerDeleteIndexedProperty(uint index)
@@ -509,8 +510,8 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index); }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static Property *advanceIterator(Managed *that, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, attrs); }
+    static void advanceIterator(Managed *that, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, p, attrs); }
 
     static void destroy(Managed *that)
     {

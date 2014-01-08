@@ -74,8 +74,6 @@ struct Q_QML_EXPORT ObjectIterator
     uint memberIndex;
     uint flags;
 
-    Property tmpDynamicProperty;
-
     ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const ObjectRef o, uint flags);
     ObjectIterator(Scope &scope, const ObjectRef o, uint flags);
     void next(StringRef name, uint *index, Property *pd, PropertyAttributes *attributes = 0);

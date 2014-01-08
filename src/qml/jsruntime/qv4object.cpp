@@ -547,7 +547,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         l->setter = Lookup::setterInsert2;
 }
 
-Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
+void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
     name = (String *)0;
@@ -568,9 +568,9 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                     it->arrayIndex = k + 1;
                     *index = k;
-                    if (attrs)
-                        *attrs = a;
-                    return p;
+                    *attrs = a;
+                    *pd = *p;
+                    return;
                 }
             }
             it->arrayNode = 0;
@@ -584,9 +584,9 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name
             if (!p->value.isEmpty()
                 && (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable())) {
                 *index = it->arrayIndex - 1;
-                if (attrs)
-                    *attrs = a;
-                return p;
+                *attrs = a;
+                *pd = *p;
+                return;
             }
         }
     }
@@ -600,13 +600,13 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
             name = n;
-            if (attrs)
-                *attrs = a;
-            return p;
+            *attrs = a;
+            *pd = *p;
+            return;
         }
     }
 
-    return 0;
+    *attrs = PropertyAttributes();
 }
 
 // Section 8.12.3

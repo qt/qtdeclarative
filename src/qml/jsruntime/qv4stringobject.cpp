@@ -135,7 +135,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     return true;
 }
 
-Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
+void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name = (String *)0;
     StringObject *s = static_cast<StringObject *>(m);
@@ -145,11 +145,11 @@ Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRe
             *index = it->arrayIndex;
             ++it->arrayIndex;
             PropertyAttributes a;
-            Property *p = s->__getOwnProperty__(*index, &a);
+            Property *pd = s->__getOwnProperty__(*index, &a);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-                if (attrs)
-                    *attrs = a;
-                return p;
+                *attrs = a;
+                *p = *pd;
+                return;
             }
         }
         if (s->arrayData) {
@@ -160,7 +160,7 @@ Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRe
         }
     }
 
-    return Object::advanceIterator(m, it, name, index, attrs);
+    return Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
 void StringObject::markObjects(Managed *that, ExecutionEngine *e)

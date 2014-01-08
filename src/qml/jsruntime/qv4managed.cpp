@@ -255,7 +255,7 @@ bool Managed::deleteProperty(const StringRef name)
     return internalClass->vtable->deleteProperty(this, name);
 }
 
-Property *Managed::advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
+void Managed::advanceIterator(ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
 {
-    return internalClass->vtable->advanceIterator(this, it, name, index, attributes);
+    internalClass->vtable->advanceIterator(this, it, name, index, p, attributes);
 }

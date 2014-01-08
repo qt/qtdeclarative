@@ -265,7 +265,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const ValueRef v);
-    static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
+    static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
 private:

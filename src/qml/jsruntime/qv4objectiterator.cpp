@@ -56,7 +56,6 @@ ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const
 {
     object = o;
     current = o;
-    tmpDynamicProperty.value = Primitive::undefinedValue();
 
     if (object && object->asArgumentsObject()) {
         Scope scope(object->engine());
@@ -74,7 +73,6 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
 {
     object = o;
     current = o;
-    tmpDynamicProperty.value = Primitive::undefinedValue();
 
     if (object && object->asArgumentsObject()) {
         Scope scope(object->engine());
@@ -92,25 +90,29 @@ void ObjectIterator::next(StringRef name, uint *index, Property *pd, PropertyAtt
         return;
     }
 
-    Property *p = 0;
     while (1) {
         if (!current)
             break;
 
-        while ((p = current->advanceIterator(this, name, index, attrs))) {
+        while (1) {
+            current->advanceIterator(this, name, index, pd, attrs);
+            if (attrs->isEmpty())
+                break;
             // check the property is not already defined earlier in the proto chain
             if (current != object) {
-                Property *pp;
-                if (name) {
-                    pp = object->__getPropertyDescriptor__(name);
-                } else {
-                    assert (*index != UINT_MAX);
-                    pp = object->__getPropertyDescriptor__(*index);
+                Object *o = object;
+                bool shadowed = false;
+                while (o != current) {
+                    if ((name && o->hasOwnProperty(name)) ||
+                        (*index != UINT_MAX && o->hasOwnProperty(*index))) {
+                        shadowed = true;
+                        break;
+                    }
+                    o = o->prototype();
                 }
-                if (pp != p)
+                if (shadowed)
                     continue;
             }
-            *pd = *p;
             return;
         }
 
