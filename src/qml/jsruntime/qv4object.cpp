@@ -312,7 +312,7 @@ Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttrib
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __getPropertyDescriptor__(idx);
+        return __getPropertyDescriptor__(idx, attrs);
 
 
     const Object *o = this;
