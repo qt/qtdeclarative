@@ -189,7 +189,7 @@ void QSGDistanceFieldGlyphCache::update()
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing) {
-        printf("   - glyphs: count=%d, render=%d, store=%d, total=%d\n",
+        qDebug("   - glyphs: count=%d, render=%d, store=%d, total=%d",
                count,
                int(renderTime/1000000),
                (int) qsg_render_timer.elapsed() - int(renderTime/1000000),

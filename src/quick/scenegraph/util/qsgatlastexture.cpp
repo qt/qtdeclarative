@@ -375,7 +375,7 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
-            printf("   - AtlasTexture(%dx%d), uploaded in %d ms\n",
+            qDebug("   - AtlasTexture(%dx%d), uploaded in %d ms",
                    m_pending_uploads.at(i)->image().width(),
                    m_pending_uploads.at(i)->image().height(),
                    (int) (qsg_renderer_timer.elapsed()));

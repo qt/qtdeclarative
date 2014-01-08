@@ -259,6 +259,152 @@ inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
     }
 }
 
+class BasicBlockSet
+{
+    typedef std::vector<int> Numbers;
+    typedef std::vector<bool> Flags;
+
+    Numbers *blockNumbers;
+    Flags *blockFlags;
+    QVector<BasicBlock *> allBlocks;
+    enum { MaxVectorCapacity = 8 };
+
+    // Q_DISABLE_COPY(BasicBlockSet); disabled because MSVC wants assignment operator for std::vector
+
+public:
+    class const_iterator
+    {
+        const BasicBlockSet &set;
+        // ### These two members could go into a union, but clang won't compile (https://codereview.qt-project.org/#change,74259)
+        Numbers::const_iterator numberIt;
+        size_t flagIt;
+
+        friend class BasicBlockSet;
+        const_iterator(const BasicBlockSet &set, bool end)
+            : set(set)
+        {
+            if (end) {
+                if (set.blockNumbers)
+                    numberIt = set.blockNumbers->end();
+                else
+                    flagIt = set.blockFlags->size();
+            } else {
+                if (set.blockNumbers) {
+                    numberIt = set.blockNumbers->begin();
+                } else {
+                    flagIt = 0;
+                    size_t eIt = set.blockFlags->size();
+                    while (flagIt != eIt) {
+                        if (set.blockFlags->operator[](flagIt))
+                            break;
+                        else
+                            ++flagIt;
+                    }
+                }
+            }
+        }
+
+    public:
+        BasicBlock *operator*() const
+        {
+            if (set.blockNumbers)
+                return set.allBlocks[*numberIt];
+            else
+                return set.allBlocks[flagIt];
+        }
+
+        bool operator==(const const_iterator &other) const
+        {
+            if (&set != &other.set)
+                return false;
+            if (set.blockNumbers)
+                return numberIt == other.numberIt;
+            else
+                return flagIt == other.flagIt;
+        }
+
+        bool operator!=(const const_iterator &other) const
+        { return !(*this == other); }
+
+        const_iterator &operator++()
+        {
+            if (set.blockNumbers) {
+                ++numberIt;
+            } else {
+                size_t eIt = set.blockFlags->size();
+                while (flagIt != eIt) {
+                     ++flagIt;
+                    if (flagIt == eIt || set.blockFlags->operator[](flagIt))
+                        break;
+                }
+            }
+
+            return *this;
+        }
+    };
+
+    friend class const_iterator;
+
+public:
+    BasicBlockSet(): blockNumbers(0), blockFlags(0) {}
+#ifdef Q_COMPILER_RVALUE_REFS
+    BasicBlockSet(BasicBlockSet &&other): blockNumbers(0), blockFlags(0)
+    {
+        std::swap(blockNumbers, other.blockNumbers);
+        std::swap(blockFlags, other.blockFlags);
+        std::swap(allBlocks, other.allBlocks);
+    }
+
+#endif // Q_COMPILER_RVALUE_REFS
+    ~BasicBlockSet() { delete blockNumbers; delete blockFlags; }
+
+    void init(const QVector<BasicBlock *> &nodes)
+    {
+        Q_ASSERT(allBlocks.isEmpty());
+        allBlocks = nodes;
+        blockNumbers = new Numbers;
+        blockNumbers->reserve(MaxVectorCapacity);
+    }
+
+    void insert(BasicBlock *bb)
+    {
+        if (blockFlags) {
+            (*blockFlags)[bb->index] = true;
+            return;
+        }
+
+        for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end();
+             i != ei; ++i)
+            if (*i == bb->index)
+                return;
+
+        if (blockNumbers->size() == MaxVectorCapacity) {
+            blockFlags = new Flags(allBlocks.size(), false);
+            for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end();
+                 i != ei; ++i)
+                blockFlags->operator[](*i) = true;
+            delete blockNumbers;
+            blockNumbers = 0;
+            blockFlags->operator[](bb->index) = true;
+        } else {
+            blockNumbers->push_back(bb->index);
+        }
+    }
+
+    const_iterator begin() const { return const_iterator(*this, false); }
+    const_iterator end() const { return const_iterator(*this, true); }
+
+    QList<BasicBlock *> values() const
+    {
+        QList<BasicBlock *> result;
+
+        for (const_iterator it = begin(), eit = end(); it != eit; ++it)
+            result.append(*it);
+
+        return result;
+    }
+};
+
 class DominatorTree {
     typedef int BasicBlockIndex;
     enum { InvalidBasicBlockIndex = -1 };
@@ -273,7 +419,7 @@ class DominatorTree {
     std::vector<BasicBlockIndex> semi; // BasicBlock index -> semi dominator BasicBlock index
     std::vector<BasicBlockIndex> idom; // BasicBlock index -> immediate dominator BasicBlock index
     std::vector<BasicBlockIndex> samedom; // BasicBlock index -> same dominator BasicBlock index
-    std::vector<QSet<BasicBlock *> > DF; // BasicBlock index -> dominator frontier
+    std::vector<BasicBlockSet> DF; // BasicBlock index -> dominator frontier
 
     struct DFSTodo {
         BasicBlockIndex node, parent;
@@ -485,18 +631,20 @@ class DominatorTree {
             }
 
             if (np.todo.empty()) {
-                QSet<BasicBlock *> S;
+                BasicBlockSet &S = DF[node];
+                S.init(nodes);
                 foreach (BasicBlock *y, nodes[node]->out)
                     if (idom[y->index] != node)
                         S.insert(y);
                 foreach (BasicBlockIndex child, np.children) {
-                    foreach (BasicBlock *w, DF[child]) {
+                    const BasicBlockSet &ws = DF[child];
+                    for (BasicBlockSet::const_iterator it = ws.begin(), eit = ws.end(); it != eit; ++it) {
+                        BasicBlock *w = *it;
                         const BasicBlockIndex wIndex = w->index;
                         if (node == wIndex || !dominates(node, w->index))
                             S.insert(w);
                     }
                 }
-                DF[node] = S;
                 DF_done[node] = true;
                 worklist.pop_back();
             }
@@ -517,7 +665,9 @@ class DominatorTree {
 #endif // SHOW_SSA
 #if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
         foreach (BasicBlock *n, nodes) {
-            foreach (BasicBlock *fBlock, DF[n->index]) {
+            const BasicBlockSet &fBlocks = DF[n->index];
+            for (BasicBlockSet::const_iterator it = fBlocks.begin(), eit = fBlocks.end(); it != eit; ++it) {
+                BasicBlock *fBlock = *it;
                 Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
                 bool hasDominatedSucc = false;
                 foreach (BasicBlock *succ, fBlock->in) {
@@ -545,7 +695,11 @@ public:
         computeDF();
     }
 
-    QSet<BasicBlock *> operator[](BasicBlock *n) const {
+//    QSet<BasicBlock *> operator[](BasicBlock *n) const {
+//        return DF[n->index];
+//    }
+
+    const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
         return DF[n->index];
     }
 
@@ -1085,7 +1239,10 @@ void convertToSSA(Function *function, const DominatorTree &df)
         while (!W.isEmpty()) {
             BasicBlock *n = W.first();
             W.removeFirst();
-            foreach (BasicBlock *y, df[n]) {
+            const BasicBlockSet &dominatorFrontierForN = df.dominatorFrontier(n);
+            for (BasicBlockSet::const_iterator it = dominatorFrontierForN.begin(), eit = dominatorFrontierForN.end();
+                 it != eit; ++it) {
+                BasicBlock *y = *it;
                 if (!A_phi[y].contains(a)) {
                     insertPhiNode(a, y, function);
                     A_phi[y].insert(a);

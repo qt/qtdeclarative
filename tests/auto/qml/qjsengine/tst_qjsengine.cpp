@@ -146,6 +146,8 @@ private slots:
     void threadedEngine();
 
     void functionDeclarationsInConditionals();
+
+    void arrayPop_QTBUG_35979();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -2690,6 +2692,17 @@ void tst_QJSEngine::functionDeclarationsInConditionals()
                                    "blah();");
     QVERIFY(result.isBool());
     QCOMPARE(result.toBool(), true);
+}
+
+void tst_QJSEngine::arrayPop_QTBUG_35979()
+{
+    QJSEngine eng;
+    QJSValue result = eng.evaluate(""
+            "var x = [1, 2]\n"
+            "x.pop()\n"
+            "x[1] = 3\n"
+            "x.toString()\n");
+    QCOMPARE(result.toString(), QString("1,3"));
 }
 
 QTEST_MAIN(tst_QJSEngine)
