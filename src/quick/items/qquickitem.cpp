@@ -851,7 +851,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
     \list 1
     \li Items specified in \c forwardTo
     \li specific key handlers, e.g. onReturnPressed
-    \li onKeyPress, onKeyRelease handlers
+    \li onPressed, onReleased handlers
     \li Item specific key handling, e.g. TextInput key handling
     \li parent item
     \endlist
@@ -862,7 +862,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
     \li Item specific key handling, e.g. TextInput key handling
     \li Items specified in \c forwardTo
     \li specific key handlers, e.g. onReturnPressed
-    \li onKeyPress, onKeyRelease handlers
+    \li onPressed, onReleased handlers
     \li parent item
     \endlist
 
