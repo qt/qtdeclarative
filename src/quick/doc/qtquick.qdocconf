@@ -38,7 +38,8 @@ depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtquickla
 
 headerdirs  += ..
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               ../../imports/testlib
 
 exampledirs +=  ../../../examples/quick \
                 snippets

@@ -310,6 +310,14 @@ set of Particle System types for Qt Quick 2
 \li \l {TextMetrics} - Provides text and font measurement data for use in a Canvas
 \endlist
 
+\target qttest-types
+\section2 QtTest Types
+
+\list
+\li \l {QtTest::TestCase}{TestCase} - Represents a unit test case
+\li \l {QtTest::SignalSpy}{SignalSpy} - Enables introspection of signal emission
+\endlist
+
 */
 
 /*!
@@ -1070,8 +1078,9 @@ console.log(c + " " + d); // false true
 
 /*!
 \qmlmodule QtTest 1.0
-\title Qt Quick Test
+\title Qt Quick Test QML Types
 \brief This module provides QML types to unit test your QML application
+\ingroup qmlmodules
 
 You can import this module using the following statement:
 \code
