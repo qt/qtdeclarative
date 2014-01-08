@@ -454,9 +454,9 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
         return o->arrayData->attributes(index);
 
     if (o->isStringObject()) {
-        Property *p = static_cast<const StringObject *>(o)->getIndex(index);
-        if (p)
-            return Attr_Data;
+        String *s = static_cast<const StringObject *>(o)->value.asString();
+        if (index < (uint)s->length())
+            return (Attr_NotWritable|Attr_NotConfigurable);
     }
     return Attr_Invalid;
 }
