@@ -82,12 +82,15 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     }
 }
 
-Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *attrs)
+void ObjectIterator::next(StringRef name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     name = (String *)0;
     *index = UINT_MAX;
-    if (!object)
-        return 0;
+
+    if (!object) {
+        *attrs = PropertyAttributes();
+        return;
+    }
 
     Property *p = 0;
     while (1) {
@@ -107,7 +110,8 @@ Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *
                 if (pp != p)
                     continue;
             }
-            return p;
+            *pd = *p;
+            return;
         }
 
         if (flags & WithProtoChain)
@@ -118,7 +122,7 @@ Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *
         arrayIndex = 0;
         memberIndex = 0;
     }
-    return 0;
+    *attrs = PropertyAttributes();
 }
 
 ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
@@ -127,14 +131,15 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
         return Encode::null();
 
     PropertyAttributes attrs;
+    Property p;
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    Property *p = next(name, &index, &attrs);
-    if (!p)
+    next(name, &index, &p, &attrs);
+    if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->getValue(p, attrs);
+    value = object->getValue(&p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -148,14 +153,15 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
         return Encode::null();
 
     PropertyAttributes attrs;
+    Property p;
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    Property *p = next(name, &index, &attrs);
-    if (!p)
+    next(name, &index, &p, &attrs);
+    if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->getValue(p, attrs);
+    value = object->getValue(&p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -169,11 +175,12 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
         return Encode::null();
 
     PropertyAttributes attrs;
+    Property p;
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    Property *p = next(name, &index, &attrs);
-    if (!p)
+    next(name, &index, &p, &attrs);
+    if (attrs.isEmpty())
         return Encode::null();
 
     if (!!name)

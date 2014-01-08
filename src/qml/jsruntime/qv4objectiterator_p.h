@@ -78,7 +78,7 @@ struct Q_QML_EXPORT ObjectIterator
 
     ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const ObjectRef o, uint flags);
     ObjectIterator(Scope &scope, const ObjectRef o, uint flags);
-    Property *next(StringRef name, uint *index, PropertyAttributes *attributes = 0);
+    void next(StringRef name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(ValueRef value);
     ReturnedValue nextPropertyNameAsString(ValueRef value);
     ReturnedValue nextPropertyNameAsString();

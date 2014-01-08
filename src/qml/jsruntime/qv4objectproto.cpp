@@ -239,12 +239,13 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
     while (1) {
         uint index;
         PropertyAttributes attrs;
-        Property *pd = it.next(name, &index, &attrs);
-        if (!pd)
+        Property pd;
+        it.next(name, &index, &pd, &attrs);
+        if (attrs.isEmpty())
             break;
         Property n;
         PropertyAttributes nattrs;
-        val = o->getValue(pd, attrs);
+        val = o->getValue(&pd, attrs);
         toPropertyDescriptor(ctx, val, &n, &nattrs);
         if (scope.engine->hasException)
             return Encode::undefined();
