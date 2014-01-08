@@ -1234,7 +1234,11 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             d->replayDelayedPress();
 
             // Now send the release
-            window()->sendEvent(window()->mouseGrabberItem(), event);
+            if (window()->mouseGrabberItem()) {
+                QPointF localPos = window()->mouseGrabberItem()->mapFromScene(event->windowPos());
+                QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
+                window()->sendEvent(window()->mouseGrabberItem(), mouseEvent.data());
+            }
 
             // And the event has been consumed
             d->stealMouse = false;
