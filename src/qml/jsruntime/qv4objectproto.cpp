@@ -596,13 +596,13 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     desc->setSetter(0);
     ScopedValue tmp(scope);
 
-    if (o->__hasProperty__(ctx->engine->id_enumerable))
+    if (o->hasProperty(ctx->engine->id_enumerable))
         attrs->setEnumerable((tmp = o->get(ctx->engine->id_enumerable))->toBoolean());
 
-    if (o->__hasProperty__(ctx->engine->id_configurable))
+    if (o->hasProperty(ctx->engine->id_configurable))
         attrs->setConfigurable((tmp = o->get(ctx->engine->id_configurable))->toBoolean());
 
-    if (o->__hasProperty__(ctx->engine->id_get)) {
+    if (o->hasProperty(ctx->engine->id_get)) {
         ScopedValue get(scope, o->get(ctx->engine->id_get));
         FunctionObject *f = get->asFunctionObject();
         if (f) {
@@ -616,7 +616,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->__hasProperty__(ctx->engine->id_set)) {
+    if (o->hasProperty(ctx->engine->id_set)) {
         ScopedValue set(scope, o->get(ctx->engine->id_set));
         FunctionObject *f = set->asFunctionObject();
         if (f) {
@@ -630,7 +630,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->__hasProperty__(ctx->engine->id_writable)) {
+    if (o->hasProperty(ctx->engine->id_writable)) {
         if (attrs->isAccessor()) {
             ctx->throwTypeError();
             return;
@@ -640,7 +640,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
         desc->value = Primitive::undefinedValue();
     }
 
-    if (o->__hasProperty__(ctx->engine->id_value)) {
+    if (o->hasProperty(ctx->engine->id_value)) {
         if (attrs->isAccessor()) {
             ctx->throwTypeError();
             return;

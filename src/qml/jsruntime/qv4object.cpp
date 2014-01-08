@@ -356,30 +356,30 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     return 0;
 }
 
-bool Object::__hasProperty__(const StringRef name) const
+bool Object::hasProperty(const StringRef name) const
 {
-    if (__getPropertyDescriptor__(name))
-        return true;
+    uint idx = name->asArrayIndex();
+    if (idx != UINT_MAX)
+        return hasProperty(idx);
 
     const Object *o = this;
     while (o) {
-        if (!o->query(name).isEmpty())
+        if (o->hasOwnProperty(name))
             return true;
+
         o = o->prototype();
     }
 
     return false;
 }
 
-bool Object::__hasProperty__(uint index) const
+bool Object::hasProperty(uint index) const
 {
-    if (__getPropertyDescriptor__(index))
-        return true;
-
     const Object *o = this;
     while (o) {
-        if (!o->queryIndexed(index).isEmpty())
-            return true;
+        if (o->hasOwnProperty(index))
+                return true;
+
         o = o->prototype();
     }
 
@@ -388,12 +388,29 @@ bool Object::__hasProperty__(uint index) const
 
 bool Object::hasOwnProperty(const StringRef name) const
 {
-    return const_cast<Object *>(this)->__getOwnProperty__(name) != 0;
+    uint idx = name->asArrayIndex();
+    if (idx != UINT_MAX)
+        return hasOwnProperty(idx);
+
+    if (internalClass->find(name) < UINT_MAX)
+        return true;
+    if (!query(name).isEmpty())
+        return true;
+    return false;
 }
 
 bool Object::hasOwnProperty(uint index) const
 {
-    return const_cast<Object *>(this)->__getOwnProperty__(index) != 0;
+    if (!arrayData->isEmpty(index))
+        return true;
+    if (isStringObject()) {
+        String *s = static_cast<const StringObject *>(this)->value.asString();
+        if (index < (uint)s->length())
+            return true;
+    }
+    if (!queryIndexed(index).isEmpty())
+        return true;
+    return false;
 }
 
 ReturnedValue Object::get(Managed *m, const StringRef name, bool *hasProperty)

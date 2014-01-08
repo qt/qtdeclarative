@@ -152,7 +152,7 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
         ctx = ctx->outer;
     }
 
-    if (activation->__hasProperty__(name))
+    if (activation->hasProperty(name))
         return;
     Property desc = Property::fromValue(Primitive::undefinedValue());
     PropertyAttributes attrs(Attr_Data);
@@ -256,7 +256,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
         if (ctx->type == Type_WithContext) {
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
-            if (w->withObject->__hasProperty__(name))
+            if (w->withObject->hasProperty(name))
                 return w->withObject->deleteProperty(name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
@@ -271,11 +271,11 @@ bool ExecutionContext::deleteProperty(const StringRef name)
                     // ### throw in strict mode?
                     return false;
             }
-            if (c->activation && c->activation->__hasProperty__(name))
+            if (c->activation && c->activation->hasProperty(name))
                 return c->activation->deleteProperty(name);
         } else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            if (g->global->__hasProperty__(name))
+            if (g->global->hasProperty(name))
                 return g->global->deleteProperty(name);
         }
     }
@@ -328,7 +328,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
             ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
-            if (w->__hasProperty__(name)) {
+            if (w->hasProperty(name)) {
                 w->put(name, value);
                 return;
             }

@@ -338,7 +338,7 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
     ScopedString s(scope, left->toString(ctx));
     if (scope.hasException())
         return Encode::undefined();
-    bool r = right->objectValue()->__hasProperty__(s);
+    bool r = right->objectValue()->hasProperty(s);
     return Encode(r);
 }
 

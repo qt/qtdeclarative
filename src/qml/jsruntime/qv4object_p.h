@@ -130,8 +130,8 @@ struct Q_QML_EXPORT Object: Managed {
     Property *__getPropertyDescriptor__(const StringRef name, PropertyAttributes *attrs = 0) const;
     Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
 
-    bool __hasProperty__(const StringRef name) const;
-    bool __hasProperty__(uint index) const;
+    bool hasProperty(const StringRef name) const;
+    bool hasProperty(uint index) const;
 
     bool hasOwnProperty(const StringRef name) const;
     bool hasOwnProperty(uint index) const;
