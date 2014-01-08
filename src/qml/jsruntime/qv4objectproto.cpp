@@ -501,13 +501,13 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
         return ctx->throwTypeError();
 
     Scope scope(ctx);
-    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
-
     Scoped<FunctionObject> f(scope, ctx->argument(1));
     if (!f)
         return ctx->throwTypeError();
+
+    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<Object> o(scope, ctx->callData->thisObject);
     if (!o) {
@@ -516,7 +516,9 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
         o = ctx->engine->globalObject;
     }
 
-    Property pd = Property::fromAccessor(f.getPointer(), 0);
+    Property pd;
+    pd.value = f;
+    pd.set = Primitive::emptyValue();
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }
@@ -527,13 +529,13 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
         return ctx->throwTypeError();
 
     Scope scope(ctx);
-    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
-
     Scoped<FunctionObject> f(scope, ctx->argument(1));
     if (!f)
         return ctx->throwTypeError();
+
+    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<Object> o(scope, ctx->callData->thisObject);
     if (!o) {
@@ -542,7 +544,9 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
         o = ctx->engine->globalObject;
     }
 
-    Property pd = Property::fromAccessor(0, f.getPointer());
+    Property pd;
+    pd.value = Primitive::emptyValue();
+    pd.set = f;
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }

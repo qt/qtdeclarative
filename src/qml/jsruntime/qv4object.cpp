@@ -140,12 +140,12 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
         return;
 
     if (attrs.isAccessor()) {
-        if (pd->set) {
-            Scope scope(pd->set->engine());
+        if (FunctionObject *set = pd->setter()) {
+            Scope scope(set->engine());
             ScopedCallData callData(scope, 1);
             callData->args[0] = *value;
             callData->thisObject = this;
-            pd->set->call(callData);
+            set->call(callData);
             return;
         }
         goto reject;
