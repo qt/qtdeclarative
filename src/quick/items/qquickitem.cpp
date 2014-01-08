@@ -2067,8 +2067,12 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
         if (role == QAccessible::EditableText
                 || role == QAccessible::Table
                 || role == QAccessible::List
-                || role == QAccessible::SpinBox)
+                || role == QAccessible::SpinBox) {
             result = true;
+        } else if (role == QAccessible::ComboBox) {
+            QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item);
+            return iface->state().editable;
+        }
     }
 #endif
 
