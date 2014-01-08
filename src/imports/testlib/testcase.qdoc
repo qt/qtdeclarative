@@ -205,7 +205,7 @@
     will fail.  Use the \l when and windowShown properties to track
     when the main window has been shown.
 
-    \sa SignalSpy
+    \sa SignalSpy, {Qt Quick Test Reference Documentation}
 */
 
 /*!

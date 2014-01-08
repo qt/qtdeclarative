@@ -75,7 +75,7 @@
     synchronously.  For asynchronous signals, the wait() method can be
     used to block the test until the signal occurs (or a timeout expires).
 
-    \sa TestCase
+    \sa TestCase, {Qt Quick Test Reference Documentation}
 */
 
 /*!

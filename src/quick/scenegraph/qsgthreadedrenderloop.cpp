@@ -1136,7 +1136,8 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w)
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
-        qDebug(" - on GUI: polish=%d, lock=%d, block/sync=%d -- animations=%d",
+        qDebug(" - Gui Thread: window=%p, polish=%d, lock=%d, block/sync=%d -- animations=%d",
+               w->window,
                int(polishTime/1000000),
                int((waitTime - polishTime)/1000000),
                int((syncTime - waitTime)/1000000),
