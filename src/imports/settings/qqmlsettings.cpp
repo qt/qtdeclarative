@@ -273,6 +273,9 @@ QSettings *QQmlSettingsPrivate::instance() const
 void QQmlSettingsPrivate::init()
 {
     if (!initialized) {
+#ifdef SETTINGS_DEBUG
+        qDebug() << "QQmlSettings: stored at" << instance()->fileName();
+#endif
         load();
         initialized = true;
     }
