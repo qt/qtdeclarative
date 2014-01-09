@@ -1664,10 +1664,6 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
             continue;
 
-        if (binding->type != QV4::CompiledData::Binding::Type_Script) {
-            COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
-        }
-
         PropertyResolver resolver(propertyCache);
 
         Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
@@ -1734,6 +1730,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             }
 
             parameters = entry.value();
+        }
+
+        if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+            COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
         }
 
         QQmlJS::Engine &jsEngine = parsedQML->jsParserEngine;
