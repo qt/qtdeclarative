@@ -70,8 +70,7 @@ public:
 private:
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
-                          QObject *scopeObjectForJavaScript, QQmlPropertyData *valueTypeProperty);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty);
 
     void setupBindings();
     bool setPropertyValue(QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
@@ -97,7 +96,9 @@ private:
     QQmlContextData *rootContext;
 
     QObject *_qobject;
-    QObject *_qobjectForBindings;
+    QObject *_scopeObject;
+    QObject *_bindingTarget;
+
     QQmlPropertyData *_valueTypeProperty; // belongs to _qobjectForBindings's property cache
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
