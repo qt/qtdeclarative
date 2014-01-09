@@ -136,7 +136,7 @@ struct Q_QML_EXPORT Object: Managed {
     bool hasOwnProperty(const StringRef name) const;
     bool hasOwnProperty(uint index) const;
 
-    bool __defineOwnProperty__(ExecutionContext *ctx, Property *current, const StringRef member, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const StringRef member, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, const StringRef name, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs);
@@ -209,16 +209,14 @@ public:
     void arrayCreate() {
         if (!arrayData)
             arrayData = new ArrayData;
+#ifdef CHECK_SPARSE_ARRAYS
+        initSparseArray();
+#endif
     }
 
     void initSparseArray();
     SparseArrayNode *sparseBegin() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData)->sparse->begin() : 0; }
     SparseArrayNode *sparseEnd() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData)->sparse->end() : 0; }
-
-    inline Property *arrayInsert(uint index) {
-        arrayCreate();
-        return ArrayData::insert(this, index);
-    }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -344,7 +342,6 @@ inline void Object::setArrayLengthUnchecked(uint l)
 inline void Object::push_back(const ValueRef v)
 {
     arrayCreate();
-    Q_ASSERT(!arrayData->isSparse());
 
     uint idx = getLength();
     arrayReserve(idx + 1);
@@ -355,12 +352,21 @@ inline void Object::push_back(const ValueRef v)
 
 inline void Object::arraySet(uint index, const Property &p, PropertyAttributes attributes)
 {
-    if (attributes.isAccessor())
+    // ### Clean up
+    arrayCreate();
+    if (attributes.isAccessor()) {
         hasAccessorProperty = 1;
-
-    Property *pd = arrayInsert(index);
-    *pd = p;
+        initSparseArray();
+    } else if (index > 0x1000 && index > 2*arrayData->alloc) {
+        initSparseArray();
+    } else {
+        arrayData->vtable->reserve(arrayData, index + 1);
+    }
     arrayData->setAttributes(index, attributes);
+    Property *pd = ArrayData::insert(this, index, attributes.isAccessor());
+    pd->value = p.value;
+    if (attributes.isAccessor())
+        pd->set = p.set;
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }
@@ -368,7 +374,11 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
 
 inline void Object::arraySet(uint index, ValueRef value)
 {
-    Property *pd = arrayInsert(index);
+    arrayCreate();
+    if (index > 0x1000 && index > 2*arrayData->alloc) {
+        initSparseArray();
+    }
+    Property *pd = ArrayData::insert(this, index);
     pd->value = value ? *value : Primitive::undefinedValue();
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);

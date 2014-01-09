@@ -69,6 +69,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         arrayData->setLength(context->callData->argc);
         fullyCreated = true;
     } else {
+        hasAccessorProperty = 1;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
     }
@@ -92,14 +93,13 @@ void ArgumentsObject::fullyCreate()
     uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
     uint argCount = qMin(context->realArgumentCount, context->callData->argc);
     arrayReserve(argCount);
+    initSparseArray();
     arrayData->ensureAttributes();
     context->engine->requireArgumentsAccessors(numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments.append(context->callData->args[i]);
-        arrayData->data[i] = context->engine->argumentsAccessors.at(i);
-        arrayData->setAttributes(i, Attr_Accessor);
+        arraySet(i, context->engine->argumentsAccessors.at(i), Attr_Accessor);
     }
-    arrayData->setLength(numAccessors);
     arrayData->put(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
         arrayData->setAttributes(i, Attr_Data);
@@ -124,6 +124,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         map = *pd;
         mapAttrs = arrayData->attributes(index);
         arrayData->setAttributes(index, Attr_Data);
+        pd = arrayData->getProperty(index);
         pd->value = mappedArguments.at(index);
     }
 
@@ -139,8 +140,9 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         map.setter()->call(callData);
 
         if (attrs.isWritable()) {
-            *pd = map;
             arrayData->setAttributes(index, mapAttrs);
+            pd = arrayData->getProperty(index);
+            *pd = map;
         }
     }
 

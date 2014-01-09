@@ -95,7 +95,7 @@ struct Q_QML_EXPORT ArrayData
     uint alloc;
     uint type;
     PropertyAttributes *attrs;
-    Property *data;
+    SafeValue *data;
 
     bool isSparse() const { return this && type == Sparse; }
 
@@ -170,7 +170,7 @@ struct Q_QML_EXPORT ArrayData
 
     static void sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
     static uint append(Object *o, const ArrayObject *otherObj, uint n);
-    static Property *insert(Object *o, uint index);
+    static Property *insert(Object *o, uint index, bool isAccessor = false);
     void markObjects(ExecutionEngine *e);
 
     static void getHeadRoom(ArrayData *d);
@@ -200,7 +200,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     uint freeList;
     SparseArray *sparse;
 
-    static uint allocate(ArrayData *d);
+    static uint allocate(ArrayData *d, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
     static void freeData(ArrayData *d);
@@ -224,14 +224,14 @@ inline Property *ArrayData::getProperty(uint index) const
     if (!this)
         return 0;
     if (type != Sparse) {
-        if (index >= len || data[index].value.isEmpty())
+        if (index >= len || data[index].isEmpty())
             return 0;
-        return data + index;
+        return reinterpret_cast<Property *>(data + index);
     } else {
         SparseArrayNode *n = static_cast<const SparseArrayData *>(this)->sparse->findNode(index);
         if (!n)
             return 0;
-        return data + n->value;
+        return reinterpret_cast<Property *>(data + n->value);
     }
 }
 

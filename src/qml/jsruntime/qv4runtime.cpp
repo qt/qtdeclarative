@@ -1120,8 +1120,8 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
 
     uint idx = name->asArrayIndex();
     Property pd;
-    pd.setGetter(getter ? getter->asFunctionObject() : 0);
-    pd.setSetter(setter ? setter->asFunctionObject() : 0);
+    pd.value = getter;
+    pd.set = setter;
     if (idx != UINT_MAX) {
         o->arraySet(idx, pd, Attr_Accessor);
     } else {
@@ -1139,9 +1139,9 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
         if (klass->propertyData[i].isData())
             o->memberData[i].value = *args++;
         else {
-            o->memberData[i].setGetter(args->asFunctionObject());
+            o->memberData[i].value = *args;
             args++;
-            o->memberData[i].setSetter(args->asFunctionObject());
+            o->memberData[i].set = *args;
             args++;
         }
     }

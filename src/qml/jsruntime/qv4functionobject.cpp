@@ -351,8 +351,8 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
                 callData->args[i] = arr->getIndexed(i);
         } else {
             int alen = qMin(len, arr->arrayData->length());
-            for (int i = 0; i < alen; ++i)
-                callData->args[i] = arr->arrayData->data[i].value;
+            if (alen)
+                memcpy(callData->args, arr->arrayData->data, alen*sizeof(SafeValue));
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

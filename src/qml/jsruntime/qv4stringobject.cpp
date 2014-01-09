@@ -140,7 +140,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef nam
     name = (String *)0;
     StringObject *s = static_cast<StringObject *>(m);
     uint slen = s->value.stringValue()->toQString().length();
-    if (it->arrayIndex < slen) {
+    if (it->arrayIndex <= slen) {
         while (it->arrayIndex < slen) {
             *index = it->arrayIndex;
             ++it->arrayIndex;

@@ -229,14 +229,9 @@ void Object::markObjects(Managed *that, ExecutionEngine *e)
     } else {
         for (uint i = 0; i < o->internalClass->size; ++i) {
             const Property &pd = o->memberData[i];
-            if (o->internalClass->propertyData[i].isAccessor()) {
-                if (pd.getter())
-                    pd.getter()->mark(e);
-                if (pd.setter())
-                    pd.setter()->mark(e);
-            } else {
-                pd.value.mark(e);
-            }
+            pd.value.mark(e);
+            if (o->internalClass->propertyData[i].isAccessor())
+                pd.set.mark(e);
         }
     }
     if (o->arrayData)
@@ -562,7 +557,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
             while (it->arrayNode != o->sparseEnd()) {
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
-                Property *p = o->arrayData->data + pidx;
+                Property *p = reinterpret_cast<Property *>(o->arrayData->data + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = o->arrayData->attributes(k);
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -578,14 +573,14 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         }
         // dense arrays
         while (it->arrayIndex < o->arrayData->length()) {
-            Property *p = o->arrayData->data + it->arrayIndex;
+            SafeValue *val = o->arrayData->data + it->arrayIndex;
             PropertyAttributes a = o->arrayData->attributes(it->arrayIndex);
             ++it->arrayIndex;
-            if (!p->value.isEmpty()
+            if (!val->isEmpty()
                 && (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable())) {
                 *index = it->arrayIndex - 1;
                 *attrs = a;
-                *pd = *p;
+                pd->value = *val;
                 return;
             }
         }
@@ -874,6 +869,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     Scope scope(ctx);
     Property *current;
     PropertyAttributes *cattrs;
+    uint memberIndex;
 
     if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
@@ -904,11 +900,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     }
 
     // Clause 1
-    {
-        uint member = internalClass->find(name.getPointer());
-        current = (member < UINT_MAX) ? memberData + member : 0;
-        cattrs = internalClass->propertyData.constData() + member;
-    }
+    memberIndex = internalClass->find(name.getPointer());
+    current = (memberIndex < UINT_MAX) ? memberData + memberIndex : 0;
+    cattrs = internalClass->propertyData.constData() + memberIndex;
 
     if (!current) {
         // clause 3
@@ -921,7 +915,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         return true;
     }
 
-    return __defineOwnProperty__(ctx, current, name, p, attrs);
+    return __defineOwnProperty__(ctx, memberIndex, name, p, attrs);
 reject:
   if (ctx->strictMode)
       ctx->throwTypeError();
@@ -972,24 +966,28 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
         return true;
     }
 
-    return __defineOwnProperty__(ctx, current, StringRef::null(), p, attrs);
+    return __defineOwnProperty__(ctx, index, StringRef::null(), p, attrs);
 reject:
   if (ctx->strictMode)
       ctx->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, const StringRef member, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const StringRef member, const Property &p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
         return true;
 
+    Property *current;
     PropertyAttributes cattrs;
-    if (!member.isNull())
-        cattrs = internalClass->propertyData[current - memberData];
-    else
-        cattrs = arrayData->attrs ? arrayData->attrs[current - arrayData->data] : Attr_Data;
+    if (!member.isNull()) {
+        current = memberData + index;
+        cattrs = internalClass->propertyData[index];
+    } else {
+        current = arrayData->getProperty(index);
+        cattrs = arrayData->attributes(index);
+    }
 
     // clause 6
     if (p.isSubset(attrs, *current, cattrs))
@@ -1016,12 +1014,23 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, con
             // 9b
             cattrs.setType(PropertyAttributes::Accessor);
             cattrs.clearWritable();
+            if (member.isNull()) {
+                // need to convert the array and the slot
+                initSparseArray();
+                arrayData->setAttributes(index, cattrs);
+                current = arrayData->getProperty(index);
+            }
             current->setGetter(0);
             current->setSetter(0);
         } else {
             // 9c
             cattrs.setType(PropertyAttributes::Data);
             cattrs.setWritable(false);
+            if (member.isNull()) {
+                // need to convert the array and the slot
+                arrayData->setAttributes(index, cattrs);
+                current = arrayData->getProperty(index);
+            }
             current->value = Primitive::undefinedValue();
         }
     } else if (cattrs.isData() && attrs.isData()) { // clause 10
@@ -1030,11 +1039,11 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, con
                 goto reject;
         }
     } else { // clause 10
-        assert(cattrs.isAccessor() && attrs.isAccessor());
+        Q_ASSERT(cattrs.isAccessor() && attrs.isAccessor());
         if (!cattrs.isConfigurable()) {
-            if (p.getter() && !(current->getter() == p.getter() || (!current->getter() && (quintptr)p.getter() == 0x1)))
+            if (!p.value.isEmpty() && current->value.val != p.value.val)
                 goto reject;
-            if (p.setter() && !(current->setter() == p.setter() || (!current->setter() && (quintptr)p.setter() == 0x1)))
+            if (!p.set.isEmpty() && current->set.val != p.set.val)
                 goto reject;
         }
     }
@@ -1045,9 +1054,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, con
     if (!member.isNull()) {
         internalClass = internalClass->changeMember(member.getPointer(), cattrs);
     } else {
-        arrayData->setAttributes(current - arrayData->data, cattrs);
+        arrayData->setAttributes(index, cattrs);
     }
-    if (attrs.isAccessor())
+    if (cattrs.isAccessor())
         hasAccessorProperty = 1;
     return true;
   reject:
@@ -1078,6 +1087,13 @@ void Object::copyArrayData(Object *other)
         for (uint i = 0; i < len; ++i) {
             arraySet(i, (v = other->getIndexed(i)));
         }
+    } else if (!other->arrayData) {
+        ;
+    } else if (other->hasAccessorProperty && other->arrayData->attrs && other->arrayData->isSparse()){
+        // do it the slow way
+        for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other->arrayData)->sparse->begin();
+             it != static_cast<const SparseArrayData *>(other->arrayData)->sparse->end(); it = it->nextNode())
+            arraySet(it->key(), *reinterpret_cast<Property *>(other->arrayData->data + it->value), other->arrayData->attrs[it->value]);
     } else {
         Q_ASSERT(!arrayData && other->arrayData);
         if (other->arrayType() == ArrayData::Sparse) {
@@ -1087,11 +1103,11 @@ void Object::copyArrayData(Object *other)
             dd->sparse = new SparseArray(*od->sparse);
             dd->freeList = od->freeList;
             arrayData = dd;
+            other->arrayData->len = other->arrayData->alloc;
         }
         arrayReserve(other->arrayData->len);
         arrayData->len = other->arrayData->len;
-        // ### correctly deal with accessor properties
-        memcpy(arrayData->data, other->arrayData->data, arrayData->len*sizeof(Property));
+        memcpy(arrayData->data, other->arrayData->data, arrayData->len*sizeof(SafeValue));
 
         arrayData->offset = 0;
     }
@@ -1152,21 +1168,25 @@ void Object::initSparseArray()
     uint *lastFree = &data->freeList;
     for (uint i = 0; i < oldOffset; ++i) {
         *lastFree = i;
-        lastFree = &data->data[i].value.uint_32;
+        data->data[i].tag = Value::Empty_Type;
+        lastFree = &data->data[i].uint_32;
     }
     for (uint i = 0; i < data->len; ++i) {
-        if (!data->data[i + oldOffset].value.isEmpty()) {
+        if (!data->data[i + oldOffset].isEmpty()) {
             SparseArrayNode *n = data->sparse->insert(i);
             n->value = i + oldOffset;
         } else {
             *lastFree = i + oldOffset;
-            lastFree = &data->data[i + oldOffset].value.uint_32;
+            data->data[i + oldOffset].tag = Value::Empty_Type;
+            lastFree = &data->data[i + oldOffset].uint_32;
         }
     }
     for (uint i = data->len + oldOffset; i < data->alloc; ++i) {
         *lastFree = i;
-        lastFree = &data->data[i].value.uint_32;
+        data->data[i].tag = Value::Empty_Type;
+        lastFree = &data->data[i].uint_32;
     }
+    *lastFree = data->alloc;
     arrayData = data;
 }
 

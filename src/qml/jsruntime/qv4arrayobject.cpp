@@ -613,7 +613,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 
     ScopedValue value(scope);
 
-    if ((instance->arrayData && instance->arrayType() != ArrayData::Simple) || instance->protoHasArray()) {
+    if (instance->hasAccessorProperty || (instance->arrayType() >= ArrayData::Sparse) || instance->protoHasArray()) {
         // lets be safe and slow
         for (uint i = fromIndex; i < len; ++i) {
             bool exists;
@@ -625,31 +625,22 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         }
     } else if (!instance->arrayData) {
         return Encode(-1);
-    } else if (instance->arrayType() == ArrayData::Sparse) {
-        for (SparseArrayNode *n = static_cast<SparseArrayData *>(instance->arrayData)->sparse->lowerBound(fromIndex);
-             n != static_cast<SparseArrayData *>(instance->arrayData)->sparse->end() && n->key() < len; n = n->nextNode()) {
-            value = instance->getValue(instance->arrayData->data + n->value,
-                                       instance->arrayData->attrs ? instance->arrayData->attrs[n->value] : Attr_Data);
-            if (scope.hasException())
-                return Encode::undefined();
-            if (__qmljs_strict_equal(value, searchValue))
-                return Encode(n->key());
-        }
     } else {
+        Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
         if (len > instance->arrayData->length())
             len = instance->arrayData->length();
-        Property *pd = instance->arrayData->data;
-        Property *end = pd + len;
-        pd += fromIndex;
-        while (pd < end) {
-            if (!pd->value.isEmpty()) {
-                value = instance->getValue(pd, instance->arrayData->attributes(pd - instance->arrayData->data));
+        SafeValue *val = instance->arrayData->data;
+        SafeValue *end = val + len;
+        val += fromIndex;
+        while (val < end) {
+            if (!val->isEmpty()) {
+                value = *val;
                 if (scope.hasException())
                     return Encode::undefined();
                 if (__qmljs_strict_equal(value, searchValue))
-                    return Encode((uint)(pd - instance->arrayData->data));
+                    return Encode((uint)(val - instance->arrayData->data));
             }
-            ++pd;
+            ++val;
         }
     }
     return Encode(-1);

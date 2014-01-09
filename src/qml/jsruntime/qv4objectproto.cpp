@@ -597,8 +597,8 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     }
 
     attrs->clear();
-    desc->setGetter(0);
-    desc->setSetter(0);
+    desc->value = Primitive::emptyValue();
+    desc->set = Primitive::emptyValue();
     ScopedValue tmp(scope);
 
     if (o->hasProperty(ctx->engine->id_enumerable))
@@ -610,10 +610,8 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     if (o->hasProperty(ctx->engine->id_get)) {
         ScopedValue get(scope, o->get(ctx->engine->id_get));
         FunctionObject *f = get->asFunctionObject();
-        if (f) {
-            desc->setGetter(f);
-        } else if (get->isUndefined()) {
-            desc->setGetter((FunctionObject *)0x1);
+        if (f || get->isUndefined()) {
+            desc->value = get;
         } else {
             ctx->throwTypeError();
             return;
@@ -624,10 +622,8 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     if (o->hasProperty(ctx->engine->id_set)) {
         ScopedValue set(scope, o->get(ctx->engine->id_set));
         FunctionObject *f = set->asFunctionObject();
-        if (f) {
-            desc->setSetter(f);
-        } else if (set->isUndefined()) {
-            desc->setSetter((FunctionObject *)0x1);
+        if (f || set->isUndefined()) {
+            desc->set = set;
         } else {
             ctx->throwTypeError();
             return;

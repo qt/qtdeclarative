@@ -62,10 +62,10 @@ struct Property {
         }
         if (attrs->type() == PropertyAttributes::Accessor) {
             attrs->clearWritable();
-            if (value.managed() == (Managed *)0x1)
-                value = Primitive::fromManaged(0);
-            if (set.managed() == (Managed *)0x1)
-                set = Primitive::fromManaged(0);
+            if (value.isEmpty())
+                value = Primitive::undefinedValue();
+            if (set.isEmpty())
+                set = Primitive::undefinedValue();
         }
         attrs->resolve();
     }
@@ -91,8 +91,8 @@ struct Property {
     inline bool isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const;
     inline void merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs);
 
-    inline FunctionObject *getter() const { return reinterpret_cast<FunctionObject *>(value.managed()); }
-    inline FunctionObject *setter() const { return reinterpret_cast<FunctionObject *>(set.managed()); }
+    inline FunctionObject *getter() const { return reinterpret_cast<FunctionObject *>(value.asManaged()); }
+    inline FunctionObject *setter() const { return reinterpret_cast<FunctionObject *>(set.asManaged()); }
     inline void setGetter(FunctionObject *g) { value = Primitive::fromManaged(reinterpret_cast<Managed *>(g)); }
     inline void setSetter(FunctionObject *s) { set = Primitive::fromManaged(reinterpret_cast<Managed *>(s)); }
 };
@@ -110,9 +110,9 @@ inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &
     if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other.value))
         return false;
     if (attrs.type() == PropertyAttributes::Accessor) {
-        if (value.managed() != other.value.managed())
+        if (value.asManaged() != other.value.asManaged())
             return false;
-        if (set.managed() != other.set.managed())
+        if (set.asManaged() != other.set.asManaged())
             return false;
     }
     return true;
@@ -128,10 +128,10 @@ inline void Property::merge(PropertyAttributes &attrs, const Property &other, Pr
         attrs.setWritable(otherAttrs.isWritable());
     if (otherAttrs.type() == PropertyAttributes::Accessor) {
         attrs.setType(PropertyAttributes::Accessor);
-        if (other.value.managed())
-            value = (other.value.managed() == (Managed *)0x1) ? Primitive::fromManaged(0).asReturnedValue() : other.value.asReturnedValue();
-        if (other.set.managed())
-            set = (other.set.managed() == (Managed *)0x1) ? Primitive::fromManaged(0).asReturnedValue() : other.set.asReturnedValue();
+        if (!other.value.isEmpty())
+            value = other.value;
+        if (!other.set.isEmpty())
+            set = other.set;
     } else if (otherAttrs.type() == PropertyAttributes::Data){
         attrs.setType(PropertyAttributes::Data);
         value = other.value;
