@@ -703,7 +703,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         }
     }
 
-    if (_ddata->hasBindingBit(property->coreIndex))
+    if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression))
         removeBindingOnProperty(_bindingTarget, property->coreIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
