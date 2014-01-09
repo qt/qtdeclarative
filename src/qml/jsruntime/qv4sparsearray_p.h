@@ -49,6 +49,7 @@
 #include "qv4property_p.h"
 #include <assert.h>
 
+//#define Q_MAP_DEBUG
 #ifdef Q_MAP_DEBUG
 #include <QtCore/qdebug.h>
 #endif
@@ -182,6 +183,8 @@ public:
 
     SparseArrayNode *findNode(uint akey) const;
 
+    uint nEntries() const { return numEntries; }
+
     uint pop_front();
     void push_front(uint at);
     uint pop_back(uint len);
@@ -208,7 +211,7 @@ public:
     typedef qptrdiff difference_type;
     typedef int size_type;
 
-#ifdef Q_MAP_DEBUG
+#ifndef QT_NO_DEBUG
     void dump() const;
 #endif
 };
@@ -281,23 +284,22 @@ inline void SparseArray::push_back(uint index, uint len)
     n->value = index;
 }
 
-#ifdef Q_MAP_DEBUG
-
-void SparseArray::dump() const
+#ifndef QT_NO_DEBUG
+inline void SparseArray::dump() const
 {
-    const_iterator it = begin();
+    const SparseArrayNode *it = begin();
     qDebug() << "map dump:";
     while (it != end()) {
-        const SparseArrayNode *n = it.i;
+        const SparseArrayNode *n = it;
         int depth = 0;
         while (n && n != root()) {
             ++depth;
             n = n->parent();
         }
         QByteArray space(4*depth, ' ');
-        qDebug() << space << (it.i->color() == SparseArrayNode::Red ? "Red  " : "Black") << it.i << it.i->left << it.i->right
-                 << it.key() << it.value();
-        ++it;
+        qDebug() << space << (it->color() == SparseArrayNode::Red ? "Red  " : "Black") << it << it->size_left << it->left << it->right
+                 << it->key() << it->value;
+        it = it->nextNode();
     }
     qDebug() << "---------";
 }
