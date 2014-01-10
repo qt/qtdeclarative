@@ -57,17 +57,17 @@ public:
 
     QImage runTest(const QString &fileName)
     {
-        QQuickView view;
-        view.setSource(testFileUrl(fileName));
+        QQuickView view(&outerWindow);
         view.setResizeMode(QQuickView::SizeViewToRootObject);
-        const QRect screenGeometry = view.screen()->availableGeometry();
-        const QSize size = view.size();
-        const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
-        view.setFramePosition(screenGeometry.center() - offset);
-        view.showNormal();
+        view.setSource(testFileUrl(fileName));
+        view.setVisible(true);
         QTest::qWaitForWindowExposed(&view);
         return view.grabWindow();
     }
+
+    //It is important for platforms that only are able to show fullscreen windows
+    //to have a container for the window that is painted on.
+    QQuickWindow outerWindow;
 
 private slots:
     void renderOrder();
@@ -187,6 +187,8 @@ tst_rendernode::tst_rendernode()
 {
     qmlRegisterType<ClearItem>("Test", 1, 0, "ClearItem");
     qmlRegisterType<MessUpItem>("Test", 1, 0, "MessUpItem");
+    outerWindow.showNormal();
+    outerWindow.setGeometry(0,0,400,400);
 }
 
 static bool fuzzyCompareColor(QRgb x, QRgb y, QByteArray *errorMessage)
