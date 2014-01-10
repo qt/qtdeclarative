@@ -30,7 +30,7 @@
 \title Property Binding
 \brief binding object properties
 
-To make the fullest use of QML and its built-in support for implementing dynamic object behavioral changes, most QML objects will use \e {property binding}. This is a core feature of QML that allows objects to automatically update their properties in response to changing attributes in other objects or the occurence of some external event.
+To make the fullest use of QML and its built-in support for implementing dynamic object behavioral changes, most QML objects will use \e {property binding}. This is a core feature of QML that allows objects to automatically update their properties in response to changing attributes in other objects or the occurrence of some external event.
 
 When an object's property is assigned a value, it can either be assigned a static value, or \e bound to a JavaScript expression. In the first case, the property's value will not change unless a new value is assigned to the property. In the latter case, a \e {property binding} is created and the property's value is automatically updated by the QML engine whenever the value of the evaluated expression changes.
 

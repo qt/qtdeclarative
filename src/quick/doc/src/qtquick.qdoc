@@ -125,6 +125,7 @@ Additional Qt Quick information:
     top-level windows and accessing screen information
     \li \l{Qt Quick Dialogs}{Dialogs} - contains types for creating and
     interacting with system dialogs
+    \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Code Samples} - list of all Qt Quick examples

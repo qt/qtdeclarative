@@ -42,11 +42,11 @@ by this module, organized according to category and purpose.
 The types provided by the \l {Qt Quick} module are only available in a QML document
 if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version 2.0, and thus it may be
+The current version of the \c QtQuick module is version 2.2, and thus it may be
 imported via the following statement:
 
 \qml
-import QtQuick 2.0
+import QtQuick 2.2
 \endqml
 
 See the \l {Qt Quick} module documentation for more
@@ -308,6 +308,14 @@ set of Particle System types for Qt Quick 2
 \li \l {CanvasPixelArray} - Allows specification of a pixel array for use in a Canvas
 \li \l {CanvasImageData} - Allows specification of image data for use in a Canvas
 \li \l {TextMetrics} - Provides text and font measurement data for use in a Canvas
+\endlist
+
+\target qttest-types
+\section2 QtTest Types
+
+\list
+\li \l {QtTest::TestCase}{TestCase} - Represents a unit test case
+\li \l {QtTest::SignalSpy}{SignalSpy} - Enables introspection of signal emission
 \endlist
 
 */
@@ -1070,8 +1078,9 @@ console.log(c + " " + d); // false true
 
 /*!
 \qmlmodule QtTest 1.0
-\title Qt Quick Test
+\title Qt Quick Test QML Types
 \brief This module provides QML types to unit test your QML application
+\ingroup qmlmodules
 
 You can import this module using the following statement:
 \code
