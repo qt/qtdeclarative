@@ -892,12 +892,12 @@ void QQuickListViewPrivate::createHighlight()
             highlightWidthAnimator = new QSmoothedAnimation;
             highlightWidthAnimator->velocity = highlightResizeVelocity;
             highlightWidthAnimator->userDuration = highlightResizeDuration;
-            highlightWidthAnimator->target = QQmlProperty(item, "width");
+            highlightWidthAnimator->target = QQmlProperty(item, QStringLiteral("width"));
 
             highlightHeightAnimator = new QSmoothedAnimation;
             highlightHeightAnimator->velocity = highlightResizeVelocity;
             highlightHeightAnimator->userDuration = highlightResizeDuration;
-            highlightHeightAnimator->target = QQmlProperty(item, "height");
+            highlightHeightAnimator->target = QQmlProperty(item, QStringLiteral("height"));
 
             highlight = newHighlight;
             changed = true;
