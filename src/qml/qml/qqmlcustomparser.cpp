@@ -298,6 +298,20 @@ void QQmlCustomParser::error(const QV4::CompiledData::Binding *binding, const QS
 }
 
 /*!
+    Reports an error in parsing \a object, with the given \a description.
+
+    An error is generated referring to the position of \a object in the source file.
+*/
+void QQmlCustomParser::error(const QV4::CompiledData::Object *object, const QString &description)
+{
+    QQmlError error;
+    error.setLine(object->location.line);
+    error.setColumn(object->location.column);
+    error.setDescription(description);
+    exceptions << error;
+}
+
+/*!
     If \a script is a simple enumeration expression (eg. Text.AlignLeft),
     returns the integer equivalent (eg. 1), and sets \a ok to true.
 

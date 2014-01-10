@@ -259,6 +259,29 @@ QQuickPropertyChangesParser::compileList(QList<QPair<QString, QVariant> > &list,
     }
 }
 
+void QQuickPropertyChangesParser::compileList(QList<QPair<QString, const QV4::CompiledData::Binding*> > &list, const QString &pre, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding)
+{
+    QString propName = pre + qmlUnit->header.stringAt(binding->propertyNameIndex);
+
+    if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+        error(qmlUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
+        return;
+    }
+
+    if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
+        || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+        QString pre = propName + QLatin1Char('.');
+        const QV4::CompiledData::Object *subObj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
+        for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
+            compileList(list, pre, qmlUnit, subBinding);
+        }
+        return;
+    }
+
+    list << qMakePair(propName, binding);
+}
+
 QByteArray
 QQuickPropertyChangesParser::compile(const QList<QQmlCustomParserProperty> &props)
 {
@@ -295,6 +318,44 @@ QQuickPropertyChangesParser::compile(const QList<QQmlCustomParserProperty> &prop
             break;
         }
 
+        ds << data.at(ii).first << isScript << var;
+        if (isScript)
+            ds << id;
+    }
+
+    return rv;
+}
+
+QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+{
+    QList<QPair<QString, const QV4::CompiledData::Binding *> > data;
+    for (int ii = 0; ii < props.count(); ++ii)
+        compileList(data, QString(), qmlUnit, props.at(ii));
+
+    QByteArray rv;
+    QDataStream ds(&rv, QIODevice::WriteOnly);
+
+    ds << data.count();
+    for (int ii = 0; ii < data.count(); ++ii) {
+        const QV4::CompiledData::Binding *binding = data.at(ii).second;
+        QVariant var;
+        bool isScript = binding->type == QV4::CompiledData::Binding::Type_Script;
+        QQmlBinding::Identifier id = QQmlBinding::Invalid;
+        switch (binding->type) {
+        case QV4::CompiledData::Binding::Type_Script:
+            // ### pre-compile binding
+        case QV4::CompiledData::Binding::Type_String:
+            var = binding->valueAsString(&qmlUnit->header);
+            break;
+        case QV4::CompiledData::Binding::Type_Number:
+            var = binding->valueAsNumber();
+            break;
+        case QV4::CompiledData::Binding::Type_Boolean:
+            var = binding->valueAsBoolean();
+            break;
+        default:
+            break;
+        }
         ds << data.at(ii).first << isScript << var;
         if (isScript)
             ds << id;

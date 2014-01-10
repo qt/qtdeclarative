@@ -264,7 +264,7 @@ struct Function
 
 // Qml data structures
 
-struct Binding
+struct Q_QML_EXPORT Binding
 {
     quint32 propertyNameIndex;
 
