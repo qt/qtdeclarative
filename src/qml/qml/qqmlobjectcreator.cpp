@@ -181,7 +181,13 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
-    // ### enums
+
+    // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
+    if (property->isEnum()) {
+        QVariant value = binding->valueAsString(&qmlUnit->header);
+        QQmlPropertyPrivate::write(_qobject, *property, value, context);
+        return;
+    }
 
     switch (property->propType) {
     case QMetaType::QVariant: {
