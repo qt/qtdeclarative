@@ -152,52 +152,24 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
 
 QAccessible::State QAccessibleQuickItem::state() const
 {
-    QAccessible::State state;
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item());
+    if (!attached)
+        return QAccessible::State();
 
-    if (item()->hasActiveFocus()) {
-        state.focusable = true;
-        state.focused = true;
-    }
-
-    if (item()->activeFocusOnTab())
-        state.focusable = true;
+    QAccessible::State st = attached->state();
 
     if (!item()->window() || !item()->window()->isVisible() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
-        state.invisible = true;
+        st.invisible = true;
 
-    QAccessible::Role r = role();
-    switch (r) {
-    case QAccessible::Button: {
-        state.focusable = true;
-        QVariant checkable = item()->property("checkable");
-        if (!checkable.toBool())
-            break;
-        // fall through
-    }
-    case QAccessible::CheckBox:
-    case QAccessible::RadioButton: {
-        state.focusable = true;
-        state.checkable = true;
-        state.checked = item()->property("checked").toBool();
-        break;
-    }
-    case QAccessible::MenuItem:
-    case QAccessible::PageTab:
-    case QAccessible::EditableText:
-    case QAccessible::SpinBox:
-    case QAccessible::Terminal:
-    case QAccessible::ScrollBar:
-        state.focusable = true;
-        break;
-    case QAccessible::ComboBox:
-        state.focusable = true;
-        state.editable = item()->property("editable").toBool();
-        break;
-    default:
-        break;
-    }
+    if (item()->activeFocusOnTab())
+        st.focusable = true;
+    if (item()->hasActiveFocus())
+        st.focused = true;
 
-    return state;
+    if (role() == QAccessible::ComboBox)
+        st.editable = item()->property("editable").toBool();
+
+    return st;
 }
 
 QAccessible::Role QAccessibleQuickItem::role() const

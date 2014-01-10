@@ -44,6 +44,10 @@
 #include "QtTest/qtestaccessible.h"
 
 #include <QtGui/qaccessible.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformintegration.h>
+#include <qpa/qplatformaccessibility.h>
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -96,6 +100,12 @@ public:
     tst_QQuickAccessible();
     virtual ~tst_QQuickAccessible();
 
+public slots:
+    void initTestCase();
+    void cleanupTestCase();
+    void init();
+    void cleanup();
+
 private slots:
     void commonTests_data();
     void commonTests();
@@ -114,6 +124,37 @@ tst_QQuickAccessible::tst_QQuickAccessible()
 tst_QQuickAccessible::~tst_QQuickAccessible()
 {
 
+}
+
+void tst_QQuickAccessible::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    QTestAccessibility::initialize();
+    QPlatformIntegration *pfIntegration = QGuiApplicationPrivate::platformIntegration();
+    pfIntegration->accessibility()->setActive(true);
+}
+
+void tst_QQuickAccessible::cleanupTestCase()
+{
+    QTestAccessibility::cleanup();
+}
+
+void tst_QQuickAccessible::init()
+{
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::cleanup()
+{
+    const EventList list = QTestAccessibility::events();
+    if (!list.isEmpty()) {
+        qWarning("%d accessibility event(s) were not handled in testfunction '%s':", list.count(),
+                 QString(QTest::currentTestFunction()).toLatin1().constData());
+        for (int i = 0; i < list.count(); ++i)
+            qWarning(" %d: Object: %p Event: '%s' Child: %d", i + 1, list.at(i)->object(),
+                     qAccessibleEventString(list.at(i)->type()), list.at(i)->child());
+    }
+    QTestAccessibility::clearEvents();
 }
 
 void tst_QQuickAccessible::commonTests_data()
@@ -141,6 +182,7 @@ void tst_QQuickAccessible::commonTests()
     QVERIFY(iface);
 
     delete view;
+    QTestAccessibility::clearEvents();
 }
 
 void tst_QQuickAccessible::quickAttachedProperties()
@@ -215,6 +257,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
         }
         delete object;
     }
+    QTestAccessibility::clearEvents();
 }
 
 
@@ -265,6 +308,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(text2->indexOfChild(item), -1);
 
     delete window;
+    QTestAccessibility::clearEvents();
 }
 
 QAccessibleInterface *topLevelChildAt(QAccessibleInterface *iface, int x, int y)
@@ -330,6 +374,7 @@ void tst_QQuickAccessible::hitTest()
     QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
 
     delete window;
+    QTestAccessibility::clearEvents();
 }
 
 void tst_QQuickAccessible::checkableTest()
@@ -337,6 +382,17 @@ void tst_QQuickAccessible::checkableTest()
     QQuickView *window = new QQuickView();
     window->setSource(testFileUrl("checkbuttons.qml"));
     window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    // the window becomes active
+    QAccessible::State activatedChange;
+    activatedChange.active = true;
 
     QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window);
     QVERIFY(iface);
@@ -347,9 +403,28 @@ void tst_QQuickAccessible::checkableTest()
     QVERIFY(!(button1->state().checked));
     QVERIFY(!(button1->state().checkable));
 
+    QVERIFY(button1->state().focusable);
+    QVERIFY(!button1->state().focused);
+
+    QTestAccessibility::clearEvents();
+
+    // set properties
+    QQuickItem *button1item = qobject_cast<QQuickItem*>(rootItem->childItems().at(0));
+    QVERIFY(button1item);
+    QCOMPARE(button1item->objectName(), QLatin1String("button1"));
+    button1item->forceActiveFocus();
+    QVERIFY(button1->state().focusable);
+    QVERIFY(button1->state().focused);
+
+    QAccessibleEvent focusEvent(button1item, QAccessible::Focus);
+    QVERIFY_EVENT(&focusEvent);
+
     QAccessibleInterface *button2 = root->child(1);
     QVERIFY(!(button2->state().checked));
     QVERIFY(button2->state().checkable);
+    QQuickItem *button2item = qobject_cast<QQuickItem*>(rootItem->childItems().at(1));
+    QVERIFY(button2item);
+    QCOMPARE(button2item->objectName(), QLatin1String("button2"));
 
     QAccessibleInterface *button3 = root->child(2);
     QVERIFY(button3->state().checked);
@@ -357,12 +432,28 @@ void tst_QQuickAccessible::checkableTest()
 
     QAccessibleInterface *checkBox1 = root->child(3);
     QCOMPARE(checkBox1->role(), QAccessible::CheckBox);
-    QVERIFY((checkBox1->state().checked));
+    QVERIFY(checkBox1->state().checked);
     QVERIFY(checkBox1->state().checkable);
+    QQuickItem *checkbox1item = qobject_cast<QQuickItem*>(rootItem->childItems().at(3));
+    QVERIFY(checkbox1item);
+    QCOMPARE(checkbox1item->objectName(), QLatin1String("checkbox1"));
+
+    checkbox1item->setProperty("checked", false);
+    QVERIFY(!checkBox1->state().checked);
+    QAccessible::State checkState;
+    checkState.checked = true;
+    QAccessibleStateChangeEvent checkChanged(checkbox1item, checkState);
+    QVERIFY_EVENT(&checkChanged);
+
+    checkbox1item->setProperty("checked", true);
+    QVERIFY(checkBox1->state().checked);
+    QVERIFY_EVENT(&checkChanged);
 
     QAccessibleInterface *checkBox2 = root->child(4);
     QVERIFY(!(checkBox2->state().checked));
     QVERIFY(checkBox2->state().checkable);
+
+    QTestAccessibility::clearEvents();
 }
 
 QTEST_MAIN(tst_QQuickAccessible)

@@ -55,15 +55,46 @@
 QT_BEGIN_NAMESPACE
 
 
+#define STATE_PROPERTY(P) \
+    Q_PROPERTY(bool P READ P WRITE set_ ## P NOTIFY P ## Changed FINAL) \
+    bool P() const { return m_state.P ; } \
+    void set_ ## P(bool arg) \
+    { \
+        if (m_state.P == arg) \
+            return; \
+        m_state.P = arg; \
+        emit P ## Changed(arg); \
+        QAccessible::State changedState; \
+        changedState.P = true; \
+        QAccessibleStateChangeEvent ev(parent(), changedState); \
+        QAccessible::updateAccessibility(&ev); \
+    } \
+    Q_SIGNAL void P ## Changed(bool arg);
+
+
 class Q_QUICK_PRIVATE_EXPORT QQuickAccessibleAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QAccessible::Role role READ role WRITE setRole NOTIFY roleChanged)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
+    Q_PROPERTY(QAccessible::Role role READ role WRITE setRole NOTIFY roleChanged FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged FINAL)
 
 public:
-    Q_ENUMS(QAccessible::Role QAccessible::Event QAccessible::State)
+    Q_ENUMS(QAccessible::Role QAccessible::Event)
+    STATE_PROPERTY(checkable)
+    STATE_PROPERTY(checked)
+    STATE_PROPERTY(editable)
+    STATE_PROPERTY(focusable)
+    STATE_PROPERTY(focused)
+    STATE_PROPERTY(multiLine)
+    STATE_PROPERTY(readOnly)
+    STATE_PROPERTY(selected)
+    STATE_PROPERTY(selectable)
+    STATE_PROPERTY(pressed)
+    STATE_PROPERTY(checkStateMixed)
+    STATE_PROPERTY(defaultButton)
+    STATE_PROPERTY(passwordEdit)
+    STATE_PROPERTY(selectableText)
 
     QQuickAccessibleAttached(QObject *parent);
     ~QQuickAccessibleAttached();
@@ -76,6 +107,26 @@ public:
             Q_EMIT roleChanged();
             // There is no way to signify role changes at the moment.
             // QAccessible::updateAccessibility(parent(), 0, QAccessible::);
+
+            switch (role) {
+            case QAccessible::CheckBox:
+            case QAccessible::RadioButton:
+                m_state.focusable = true;
+                m_state.checkable = true;
+                break;
+            case QAccessible::Button:
+            case QAccessible::MenuItem:
+            case QAccessible::PageTab:
+            case QAccessible::EditableText:
+            case QAccessible::SpinBox:
+            case QAccessible::ComboBox:
+            case QAccessible::Terminal:
+            case QAccessible::ScrollBar:
+                m_state.focusable = true;
+                break;
+            default:
+                break;
+            }
         }
     }
     QString name() const { return m_name; }
@@ -102,12 +153,12 @@ public:
     // Factory function
     static QQuickAccessibleAttached *qmlAttachedProperties(QObject *obj);
 
-    // Property getter
-    static QObject *attachedProperties(const QObject *obj)
+    static QQuickAccessibleAttached *attachedProperties(const QObject *obj)
     {
-        return qmlAttachedPropertiesObject<QQuickAccessibleAttached>(obj, false);
+        return qobject_cast<QQuickAccessibleAttached*>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(obj, false));
     }
 
+    // Property getter
     static QVariant property(const QObject *object, const char *propertyName)
     {
         if (QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object))
@@ -128,14 +179,16 @@ public:
     static QObject *findAccessible(QObject *object, QAccessible::Role role = QAccessible::NoRole)
     {
         while (object) {
-            QObject *att = QQuickAccessibleAttached::attachedProperties(object);
-            if (att && (role == QAccessible::NoRole || att->property("role").toInt() == role)) {
+            QQuickAccessibleAttached *att = QQuickAccessibleAttached::attachedProperties(object);
+            if (att && (role == QAccessible::NoRole || att->role() == role)) {
                 break;
             }
             object = object->parent();
         }
         return object;
     }
+
+    QAccessible::State state() { return m_state; }
 
 public Q_SLOTS:
     void valueChanged() {
@@ -153,7 +206,10 @@ Q_SIGNALS:
     void descriptionChanged();
 
 private:
+    QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
+
     QAccessible::Role m_role;
+    QAccessible::State m_state;
     QString m_name;
     QString m_description;
 

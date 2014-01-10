@@ -139,6 +139,57 @@ QT_BEGIN_NAMESPACE
     \endtable
 */
 
+/*! \qmlproperty bool focusable
+    \brief This property holds whether this item is focusable.
+
+    By default, this property is false except for items where the role is one of
+    CheckBox, RadioButton, Button, MenuItem, PageTab, EditableText, SpinBox, ComboBox,
+    Terminal or ScrollBar.
+*/
+/*! \qmlproperty bool focused
+    \brief This property holds whether this item currently has the active focus.
+
+    By default, this property is false, but it will return true for items that
+    have \l QQuickItem::hasActiveFocus() returning true.
+*/
+/*! \qmlproperty bool checkable
+    \brief This property holds whether this item is checkable (like a check box or some buttons).
+*/
+/*! \qmlproperty bool checked
+    \brief This property holds whether this item is currently checked.
+*/
+/*! \qmlproperty bool editable
+    \brief This property holds whether this item has editable text.
+*/
+/*! \qmlproperty bool multiLine
+    \brief This property holds whether this item has multiple text lines.
+*/
+/*! \qmlproperty bool readOnly
+    \brief This property holds whether this item while being of type \l QAccessible::EditableText
+    is set to read-only.
+*/
+/*! \qmlproperty bool selected
+    \brief This property holds whether this item is selected.
+*/
+/*! \qmlproperty bool selectable
+    \brief This property holds whether this item can be selected.
+*/
+/*! \qmlproperty bool pressed
+    \brief This property holds whether this item is pressed (for example a button during a mouse click).
+*/
+/*! \qmlproperty bool checkStateMixed
+    \brief This property holds whether this item is in the partially checked state.
+*/
+/*! \qmlproperty bool defaultButton
+    \brief This property holds whether this item is the default button of a dialog.
+*/
+/*! \qmlproperty bool passwordEdit
+    \brief This property holds whether this item is a password text edit.
+*/
+/*! \qmlproperty bool selectableText
+    \brief This property holds whether this item contains selectable text.
+*/
+
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
 {
