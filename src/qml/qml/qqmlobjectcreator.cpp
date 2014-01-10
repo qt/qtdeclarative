@@ -53,6 +53,7 @@
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlcustomparser_p.h>
+#include <private/qqmlscriptstring_p.h>
 
 QT_USE_NAMESPACE
 
@@ -646,6 +647,24 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
         if (!populateInstance(binding->value.objectIndex, qmlObject, cache, qmlObject, /*value type property*/0))
             return false;
+        return true;
+    }
+
+    // ### resolve this at compile time
+    if (property && property->propType == qMetaTypeId<QQmlScriptString>()) {
+        QQmlScriptString ss(binding->valueAsScriptString(&qmlUnit->header), context->asQQmlContext(), _scopeObject);
+        ss.d.data()->bindingId = QQmlBinding::Invalid;
+        ss.d.data()->lineNumber = binding->location.line;
+        ss.d.data()->columnNumber = binding->location.column;
+        ss.d.data()->isStringLiteral = binding->type == QV4::CompiledData::Binding::Type_String;
+        ss.d.data()->isNumberLiteral = binding->type == QV4::CompiledData::Binding::Type_Number;
+        ss.d.data()->numberValue = binding->valueAsNumber();
+
+        QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
+                                                                   QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+        int propertyWriteStatus = -1;
+        void *argv[] = { &ss, 0, &propertyWriteStatus, &propertyWriteFlags };
+        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         return true;
     }
 

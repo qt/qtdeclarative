@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QQmlContext;
 class QQmlScriptStringPrivate;
+class QmlObjectCreator;
 class Q_QML_EXPORT QQmlScriptString 
 {
 public:
@@ -74,6 +75,7 @@ private:
     QQmlScriptString(const QString &script, QQmlContext *context, QObject *scope);
     QSharedDataPointer<QQmlScriptStringPrivate> d;
 
+    friend class QmlObjectCreator;
     friend class QQmlScriptStringPrivate;
     friend class QQmlVME;
     friend class QQmlExpression;

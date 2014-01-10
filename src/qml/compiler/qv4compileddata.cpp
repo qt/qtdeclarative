@@ -193,6 +193,57 @@ QString Binding::valueAsString(const Unit *unit) const
     return QString();
 }
 
+//reverse of Lexer::singleEscape()
+static QString escapedString(const QString &string)
+{
+    QString tmp = QLatin1String("\"");
+    for (int i = 0; i < string.length(); ++i) {
+        const QChar &c = string.at(i);
+        switch (c.unicode()) {
+        case 0x08:
+            tmp += QLatin1String("\\b");
+            break;
+        case 0x09:
+            tmp += QLatin1String("\\t");
+            break;
+        case 0x0A:
+            tmp += QLatin1String("\\n");
+            break;
+        case 0x0B:
+            tmp += QLatin1String("\\v");
+            break;
+        case 0x0C:
+            tmp += QLatin1String("\\f");
+            break;
+        case 0x0D:
+            tmp += QLatin1String("\\r");
+            break;
+        case 0x22:
+            tmp += QLatin1String("\\\"");
+            break;
+        case 0x27:
+            tmp += QLatin1String("\\\'");
+            break;
+        case 0x5C:
+            tmp += QLatin1String("\\\\");
+            break;
+        default:
+            tmp += c;
+            break;
+        }
+    }
+    tmp += QLatin1Char('\"');
+    return tmp;
+}
+
+QString Binding::valueAsScriptString(const Unit *unit) const
+{
+    if (type == Type_String)
+        return escapedString(unit->stringAt(stringIndex));
+    else
+        return valueAsString(unit);
+}
+
 }
 
 }

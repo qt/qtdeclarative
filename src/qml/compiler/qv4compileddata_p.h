@@ -296,6 +296,7 @@ struct Binding
     Location location;
 
     QString valueAsString(const Unit *unit) const;
+    QString valueAsScriptString(const Unit *unit) const;
     double valueAsNumber() const
     {
         if (type == Type_Number)
