@@ -894,7 +894,13 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
-    binding->type = QV4::CompiledData::Binding::Type_Object;
+
+    // No type name on the initializer means it must be a group property
+    if (stringAt(_objects.at(objectIndex)->inheritedTypeNameIndex).isEmpty())
+        binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
+    else
+        binding->type = QV4::CompiledData::Binding::Type_Object;
+
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
 }
