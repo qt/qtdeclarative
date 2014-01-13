@@ -349,7 +349,6 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         int end = matchOffsets[i * 2 + 1];
         v = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
         array->arrayData->put(i, v);
-        array->arrayData->setLength(i + 1);
     }
     array->setArrayLengthUnchecked(len);
 

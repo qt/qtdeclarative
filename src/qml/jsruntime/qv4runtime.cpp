@@ -613,7 +613,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
-        if (idx < o->arrayData->length() && o->arrayType() == ArrayData::Simple)
+        if (o->arrayType() == ArrayData::Simple && idx < o->arrayData->length())
             o->arrayData->put(idx, value);
         else
             o->putIndexed(idx, value);
@@ -1105,7 +1105,6 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, SafeValue *val
 
     if (length) {
         a->arrayReserve(length);
-        a->arrayData->setLength(length);
         a->arrayData->put(0, values, length);
         a->setArrayLengthUnchecked(length);
     }

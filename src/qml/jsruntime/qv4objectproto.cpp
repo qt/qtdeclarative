@@ -274,7 +274,7 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
 
     if (o->arrayData) {
         o->arrayData->ensureAttributes();
-        for (uint i = 0; i < o->arrayData->length(); ++i) {
+        for (uint i = 0; i < o->arrayData->alloc; ++i) {
             if (!o->arrayData->isEmpty(i))
                 o->arrayData->attrs[i].setConfigurable(false);
         }
@@ -299,7 +299,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
 
     if (o->arrayData) {
         o->arrayData->ensureAttributes();
-        for (uint i = 0; i < o->arrayData->length(); ++i) {
+        for (uint i = 0; i < o->arrayData->alloc; ++i) {
             if (!o->arrayData->isEmpty(i))
                 o->arrayData->attrs[i].setConfigurable(false);
             if (o->arrayData->attrs[i].isData())
@@ -339,7 +339,7 @@ ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
     if (o->arrayData->length() && !o->arrayData->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData->length(); ++i) {
+    for (uint i = 0; i < o->arrayData->alloc; ++i) {
         // ### Fix for sparse arrays
         if (!o->arrayData->isEmpty(i))
             if (o->arrayData->attributes(i).isConfigurable())
@@ -368,7 +368,7 @@ ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
     if (o->arrayData->length() && !o->arrayData->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData->length(); ++i) {
+    for (uint i = 0; i < o->arrayData->alloc; ++i) {
         // ### Fix for sparse arrays
         if (!o->arrayData->isEmpty(i))
             if (o->arrayData->attributes(i).isConfigurable() || o->arrayData->attributes(i).isWritable())

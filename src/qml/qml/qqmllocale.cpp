@@ -498,7 +498,6 @@ QV4::ReturnedValue QQmlLocaleData::method_get_weekDays(QV4::CallContext *ctx)
 
     QV4::Scoped<QV4::ArrayObject> result(scope, ctx->engine->newArrayObject());
     result->arrayReserve(days.size());
-    result->arrayData->setLength(days.size());
     for (int i = 0; i < days.size(); ++i) {
         int day = days.at(i);
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
@@ -521,10 +520,8 @@ QV4::ReturnedValue QQmlLocaleData::method_get_uiLanguages(QV4::CallContext *ctx)
     QV4::Scoped<QV4::ArrayObject> result(scope, ctx->engine->newArrayObject());
     result->arrayReserve(langs.size());
     QV4::ScopedValue v(scope);
-    for (int i = 0; i < langs.size(); ++i) {
+    for (int i = 0; i < langs.size(); ++i)
         result->arrayData->put(i, (v = ctx->engine->newString(langs.at(i))));
-        result->arrayData->setLength(i + 1);
-    }
 
     result->setArrayLengthUnchecked(langs.size());
 

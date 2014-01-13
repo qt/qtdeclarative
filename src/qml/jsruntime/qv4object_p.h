@@ -208,7 +208,7 @@ public:
 
     void arrayCreate() {
         if (!arrayData)
-            arrayData = new ArrayData;
+            arrayData = new SimpleArrayData;
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif
@@ -346,7 +346,6 @@ inline void Object::push_back(const ValueRef v)
     uint idx = getLength();
     arrayReserve(idx + 1);
     arrayData->put(idx, v);
-    arrayData->setLength(idx + 1);
     setArrayLengthUnchecked(idx + 1);
 }
 

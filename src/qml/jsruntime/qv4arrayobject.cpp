@@ -73,7 +73,6 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
         len = callData->argc;
         a->arrayReserve(len);
         a->arrayData->put(0, callData->args, len);
-        a->arrayData->setLength(len);
     }
     a->setArrayLengthUnchecked(len);
 
@@ -303,7 +302,9 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         return Encode(newLen);
     }
 
-    if (!instance->protoHasArray() && instance->arrayData->length() <= len) {
+    if (!ctx->callData->argc) {
+        ;
+    } else if (!instance->protoHasArray() && instance->arrayData->length() <= len) {
         len = instance->arrayData->push_back(len, ctx->callData->argc, ctx->callData->args);
     } else {
         for (int i = 0; i < ctx->callData->argc; ++i)
@@ -483,10 +484,8 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
         v = instance->getIndexed(start + i, &exists);
         if (scope.hasException())
             return Encode::undefined();
-        if (exists) {
+        if (exists)
             newArray->arrayData->put(i, v);
-            newArray->arrayData->setLength(i + 1);
-        }
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 

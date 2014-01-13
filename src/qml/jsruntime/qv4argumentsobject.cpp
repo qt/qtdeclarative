@@ -66,7 +66,6 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
 
         arrayReserve(context->callData->argc);
         arrayData->put(0, context->callData->args, context->callData->argc);
-        arrayData->setLength(context->callData->argc);
         fullyCreated = true;
     } else {
         hasAccessorProperty = 1;
@@ -103,7 +102,6 @@ void ArgumentsObject::fullyCreate()
     arrayData->put(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
         arrayData->setAttributes(i, Attr_Data);
-    arrayData->setLength(argCount);
 
     fullyCreated = true;
 }

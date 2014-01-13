@@ -66,15 +66,14 @@ struct ArrayVTable
     void (*push_front)(ArrayData *d, SafeValue *values, uint n);
     ReturnedValue (*pop_front)(ArrayData *d);
     uint (*truncate)(ArrayData *d, uint newLen);
+    uint (*length)(const ArrayData *d);
 };
 
 
 struct Q_QML_EXPORT ArrayData
 {
     ArrayData()
-        : vtable(&static_vtbl)
-        , offset(0)
-        , len(0)
+        : vtable(0)
         , alloc(0)
         , type(0)
         , attrs(0)
@@ -90,8 +89,6 @@ struct Q_QML_EXPORT ArrayData
     };
 
     const ArrayVTable *vtable;
-    uint offset;
-    uint len;
     uint alloc;
     uint type;
     PropertyAttributes *attrs;
@@ -100,11 +97,9 @@ struct Q_QML_EXPORT ArrayData
     bool isSparse() const { return this && type == Sparse; }
 
     uint length() const {
-        return this ? len : 0;
-    }
-    void setLength(uint l) {
-        Q_ASSERT(this);
-        len = l;
+        if (!this)
+            return 0;
+        return vtable->length(this);
     }
 
     bool hasAttributes() const {
@@ -143,13 +138,13 @@ struct Q_QML_EXPORT ArrayData
     }
     inline uint push_back(uint l, uint n, SafeValue *values) {
         vtable->putArray(this, l, values, n);
-        return len;
+        return length();
     }
     inline bool deleteIndex(uint index) {
         return vtable->del(this, index);
     }
     inline uint truncate(uint newLen) {
-        if (!this || len < newLen)
+        if (!this)
             return newLen;
         return vtable->truncate(this, newLen);
     }
@@ -166,12 +161,23 @@ struct Q_QML_EXPORT ArrayData
     }
     inline Property *getProperty(uint index) const;
 
-
-
     static void sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
-    static uint append(Object *o, const ArrayObject *otherObj, uint n);
+    static uint append(Object *obj, const ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
     void markObjects(ExecutionEngine *e);
+
+};
+
+struct Q_QML_EXPORT SimpleArrayData : public ArrayData
+{
+    SimpleArrayData()
+        : ArrayData()
+        , len(0)
+        , offset(0)
+    { vtable = &static_vtbl; }
+
+    uint len;
+    uint offset;
 
     static void getHeadRoom(ArrayData *d);
     static void reserve(ArrayData *d, uint n);
@@ -186,8 +192,10 @@ struct Q_QML_EXPORT ArrayData
     static void push_front(ArrayData *d, SafeValue *values, uint n);
     static ReturnedValue pop_front(ArrayData *d);
     static uint truncate(ArrayData *d, uint newLen);
+    static uint length(const ArrayData *d);
 
     static const ArrayVTable static_vtbl;
+
 };
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
@@ -214,6 +222,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static void push_front(ArrayData *d, SafeValue *values, uint n);
     static ReturnedValue pop_front(ArrayData *d);
     static uint truncate(ArrayData *d, uint newLen);
+    static uint length(const ArrayData *d);
 
     static const ArrayVTable static_vtbl;
 };
@@ -224,7 +233,8 @@ inline Property *ArrayData::getProperty(uint index) const
     if (!this)
         return 0;
     if (type != Sparse) {
-        if (index >= len || data[index].isEmpty())
+        const SimpleArrayData *that = static_cast<const SimpleArrayData *>(this);
+        if (index >= that->len || data[index].isEmpty())
             return 0;
         return reinterpret_cast<Property *>(data + index);
     } else {
