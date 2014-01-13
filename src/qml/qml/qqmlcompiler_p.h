@@ -144,9 +144,9 @@ public:
 
     QQmlPropertyCache *rootPropertyCache;
     QList<QString> primitives;
-    QList<QByteArray> datas;
+    QVector<QByteArray> datas;
     QByteArray bytecode;
-    QList<QQmlPropertyCache *> propertyCaches;
+    QVector<QQmlPropertyCache *> propertyCaches;
     QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;

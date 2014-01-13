@@ -99,33 +99,11 @@ bool QQmlTypeCompiler::compile()
     compiledData->datas.reserve(objectCount);
     compiledData->propertyCaches.reserve(objectCount);
 
-    QQmlPropertyCacheCreator propertyCacheBuilder(this);
-
-    for (int i = 0; i < objectCount; ++i) {
-        const QtQml::QmlObject *obj = parsedQML->objects.at(i);
-
-        QByteArray vmeMetaObjectData;
-        QQmlPropertyCache *propertyCache = 0;
-
-        // If the object has no type, then it's probably a nested object definition as part
-        // of a group property.
-        const bool objectHasType = !propertyCacheBuilder.stringAt(obj->inheritedTypeNameIndex).isEmpty();
-        if (objectHasType) {
-            if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
-                errors << propertyCacheBuilder.errors;
-                return false;
-            }
-        }
-
-        compiledData->datas << vmeMetaObjectData;
-        if (propertyCache)
-            propertyCache->addref();
-        compiledData->propertyCaches << propertyCache;
-
-        if (i == parsedQML->indexOfRootObject) {
-            Q_ASSERT(propertyCache);
-            compiledData->rootPropertyCache = propertyCache;
-            propertyCache->addref();
+    {
+        QQmlPropertyCacheCreator propertyCacheBuilder(this);
+        if (!propertyCacheBuilder.buildMetaObjects()) {
+            errors << propertyCacheBuilder.errors;
+            return false;
         }
     }
 
@@ -263,12 +241,26 @@ int QQmlTypeCompiler::rootObjectIndex() const
     return parsedQML->indexOfRootObject;
 }
 
-const QList<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
+void QQmlTypeCompiler::setPropertyCaches(const QVector<QQmlPropertyCache *> &caches)
+{
+    Q_ASSERT(compiledData->propertyCaches.isEmpty());
+    compiledData->propertyCaches = caches;
+    Q_ASSERT(caches.count() >= parsedQML->indexOfRootObject);
+    compiledData->rootPropertyCache = caches.at(parsedQML->indexOfRootObject);
+}
+
+const QVector<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
 {
     return compiledData->propertyCaches;
 }
 
-QList<QByteArray> *QQmlTypeCompiler::vmeMetaObjects() const
+void QQmlTypeCompiler::setVMEMetaObjects(const QVector<QByteArray> &metaObjects)
+{
+    Q_ASSERT(compiledData->datas.isEmpty());
+    compiledData->datas = metaObjects;
+}
+
+QVector<QByteArray> *QQmlTypeCompiler::vmeMetaObjects() const
 {
     return &compiledData->datas;
 }
@@ -312,31 +304,62 @@ static QAtomicInt classIndexCounter(0);
 QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
+    , qmlObjects(*typeCompiler->qmlObjects())
     , imports(typeCompiler->imports())
     , resolvedTypes(typeCompiler->resolvedTypes())
 {
 }
 
-bool QQmlPropertyCacheCreator::create(const QtQml::QmlObject *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
+QQmlPropertyCacheCreator::~QQmlPropertyCacheCreator()
 {
-    Q_ASSERT(!stringAt(obj->inheritedTypeNameIndex).isEmpty());
+    for (int i = 0; i < propertyCaches.count(); ++i)
+        if (QQmlPropertyCache *cache = propertyCaches.at(i))
+            cache->release();
+    propertyCaches.clear();
+}
 
-    QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
-    QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-    Q_ASSERT(baseTypeCache);
-    if (obj->properties->count == 0 && obj->qmlSignals->count == 0 && obj->functions->count == 0) {
-        *resultCache = baseTypeCache;
-        vmeMetaObjectData->clear();
-        return true;
+bool QQmlPropertyCacheCreator::buildMetaObjects()
+{
+    propertyCaches.resize(qmlObjects.count());
+    vmeMetaObjects.resize(qmlObjects.count());
+
+    for (int i = 0; i < qmlObjects.count(); ++i) {
+        const QtQml::QmlObject *obj = qmlObjects.at(i);
+
+        // If the object has no type, then it's probably a nested object definition as part
+        // of a group property.
+        const bool objectHasType = !stringAt(obj->inheritedTypeNameIndex).isEmpty();
+        if (objectHasType) {
+            QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+            QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+            Q_ASSERT(baseTypeCache);
+
+            bool needVMEMetaObject = obj->properties->count != 0 || obj->qmlSignals->count != 0 || obj->functions->count != 0;
+            if (needVMEMetaObject) {
+                if (!createMetaObject(i, obj, baseTypeCache))
+                    return false;
+            } else {
+                propertyCaches[i] = baseTypeCache;
+                baseTypeCache->addref();
+            }
+        }
     }
 
+    compiler->setVMEMetaObjects(vmeMetaObjects);
+    compiler->setPropertyCaches(propertyCaches);
+    propertyCaches.clear();
+
+    return true;
+}
+
+bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache)
+{
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate),
                                                              obj->properties->count,
                                                              obj->functions->count + obj->properties->count + obj->qmlSignals->count,
                                                              obj->qmlSignals->count + obj->properties->count);
-    *resultCache = cache;
-
-    vmeMetaObjectData->clear();
+    propertyCaches[objectIndex] = cache;
+    cache->addref();
 
     struct TypeData {
         QV4::CompiledData::Property::Type dtype;
@@ -406,7 +429,7 @@ bool QQmlPropertyCacheCreator::create(const QtQml::QmlObject *obj, QQmlPropertyC
 
     typedef QQmlVMEMetaData VMD;
 
-    QByteArray &dynamicData = *vmeMetaObjectData = QByteArray(sizeof(QQmlVMEMetaData)
+    QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
                                                               + obj->properties->count * sizeof(VMD::PropertyData)
                                                               + obj->functions->count * sizeof(VMD::MethodData)
                                                               + aliasCount * sizeof(VMD::AliasData), 0);

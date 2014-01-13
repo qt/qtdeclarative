@@ -84,8 +84,10 @@ struct QQmlTypeCompiler
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes();
     QList<QtQml::QmlObject*> *qmlObjects();
     int rootObjectIndex() const;
-    const QList<QQmlPropertyCache *> &propertyCaches() const;
-    QList<QByteArray> *vmeMetaObjects() const;
+    void setPropertyCaches(const QVector<QQmlPropertyCache *> &caches);
+    const QVector<QQmlPropertyCache *> &propertyCaches() const;
+    void setVMEMetaObjects(const QVector<QByteArray> &metaObjects);
+    QVector<QByteArray> *vmeMetaObjects() const;
     QHash<int, int> *objectIndexToIdForRoot();
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
     QHash<int, QByteArray> *customParserData();
@@ -101,6 +103,8 @@ private:
 
 struct QQmlCompilePass
 {
+    virtual ~QQmlCompilePass() {}
+
     QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
     QList<QQmlError> errors;
 
@@ -117,13 +121,18 @@ class QQmlPropertyCacheCreator : public QQmlCompilePass
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
     QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
+    ~QQmlPropertyCacheCreator();
 
-    bool create(const QtQml::QmlObject *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
-
+    bool buildMetaObjects();
 protected:
+    bool createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache);
+
     QQmlEnginePrivate *enginePrivate;
+    const QList<QtQml::QmlObject*> &qmlObjects;
     const QQmlImports *imports;
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
+    QVector<QByteArray> vmeMetaObjects;
+    QVector<QQmlPropertyCache*> propertyCaches;
 };
 
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
@@ -157,8 +166,8 @@ protected:
     QList<int> _objectsWithAliases;
 
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
-    const QList<QQmlPropertyCache *> propertyCaches;
-    QList<QByteArray> *vmeMetaObjectData;
+    const QVector<QQmlPropertyCache *> propertyCaches;
+    QVector<QByteArray> *vmeMetaObjectData;
     QHash<int, int> *objectIndexToIdForRoot;
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
 };
@@ -178,7 +187,7 @@ private:
 
     const QV4::CompiledData::QmlUnit *qmlUnit;
     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
-    const QList<QQmlPropertyCache *> &propertyCaches;
+    const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QByteArray> *customParserData;
 };

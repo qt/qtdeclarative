@@ -87,8 +87,8 @@ private:
     QQmlContextData *parentContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
-    const QList<QQmlPropertyCache *> propertyCaches;
-    const QList<QByteArray> vmeMetaObjectData;
+    const QVector<QQmlPropertyCache *> propertyCaches;
+    const QVector<QByteArray> vmeMetaObjectData;
     QHash<int, int> objectIndexToId;
     QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
     QLinkedList<QVector<QQmlParserStatus*> > allParserStatusCallbacks;
