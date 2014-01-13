@@ -109,21 +109,28 @@ quintptr getStackLimit()
 #  else
     void* stackBottom = 0;
     pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
-    size_t stackSize = 0;
-    pthread_attr_getstack(&attr, &stackBottom, &stackSize);
-    pthread_attr_destroy(&attr);
+    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+        size_t stackSize = 0;
+        pthread_attr_getstack(&attr, &stackBottom, &stackSize);
+        pthread_attr_destroy(&attr);
 
-#    if defined(Q_OS_ANDROID)
-    // Bionic pretends that the main thread has a tiny stack; work around it
-    if (gettid() == getpid()) {
-        rlimit limit;
-        getrlimit(RLIMIT_STACK, &limit);
-        stackBottom = reinterpret_cast<void*>(reinterpret_cast<quintptr>(stackBottom) + stackSize - limit.rlim_cur);
+#        if defined(Q_OS_ANDROID)
+        // Bionic pretends that the main thread has a tiny stack; work around it
+        if (gettid() == getpid()) {
+            rlimit limit;
+            getrlimit(RLIMIT_STACK, &limit);
+            stackBottom = reinterpret_cast<void*>(reinterpret_cast<quintptr>(stackBottom) + stackSize - limit.rlim_cur);
+        }
+#       endif
+
+        stackLimit = reinterpret_cast<quintptr>(stackBottom);
+    } else {
+        int dummy;
+        // this is inexact, as part of the stack is used when being called here,
+        // but let's simply default to 1MB from where the stack is right now
+        stackLimit = reinterpret_cast<qintptr>(&dummy) - 1024*1024;
     }
-#    endif
 
-    stackLimit = reinterpret_cast<quintptr>(stackBottom);
 #  endif
 // This is wrong. StackLimit is the currently committed stack size, not the real end.
 // only way to get that limit is apparently by using VirtualQuery (Yuck)
