@@ -676,6 +676,7 @@ void tst_qqmlcontext::qobjectDerived()
     QQmlContext context(engine.rootContext());
 
     QObject *o1 = component.create(&context);
+    Q_UNUSED(o1);
 
     QCOMPARE(command.count, 2);
 }

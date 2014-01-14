@@ -885,6 +885,7 @@ public:
 
     QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize)
     {
+        Q_UNUSED(requestedSize);
         if (id == QLatin1String("first-image.png")) {
             QTest::qWait(50);
             int width = 100;
