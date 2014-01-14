@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty bool QtQuick.Particles::GroupGoal::jump
 
     If true, affected particles will jump directly to the target group instead of taking the
-    the shortest valid path to get there. They will also not finish their current state,
+    shortest valid path to get there. They will also not finish their current state,
     but immediately move to the beginning of the goal state.
 
     Default is false.

@@ -106,7 +106,8 @@ bool qsg_sort_batch_is_valid(Batch *a, Batch *b) { return a->first && !b->first;
 bool qsg_sort_batch_increasing_order(Batch *a, Batch *b) { return a->first->order < b->first->order; }
 bool qsg_sort_batch_decreasing_order(Batch *a, Batch *b) { return a->first->order > b->first->order; }
 
-QSGMaterial::Flag QSGMaterial_RequiresFullMatrixBit = (QSGMaterial::Flag) (QSGMaterial::RequiresFullMatrix & ~QSGMaterial::RequiresFullMatrixExceptTranslate);
+QSGMaterial::Flag QSGMaterial_FullMatrix = (QSGMaterial::Flag) (QSGMaterial::RequiresFullMatrix & ~QSGMaterial::RequiresFullMatrixExceptTranslate);
+QSGMaterial::Flag QSGMaterial_FullExceptTranslate = (QSGMaterial::Flag) (QSGMaterial::RequiresFullMatrixExceptTranslate & ~QSGMaterial::RequiresDeterminant);
 
 struct QMatrix4x4_Accessor
 {
@@ -1699,14 +1700,12 @@ void Renderer::uploadBatch(Batch *b)
 
         QSGGeometryNode *gn = b->first->node;
         QSGGeometry *g =  gn->geometry();
-
+        QSGMaterial::Flags flags = gn->activeMaterial()->flags();
         bool canMerge = (g->drawingMode() == GL_TRIANGLES || g->drawingMode() == GL_TRIANGLE_STRIP)
                         && b->positionAttribute >= 0
                         && g->indexType() == GL_UNSIGNED_SHORT
-                        && (gn->activeMaterial()->flags() & QSGMaterial::CustomCompileStep) == 0
-                        && (((gn->activeMaterial()->flags() & QSGMaterial::RequiresDeterminant) == 0)
-                            || (((gn->activeMaterial()->flags() & QSGMaterial_RequiresFullMatrixBit) == 0) && b->isTranslateOnlyToRoot())
-                            )
+                        && (flags & (QSGMaterial::CustomCompileStep | QSGMaterial_FullMatrix)) == 0
+                        && ((flags & QSGMaterial_FullExceptTranslate) == 0 || b->isTranslateOnlyToRoot())
                         && b->isSafeToBatch();
 
         b->merged = canMerge;

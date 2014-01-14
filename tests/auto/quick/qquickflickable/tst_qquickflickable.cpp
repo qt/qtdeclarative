@@ -412,6 +412,29 @@ void tst_qquickflickable::pressDelay()
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
     QCOMPARE(clickedSpy.count(),1);
 
+    // Press and release position should match
+    QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
+    QCOMPARE(flickable->property("pressY").toReal(), flickable->property("releaseY").toReal());
+
+
+    // Test a quick tap within the pressDelay timeout
+    clickedSpy.clear();
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(180, 180));
+
+    // The press should not occur immediately
+    QVERIFY(mouseArea->property("pressed").toBool() == false);
+
+    QCOMPARE(clickedSpy.count(),0);
+
+    // On release the press, release and clicked signal should be emitted
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(180, 180));
+    QCOMPARE(clickedSpy.count(),1);
+
+    // Press and release position should match
+    QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
+    QCOMPARE(flickable->property("pressY").toReal(), flickable->property("releaseY").toReal());
+
+
     // QTBUG-31168
     QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(150, 110));
 

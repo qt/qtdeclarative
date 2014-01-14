@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty bool QtQuick.Particles::SpriteGoal::jump
 
     If true, affected sprites will jump directly to the goal state instead of taking the
-    the shortest valid path to get there. They will also not finish their current state,
+    shortest valid path to get there. They will also not finish their current state,
     but immediately move to the beginning of the goal state.
 
     Default is false.

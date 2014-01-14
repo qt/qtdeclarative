@@ -89,7 +89,7 @@ Rectangle {
     // item visible.
     //
     // The second ListView sets a highlight range which attempts to keep the
-    // current item within the the bounds of the range. However,
+    // current item within the bounds of the range. However,
     // items will not scroll beyond the beginning or end of the view,
     // forcing the highlight to move outside the range at the ends.
     //
