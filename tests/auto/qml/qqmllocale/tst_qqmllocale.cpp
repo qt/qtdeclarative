@@ -117,6 +117,7 @@ private slots:
     void stringLocaleCompare_data();
     void stringLocaleCompare();
 
+    void localeAsCppProperty();
 private:
     void addPropertyData(const QString &l);
     QVariant getProperty(QObject *obj, const QString &locale, const QString &property);
@@ -1221,6 +1222,41 @@ void tst_qqmllocale::stringLocaleCompare()
     obj->setProperty("string2", string2);
 
     QCOMPARE(obj->property("comparison").toInt(), QString::localeAwareCompare(string1, string2));
+}
+
+class Calendar : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale)
+public:
+    Calendar() {
+    }
+
+    QLocale locale() const {
+        return mLocale;
+    }
+
+    void setLocale(const QLocale &locale) {
+        mLocale = locale;
+    }
+private:
+    QLocale mLocale;
+};
+
+void tst_qqmllocale::localeAsCppProperty()
+{
+    QQmlComponent component(&engine);
+    qmlRegisterType<Calendar>("Test", 1, 0, "Calendar");
+    component.setData("import QtQml 2.2\nimport Test 1.0\nCalendar { locale: Qt.locale('en_GB'); property var testLocale }", QUrl());
+    QVERIFY(!component.isError());
+    QTRY_VERIFY(component.isReady());
+
+    Calendar *item = qobject_cast<Calendar*>(component.create());
+    QCOMPARE(item->property("locale").toLocale().name(), QLatin1String("en_GB"));
+
+    QVariant localeVariant(QLocale("nb_NO"));
+    item->setProperty("testLocale", localeVariant);
+    QCOMPARE(item->property("testLocale").toLocale().name(), QLatin1String("nb_NO"));
 }
 
 class DateFormatter : public QObject

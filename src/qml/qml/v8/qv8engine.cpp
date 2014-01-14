@@ -300,7 +300,8 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
                 return QV4::JsonObject::fromJsonObject(m_v4Engine, *reinterpret_cast<const QJsonObject *>(ptr));
             case QMetaType::QJsonArray:
                 return QV4::JsonObject::fromJsonArray(m_v4Engine, *reinterpret_cast<const QJsonArray *>(ptr));
-
+            case QMetaType::QLocale:
+                return QQmlLocale::wrap(this, *reinterpret_cast<const QLocale*>(ptr));
             default:
                 break;
         }
@@ -395,6 +396,8 @@ QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
         return value->asDouble();
     if (value->isString())
         return value->stringValue()->toQString();
+    if (QQmlLocaleData *ld = value->as<QQmlLocaleData>())
+        return ld->locale;
     if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
