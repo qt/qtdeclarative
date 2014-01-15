@@ -215,7 +215,7 @@ public:
 
     struct OperationGuard : public QQmlGuard<QQuickStateOperation>
     {
-        OperationGuard(QObject *obj, QList<OperationGuard> *l) : list(l) { 
+        OperationGuard(QObject *obj, QList<OperationGuard> *l) : list(l) {
             setObject(static_cast<QQuickStateOperation *>(obj));
         }
         QList<OperationGuard> *list;

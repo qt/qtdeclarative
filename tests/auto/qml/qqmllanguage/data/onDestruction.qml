@@ -10,7 +10,7 @@ MyTypeObject {
     objectProperty: OnDestructionType {
         qmlobjectProperty: MyQmlObject {
             id: nestedObject
-            property int b: 10 
+            property int b: 10
             Component.onDestruction: console.log("Destruction " + a + " " + nestedObject.b)
         }
     }

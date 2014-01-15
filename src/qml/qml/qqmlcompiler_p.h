@@ -101,7 +101,7 @@ public:
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
-    struct TypeReference 
+    struct TypeReference
     {
         TypeReference()
             : type(0), typePropertyCache(0), component(0)
@@ -208,7 +208,7 @@ private:
 };
 
 namespace QQmlCompilerTypes {
-    struct BindingContext 
+    struct BindingContext
     {
         BindingContext()
             : stack(0), owner(0), object(0) {}
@@ -258,7 +258,7 @@ namespace QQmlCompilerTypes {
         int n;
     };
 
-    struct IdList : public QFieldList<QQmlScript::Object, 
+    struct IdList : public QFieldList<QQmlScript::Object,
                                       &QQmlScript::Object::nextIdObject>
     {
         QQmlScript::Object *value(const QString &id) const {
@@ -292,8 +292,8 @@ namespace QQmlCompilerTypes {
     // more than one of these for each compile
     struct ComponentCompileState : public QQmlPool::Class
     {
-        ComponentCompileState() 
-        : parserStatusCount(0), totalBindingsCount(0), pushedProperties(0), nested(false), 
+        ComponentCompileState()
+        : parserStatusCount(0), totalBindingsCount(0), pushedProperties(0), nested(false),
           root(0) {}
 
         IdList ids;
@@ -364,23 +364,23 @@ private:
     bool buildObject(QQmlScript::Object *obj, const QQmlCompilerTypes::BindingContext &);
     bool buildComponent(QQmlScript::Object *obj, const QQmlCompilerTypes::BindingContext &);
     bool buildSubObject(QQmlScript::Object *obj, const QQmlCompilerTypes::BindingContext &);
-    bool buildSignal(QQmlScript::Property *prop, QQmlScript::Object *obj, 
+    bool buildSignal(QQmlScript::Property *prop, QQmlScript::Object *obj,
                      const QQmlCompilerTypes::BindingContext &);
-    bool buildProperty(QQmlScript::Property *prop, QQmlScript::Object *obj, 
+    bool buildProperty(QQmlScript::Property *prop, QQmlScript::Object *obj,
                        const QQmlCompilerTypes::BindingContext &);
     bool buildPropertyInNamespace(QQmlImportNamespace *ns,
-                                  QQmlScript::Property *prop, 
-                                  QQmlScript::Object *obj, 
+                                  QQmlScript::Property *prop,
+                                  QQmlScript::Object *obj,
                                   const QQmlCompilerTypes::BindingContext &);
     bool buildIdProperty(QQmlScript::Property *prop, QQmlScript::Object *obj);
-    bool buildAttachedProperty(QQmlScript::Property *prop, 
+    bool buildAttachedProperty(QQmlScript::Property *prop,
                                QQmlScript::Object *obj,
                                const QQmlCompilerTypes::BindingContext &ctxt);
     bool buildGroupedProperty(QQmlScript::Property *prop,
                               QQmlScript::Object *obj,
                               const QQmlCompilerTypes::BindingContext &ctxt);
-    bool buildValueTypeProperty(QObject *type, 
-                                QQmlScript::Object *obj, 
+    bool buildValueTypeProperty(QObject *type,
+                                QQmlScript::Object *obj,
                                 QQmlScript::Object *baseObj,
                                 const QQmlCompilerTypes::BindingContext &ctxt);
     bool buildListProperty(QQmlScript::Property *prop,
@@ -432,13 +432,13 @@ private:
     void genComponent(QQmlScript::Object *obj);
     void genValueProperty(QQmlScript::Property *prop, QQmlScript::Object *obj);
     void genListProperty(QQmlScript::Property *prop, QQmlScript::Object *obj);
-    void genPropertyAssignment(QQmlScript::Property *prop, 
+    void genPropertyAssignment(QQmlScript::Property *prop,
                                QQmlScript::Object *obj,
                                QQmlScript::Property *valueTypeProperty = 0);
     void genLiteralAssignment(QQmlScript::Property *prop,
                               QQmlScript::Value *value);
-    void genBindingAssignment(QQmlScript::Value *binding, 
-                              QQmlScript::Property *prop, 
+    void genBindingAssignment(QQmlScript::Value *binding,
+                              QQmlScript::Property *prop,
                               QQmlScript::Object *obj,
                               QQmlScript::Property *valueTypeProperty = 0);
     int genContextCache();

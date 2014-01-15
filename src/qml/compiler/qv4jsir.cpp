@@ -740,7 +740,7 @@ Temp *BasicBlock::LOCAL(unsigned index, unsigned scope)
 }
 
 Expr *BasicBlock::CONST(Type type, double value)
-{ 
+{
     Const *e = function->New<Const>();
     if (type == NumberType) {
         int ival = (int)value;
@@ -769,7 +769,7 @@ Expr *BasicBlock::REGEXP(const QString *value, int flags)
 }
 
 Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
-{ 
+{
     Name *e = function->New<Name>();
     e->init(function->newString(id), line, column);
     return e;
@@ -805,7 +805,7 @@ Expr *BasicBlock::CONVERT(Expr *expr, Type type)
 }
 
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
-{ 
+{
     Unop *e = function->New<Unop>();
     e->init(op, expr);
     return e;
@@ -819,7 +819,7 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 }
 
 Expr *BasicBlock::CALL(Expr *base, ExprList *args)
-{ 
+{
     Call *e = function->New<Call>();
     e->init(base, args);
     int argc = 0;
@@ -851,7 +851,7 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *prop
 }
 
 Stmt *BasicBlock::EXP(Expr *expr)
-{ 
+{
     if (isTerminated())
         return 0;
 
@@ -862,7 +862,7 @@ Stmt *BasicBlock::EXP(Expr *expr)
 }
 
 Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
-{ 
+{
     if (isTerminated())
         return 0;
 
@@ -872,7 +872,7 @@ Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
     return s;
 }
 
-Stmt *BasicBlock::JUMP(BasicBlock *target) 
+Stmt *BasicBlock::JUMP(BasicBlock *target)
 {
     if (isTerminated())
         return 0;
@@ -890,7 +890,7 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     return s;
 }
 
-Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse) 
+Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
 {
     if (isTerminated())
         return 0;

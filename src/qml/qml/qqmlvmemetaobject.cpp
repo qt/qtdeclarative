@@ -224,7 +224,7 @@ const void *QQmlVMEVariant::dataPtr() const
     return &data;
 }
 
-void *QQmlVMEVariant::dataPtr() 
+void *QQmlVMEVariant::dataPtr()
 {
     return &data;
 }
@@ -234,7 +234,7 @@ size_t QQmlVMEVariant::dataSize() const
     return sizeof(data);
 }
 
-QObject *QQmlVMEVariant::asQObject() 
+QObject *QQmlVMEVariant::asQObject()
 {
     if (type != QMetaType::QObjectStar)
         setValue((QObject *)0, 0, -1);
@@ -242,7 +242,7 @@ QObject *QQmlVMEVariant::asQObject()
     return *(QQmlGuard<QObject> *)(dataPtr());
 }
 
-const QVariant &QQmlVMEVariant::asQVariant() 
+const QVariant &QQmlVMEVariant::asQVariant()
 {
     if (type != QMetaType::QVariant)
         setValue(QVariant());
@@ -250,7 +250,7 @@ const QVariant &QQmlVMEVariant::asQVariant()
     return *(QVariant *)(dataPtr());
 }
 
-int QQmlVMEVariant::asInt() 
+int QQmlVMEVariant::asInt()
 {
     if (type != QMetaType::Int)
         setValue(int(0));
@@ -258,7 +258,7 @@ int QQmlVMEVariant::asInt()
     return *(int *)(dataPtr());
 }
 
-bool QQmlVMEVariant::asBool() 
+bool QQmlVMEVariant::asBool()
 {
     if (type != QMetaType::Bool)
         setValue(bool(false));
@@ -266,7 +266,7 @@ bool QQmlVMEVariant::asBool()
     return *(bool *)(dataPtr());
 }
 
-double QQmlVMEVariant::asDouble() 
+double QQmlVMEVariant::asDouble()
 {
     if (type != QMetaType::Double)
         setValue(double(0));
@@ -274,7 +274,7 @@ double QQmlVMEVariant::asDouble()
     return *(double *)(dataPtr());
 }
 
-const QString &QQmlVMEVariant::asQString() 
+const QString &QQmlVMEVariant::asQString()
 {
     if (type != QMetaType::QString)
         setValue(QString());
@@ -282,7 +282,7 @@ const QString &QQmlVMEVariant::asQString()
     return *(QString *)(dataPtr());
 }
 
-const QUrl &QQmlVMEVariant::asQUrl() 
+const QUrl &QQmlVMEVariant::asQUrl()
 {
     if (type != QMetaType::QUrl)
         setValue(QUrl());
@@ -290,7 +290,7 @@ const QUrl &QQmlVMEVariant::asQUrl()
     return *(QUrl *)(dataPtr());
 }
 
-const QTime &QQmlVMEVariant::asQTime() 
+const QTime &QQmlVMEVariant::asQTime()
 {
     if (type != QMetaType::QTime)
         setValue(QTime());
@@ -298,7 +298,7 @@ const QTime &QQmlVMEVariant::asQTime()
     return *(QTime *)(dataPtr());
 }
 
-const QDate &QQmlVMEVariant::asQDate() 
+const QDate &QQmlVMEVariant::asQDate()
 {
     if (type != QMetaType::QDate)
         setValue(QDate());
@@ -306,7 +306,7 @@ const QDate &QQmlVMEVariant::asQDate()
     return *(QDate *)(dataPtr());
 }
 
-const QDateTime &QQmlVMEVariant::asQDateTime() 
+const QDateTime &QQmlVMEVariant::asQDateTime()
 {
     if (type != QMetaType::QDateTime)
         setValue(QDateTime());
@@ -779,9 +779,9 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
                             int listIndex = data[id].asInt();
                             const List *list = &listProperties.at(listIndex);
-                            *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) = 
+                            *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
                                 QQmlListProperty<QObject>(object, (void *)list,
-                                                                  list_append, list_count, list_at, 
+                                                                  list_append, list_count, list_at,
                                                                   list_clear);
                         }
 
@@ -858,7 +858,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::AliasData *d = metaData->aliasData() + id;
 
-                if (d->flags & QML_ALIAS_FLAG_PTR && c == QMetaObject::ReadProperty) 
+                if (d->flags & QML_ALIAS_FLAG_PTR && c == QMetaObject::ReadProperty)
                         *reinterpret_cast<void **>(a[0]) = 0;
 
                 if (!ctxt) return -1;
@@ -867,7 +867,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
                 QObject *target = ctxtPriv->data->idValues[d->contextIdx].data();
-                if (!target) 
+                if (!target)
                     return -1;
 
                 connectAlias(id);
@@ -875,8 +875,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 if (d->isObjectAlias()) {
                     *reinterpret_cast<QObject **>(a[0]) = target;
                     return -1;
-                } 
-                
+                }
+
                 // Remove binding (if any) on write
                 if(c == QMetaObject::WriteProperty) {
                     int flags = *reinterpret_cast<int*>(a[3]);
@@ -888,7 +888,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         }
                     }
                 }
-                
+
                 if (d->isValueTypeAlias()) {
                     // Value type property
                     QQmlValueType *valueType = QQmlValueTypeFactory::valueType(d->valueType());
@@ -896,7 +896,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                     valueType->read(target, d->propertyIndex());
                     int rv = QMetaObject::metacall(valueType, c, d->valueTypeIndex(), a);
-                    
+
                     if (c == QMetaObject::WriteProperty)
                         valueType->write(target, d->propertyIndex(), 0x00);
 
@@ -987,7 +987,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
         return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 
-    if (!v8methods) 
+    if (!v8methods)
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     return v8methods[index].value();
@@ -1186,7 +1186,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, QV4::ValueRef function)
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
 
-    if (!v8methods) 
+    if (!v8methods)
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;

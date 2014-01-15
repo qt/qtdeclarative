@@ -53,7 +53,7 @@ Item {
     function toggle() {
         if (toggleswitch.state == "on")
             toggleswitch.state = "off";
-        else 
+        else
             toggleswitch.state = "on";
     }
 //![2]

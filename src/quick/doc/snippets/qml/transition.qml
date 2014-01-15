@@ -55,8 +55,8 @@ Rectangle {
         PropertyChanges { target: rect; x: 50; y: 50 }
     }
 
-    transitions: Transition { 
-        NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad } 
+    transitions: Transition {
+        NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad }
     }
 }
 //![0]

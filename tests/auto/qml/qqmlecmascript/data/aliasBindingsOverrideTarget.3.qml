@@ -11,7 +11,7 @@ Item {
         id: obj
 
         testProperty: root.value1 * 9
-        aliasProperty: root.value2 * 10 
+        aliasProperty: root.value2 * 10
     }
 
     Component.onCompleted: {

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
 \internal
 \class QQmlCleanup
-\brief The QQmlCleanup provides a callback when a QQmlEngine is deleted. 
+\brief The QQmlCleanup provides a callback when a QQmlEngine is deleted.
 
 Any object that needs cleanup to occur before the QQmlEngine's V8 engine is
 destroyed should inherit from QQmlCleanup.  The clear() virtual method will be
@@ -111,7 +111,7 @@ QQmlCleanup::~QQmlCleanup()
 
     if (prev) *prev = next;
     if (next) next->prev = prev;
-    prev = 0; 
+    prev = 0;
     next = 0;
 }
 

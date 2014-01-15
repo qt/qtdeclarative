@@ -137,9 +137,9 @@ Rectangle {
 
                     Text { anchors.centerIn: parent; text: "Cut" }
 
-                    MouseArea { 
+                    MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.cut(); editor.state = "" } 
+                        onClicked: { edit.cut(); editor.state = "" }
                     }
                 }
 
@@ -152,9 +152,9 @@ Rectangle {
 
                     Text { anchors.centerIn: parent; text: "Copy" }
 
-                    MouseArea { 
+                    MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.copy(); editor.state = "selection" } 
+                        onClicked: { edit.copy(); editor.state = "selection" }
                     }
                 }
 
@@ -167,9 +167,9 @@ Rectangle {
 
                     Text { anchors.centerIn: parent; text: "Paste" }
 
-                    MouseArea { 
+                    MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.paste(); edit.cursorPosition = edit.selectionEnd; editor.state = "" } 
+                        onClicked: { edit.paste(); edit.cursorPosition = edit.selectionEnd; editor.state = "" }
                     }
                 }
 
@@ -182,13 +182,13 @@ Rectangle {
 
                     Text { anchors.centerIn: parent; text: "Deselect" }
 
-                    MouseArea { 
+                    MouseArea {
                         anchors.fill: parent
-                        onClicked: { 
+                        onClicked: {
                             edit.cursorPosition = edit.selectionEnd;
                             edit.deselect();
-                            editor.state = "" 
-                        } 
+                            editor.state = ""
+                        }
                     }
                 }
             }

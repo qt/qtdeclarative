@@ -5,7 +5,7 @@ Rectangle {
 
     width: 800; height: 600; color: "blue"
 
-    Item { 
+    Item {
         id: firstItem;
         KeyNavigation.right: input
     }
@@ -18,7 +18,7 @@ Rectangle {
         KeyNavigation.down: lastItem
     }
     Item {
-        id: lastItem 
+        id: lastItem
         KeyNavigation.left: input
     }
 }

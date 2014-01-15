@@ -55,10 +55,10 @@
 
 #define QML_DECLARE_TYPE(TYPE) \
     Q_DECLARE_METATYPE(TYPE *) \
-    Q_DECLARE_METATYPE(QQmlListProperty<TYPE>) 
+    Q_DECLARE_METATYPE(QQmlListProperty<TYPE>)
 
 #define QML_DECLARE_TYPE_HASMETATYPE(TYPE) \
-    Q_DECLARE_METATYPE(QQmlListProperty<TYPE>) 
+    Q_DECLARE_METATYPE(QQmlListProperty<TYPE>)
 
 #define QML_DECLARE_INTERFACE(INTERFACE) \
     QML_DECLARE_TYPE(INTERFACE)
@@ -109,7 +109,7 @@ int qmlRegisterType()
     QML_GETTYPENAMES
 
     QQmlPrivate::RegisterType type = {
-        0, 
+        0,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
@@ -121,7 +121,7 @@ int qmlRegisterType()
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
 
-        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(), 
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
@@ -204,7 +204,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     QML_GETTYPENAMES
 
     QQmlPrivate::RegisterType type = {
-        0, 
+        0,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
@@ -216,7 +216,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
 
-        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(), 
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
@@ -298,7 +298,7 @@ int qmlRegisterExtendedType()
     QML_GETTYPENAMES
 
     QQmlPrivate::RegisterType type = {
-        0, 
+        0,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
@@ -310,7 +310,7 @@ int qmlRegisterExtendedType()
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
 
-        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(), 
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
@@ -324,20 +324,20 @@ int qmlRegisterExtendedType()
 }
 
 template<typename T, typename E>
-int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, 
+int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
                             const char *qmlName)
 {
     QML_GETTYPENAMES
 
     QQmlAttachedPropertiesFunc attached = QQmlPrivate::attachedPropertiesFunc<E>();
-    const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>(); 
+    const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>();
     if (!attached) {
         attached = QQmlPrivate::attachedPropertiesFunc<T>();
         attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<T>();
     }
 
     QQmlPrivate::RegisterType type = {
-        0, 
+        0,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
@@ -349,7 +349,7 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
         attached,
         attachedMetaObject,
 
-        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(), 
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
@@ -383,13 +383,13 @@ int qmlRegisterInterface(const char *typeName)
 }
 
 template<typename T>
-int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor, 
+int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
                           const char *qmlName, QQmlCustomParser *parser)
 {
     QML_GETTYPENAMES
 
     QQmlPrivate::RegisterType type = {
-        0, 
+        0,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
@@ -401,7 +401,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
 
-        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(), 
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
@@ -506,7 +506,7 @@ inline int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versio
 
 inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
-    if (url.isRelative()) { 
+    if (url.isRelative()) {
         // User input check must go here, because QQmlPrivate::qmlregister is also used internally for composite types
         qWarning("qmlRegisterType requires absolute URLs.");
         return 0;

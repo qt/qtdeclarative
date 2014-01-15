@@ -189,7 +189,7 @@ private:
 
     // m_errors should *always* be written before the status is set to Error.
     // We use the status change as a memory fence around m_errors so that locking
-    // isn't required.  Once the status is set to Error (or Complete), m_errors 
+    // isn't required.  Once the status is set to Error (or Complete), m_errors
     // cannot be changed.
     QList<QQmlError> m_errors;
 
@@ -244,7 +244,7 @@ private:
     void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
     void networkReplyFinished(QNetworkReply *);
     void networkReplyProgress(QNetworkReply *, qint64, qint64);
-    
+
     typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
 
     void setData(QQmlDataBlob *, const QByteArray &);
@@ -491,10 +491,10 @@ private:
     bool loadImplicitImport();
 };
 
-// QQmlScriptData instances are created, uninitialized, by the loader in the 
+// QQmlScriptData instances are created, uninitialized, by the loader in the
 // load thread.  The first time they are used by the VME, they are initialized which
 // creates their v8 objects and they are referenced and added to the  engine's cleanup
-// list.  During QQmlCleanup::clear() all v8 resources are destroyed, and the 
+// list.  During QQmlCleanup::clear() all v8 resources are destroyed, and the
 // reference that was created is released but final deletion only occurs once all the
 // references as released.  This is all intended to ensure that the v8 resources are
 // only created and destroyed in the main thread :)

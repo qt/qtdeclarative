@@ -10,7 +10,7 @@ Rectangle {
 
     property int myPixelSize: 12
     property int myPixelSize2: 24
-    
+
     Text {
         id: other
         font.pixelSize: 6

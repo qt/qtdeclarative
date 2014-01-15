@@ -64,7 +64,7 @@ public:
         Normal
     };
 
-    enum Type { 
+    enum Type {
         Invalid,
         Property,
         SignalProperty

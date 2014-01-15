@@ -162,9 +162,9 @@ def BuildOptions():
                     help="Print summary after running tests")
   result.add_option("--full-summary", default=False, action="store_true",
                     help="Print summary and test output after running tests")
-  result.add_option("--strict_only", default=False, action="store_true", 
+  result.add_option("--strict_only", default=False, action="store_true",
                     help="Test only strict mode")
-  result.add_option("--non_strict_only", default=False, action="store_true", 
+  result.add_option("--non_strict_only", default=False, action="store_true",
                     help="Test only non-strict mode")
   result.add_option("--parallel", default=False, action="store_true",
                     help="Run tests in parallel")
@@ -174,7 +174,7 @@ def BuildOptions():
                     help="Update test expectations fail when a test passes that was expected to fail")
   # TODO: Once enough tests are made strict compat, change the default
   # to "both"
-  result.add_option("--unmarked_default", default="non_strict", 
+  result.add_option("--unmarked_default", default="non_strict",
                     help="default mode for tests of unspecified strictness")
   return result
 
@@ -293,7 +293,7 @@ class TestCase(object):
     del testRecord["header"]
     del testRecord["commentary"]
     self.testRecord = testRecord;
-    
+
 
   def GetName(self):
     return path.join(*self.name)
@@ -570,8 +570,8 @@ def Main():
   parser = BuildOptions()
   (options, args) = parser.parse_args()
   ValidateOptions(options)
-  test_suite = TestSuite(options.tests, 
-                         options.strict_only, 
+  test_suite = TestSuite(options.tests,
+                         options.strict_only,
                          options.non_strict_only,
                          options.unmarked_default,
                          options.with_test_expectations)

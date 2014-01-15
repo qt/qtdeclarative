@@ -66,7 +66,7 @@ int LineEditExtension::rightMargin() const
     return r;
 }
 
-void LineEditExtension::setRightMargin(int m) 
+void LineEditExtension::setRightMargin(int m)
 {
     int l, r, t, b;
     m_lineedit->getTextMargins(&l, &t, &r, &b);
@@ -80,7 +80,7 @@ int LineEditExtension::topMargin() const
     return t;
 }
 
-void LineEditExtension::setTopMargin(int m) 
+void LineEditExtension::setTopMargin(int m)
 {
     int l, r, t, b;
     m_lineedit->getTextMargins(&l, &t, &r, &b);
@@ -94,7 +94,7 @@ int LineEditExtension::bottomMargin() const
     return b;
 }
 
-void LineEditExtension::setBottomMargin(int m) 
+void LineEditExtension::setBottomMargin(int m)
 {
     int l, r, t, b;
     m_lineedit->getTextMargins(&l, &t, &r, &b);

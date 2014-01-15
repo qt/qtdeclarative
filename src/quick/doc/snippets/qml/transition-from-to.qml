@@ -52,7 +52,7 @@ Rectangle {
         PropertyChanges { target: rect; color: "yellow" }
     }
 
-    transitions: Transition { 
+    transitions: Transition {
         ColorAnimation { duration: 1000 }
     }
 }

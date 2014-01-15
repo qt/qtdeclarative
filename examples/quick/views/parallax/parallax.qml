@@ -68,7 +68,7 @@ Rectangle {
             Loader {
                 anchors { top: parent.top; topMargin: 10; horizontalCenter: parent.horizontalCenter }
                 width: 300; height: 400
-                clip: true; 
+                clip: true;
                 source: "../../demos/samegame/samegame.qml"
             }
         }

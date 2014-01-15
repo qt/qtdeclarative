@@ -403,7 +403,7 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 }
 
 /*!
-Returns the name of \a object in this context, or an empty string if \a object 
+Returns the name of \a object in this context, or an empty string if \a object
 is not named in the context.  Objects are named by setContextProperty(), or by ids in
 the case of QML created contexts.
 
@@ -521,7 +521,7 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
 
 
 QQmlContextData::QQmlContextData()
-: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
+: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false),
   isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
   publicContext(0), activeVMEData(0),
   contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
@@ -531,7 +531,7 @@ QQmlContextData::QQmlContextData()
 }
 
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
-: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
+: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false),
   isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
   publicContext(ctxt), activeVMEData(0),
   contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),

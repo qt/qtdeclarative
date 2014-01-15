@@ -46,7 +46,7 @@
 \brief The QIntrusiveList class is a template class that provides a list of objects using static storage.
 \internal
 
-QIntrusiveList creates a linked list of objects.  Adding and removing objects from the 
+QIntrusiveList creates a linked list of objects.  Adding and removing objects from the
 QIntrusiveList is a constant time operation and is very quick.  The list performs no memory
 allocations, but does require the objects being added to the list to contain a QIntrusiveListNode
 instance for the list's use.  Even so, for small lists QIntrusiveList uses less memory than Qt's
@@ -102,7 +102,7 @@ Destroy the list.  All entries are removed.
 /*!
 \fn void QIntrusiveList::insert(N *object);
 
-Insert \a object into the list.  If \a object is a member of this, or another list, it will be 
+Insert \a object into the list.  If \a object is a member of this, or another list, it will be
 removed and inserted at the head of this list.
 */
 

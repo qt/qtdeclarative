@@ -486,7 +486,7 @@ void tst_qqmlinstruction::dump()
     }
 
     QStringList expect;
-    expect 
+    expect
         << "Index\tOperation\t\tData1\tData2\tData3\tComments"
         << "-------------------------------------------------------------------------------"
         << "0\t\tINIT\t\t\t0\t3\t-1\t-1"

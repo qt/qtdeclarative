@@ -42,7 +42,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 240; height: 320; 
+    width: 240; height: 320;
 
     ListView {
         anchors.fill: parent
@@ -50,6 +50,6 @@ Rectangle {
         delegate: Text {
             text: modelData.firstName + " " + modelData.lastName
         }
-    } 
+    }
 }
 //! [document]

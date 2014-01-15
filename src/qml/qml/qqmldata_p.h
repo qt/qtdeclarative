@@ -143,7 +143,7 @@ public:
         void layout(QQmlNotifierEndpoint*);
     };
     NotifyList *notifyList;
-    
+
     inline QQmlNotifierEndpoint *notify(int index);
     void addNotify(int index, QQmlNotifierEndpoint *);
     int endpointCount(int index);
@@ -151,7 +151,7 @@ public:
     void disconnectNotifiers();
 
     // The context that created the C++ object
-    QQmlContextData *context; 
+    QQmlContextData *context;
     // The outermost context in which this object lives
     QQmlContextData *outerContext;
 
@@ -163,7 +163,7 @@ public:
     QQmlData**prevContextObject;
 
     int bindingBitsSize;
-    quint32 *bindingBits; 
+    quint32 *bindingBits;
 
     inline bool hasBindingBit(int) const;
     void clearBindingBit(int);

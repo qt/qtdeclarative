@@ -55,13 +55,13 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-// We allow the following JavaScript types to be passed between the main and 
+// We allow the following JavaScript types to be passed between the main and
 // the secondary thread:
 //    + undefined
 //    + null
 //    + Boolean
 //    + String
-//    + Function 
+//    + Function
 //    + Array
 //    + "Simple" Objects
 //    + Number
@@ -143,7 +143,7 @@ static inline void *popPtr(const char *&data)
     return rv;
 }
 
-// XXX TODO: Check that worker script is exception safe in the case of 
+// XXX TODO: Check that worker script is exception safe in the case of
 // serialization/deserialization failures
 
 #define ALIGN(size) (((size) + 3) & ~3)
@@ -171,7 +171,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
 
         reserve(data, utf16size + sizeof(quint32));
         push(data, valueheader(WorkerString, length));
-        
+
         int offset = data.size();
         data.resize(data.size() + utf16size);
         char *buffer = data.data() + offset;

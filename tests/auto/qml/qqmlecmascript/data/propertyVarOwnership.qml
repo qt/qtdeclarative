@@ -17,6 +17,6 @@ Item {
         if (varProperty.a != 10) return;
 
         test = true;
-    } 
+    }
 }
 

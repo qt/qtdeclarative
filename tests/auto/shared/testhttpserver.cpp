@@ -127,7 +127,7 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
 
     QFile expectFile(expect.toLocalFile());
     if (!expectFile.open(QIODevice::ReadOnly)) return false;
-    
+
     QFile replyFile(reply.toLocalFile());
     if (!replyFile.open(QIODevice::ReadOnly)) return false;
 
@@ -325,7 +325,7 @@ void TestHTTPServer::serveGET(QTcpSocket *socket, const QByteArray &data)
 
     QByteArray total = dataCache[socket] + data;
     dataCache[socket] = total;
-    
+
     if (total.contains("\n\r\n")) {
 
         bool close = true;
@@ -342,7 +342,7 @@ void TestHTTPServer::serveGET(QTcpSocket *socket, const QByteArray &data)
         }
         dataCache.remove(socket);
 
-        if (close) 
+        if (close)
             socket->disconnectFromHost();
     }
 }

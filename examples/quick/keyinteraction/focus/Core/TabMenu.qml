@@ -42,7 +42,7 @@ import QtQuick 2.1
 
 FocusScope {
     onActiveFocusChanged: {
-        if (activeFocus) 
+        if (activeFocus)
             mainView.state = "showTabViews"
     }
 

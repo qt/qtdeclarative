@@ -6,8 +6,8 @@ MyQmlObject {
     property alias c2: myConstants.c2
     property int c3: 0
 
-    objectProperty: ConstantsOverrideBindings { 
-        id: myConstants 
+    objectProperty: ConstantsOverrideBindings {
+        id: myConstants
         c2: obj.c3
     }
 

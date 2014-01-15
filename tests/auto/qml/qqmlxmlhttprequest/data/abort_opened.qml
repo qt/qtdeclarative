@@ -15,7 +15,7 @@ QtObject {
 
     Component.onCompleted: {
         var x = new XMLHttpRequest;
-	x.abort();
+        x.abort();
 
         if (x.readyState == XMLHttpRequest.UNSENT)
             readyState = true;
@@ -23,7 +23,7 @@ QtObject {
         x.open("PUT", url);
         x.setRequestHeader("Accept-Language", "en-US");
 
-	x.abort();
+        x.abort();
 
         x.open("GET", url);
         x.setRequestHeader("Accept-Language", "en-US");

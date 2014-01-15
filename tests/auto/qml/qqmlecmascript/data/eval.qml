@@ -1,11 +1,11 @@
 import QtQuick 2.0
 
 QtObject {
-    property bool test1: false;        
-    property bool test2: false;        
-    property bool test3: false;        
-    property bool test4: false;        
-    property bool test5: false;        
+    property bool test1: false;
+    property bool test2: false;
+    property bool test3: false;
+    property bool test4: false;
+    property bool test5: false;
 
 
     property int a: 7

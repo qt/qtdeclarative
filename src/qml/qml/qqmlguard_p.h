@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlGuardImpl 
+class QQmlGuardImpl
 {
 public:
     inline QQmlGuardImpl();
@@ -91,7 +91,7 @@ public:
 
     inline T *object() const;
     inline void setObject(T *g);
-    
+
     inline bool isNull() const
         { return !o; }
 
@@ -141,7 +141,7 @@ void QQmlGuardImpl::addGuard()
 {
     Q_ASSERT(!prev);
 
-    if (QObjectPrivate::get(o)->wasDeleted) 
+    if (QObjectPrivate::get(o)->wasDeleted)
         return;
 
     QQmlData *data = QQmlData::get(o, true);
@@ -198,13 +198,13 @@ QQmlGuard<T> &QQmlGuard<T>::operator=(T *g)
 }
 
 template<class T>
-T *QQmlGuard<T>::object() const 
-{ 
-    return static_cast<T *>(o); 
+T *QQmlGuard<T>::object() const
+{
+    return static_cast<T *>(o);
 }
 
 template<class T>
-void QQmlGuard<T>::setObject(T *g) 
+void QQmlGuard<T>::setObject(T *g)
 {
     if (g != o) {
         if (prev) remGuard();

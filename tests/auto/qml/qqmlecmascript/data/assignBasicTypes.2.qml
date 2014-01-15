@@ -12,7 +12,7 @@ MyTypeObject {
     floatProperty: if(1) 8.5
     colorProperty: if(1) "red"
     dateProperty: if(1) "1982-11-25"
-    timeProperty: if(1) "11:11:32" 
+    timeProperty: if(1) "11:11:32"
     dateTimeProperty: if(1) "2009-05-12T13:22:01"
     pointProperty: if(1) "99,13"
     pointFProperty: if(1) "-10.1,12.3"

@@ -86,7 +86,7 @@ public:
 
     inline QQmlRefPointer<T> &operator=(const QQmlRefPointer<T> &o);
     inline QQmlRefPointer<T> &operator=(T *);
-    
+
     inline bool isNull() const { return !o; }
 
     inline T* operator->() const { return o; }
@@ -100,27 +100,27 @@ private:
     T *o;
 };
 
-QQmlRefCount::QQmlRefCount() 
-: refCount(1) 
+QQmlRefCount::QQmlRefCount()
+: refCount(1)
 {
 }
 
-QQmlRefCount::~QQmlRefCount() 
+QQmlRefCount::~QQmlRefCount()
 {
     Q_ASSERT(refCount.load() == 0);
 }
 
-void QQmlRefCount::addref() 
-{ 
+void QQmlRefCount::addref()
+{
     Q_ASSERT(refCount.load() > 0);
-    refCount.ref(); 
+    refCount.ref();
 }
 
-void QQmlRefCount::release() 
-{ 
+void QQmlRefCount::release()
+{
     Q_ASSERT(refCount.load() > 0);
-    if (!refCount.deref()) 
-        destroy(); 
+    if (!refCount.deref())
+        destroy();
 }
 
 int QQmlRefCount::count() const
@@ -128,20 +128,20 @@ int QQmlRefCount::count() const
     return refCount.load();
 }
 
-void QQmlRefCount::destroy() 
-{ 
-    delete this; 
+void QQmlRefCount::destroy()
+{
+    delete this;
 }
 
 template<class T>
 QQmlRefPointer<T>::QQmlRefPointer()
-: o(0) 
+: o(0)
 {
 }
 
 template<class T>
 QQmlRefPointer<T>::QQmlRefPointer(T *o)
-: o(o) 
+: o(o)
 {
     if (o) o->addref();
 }

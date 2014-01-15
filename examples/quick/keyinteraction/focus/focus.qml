@@ -43,7 +43,7 @@ import "Core"
 
 Rectangle {
     id: window
-    
+
     width: 800; height: 640
     color: "#3E606F"
 
@@ -73,11 +73,11 @@ Rectangle {
             activeFocusOnTab: true
         }
 
-        Rectangle { 
+        Rectangle {
             id: shade
             anchors.fill: parent
             color: "black"
-            opacity: 0 
+            opacity: 0
         }
 
         states:  [

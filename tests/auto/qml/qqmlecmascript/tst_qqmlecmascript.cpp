@@ -770,7 +770,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
     context.setContextProperty("testObj", &object1);
     context.setContextProperty("testObj2", object3);
 
-    { 
+    {
         MyExpression expr(&context, "testProp + 1");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant(2));
@@ -780,7 +780,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
         QCOMPARE(expr.evaluate(), QVariant(3));
     }
 
-    { 
+    {
         MyExpression expr(&context, "testProp + testProp + testProp");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant(6));
@@ -790,7 +790,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
         QCOMPARE(expr.evaluate(), QVariant(12));
     }
 
-    { 
+    {
         MyExpression expr(&context, "testObj.stringProperty");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant("Hello"));
@@ -800,7 +800,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
         QCOMPARE(expr.evaluate(), QVariant("World"));
     }
 
-    { 
+    {
         MyExpression expr(&context, "testObj.stringProperty /**/");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant("World"));
@@ -810,7 +810,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
         QCOMPARE(expr.evaluate(), QVariant("Hello"));
     }
 
-    { 
+    {
         MyExpression expr(&context, "testObj2");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant::fromValue((QObject *)object3));
@@ -831,7 +831,7 @@ void tst_qqmlecmascript::objectPropertiesTriggerReeval()
     object2.setStringProperty(QLatin1String("Dog"));
     object3.setStringProperty(QLatin1String("Cat"));
 
-    { 
+    {
         MyExpression expr(&context, "testObj.stringProperty");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant("Hello"));
@@ -841,7 +841,7 @@ void tst_qqmlecmascript::objectPropertiesTriggerReeval()
         QCOMPARE(expr.evaluate(), QVariant("World"));
     }
 
-    { 
+    {
         MyExpression expr(&context, "testObj.objectProperty.stringProperty");
         QCOMPARE(expr.changed, false);
         QCOMPARE(expr.evaluate(), QVariant());
@@ -876,7 +876,7 @@ void tst_qqmlecmascript::objectPropertiesTriggerReeval()
 void tst_qqmlecmascript::deferredProperties()
 {
     QQmlComponent component(&engine, testFileUrl("deferredProperties.qml"));
-    MyDeferredObject *object = 
+    MyDeferredObject *object =
         qobject_cast<MyDeferredObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->value(), 0);
@@ -885,7 +885,7 @@ void tst_qqmlecmascript::deferredProperties()
     qmlExecuteDeferred(object);
     QCOMPARE(object->value(), 10);
     QVERIFY(object->objectProperty() != 0);
-    MyQmlObject *qmlObject = 
+    MyQmlObject *qmlObject =
         qobject_cast<MyQmlObject *>(object->objectProperty());
     QVERIFY(qmlObject != 0);
     QCOMPARE(qmlObject->value(), 10);
@@ -899,7 +899,7 @@ void tst_qqmlecmascript::deferredProperties()
 void tst_qqmlecmascript::deferredPropertiesErrors()
 {
     QQmlComponent component(&engine, testFileUrl("deferredPropertiesErrors.qml"));
-    MyDeferredObject *object = 
+    MyDeferredObject *object =
         qobject_cast<MyDeferredObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->value(), 0);
@@ -961,7 +961,7 @@ void tst_qqmlecmascript::deferredPropertiesInDestruction()
 void tst_qqmlecmascript::extensionObjects()
 {
     QQmlComponent component(&engine, testFileUrl("extensionObjects.qml"));
-    MyExtendedObject *object = 
+    MyExtendedObject *object =
         qobject_cast<MyExtendedObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->baseProperty(), 13);
@@ -1153,7 +1153,7 @@ void tst_qqmlecmascript::valueTypeFunctions()
     delete obj;
 }
 
-/* 
+/*
 Tests that writing a constant to a property with a binding on it disables the
 binding.
 */
@@ -1236,7 +1236,7 @@ the original binding to be disabled.
 */
 void tst_qqmlecmascript::outerBindingOverridesInnerBinding()
 {
-    QQmlComponent component(&engine, 
+    QQmlComponent component(&engine,
                            testFileUrl("outerBindingOverridesInnerBinding.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -1259,7 +1259,7 @@ void tst_qqmlecmascript::outerBindingOverridesInnerBinding()
 }
 
 /*
-Access a non-existent attached object.  
+Access a non-existent attached object.
 
 Tests for a regression where this used to crash.
 */
@@ -1916,7 +1916,7 @@ void tst_qqmlecmascript::propertyAssignmentErrors()
 
     delete object;
 }
-    
+
 /*
 Test bindings still work when the reeval is triggered from within
 a signal script.
@@ -2263,7 +2263,7 @@ void tst_qqmlecmascript::regExpBug()
 
 static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, const char *source)
 {
-    QString functionSource = QLatin1String("(function(object) { return ") + 
+    QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
@@ -2291,7 +2291,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
 static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
                                   const char *source, const QV4::ValueRef result)
 {
-    QString functionSource = QLatin1String("(function(object) { return ") + 
+    QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
@@ -2323,7 +2323,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
 static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,
                                              const char *source)
 {
-    QString functionSource = QLatin1String("(function(object) { return ") + 
+    QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->currentContext();
@@ -2362,7 +2362,7 @@ void tst_qqmlecmascript::callQtInvokables()
 
     QQmlEngine qmlengine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
-    
+
     QV8Engine *engine = ep->v8engine();
     QV4::Scope scope(QV8Engine::getV4(engine));
 
@@ -3026,7 +3026,7 @@ void tst_qqmlecmascript::attachedPropertyScope()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    MyQmlAttachedObject *attached = 
+    MyQmlAttachedObject *attached =
         qobject_cast<MyQmlAttachedObject *>(qmlAttachedPropertiesObject<MyQmlObject>(object));
     QVERIFY(attached != 0);
 
@@ -3241,7 +3241,7 @@ void tst_qqmlecmascript::ownership()
         QVERIFY(own.object != 0);
 
         QObject *object = component.create(context);
-        
+
         engine.collectGarbage();
 
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
@@ -3277,7 +3277,7 @@ public:
     QPointer<QObject> value;
 };
 
-// QTBUG-15695.  
+// QTBUG-15695.
 // Test setObjectOwnership(CppOwnership) works even when there is no QQmlData
 void tst_qqmlecmascript::cppOwnershipReturnValue()
 {
@@ -5627,7 +5627,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     }
 }
 
-// Test that assigning a null object works 
+// Test that assigning a null object works
 // Regressed with: df1788b4dbbb2826ae63f26bdf166342595343f4
 void tst_qqmlecmascript::nullObjectBinding()
 {
@@ -6278,7 +6278,7 @@ void tst_qqmlecmascript::aliasBindingsAssignCorrectly()
 // Test bindings assigned to alias properties override a binding on the target (QTBUG-13719)
 void tst_qqmlecmascript::aliasBindingsOverrideTarget()
 {
-    { 
+    {
     QQmlComponent component(&engine, testFileUrl("aliasBindingsOverrideTarget.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);

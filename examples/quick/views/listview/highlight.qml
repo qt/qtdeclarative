@@ -67,7 +67,7 @@ Rectangle {
                 PropertyChanges { target: wrapper; x: 20 }
             }
             transitions: Transition {
-                NumberAnimation { properties: "x"; duration: 200 } 
+                NumberAnimation { properties: "x"; duration: 200 }
             }
             MouseArea {
                 anchors.fill: parent

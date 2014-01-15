@@ -49,17 +49,17 @@ Item {
         width: 100; height: 100
 
         slices: [
-            PieSlice { 
+            PieSlice {
                 anchors.fill: parent
                 color: "red"
-                fromAngle: 0; angleSpan: 110 
+                fromAngle: 0; angleSpan: 110
             },
-            PieSlice { 
+            PieSlice {
                 anchors.fill: parent
                 color: "black"
-                fromAngle: 110; angleSpan: 50 
+                fromAngle: 110; angleSpan: 50
             },
-            PieSlice { 
+            PieSlice {
                 anchors.fill: parent
                 color: "blue"
                 fromAngle: 160; angleSpan: 100

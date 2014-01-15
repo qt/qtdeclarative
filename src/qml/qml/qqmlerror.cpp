@@ -131,7 +131,7 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
 }
 
 /*!
-    \internal 
+    \internal
 */
 QQmlError::~QQmlError()
 {
@@ -297,7 +297,7 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
 
                 if(error.column() > 0) {
                     int column = qMax(0, error.column() - 1);
-                    column = qMin(column, line.length()); 
+                    column = qMin(column, line.length());
 
                     QByteArray ind;
                     ind.reserve(column);

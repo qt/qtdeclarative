@@ -49,7 +49,7 @@ Image {
     source: image
     onCreatedChanged: {
         if (created) {
-            sun.z = 1;    // above the sky but below the ground layer 
+            sun.z = 1;    // above the sky but below the ground layer
             window.activeSuns++;
             // once item is created, start moving offscreen
             dropYAnim.duration = (window.height + window.centerOffset - sun.y) * 16;

@@ -8,8 +8,8 @@
         $time = $_POST["time"];
         if($name == "")
             $name = "Anonymous";
-	$file = fopen("score_data.xml", "a");
-        $ret = fwrite($file, "<record><score>". $score . "</score><name>" 
+        $file = fopen("score_data.xml", "a");
+        $ret = fwrite($file, "<record><score>". $score . "</score><name>"
             . $name . "</name><gridSize>" . $grid . "</gridSize><seconds>"
             . $time . "</seconds></record>\n");
         echo "Your score has been recorded. Thanks for playing!";
@@ -18,7 +18,7 @@
     }else{#Read high score list
         #Now uses XSLT to display. So just print the file. With XML cruft added.
         #Note that firefox at least won't apply the XSLT on a php file. So redirecting
-	$file = fopen("scores.xml", "w");
+        $file = fopen("scores.xml", "w");
         $ret = fwrite($file, '<?xml version="1.0" encoding="ISO-8859-1"?>' . "\n"
             . '<?xml-stylesheet type="text/xsl" href="score_style.xsl"?>' . "\n"
             . "<records>\n" . file_get_contents("score_data.xml") . "</records>\n");

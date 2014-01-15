@@ -63,7 +63,7 @@ public:
         if (size)
             *size = QSize(width, height);
         QPixmap pixmap(requestedSize.width() > 0 ? requestedSize.width() : width,
-                       requestedSize.height() > 0 ? requestedSize.height() : height); 
+                       requestedSize.height() > 0 ? requestedSize.height() : height);
         pixmap.fill(QColor(id).rgba());
 //![0]
 

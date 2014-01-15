@@ -54,8 +54,8 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onEntered: {
-            focusRect.x = myRect.x; 
-            focusRect.y = myRect.y; 
+            focusRect.x = myRect.x;
+            focusRect.y = myRect.y;
             focusRect.text = myRect.text;
         }
     }

@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 // example where you would write:
 //     QSet<QString> strings;
 //     for (int ii = 0; ii < mystrings.count(); ++ii) {
-//         if (strings.contains(mystrings.at(ii))) 
+//         if (strings.contains(mystrings.at(ii)))
 //             qFatal("Duplication!");
 //         strings.insert(mystrings);
 //     }
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 //         if (strings.testAndSet(qHash(mystrings.at(ii)))) {
 //             // The string *might* be duplicated
 //             for (int jj = 0; jj < ii; ++jj) {
-//                 if (mystrings.at(ii) == mystrings.at(jj)) 
+//                 if (mystrings.at(ii) == mystrings.at(jj))
 //                     qFatal("Duplication!");
 //             }
 //          }

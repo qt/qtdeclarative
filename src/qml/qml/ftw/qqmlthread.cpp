@@ -83,10 +83,10 @@ public:
     void threadEvent();
 
 protected:
-    virtual bool event(QEvent *); 
+    virtual bool event(QEvent *);
 
 private:
-    struct MainObject : public QObject { 
+    struct MainObject : public QObject {
         MainObject(QQmlThreadPrivate *p);
         virtual bool event(QEvent *e);
         QQmlThreadPrivate *p;
@@ -97,8 +97,8 @@ private:
     QWaitCondition _wait;
 };
 
-QQmlThreadPrivate::MainObject::MainObject(QQmlThreadPrivate *p) 
-: p(p) 
+QQmlThreadPrivate::MainObject::MainObject(QQmlThreadPrivate *p)
+: p(p)
 {
 }
 
@@ -116,22 +116,22 @@ void QQmlThreadPrivate::triggerThreadEvent()
     QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 }
 
-bool QQmlThreadPrivate::MainObject::event(QEvent *e) 
+bool QQmlThreadPrivate::MainObject::event(QEvent *e)
 {
-    if (e->type() == QEvent::User) 
+    if (e->type() == QEvent::User)
         p->mainEvent();
     return QObject::event(e);
 }
-    
+
 QQmlThreadPrivate::QQmlThreadPrivate(QQmlThread *q)
-: q(q), m_threadProcessing(false), m_mainProcessing(false), m_shutdown(false), 
+: q(q), m_threadProcessing(false), m_mainProcessing(false), m_shutdown(false),
   m_mainThreadWaiting(false), mainSync(0), m_mainObject(this)
 {
 }
 
 bool QQmlThreadPrivate::event(QEvent *e)
 {
-    if (e->type() == QEvent::User) 
+    if (e->type() == QEvent::User)
         threadEvent();
     return QThread::event(e);
 }
@@ -175,7 +175,7 @@ void QQmlThreadPrivate::mainEvent()
     unlock();
 }
 
-void QQmlThreadPrivate::threadEvent() 
+void QQmlThreadPrivate::threadEvent()
 {
     lock();
 

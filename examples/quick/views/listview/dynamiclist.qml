@@ -204,7 +204,7 @@ Rectangle {
         anchors { left: parent.left; bottom: parent.bottom; margins: 20 }
         spacing: 10
 
-        TextButton { 
+        TextButton {
             text: "Add an item"
             onClicked: {
                 fruitModel.append({
@@ -215,8 +215,8 @@ Rectangle {
             }
         }
 
-        TextButton { 
-            text: "Remove all items" 
+        TextButton {
+            text: "Remove all items"
             onClicked: fruitModel.clear()
         }
     }

@@ -44,7 +44,7 @@
 
 #include <QtCore/qobject.h>
 
-class TestObject : public QObject 
+class TestObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int intValue READ intValue);
@@ -58,7 +58,7 @@ public:
 
 private:
     QString m_string;
-}; 
+};
 
 void registerTypes();
 

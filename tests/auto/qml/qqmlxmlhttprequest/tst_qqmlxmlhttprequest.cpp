@@ -208,7 +208,7 @@ void tst_qqmlxmlhttprequest::instanceStateValues()
     QCOMPARE(object->property("done").toInt(), 4);
 }
 
-// Test calling constructor 
+// Test calling constructor
 void tst_qqmlxmlhttprequest::constructor()
 {
     QQmlComponent component(&engine, testFileUrl("constructor.qml"));
@@ -436,7 +436,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_sent()
     component.completeCreate();
 
     QCOMPARE(object->property("test").toBool(), true);
-    
+
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
 }
 
@@ -796,7 +796,7 @@ void tst_qqmlxmlhttprequest::statusText()
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
     QVERIFY(server.wait(testFileUrl("status.expect"),
-                        replyUrl, 
+                        replyUrl,
                         testFileUrl("testdocument.html")));
 
     QQmlComponent component(&engine, testFileUrl("statusText.qml"));
@@ -836,7 +836,7 @@ void tst_qqmlxmlhttprequest::responseText()
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
     QVERIFY(server.wait(testFileUrl("status.expect"),
-                        replyUrl, 
+                        replyUrl,
                         bodyUrl));
 
     QQmlComponent component(&engine, testFileUrl("responseText.qml"));
@@ -883,7 +883,7 @@ void tst_qqmlxmlhttprequest::nonUtf8()
     QMetaObject::invokeMethod(object.data(), "startRequest");
 
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
-    
+
     QCOMPARE(object->property("responseText").toString(), responseText);
 
     if (!xmlRootNodeValue.isEmpty()) {
@@ -980,10 +980,10 @@ void tst_qqmlxmlhttprequest::redirects()
         object->setProperty("expectedText", "");
         component.completeCreate();
 
-        for (int ii = 0; ii < 60; ++ii) { 
-            if (object->property("done").toBool()) break; 
-            QTest::qWait(50); 
-        } 
+        for (int ii = 0; ii < 60; ++ii) {
+            if (object->property("done").toBool()) break;
+            QTest::qWait(50);
+        }
         QVERIFY(object->property("done").toBool() == true);
 
         QCOMPARE(object->property("dataOK").toBool(), true);

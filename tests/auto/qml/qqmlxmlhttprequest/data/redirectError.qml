@@ -5,7 +5,7 @@ QtObject {
 
     property bool dataOK: false
     property bool done: false
-        
+
     Component.onCompleted: {
         var x = new XMLHttpRequest;
         x.open("GET", url);

@@ -4339,7 +4339,7 @@ function initRuntime() {
 	tmp = tmp.replace(/\n/g, "<br />");
 	tmp = tmp.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp");
 	return tmp;
-	
+
     }
 
     document.write("<div id='stdout'></div>");
@@ -4865,7 +4865,7 @@ sc_Pair.prototype.sc_toWriteOrDisplayString = function(writeOrDisplay) {
 	} else // current.cdr == null
 	    break;
     }
-	
+
     res += ")";
 
     return res;
@@ -5205,7 +5205,7 @@ function sc_reverseAppendBang(l1, l2) {
     }
     return res;
 }
-	
+
 function sc_dualAppend(l1, l2) {
     if (l1 === null) return l2;
     if (l2 === null) return l1;
@@ -6639,7 +6639,7 @@ sc_Tokenizer.prototype.nextToken = function() {
 
 	if (c === "(")
 	    return new sc_Token(14/*VECTOR_BEGIN*/);
-	
+
 	if (c === "\\") { // character
 	    var tmp = ""
 	    while (!isWhitespaceOrEOF(port.peekChar()))
@@ -6684,7 +6684,7 @@ sc_Tokenizer.prototype.nextToken = function() {
 	    } else
 		return new sc_Token(13/*ERROR*/, "bad #-pattern5");
 	}
-	
+
     };
 
     skipWhitespaceAndComments();
@@ -6763,7 +6763,7 @@ sc_Reader.prototype.read = function() {
 			+ " " + par.type;
 		else
 		    return sc_reverseAppendBang(res, cdr);
-		
+
 
 	    default:
 		res = sc_cons(this.read(), res);
@@ -6782,7 +6782,7 @@ sc_Reader.prototype.read = function() {
 	    case 2/*CLOSE_PAR*/:
 		tokenizer.readToken();
 		return a;
-		
+
 	    default:
 		a.push(this.read());
 	    }
@@ -6794,7 +6794,7 @@ sc_Reader.prototype.read = function() {
 	this.backref[nb] = tmp;
 	return tmp;
     };
-	
+
     function readReference(nb) {
 	if (nb in this.backref)
 	    return this.backref[nb];

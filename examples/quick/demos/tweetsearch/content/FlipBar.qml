@@ -59,7 +59,7 @@ Item {
 
     width: cur.width
     height: cur.height
-    onFrontChanged: resync(); 
+    onFrontChanged: resync();
     onBackChanged: resync();
 
     function resync() {//TODO: Are the items ever actually visible?
@@ -128,7 +128,7 @@ Item {
             sourceItem: back
             hideSource: effect.visible
         }
-        
+
         fragmentShader: "
             uniform lowp float qt_Opacity;
             uniform sampler2D sourceA;

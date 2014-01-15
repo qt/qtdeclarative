@@ -61,7 +61,7 @@ Rectangle {
             goalState: ""
             jump: true
         }
-        
+
         Emitter {
             //0,0 position
             group: "notdefault"

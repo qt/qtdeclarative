@@ -131,7 +131,7 @@ QT_BEGIN_NAMESPACE
     F(Defer, defer) \
     F(PopFetchedObject, common) \
     F(FetchValueType, fetchValue) \
-    F(PopValueType, fetchValue) 
+    F(PopValueType, fetchValue)
 
 #ifndef QT_NO_TRANSLATION
 #define F_TRANSLATION(F, I, FMT) F(I, FMT)
@@ -161,7 +161,7 @@ QT_BEGIN_NAMESPACE
 class QQmlCompiledData;
 union QQmlInstruction
 {
-    enum Type { 
+    enum Type {
         FOR_EACH_QML_INSTR(QML_INSTR_ENUM)
     };
 
@@ -193,7 +193,7 @@ union QQmlInstruction
     struct instr_completeQml {
         QML_INSTR_HEADER
         ushort column;
-        ushort line; 
+        ushort line;
         bool isRoot;
     };
     struct instr_create {
@@ -201,7 +201,7 @@ union QQmlInstruction
         int type;
         int data;
         ushort column;
-        ushort line; 
+        ushort line;
         bool isRoot:1;
         bool parentToSuper:1;
     };
@@ -211,7 +211,7 @@ union QQmlInstruction
         int typeSize;
         int type;
         ushort column;
-        ushort line; 
+        ushort line;
         bool parentToSuper;
     };
     struct instr_storeMeta {
@@ -266,7 +266,7 @@ union QQmlInstruction
     struct instr_begin {
         QML_INSTR_HEADER
         int castValue;
-    }; 
+    };
     struct instr_storeFloat {
         QML_INSTR_HEADER
         int propertyIndex;
@@ -322,7 +322,7 @@ union QQmlInstruction
         double numberValue;
         bool isStringLiteral:1;
         bool isNumberLiteral:1;
-    }; 
+    };
     struct instr_storeScript {
         QML_INSTR_HEADER
         int value;
@@ -399,7 +399,7 @@ union QQmlInstruction
     struct instr_assignSignalObject {
         QML_INSTR_HEADER
         int signal;
-        ushort line; 
+        ushort line;
     };
     struct instr_createComponent {
         QML_INSTR_HEADER

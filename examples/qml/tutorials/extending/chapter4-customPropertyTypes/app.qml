@@ -49,9 +49,9 @@ Item {
         anchors.centerIn: parent
         width: 100; height: 100
 
-        pieSlice: PieSlice { 
+        pieSlice: PieSlice {
             anchors.fill: parent
-            color: "red" 
+            color: "red"
         }
     }
 

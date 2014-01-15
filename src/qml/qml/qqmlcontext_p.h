@@ -134,7 +134,7 @@ public:
 
     QUrl resolvedUrl(const QUrl &);
 
-    // My containing QQmlContext.  If isInternal is true this owns publicContext.  
+    // My containing QQmlContext.  If isInternal is true this owns publicContext.
     // If internal is false publicContext owns this.
     QQmlContext *asQQmlContext();
     QQmlContextPrivate *asQQmlContextPrivate();

@@ -127,7 +127,7 @@ QQmlCompiledData::~QQmlCompiledData()
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
 
-    for (int ii = 0; ii < propertyCaches.count(); ++ii) 
+    for (int ii = 0; ii < propertyCaches.count(); ++ii)
         if (propertyCaches.at(ii))
             propertyCaches.at(ii)->release();
 
@@ -163,7 +163,7 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngine *engine) 
+QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngine *engine)
 {
     if (typePropertyCache) {
         return typePropertyCache;
@@ -234,13 +234,13 @@ int QQmlCompiledData::addInstructionHelper(QQmlInstruction::Type type, QQmlInstr
     return ptrOffset;
 }
 
-int QQmlCompiledData::nextInstructionIndex() 
-{ 
+int QQmlCompiledData::nextInstructionIndex()
+{
     return bytecode.size();
 }
 
-QQmlInstruction *QQmlCompiledData::instruction(int index) 
-{ 
+QQmlInstruction *QQmlCompiledData::instruction(int index)
+{
     return (QQmlInstruction *)(bytecode.constData() + index);
 }
 

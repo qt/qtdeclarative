@@ -1,4 +1,4 @@
 import Test 1.0
-MyQmlObject { 
-    something: 1 + 1 
+MyQmlObject {
+    something: 1 + 1
 }

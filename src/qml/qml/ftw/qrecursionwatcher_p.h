@@ -76,7 +76,7 @@ private:
 };
 
 QRecursionNode::QRecursionNode()
-: _r(0) 
+: _r(0)
 {
 }
 

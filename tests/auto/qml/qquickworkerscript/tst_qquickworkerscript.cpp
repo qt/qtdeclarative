@@ -187,7 +187,7 @@ void tst_QQuickWorkerScript::messaging_sendJsObject()
     waitForEchoMessage(worker);
 
     QVariant result = qVariantFromValue(false);
-    QVERIFY(QMetaObject::invokeMethod(worker, "compareLiteralResponse", Qt::DirectConnection, 
+    QVERIFY(QMetaObject::invokeMethod(worker, "compareLiteralResponse", Qt::DirectConnection,
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, jsObject)));
     QVERIFY(result.toBool());
 

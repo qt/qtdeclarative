@@ -191,7 +191,7 @@ function reportFailure (msg)
   var l;
   var funcName = currentFunc();
   var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
-   
+
   for (var i=0; i<lines.length; i++)
     print (FAILED + prefix + lines[i]);
 }
@@ -224,11 +224,11 @@ function printBugNumber (num)
 
 function toPrinted(value)
 {
-  if (typeof value == "xml") 
+  if (typeof value == "xml")
   {
     value = value.toXMLString();
-  } 
-  else 
+  }
+  else
   {
     value = String(value);
   }
@@ -406,7 +406,7 @@ function enterFunc (funcName)
 function exitFunc (funcName)
 {
   var lastFunc = callStack.pop();
-   
+
   if (funcName)
   {
     if (!funcName.match(/\(\)$/))
@@ -516,7 +516,7 @@ function BigO(data)
     {
       var Ydiff = Y[i] - this.Yavg;
       var Xdiff = X[i] - this.Xavg;
-       
+
       SUM_Ydiff2 += Ydiff * Ydiff;
       SUM_Xdiff2 += Xdiff * Xdiff;
       SUM_XdiffYdiff += Xdiff * Ydiff;
@@ -552,7 +552,7 @@ function BigO(data)
     {
       deriv.X[i] = (X[i] + X[i+1])/2;
       deriv.Y[i] = (Y[i+1] - Y[i])/(X[i+1] - X[i]);
-    } 
+    }
     return deriv;
   }
 
@@ -628,7 +628,7 @@ function optionsInit() {
 }
 
 function optionsClear() {
-       
+
   // turn off current settings
   var optionNames = options().split(',');
   for (var i = 0; i < optionNames.length; i++)
@@ -696,27 +696,27 @@ function getTestCaseResult(expected, actual)
   var expected_t = typeof expected;
   var actual_t = typeof actual;
   var passed = true;
- 
+
   // because ( NaN == NaN ) always returns false, need to do
   // a special compare to see if we got the right result.
-  if ( actual != actual ) 
+  if ( actual != actual )
   {
-    if ( actual_t == "object" ) 
+    if ( actual_t == "object" )
     {
       actual = "NaN object";
-    } 
-    else 
+    }
+    else
     {
       actual = "NaN number";
     }
   }
-  if ( expected != expected ) 
+  if ( expected != expected )
   {
-    if ( expected_t == "object" ) 
+    if ( expected_t == "object" )
     {
       expected = "NaN object";
-    } 
-    else 
+    }
+    else
     {
       expected = "NaN number";
     }
@@ -733,7 +733,7 @@ function getTestCaseResult(expected, actual)
       passed = false;
     }
   }
- 
+
   return passed;
 }
 

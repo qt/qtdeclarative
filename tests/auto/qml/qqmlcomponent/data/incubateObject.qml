@@ -8,12 +8,12 @@ Item{
 
     property var i
 
-    Component{ 
+    Component{
         id: component
         Item {
             property int dummy: 13
             property int dummy2: 26
-        } 
+        }
     }
 
     Component.onCompleted: {

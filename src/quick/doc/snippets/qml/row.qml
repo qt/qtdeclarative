@@ -48,7 +48,7 @@ Rectangle {
     Row {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        
+
         spacing: 5
 
         Rectangle { width: 100; height: 100; radius: 20.0

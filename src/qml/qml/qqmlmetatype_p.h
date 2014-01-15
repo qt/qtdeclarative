@@ -103,7 +103,7 @@ public:
 
     enum TypeCategory { Unknown, Object, List };
     static TypeCategory typeCategory(int);
-        
+
     static bool isInterface(int);
     static const char *interfaceIId(int);
     static bool isList(int);
@@ -277,7 +277,7 @@ private:
     QQmlTypeModulePrivate *d;
 };
 
-class QQmlTypeModuleVersion 
+class QQmlTypeModuleVersion
 {
 public:
     QQmlTypeModuleVersion();

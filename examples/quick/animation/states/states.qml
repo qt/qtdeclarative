@@ -45,7 +45,7 @@ Rectangle {
     width: 640; height: 480
     color: "#343434"
 
-    Image { 
+    Image {
         id: userIcon
         x: topLeftRect.x; y: topLeftRect.y
         source: "qt-logo.png"

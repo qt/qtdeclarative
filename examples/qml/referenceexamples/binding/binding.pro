@@ -3,7 +3,7 @@ QT += qml
 SOURCES += main.cpp \
            person.cpp \
            birthdayparty.cpp \
-           happybirthdaysong.cpp 
+           happybirthdaysong.cpp
 HEADERS += person.h \
            birthdayparty.h \
            happybirthdaysong.h

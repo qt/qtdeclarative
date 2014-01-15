@@ -79,7 +79,7 @@ public:
     QQmlScript::Location location() const;
 
     bool isList() const;
-    // Will be one of QQmlScript::Variant, QQmlCustomParserProperty or 
+    // Will be one of QQmlScript::Variant, QQmlCustomParserProperty or
     // QQmlCustomParserNode
     QList<QVariant> assignedValues() const;
 

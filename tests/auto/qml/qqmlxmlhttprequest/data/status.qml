@@ -19,22 +19,22 @@ QtObject {
     Component.onCompleted: {
         var x = new XMLHttpRequest;
 
-	try {
-	    var a = x.status;
-	} catch (e) {
-	    if (e.code == DOMException.INVALID_STATE_ERR)
-		unsentException = true;
-	}
+        try {
+            var a = x.status;
+        } catch (e) {
+            if (e.code == DOMException.INVALID_STATE_ERR)
+                unsentException = true;
+        }
 
         x.open("GET", url);
         x.setRequestHeader("Accept-Language", "en-US");
 
-	try {
-	    var a = x.status;
-	} catch (e) {
-	    if (e.code == DOMException.INVALID_STATE_ERR)
-		openedException = true;
-	}
+        try {
+            var a = x.status;
+        } catch (e) {
+            if (e.code == DOMException.INVALID_STATE_ERR)
+                openedException = true;
+        }
 
         // Test to the end
         x.onreadystatechange = function() {
@@ -65,11 +65,11 @@ QtObject {
 
         x.send()
 
-	try {
-	    var a = x.status;
-	} catch (e) {
-	    if (e.code == DOMException.INVALID_STATE_ERR)
-		sentException = true;
-	}
+        try {
+            var a = x.status;
+        } catch (e) {
+            if (e.code == DOMException.INVALID_STATE_ERR)
+                sentException = true;
+        }
     }
 }

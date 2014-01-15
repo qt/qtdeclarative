@@ -141,7 +141,7 @@ ListView {
     }
 
     model: ContactModel {}
-    delegate: contactsDelegate 
+    delegate: contactsDelegate
     focus: true
 }
 //![isCurrentItem]

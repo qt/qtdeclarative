@@ -86,7 +86,7 @@ const QChar tst_qquickstyledtext::disc(0x25e6);
 const QChar tst_qquickstyledtext::square(0x25a1);
 
 // For malformed input all we test is that we get the expected text and format out.
-// 
+//
 void tst_qquickstyledtext::textOutput_data()
 {
     QTest::addColumn<QString>("input");

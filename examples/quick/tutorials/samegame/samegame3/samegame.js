@@ -160,7 +160,7 @@ function victoryCheck() {
 }
 //![2]
 
-//only floods up and right, to see if it can find adjacent same-typed blocks 
+//only floods up and right, to see if it can find adjacent same-typed blocks
 function floodMoveCheck(column, row, type) {
     if (column >= maxColumn || column < 0 || row >= maxRow || row < 0)
         return false;

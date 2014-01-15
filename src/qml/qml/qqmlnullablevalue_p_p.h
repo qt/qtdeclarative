@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 template<typename T>
-struct QQmlNullableValue 
+struct QQmlNullableValue
 {
     QQmlNullableValue()
     : isNull(true), value(T()) {}

@@ -22,7 +22,7 @@ function loadComponent() {
     itemComponent = Qt.createComponent(paletteItem.componentFile);
     if (itemComponent.status == Component.Loading)  //Depending on the content, it can be ready or error immediately
         component.statusChanged.connect(createItem);
-    else    
+    else
         createItem();
 }
 

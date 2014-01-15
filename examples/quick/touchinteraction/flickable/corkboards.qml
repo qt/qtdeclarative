@@ -50,13 +50,13 @@ Rectangle {
 
         ListElement {
             name: "Panel One"
-            notes: [ 
+            notes: [
                 ListElement { noteText: "Tap to edit" },
                 ListElement { noteText: "Drag to move" },
                 ListElement { noteText: "Flick to scroll" }
             ]
         }
-        
+
         ListElement {
             name: "Panel Two"
             notes: [

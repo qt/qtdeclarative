@@ -9,7 +9,7 @@ QtObject {
     property bool test5: false
     property bool test6: false
 
-    Component.onCompleted: { 
-        IncludeTest.go(); 
+    Component.onCompleted: {
+        IncludeTest.go();
     }
 }

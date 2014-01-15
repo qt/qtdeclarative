@@ -25,5 +25,5 @@ Item {
             property bool acceptable: acceptableInput
         }
     }
-        
+
 }

@@ -744,9 +744,9 @@ void tst_qquickxmllistmodel::noKeysValueChanges()
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
     QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    
+
     QString xml;
-    
+
     xml = makeItemXmlAndData("name=A,age=25,sport=Football;name=B,age=35,sport=Athletics");
     model->setProperty("xml",xml);
     QTRY_COMPARE(model->rowCount(), 2);
@@ -820,11 +820,11 @@ void tst_qquickxmllistmodel::threading()
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
 
     QAbstractItemModel *m1 = qobject_cast<QAbstractItemModel *>(component.create());
-    QVERIFY(m1 != 0); 
+    QVERIFY(m1 != 0);
     QAbstractItemModel *m2 = qobject_cast<QAbstractItemModel *>(component.create());
-    QVERIFY(m2 != 0); 
+    QVERIFY(m2 != 0);
     QAbstractItemModel *m3 = qobject_cast<QAbstractItemModel *>(component.create());
-    QVERIFY(m3 != 0); 
+    QVERIFY(m3 != 0);
 
     for (int dataCount=0; dataCount<xmlDataCount; dataCount++) {
 

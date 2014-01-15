@@ -49,7 +49,7 @@ Flipable {
     property int yAxis: 0
     property int angle: 0
 
-    width: front.width; height: front.height 
+    width: front.width; height: front.height
 
     front: Image { id: frontImage }
     back: Image { source: "back.png" }

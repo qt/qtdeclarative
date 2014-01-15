@@ -1114,7 +1114,7 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
         return args[0].toValue(engine);
 
     } else if (returnType != QMetaType::Void) {
-        
+
         CallArgument arg;
         arg.initAsType(returnType);
 
@@ -1134,7 +1134,7 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
 }
 
 /*!
-    Returns the match score for converting \a actual to be of type \a conversionType.  A 
+    Returns the match score for converting \a actual to be of type \a conversionType.  A
     zero score means "perfect match" whereas a higher score is worse.
 
     The conversion table is copied out of the \l QScript::callQtMethod() function.
@@ -1308,7 +1308,7 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
 
         QMetaMethod method = mo->method(current->overrideIndex);
         dummy.load(method);
-        
+
         // Look for overloaded methods
         QByteArray methodName = method.name();
         for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
@@ -1342,7 +1342,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         int *args = 0;
         QVarLengthArray<int, 9> dummy;
 
-        args = QQmlPropertyCache::methodParameterTypes(object, data.coreIndex, dummy, 
+        args = QQmlPropertyCache::methodParameterTypes(object, data.coreIndex, dummy,
                                                                &unknownTypeError);
 
         if (!args) {
@@ -1368,13 +1368,13 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
 /*!
 Resolve the overloaded method to call.  The algorithm works conceptually like this:
     1.  Resolve the set of overloads it is *possible* to call.
-        Impossible overloads include those that have too many parameters or have parameters 
-        of unknown type.  
-    2.  Filter the set of overloads to only contain those with the closest number of 
+        Impossible overloads include those that have too many parameters or have parameters
+        of unknown type.
+    2.  Filter the set of overloads to only contain those with the closest number of
         parameters.
         For example, if we are called with 3 parameters and there are 2 overloads that
         take 2 parameters and one that takes 3, eliminate the 2 parameter overloads.
-    3.  Find the best remaining overload based on its match score.  
+    3.  Find the best remaining overload based on its match score.
         If two or more overloads have the same match score, call the last one.  The match
         score is constructed by adding the matchScore() result for each of the parameters.
 */
@@ -1425,7 +1425,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             continue; // We already have a better option
 
         int methodMatchScore = 0;
-        for (int ii = 0; ii < methodArgumentCount; ++ii) 
+        for (int ii = 0; ii < methodArgumentCount; ++ii)
             methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
@@ -1447,7 +1447,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         const QQmlPropertyData *candidate = &data;
         while (candidate) {
-            error += QLatin1String("\n    ") + 
+            error += QLatin1String("\n    ") +
                      QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).methodSignature().constData());
             candidate = RelatedMethod(object, candidate, dummy);
         }
@@ -1482,7 +1482,7 @@ void CallArgument::cleanup()
         jsonObjectPtr->~QJsonObject();
     }  else if (type == QMetaType::QJsonValue) {
         jsonValuePtr->~QJsonValue();
-    } 
+    }
 }
 
 void *CallArgument::dataPtr()

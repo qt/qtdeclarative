@@ -2,12 +2,12 @@ import QtQuick 2.0
 ListView {
     width: 100
     height: 250
-    delegate: Rectangle { 
+    delegate: Rectangle {
         width: 100
         height: 50
-        color: black ? "black": "white" 
+        color: black ? "black": "white"
     }
-    model: ListModel { 
+    model: ListModel {
         objectName: "listModel"
         ListElement {
             black: false

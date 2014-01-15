@@ -26,5 +26,5 @@ Rectangle {
                 duration: 1000
             }
         }
-    } 
+    }
 }

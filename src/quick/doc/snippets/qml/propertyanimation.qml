@@ -55,8 +55,8 @@ Rectangle {
     }
     //! [single state]
 
-    transitions: Transition { 
-        PropertyAnimation { properties: "x,y"; easing.type: Easing.InOutQuad } 
+    transitions: Transition {
+        PropertyAnimation { properties: "x,y"; easing.type: Easing.InOutQuad }
     }
 }
 //![transition]

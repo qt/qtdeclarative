@@ -49,7 +49,7 @@ Item {
        source: "MyItem.qml"
     }
 
-    Connections { 
+    Connections {
         target: myLoader.item
         onMessage: console.log(msg)
     }

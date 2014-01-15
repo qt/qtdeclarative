@@ -66,7 +66,7 @@ FocusScope {
         font.italic: true
     }
 
-    MouseArea { 
+    MouseArea {
         anchors.fill: parent
         onClicked: { focusScope.focus = true; Qt.inputMethod.show(); }
     }
@@ -84,7 +84,7 @@ FocusScope {
         source: "images/clear.png"
         opacity: 0
 
-        MouseArea { 
+        MouseArea {
             anchors.fill: parent
             onClicked: { textInput.text = ''; focusScope.focus = true; textInput.openSoftwareInputPanel(); }
         }

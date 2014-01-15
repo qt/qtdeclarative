@@ -44,7 +44,7 @@
 
 #include <private/qtqmlglobal_p.h>
 
-// 
+//
 //  W A R N I N G
 //  -------------
 //

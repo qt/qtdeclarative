@@ -147,8 +147,8 @@ QImage QQuickTextureFactory::image() const
     Image { source: "image://myimageprovider/image.png" }
     \endqml
 
-    This specifies that the image should be loaded by the image provider named 
-    "myimageprovider", and the image to be loaded is named "image.png". The QML engine 
+    This specifies that the image should be loaded by the image provider named
+    "myimageprovider", and the image to be loaded is named "image.png". The QML engine
     invokes the appropriate image provider according to the providers that have
     been registered through QQmlEngine::addImageProvider().
 
@@ -173,11 +173,11 @@ QImage QQuickTextureFactory::image() const
 
     When these images are loaded by QML, it looks for a matching image provider
     and calls its requestImage() or requestPixmap() method (depending on its
-    imageType()) to load the image. The method is called with the \c id 
+    imageType()) to load the image. The method is called with the \c id
     parameter set to "yellow" for the first image, and "red" for the second.
 
-    Here is an image provider implementation that can load the images 
-    requested by the above QML. This implementation dynamically 
+    Here is an image provider implementation that can load the images
+    requested by the above QML. This implementation dynamically
     generates QPixmap images that are filled with the requested color:
 
     \snippet imageprovider/imageprovider.cpp 0
@@ -188,7 +188,7 @@ QImage QQuickTextureFactory::image() const
     with a "colors" identifier:
 
     \code
-    int main(int argc, char *argv[]) 
+    int main(int argc, char *argv[])
     {
         ...
 
@@ -203,7 +203,7 @@ QImage QQuickTextureFactory::image() const
 
     \image imageprovider.png
 
-    A complete example is available in Qt's 
+    A complete example is available in Qt's
     \l {qml/imageprovider}{examples/quick/imageprovider}
     directory. Note the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
@@ -214,7 +214,7 @@ QImage QQuickTextureFactory::image() const
     Image providers that support QImage or Texture loading automatically include support
     for asychronous loading of images. To enable asynchronous loading for an
     image source, set the \c asynchronous property to \c true for the relevant
-    \l Image, \l BorderImage or \l AnimatedImage object. When this is enabled, 
+    \l Image, \l BorderImage or \l AnimatedImage object. When this is enabled,
     the image request to the provider is run in a low priority thread,
     allowing image loading to be executed in the background, and reducing the
     performance impact on the user interface.
@@ -285,7 +285,7 @@ QQuickImageProvider::Flags QQuickImageProvider::flags() const
 }
 
 /*!
-    Implement this method to return the image with \a id. The default 
+    Implement this method to return the image with \a id. The default
     implementation returns an empty image.
 
     The \a id is the requested image source, with the "image:" scheme and

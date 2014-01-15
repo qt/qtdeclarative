@@ -59,7 +59,7 @@
 
 QVariant myCustomVariantTypeConverter(const QString &data);
 
-class MyInterface 
+class MyInterface
 {
 public:
     MyInterface() : id(913) {}

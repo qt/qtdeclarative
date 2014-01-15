@@ -70,7 +70,7 @@ void HappyBirthdaySong::setName(const QString &name)
     m_lyrics << "Happy birthday to you!";
     m_lyrics << "";
 }
-    
+
 void HappyBirthdaySong::advance()
 {
     m_line = (m_line + 1) % m_lyrics.count();

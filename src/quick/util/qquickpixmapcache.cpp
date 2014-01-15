@@ -234,7 +234,7 @@ class QQuickPixmapData
 {
 public:
     QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QSize &s, const QString &e)
-    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Error), 
+    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Error),
       url(u), errorString(e), requestSize(s), textureFactory(0), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
@@ -242,7 +242,7 @@ public:
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QSize &r)
-    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Loading), 
+    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Loading),
       url(u), requestSize(r), textureFactory(0), reply(0), prevUnreferenced(0), prevUnreferencedPtr(0),
       nextUnreferenced(0)
     {
@@ -286,7 +286,7 @@ public:
     uint refCount;
 
     bool inCache:1;
-    
+
     QQuickPixmap::Status pixmapStatus;
     QUrl url;
     QString errorString;
@@ -337,7 +337,7 @@ QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
     return accessManager;
 }
 
-static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *errorString, QSize *impsize, 
+static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *errorString, QSize *impsize,
                       const QSize &requestSize)
 {
     QImageReader imgio(dev);
@@ -469,17 +469,17 @@ QQuickPixmapReaderThreadObject::QQuickPixmapReaderThreadObject(QQuickPixmapReade
 {
 }
 
-void QQuickPixmapReaderThreadObject::processJobs() 
-{ 
-    QCoreApplication::postEvent(this, new QEvent(QEvent::User)); 
+void QQuickPixmapReaderThreadObject::processJobs()
+{
+    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 }
 
-bool QQuickPixmapReaderThreadObject::event(QEvent *e) 
+bool QQuickPixmapReaderThreadObject::event(QEvent *e)
 {
-    if (e->type() == QEvent::User) { 
-        reader->processJobs(); 
-        return true; 
-    } else { 
+    if (e->type() == QEvent::User) {
+        reader->processJobs();
+        return true;
+    } else {
         return QObject::event(e);
     }
 }
@@ -495,7 +495,7 @@ void QQuickPixmapReader::processJobs()
     QMutexLocker locker(&mutex);
 
     while (true) {
-        if (cancelled.isEmpty() && (jobs.isEmpty() || replies.count() >= IMAGEREQUEST_MAX_REQUEST_COUNT)) 
+        if (cancelled.isEmpty() && (jobs.isEmpty() || replies.count() >= IMAGEREQUEST_MAX_REQUEST_COUNT))
             return; // Nothing else to do
 
         // Clean cancelled jobs
@@ -529,7 +529,7 @@ void QQuickPixmapReader::processJobs()
     }
 }
 
-void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &url, 
+void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &url,
                                           const QSize &requestSize)
 {
     // fetch
@@ -649,7 +649,7 @@ QQuickPixmapReply *QQuickPixmapReader::getImage(QQuickPixmapData *data)
     QQuickPixmapReply *reply = new QQuickPixmapReply(data);
     reply->engineForReader = engine;
     jobs.append(reply);
-    // XXX 
+    // XXX
     if (threadObject) threadObject->processJobs();
     mutex.unlock();
     return reply;
@@ -661,7 +661,7 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
     if (reply->loading) {
         cancelled.append(reply);
         reply->data = 0;
-        // XXX 
+        // XXX
         if (threadObject) threadObject->processJobs();
     } else {
         jobs.removeAll(reply);
@@ -816,7 +816,7 @@ void QQuickPixmapStore::referencePixmap(QQuickPixmapData *data)
     Q_ASSERT(data->prevUnreferencedPtr);
 
     *data->prevUnreferencedPtr = data->nextUnreferenced;
-    if (data->nextUnreferenced) { 
+    if (data->nextUnreferenced) {
         data->nextUnreferenced->prevUnreferencedPtr = data->prevUnreferencedPtr;
         data->nextUnreferenced->prevUnreferenced = data->prevUnreferenced;
     }
@@ -927,7 +927,7 @@ void QQuickPixmapData::addref()
 {
     ++refCount;
     Q_QML_PROFILE(pixmapCountChanged<QQmlProfilerService::PixmapReferenceCountChanged>(url, refCount));
-    if (prevUnreferencedPtr) 
+    if (prevUnreferencedPtr)
         pixmapStore()->referencePixmap(this);
 }
 
@@ -1029,7 +1029,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     }
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
-    if (localFile.isEmpty()) 
+    if (localFile.isEmpty())
         return 0;
 
     QFile f(localFile);
@@ -1130,7 +1130,7 @@ const QUrl &QQuickPixmap::url() const
 
 const QSize &QQuickPixmap::implicitSize() const
 {
-    if (d) 
+    if (d)
         return d->implicitSize;
     else
         return nullPixmap()->size;
@@ -1252,7 +1252,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
                 Q_QML_PROFILE(pixmapStateChanged<QQmlProfilerService::PixmapLoadingError>(url));
                 return;
             }
-        } 
+        }
 
         if (!engine)
             return;
@@ -1283,7 +1283,7 @@ void QQuickPixmap::clear()
 void QQuickPixmap::clear(QObject *obj)
 {
     if (d) {
-        if (d->reply) 
+        if (d->reply)
             QObject::disconnect(d->reply, 0, obj, 0);
         d->declarativePixmaps.remove(this);
         d->release();

@@ -195,15 +195,15 @@ private:
     void reportScriptException(WorkerScript *, const QQmlError &error);
 };
 
-QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent) 
+QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
 : QV8Engine(0), p(parent), accessManager(0)
 {
     m_v4Engine->v8Engine = this;
 }
 
-QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine() 
-{ 
-    delete accessManager; 
+QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
+{
+    delete accessManager;
 }
 
 void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
@@ -264,7 +264,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     return v.asReturnedValue();
 }
 
-QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager() 
+QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager()
 {
     if (!accessManager) {
         if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
@@ -411,7 +411,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     }
 }
 
-void QQuickWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script, 
+void QQuickWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script,
                                                                   const QQmlError &error)
 {
     QQuickWorkerScriptEnginePrivate *p = QQuickWorkerScriptEnginePrivate::get(workerEngine);

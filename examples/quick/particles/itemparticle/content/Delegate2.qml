@@ -43,7 +43,7 @@ import QtQuick 2.0
 //![0]
 Package {
     Item { id: gridDelegate; width: w; height: h; Package.name: 'grid' }
-    Item { id: particleDelegate; width: w; height: h; Package.name: 'particles' 
+    Item { id: particleDelegate; width: w; height: h; Package.name: 'particles'
 
         Rectangle {
             id: wrapper

@@ -113,7 +113,7 @@ struct QQmlVMEMetaData
             return (propertyIdx & 0xFFFF0000) ? propType : 0;
         }
     };
-    
+
     struct PropertyData {
         int propertyType;
     };

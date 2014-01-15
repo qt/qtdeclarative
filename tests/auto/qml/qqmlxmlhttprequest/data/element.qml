@@ -115,8 +115,8 @@ QtObject {
 
     function checkXML(document)
     {
-        checkElement(document.documentElement, 
-                     document.documentElement.childNodes[0], 
+        checkElement(document.documentElement,
+                     document.documentElement.childNodes[0],
                      document.documentElement.childNodes[1]);
     }
 

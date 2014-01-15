@@ -99,7 +99,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name, 
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
                                                                    const void *importNamespace)
 {
     Q_ASSERT(importNamespace);

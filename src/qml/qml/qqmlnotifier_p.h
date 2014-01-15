@@ -123,7 +123,7 @@ QQmlNotifier::QQmlNotifier()
 }
 
 QQmlNotifier::~QQmlNotifier()
-{    
+{
     QQmlNotifierEndpoint *endpoint = endpoints;
     while (endpoint) {
         QQmlNotifierEndpoint *n = endpoint;
@@ -221,7 +221,7 @@ bool QQmlNotifierEndpoint::isNotifying() const
 /*!
 Cancel any notifies that are in progress.
 */
-void QQmlNotifierEndpoint::cancelNotify() 
+void QQmlNotifierEndpoint::cancelNotify()
 {
     if (isNotifying()) {
         qintptr sp = *((qintptr *)(senderPtr & ~0x1));

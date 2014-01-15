@@ -86,7 +86,7 @@ Component {
             Text { text: "Attributes:" }
             Repeater {
                 model: attributes
-                Text { text: description } 
+                Text { text: description }
             }
         }
     }

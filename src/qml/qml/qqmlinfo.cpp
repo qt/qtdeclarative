@@ -61,13 +61,13 @@ QT_BEGIN_NAMESPACE
     When QML types display warning messages, it improves traceability
     if they include the QML file and line number on which the
     particular instance was instantiated.
-    
+
     To include the file and line number, an object must be passed.  If
     the file and line number is not available for that instance
     (either it was not instantiated by the QML engine or location
     information is disabled), "unknown location" will be used instead.
 
-    For example, 
+    For example,
 
     \code
     qmlInfo(object) << tr("component property is a write-once property");

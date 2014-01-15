@@ -103,7 +103,7 @@ Rectangle {
                     width: background.width - recipeImage.width - 20; height: recipeImage.height
                     spacing: 5
 
-                    Text { 
+                    Text {
                         text: title
                         font.bold: true; font.pointSize: 16
                     }

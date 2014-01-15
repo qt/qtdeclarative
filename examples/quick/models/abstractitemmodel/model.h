@@ -41,7 +41,7 @@
 #include <QStringList>
 
 //![0]
-class Animal 
+class Animal
 {
 public:
     Animal(const QString &type, const QString &size);

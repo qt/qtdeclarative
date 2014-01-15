@@ -4,8 +4,8 @@ MyQmlObject {
     property alias c1: myConstants.c1
     property alias c2: myConstants.c2
 
-    objectProperty: ConstantsOverrideBindings { 
+    objectProperty: ConstantsOverrideBindings {
         id: myConstants
-        c2: 10 
+        c2: 10
     }
 }

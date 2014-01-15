@@ -335,7 +335,7 @@ QQmlDebugClientPrivate::QQmlDebugClientPrivate()
 {
 }
 
-QQmlDebugClient::QQmlDebugClient(const QString &name, 
+QQmlDebugClient::QQmlDebugClient(const QString &name,
                                                  QQmlDebugConnection *parent)
     : QObject(parent),
       d(new QQmlDebugClientPrivate)

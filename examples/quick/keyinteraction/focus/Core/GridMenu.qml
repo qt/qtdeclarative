@@ -44,7 +44,7 @@ FocusScope {
     property alias interactive: gridView.interactive
 
     onActiveFocusChanged: {
-        if (activeFocus) 
+        if (activeFocus)
             mainView.state = "showGridViews"
     }
 

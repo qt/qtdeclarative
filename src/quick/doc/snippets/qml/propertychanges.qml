@@ -53,9 +53,9 @@ Item {
         width: 100; height: 100
         color: "red"
 
-        MouseArea { 
+        MouseArea {
            id: mouseArea
-           anchors.fill: parent 
+           anchors.fill: parent
         }
 
         states: State {

@@ -102,7 +102,7 @@ QQmlCompiler::QQmlCompiler(QQmlPool *pool)
 : compileState(0), pool(pool), output(0), engine(0), enginePrivate(0), unitRoot(0), unit(0), cachedComponentTypeRef(-1),
   cachedTranslationContextIndex(-1), componentStats(0)
 {
-    if (compilerStatDump()) 
+    if (compilerStatDump())
         componentStats = pool->New<ComponentStats>();
 }
 
@@ -1007,13 +1007,13 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     if (tr.type && obj->metatype->metaObject() == &QQmlComponent::staticMetaObject) {
         COMPILE_CHECK(buildComponent(obj, ctxt));
         return true;
-    } 
+    }
 
     if (tr.component) {
-        typedef QQmlInstruction I; 
+        typedef QQmlInstruction I;
         const I *init = ((const I *)tr.component->bytecode.constData());
         Q_ASSERT(init && tr.component->instructionType(init) == QQmlInstruction::Init);
- 
+
         // Adjust stack depths to include nested components
         compileState->objectDepth.pushPop(init->init.objectStackSize);
         compileState->listDepth.pushPop(init->init.listStackSize);
@@ -1027,7 +1027,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     BindingContext objCtxt(obj);
 
     // Create the synthesized meta object, ignoring aliases
-    COMPILE_CHECK(checkDynamicMeta(obj)); 
+    COMPILE_CHECK(checkDynamicMeta(obj));
     COMPILE_CHECK(mergeDynamicMetaProperties(obj));
     COMPILE_CHECK(buildDynamicMeta(obj, Normal));
 
@@ -1058,7 +1058,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
         }
     }
 
-    // Merge 
+    // Merge
     Property *defaultProperty = 0;
     Property *skipProperty = 0;
     if (obj->defaultProperty) {
@@ -1098,7 +1098,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
             }
 
             defaultProperty->values.insertAfter(insertPos, explicitProperty->values);
-        } 
+        }
     }
 
     QQmlCustomParser *cp = 0;
@@ -1316,9 +1316,9 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         Instruction::DeferInit dinit;
         // XXX - these are now massive over allocations
         dinit.bindingsSize = compileState->totalBindingsCount;
-        dinit.parserStatusSize = compileState->parserStatusCount; 
-        dinit.objectStackSize = compileState->objectDepth.maxDepth(); 
-        dinit.listStackSize = compileState->listDepth.maxDepth(); 
+        dinit.parserStatusSize = compileState->parserStatusCount;
+        dinit.objectStackSize = compileState->objectDepth.maxDepth();
+        dinit.listStackSize = compileState->listDepth.maxDepth();
         output->addInstruction(dinit);
 
         for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
@@ -1404,7 +1404,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
     }
 
     for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
-        if (prop->isDeferred) 
+        if (prop->isDeferred)
             continue;
         if (prop->isAlias)
             genValueProperty(prop, obj);
@@ -1485,7 +1485,7 @@ void QQmlCompiler::genComponent(QQmlScript::Object *obj)
     Instruction::Done done;
     output->addInstruction(done);
 
-    output->instruction(createInstruction)->createComponent.count = 
+    output->instruction(createInstruction)->createComponent.count =
         output->nextInstructionIndex() - nextInstructionIndex;
 
     compileState = oldCompileState;
@@ -1516,12 +1516,12 @@ bool QQmlCompiler::buildComponent(QQmlScript::Object *obj,
     if (obj->properties.isMany() ||
        (obj->properties.isOne() && obj->properties.first()->name() != id_string))
         COMPILE_EXCEPTION(obj->properties.first(), tr("Component elements may not contain properties other than id"));
-       
+
     if (!obj->properties.isEmpty())
         idProp = obj->properties.first();
 
     if (idProp) {
-       if (idProp->value || idProp->values.isMany() || idProp->values.first()->object) 
+       if (idProp->value || idProp->values.isMany() || idProp->values.first()->object)
            COMPILE_EXCEPTION(idProp, tr("Invalid component id specification"));
        COMPILE_CHECK(checkValidId(idProp->values.first(), idProp->values.first()->primitive()))
 
@@ -1790,7 +1790,7 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
                                          QQmlScript::Object *obj,
                                          const BindingContext &ctxt)
 {
-    if (prop->isEmpty()) 
+    if (prop->isEmpty())
         COMPILE_EXCEPTION(prop, tr("Empty property assignment"));
 
     if (isAttachedPropertyName(prop->name())) {
@@ -1808,7 +1808,7 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
         unit->imports().resolveType(prop->name(), &type, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
-            COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj, 
+            COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj,
                                                    ctxt));
             return true;
         } else if (!type || !type->attachedPropertiesType())  {
@@ -1852,13 +1852,13 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
 
         // We can't error here as the "id" property does not require a
         // successful index resolution
-        if (prop->index != -1) 
+        if (prop->index != -1)
             prop->type = prop->core.propType;
 
         // Check if this is an alias
-        if (prop->index != -1 && 
-            prop->parent && 
-            prop->parent->type != -1 && 
+        if (prop->index != -1 &&
+            prop->parent &&
+            prop->parent->type != -1 &&
             output->types.at(prop->parent->type).component) {
 
             QQmlPropertyCache *cache = output->types.at(prop->parent->type).component->rootPropertyCache;
@@ -1866,7 +1866,7 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
                 prop->isAlias = true;
         }
 
-        if (prop->index != -1 && !prop->values.isEmpty()) 
+        if (prop->index != -1 && !prop->values.isEmpty())
             prop->parent->setBindingBit(prop->index);
     }
 
@@ -1931,7 +1931,7 @@ bool QQmlCompiler::buildPropertyInNamespace(QQmlImportNamespace *ns,
         QQmlType *type = 0;
         unit->imports().resolveType(ns, prop->name(), &type, 0, 0);
 
-        if (!type || !type->attachedPropertiesType()) 
+        if (!type || !type->attachedPropertiesType())
             COMPILE_EXCEPTION(prop, tr("Non-existent attached object"));
 
         if (!prop->value)
@@ -2131,7 +2131,7 @@ void QQmlCompiler::saveComponentState()
 
     compileState->root->componentCompileState = compileState;
 
-    if (componentStats) 
+    if (componentStats)
         componentStats->savedComponentStats.append(componentStats->componentStat);
 }
 
@@ -2234,7 +2234,7 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
         if (!prop->value->metatype)
             COMPILE_EXCEPTION(prop, tr("Invalid grouped property access"));
 
-        if (!prop->values.isEmpty()) 
+        if (!prop->values.isEmpty())
             COMPILE_EXCEPTION(prop->values.first(), tr( "Cannot assign a value directly to a grouped property"));
 
         obj->addGroupedProperty(prop);
@@ -2263,7 +2263,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
     for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
         QQmlPropertyData *d = property(obj, prop->name());
-        if (d == 0) 
+        if (d == 0)
             COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
 
         prop->index = d->coreIndex;
@@ -2311,7 +2311,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
         for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
             Q_ASSERT(v->object);
 
-            COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, baseObj, v, ctxt)); 
+            COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, baseObj, v, ctxt));
         }
 
         obj->addValueProperty(prop);
@@ -2323,7 +2323,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
 }
 
 // Build assignments to QML lists.  QML lists are properties of type
-// QQmlListProperty<T>.  List properties can accept a list of 
+// QQmlListProperty<T>.  List properties can accept a list of
 // objects, or a single binding.
 bool QQmlCompiler::buildListProperty(QQmlScript::Property *prop,
                                              QQmlScript::Object *obj,
@@ -2720,7 +2720,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
         }
 
         if (propNames.testAndSet(prop.name.hash())) {
-            for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p; 
+            for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p;
                  p2 = obj->dynamicProperties.next(p2)) {
                 if (p2->name == prop.name) {
                     COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
@@ -2798,7 +2798,7 @@ bool QQmlCompiler::mergeDynamicMetaProperties(QQmlScript::Object *obj)
             property = obj->getDefaultProperty();
         } else {
             property = obj->getProperty(p->name);
-            if (!property->values.isEmpty()) 
+            if (!property->values.isEmpty())
                 COMPILE_EXCEPTION(property, tr("Property value set multiple times"));
         }
 
@@ -3620,7 +3620,7 @@ int QQmlCompiler::genContextCache()
 }
 
 QQmlPropertyData
-QQmlCompiler::genValueTypeData(QQmlScript::Property *valueTypeProp, 
+QQmlCompiler::genValueTypeData(QQmlScript::Property *valueTypeProp,
                                        QQmlScript::Property *prop)
 {
     QQmlValueType *vt = QQmlValueTypeFactory::valueType(prop->type);
@@ -3633,8 +3633,8 @@ bool QQmlCompiler::completeComponentBuild()
     if (componentStats)
         componentStats->componentStat.ids = compileState->ids.count();
 
-    for (Object *aliasObject = compileState->aliasingObjects.first(); aliasObject; 
-         aliasObject = compileState->aliasingObjects.next(aliasObject)) 
+    for (Object *aliasObject = compileState->aliasingObjects.first(); aliasObject;
+         aliasObject = compileState->aliasingObjects.next(aliasObject))
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
     const QQmlScript::Parser &parser = unit->parser();
@@ -3884,7 +3884,7 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
         QHashedStringRef propName = name.mid(0, name.length() - Changed_string.length());
 
         d = property(object, propName, notInRevision);
-        if (d) 
+        if (d)
             return cache->signal(d->notifyIndex);
     }
 
@@ -3892,20 +3892,20 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
 }
 
 // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-int QQmlCompiler::indexOfSignal(QQmlScript::Object *object, const QString &name, 
+int QQmlCompiler::indexOfSignal(QQmlScript::Object *object, const QString &name,
                                         bool *notInRevision)
 {
     QQmlPropertyData *d = signal(object, QStringRef(&name), notInRevision);
     return d?d->coreIndex:-1;
 }
 
-int QQmlCompiler::indexOfProperty(QQmlScript::Object *object, const QString &name, 
+int QQmlCompiler::indexOfProperty(QQmlScript::Object *object, const QString &name,
                                           bool *notInRevision)
 {
     return indexOfProperty(object, QStringRef(&name), notInRevision);
 }
 
-int QQmlCompiler::indexOfProperty(QQmlScript::Object *object, const QHashedStringRef &name, 
+int QQmlCompiler::indexOfProperty(QQmlScript::Object *object, const QHashedStringRef &name,
                                           bool *notInRevision)
 {
     QQmlPropertyData *d = property(object, name, notInRevision);

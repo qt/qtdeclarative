@@ -49,7 +49,7 @@ Rectangle {
 
     AnimatedImage { id: animation; source: "animation.gif" }
 
-    Rectangle { 
+    Rectangle {
         property int frames: animation.frameCount
 
         width: 4; height: 8

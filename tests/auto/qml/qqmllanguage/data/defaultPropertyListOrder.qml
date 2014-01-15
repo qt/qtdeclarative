@@ -13,10 +13,10 @@ MyContainer {
     children: [
         QtObject {
             property int index: 2
-        }, 
+        },
         QtObject {
             property int index: 3
-        } 
+        }
     ]
 
     QtObject {

@@ -5,7 +5,7 @@ Item {
     property bool test: false
     property bool test2: false
 
-    Bar { 
+    Bar {
         id: bar
     }
 

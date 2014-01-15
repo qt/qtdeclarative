@@ -44,9 +44,9 @@ Image {
     id: rootItem
 
     property bool created: false
-    property string image 
+    property string image
 
-    property double scaledBottom: y + (height + height*scale) / 2 
+    property double scaledBottom: y + (height + height*scale) / 2
     property bool onLand: scaledBottom > (window.height / 2 + window.centerOffset)
 
     source: image

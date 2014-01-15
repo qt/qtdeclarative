@@ -9,8 +9,8 @@ QtObject {
     property bool test3: false
     property bool test3_1: false
 
-    Component.onCompleted: { 
-        IncludeTest.go(); 
+    Component.onCompleted: {
+        IncludeTest.go();
         test0 = IncludeTest.value
         test1 = IncludeTest.test1
         test2 = IncludeTest.test2

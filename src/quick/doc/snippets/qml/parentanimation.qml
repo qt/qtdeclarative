@@ -43,13 +43,13 @@ import QtQuick 2.0
 Item {
     width: 200; height: 100
 
-    Rectangle { 
+    Rectangle {
         id: redRect
         width: 100; height: 100
         color: "red"
     }
 
-    Rectangle { 
+    Rectangle {
         id: blueRect
         x: redRect.width
         width: 50; height: 50

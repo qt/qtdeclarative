@@ -6,7 +6,7 @@ Rectangle {
         id: myDelegate
         Item {
             id: wrapper
-            width: 180; height: 40; 
+            width: 180; height: 40;
             opacity: PathView.opacity
             Column {
                 x: 5; y: 5
@@ -46,7 +46,7 @@ Rectangle {
         }
     }
 
-    data:[  
+    data:[
     ListModel {
         id: listModel
         ListElement {

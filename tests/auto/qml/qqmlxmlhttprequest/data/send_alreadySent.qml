@@ -19,7 +19,7 @@ QtObject {
         x.send();
 
         try {
-            x.send()        
+            x.send()
         } catch (e) {
             if (e.code == DOMException.INVALID_STATE_ERR)
                 test = true;

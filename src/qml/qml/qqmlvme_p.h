@@ -187,7 +187,7 @@ private:
 };
 
 // Used to check that a QQmlVME that is interrupted mid-execution
-// is still valid.  Checks all the objects and contexts have not been 
+// is still valid.  Checks all the objects and contexts have not been
 // deleted.
 class QQmlVMEGuard
 {

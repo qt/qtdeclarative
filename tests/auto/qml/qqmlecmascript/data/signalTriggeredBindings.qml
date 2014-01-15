@@ -11,7 +11,7 @@ MyQmlObject {
         property real test1: base
         property real test2: Math.max(0, base)
     }
-        
+
     // Signal with no args
     onBasicSignal: base = 200
     // Signal with args

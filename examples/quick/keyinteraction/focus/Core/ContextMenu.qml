@@ -54,7 +54,7 @@ FocusScope {
             focus: true
             Keys.onRightPressed: mainView.focus = true
 
-            Text { 
+            Text {
                 anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; margins: 30 }
                 color: "black"
                 font.pixelSize: 14

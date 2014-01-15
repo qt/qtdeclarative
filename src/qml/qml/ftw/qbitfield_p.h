@@ -91,13 +91,13 @@ QBitField::QBitField(const quint32 *bitData, int bitCount)
 QBitField::QBitField(const QBitField &other)
 : bits(other.bits), ownData(other.ownData), data(other.data)
 {
-    if (ownData) 
+    if (ownData)
         ++(*ownData);
 }
 
 QBitField::~QBitField()
 {
-    if (ownData) 
+    if (ownData)
         if(0 == --(*ownData)) delete [] ownData;
 }
 
@@ -106,14 +106,14 @@ QBitField &QBitField::operator=(const QBitField &other)
     if (other.data == data)
         return *this;
 
-    if (ownData) 
+    if (ownData)
         if(0 == --(*ownData)) delete [] ownData;
 
     bits = other.bits;
     ownData = other.ownData;
     data = other.data;
 
-    if (ownData) 
+    if (ownData)
         ++(*ownData);
 
     return *this;

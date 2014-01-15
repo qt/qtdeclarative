@@ -46,7 +46,7 @@ Rectangle {
     width: 640
     height: 480
     ParticleSystem {
-        id: sys 
+        id: sys
     }
 
     ImageParticle {

@@ -8,6 +8,6 @@ QtObject {
     objectProperty2: QtObject {}
 
     property MyComponent myComponentProperty
-    property MyComponent myComponentProperty2 
+    property MyComponent myComponentProperty2
     myComponentProperty2: MyComponent {}
 }

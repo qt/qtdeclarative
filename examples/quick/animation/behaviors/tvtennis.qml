@@ -64,7 +64,7 @@ Rectangle {
             PropertyAction { target: ball; property: "direction"; value: "right" }
         }
 
-        // Make y move with a velocity of 200 
+        // Make y move with a velocity of 200
         Behavior on y { SpringAnimation{ velocity: 200; }
         }
 

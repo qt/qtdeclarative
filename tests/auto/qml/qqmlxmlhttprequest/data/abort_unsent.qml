@@ -15,7 +15,7 @@ QtObject {
 
     Component.onCompleted: {
         var x = new XMLHttpRequest;
-	x.abort();
+        x.abort();
 
         if (x.readyState == XMLHttpRequest.UNSENT)
             readyState = true;

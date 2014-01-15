@@ -248,7 +248,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     if (type && !type->isSingleton() && w->object) {
         QObject *object = w->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
-        if (ao) 
+        if (ao)
             QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, ao, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();

@@ -117,7 +117,7 @@ namespace QV4 {
 //         ...
 //         Q_INVOKABLE void myMethod(QQmlV8Function*);
 //     };
-// The QQmlV8Function - and consequently the arguments and return value - only remains 
+// The QQmlV8Function - and consequently the arguments and return value - only remains
 // valid during the call.  If the return value isn't set within myMethod(), the will return
 // undefined.
 class QV8Engine;

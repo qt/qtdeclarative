@@ -67,14 +67,14 @@ Rectangle {
     }
 
     CustomParticle {
-        system: sys 
+        system: sys
         //! [vertex]
         vertexShader:"
             uniform lowp float qt_Opacity;
             varying lowp float fFade;
             varying lowp float fBlur;
 
-            void main() {                                           
+            void main() {
                 defaultMain();
                 highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;
                 highp float fadeIn = min(t * 10., 1.);

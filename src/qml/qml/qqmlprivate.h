@@ -85,8 +85,8 @@ namespace QQmlPrivate
     class QQmlElement : public T
     {
     public:
-        virtual ~QQmlElement() { 
-            QQmlPrivate::qdeclarativeelement_destructor(this); 
+        virtual ~QQmlElement() {
+            QQmlPrivate::qdeclarativeelement_destructor(this);
         }
     };
 
@@ -130,7 +130,7 @@ namespace QQmlPrivate
     };
 
     template <typename T, bool hasMember>
-    class has_attachedPropertiesMethod 
+    class has_attachedPropertiesMethod
     {
     public:
         typedef int yes_type;
@@ -141,7 +141,7 @@ namespace QQmlPrivate
         static no_type check(...);
 
         static bool const value = sizeof(check(&T::qmlAttachedProperties)) == sizeof(yes_type);
-    }; 
+    };
 
     template <typename T>
     class has_attachedPropertiesMethod<T, false>

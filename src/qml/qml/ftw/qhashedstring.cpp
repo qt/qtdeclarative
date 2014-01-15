@@ -198,19 +198,19 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
 QHashedStringRef QHashedStringRef::mid(int offset, int length) const
 {
     Q_ASSERT(offset < m_length);
-    return QHashedStringRef(m_data + offset, 
+    return QHashedStringRef(m_data + offset,
                             (length == -1 || (offset + length) > m_length)?(m_length - offset):length);
 }
 
 bool QHashedStringRef::endsWith(const QString &s) const
 {
-    return s.length() < m_length && 
+    return s.length() < m_length &&
            QHashedString::compare(s.constData(), m_data + m_length - s.length(), s.length());
 }
 
 bool QHashedStringRef::startsWith(const QString &s) const
 {
-    return s.length() < m_length && 
+    return s.length() < m_length &&
            QHashedString::compare(s.constData(), m_data, s.length());
 }
 

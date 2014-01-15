@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 /*
     This is exactly the same as states.qml, except that we have appended
-    a set of transitions to apply animations when the item changes 
+    a set of transitions to apply animations when the item changes
     between each state.
 */
 
@@ -51,7 +51,7 @@ Rectangle {
     width: 640; height: 480
     color: "#343434"
 
-    Image { 
+    Image {
         id: userIcon
         x: topLeftRect.x; y: topLeftRect.y
         source: "qt-logo.png"

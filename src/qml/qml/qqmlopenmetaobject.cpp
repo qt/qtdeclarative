@@ -254,7 +254,7 @@ int QQmlOpenMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
                 propertyWritten(propId);
                 activate(d->object, d->type->d->signalOffset + propId, 0);
             }
-        } 
+        }
         return -1;
     } else {
         if (d->parent)

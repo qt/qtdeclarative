@@ -39,7 +39,7 @@ Rectangle {
             color: "lightsteelblue"
         }
     }
-        
+
     ListView {
         id: list
         objectName: "list"

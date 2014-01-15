@@ -16,7 +16,7 @@ Item {
         test1 = true;
     }
 
-    // Run gc() from C++ 
+    // Run gc() from C++
 
     function runTest2() {
         if (object.dummy != 10) return;

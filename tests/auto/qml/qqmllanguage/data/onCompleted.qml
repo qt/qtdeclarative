@@ -10,7 +10,7 @@ MyTypeObject {
     objectProperty: OnCompletedType {
         qmlobjectProperty: MyQmlObject {
             id: nestedObject
-            property int b: 10 
+            property int b: 10
             Component.onCompleted: console.log("Completed " + a + " " + nestedObject.b)
         }
     }

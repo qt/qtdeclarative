@@ -707,7 +707,7 @@ again:
         _validTokenText = true;
         _tokenText.resize(0);
         startCode--;
-        while (startCode != _codePtr - 1) 
+        while (startCode != _codePtr - 1)
             _tokenText += *startCode++;
 
         while (_codePtr <= _endPtr) {

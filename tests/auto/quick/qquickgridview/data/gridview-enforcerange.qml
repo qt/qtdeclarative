@@ -39,7 +39,7 @@ Rectangle {
             color: "lightsteelblue"
         }
     }
-        
+
     GridView {
         id: grid
         objectName: "grid"

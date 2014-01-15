@@ -145,7 +145,7 @@ void tst_qqmlmoduleplugin::importsPlugin()
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("works.qml")));
     foreach (QQmlError err, component.errors())
-    	qWarning() << err;
+        qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);

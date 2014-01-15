@@ -45,9 +45,9 @@ Rectangle {
     width: 100; height: 100
     color: "black"
 
-    MouseArea { 
+    MouseArea {
         id: mouseArea
-        anchors.fill: parent 
+        anchors.fill: parent
         onClicked: myRect.state == 'clicked' ? myRect.state = "" : myRect.state = 'clicked';
     }
 

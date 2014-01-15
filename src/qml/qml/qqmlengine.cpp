@@ -107,7 +107,7 @@
 #include <qlibrary.h>
 #include <windows.h>
 
-#define CSIDL_APPDATA		0x001a	// <username>\Application Data
+#define CSIDL_APPDATA           0x001a  // <username>\Application Data
 #endif
 
 Q_DECLARE_METATYPE(QQmlProperty)

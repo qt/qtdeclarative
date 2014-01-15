@@ -73,7 +73,7 @@ ParticleSystem {
             varying lowp float fFade;
             varying highp vec2 fPos;
 
-            void main() {                                           
+            void main() {
                 qt_TexCoord0 = qt_ParticleTex;
                 highp float size = qt_ParticleData.z;
                 highp float endSize = qt_ParticleData.w;

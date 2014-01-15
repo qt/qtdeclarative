@@ -152,7 +152,7 @@ public:
     }
 
     QObject *objectProperty() const { return m_object; }
-    void setObjectProperty(QObject *obj) { 
+    void setObjectProperty(QObject *obj) {
         if (obj == m_object)
             return;
         m_object = obj;
@@ -206,7 +206,7 @@ public:
 
     int intProperty() const { return m_intProperty; }
     void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
-    
+
     Q_INVOKABLE MyEnum2 getEnumValue() const { return EnumValue4; }
 
     MyEnum enumPropertyValue;
@@ -803,7 +803,7 @@ public:
     Q_INVOKABLE void method_QObject(QObject *a) { invoke(13); m_actuals << qVariantFromValue(a); }
     Q_INVOKABLE void method_QScriptValue(QJSValue a) { invoke(14); m_actuals << qVariantFromValue(a); }
     Q_INVOKABLE void method_intQScriptValue(int a, QJSValue b) { invoke(15); m_actuals << a << qVariantFromValue(b); }
-    
+
     Q_INVOKABLE void method_overload(int a) { invoke(16); m_actuals << a; }
     Q_INVOKABLE void method_overload(int a, int b) { invoke(17); m_actuals << a << b; }
     Q_INVOKABLE void method_overload(QString a) { invoke(18); m_actuals << a; }

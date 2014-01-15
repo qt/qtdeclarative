@@ -57,7 +57,7 @@ Rectangle {
     }
 
     //! [0]
-    Wander { 
+    Wander {
         id: wanderer
         system: particles
         anchors.fill: parent

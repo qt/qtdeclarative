@@ -116,7 +116,7 @@ struct QQmlMetaTypeData
 class QQmlTypeModulePrivate
 {
 public:
-    QQmlTypeModulePrivate() 
+    QQmlTypeModulePrivate()
     : minMinorVersion(INT_MAX), maxMinorVersion(0), locked(false) {}
 
     static QQmlTypeModulePrivate* get(QQmlTypeModule* q) { return q->d; }
@@ -479,7 +479,7 @@ QQmlType *QQmlType::superType() const
     return d->superType;
 }
 
-static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo, 
+static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                   const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd)
 {
     // Set classname
@@ -491,7 +491,7 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
 
         int otherIndex = ignoreEnd->indexOfClassInfo(info.name());
         if (otherIndex >= ignoreStart->classInfoOffset() + ignoreStart->classInfoCount()) {
-            // Skip 
+            // Skip
         } else {
             builder.addClassInfo(info.name(), info.value());
         }
@@ -504,7 +504,7 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         int otherIndex = ignoreEnd->indexOfProperty(property.name());
         if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
             builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
-            // Skip 
+            // Skip
         } else {
             builder.addProperty(property);
         }
@@ -520,7 +520,7 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
 
         bool found = false;
 
-        for (int ii = ignoreStart->methodOffset() + ignoreStart->methodCount(); 
+        for (int ii = ignoreStart->methodOffset() + ignoreStart->methodCount();
              !found && ii < ignoreEnd->methodOffset() + ignoreEnd->methodCount();
              ++ii) {
 
@@ -540,7 +540,7 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
 
         int otherIndex = ignoreEnd->indexOfEnumerator(enumerator.name());
         if (otherIndex >= ignoreStart->enumeratorOffset() + ignoreStart->enumeratorCount()) {
-            // Skip 
+            // Skip
         } else {
             builder.addEnumerator(enumerator);
         }
@@ -860,7 +860,7 @@ const QMetaObject *QQmlType::attachedPropertiesType() const
 
 /*
 This is the id passed to qmlAttachedPropertiesById().  This is different from the index
-for the case that a single class is registered under two or more names (eg. Item in 
+for the case that a single class is registered under two or more names (eg. Item in
 Qt 4.7 and QtQuick 1.0).
 */
 int QQmlType::attachedPropertiesId() const
@@ -1128,7 +1128,7 @@ int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
 
 int registerInterface(const QQmlPrivate::RegisterInterface &interface)
 {
-    if (interface.version > 0) 
+    if (interface.version > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QWriteLocker lock(metaTypeDataLock());
@@ -1472,7 +1472,7 @@ bool QQmlMetaType::isModule(const QString &module, int versionMajor, int version
     QQmlMetaTypeData *data = metaTypeData();
 
     // first, check Types
-    QQmlTypeModule *tm = 
+    QQmlTypeModule *tm =
         data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, versionMajor));
     if (tm && tm->minimumMinorVersion() <= versionMinor && tm->maximumMinorVersion() >= versionMinor)
         return true;
@@ -1755,7 +1755,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStri
 }
 
 /*!
-    Returns the type (if any) that corresponds to the QVariant::Type \a userType.  
+    Returns the type (if any) that corresponds to the QVariant::Type \a userType.
     Returns null if no type is registered.
 */
 QQmlType *QQmlMetaType::qmlType(int userType)

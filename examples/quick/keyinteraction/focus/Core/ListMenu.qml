@@ -44,7 +44,7 @@ FocusScope {
     clip: true
 
     onActiveFocusChanged: {
-        if (activeFocus) 
+        if (activeFocus)
             mainView.state = "showListViews"
     }
 

@@ -63,7 +63,7 @@ class Q_QML_PRIVATE_EXPORT QQmlPool
 {
 public:
     // The class has a destructor that needs to be called
-    class Class { 
+    class Class {
     public:
         inline QQmlPool *pool() const;
 
@@ -82,7 +82,7 @@ public:
     class POD {
     public:
         inline QQmlPool *pool() const;
-        
+
     private:
         void *operator new(size_t);
         void *operator new(size_t, void *m) { return m; }
@@ -120,16 +120,16 @@ public:
         int count() const {
             return m_length;
         }
-        int length() const { 
-            return m_length; 
+        int length() const {
+            return m_length;
         }
-        const T &at(int index) const { 
-            Q_ASSERT(index < m_length); 
-            return m_data[index]; 
+        const T &at(int index) const {
+            Q_ASSERT(index < m_length);
+            return m_data[index];
         };
         T &operator[](int index) {
-            Q_ASSERT(index < m_length); 
-            return m_data[index]; 
+            Q_ASSERT(index < m_length);
+            return m_data[index];
         };
         const T *data() const { return m_data; }
     private:

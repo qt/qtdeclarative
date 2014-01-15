@@ -224,7 +224,7 @@ Item {
                 anchors.centerIn: parent
                 antialiasing: true;
                 source: "http://" + Script.getImagePath(content); cache: true
-                fillMode: Image.PreserveAspectFit; 
+                fillMode: Image.PreserveAspectFit;
                 width: parent.width-4; height: parent.height-4
                 onStatusChanged: if (img.status == Image.Ready) {
                     loading.opacity = 0;

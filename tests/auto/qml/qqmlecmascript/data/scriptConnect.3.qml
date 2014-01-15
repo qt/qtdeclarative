@@ -1,11 +1,11 @@
 import Qt.test 1.0
 import QtQuick 2.0
 
-MyQmlObject { 
+MyQmlObject {
     property bool test: false
 
     id: root
-    
+
     function testFunction() {
         test = true;
     }

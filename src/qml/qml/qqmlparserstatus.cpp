@@ -109,7 +109,7 @@ QQmlParserStatus::~QQmlParserStatus()
 /*!
     \fn void QQmlParserStatus::componentComplete()
 
-    Invoked after the root component that caused this instantiation has 
+    Invoked after the root component that caused this instantiation has
     completed construction.  At this point all static values and binding values
     have been assigned to the class.
 */

@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
-Image { 
+Image {
     source: "heart.png"
     fillMode: Image.PreserveAspectFit;
 }

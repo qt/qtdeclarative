@@ -149,7 +149,7 @@ Item {
 
     Item {
         id: circle
-        x: root.width / 1.2 
+        x: root.width / 1.2
         y: root.height / 1.7
         property real percent: 0
 
@@ -167,7 +167,7 @@ Item {
     }
 
     ImageParticle {
-        z:0 
+        z:0
         system: sys
         groups: ["exhaust"]
         source: "qrc:///particleresources/fuzzydot.png"
@@ -199,7 +199,7 @@ Item {
         lifeSpan: 500
 
         y: holder.y
-        x: holder.x 
+        x: holder.x
 
         velocity: PointDirection { xVariation: 40; yVariation: 40; }
         velocityFromMovement: 16

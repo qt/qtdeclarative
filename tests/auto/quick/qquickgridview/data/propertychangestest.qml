@@ -6,7 +6,7 @@ Rectangle {
         id: delegate
         Item {
             id: wrapper
-            width: 180; height: 40; 
+            width: 180; height: 40;
             Column {
                 x: 5; y: 5
                 Text { text: '<b>Name:</b> ' + name }
@@ -36,7 +36,7 @@ Rectangle {
         flow: GridView.LeftToRight
     }
 
-    data:[  
+    data:[
         ListModel {
             id: listModel
             ListElement {
@@ -65,5 +65,5 @@ Rectangle {
         }
     ]
 }
- 
- 
+
+

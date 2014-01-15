@@ -173,9 +173,9 @@ bool QQmlVME::initDeferred(QObject *object)
 }
 
 namespace {
-struct ActiveVMERestorer 
+struct ActiveVMERestorer
 {
-    ActiveVMERestorer(QQmlVME *me, QQmlEnginePrivate *ep) 
+    ActiveVMERestorer(QQmlVME *me, QQmlEnginePrivate *ep)
     : ep(ep), oldVME(ep->activeVME) { ep->activeVME = me; }
     ~ActiveVMERestorer() { ep->activeVME = oldVME; }
 
@@ -202,7 +202,7 @@ QObject *QQmlVME::execute(QList<QQmlError> *errors, const Interrupt &interrupt)
     return rv;
 }
 
-inline bool fastHasBinding(QObject *o, int index) 
+inline bool fastHasBinding(QObject *o, int index)
 {
     if (QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData)) {
         int coreIndex = index & 0x0000FFFF;
@@ -238,7 +238,7 @@ static QV4::ExecutionContext *qmlBindingContext(QQmlEngine *engine, QV4::Executi
     return wrapper->context();
 }
 
-// XXX we probably need some form of "work count" here to prevent us checking this 
+// XXX we probably need some form of "work count" here to prevent us checking this
 // for every instruction.
 #define QML_BEGIN_INSTR_COMMON(I) { \
     const QQmlInstructionMeta<(int)QQmlInstruction::I>::DataType &instr = QQmlInstructionMeta<(int)QQmlInstruction::I>::data(*genericInstr); \
@@ -461,7 +461,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             CTXT->imports = COMP->importCache;
             CTXT->imports->addref();
             CTXT->setParent(parentCtxt);
-            if (instr.contextCache != -1) 
+            if (instr.contextCache != -1)
                 CTXT->setIdPropertyData(COMP->contextCaches.at(instr.contextCache));
             if (states.count() == 1) {
                 rootContext = CTXT;
@@ -469,7 +469,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 rootContext->isRootObjectInCreation = true;
             }
             if (states.count() == 1 && !creationContext.isNull()) {
-                // A component that is logically created within another component instance shares the 
+                // A component that is logically created within another component instance shares the
                 // same instances of script imports.  For example:
                 //
                 //     import QtQuick 2.0
@@ -482,7 +482,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 //     }
                 //
                 // Has the same "Test" instance.  To implement this, we simply copy the v8 handles into
-                // the inner context.  We have to create a fresh persistent handle for each to prevent 
+                // the inner context.  We have to create a fresh persistent handle for each to prevent
                 // double dispose.  It is possible we could do this more efficiently using some form of
                 // referencing instead.
                 CTXT->importedScripts = creationContext->importedScripts;
@@ -630,9 +630,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (!objects.isEmpty()) {
                 QObject *parent = objects.at(objects.count() - 1 - (instr.parentToSuper?1:0));
 #if 0 // ### refactor
-                if (o->isWidgetType() && parent->isWidgetType()) 
+                if (o->isWidgetType() && parent->isWidgetType())
                     static_cast<QWidget*>(o)->setParent(static_cast<QWidget*>(parent));
-                else 
+                else
 #endif
                     QQml_setParent_noEvent(o, parent);
                 ddata->parentFrozen = true;
@@ -644,7 +644,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(CreateSimpleObject)
             const QQmlCompiledData::TypeReference &ref = TYPES.at(instr.type);
             Q_QML_VME_PROFILE(profiler.start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
-            QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));   
+            QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));
             ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);
 
@@ -656,16 +656,16 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             ddata->lineNumber = instr.line;
             ddata->columnNumber = instr.column;
 
-            QObjectPrivate::get(o)->declarativeData = ddata;                                                      
+            QObjectPrivate::get(o)->declarativeData = ddata;
             ddata->context = ddata->outerContext = CTXT;
-            ddata->nextContextObject = CTXT->contextObjects; 
-            if (ddata->nextContextObject) 
-                ddata->nextContextObject->prevContextObject = &ddata->nextContextObject; 
-            ddata->prevContextObject = &CTXT->contextObjects; 
-            CTXT->contextObjects = ddata; 
+            ddata->nextContextObject = CTXT->contextObjects;
+            if (ddata->nextContextObject)
+                ddata->nextContextObject->prevContextObject = &ddata->nextContextObject;
+            ddata->prevContextObject = &CTXT->contextObjects;
+            CTXT->contextObjects = ddata;
 
             QObject *parent = objects.at(objects.count() - 1 - (instr.parentToSuper?1:0));
-            QQml_setParent_noEvent(o, parent);                                                        
+            QQml_setParent_noEvent(o, parent);
 
             ddata->parentFrozen = true;
             objects.push(o);
@@ -682,7 +682,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(SetDefault)
 
         QML_BEGIN_INSTR(CreateComponent)
-            QQmlComponent *qcomp = 
+            QQmlComponent *qcomp =
                 new QQmlComponent(CTXT->engine, COMP, INSTRUCTIONSTREAM - COMP->bytecode.constData(),
                                           objects.isEmpty() ? 0 : objects.top());
 
@@ -717,7 +717,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QQmlPropertyCache *propertyCache = PROPERTYCACHES.at(instr.propertyCache);
 
-            const QQmlVMEMetaData *data = 
+            const QQmlVMEMetaData *data =
                 (const QQmlVMEMetaData *)DATAS.at(instr.aliasData).constData();
 
             QV4::ExecutionContext *qmlContext = qmlBindingContext(engine, QV8Engine::getV4(engine), qmlBindingWrappers, CTXT, target, objects.count() - 1);
@@ -739,13 +739,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type);
             QVariant v = (*converter)(primitive);
 
-            QMetaProperty prop = 
+            QMetaProperty prop =
                     target->metaObject()->property(instr.propertyIndex);
-            if (v.isNull() || ((int)prop.type() != type && prop.userType() != type)) 
+            if (v.isNull() || ((int)prop.type() != type && prop.userType() != type))
                 VME_EXCEPTION(tr("Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())), instr.line);
 
             void *a[] = { (void *)v.data(), 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
                                   instr.propertyIndex, a);
         QML_END_INSTR(AssignCustomType)
 
@@ -818,7 +818,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             ss.d.data()->numberValue = instr.numberValue;
 
             void *a[] = { &ss, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreScriptString)
 
@@ -837,9 +837,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(BeginObject)
 
         QML_BEGIN_INSTR(StoreBinding)
-            QObject *target = 
+            QObject *target =
                 objects.at(objects.count() - 1 - instr.owner);
-            QObject *context = 
+            QObject *context =
                 objects.at(objects.count() - 1 - instr.context);
 
             if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
@@ -885,7 +885,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *obj = objects.pop();
             QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.castValue);
             QObject *target = obj->parent();
-            QQmlProperty prop = 
+            QQmlProperty prop =
                 QQmlPropertyPrivate::restore(target, instr.property, CTXT);
             vi->setTarget(prop);
             QQmlVMEMetaObject *mo = QQmlVMEMetaObject::get(target);
@@ -913,9 +913,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             void *ptr = 0;
 
             const char *iid = QQmlMetaType::interfaceIId(type);
-            if (iid) 
+            if (iid)
                 ptr = assign->qt_metacast(iid);
-            if (!ptr) 
+            if (!ptr)
                 VME_EXCEPTION(tr("Cannot assign object to list"), instr.line);
 
             if (list.qListProperty.append)
@@ -938,17 +938,17 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 void *ptr = assign->qt_metacast(iid);
                 if (ptr) {
                     void *a[] = { &ptr, 0, &status, &flags };
-                    QMetaObject::metacall(target, 
+                    QMetaObject::metacall(target,
                                           QMetaObject::WriteProperty,
                                           coreIdx, a);
                     ok = true;
                 }
-            } 
+            }
 
-            if (!ok) 
+            if (!ok)
                 VME_EXCEPTION(tr("Cannot assign object to interface property"), instr.line);
         QML_END_INSTR(StoreInterface)
-            
+
         QML_BEGIN_INSTR(FetchAttached)
             QObject *target = objects.top();
 
@@ -968,7 +968,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             void *a[1];
             a[0] = (void *)&(lists.top().qListProperty);
-            QMetaObject::metacall(target, QMetaObject::ReadProperty, 
+            QMetaObject::metacall(target, QMetaObject::ReadProperty,
                                   instr.property, a);
         QML_END_INSTR(FetchQList)
 
@@ -976,11 +976,11 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *target = objects.top();
 
             QObject *obj = 0;
-            // NOTE: This assumes a cast to QObject does not alter the 
+            // NOTE: This assumes a cast to QObject does not alter the
             // object pointer
             void *a[1];
             a[0] = &obj;
-            QMetaObject::metacall(target, QMetaObject::ReadProperty, 
+            QMetaObject::metacall(target, QMetaObject::ReadProperty,
                                   instr.property, a);
 
             if (!obj)
@@ -1026,14 +1026,14 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 // Possibly need to clear bindings
                 QQmlData *targetData = QQmlData::get(target);
                 if (targetData) {
-                    QQmlAbstractBinding *binding = 
+                    QQmlAbstractBinding *binding =
                         QQmlPropertyPrivate::binding(target, instr.property, -1);
 
                     if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
                         QQmlPropertyPrivate::setBinding(target, instr.property, -1, 0);
                         binding->destroy();
                     } else if (binding) {
-                        QQmlValueTypeProxyBinding *proxy = 
+                        QQmlValueTypeProxyBinding *proxy =
                             static_cast<QQmlValueTypeProxyBinding *>(binding);
                         proxy->removeBindings(instr.bindingSkipList);
                     }
@@ -1048,7 +1048,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(FetchValueType)
 
         QML_BEGIN_INSTR(PopValueType)
-            QQmlValueType *valueHandler = 
+            QQmlValueType *valueHandler =
                 static_cast<QQmlValueType *>(objects.pop());
             QObject *target = objects.top();
             valueHandler->write(target, instr.property, QQmlPropertyPrivate::BypassInterceptor);
@@ -1093,9 +1093,9 @@ void QQmlVME::reset()
     QRecursionWatcher<QQmlVME, &QQmlVME::recursion> watcher(this);
 
     if (!objects.isEmpty() && !(states.at(0).flags & State::Deferred))
-        delete objects.at(0); 
-    
-    if (!rootContext.isNull()) 
+        delete objects.at(0);
+
+    if (!rootContext.isNull())
         rootContext->activeVMEData = 0;
 
     // Remove the QQmlParserStatus and QQmlAbstractBinding back pointers
@@ -1106,7 +1106,7 @@ void QQmlVME::reset()
         QQmlComponentAttached *a = componentAttached;
         a->rem();
     }
-    
+
     engine = 0;
     objects.deallocate();
     lists.deallocate();
@@ -1293,7 +1293,7 @@ QQmlVMEGuard::~QQmlVMEGuard()
 void QQmlVMEGuard::guard(QQmlVME *vme)
 {
     clear();
-    
+
     m_objectCount = vme->objects.count();
     m_objects = new QPointer<QObject>[m_objectCount];
     for (int ii = 0; ii < m_objectCount; ++ii)
@@ -1301,7 +1301,7 @@ void QQmlVMEGuard::guard(QQmlVME *vme)
 
     m_contextCount = (vme->rootContext.isNull()?0:1) + vme->states.count();
     m_contexts = new QQmlGuardedContextData[m_contextCount];
-    for (int ii = 0; ii < vme->states.count(); ++ii) 
+    for (int ii = 0; ii < vme->states.count(); ++ii)
         m_contexts[ii] = vme->states.at(ii).context;
     if (!vme->rootContext.isNull())
         m_contexts[m_contextCount - 1] = vme->rootContext.contextData();

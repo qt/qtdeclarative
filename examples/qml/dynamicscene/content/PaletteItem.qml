@@ -49,7 +49,7 @@ Image {
 
     source: image
 
-    MouseArea { 
+    MouseArea {
         anchors.fill: parent
 
         onPressed: Code.startDrag(mouse);

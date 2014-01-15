@@ -89,7 +89,7 @@ bool QQuickTransitionManager::isRunning() const
     return d->transitionInstance && d->transitionInstance->isRunning();
 }
 
-void QQuickTransitionManager::complete() 
+void QQuickTransitionManager::complete()
 {
     d->applyBindings();
 
@@ -100,7 +100,7 @@ void QQuickTransitionManager::complete()
 
     d->completeList.clear();
 
-    if (d->state) 
+    if (d->state)
         static_cast<QQuickStatePrivate*>(QObjectPrivate::get(d->state))->complete();
 
     finished();
@@ -228,8 +228,8 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             } else {
 
                 if (touched.contains(action.property)) {
-                    if (action.toValue != action.fromValue) 
-                        d->completeList << 
+                    if (action.toValue != action.fromValue)
+                        d->completeList <<
                             QQuickSimpleAction(action, QQuickSimpleAction::EndState);
 
                     applyList.removeAt(ii);
@@ -242,7 +242,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
 
     // Any actions remaining have not been handled by the transition and should
     // be applied immediately.  We skip applying bindings, as they are all
-    // applied at the end in applyBindings() to avoid any nastiness mid 
+    // applied at the end in applyBindings() to avoid any nastiness mid
     // transition
     foreach(const QQuickStateAction &action, applyList) {
         if (action.event && !action.event->changesBindings()) {
@@ -261,7 +261,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
                 qWarning() << "    No transition for event:" << action.event->type();
             else
                 qWarning() << "    No transition for:" << action.property.object()
-                           << action.property.name() << "From:" << action.fromValue 
+                           << action.property.name() << "From:" << action.fromValue
                            << "To:" << action.toValue;
         }
     }

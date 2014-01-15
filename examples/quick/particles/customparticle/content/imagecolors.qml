@@ -81,7 +81,7 @@ Rectangle {
                 varying lowp float fFade;
                 uniform lowp float qt_Opacity;
 
-                void main() {                                           
+                void main() {
 
                     fTex2 = vec2(qt_ParticlePos.x, qt_ParticlePos.y);
                     //Uncomment this next line for each particle to use full texture, instead of the solid color at the center of the particle.

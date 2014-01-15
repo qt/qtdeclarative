@@ -303,7 +303,7 @@ public:
 \brief The QQmlImports class encapsulates one QML document's import statements.
 \internal
 */
-QQmlImports::QQmlImports(const QQmlImports &copy) 
+QQmlImports::QQmlImports(const QQmlImports &copy)
 : d(copy.d)
 {
     ++d->ref;
@@ -1631,7 +1631,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
     }
 
     if (qmlImportTrace())
-        qDebug() << "QQmlImportDatabase::resolvePlugin: Could not resolve plugin" << baseName 
+        qDebug() << "QQmlImportDatabase::resolvePlugin: Could not resolve plugin" << baseName
                  << "in" << qmldirPath;
 
     return QString();

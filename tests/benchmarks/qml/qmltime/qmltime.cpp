@@ -111,10 +111,10 @@ void Timer::run(uint iterations)
 
     QObject *o = m_component->create(&context);
     QGraphicsObject *go = qobject_cast<QGraphicsObject *>(o);
-    if (m_willparent && go) 
+    if (m_willparent && go)
         go->setParentItem(&m_item);
     delete o;
-    
+
     runTest(&context, iterations);
 }
 
@@ -135,7 +135,7 @@ void Timer::runTest(QQmlContext *context, uint iterations)
     for (uint ii = 0; ii < iterations; ++ii) {
         QObject *o = m_component->create(context);
         QGraphicsObject *go = qobject_cast<QGraphicsObject *>(o);
-        if (m_willparent && go) 
+        if (m_willparent && go)
             go->setParentItem(&m_item);
         delete o;
     }

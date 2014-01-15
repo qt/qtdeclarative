@@ -45,7 +45,7 @@ Rectangle {
 
     width: 100
     height: 100
-    
+
     function createIt() {
 //![0]
 var newObject = Qt.createQmlObject('import QtQuick 2.0; Rectangle {color: "red"; width: 20; height: 20}',

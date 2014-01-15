@@ -101,11 +101,11 @@ public:
     bool writeValueProperty(const QVariant &, WriteFlags);
 
     static QQmlMetaObject rawMetaObjectForType(QQmlEnginePrivate *, int);
-    static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object, 
+    static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object,
                                   const QVariant &value, int flags);
     static bool writeValueProperty(QObject *,
                                    const QQmlPropertyData &,
-                                   const QVariant &, QQmlContextData *, 
+                                   const QVariant &, QQmlContextData *,
                                    WriteFlags flags = 0);
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
                       QQmlContextData *, WriteFlags flags = 0);

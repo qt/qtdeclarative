@@ -94,7 +94,7 @@
 
 #else
 
-#define ASSERT_MAINTHREAD() 
+#define ASSERT_MAINTHREAD()
 #define ASSERT_LOADTHREAD()
 #define ASSERT_CALLBACK()
 
@@ -116,9 +116,9 @@ namespace {
 }
 
 // This is a lame object that we need to ensure that slots connected to
-// QNetworkReply get called in the correct thread (the loader thread).  
+// QNetworkReply get called in the correct thread (the loader thread).
 // As QQmlDataLoader lives in the main thread, and we can't use
-// Qt::DirectConnection connections from a QNetworkReply (because then 
+// Qt::DirectConnection connections from a QNetworkReply (because then
 // sender() wont work), we need to insert this object in the middle.
 class QQmlDataLoaderNetworkReplyProxy : public QObject
 {
@@ -168,8 +168,8 @@ private:
 };
 
 
-QQmlDataLoaderNetworkReplyProxy::QQmlDataLoaderNetworkReplyProxy(QQmlDataLoader *l) 
-: l(l) 
+QQmlDataLoaderNetworkReplyProxy::QQmlDataLoaderNetworkReplyProxy(QQmlDataLoader *l)
+: l(l)
 {
 }
 
@@ -241,7 +241,7 @@ This enum describes the type of the data blob.
 Create a new QQmlDataBlob for \a url and of the provided \a type.
 */
 QQmlDataBlob::QQmlDataBlob(const QUrl &url, Type type)
-: m_type(type), m_url(url), m_finalUrl(url), m_manager(0), m_redirectCount(0), 
+: m_type(type), m_url(url), m_finalUrl(url), m_manager(0), m_redirectCount(0),
   m_inCallback(false), m_isDone(false)
 {
 }
@@ -396,7 +396,7 @@ QList<QQmlError> QQmlDataBlob::errors() const
 /*!
 Mark this blob as having \a errors.
 
-All outstanding dependencies will be cancelled.  Requests to add new dependencies 
+All outstanding dependencies will be cancelled.  Requests to add new dependencies
 will be ignored.  Entry into the Error state is irreversable.
 
 The setError() method may only be called from within a QQmlDataBlob callback.
@@ -434,8 +434,8 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
         tryDone();
 }
 
-/*! 
-Wait for \a blob to become complete or to error.  If \a blob is already 
+/*!
+Wait for \a blob to become complete or to error.  If \a blob is already
 complete or in error, or this blob is already complete, this has no effect.
 
 The setError() method may only be called from within a QQmlDataBlob callback.
@@ -448,7 +448,7 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 
     if (!blob ||
         blob->status() == Error || blob->status() == Complete ||
-        status() == Error || status() == Complete || m_isDone || 
+        status() == Error || status() == Complete || m_isDone ||
         m_waitingFor.contains(blob))
         return;
 
@@ -469,7 +469,7 @@ or addDependency().
 */
 
 /*!
-Invoked once data has either been received or a network error occurred, and all 
+Invoked once data has either been received or a network error occurred, and all
 dependencies are complete.
 
 You can set an error in this method, but you cannot add new dependencies.  Implementors
@@ -537,7 +537,7 @@ void QQmlDataBlob::networkError(QNetworkReply::NetworkError networkError)
     setError(error);
 }
 
-/*! 
+/*!
 Called if \a blob, which was previously waited for, has an error.
 
 The default implementation does nothing.
@@ -557,9 +557,9 @@ void QQmlDataBlob::dependencyComplete(QQmlDataBlob *blob)
     Q_UNUSED(blob);
 }
 
-/*! 
-Called when all blobs waited for have completed.  This occurs regardless of 
-whether they are in error, or complete state.  
+/*!
+Called when all blobs waited for have completed.  This occurs regardless of
+whether they are in error, or complete state.
 
 The default implementation does nothing.
 */
@@ -571,9 +571,9 @@ void QQmlDataBlob::allDependenciesDone()
 Called when the download progress of this blob changes.  \a progress goes
 from 0 to 1.
 
-This callback is only invoked if an asynchronous load for this blob is 
+This callback is only invoked if an asynchronous load for this blob is
 made.  An asynchronous load is one in which the Asynchronous mode is
-specified explicitly, or one that is implicitly delayed due to a network 
+specified explicitly, or one that is implicitly delayed due to a network
 operation.
 
 The default implementation does nothing.
@@ -587,12 +587,12 @@ void QQmlDataBlob::downloadProgressChanged(qreal progress)
 Invoked on the main thread sometime after done() was called on the load thread.
 
 You cannot modify the blobs state at all in this callback and cannot depend on the
-order or timeliness of these callbacks.  Implementors should use this callback to notify 
+order or timeliness of these callbacks.  Implementors should use this callback to notify
 dependencies on the main thread that the blob is done and not a lot else.
 
-This callback is only invoked if an asynchronous load for this blob is 
+This callback is only invoked if an asynchronous load for this blob is
 made.  An asynchronous load is one in which the Asynchronous mode is
-specified explicitly, or one that is implicitly delayed due to a network 
+specified explicitly, or one that is implicitly delayed due to a network
 operation.
 
 The default implementation does nothing.
@@ -670,7 +670,7 @@ void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
 
     blob->release();
 
-    if (!isError() && m_waitingFor.isEmpty()) 
+    if (!isError() && m_waitingFor.isEmpty())
         allDependenciesDone();
 
     m_inCallback = false;
@@ -754,10 +754,10 @@ QQmlDataLoaderNetworkReplyProxy *QQmlDataLoaderThread::networkReplyProxy() const
     return m_networkReplyProxy;
 }
 
-void QQmlDataLoaderThread::load(QQmlDataBlob *b) 
-{ 
+void QQmlDataLoaderThread::load(QQmlDataBlob *b)
+{
     b->addref();
-    callMethodInThread(&This::loadThread, b); 
+    callMethodInThread(&This::loadThread, b);
 }
 
 void QQmlDataLoaderThread::loadAsync(QQmlDataBlob *b)
@@ -778,19 +778,19 @@ void QQmlDataLoaderThread::loadWithStaticDataAsync(QQmlDataBlob *b, const QByteA
     postMethodToThread(&This::loadWithStaticDataThread, b, d);
 }
 
-void QQmlDataLoaderThread::callCompleted(QQmlDataBlob *b) 
-{ 
-    b->addref(); 
-    postMethodToMain(&This::callCompletedMain, b); 
+void QQmlDataLoaderThread::callCompleted(QQmlDataBlob *b)
+{
+    b->addref();
+    postMethodToMain(&This::callCompletedMain, b);
 }
 
-void QQmlDataLoaderThread::callDownloadProgressChanged(QQmlDataBlob *b, qreal p) 
-{ 
-    b->addref(); 
-    postMethodToMain(&This::callDownloadProgressChangedMain, b, p); 
+void QQmlDataLoaderThread::callDownloadProgressChanged(QQmlDataBlob *b, qreal p)
+{
+    b->addref();
+    postMethodToMain(&This::callDownloadProgressChangedMain, b, p);
 }
 
-void QQmlDataLoaderThread::initializeEngine(QQmlExtensionInterface *iface, 
+void QQmlDataLoaderThread::initializeEngine(QQmlExtensionInterface *iface,
                                                     const char *uri)
 {
     callMethodInMain(&This::initializeEngineMain, iface, uri);
@@ -804,9 +804,9 @@ void QQmlDataLoaderThread::shutdownThread()
     m_networkReplyProxy = 0;
 }
 
-void QQmlDataLoaderThread::loadThread(QQmlDataBlob *b) 
-{ 
-    m_loader->loadThread(b); 
+void QQmlDataLoaderThread::loadThread(QQmlDataBlob *b)
+{
+    m_loader->loadThread(b);
     b->release();
 }
 
@@ -816,27 +816,27 @@ void QQmlDataLoaderThread::loadWithStaticDataThread(QQmlDataBlob *b, const QByte
     b->release();
 }
 
-void QQmlDataLoaderThread::callCompletedMain(QQmlDataBlob *b) 
-{ 
+void QQmlDataLoaderThread::callCompletedMain(QQmlDataBlob *b)
+{
     QML_MEMORY_SCOPE_URL(b->url());
 #ifdef DATABLOB_DEBUG
-    qWarning("QQmlDataLoaderThread: %s completed() callback", qPrintable(b->url().toString())); 
+    qWarning("QQmlDataLoaderThread: %s completed() callback", qPrintable(b->url().toString()));
 #endif
-    b->completed(); 
-    b->release(); 
+    b->completed();
+    b->release();
 }
 
-void QQmlDataLoaderThread::callDownloadProgressChangedMain(QQmlDataBlob *b, qreal p) 
-{ 
+void QQmlDataLoaderThread::callDownloadProgressChangedMain(QQmlDataBlob *b, qreal p)
+{
 #ifdef DATABLOB_DEBUG
-    qWarning("QQmlDataLoaderThread: %s downloadProgressChanged(%f) callback", 
-             qPrintable(b->url().toString()), p); 
+    qWarning("QQmlDataLoaderThread: %s downloadProgressChanged(%f) callback",
+             qPrintable(b->url().toString()), p);
 #endif
-    b->downloadProgressChanged(p); 
-    b->release(); 
+    b->downloadProgressChanged(p);
+    b->release();
 }
 
-void QQmlDataLoaderThread::initializeEngineMain(QQmlExtensionInterface *iface, 
+void QQmlDataLoaderThread::initializeEngineMain(QQmlExtensionInterface *iface,
                                                         const char *uri)
 {
     Q_ASSERT(m_loader->engine()->thread() == QThread::currentThread());
@@ -856,7 +856,7 @@ The loader then fetches the data over the network or from the local file system 
 QQmlDataBlob is an abstract class, so should always be specialized.
 
 Once data is received, the QQmlDataBlob::dataReceived() method is invoked on the blob.  The
-derived class should use this callback to process the received data.  Processing of the data can 
+derived class should use this callback to process the received data.  Processing of the data can
 result in an error being set (QQmlDataBlob::setError()), or one or more dependencies being
 created (QQmlDataBlob::addDependency()).  Dependencies are other QQmlDataBlob's that
 are required before processing can fully complete.
@@ -884,7 +884,7 @@ QQmlDataLoader::QQmlDataLoader(QQmlEngine *engine)
 /*! \internal */
 QQmlDataLoader::~QQmlDataLoader()
 {
-    for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter) 
+    for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
         (*iter)->release();
 
     shutdownThread();
@@ -909,7 +909,7 @@ The loader must be locked.
 void QQmlDataLoader::load(QQmlDataBlob *blob, Mode mode)
 {
 #ifdef DATABLOB_DEBUG
-    qWarning("QQmlDataLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()), 
+    qWarning("QQmlDataLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
     blob->startLoading(this);
@@ -941,7 +941,7 @@ The loader must be locked.
 void QQmlDataLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &data, Mode mode)
 {
 #ifdef DATABLOB_DEBUG
-    qWarning("QQmlDataLoader::loadWithStaticData(%s, data): %s thread", qPrintable(blob->m_url.toString()), 
+    qWarning("QQmlDataLoader::loadWithStaticData(%s, data): %s thread", qPrintable(blob->m_url.toString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
 
@@ -1118,7 +1118,7 @@ QQmlEngine *QQmlDataLoader::engine() const
 Call the initializeEngine() method on \a iface.  Used by QQmlImportDatabase to ensure it
 gets called in the correct thread.
 */
-void QQmlDataLoader::initializeEngine(QQmlExtensionInterface *iface, 
+void QQmlDataLoader::initializeEngine(QQmlExtensionInterface *iface,
                                               const char *uri)
 {
     Q_ASSERT(m_thread->isThisThread() || engine()->thread() == QThread::currentThread());
@@ -1158,7 +1158,7 @@ void QQmlDataLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
     if (!blob->isError() && !blob->isWaiting())
         blob->allDependenciesDone();
 
-    if (blob->status() != QQmlDataBlob::Error) 
+    if (blob->status() != QQmlDataBlob::Error)
         blob->m_data.setStatus(QQmlDataBlob::WaitingForDependencies);
 
     blob->m_inCallback = false;
@@ -1525,12 +1525,12 @@ Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 {
-    Q_ASSERT(!url.isRelative() && 
+    Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
     LockHolder<QQmlTypeLoader> holder(this);
-    
+
     QQmlTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
@@ -1546,7 +1546,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 }
 
 /*!
-Returns a QQmlTypeData for the given \a data with the provided base \a url.  The 
+Returns a QQmlTypeData for the given \a data with the provided base \a url.  The
 QQmlTypeData will not be cached.
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url)
@@ -1564,7 +1564,7 @@ Return a QQmlScriptBlob for \a url.  The QQmlScriptData may be cached.
 */
 QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
 {
-    Q_ASSERT(!url.isRelative() && 
+    Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
@@ -1588,7 +1588,7 @@ Returns a QQmlQmldirData for \a url.  The QQmlQmldirData may be cached.
 */
 QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
 {
-    Q_ASSERT(!url.isRelative() && 
+    Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
@@ -1905,7 +1905,7 @@ void QQmlTypeLoader::clearCache()
 {
     for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter)
         (*iter)->release();
-    for (ScriptCache::Iterator iter = m_scriptCache.begin(); iter != m_scriptCache.end(); ++iter) 
+    for (ScriptCache::Iterator iter = m_scriptCache.begin(); iter != m_scriptCache.end(); ++iter)
         (*iter)->release();
     for (QmldirCache::Iterator iter = m_qmldirCache.begin(); iter != m_qmldirCache.end(); ++iter)
         (*iter)->release();
@@ -1971,9 +1971,9 @@ QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 
 QQmlTypeData::~QQmlTypeData()
 {
-    for (int ii = 0; ii < m_scripts.count(); ++ii) 
+    for (int ii = 0; ii < m_scripts.count(); ++ii)
         m_scripts.at(ii).script->release();
-    for (int ii = 0; ii < m_types.count(); ++ii) 
+    for (int ii = 0; ii < m_types.count(); ++ii)
         if (m_types.at(ii).typeData) m_types.at(ii).typeData->release();
     if (m_compiledData)
         m_compiledData->release();
@@ -2110,7 +2110,7 @@ void QQmlTypeData::done()
     }
 
     // Compile component
-    if (!isError()) 
+    if (!isError())
         compile();
 
     scriptParser.clear();

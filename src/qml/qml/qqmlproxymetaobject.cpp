@@ -78,7 +78,7 @@ int QQmlProxyMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
             if (id >= data.propertyOffset) {
                 if (!proxies) {
                     proxies = new QObject*[metaObjects->count()];
-                    ::memset(proxies, 0, 
+                    ::memset(proxies, 0,
                              sizeof(QObject *) * metaObjects->count());
                 }
 
@@ -93,7 +93,7 @@ int QQmlProxyMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
 
                     // ### - Can this be done more optimally?
                     for (int jj = 0; jj < methods; ++jj) {
-                        QMetaMethod method = 
+                        QMetaMethod method =
                             metaObject->method(jj + methodOffset);
                         if (method.methodType() == QMetaMethod::Signal)
                             QQmlPropertyPrivate::connect(proxy, methodOffset + jj, object, localOffset + jj);

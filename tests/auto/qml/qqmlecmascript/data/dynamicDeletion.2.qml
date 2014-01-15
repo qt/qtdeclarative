@@ -14,7 +14,7 @@ QtObject {
     function create() {
         objectProperty = c.createObject(root);
     }
-    
+
     function destroy() {
         objectProperty.destroy();
     }

@@ -231,7 +231,7 @@ union Instr
     struct instr_ret {
         MOTH_INSTR_HEADER
         Param result;
-    }; 
+    };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
@@ -525,7 +525,7 @@ union Instr
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset; 
+        ptrdiff_t offset;
     };
     struct instr_cjump {
         MOTH_INSTR_HEADER
@@ -782,7 +782,7 @@ struct InstrMeta {
         typedef Instr::instr_##FMT DataType; \
         static const DataType &data(const Instr &instr) { return instr.FMT; } \
         static void setData(Instr &instr, const DataType &v) { instr.FMT = v; } \
-    }; 
+    };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
 

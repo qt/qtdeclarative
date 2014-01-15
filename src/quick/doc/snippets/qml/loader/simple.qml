@@ -46,7 +46,7 @@ Item {
 
     Loader { id: pageLoader }
 
-    MouseArea { 
+    MouseArea {
         anchors.fill: parent
         onClicked: pageLoader.source = "Page1.qml"
     }

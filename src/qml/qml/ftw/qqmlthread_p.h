@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 class QThread;
 
 class QQmlThreadPrivate;
-class QQmlThread 
+class QQmlThread
 {
 public:
     QQmlThread();

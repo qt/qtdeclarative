@@ -45,7 +45,7 @@ Rectangle {
     property alias text: textItem.text
 
     width: 100; height: 30
-    border.width: 1 
+    border.width: 1
     radius: 5
     antialiasing: true
 

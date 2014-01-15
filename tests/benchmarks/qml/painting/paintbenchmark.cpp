@@ -351,8 +351,8 @@ public:
             last = elapsed;
         }
         QPainter p(this);
-	p.fillRect(rect(), Qt::white);
-	p.setPen(Qt::black);
+        p.fillRect(rect(), Qt::white);
+        p.setPen(Qt::black);
         QTime drawTimer;
         drawTimer.start();
         testFunc(p);

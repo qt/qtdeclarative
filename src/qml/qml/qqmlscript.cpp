@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 using namespace QQmlJS;
 using namespace QQmlScript;
 
-// 
+//
 // Parser IR classes
 //
 QQmlScript::Object::Object()
@@ -68,8 +68,8 @@ QQmlScript::Object::Object()
 {
 }
 
-QQmlScript::Object::~Object() 
-{ 
+QQmlScript::Object::~Object()
+{
     if (synthCache) synthCache->release();
 }
 
@@ -215,7 +215,7 @@ int QQmlScript::Object::DynamicSlot::parameterNamesLength() const
 }
 
 QQmlScript::Property::Property()
-: parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false), 
+: parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false),
   isValueTypeSubProperty(false), isAlias(false), isReadOnlyDeclaration(false),
   scriptStringScope(-1), nextMainProperty(0), nextProperty(0)
 {
@@ -354,7 +354,7 @@ QString escapedString(const QString &string)
 
 QString QQmlScript::Variant::asScript() const
 {
-    switch(type()) { 
+    switch (type()) {
     default:
     case Invalid:
         return QString();
@@ -363,7 +363,7 @@ QString QQmlScript::Variant::asScript() const
     case Number:
         if (asWritten.isEmpty())
             return QString::number(d);
-        else 
+        else
             return asWritten.toString();
     case String:
         return escapedString(asString());
@@ -727,7 +727,7 @@ ProcessAST::defineObjectBinding(AST::Node *node,
     } else {
         // Class
 
-	QQmlScript::Object *obj = _parser->_pool.New<QQmlScript::Object>();
+        QQmlScript::Object *obj = _parser->_pool.New<QQmlScript::Object>();
 
         obj->type = _parser->findOrCreateTypeId(objectType, obj);
         obj->typeReference = _parser->_refTypes.at(obj->type);
@@ -1034,11 +1034,11 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         bool typeFound = false;
         Object::DynamicProperty::Type type;
 
-        if ((unsigned)memberType.length() == strlen("alias") && 
+        if ((unsigned)memberType.length() == strlen("alias") &&
             QHashedString::compare(memberType.constData(), "alias", int(strlen("alias")))) {
             type = Object::DynamicProperty::Alias;
             typeFound = true;
-        } 
+        }
 
         for(int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
             const TypeNameToType *t = propTypeNameToTypes + ii;
@@ -1054,7 +1054,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
             if (typeModifier.isEmpty()) {
                 type = Object::DynamicProperty::Custom;
-            } else if((unsigned)typeModifier.length() == strlen("list") && 
+            } else if ((unsigned)typeModifier.length() == strlen("list") &&
                       QHashedString::compare(typeModifier.constData(), "list", int(strlen("list")))) {
                 type = Object::DynamicProperty::CustomList;
             } else {
@@ -1411,7 +1411,7 @@ QList<QQmlError> QQmlScript::Parser::errors() const
     return _errors;
 }
 
-static void replaceWithSpace(QString &str, int idx, int n) 
+static void replaceWithSpace(QString &str, int idx, int n)
 {
     QChar *data = str.data() + idx;
     const QChar space(QLatin1Char(' '));
@@ -1490,42 +1490,42 @@ QQmlScript::Object::ScriptBlock::Pragmas QQmlScript::Parser::extractPragmas(QStr
 #define CHECK_TOKEN(t) if (token != QQmlJSGrammar:: t) return rv;
 
 static const int uriTokens[] = {
-    QQmlJSGrammar::T_IDENTIFIER, 
-    QQmlJSGrammar::T_PROPERTY, 
-    QQmlJSGrammar::T_SIGNAL, 
-    QQmlJSGrammar::T_READONLY, 
-    QQmlJSGrammar::T_ON, 
-    QQmlJSGrammar::T_BREAK, 
-    QQmlJSGrammar::T_CASE, 
-    QQmlJSGrammar::T_CATCH, 
-    QQmlJSGrammar::T_CONTINUE, 
-    QQmlJSGrammar::T_DEFAULT, 
-    QQmlJSGrammar::T_DELETE, 
-    QQmlJSGrammar::T_DO, 
-    QQmlJSGrammar::T_ELSE, 
-    QQmlJSGrammar::T_FALSE, 
-    QQmlJSGrammar::T_FINALLY, 
-    QQmlJSGrammar::T_FOR, 
-    QQmlJSGrammar::T_FUNCTION, 
-    QQmlJSGrammar::T_IF, 
-    QQmlJSGrammar::T_IN, 
-    QQmlJSGrammar::T_INSTANCEOF, 
-    QQmlJSGrammar::T_NEW, 
-    QQmlJSGrammar::T_NULL, 
-    QQmlJSGrammar::T_RETURN, 
-    QQmlJSGrammar::T_SWITCH, 
-    QQmlJSGrammar::T_THIS, 
-    QQmlJSGrammar::T_THROW, 
-    QQmlJSGrammar::T_TRUE, 
-    QQmlJSGrammar::T_TRY, 
-    QQmlJSGrammar::T_TYPEOF, 
-    QQmlJSGrammar::T_VAR, 
-    QQmlJSGrammar::T_VOID, 
-    QQmlJSGrammar::T_WHILE, 
-    QQmlJSGrammar::T_CONST, 
-    QQmlJSGrammar::T_DEBUGGER, 
-    QQmlJSGrammar::T_RESERVED_WORD, 
-    QQmlJSGrammar::T_WITH, 
+    QQmlJSGrammar::T_IDENTIFIER,
+    QQmlJSGrammar::T_PROPERTY,
+    QQmlJSGrammar::T_SIGNAL,
+    QQmlJSGrammar::T_READONLY,
+    QQmlJSGrammar::T_ON,
+    QQmlJSGrammar::T_BREAK,
+    QQmlJSGrammar::T_CASE,
+    QQmlJSGrammar::T_CATCH,
+    QQmlJSGrammar::T_CONTINUE,
+    QQmlJSGrammar::T_DEFAULT,
+    QQmlJSGrammar::T_DELETE,
+    QQmlJSGrammar::T_DO,
+    QQmlJSGrammar::T_ELSE,
+    QQmlJSGrammar::T_FALSE,
+    QQmlJSGrammar::T_FINALLY,
+    QQmlJSGrammar::T_FOR,
+    QQmlJSGrammar::T_FUNCTION,
+    QQmlJSGrammar::T_IF,
+    QQmlJSGrammar::T_IN,
+    QQmlJSGrammar::T_INSTANCEOF,
+    QQmlJSGrammar::T_NEW,
+    QQmlJSGrammar::T_NULL,
+    QQmlJSGrammar::T_RETURN,
+    QQmlJSGrammar::T_SWITCH,
+    QQmlJSGrammar::T_THIS,
+    QQmlJSGrammar::T_THROW,
+    QQmlJSGrammar::T_TRUE,
+    QQmlJSGrammar::T_TRY,
+    QQmlJSGrammar::T_TYPEOF,
+    QQmlJSGrammar::T_VAR,
+    QQmlJSGrammar::T_VOID,
+    QQmlJSGrammar::T_WHILE,
+    QQmlJSGrammar::T_CONST,
+    QQmlJSGrammar::T_DEBUGGER,
+    QQmlJSGrammar::T_RESERVED_WORD,
+    QQmlJSGrammar::T_WITH,
 
     QQmlJSGrammar::EOF_SYMBOL
 };

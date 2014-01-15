@@ -11,8 +11,8 @@ QtObject {
 
     property int testValue: 99
 
-    Component.onCompleted: { 
-        IncludeTest.go(); 
+    Component.onCompleted: {
+        IncludeTest.go();
         test0 = IncludeTest.value
         test1 = IncludeTest.test1
         test2 = IncludeTest.test2

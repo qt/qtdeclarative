@@ -54,7 +54,7 @@ Rectangle {
     }
 
     //! [sequential animations]
-    transitions: Transition { 
+    transitions: Transition {
         SequentialAnimation {
             PropertyAnimation { property: "x"; duration: 1000 }
             ColorAnimation { duration: 1000 }

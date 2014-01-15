@@ -93,7 +93,7 @@ using namespace QQmlScript;
     The \a object will be an instance of the TypeClass specified by QML_REGISTER_CUSTOM_TYPE.
 */
 
-QQmlCustomParserNode 
+QQmlCustomParserNode
 QQmlCustomParserNodePrivate::fromObject(QQmlScript::Object *root)
 {
     QQmlCustomParserNode rootNode;
@@ -111,7 +111,7 @@ QQmlCustomParserNodePrivate::fromObject(QQmlScript::Object *root)
     return rootNode;
 }
 
-QQmlCustomParserProperty 
+QQmlCustomParserProperty
 QQmlCustomParserNodePrivate::fromProperty(QQmlScript::Property *p)
 {
     QQmlCustomParserProperty prop;

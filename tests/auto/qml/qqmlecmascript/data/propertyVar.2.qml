@@ -15,7 +15,7 @@ Item {
         if (wheelCount != 8) return;
 
         // not bindable, but wheelCount will update because truck itself changed.
-        truck = new vehicle(12); 
+        truck = new vehicle(12);
 
         if (wheelCount != 12) return;
 

@@ -103,7 +103,7 @@ import "../../../modelviews/listview/content"
                     width: background.width - recipeImage.width - 20; height: recipeImage.height
                     spacing: 5
 
-                    Text { 
+                    Text {
                         text: title
                         font.bold: true; font.pointSize: 16
                     }
@@ -185,7 +185,7 @@ import "../../../modelviews/listview/content"
             }
 
             transitions: Transition {
-                //The only strictly necessary particle specific lines 
+                //The only strictly necessary particle specific lines
                 to: "Details"
                 reversible: true
                 ScriptAction {script: {

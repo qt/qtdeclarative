@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickStatePrivate;
 class QQuickTransitionManagerPrivate;
-class Q_AUTOTEST_EXPORT QQuickTransitionManager 
+class Q_AUTOTEST_EXPORT QQuickTransitionManager
 {
 public:
     QQuickTransitionManager();

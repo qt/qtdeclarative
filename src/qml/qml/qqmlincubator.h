@@ -60,11 +60,11 @@ public:
         AsynchronousIfNested,
         Synchronous
     };
-    enum Status { 
-        Null, 
-        Ready, 
-        Loading, 
-        Error 
+    enum Status {
+        Null,
+        Ready,
+        Loading,
+        Error
     };
 
     QQmlIncubator(IncubationMode = Asynchronous);

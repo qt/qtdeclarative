@@ -27,7 +27,7 @@ Item {
 
 
     // id takes precedence over local, and root properties
-    property int test1: a.value 
+    property int test1: a.value
     property alias test2: nested.test
 
     // properties takes precedence over local, and root methods

@@ -42,7 +42,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 240; height: 320; 
+    width: 240; height: 320;
 
     resources: [
         Component {
@@ -57,6 +57,6 @@ Rectangle {
         anchors.fill: parent
         model: contactModel
         delegate: contactDelegate
-    } 
+    }
 }
 //! [document]

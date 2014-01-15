@@ -54,7 +54,7 @@ class QObject;
 class QQmlContext;
 class QQmlScriptStringPrivate;
 class QmlObjectCreator;
-class Q_QML_EXPORT QQmlScriptString 
+class Q_QML_EXPORT QQmlScriptString
 {
 public:
     QQmlScriptString();

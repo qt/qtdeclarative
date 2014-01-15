@@ -81,7 +81,7 @@ class QQmlComponentAttached;
 class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public QQmlTypeData::TypeDataCallback
 {
     Q_DECLARE_PUBLIC(QQmlComponent)
-        
+
 public:
     QQmlComponentPrivate()
         : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), depthIncreased(false) {}
@@ -95,7 +95,7 @@ public:
     QQmlTypeData *typeData;
     virtual void typeDataReady(QQmlTypeData *);
     virtual void typeDataProgress(QQmlTypeData *, qreal);
-    
+
     void fromTypeData(QQmlTypeData *data);
 
     QUrl url;
@@ -124,7 +124,7 @@ public:
     };
     ConstructionState state;
 
-    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object, 
+    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object,
                               ConstructionState *state);
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
 

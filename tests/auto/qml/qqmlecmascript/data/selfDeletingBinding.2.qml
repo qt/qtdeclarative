@@ -11,7 +11,7 @@ MyQmlContainer {
 
         MyQmlObject {
             // Will trigger deletion on binding assignment, but after component creation
-            deleteOnSet: if (triggerDelete) 1; else 0; 
+            deleteOnSet: if (triggerDelete) 1; else 0;
         }
     ]
 }

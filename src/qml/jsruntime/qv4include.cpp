@@ -131,8 +131,8 @@ void QV4Include::finished()
         QVariant redirect = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirect.isValid()) {
             m_url = m_url.resolved(redirect.toUrl());
-            delete m_reply; 
-            
+            delete m_reply;
+
             QNetworkRequest request;
             request.setUrl(m_url);
 
@@ -209,7 +209,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
                                        callbackFunction);
         result = i->result();
 
-    } else { 
+    } else {
 
         QFile f(localFile);
 

@@ -59,10 +59,10 @@ QVariant IncrementalModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    
+
     if (index.row() >= list.size() || index.row() < 0)
         return QVariant();
-    
+
     if (role == Qt::DisplayRole)
         return list.at(index.row());
     return QVariant();
@@ -82,7 +82,7 @@ void IncrementalModel::fetchMore(const QModelIndex & /* index */)
     int itemsToFetch = qMin(5, remainder);
 
     beginInsertRows(QModelIndex(), count, count+itemsToFetch-1);
-    
+
     count += itemsToFetch;
 
     endInsertRows();

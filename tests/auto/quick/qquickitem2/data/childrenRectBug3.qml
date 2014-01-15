@@ -9,7 +9,7 @@ Rectangle {
 
         Repeater {
             model: 1
-            Rectangle {	}
+            Rectangle { }
         }
     }
 }

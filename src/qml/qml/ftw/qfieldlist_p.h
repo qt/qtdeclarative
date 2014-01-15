@@ -90,7 +90,7 @@ private:
 // QFieldList is a simple linked list, that can append and prepend and also
 // maintains a count
 template<class N, N *N::*nextMember>
-class QFieldList 
+class QFieldList
 {
 public:
     inline QFieldList();
@@ -253,7 +253,7 @@ N *QFieldList<N, nextMember>::takeFirst()
         }
         value->*nextMember = 0;
         --_count;
-    } 
+    }
     return value;
 }
 

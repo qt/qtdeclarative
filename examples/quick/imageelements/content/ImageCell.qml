@@ -52,7 +52,7 @@ Item {
         clip: true      // only makes a difference if mode is PreserveAspectCrop
     }
 
-    Text { 
+    Text {
         id: captionItem
         anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
     }

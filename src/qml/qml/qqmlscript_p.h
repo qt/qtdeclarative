@@ -72,14 +72,14 @@ namespace QQmlCompilerTypes { struct BindingReference; struct ComponentCompileSt
 
 namespace QQmlScript {
 
-struct Location 
+struct Location
 {
     Location() : line(0), column(0) {}
     quint16 line;
     quint16 column;
 
     inline bool operator<(const Location &other) {
-        return line < other.line || 
+        return line < other.line ||
                (line == other.line && column < other.column);
     }
 };
@@ -253,12 +253,12 @@ public:
     void addValue(Value *v);
     void addOnValue(Value *v);
 
-    // The QVariant::Type of the property, or 0 (QVariant::Invalid) if 
+    // The QVariant::Type of the property, or 0 (QVariant::Invalid) if
     // unknown.
     int type;
     // The metaobject index of this property, or -1 if unknown.
     int index;
-    // The core data in the case of a regular property.  
+    // The core data in the case of a regular property.
     // XXX This has to be a value now as the synthCache may change during
     // compilation which invalidates pointers.  We should fix this.
     QQmlPropertyData core;
@@ -280,14 +280,14 @@ public:
     const QHashedStringRef &name() const { return _name; }
     void setName(const QString &n) { _name = QHashedStringRef(pool()->NewString(n)); }
     void setName(const QHashedStringRef &n) { _name = n; }
-    // True if this property was accessed as the default property.  
+    // True if this property was accessed as the default property.
     bool isDefault;
     // True if the setting of this property will be deferred.  Set by the
     // QQmlCompiler
     bool isDeferred;
     // True if this property is a value-type pseudo-property
     bool isValueTypeSubProperty;
-    // True if this property is a property alias.  Set by the 
+    // True if this property is a property alias.  Set by the
     // QQmlCompiler
     bool isAlias;
     // True if this is a readonly property declaration
@@ -314,9 +314,9 @@ class Object : public QQmlPool::Class
 {
 public:
     Object();
-    virtual ~Object(); 
+    virtual ~Object();
 
-    // Type of the object.  The integer is an index into the 
+    // Type of the object.  The integer is an index into the
     // QQmlCompiledData::types array, or -1 if the object is a property
     // group.
     int type;
@@ -331,7 +331,7 @@ public:
     // Custom parsed data
     QByteArray custom;
     // Bit mask of the properties assigned bindings
-    QByteArray bindingBitmask; 
+    QByteArray bindingBitmask;
     void setBindingBit(int);
 
     QQmlPropertyCache *metatype;
@@ -374,7 +374,7 @@ public:
 
     // Script blocks that were nested under this object
     struct ScriptBlock {
-        enum Pragma { 
+        enum Pragma {
             None   = 0x00000000,
             Shared = 0x00000001
         };
@@ -385,14 +385,14 @@ public:
         Pragmas pragmas;
     };
 
-    // The bytes to cast instances by to get to the QQmlParserStatus 
+    // The bytes to cast instances by to get to the QQmlParserStatus
     // interface.  -1 indicates the type doesn't support this interface.
     // Set by the QQmlCompiler.
     int parserStatusCast;
 
     LocationSpan location;
 
-    struct DynamicProperty : public QQmlPool::POD 
+    struct DynamicProperty : public QQmlPool::POD
     {
         DynamicProperty();
 
@@ -500,7 +500,7 @@ public:
 
     class JavaScriptMetaData {
     public:
-        JavaScriptMetaData() 
+        JavaScriptMetaData()
         : pragmas(QQmlScript::Object::ScriptBlock::None) {}
 
         QQmlScript::Object::ScriptBlock::Pragmas pragmas;

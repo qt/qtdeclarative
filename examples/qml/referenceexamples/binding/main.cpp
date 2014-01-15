@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
             Person *guest = party->guest(ii);
 
             QDate rsvpDate;
-            QObject *attached = 
+            QObject *attached =
                 qmlAttachedPropertiesObject<BirthdayParty>(guest, false);
             if (attached)
                 rsvpDate = attached->property("rsvp").toDate();

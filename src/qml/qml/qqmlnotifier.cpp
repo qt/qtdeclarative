@@ -84,7 +84,7 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
             // End of notifying, restore values
             endpoint->senderPtr = originalSenderPtr;
         }
-    } 
+    }
 }
 
 /*! \internal

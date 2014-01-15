@@ -82,7 +82,7 @@ public:
         inline iterator &operator++();
 
         inline iterator &erase();
-        
+
     private:
         N *_value;
     };
@@ -114,60 +114,60 @@ public:
 };
 
 template<class N, QIntrusiveListNode N::*member>
-QIntrusiveList<N, member>::iterator::iterator() 
-: _value(0) 
+QIntrusiveList<N, member>::iterator::iterator()
+: _value(0)
 {
 }
 
 template<class N, QIntrusiveListNode N::*member>
-QIntrusiveList<N, member>::iterator::iterator(N *value) 
-: _value(value) 
+QIntrusiveList<N, member>::iterator::iterator(N *value)
+: _value(value)
 {
 }
 
 template<class N, QIntrusiveListNode N::*member>
-N *QIntrusiveList<N, member>::iterator::operator*() const 
-{ 
-    return _value; 
+N *QIntrusiveList<N, member>::iterator::operator*() const
+{
+    return _value;
 }
 
 template<class N, QIntrusiveListNode N::*member>
-N *QIntrusiveList<N, member>::iterator::operator->() const 
-{ 
-    return _value; 
+N *QIntrusiveList<N, member>::iterator::operator->() const
+{
+    return _value;
 }
 
 template<class N, QIntrusiveListNode N::*member>
-bool QIntrusiveList<N, member>::iterator::operator==(const iterator &other) const 
-{ 
-    return other._value == _value; 
+bool QIntrusiveList<N, member>::iterator::operator==(const iterator &other) const
+{
+    return other._value == _value;
 }
 
 template<class N, QIntrusiveListNode N::*member>
-bool QIntrusiveList<N, member>::iterator::operator!=(const iterator &other) const 
-{ 
-    return other._value != _value; 
+bool QIntrusiveList<N, member>::iterator::operator!=(const iterator &other) const
+{
+    return other._value != _value;
 }
 
 template<class N, QIntrusiveListNode N::*member>
-typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterator::operator++() 
-{ 
-    _value = QIntrusiveList<N, member>::next(_value); 
-    return *this; 
-}
-
-template<class N, QIntrusiveListNode N::*member>
-typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterator::erase() 
-{ 
-    N *old = _value; 
-    _value = QIntrusiveList<N, member>::next(_value); 
-    (old->*member).remove(); 
+typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterator::operator++()
+{
+    _value = QIntrusiveList<N, member>::next(_value);
     return *this;
 }
-        
+
 template<class N, QIntrusiveListNode N::*member>
-QIntrusiveList<N, member>::QIntrusiveList() 
-: __first(0) 
+typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterator::erase()
+{
+    N *old = _value;
+    _value = QIntrusiveList<N, member>::next(_value);
+    (old->*member).remove();
+    return *this;
+}
+
+template<class N, QIntrusiveListNode N::*member>
+QIntrusiveList<N, member>::QIntrusiveList()
+: __first(0)
 {
 }
 
@@ -184,7 +184,7 @@ bool QIntrusiveList<N, member>::isEmpty() const
 }
 
 template<class N, QIntrusiveListNode N::*member>
-void QIntrusiveList<N, member>::insert(N *n) 
+void QIntrusiveList<N, member>::insert(N *n)
 {
     QIntrusiveListNode *nnode = &(n->*member);
     nnode->remove();
@@ -215,13 +215,13 @@ bool QIntrusiveList<N, member>::contains(N *n) const
 }
 
 template<class N, QIntrusiveListNode N::*member>
-N *QIntrusiveList<N, member>::first() const 
-{ 
-    return __first?nodeToN(__first):0; 
+N *QIntrusiveList<N, member>::first() const
+{
+    return __first?nodeToN(__first):0;
 }
 
 template<class N, QIntrusiveListNode N::*member>
-N *QIntrusiveList<N, member>::next(N *current) 
+N *QIntrusiveList<N, member>::next(N *current)
 {
     QIntrusiveListNode *nextnode = (current->*member)._next;
     N *nextstruct = nextnode?nodeToN(nextnode):0;
@@ -229,19 +229,19 @@ N *QIntrusiveList<N, member>::next(N *current)
 }
 
 template<class N, QIntrusiveListNode N::*member>
-typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::begin() 
-{ 
-    return __first?iterator(nodeToN(__first)):iterator(); 
+typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::begin()
+{
+    return __first?iterator(nodeToN(__first)):iterator();
 }
 
 template<class N, QIntrusiveListNode N::*member>
-typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::end() 
-{ 
-    return iterator(); 
+typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::end()
+{
+    return iterator();
 }
 
 template<class N, QIntrusiveListNode N::*member>
-N *QIntrusiveList<N, member>::nodeToN(QIntrusiveListNode *node) 
+N *QIntrusiveList<N, member>::nodeToN(QIntrusiveListNode *node)
 {
     return (N *)((char *)node - ((char *)&(((N *)0)->*member) - (char *)0));
 }

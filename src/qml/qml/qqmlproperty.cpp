@@ -1250,7 +1250,7 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
     return rv;
 }
 
-bool QQmlPropertyPrivate::write(QObject *object, 
+bool QQmlPropertyPrivate::write(QObject *object,
                                         const QQmlPropertyData &property,
                                         const QVariant &value, QQmlContextData *context,
                                         WriteFlags flags)

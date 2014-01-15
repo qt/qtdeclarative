@@ -97,7 +97,7 @@ private:
 };
 
 class QHashedCStringRef;
-class Q_AUTOTEST_EXPORT QHashedStringRef 
+class Q_AUTOTEST_EXPORT QHashedStringRef
 {
 public:
     inline QHashedStringRef();
@@ -258,15 +258,15 @@ public:
     }
 
     inline bool equals(const QHashedStringRef &string) const {
-        return length == string.length() && 
-               hash == string.hash() && 
+        return length == string.length() &&
+               hash == string.hash() &&
                (isQString()?QHashedString::compare(string.constData(), (QChar *)utf16Data(), length):
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
 
     inline bool equals(const QHashedCStringRef &string) const {
-        return length == string.length() && 
-               hash == string.hash() && 
+        return length == string.length() &&
+               hash == string.hash() &&
                (isQString()?QHashedString::compare((QChar *)utf16Data(), string.constData(), length):
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
@@ -275,7 +275,7 @@ public:
 class Q_AUTOTEST_EXPORT QStringHashData
 {
 public:
-    QStringHashData() 
+    QStringHashData()
     : buckets(0), numBuckets(0), size(0), numBits(0)
 #ifdef QSTRINGHASH_LINK_DEBUG
       , linkCount(0)
@@ -1026,33 +1026,33 @@ typename QStringHash<T>::ConstIterator QStringMultiHash<T>::findNext(const Const
     return ConstIterator();
 }
 
-inline uint qHash(const QHashedString &string) 
-{ 
-    return uint(string.hash()); 
+inline uint qHash(const QHashedString &string)
+{
+    return uint(string.hash());
 }
 
-inline uint qHash(const QHashedStringRef &string) 
-{ 
-    return uint(string.hash()); 
+inline uint qHash(const QHashedStringRef &string)
+{
+    return uint(string.hash());
 }
 
-QHashedString::QHashedString() 
-: QString(), m_hash(0) 
+QHashedString::QHashedString()
+: QString(), m_hash(0)
 {
 }
 
-QHashedString::QHashedString(const QString &string) 
-: QString(string), m_hash(0) 
+QHashedString::QHashedString(const QString &string)
+: QString(string), m_hash(0)
 {
 }
 
-QHashedString::QHashedString(const QString &string, quint32 hash) 
-: QString(string), m_hash(hash) 
+QHashedString::QHashedString(const QString &string, quint32 hash)
+: QString(string), m_hash(hash)
 {
 }
 
-QHashedString::QHashedString(const QHashedString &string) 
-: QString(string), m_hash(string.m_hash) 
+QHashedString::QHashedString(const QHashedString &string)
+: QString(string), m_hash(string.m_hash)
 {
 }
 
@@ -1065,29 +1065,29 @@ QHashedString &QHashedString::operator=(const QHashedString &string)
 
 bool QHashedString::operator==(const QHashedString &string) const
 {
-    return (string.m_hash == m_hash || !string.m_hash || !m_hash) && 
+    return (string.m_hash == m_hash || !string.m_hash || !m_hash) &&
            static_cast<const QString &>(*this) == static_cast<const QString &>(string);
 }
 
 bool QHashedString::operator==(const QHashedStringRef &string) const
 {
     return length() == string.m_length &&
-           (string.m_hash == m_hash || !string.m_hash || !m_hash) && 
+           (string.m_hash == m_hash || !string.m_hash || !m_hash) &&
            QHashedString::compare(constData(), string.m_data, string.m_length);
 }
 
 quint32 QHashedString::hash() const
-{ 
+{
     if (!m_hash) computeHash();
     return m_hash;
 }
 
 quint32 QHashedString::existingHash() const
-{ 
+{
     return m_hash;
 }
 
-QHashedStringRef::QHashedStringRef() 
+QHashedStringRef::QHashedStringRef()
 : m_data(0), m_length(0), m_hash(0)
 {
 }
@@ -1138,21 +1138,21 @@ bool QHashedStringRef::operator==(const QString &string) const
 
 bool QHashedStringRef::operator==(const QHashedString &string) const
 {
-    return m_length == string.length() && 
+    return m_length == string.length() &&
            (m_hash == string.m_hash || !m_hash || !string.m_hash) &&
            QHashedString::compare(string.constData(), m_data, m_length);
 }
 
 bool QHashedStringRef::operator==(const QHashedStringRef &string) const
 {
-    return m_length == string.m_length && 
+    return m_length == string.m_length &&
            (m_hash == string.m_hash || !m_hash || !string.m_hash) &&
            QHashedString::compare(string.m_data, m_data, m_length);
 }
 
 bool QHashedStringRef::operator==(const QHashedCStringRef &string) const
 {
-    return m_length == string.m_length && 
+    return m_length == string.m_length &&
            (m_hash == string.m_hash || !m_hash || !string.m_hash) &&
            QHashedString::compare(m_data, string.m_data, m_length);
 }
@@ -1165,7 +1165,7 @@ bool QHashedStringRef::operator!=(const QString &string) const
 
 bool QHashedStringRef::operator!=(const QHashedString &string) const
 {
-    return m_length != string.length() || 
+    return m_length != string.length() ||
            (m_hash != string.m_hash && m_hash && string.m_hash) ||
            !QHashedString::compare(string.constData(), m_data, m_length);
 }
@@ -1224,7 +1224,7 @@ bool QHashedStringRef::startsWithUpper() const
 }
 
 quint32 QHashedStringRef::hash() const
-{ 
+{
     if (!m_hash) computeHash();
     return m_hash;
 }
@@ -1279,20 +1279,20 @@ void QHashedCStringRef::writeUtf16(quint16 *output) const
 {
     int l = m_length;
     const char *d = m_data;
-    while (l--) 
+    while (l--)
         *output++ = *d++;
 }
 
-bool QHashedString::compare(const QChar *lhs, const char *rhs, int length) 
+bool QHashedString::compare(const QChar *lhs, const char *rhs, int length)
 {
     Q_ASSERT(lhs && rhs);
     const quint16 *l = (const quint16*)lhs;
-    while (length--) 
+    while (length--)
         if (*l++ != *rhs++) return false;
     return true;
 }
 
-bool QHashedString::compare(const char *lhs, const char *rhs, int length) 
+bool QHashedString::compare(const char *lhs, const char *rhs, int length)
 {
     Q_ASSERT(lhs && rhs);
     return 0 == ::memcmp(lhs, rhs, length);

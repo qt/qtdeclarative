@@ -487,11 +487,11 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("notAvailable") << "notAvailable.qml" << "notAvailable.errors.txt" << false;
     QTest::newRow("singularProperty") << "singularProperty.qml" << "singularProperty.errors.txt" << false;
     QTest::newRow("singularProperty.2") << "singularProperty.2.qml" << "singularProperty.2.errors.txt" << false;
-    QTest::newRow("incorrectCase") << "incorrectCase.qml" 
+    QTest::newRow("incorrectCase") << "incorrectCase.qml"
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-        << "incorrectCase.errors.insensitive.txt" 
+        << "incorrectCase.errors.insensitive.txt"
 #else
-        << "incorrectCase.errors.sensitive.txt" 
+        << "incorrectCase.errors.sensitive.txt"
 #endif
         << false;
 
@@ -612,7 +612,7 @@ void tst_qqmllanguage::assignQmlComponent()
     QCOMPARE(child->property("y"), QVariant(11));
 }
 
-// Test literal assignment to all the basic types 
+// Test literal assignment to all the basic types
 void tst_qqmllanguage::assignBasicTypes()
 {
     QQmlComponent component(&engine, testFileUrl("assignBasicTypes.qml"));
@@ -1170,7 +1170,7 @@ void tst_qqmllanguage::idProperty()
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->getChildren()->count(), 1);
-    MyTypeObject *child = 
+    MyTypeObject *child =
         qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
     QVERIFY(child != 0);
     QCOMPARE(child->id(), QString("myObjectId"));
@@ -1361,12 +1361,12 @@ void tst_qqmllanguage::propertyValueSource()
     QList<QObject *> valueSources;
     QObjectList allChildren = object->findChildren<QObject*>();
     foreach (QObject *child, allChildren) {
-        if (qobject_cast<QQmlPropertyValueSource *>(child)) 
+        if (qobject_cast<QQmlPropertyValueSource *>(child))
             valueSources.append(child);
     }
 
     QCOMPARE(valueSources.count(), 1);
-    MyPropertyValueSource *valueSource = 
+    MyPropertyValueSource *valueSource =
         qobject_cast<MyPropertyValueSource *>(valueSources.at(0));
     QVERIFY(valueSource != 0);
     QCOMPARE(valueSource->prop.object(), qobject_cast<QObject*>(object));
@@ -1382,12 +1382,12 @@ void tst_qqmllanguage::propertyValueSource()
     QList<QObject *> valueSources;
     QObjectList allChildren = object->findChildren<QObject*>();
     foreach (QObject *child, allChildren) {
-        if (qobject_cast<QQmlPropertyValueSource *>(child)) 
+        if (qobject_cast<QQmlPropertyValueSource *>(child))
             valueSources.append(child);
     }
 
     QCOMPARE(valueSources.count(), 1);
-    MyPropertyValueSource *valueSource = 
+    MyPropertyValueSource *valueSource =
         qobject_cast<MyPropertyValueSource *>(valueSources.at(0));
     QVERIFY(valueSource != 0);
     QCOMPARE(valueSource->prop.object(), qobject_cast<QObject*>(object));
@@ -1510,7 +1510,7 @@ void tst_qqmllanguage::aliasProperties()
         QVERIFY(object != 0);
 
         // Read through alias
-        MyQmlObject *v = 
+        MyQmlObject *v =
             qvariant_cast<MyQmlObject *>(object->property("aliasObject"));
         QVERIFY(v != 0);
         QCOMPARE(v->value(), 10);
@@ -1519,7 +1519,7 @@ void tst_qqmllanguage::aliasProperties()
         MyQmlObject *v2 = new MyQmlObject();
         v2->setParent(object);
         object->setProperty("aliasObject", qVariantFromValue(v2));
-        MyQmlObject *v3 = 
+        MyQmlObject *v3 =
             qvariant_cast<MyQmlObject *>(object->property("aliasObject"));
         QVERIFY(v3 != 0);
         QCOMPARE(v3, v2);
@@ -1592,7 +1592,7 @@ void tst_qqmllanguage::aliasProperties()
         QCOMPARE(object->property("a").toInt(), 1923);
     }
 
-    // Ptr Alias Cleanup - check that aliases to ptr types return 0 
+    // Ptr Alias Cleanup - check that aliases to ptr types return 0
     // if the object aliased to is removed
     {
         QQmlComponent component(&engine, testFileUrl("alias.7.qml"));
@@ -1846,7 +1846,7 @@ void tst_qqmllanguage::scriptString()
     }
 }
 
-// Check that default property assignments are correctly spliced into explicit 
+// Check that default property assignments are correctly spliced into explicit
 // property assignments
 void tst_qqmllanguage::defaultPropertyListOrder()
 {
@@ -2993,7 +2993,7 @@ void tst_qqmllanguage::remoteLoadCrash()
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
-    while (component.isLoading()) 
+    while (component.isLoading())
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 
     QObject *o = component.create();
