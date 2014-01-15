@@ -349,7 +349,6 @@ public:
     static bool isAttachedPropertyName(const QHashedStringRef &);
     static bool isSignalPropertyName(const QHashedStringRef &);
 
-    int bindingIdentifier(const QString &name, const QQmlScript::Variant& value, const QQmlCompilerTypes::BindingContext &ctxt); // for QQmlCustomParser::bindingIndex
     virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&value, const QString&name, QQmlCustomParser *customParser);
 
     virtual const QQmlImports &imports() const { return unit->imports(); }

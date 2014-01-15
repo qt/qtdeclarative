@@ -92,6 +92,8 @@ struct QQmlTypeCompiler
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
     QHash<int, QByteArray> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
+    const QList<CompiledFunctionOrExpression> &functions() const;
+    void setCustomParserBindings(const QVector<int> &bindings);
 
 private:
     QList<QQmlError> errors;
@@ -176,13 +178,14 @@ class QQmlPropertyValidator : public QQmlCompilePass, public QQmlCustomParserCom
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QVector<int> &runtimeFunctionIndices);
 
     bool validate();
 
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
-
+    virtual QQmlJS::AST::Node *astForBinding(int scriptIndex) const;
+    virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
 
 private:
     bool validateObject(int objectIndex);
@@ -194,6 +197,8 @@ private:
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QByteArray> *customParserData;
+    QVector<int> customParserBindings;
+    const QVector<int> &runtimeFunctionIndices;
 };
 
 QT_END_NAMESPACE

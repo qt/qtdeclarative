@@ -173,7 +173,8 @@ struct Pragma
 struct CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
-        : disableAcceleratedLookups(false)
+        : node(0)
+        , disableAcceleratedLookups(false)
     {}
     CompiledFunctionOrExpression(AST::Node *n)
         : node(n)

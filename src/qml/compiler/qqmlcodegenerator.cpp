@@ -1640,7 +1640,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (elementName.isEmpty())
             continue;
         QQmlCompiledData::TypeReference *tr = unit->resolvedTypes.value(obj->inheritedTypeNameIndex);
-        if (tr && tr->type && tr->type->customParser())
+        QQmlCustomParser *customParser = (tr && tr->type) ? tr->type->customParser() : 0;
+        if (customParser && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
             continue;
         QQmlPropertyCache *cache = unit->propertyCaches.value(objectIndex);
         Q_ASSERT(cache);

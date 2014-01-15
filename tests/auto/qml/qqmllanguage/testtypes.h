@@ -719,6 +719,7 @@ class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
     QByteArray compile(const QList<QQmlCustomParserProperty> &) { return QByteArray(); }
+    QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) { return QByteArray(); }
     void setCustomData(QObject *, const QByteArray &) {}
 };
 
@@ -1090,6 +1091,7 @@ public:
 class CustomBindingParser : public QQmlCustomParser
 {
     virtual QByteArray compile(const QList<QQmlCustomParserProperty> &properties);
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
     virtual void setCustomData(QObject *object, const QByteArray &data);
 };
 

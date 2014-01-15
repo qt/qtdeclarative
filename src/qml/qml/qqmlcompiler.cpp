@@ -2665,30 +2665,6 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     return true;
 }
 
-int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, const BindingContext &ctxt)
-{
-    JSBindingReference *reference = pool->New<JSBindingReference>();
-    reference->expression = value;
-    reference->property = pool->New<Property>();
-    reference->property->setName(name);
-    reference->value = 0;
-    reference->bindingContext = ctxt;
-    reference->bindingContext.owner++;
-    // Unfortunately this is required for example for PropertyChanges where the bindings
-    // will be executed in the dynamic scope of the target, so we can't resolve any lookups
-    // at run-time.
-    reference->disableLookupAcceleration = true;
-
-    const int id = output->customParserBindings.count();
-    output->customParserBindings.append(0); // Filled in later.
-    reference->customParserBindingsIndex = id;
-
-    compileState->totalBindingsCount++;
-    compileState->bindings.prepend(reference);
-
-    return id;
-}
-
 QQmlBinding::Identifier QQmlCompiler::bindingIdentifier(const Variant &value, const QString &name, QQmlCustomParser *customParser)
 {
     JSBindingReference *reference = pool->New<JSBindingReference>();

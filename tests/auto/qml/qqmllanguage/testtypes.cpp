@@ -126,6 +126,26 @@ QByteArray CustomBindingParser::compile(const QList<QQmlCustomParserProperty> &p
     return result;
 }
 
+QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    QByteArray result;
+    QDataStream ds(&result, QIODevice::WriteOnly);
+
+    ds << bindings.count();
+    for (int i = 0; i < bindings.count(); ++i) {
+        const QV4::CompiledData::Binding *binding = bindings.at(i);
+        ds << qmlUnit->header.stringAt(binding->propertyNameIndex);
+
+        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
+        int bindingId = bindingIdentifier(binding);
+        ds << bindingId;
+
+        ds << binding->location.line;
+    }
+
+    return result;
+}
+
 void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);

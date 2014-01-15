@@ -201,7 +201,7 @@ bool QQmlTypeCompiler::compile()
     }
 
     // Sanity check property bindings
-    QQmlPropertyValidator validator(this);
+    QQmlPropertyValidator validator(this, runtimeFunctionIndices);
     if (!validator.validate())
         return false;
 
@@ -293,6 +293,16 @@ QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
 MemoryPool *QQmlTypeCompiler::memoryPool()
 {
     return parsedQML->jsParserEngine.pool();
+}
+
+const QList<CompiledFunctionOrExpression> &QQmlTypeCompiler::functions() const
+{
+    return parsedQML->functions;
+}
+
+void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
+{
+    compiledData->customParserBindings = bindings;
 }
 
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
@@ -1113,24 +1123,44 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 }
 
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QVector<int> &runtimeFunctionIndices)
     : QQmlCompilePass(typeCompiler)
     , qmlUnit(typeCompiler->qmlUnit())
     , resolvedTypes(*typeCompiler->resolvedTypes())
     , propertyCaches(typeCompiler->propertyCaches())
     , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
     , customParserData(typeCompiler->customParserData())
+    , runtimeFunctionIndices(runtimeFunctionIndices)
 {
 }
 
 bool QQmlPropertyValidator::validate()
 {
-    return validateObject(qmlUnit->indexOfRootObject);
+    if (!validateObject(qmlUnit->indexOfRootObject))
+        return false;
+    compiler->setCustomParserBindings(customParserBindings);
+    return true;
 }
 
 const QQmlImports &QQmlPropertyValidator::imports() const
 {
     return *compiler->imports();
+}
+
+AST::Node *QQmlPropertyValidator::astForBinding(int scriptIndex) const
+{
+    // ####
+    int reverseIndex = runtimeFunctionIndices.indexOf(scriptIndex);
+    if (reverseIndex == -1)
+        return 0;
+    return compiler->functions().value(reverseIndex).node;
+}
+
+QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *)
+{
+    int id = customParserBindings.count();
+    customParserBindings.append(binding->value.compiledScriptIndex);
+    return id;
 }
 
 bool QQmlPropertyValidator::validateObject(int objectIndex)
@@ -1158,16 +1188,30 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
 
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object && !customParser) {
-            if (!validateObject(binding->value.objectIndex))
-                return false;
+
+        if (customParser) {
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+                if (customParser->flags() & QQmlCustomParser::AcceptsAttachedProperties) {
+                    customBindings << binding;
+                    continue;
+                }
+            } else if ((binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+                       && (!customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
+                customBindings << binding;
+                continue;
+            } else if (binding->type == QV4::CompiledData::Binding::Type_Object
+                       || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+                customBindings << binding;
+                continue;
+            }
         }
 
-        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
-            || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-            if (customParser)
-                customBindings << binding;
-            continue;
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            if (!validateObject(binding->value.objectIndex))
+                return false;
+            // Nothing further to check for attached properties.
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
+                continue;
         }
 
         const QString name = stringAt(binding->propertyNameIndex);

@@ -230,13 +230,6 @@ void QQmlCustomParser::clearErrors()
     exceptions.clear();
 }
 
-QByteArray QQmlCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
-{
-    Q_UNUSED(qmlUnit)
-    Q_UNUSED(bindings)
-    return QByteArray();
-}
-
 /*!
     Reports an error with the given \a description.
 
@@ -347,6 +340,16 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QQmlScript::Variant &value, const QString& name)
 {
     return compiler->bindingIdentifier(value, name, this);
+}
+
+QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledData::Binding *binding)
+{
+    return compiler->bindingIdentifier(binding, this);
+}
+
+AST::Node *QQmlCustomParser::astForBinding(int scriptIndex) const
+{
+    return compiler->astForBinding(scriptIndex);
 }
 
 struct StaticQtMetaObject : public QObject

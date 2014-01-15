@@ -997,8 +997,9 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         context->setIdProperty(idEntry.value(), instance);
 
     if (customParser) {
-        QByteArray data = compiledData->customParserData.value(index);
-        customParser->setCustomData(instance, data);
+        QHash<int, QByteArray>::ConstIterator entry = compiledData->customParserData.find(index);
+        if (entry != compiledData->customParserData.constEnd())
+            customParser->setCustomData(instance, *entry);
     }
 
     if (isComponent)
