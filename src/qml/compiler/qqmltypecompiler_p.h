@@ -106,13 +106,11 @@ struct QQmlCompilePass
     virtual ~QQmlCompilePass() {}
 
     QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
-    QList<QQmlError> errors;
 
     QString stringAt(int idx) const { return compiler->stringAt(idx); }
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    const QUrl url;
     QQmlTypeCompiler *compiler;
 };
 

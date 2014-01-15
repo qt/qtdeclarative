@@ -101,10 +101,8 @@ bool QQmlTypeCompiler::compile()
 
     {
         QQmlPropertyCacheCreator propertyCacheBuilder(this);
-        if (!propertyCacheBuilder.buildMetaObjects()) {
-            errors << propertyCacheBuilder.errors;
+        if (!propertyCacheBuilder.buildMetaObjects())
             return false;
-        }
     }
 
     {
@@ -141,10 +139,8 @@ bool QQmlTypeCompiler::compile()
     {
         // Scan for components, determine their scopes and resolve aliases within the scope.
         QQmlComponentAndAliasResolver resolver(this);
-        if (!resolver.resolve()) {
-            errors << resolver.errors;
+        if (!resolver.resolve())
             return false;
-        }
     }
 
     // Compile JS binding expressions and signal handlers
@@ -191,10 +187,8 @@ bool QQmlTypeCompiler::compile()
 
     // Sanity check property bindings
     QQmlPropertyValidator validator(this);
-    if (!validator.validate()) {
-        errors << validator.errors;
+    if (!validator.validate())
         return false;
-    }
 
     return errors.isEmpty();
 }
@@ -909,7 +903,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
     resolveAliases();
 
-    return errors.isEmpty();
+    return true;
 }
 
 bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
@@ -1191,10 +1185,8 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
         customParserData->insert(objectIndex, data);
         const QList<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty()) {
-            foreach (QQmlError error, parserErrors) {
-                error.setUrl(url);
-                errors << error;
-            }
+            foreach (QQmlError error, parserErrors)
+                compiler->recordError(error);
             return false;
         }
     }
