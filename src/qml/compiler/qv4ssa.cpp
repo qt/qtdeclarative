@@ -409,7 +409,7 @@ class DominatorTree {
     typedef int BasicBlockIndex;
     enum { InvalidBasicBlockIndex = -1 };
 
-    const QVector<BasicBlock *> nodes;
+    QVector<BasicBlock *> nodes;
     int N;
     std::vector<int> dfnum; // BasicBlock index -> dfnum
     std::vector<int> vertex;
@@ -705,19 +705,57 @@ public:
         return nodes[idom[bb->index]];
     }
 
+    void dumpImmediateDominators() const
+    {
+        qDebug() << "Immediate dominators for" << idom.size() << "nodes:";
+        for (size_t i = 0, ei = idom.size(); i != ei; ++i)
+            if (idom[i] == InvalidBasicBlockIndex)
+                qDebug("\tnone -> L%d", int(i));
+            else
+                qDebug("\tL%d -> L%d", idom[i], int(i));
+    }
+
     void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
     {
-        idom[bb->index] = newDominator->index;
+        Q_ASSERT(bb->index >= 0);
+
+        int blockIndex;
+        if (static_cast<std::vector<BasicBlockIndex>::size_type>(bb->index) >= idom.size()) {
+            // This is a new block, probably introduced by edge splitting. So, we'll have to grow
+            // the array before inserting the immediate dominator.
+            nodes.append(bb);
+            idom.resize(nodes.size(), InvalidBasicBlockIndex);
+            blockIndex = nodes.size() - 1;
+        } else {
+            blockIndex = getBlockIndex(bb);
+        }
+
+        idom[blockIndex] = getBlockIndex(newDominator);
     }
 
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
         // The index of the basic blocks might have changed, or the nodes array might have changed,
-        // or the block got deleted, so get the index from our copy of the array.
-        return dominates(nodes.indexOf(dominator), nodes.indexOf(dominated));
+        // so get the index from our copy of the array.
+        return dominates(getBlockIndex(dominator), getBlockIndex(dominated));
     }
 
 private:
+    int getBlockIndex(BasicBlock *bb) const {
+        if (!bb)
+            return InvalidBasicBlockIndex;
+
+        if (bb->index >= 0 && bb->index < nodes.size()) {
+            if (nodes.at(bb->index) == bb)
+                return bb->index;
+        }
+
+        return nodes.indexOf(bb);
+    }
+
     bool dominates(BasicBlockIndex dominator, BasicBlockIndex dominated) const {
+        // dominator can be Invalid when the dominated block has no dominator (i.e. the start node)
+        Q_ASSERT(dominated != InvalidBasicBlockIndex);
+
         for (BasicBlockIndex it = dominated; it != InvalidBasicBlockIndex; it = idom[it]) {
             if (it == dominator)
                 return true;
@@ -2471,7 +2509,7 @@ protected:
     }
 };
 
-void splitCriticalEdges(Function *f)
+void splitCriticalEdges(Function *f, DominatorTree &df)
 {
     for (int i = 0, ei = f->basicBlocks.size(); i != ei; ++i) {
         BasicBlock *bb = f->basicBlocks[i];
@@ -2518,6 +2556,9 @@ void splitCriticalEdges(Function *f)
                     } else {
                         Q_ASSERT(!"Unknown terminator!");
                     }
+
+                    // Set the immediate dominator of the new block to inBB
+                    df.updateImmediateDominator(newBB, inBB);
                 }
             }
         }
@@ -2666,6 +2707,12 @@ public:
     {
         showMeTheCode(function);
         schedule(function->basicBlocks.first());
+
+#if defined(SHOW_SSA)
+        qDebug() << "Block sequence:";
+        foreach (BasicBlock *bb, sequence)
+            qDebug("\tL%d", bb->index);
+#endif // SHOW_SSA
 
         Q_ASSERT(function->basicBlocks.size() == sequence.size());
         function->basicBlocks = sequence;
@@ -3660,9 +3707,6 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
     if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
-//        qout << "Starting edge splitting..." << endl;
-        splitCriticalEdges(function);
-//        showMeTheCode(function);
 
         // Calculate the dominator tree:
         DominatorTree df(function->basicBlocks);
@@ -3690,6 +3734,11 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         TypePropagation(defUses).run(function);
 //        showMeTheCode(function);
 
+        // Transform the CFG into edge-split SSA.
+//        qout << "Starting edge splitting..." << endl;
+        splitCriticalEdges(function, df);
+//        showMeTheCode(function);
+
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
@@ -3709,6 +3758,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
+//        df.dumpImmediateDominators();
         startEndLoops = BlockScheduler(function, df).go();
 //        showMeTheCode(function);
 
