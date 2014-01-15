@@ -111,6 +111,8 @@ public:
 
     QQuickItem *activeFocusItem;
 
+    void deliverKeyEvent(QKeyEvent *e);
+
     // Keeps track of the item currently receiving mouse events
     QQuickItem *mouseGrabberItem;
 #ifndef QT_NO_CURSOR

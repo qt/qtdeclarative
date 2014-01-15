@@ -1299,24 +1299,43 @@ bool QQuickWindow::event(QEvent *e)
 void QQuickWindow::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
-
-#ifndef QT_NO_SHORTCUT
-    // Try looking for a Shortcut before sending key events
-    if (QGuiApplicationPrivate::instance()->shortcutMap.tryShortcutEvent(focusObject(), e))
-        return;
-#endif
-
-    if (d->activeFocusItem)
-        sendEvent(d->activeFocusItem, e);
+    d->deliverKeyEvent(e);
 }
 
 /*! \reimp */
 void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
+    d->deliverKeyEvent(e);
+}
 
-    if (d->activeFocusItem)
-        sendEvent(d->activeFocusItem, e);
+void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
+{
+    Q_Q(QQuickWindow);
+
+#ifndef QT_NO_SHORTCUT
+    // Try looking for a Shortcut before sending key events
+    if (e->type() == QEvent::KeyPress
+        && QGuiApplicationPrivate::instance()->shortcutMap.tryShortcutEvent(q->focusObject(), e))
+        return;
+#endif
+
+    if (activeFocusItem)
+        q->sendEvent(activeFocusItem, e);
+#ifdef Q_OS_MAC
+    else {
+        // This is the case for popup windows on Mac, where popup windows get focus
+        // in Qt (after exposure) but they are not "key windows" in the Cocoa sense.
+        // Therefore, the will never receive key events from Cocoa. Instead, the
+        // toplevel non-popup window (the application current "key window") will
+        // receive them. (QWidgetWindow does something similar for widgets, by keeping
+        // a list of popup windows, and forwarding the key event to the top-most popup.)
+        QWindow *focusWindow = qApp->focusWindow();
+        if (focusWindow && focusWindow != q
+            && (focusWindow->flags() & Qt::Popup) == Qt::Popup)
+            QGuiApplication::sendEvent(focusWindow, e);
+    }
+#endif
 }
 
 QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos)
