@@ -772,6 +772,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
 
     PropertyResolver propertyResolver(propertyCache);
 
+    bool defaultPropertyQueried = false;
+    QQmlPropertyData *defaultProperty = 0;
+
     for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
@@ -783,9 +786,18 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         if (targetType && targetType->metaObject() == &QQmlComponent::staticMetaObject)
             continue;
 
+        QQmlPropertyData *pd = 0;
         QString propertyName = stringAt(binding->propertyNameIndex);
-        bool notInRevision = false;
-        QQmlPropertyData *pd = propertyResolver.property(propertyName, &notInRevision);
+        if (!propertyName.isEmpty()) {
+            bool notInRevision = false;
+            pd = propertyResolver.property(propertyName, &notInRevision);
+        } else {
+            if (!defaultPropertyQueried) {
+                defaultProperty = propertyCache->defaultProperty();
+                defaultPropertyQueried = true;
+            }
+            pd = defaultProperty;
+        }
         if (!pd || !pd->isQObject())
             continue;
 
