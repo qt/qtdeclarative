@@ -165,10 +165,11 @@ class MoveMapping
         bool operator==(const Move &other) const
         { return from == other.from && to == other.to; }
     };
+    typedef QList<Move> Moves;
 
-    QList<Move> _moves;
+    Moves _moves;
 
-    int isUsedAsSource(Expr *e) const;
+    static Moves sourceUsages(Expr *e, const Moves &moves);
 
 public:
     void add(Expr *from, Temp *to, int id = 0);

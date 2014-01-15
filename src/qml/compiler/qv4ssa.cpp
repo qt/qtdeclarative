@@ -3837,15 +3837,20 @@ static inline bool overlappingStorage(const Temp &t1, const Temp &t2)
             || (t1.type != DoubleType && t2.type != DoubleType);
 }
 
-int MoveMapping::isUsedAsSource(Expr *e) const
+MoveMapping::Moves MoveMapping::sourceUsages(Expr *e, const Moves &moves)
 {
-    if (Temp *t = e->asTemp())
-        for (int i = 0, ei = _moves.size(); i != ei; ++i)
-            if (Temp *from = _moves[i].from->asTemp())
-                if (overlappingStorage(*from, *t))
-                    return i;
+    Moves usages;
 
-    return -1;
+    if (Temp *t = e->asTemp()) {
+        for (int i = 0, ei = moves.size(); i != ei; ++i) {
+            const Move &move = moves[i];
+            if (Temp *from = move.from->asTemp())
+                if (overlappingStorage(*from, *t))
+                    usages.append(move);
+        }
+    }
+
+    return usages;
 }
 
 void MoveMapping::add(Expr *from, Temp *to, int id) {
@@ -3924,9 +3929,8 @@ void MoveMapping::dump() const
 MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
                                           QList<Move> &output, QList<Move> &swaps) const
 {
-    int useIdx = isUsedAsSource(m.to);
-    if (useIdx != -1) {
-        const Move &dependency = _moves[useIdx];
+    Moves usages = sourceUsages(m.to, todo) + sourceUsages(m.to, delayed);
+    foreach (const Move &dependency, usages) {
         if (!output.contains(dependency)) {
             if (delayed.contains(dependency)) {
                 // We have a cycle! Break it by swapping instead of assigning.

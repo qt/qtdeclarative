@@ -817,19 +817,15 @@ private:
     void resolve()
     {
         foreach (BasicBlock *bb, _function->basicBlocks) {
-            foreach (BasicBlock *bbOut, bb->out) {
-#ifdef DEBUG_REGALLOC
-                Optimizer::showMeTheCode(_function);
-#endif // DEBUG_REGALLOC
-
+            foreach (BasicBlock *bbOut, bb->out)
                 resolveEdge(bb, bbOut);
-            }
         }
     }
 
     void resolveEdge(BasicBlock *predecessor, BasicBlock *successor)
     {
 #ifdef DEBUG_REGALLOC
+        Optimizer::showMeTheCode(_function);
         qDebug() << "Resolving edge" << predecessor->index << "->" << successor->index;
 #endif // DEBUG_REGALLOC
 
@@ -849,16 +845,20 @@ private:
         Q_ASSERT(successorStart > 0);
 
         foreach (const LifeTimeInterval &it, _liveAtStart[successor]) {
-            bool lifeTimeHole = false;
             if (it.end() < successorStart)
                 continue;
+
+            bool lifeTimeHole = false;
+            bool isPhiTarget = false;
             Expr *moveFrom = 0;
+
             if (it.start() == successorStart) {
                 foreach (Stmt *s, successor->statements) {
                     if (!s || s->id < 1)
                         continue;
                     if (Phi *phi = s->asPhi()) {
                         if (*phi->targetTemp == it.temp()) {
+                            isPhiTarget = true;
                             Expr *opd = phi->d->incoming[successor->in.indexOf(predecessor)];
                             if (opd->asConst()) {
                                 moveFrom = opd;
@@ -939,12 +939,17 @@ private:
 
             Temp *moveTo;
             if (it.reg() == LifeTimeInterval::Invalid || !it.covers(successorStart)) {
-                int spillSlot = _assignedSpillSlots.value(it.temp(), -1);
+                if (!isPhiTarget) // if it.temp() is a phi target, skip it.
+                    continue;
+                const int spillSlot = _assignedSpillSlots.value(it.temp(), -1);
                 if (spillSlot == -1)
                     continue; // it has a life-time hole here.
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it.temp().type);
             } else {
                 moveTo = createTemp(Temp::PhysicalRegister, platformRegister(it), it.temp().type);
+                const int spillSlot = _assignedSpillSlots.value(it.temp(), -1);
+                if (isPhiTarget && spillSlot != -1)
+                    mapping.add(moveFrom, createTemp(Temp::StackSlot, spillSlot, it.temp().type));
             }
 
             // add move to mapping
@@ -1078,7 +1083,7 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
     {
         QTextStream qout(stdout, QIODevice::WriteOnly);
         qout << "Ranges:" << endl;
-        QList<LifeTimeInterval> intervals = _unhandled;
+        QVector<LifeTimeInterval> intervals = _unhandled;
         std::sort(intervals.begin(), intervals.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, intervals) {
             r.dump(qout);
@@ -1585,7 +1590,7 @@ void RegisterAllocator::dump() const
 
     {
         qout << "Ranges:" << endl;
-        QList<LifeTimeInterval> handled = _handled;
+        QVector<LifeTimeInterval> handled = _handled;
         std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, handled) {
             r.dump(qout);
