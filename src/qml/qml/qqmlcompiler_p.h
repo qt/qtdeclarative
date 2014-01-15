@@ -65,6 +65,7 @@
 #include <private/qqmlcodegenerator_p.h>
 #include "private/qv4identifier_p.h"
 #include <private/qqmljsastfwd_p.h>
+#include "qqmlcustomparser_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -332,7 +333,7 @@ namespace QQmlCompilerTypes {
 };
 
 class QMetaObjectBuilder;
-class Q_AUTOTEST_EXPORT QQmlCompiler
+class Q_AUTOTEST_EXPORT QQmlCompiler : public QQmlCustomParserCompilerBackend
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCompiler)
 public:
@@ -348,9 +349,10 @@ public:
     static bool isAttachedPropertyName(const QHashedStringRef &);
     static bool isSignalPropertyName(const QHashedStringRef &);
 
-    int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
-    const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
     int bindingIdentifier(const QString &name, const QQmlScript::Variant& value, const QQmlCompilerTypes::BindingContext &ctxt); // for QQmlCustomParser::bindingIndex
+    virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&value, const QString&name, QQmlCustomParser *customParser);
+
+    virtual const QQmlImports &imports() const { return unit->imports(); }
 
 private:
     typedef QQmlCompiledData::Instruction Instruction;

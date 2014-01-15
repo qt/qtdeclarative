@@ -2614,7 +2614,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     if (isIntProp) {
         // Allow enum assignment to ints.
         bool ok;
-        int enumval = evaluateEnum(typeName, enumValue.toUtf8(), &ok);
+        int enumval = evaluateEnum(typeName.toString(), enumValue.toUtf8(), &ok);
         if (ok) {
             v->type = Value::Literal;
             v->value = QQmlScript::Variant((double)enumval);
@@ -2665,38 +2665,6 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     return true;
 }
 
-// Similar logic to above, but not knowing target property.
-int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const
-{
-    Q_ASSERT_X(ok, "QQmlCompiler::evaluateEnum", "ok must not be a null pointer");
-    *ok = false;
-
-    if (scope != QLatin1String("Qt")) {
-        QQmlType *type = 0;
-        unit->imports().resolveType(scope, &type, 0, 0, 0);
-        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
-    }
-
-    const QMetaObject *mo = StaticQtMetaObject::get();
-    int i = mo->enumeratorCount();
-    while (i--) {
-        int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);
-        if (*ok)
-            return v;
-    }
-    return -1;
-}
-
-const QMetaObject *QQmlCompiler::resolveType(const QString& name) const
-{
-    QQmlType *qmltype = 0;
-    if (!unit->imports().resolveType(name, &qmltype, 0, 0, 0))
-        return 0;
-    if (!qmltype)
-        return 0;
-    return qmltype->metaObject();
-}
-
 int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, const BindingContext &ctxt)
 {
     JSBindingReference *reference = pool->New<JSBindingReference>();
@@ -2705,6 +2673,30 @@ int QQmlCompiler::bindingIdentifier(const QString &name, const Variant &value, c
     reference->property->setName(name);
     reference->value = 0;
     reference->bindingContext = ctxt;
+    reference->bindingContext.owner++;
+    // Unfortunately this is required for example for PropertyChanges where the bindings
+    // will be executed in the dynamic scope of the target, so we can't resolve any lookups
+    // at run-time.
+    reference->disableLookupAcceleration = true;
+
+    const int id = output->customParserBindings.count();
+    output->customParserBindings.append(0); // Filled in later.
+    reference->customParserBindingsIndex = id;
+
+    compileState->totalBindingsCount++;
+    compileState->bindings.prepend(reference);
+
+    return id;
+}
+
+QQmlBinding::Identifier QQmlCompiler::bindingIdentifier(const Variant &value, const QString &name, QQmlCustomParser *customParser)
+{
+    JSBindingReference *reference = pool->New<JSBindingReference>();
+    reference->expression = value;
+    reference->property = pool->New<Property>();
+    reference->property->setName(name);
+    reference->value = 0;
+    reference->bindingContext = QQmlCompilerTypes::BindingContext(customParser->object);
     reference->bindingContext.owner++;
     // Unfortunately this is required for example for PropertyChanges where the bindings
     // will be executed in the dynamic scope of the target, so we can't resolve any lookups

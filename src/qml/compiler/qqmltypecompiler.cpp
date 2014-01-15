@@ -1120,6 +1120,11 @@ bool QQmlPropertyValidator::validate()
     return true;
 }
 
+const QQmlImports &QQmlPropertyValidator::imports() const
+{
+    return *compiler->imports();
+}
+
 bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache)
 {
     QQmlCustomParser *customParser = 0;
@@ -1181,7 +1186,9 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
 
     if (customParser && !customBindings.isEmpty()) {
         customParser->clearErrors();
+        customParser->compiler = this;
         QByteArray data = customParser->compile(qmlUnit, customBindings);
+        customParser->compiler = 0;
         customParserData->insert(objectIndex, data);
         const QList<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty()) {

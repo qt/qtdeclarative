@@ -172,13 +172,17 @@ protected:
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
 };
 
-class QQmlPropertyValidator : public QQmlCompilePass
+class QQmlPropertyValidator : public QQmlCompilePass, public QQmlCustomParserCompilerBackend
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
     QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
 
     bool validate();
+
+    // Re-implemented for QQmlCustomParser
+    virtual const QQmlImports &imports() const;
+
 
 private:
     bool validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache);

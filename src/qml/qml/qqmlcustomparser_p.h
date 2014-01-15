@@ -108,6 +108,17 @@ private:
     QQmlCustomParserNodePrivate *d;
 };
 
+struct QQmlCustomParserCompilerBackend
+{
+    virtual ~QQmlCustomParserCompilerBackend() {}
+    virtual const QQmlImports &imports() const = 0;
+
+    int evaluateEnum(const QString &scope, const QByteArray& enumValue, bool *ok) const;
+    const QMetaObject *resolveType(const QString& name) const;
+
+    virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&, QQmlCustomParser *) { return QQmlBinding::Invalid; }
+};
+
 class Q_QML_PRIVATE_EXPORT QQmlCustomParser
 {
 public:
@@ -146,10 +157,11 @@ protected:
 
 private:
     QList<QQmlError> exceptions;
-    QQmlCompiler *compiler;
+    QQmlCustomParserCompilerBackend *compiler;
     QQmlScript::Object *object;
     Flags m_flags;
     friend class QQmlCompiler;
+    friend class QQmlPropertyValidator;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
 
