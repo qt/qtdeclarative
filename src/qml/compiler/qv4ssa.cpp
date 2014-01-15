@@ -695,16 +695,17 @@ public:
         computeDF();
     }
 
-//    QSet<BasicBlock *> operator[](BasicBlock *n) const {
-//        return DF[n->index];
-//    }
-
     const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
         return DF[n->index];
     }
 
     BasicBlock *immediateDominator(BasicBlock *bb) const {
         return nodes[idom[bb->index]];
+    }
+
+    void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
+    {
+        idom[bb->index] = newDominator->index;
     }
 
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
@@ -2895,7 +2896,8 @@ namespace {
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
 /// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W)
+void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W,
+             DominatorTree &df)
 {
     // TODO: change this to mark the block as deleted, but leave it alone so that other references
     //       won't be dangling pointers.
@@ -2945,11 +2947,15 @@ void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector
                 }
             }
 
-            // if a successor has no incoming edges after unlinking the current basic block, then
-            // it is unreachable, and can be purged too
-            if (out->in.isEmpty())
+            if (out->in.isEmpty()) {
+                // if a successor has no incoming edges after unlinking the current basic block, then
+                // it is unreachable, and can be purged too
                 toPurge.append(out);
-
+            } else if (out->in.size() == 1) {
+                // if the successor now has only one incoming edge, we that edge is the new
+                // immediate dominator
+                df.updateImmediateDominator(out, out->in.first());
+            }
         }
 
         // unlink all defs/uses from the statements in the basic block
@@ -3032,7 +3038,7 @@ bool tryOptimizingComparison(Expr *&expr)
 }
 } // anonymous namespace
 
-void optimizeSSA(Function *function, DefUsesCalculator &defUses)
+void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &df)
 {
     const bool variablesCanEscape = function->variablesCanEscape();
 
@@ -3298,10 +3304,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 Jump *jump = function->New<Jump>();
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
-                    purgeBB(cjump->iffalse, function, defUses, W);
+                    purgeBB(cjump->iffalse, function, defUses, W, df);
                 } else {
                     jump->target = cjump->iffalse;
-                    purgeBB(cjump->iftrue, function, defUses, W);
+                    purgeBB(cjump->iftrue, function, defUses, W, df);
                 }
                 *ref[s] = jump;
 
@@ -3681,7 +3687,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
-            optimizeSSA(function, defUses);
+            optimizeSSA(function, defUses, df);
 //            showMeTheCode(function);
         }
 
