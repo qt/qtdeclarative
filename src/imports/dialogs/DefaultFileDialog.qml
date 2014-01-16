@@ -53,7 +53,13 @@ AbstractFileDialog {
             currentPathField.visible = false
         }
     }
-    onFolderChanged: view.model.folder = folder
+    onFolderChanged: {
+        var str = new String(folder)
+        if (str.indexOf("qrc:") === 0)
+            folder = "file:" + str.slice(4)
+        if (view.model.folder != folder)
+            view.model.folder = folder
+    }
 
     property real __textX: titleBar.height
     property SystemPalette __palette
@@ -61,12 +67,15 @@ AbstractFileDialog {
     property int __lastClickedIdx: -1
 
     function __dirDown(path) {
-        view.model.folder = path
+        view.model.folder = "file://" + path
         __lastClickedIdx = -1
         __selectedIndices = []
     }
     function __dirUp() {
-        view.model.folder = view.model.parentFolder
+        if (view.model.parentFolder == "")
+            view.model.folder = "file:///"
+        else
+            view.model.folder = view.model.parentFolder
         __lastClickedIdx = -1
         __selectedIndices = []
     }

@@ -106,7 +106,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ExecutionContext *outer;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
-    ExecutionContext *next; // used in the GC
 
     struct EvalCode
     {

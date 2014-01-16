@@ -308,9 +308,9 @@ public:
         BasicBlock *operator*() const
         {
             if (set.blockNumbers)
-                return set.allBlocks[*numberIt];
+                return set.allBlocks.at(*numberIt);
             else
-                return set.allBlocks[flagIt];
+                return set.allBlocks.at(flagIt);
         }
 
         bool operator==(const const_iterator &other) const
@@ -409,7 +409,7 @@ class DominatorTree {
     typedef int BasicBlockIndex;
     enum { InvalidBasicBlockIndex = -1 };
 
-    const QVector<BasicBlock *> nodes;
+    QVector<BasicBlock *> nodes;
     int N;
     std::vector<int> dfnum; // BasicBlock index -> dfnum
     std::vector<int> vertex;
@@ -472,9 +472,8 @@ class DominatorTree {
 #endif // SHOW_SSA
     }
 
-    BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v) {
-        std::vector<BasicBlockIndex> worklist;
-        worklist.reserve(vertex.capacity() / 2);
+    BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v, std::vector<BasicBlockIndex> &worklist) {
+        worklist.clear();
         for (BasicBlockIndex it = v; it != InvalidBasicBlockIndex; it = ancestor[it])
             worklist.push_back(it);
 
@@ -517,6 +516,9 @@ class DominatorTree {
         DFS(nodes.first()->index);
         Q_ASSERT(N == nodes.size()); // fails with unreachable nodes, but those should have been removed before.
 
+        std::vector<BasicBlockIndex> worklist;
+        worklist.reserve(vertex.capacity() / 2);
+
         for (int i = N - 1; i > 0; --i) {
             BasicBlockIndex n = vertex[i];
             BasicBlockIndex p = parent[n];
@@ -527,7 +529,7 @@ class DominatorTree {
                 if (dfnum[v->index] <= dfnum[n])
                     ss = v->index;
                 else
-                    ss = semi[ancestorWithLowestSemi(v->index)];
+                    ss = semi[ancestorWithLowestSemi(v->index, worklist)];
                 if (dfnum[ss] < dfnum[s])
                     s = ss;
             }
@@ -536,7 +538,7 @@ class DominatorTree {
             link(p, n);
             if (bucket.contains(p)) {
                 foreach (BasicBlockIndex v, bucket[p]) {
-                    BasicBlockIndex y = ancestorWithLowestSemi(v);
+                    BasicBlockIndex y = ancestorWithLowestSemi(v, worklist);
                     BasicBlockIndex semi_v = semi[v];
                     if (semi[y] == semi_v)
                         idom[v] = semi_v;
@@ -602,7 +604,7 @@ class DominatorTree {
         std::vector<BasicBlockIndex> worklist;
         worklist.reserve(nodes.size() * 2);
         for (int i = 0, ei = nodes.size(); i != ei; ++i) {
-            BasicBlockIndex nodeIndex = nodes[i]->index;
+            BasicBlockIndex nodeIndex = nodes.at(i)->index;
             worklist.push_back(nodeIndex);
             NodeProgress &np = nodeStatus[nodeIndex];
             np.children = children[nodeIndex];
@@ -633,7 +635,7 @@ class DominatorTree {
             if (np.todo.empty()) {
                 BasicBlockSet &S = DF[node];
                 S.init(nodes);
-                foreach (BasicBlock *y, nodes[node]->out)
+                foreach (BasicBlock *y, nodes.at(node)->out)
                     if (idom[y->index] != node)
                         S.insert(y);
                 foreach (BasicBlockIndex child, np.children) {
@@ -695,10 +697,6 @@ public:
         computeDF();
     }
 
-//    QSet<BasicBlock *> operator[](BasicBlock *n) const {
-//        return DF[n->index];
-//    }
-
     const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
         return DF[n->index];
     }
@@ -707,14 +705,57 @@ public:
         return nodes[idom[bb->index]];
     }
 
+    void dumpImmediateDominators() const
+    {
+        qDebug() << "Immediate dominators for" << idom.size() << "nodes:";
+        for (size_t i = 0, ei = idom.size(); i != ei; ++i)
+            if (idom[i] == InvalidBasicBlockIndex)
+                qDebug("\tnone -> L%d", int(i));
+            else
+                qDebug("\tL%d -> L%d", idom[i], int(i));
+    }
+
+    void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
+    {
+        Q_ASSERT(bb->index >= 0);
+
+        int blockIndex;
+        if (static_cast<std::vector<BasicBlockIndex>::size_type>(bb->index) >= idom.size()) {
+            // This is a new block, probably introduced by edge splitting. So, we'll have to grow
+            // the array before inserting the immediate dominator.
+            nodes.append(bb);
+            idom.resize(nodes.size(), InvalidBasicBlockIndex);
+            blockIndex = nodes.size() - 1;
+        } else {
+            blockIndex = getBlockIndex(bb);
+        }
+
+        idom[blockIndex] = getBlockIndex(newDominator);
+    }
+
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
         // The index of the basic blocks might have changed, or the nodes array might have changed,
-        // or the block got deleted, so get the index from our copy of the array.
-        return dominates(nodes.indexOf(dominator), nodes.indexOf(dominated));
+        // so get the index from our copy of the array.
+        return dominates(getBlockIndex(dominator), getBlockIndex(dominated));
     }
 
 private:
+    int getBlockIndex(BasicBlock *bb) const {
+        if (!bb)
+            return InvalidBasicBlockIndex;
+
+        if (bb->index >= 0 && bb->index < nodes.size()) {
+            if (nodes.at(bb->index) == bb)
+                return bb->index;
+        }
+
+        return nodes.indexOf(bb);
+    }
+
     bool dominates(BasicBlockIndex dominator, BasicBlockIndex dominated) const {
+        // dominator can be Invalid when the dominated block has no dominator (i.e. the start node)
+        Q_ASSERT(dominated != InvalidBasicBlockIndex);
+
         for (BasicBlockIndex it = dominated; it != InvalidBasicBlockIndex; it = idom[it]) {
             if (it == dominator)
                 return true;
@@ -754,6 +795,8 @@ public:
     VariableCollector(Function *function)
         : variablesCanEscape(function->variablesCanEscape())
     {
+        _defsites.reserve(function->tempCount);
+
 #if defined(SHOW_SSA)
         qout << "Variables collected:" << endl;
 #endif // SHOW_SSA
@@ -1018,6 +1061,9 @@ public:
         , tempCount(0)
         , processed(f->basicBlocks)
     {
+        localMapping.reserve(f->tempCount);
+        vregMapping.reserve(f->tempCount);
+        todo.reserve(f->basicBlocks.size());
     }
 
     void run() {
@@ -2463,11 +2509,10 @@ protected:
     }
 };
 
-void splitCriticalEdges(Function *f)
+void splitCriticalEdges(Function *f, DominatorTree &df)
 {
-    const QVector<BasicBlock *> oldBBs = f->basicBlocks;
-
-    foreach (BasicBlock *bb, oldBBs) {
+    for (int i = 0, ei = f->basicBlocks.size(); i != ei; ++i) {
+        BasicBlock *bb = f->basicBlocks[i];
         if (bb->in.size() > 1) {
             for (int inIdx = 0, eInIdx = bb->in.size(); inIdx != eInIdx; ++inIdx) {
                 BasicBlock *inBB = bb->in[inIdx];
@@ -2511,6 +2556,9 @@ void splitCriticalEdges(Function *f)
                     } else {
                         Q_ASSERT(!"Unknown terminator!");
                     }
+
+                    // Set the immediate dominator of the new block to inBB
+                    df.updateImmediateDominator(newBB, inBB);
                 }
             }
         }
@@ -2659,6 +2707,12 @@ public:
     {
         showMeTheCode(function);
         schedule(function->basicBlocks.first());
+
+#if defined(SHOW_SSA)
+        qDebug() << "Block sequence:";
+        foreach (BasicBlock *bb, sequence)
+            qDebug("\tL%d", bb->index);
+#endif // SHOW_SSA
 
         Q_ASSERT(function->basicBlocks.size() == sequence.size());
         function->basicBlocks = sequence;
@@ -2895,7 +2949,8 @@ namespace {
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
 /// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W)
+void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W,
+             DominatorTree &df)
 {
     // TODO: change this to mark the block as deleted, but leave it alone so that other references
     //       won't be dangling pointers.
@@ -2945,11 +3000,15 @@ void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector
                 }
             }
 
-            // if a successor has no incoming edges after unlinking the current basic block, then
-            // it is unreachable, and can be purged too
-            if (out->in.isEmpty())
+            if (out->in.isEmpty()) {
+                // if a successor has no incoming edges after unlinking the current basic block, then
+                // it is unreachable, and can be purged too
                 toPurge.append(out);
-
+            } else if (out->in.size() == 1) {
+                // if the successor now has only one incoming edge, we that edge is the new
+                // immediate dominator
+                df.updateImmediateDominator(out, out->in.first());
+            }
         }
 
         // unlink all defs/uses from the statements in the basic block
@@ -3032,7 +3091,7 @@ bool tryOptimizingComparison(Expr *&expr)
 }
 } // anonymous namespace
 
-void optimizeSSA(Function *function, DefUsesCalculator &defUses)
+void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &df)
 {
     const bool variablesCanEscape = function->variablesCanEscape();
 
@@ -3298,10 +3357,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 Jump *jump = function->New<Jump>();
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
-                    purgeBB(cjump->iffalse, function, defUses, W);
+                    purgeBB(cjump->iffalse, function, defUses, W, df);
                 } else {
                     jump->target = cjump->iffalse;
-                    purgeBB(cjump->iftrue, function, defUses, W);
+                    purgeBB(cjump->iftrue, function, defUses, W, df);
                 }
                 *ref[s] = jump;
 
@@ -3648,9 +3707,6 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
     if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
-//        qout << "Starting edge splitting..." << endl;
-        splitCriticalEdges(function);
-//        showMeTheCode(function);
 
         // Calculate the dominator tree:
         DominatorTree df(function->basicBlocks);
@@ -3678,10 +3734,15 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         TypePropagation(defUses).run(function);
 //        showMeTheCode(function);
 
+        // Transform the CFG into edge-split SSA.
+//        qout << "Starting edge splitting..." << endl;
+        splitCriticalEdges(function, df);
+//        showMeTheCode(function);
+
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
-            optimizeSSA(function, defUses);
+            optimizeSSA(function, defUses, df);
 //            showMeTheCode(function);
         }
 
@@ -3697,6 +3758,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
+//        df.dumpImmediateDominators();
         startEndLoops = BlockScheduler(function, df).go();
 //        showMeTheCode(function);
 
@@ -3837,15 +3899,20 @@ static inline bool overlappingStorage(const Temp &t1, const Temp &t2)
             || (t1.type != DoubleType && t2.type != DoubleType);
 }
 
-int MoveMapping::isUsedAsSource(Expr *e) const
+MoveMapping::Moves MoveMapping::sourceUsages(Expr *e, const Moves &moves)
 {
-    if (Temp *t = e->asTemp())
-        for (int i = 0, ei = _moves.size(); i != ei; ++i)
-            if (Temp *from = _moves[i].from->asTemp())
-                if (overlappingStorage(*from, *t))
-                    return i;
+    Moves usages;
 
-    return -1;
+    if (Temp *t = e->asTemp()) {
+        for (int i = 0, ei = moves.size(); i != ei; ++i) {
+            const Move &move = moves[i];
+            if (Temp *from = move.from->asTemp())
+                if (overlappingStorage(*from, *t))
+                    usages.append(move);
+        }
+    }
+
+    return usages;
 }
 
 void MoveMapping::add(Expr *from, Temp *to, int id) {
@@ -3924,9 +3991,8 @@ void MoveMapping::dump() const
 MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
                                           QList<Move> &output, QList<Move> &swaps) const
 {
-    int useIdx = isUsedAsSource(m.to);
-    if (useIdx != -1) {
-        const Move &dependency = _moves[useIdx];
+    Moves usages = sourceUsages(m.to, todo) + sourceUsages(m.to, delayed);
+    foreach (const Move &dependency, usages) {
         if (!output.contains(dependency)) {
             if (delayed.contains(dependency)) {
                 // We have a cycle! Break it by swapping instead of assigning.

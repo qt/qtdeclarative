@@ -172,6 +172,10 @@ void QFileDialogHelper::setFilter() {
     m_dialog.setFileMode(QFileDialog::FileMode(QPlatformFileDialogHelper::options()->fileMode()));
     m_dialog.setOptions((QFileDialog::Options)((int)(QPlatformFileDialogHelper::options()->options())));
     m_dialog.setAcceptMode(QFileDialog::AcceptMode(QPlatformFileDialogHelper::options()->acceptMode()));
+
+    const QUrl initialDirectory = QPlatformFileDialogHelper::options()->initialDirectory();
+    if (initialDirectory.isValid() && initialDirectory.isLocalFile())
+        m_dialog.setDirectory(initialDirectory.toLocalFile());
 }
 
 bool QFileDialogHelper::show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
