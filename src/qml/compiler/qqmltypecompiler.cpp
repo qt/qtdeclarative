@@ -841,7 +841,8 @@ bool QQmlComponentAndAliasResolver::resolve()
     //     someItemDelegate: Item {}
     // In the implicit case Item is surrounded by a synthetic Component {} because the property
     // on the left hand side is of QQmlComponent type.
-    for (int i = 0; i < qmlObjects->count(); ++i) {
+    const int objCountWithoutSynthesizedComponents = qmlObjects->count();
+    for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         const QtQml::QmlObject *obj = qmlObjects->at(i);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
