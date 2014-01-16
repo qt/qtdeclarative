@@ -634,8 +634,7 @@ void QSGPlainTexture::bind()
                        m_texture_size.width(),
                        m_texture_size.height());
             }
-            Q_QML_PROFILE(sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphTextureDeletion,
+            Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTextureDeletion, (
                     qsg_renderer_timer.nsecsElapsed()));
 #endif
         }
@@ -736,8 +735,7 @@ void QSGPlainTexture::bind()
 
     }
 
-    Q_QML_PROFILE(sceneGraphFrame(
-            QQmlProfilerService::SceneGraphTexturePrepare,
+    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTexturePrepare, (
             bindTime,
             convertTime - bindTime,
             swizzleTime - convertTime,

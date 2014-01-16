@@ -287,8 +287,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
                int(renderTime / 1000000));
     }
 
-    Q_QML_PROFILE(sceneGraphFrame(
-            QQmlProfilerService::SceneGraphRendererFrame,
+    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphRendererFrame, (
             preprocessTime,
             updatePassTime - preprocessTime,
             bindTime - updatePassTime,

@@ -196,8 +196,7 @@ void QSGDistanceFieldGlyphCache::update()
                (int) qsg_render_timer.elapsed());
 
     }
-    Q_QML_PROFILE(sceneGraphFrame(
-            QQmlProfilerService::SceneGraphAdaptationLayerFrame,
+    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphAdaptationLayerFrame, (
             count,
             renderTime,
             qsg_render_timer.nsecsElapsed() - renderTime));

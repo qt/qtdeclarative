@@ -422,15 +422,15 @@ void tst_QQmlProfilerService::pixmapCacheData()
     QCOMPARE(m_client->traceMessages[16].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
     QCOMPARE(m_client->traceMessages[16].detailType, (int)QQmlProfilerClient::PixmapLoadingStarted);
 
-    // image loaded
-    QCOMPARE(m_client->traceMessages[17].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[17].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
-
     // image size
+    QCOMPARE(m_client->traceMessages[17].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[17].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
+    QCOMPARE(m_client->traceMessages[17].line, 2); // width
+    QCOMPARE(m_client->traceMessages[17].column, 2); // height
+
+    // image loaded
     QCOMPARE(m_client->traceMessages[18].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->traceMessages[18].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
-    QCOMPARE(m_client->traceMessages[18].line, 2); // width
-    QCOMPARE(m_client->traceMessages[18].column, 2); // height
+    QCOMPARE(m_client->traceMessages[18].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
 
     // cache size
     QCOMPARE(m_client->traceMessages[19].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);

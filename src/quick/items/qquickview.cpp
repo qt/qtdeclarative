@@ -603,7 +603,7 @@ void QQuickView::resizeEvent(QResizeEvent *e)
 /*! \reimp */
 void QQuickView::keyPressEvent(QKeyEvent *e)
 {
-    Q_QML_PROFILE(addEvent(QQmlProfilerService::Key));
+    Q_QML_PROFILE(addEvent<QQmlProfilerService::Key>());
 
     QQuickWindow::keyPressEvent(e);
 }
@@ -611,7 +611,7 @@ void QQuickView::keyPressEvent(QKeyEvent *e)
 /*! \reimp */
 void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
-    Q_QML_PROFILE(addEvent(QQmlProfilerService::Key));
+    Q_QML_PROFILE(addEvent<QQmlProfilerService::Key>());
 
     QQuickWindow::keyReleaseEvent(e);
 }
@@ -619,7 +619,7 @@ void QQuickView::keyReleaseEvent(QKeyEvent *e)
 /*! \reimp */
 void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
-    Q_QML_PROFILE(addEvent(QQmlProfilerService::Mouse));
+    Q_QML_PROFILE(addEvent<QQmlProfilerService::Mouse>());
 
     QQuickWindow::mouseMoveEvent(e);
 }
@@ -627,7 +627,7 @@ void QQuickView::mouseMoveEvent(QMouseEvent *e)
 /*! \reimp */
 void QQuickView::mousePressEvent(QMouseEvent *e)
 {
-    Q_QML_PROFILE(addEvent(QQmlProfilerService::Mouse));
+    Q_QML_PROFILE(addEvent<QQmlProfilerService::Mouse>());
 
     QQuickWindow::mousePressEvent(e);
 }
@@ -635,7 +635,7 @@ void QQuickView::mousePressEvent(QMouseEvent *e)
 /*! \reimp */
 void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
-    Q_QML_PROFILE(addEvent(QQmlProfilerService::Mouse));
+    Q_QML_PROFILE(addEvent<QQmlProfilerService::Mouse>());
 
     QQuickWindow::mouseReleaseEvent(e);
 }

@@ -171,8 +171,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (qsg_render_timing)
         qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QML_PROFILE(sceneGraphFrame(
-            QQmlProfilerService::SceneGraphContextFrame,
+    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphContextFrame, (
             qsg_renderer_timer.nsecsElapsed()));
 #endif
 
@@ -208,8 +207,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     if (qsg_render_timing)
         qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QML_PROFILE(sceneGraphFrame(
-            QQmlProfilerService::SceneGraphContextFrame,
+    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphContextFrame, (
             qsg_renderer_timer.nsecsElapsed()));
 #endif
 

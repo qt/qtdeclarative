@@ -381,8 +381,7 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
                    (int) (qsg_renderer_timer.elapsed()));
         }
 
-        Q_QML_PROFILE(sceneGraphFrame(
-                QQmlProfilerService::SceneGraphTexturePrepare,
+        Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTexturePrepare, (
                 0,  // bind (not relevant)
                 0,  // convert (not relevant)
                 0,  // swizzle (not relevant)
