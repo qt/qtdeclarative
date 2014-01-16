@@ -1464,9 +1464,9 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
         return -1;
 
     for (int currentEnd = currentRanges.size(); currentIt < currentEnd; ++currentIt) {
-        const LifeTimeInterval::Range &currentRange = currentRanges[currentIt];
+        const LifeTimeInterval::Range currentRange = currentRanges.at(currentIt);
         for (int anotherIt = anotherItStart, anotherEnd = anotherRanges.size(); anotherIt < anotherEnd; ++anotherIt) {
-            const LifeTimeInterval::Range &anotherRange = anotherRanges[anotherIt];
+            const LifeTimeInterval::Range anotherRange = anotherRanges.at(anotherIt);
             if (anotherRange.start > currentRange.end)
                 break;
             int intersectPos = intersectionPosition(currentRange, anotherRange);
