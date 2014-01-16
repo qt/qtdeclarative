@@ -308,9 +308,9 @@ public:
         BasicBlock *operator*() const
         {
             if (set.blockNumbers)
-                return set.allBlocks[*numberIt];
+                return set.allBlocks.at(*numberIt);
             else
-                return set.allBlocks[flagIt];
+                return set.allBlocks.at(flagIt);
         }
 
         bool operator==(const const_iterator &other) const
@@ -472,9 +472,8 @@ class DominatorTree {
 #endif // SHOW_SSA
     }
 
-    BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v) {
-        std::vector<BasicBlockIndex> worklist;
-        worklist.reserve(vertex.capacity() / 2);
+    BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v, std::vector<BasicBlockIndex> &worklist) {
+        worklist.clear();
         for (BasicBlockIndex it = v; it != InvalidBasicBlockIndex; it = ancestor[it])
             worklist.push_back(it);
 
@@ -517,6 +516,9 @@ class DominatorTree {
         DFS(nodes.first()->index);
         Q_ASSERT(N == nodes.size()); // fails with unreachable nodes, but those should have been removed before.
 
+        std::vector<BasicBlockIndex> worklist;
+        worklist.reserve(vertex.capacity() / 2);
+
         for (int i = N - 1; i > 0; --i) {
             BasicBlockIndex n = vertex[i];
             BasicBlockIndex p = parent[n];
@@ -527,7 +529,7 @@ class DominatorTree {
                 if (dfnum[v->index] <= dfnum[n])
                     ss = v->index;
                 else
-                    ss = semi[ancestorWithLowestSemi(v->index)];
+                    ss = semi[ancestorWithLowestSemi(v->index, worklist)];
                 if (dfnum[ss] < dfnum[s])
                     s = ss;
             }
@@ -536,7 +538,7 @@ class DominatorTree {
             link(p, n);
             if (bucket.contains(p)) {
                 foreach (BasicBlockIndex v, bucket[p]) {
-                    BasicBlockIndex y = ancestorWithLowestSemi(v);
+                    BasicBlockIndex y = ancestorWithLowestSemi(v, worklist);
                     BasicBlockIndex semi_v = semi[v];
                     if (semi[y] == semi_v)
                         idom[v] = semi_v;
@@ -602,7 +604,7 @@ class DominatorTree {
         std::vector<BasicBlockIndex> worklist;
         worklist.reserve(nodes.size() * 2);
         for (int i = 0, ei = nodes.size(); i != ei; ++i) {
-            BasicBlockIndex nodeIndex = nodes[i]->index;
+            BasicBlockIndex nodeIndex = nodes.at(i)->index;
             worklist.push_back(nodeIndex);
             NodeProgress &np = nodeStatus[nodeIndex];
             np.children = children[nodeIndex];
@@ -633,7 +635,7 @@ class DominatorTree {
             if (np.todo.empty()) {
                 BasicBlockSet &S = DF[node];
                 S.init(nodes);
-                foreach (BasicBlock *y, nodes[node]->out)
+                foreach (BasicBlock *y, nodes.at(node)->out)
                     if (idom[y->index] != node)
                         S.insert(y);
                 foreach (BasicBlockIndex child, np.children) {
@@ -755,6 +757,8 @@ public:
     VariableCollector(Function *function)
         : variablesCanEscape(function->variablesCanEscape())
     {
+        _defsites.reserve(function->tempCount);
+
 #if defined(SHOW_SSA)
         qout << "Variables collected:" << endl;
 #endif // SHOW_SSA
@@ -1019,6 +1023,9 @@ public:
         , tempCount(0)
         , processed(f->basicBlocks)
     {
+        localMapping.reserve(f->tempCount);
+        vregMapping.reserve(f->tempCount);
+        todo.reserve(f->basicBlocks.size());
     }
 
     void run() {
@@ -2466,9 +2473,8 @@ protected:
 
 void splitCriticalEdges(Function *f)
 {
-    const QVector<BasicBlock *> oldBBs = f->basicBlocks;
-
-    foreach (BasicBlock *bb, oldBBs) {
+    for (int i = 0, ei = f->basicBlocks.size(); i != ei; ++i) {
+        BasicBlock *bb = f->basicBlocks[i];
         if (bb->in.size() > 1) {
             for (int inIdx = 0, eInIdx = bb->in.size(); inIdx != eInIdx; ++inIdx) {
                 BasicBlock *inBB = bb->in[inIdx];

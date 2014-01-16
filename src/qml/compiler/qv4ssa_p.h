@@ -93,6 +93,7 @@ public:
     void setFrom(Stmt *from);
     void addRange(int from, int to);
     Ranges ranges() const { return _ranges; }
+    void reserveRanges(int capacity) { _ranges.reserve(capacity); }
 
     int start() const { return _ranges.first().start; }
     int end() const { return _end; }
