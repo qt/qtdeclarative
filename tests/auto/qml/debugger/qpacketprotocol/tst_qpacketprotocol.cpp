@@ -87,7 +87,7 @@ void tst_QPacketProtocol::init()
     m_client->connectToHost(m_server->serverAddress(), m_server->serverPort());
 	
     QVERIFY(m_client->waitForConnected());
-    QVERIFY(m_server->waitForNewConnection(5000));
+    QVERIFY(m_server->waitForNewConnection(10000));
     m_serverConn = m_server->nextPendingConnection();
 }
 
