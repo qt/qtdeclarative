@@ -16,8 +16,6 @@ QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
 
 ANDROID_LIB_DEPENDENCIES = \
     lib/libQt5QuickParticles.so
-ANDROID_LIB_DEPENDENCY_REPLACEMENTS = \
-    "plugins/platforms/android/libqtforandroid.so:plugins/platforms/android/libqtforandroidGL.so"
 MODULE_PLUGIN_TYPES += \
     accessible/libqtaccessiblequick.so
 ANDROID_BUNDLED_FILES += \
