@@ -185,7 +185,7 @@ public:
 
 
 private:
-    bool validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache);
+    bool validateObject(int objectIndex);
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 

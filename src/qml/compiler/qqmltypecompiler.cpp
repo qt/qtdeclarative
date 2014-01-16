@@ -1104,21 +1104,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
 
 bool QQmlPropertyValidator::validate()
 {
-    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
-        if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
-            continue;
-
-        if (isComponent(i))
-            continue;
-
-        QQmlPropertyCache *propertyCache = propertyCaches.value(i);
-        Q_ASSERT(propertyCache);
-
-        if (!validateObject(obj, i, propertyCache))
-            return false;
-    }
-    return true;
+    return validateObject(qmlUnit->indexOfRootObject);
 }
 
 const QQmlImports &QQmlPropertyValidator::imports() const
@@ -1126,8 +1112,18 @@ const QQmlImports &QQmlPropertyValidator::imports() const
     return *compiler->imports();
 }
 
-bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache)
+bool QQmlPropertyValidator::validateObject(int objectIndex)
 {
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
+        return true;
+
+    if (isComponent(objectIndex))
+        return true;
+
+    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+    Q_ASSERT(propertyCache);
+
     QQmlCustomParser *customParser = 0;
     QQmlCompiledData::TypeReference objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
     if (objectType.type)
@@ -1140,6 +1136,11 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
 
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object && !customParser) {
+            if (!validateObject(binding->value.objectIndex))
+                return false;
+        }
+
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
             || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
             if (customParser)
