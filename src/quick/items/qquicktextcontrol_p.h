@@ -160,6 +160,7 @@ public:
 
 #ifndef QT_NO_IM
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
     virtual QMimeData *createMimeDataFromSelection() const;
