@@ -2345,6 +2345,10 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     minimumPointSize or minimumPixelSize property and maximum bound specified
     by either the \l font.pointSize or \l font.pixelSize properties.
 
+    \qml
+    Text { text: "Hello"; fontSizeMode: Text.Fit; minimumPixelSize: 10; font.pixelSize: 72 }
+    \endqml
+
     If the text does not fit within the item bounds with the minimum font size
     the text will be elided as per the \l elide property.
 */
