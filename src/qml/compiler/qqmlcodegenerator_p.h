@@ -155,6 +155,10 @@ struct QmlObject
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
 
+    // caches to quickly find duplicates
+    QSet<QString> propertyNames;
+    QSet<QString> signalNames;
+
     void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const AST::SourceLocation &location = AST::SourceLocation());
 
     void dump(DebugStream &out);
@@ -295,8 +299,6 @@ public:
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
     QmlObject *_object;
-    QSet<QString> _propertyNames;
-    QSet<QString> _signalNames;
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;

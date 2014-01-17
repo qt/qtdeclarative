@@ -303,7 +303,7 @@ bool QQmlCodeGenerator::sanityCheckFunctionNames()
         if (functionNames.contains(name))
             COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
         functionNames.insert(name);
-        if (_signalNames.contains(name))
+        if (_object->signalNames.contains(name))
             COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
 
         if (name.at(0).isUpper())
@@ -327,16 +327,12 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, loc);
 
     QSet<QString> propertyNames;
-    qSwap(_propertyNames, propertyNames);
     QSet<QString> signalNames;
-    qSwap(_signalNames, signalNames);
 
     accept(initializer);
 
     sanityCheckFunctionNames();
 
-    qSwap(_propertyNames, propertyNames);
-    qSwap(_signalNames, signalNames);
     qSwap(_object, obj);
     return objectIndex;
 }
@@ -586,9 +582,9 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             p = p->next;
         }
 
-        if (_signalNames.contains(signalName))
+        if (_object->signalNames.contains(signalName))
             COMPILE_EXCEPTION(node->identifierToken, tr("Duplicate signal name"));
-        _signalNames.insert(signalName);
+        _object->signalNames.insert(signalName);
 
         if (signalName.at(0).isUpper())
             COMPILE_EXCEPTION(node->identifierToken, tr("Signal names cannot begin with an upper case letter"));
@@ -992,10 +988,10 @@ bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameL
 
     // List items are implement by multiple bindings to the same name, so allow duplicates.
     if (!isListItemOnOrAssignment) {
-        if (_propertyNames.contains(name))
+        if (_object->propertyNames.contains(name))
             COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
 
-        _propertyNames.insert(name);
+        _object->propertyNames.insert(name);
     }
 
     if (name.at(0).isUpper())
