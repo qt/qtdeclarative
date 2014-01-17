@@ -642,7 +642,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
-        QQmlType *attachedType = resolvedTypes.value(binding->propertyNameIndex).type;
+        QQmlCompiledData::TypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
+        Q_ASSERT(tr);
+        QQmlType *attachedType = tr->type;
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
         QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
@@ -931,8 +933,9 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     } else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
-        QQmlCompiledData::TypeReference typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
-        QQmlType *type = typeRef.type;
+        QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        QQmlType *type = typeRef->type;
         if (type) {
             instance = type->create();
             if (!instance) {
@@ -950,13 +953,13 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
             customParser = type->customParser();
         } else {
-            Q_ASSERT(typeRef.component);
-            if (typeRef.component->qmlUnit->isSingleton())
+            Q_ASSERT(typeRef->component);
+            if (typeRef->component->qmlUnit->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef.component);
+            QmlObjectCreator subCreator(context, typeRef->component);
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;

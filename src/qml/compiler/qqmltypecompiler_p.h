@@ -81,7 +81,7 @@ struct QQmlTypeCompiler
 
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
-    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes();
+    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
     QList<QtQml::QmlObject*> *qmlObjects();
     int rootObjectIndex() const;
     void setPropertyCaches(const QVector<QQmlPropertyCache *> &caches);
@@ -130,7 +130,7 @@ protected:
     QQmlEnginePrivate *enginePrivate;
     const QList<QtQml::QmlObject*> &qmlObjects;
     const QQmlImports *imports;
-    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
+    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QVector<QByteArray> vmeMetaObjects;
     QVector<QQmlPropertyCache*> propertyCaches;
 };
@@ -165,7 +165,7 @@ protected:
     QHash<int, int> *_objectIndexToIdInScope;
     QList<int> _objectsWithAliases;
 
-    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
+    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     const QVector<QQmlPropertyCache *> propertyCaches;
     QVector<QByteArray> *vmeMetaObjectData;
     QHash<int, int> *objectIndexToIdForRoot;
@@ -190,7 +190,7 @@ private:
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
     const QV4::CompiledData::QmlUnit *qmlUnit;
-    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QByteArray> *customParserData;

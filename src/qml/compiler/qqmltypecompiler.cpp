@@ -80,16 +80,16 @@ bool QQmlTypeCompiler::compile()
     const QHash<int, QQmlTypeData::TypeReference> &resolvedTypes = typeData->resolvedTypeRefs();
     for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
          resolvedType != end; ++resolvedType) {
-        QQmlCompiledData::TypeReference ref;
+        QQmlCompiledData::TypeReference *ref = new QQmlCompiledData::TypeReference;
         if (resolvedType->typeData) {
-            ref.component = resolvedType->typeData->compiledData();
-            ref.component->addref();
+            ref->component = resolvedType->typeData->compiledData();
+            ref->component->addref();
         } else {
-            ref.type = resolvedType->type;
-            Q_ASSERT(ref.type);
+            ref->type = resolvedType->type;
+            Q_ASSERT(ref->type);
         }
-        ref.majorVersion = resolvedType->majorVersion;
-        ref.minorVersion = resolvedType->minorVersion;
+        ref->majorVersion = resolvedType->majorVersion;
+        ref->minorVersion = resolvedType->minorVersion;
         compiledData->resolvedTypes.insert(resolvedType.key(), ref);
     }
 
@@ -175,13 +175,14 @@ bool QQmlTypeCompiler::compile()
         engine->registerInternalCompositeType(compiledData);
     else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
-        QQmlCompiledData::TypeReference typeRef = compiledData->resolvedTypes.value(obj->inheritedTypeNameIndex);
-        if (typeRef.component) {
-            compiledData->metaTypeId = typeRef.component->metaTypeId;
-            compiledData->listMetaTypeId = typeRef.component->listMetaTypeId;
+        QQmlCompiledData::TypeReference *typeRef = compiledData->resolvedTypes.value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        if (typeRef->component) {
+            compiledData->metaTypeId = typeRef->component->metaTypeId;
+            compiledData->listMetaTypeId = typeRef->component->listMetaTypeId;
         } else {
-            compiledData->metaTypeId = typeRef.type->typeId();
-            compiledData->listMetaTypeId = typeRef.type->qListTypeId();
+            compiledData->metaTypeId = typeRef->type->typeId();
+            compiledData->listMetaTypeId = typeRef->type->qListTypeId();
         }
     }
 
@@ -220,7 +221,7 @@ const QQmlImports *QQmlTypeCompiler::imports() const
     return &typeData->imports();
 }
 
-QHash<int, QQmlCompiledData::TypeReference> *QQmlTypeCompiler::resolvedTypes()
+QHash<int, QQmlCompiledData::TypeReference*> *QQmlTypeCompiler::resolvedTypes()
 {
     return &compiledData->resolvedTypes;
 }
@@ -241,6 +242,7 @@ void QQmlTypeCompiler::setPropertyCaches(const QVector<QQmlPropertyCache *> &cac
     compiledData->propertyCaches = caches;
     Q_ASSERT(caches.count() >= parsedQML->indexOfRootObject);
     compiledData->rootPropertyCache = caches.at(parsedQML->indexOfRootObject);
+    compiledData->rootPropertyCache->addref();
 }
 
 const QVector<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
@@ -369,8 +371,9 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
 
     QString typeName = stringAt(obj->inheritedTypeNameIndex);
     if (!typeName.isEmpty()) {
-        QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
-        baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
         Q_ASSERT(baseTypeCache);
     }
 
@@ -395,8 +398,9 @@ bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
     if (!vmeMetaObjects.at(objectIndex).isEmpty())
         return true;
     const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
-    QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
-    QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+    QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+    Q_ASSERT(typeRef);
+    QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
     return createMetaObject(objectIndex, obj, baseTypeCache);
 }
 
@@ -407,7 +411,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
                                                              obj->functions->count + obj->properties->count + obj->qmlSignals->count,
                                                              obj->qmlSignals->count + obj->properties->count);
     propertyCaches[objectIndex] = cache;
-    cache->addref();
 
     struct TypeData {
         QV4::CompiledData::Property::Type dtype;
@@ -776,7 +779,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
             continue;
 
         const QtQml::QmlObject *targetObject = qmlObjects->at(binding->value.objectIndex);
-        QQmlType *targetType = resolvedTypes->value(targetObject->inheritedTypeNameIndex).type;
+        QQmlCompiledData::TypeReference *tr = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
+        Q_ASSERT(tr);
+        QQmlType *targetType = tr->type;
         if (targetType && targetType->metaObject() == &QQmlComponent::staticMetaObject)
             continue;
 
@@ -813,10 +818,10 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
 
         if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
-            QQmlCompiledData::TypeReference typeRef;
-            typeRef.type = componentType;
-            typeRef.majorVersion = componentType->majorVersion();
-            typeRef.minorVersion = componentType->minorVersion();
+            QQmlCompiledData::TypeReference *typeRef = new QQmlCompiledData::TypeReference;
+            typeRef->type = componentType;
+            typeRef->majorVersion = componentType->majorVersion();
+            typeRef->minorVersion = componentType->minorVersion();
             resolvedTypes->insert(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 
@@ -847,10 +852,11 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
 
-        QQmlCompiledData::TypeReference tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
-        if (!tref.type)
+        QQmlCompiledData::TypeReference *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(tref);
+        if (!tref->type)
             continue;
-        if (tref.type->metaObject() != &QQmlComponent::staticMetaObject) {
+        if (tref->type->metaObject() != &QQmlComponent::staticMetaObject) {
             findAndRegisterImplicitComponents(obj, i);
             continue;
         }
@@ -995,12 +1001,13 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
             if (property.isEmpty()) {
                 const QtQml::QmlObject *targetObject = qmlObjects->at(targetObjectIndex);
-                QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
+                QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
+                Q_ASSERT(typeRef);
 
-                if (typeRef.type)
-                    type = typeRef.type->typeId();
+                if (typeRef->type)
+                    type = typeRef->type->typeId();
                 else
-                    type = typeRef.component->metaTypeId;
+                    type = typeRef->component->metaTypeId;
 
                 flags |= QML_ALIAS_FLAG_PTR;
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;
@@ -1125,9 +1132,10 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
     Q_ASSERT(propertyCache);
 
     QQmlCustomParser *customParser = 0;
-    QQmlCompiledData::TypeReference objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
-    if (objectType.type)
-        customParser = objectType.type->customParser();
+    QQmlCompiledData::TypeReference *objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
+    Q_ASSERT(objectType);
+    if (objectType->type)
+        customParser = objectType->type->customParser();
     QList<const QV4::CompiledData::Binding*> customBindings;
 
     PropertyResolver propertyResolver(propertyCache);
@@ -1162,8 +1170,8 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
-                if (objectType.type) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType.type->module()).arg(objectType.majorVersion).arg(objectType.minorVersion));
+                if (objectType->type) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType->type->module()).arg(objectType->majorVersion).arg(objectType->minorVersion));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
                 }

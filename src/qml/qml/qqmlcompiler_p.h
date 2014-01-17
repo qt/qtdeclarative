@@ -129,7 +129,7 @@ public:
     QList<TypeReference> types;
     // --- new compiler:
     // map from name index
-    QHash<int, TypeReference> resolvedTypes;
+    QHash<int, TypeReference*> resolvedTypes;
     // ---
 
     struct V8Program {

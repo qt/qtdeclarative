@@ -86,7 +86,7 @@ private:
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *parentContext;
     QQmlContextData *context;
-    const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
+    const QHash<int, QQmlCompiledData::TypeReference*> resolvedTypes;
     const QVector<QQmlPropertyCache *> propertyCaches;
     const QVector<QByteArray> vmeMetaObjectData;
     QHash<int, int> objectIndexToId;

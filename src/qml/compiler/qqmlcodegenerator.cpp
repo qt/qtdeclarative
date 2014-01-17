@@ -1639,8 +1639,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QString elementName = stringAt(obj->inheritedTypeNameIndex);
         if (elementName.isEmpty())
             continue;
-        QQmlCompiledData::TypeReference &tr = unit->resolvedTypes[obj->inheritedTypeNameIndex];
-        if (tr.type && tr.type->customParser())
+        QQmlCompiledData::TypeReference *tr = unit->resolvedTypes.value(obj->inheritedTypeNameIndex);
+        if (tr && tr->type && tr->type->customParser())
             continue;
         QQmlPropertyCache *cache = unit->propertyCaches.value(objectIndex);
         Q_ASSERT(cache);
@@ -1660,7 +1660,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         // Attached property?
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             QmlObject *attachedObj = parsedQML->objects[binding->value.objectIndex];
-            QQmlType *type = unit->resolvedTypes.value(binding->propertyNameIndex).type;
+            QQmlCompiledData::TypeReference *typeRef = unit->resolvedTypes.value(binding->propertyNameIndex);
+            QQmlType *type = typeRef ? typeRef->type : 0;
             const QMetaObject *attachedType = type ? type->attachedPropertiesType() : 0;
             if (!attachedType)
                 COMPILE_EXCEPTION(binding->location, tr("Non-existent attached object"));
@@ -1703,7 +1704,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
 
-                const QQmlType *type = unit->resolvedTypes.value(obj->inheritedTypeNameIndex).type;
+                QQmlCompiledData::TypeReference *typeRef = unit->resolvedTypes.value(obj->inheritedTypeNameIndex);
+                const QQmlType *type = typeRef ? typeRef->type : 0;
                 if (type) {
                     COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
                 } else {
