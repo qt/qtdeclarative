@@ -1015,6 +1015,14 @@ void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *ta
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
 {
+    if (useFastLookups) {
+        uint lookup = registerIndexedGetterLookup();
+        generateLookupCall(target, lookup, qOffsetOf(QV4::Lookup, indexedGetter),
+                           Assembler::PointerToValue(base),
+                           Assembler::PointerToValue(index));
+        return;
+    }
+
 #if 0 // QT_POINTER_SIZE == 8
     V4IR::Temp *tbase = base->asTemp();
     V4IR::Temp *tindex = index->asTemp();

@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
+
 ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs)
 {
     int i = 0;
@@ -107,6 +108,77 @@ ReturnedValue Lookup::lookup(Object *obj, PropertyAttributes *attrs)
     return Primitive::emptyValue().asReturnedValue();
 }
 
+ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const ValueRef object, const ValueRef index)
+{
+    if (object->isObject() && index->asArrayIndex() < UINT_MAX) {
+        l->indexedGetter = indexedGetterObjectInt;
+        return indexedGetterObjectInt(l, object, index);
+    }
+    return indexedGetterFallback(l, object, index);
+}
+
+ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, const ValueRef index)
+{
+    Q_UNUSED(l);
+    ExecutionContext *ctx = l->engine->currentContext();
+    Scope scope(ctx);
+    uint idx = index->asArrayIndex();
+
+    Scoped<Object> o(scope, object);
+    if (!o) {
+        if (idx < UINT_MAX) {
+            if (String *str = object->asString()) {
+                if (idx >= (uint)str->toQString().length()) {
+                    return Encode::undefined();
+                }
+                const QString s = str->toQString().mid(idx, 1);
+                return scope.engine->newString(s)->asReturnedValue();
+            }
+        }
+
+        if (object->isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
+            return ctx->throwTypeError(message);
+        }
+
+        o = __qmljs_convert_to_object(ctx, object);
+        if (!o) // type error
+            return Encode::undefined();
+    }
+
+    if (idx < UINT_MAX) {
+        if (!o->arrayData->hasAttributes()) {
+            ScopedValue v(scope, o->arrayData->get(idx));
+            if (!v->isEmpty())
+                return v->asReturnedValue();
+        }
+
+        return o->getIndexed(idx);
+    }
+
+    ScopedString name(scope, index->toString(ctx));
+    if (scope.hasException())
+        return Encode::undefined();
+    return o->get(name);
+
+}
+
+
+ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index)
+{
+    uint idx = index->asArrayIndex();
+    if (idx == UINT_MAX || !object->isObject())
+        return indexedGetterGeneric(l, object, index);
+
+    Object *o = object->objectValue();
+    if (o->arrayData && o->arrayData->type == ArrayData::Simple) {
+        if (idx < static_cast<SimpleArrayData *>(o->arrayData)->len)
+            if (!o->arrayData->data[idx].isEmpty())
+                return o->arrayData->data[idx].asReturnedValue();
+    }
+
+    return indexedGetterFallback(l, object, index);
+}
 
 ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
 {

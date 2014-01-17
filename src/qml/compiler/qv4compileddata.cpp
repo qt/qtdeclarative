@@ -101,12 +101,16 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->setter = QV4::Lookup::setterGeneric;
             else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
+            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_IndexedGetter)
+                l->indexedGetter = QV4::Lookup::indexedGetterGeneric;
 
             for (int j = 0; j < QV4::Lookup::Size; ++j)
                 l->classList[j] = 0;
             l->level = -1;
             l->index = UINT_MAX;
             l->name = runtimeStrings[compiledLookups[i].nameIndex].asString();
+            if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_IndexedGetter)
+                l->engine = engine;
         }
     }
 

@@ -55,11 +55,13 @@ namespace QV4 {
 struct Lookup {
     enum { Size = 4 };
     union {
+        ReturnedValue (*indexedGetter)(Lookup *l, const ValueRef object, const ValueRef index);
         ReturnedValue (*getter)(Lookup *l, const ValueRef object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionContext *ctx);
         void (*setter)(Lookup *l, const ValueRef object, const ValueRef v);
     };
     union {
+        ExecutionEngine *engine;
         InternalClass *classList[Size];
         struct {
             void *dummy0;
@@ -71,6 +73,10 @@ struct Lookup {
     int level;
     uint index;
     String *name;
+
+    static ReturnedValue indexedGetterGeneric(Lookup *l, const ValueRef object, const ValueRef index);
+    static ReturnedValue indexedGetterFallback(Lookup *l, const ValueRef object, const ValueRef index);
+    static ReturnedValue indexedGetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index);
 
     static ReturnedValue getterGeneric(Lookup *l, const ValueRef object);
     static ReturnedValue getter0(Lookup *l, const ValueRef object);

@@ -72,6 +72,15 @@ int QV4::Compiler::JSUnitGenerator::getStringId(const QString &string) const
     return stringToId.value(string);
 }
 
+uint QV4::Compiler::JSUnitGenerator::registerIndexedGetterLookup()
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_IndexedGetter;
+    l.nameIndex = 0;
+    lookups << l;
+    return lookups.size() - 1;
+}
+
 uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 {
     CompiledData::Lookup l;
@@ -80,6 +89,7 @@ uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
     lookups << l;
     return lookups.size() - 1;
 }
+
 
 uint QV4::Compiler::JSUnitGenerator::registerSetterLookup(const QString &name)
 {

@@ -72,6 +72,7 @@ public:
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
     int registerString(const QString &str) { return jsGenerator->registerString(str); }
+    uint registerIndexedGetterLookup() { return jsGenerator->registerIndexedGetterLookup(); }
     uint registerGetterLookup(const QString &name) { return jsGenerator->registerGetterLookup(name); }
     uint registerSetterLookup(const QString &name) { return jsGenerator->registerSetterLookup(name); }
     uint registerGlobalGetterLookup(const QString &name) { return jsGenerator->registerGlobalGetterLookup(name); }
