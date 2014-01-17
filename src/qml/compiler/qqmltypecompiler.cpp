@@ -878,9 +878,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         QQmlCompiledData::TypeReference *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
         Q_ASSERT(tref);
-        if (!tref->type)
-            continue;
-        if (tref->type->metaObject() != &QQmlComponent::staticMetaObject) {
+        if (!tref->type || tref->type->metaObject() != &QQmlComponent::staticMetaObject) {
             findAndRegisterImplicitComponents(obj, i);
             continue;
         }
