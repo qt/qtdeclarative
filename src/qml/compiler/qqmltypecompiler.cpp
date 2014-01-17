@@ -87,6 +87,20 @@ bool QQmlTypeCompiler::compile()
         } else {
             ref->type = resolvedType->type;
             Q_ASSERT(ref->type);
+            if (ref->type->containsRevisionedAttributes()) {
+                QQmlError cacheError;
+                ref->typePropertyCache = engine->cache(ref->type,
+                                                       resolvedType->minorVersion,
+                                                       cacheError);
+                if (!ref->typePropertyCache) {
+                    cacheError.setColumn(resolvedType->location.column);
+                    cacheError.setLine(resolvedType->location.line);
+                    recordError(cacheError);
+                    delete ref;
+                    return false;
+                }
+                ref->typePropertyCache->addref();
+            }
         }
         ref->majorVersion = resolvedType->majorVersion;
         ref->minorVersion = resolvedType->minorVersion;
