@@ -58,7 +58,8 @@ PRIVATETESTS += \
     qqmltimer \
     qqmlinstantiator \
     qv4debugger \
-    qqmlenginecleanup
+    qqmlenginecleanup \
+    v4misc
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

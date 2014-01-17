@@ -913,8 +913,9 @@ private:
                 }
             }
             if (!moveFrom) {
+#if defined(QT_NO_DEBUG)
                 Q_UNUSED(lifeTimeHole);
-#if !defined(QT_NO_DEBUG)
+#else
                 Q_ASSERT(!_info->isPhiTarget(it->temp()) || it->isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
@@ -1492,6 +1493,7 @@ int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
 
 static inline void insertSorted(QVector<LifeTimeInterval> &intervals, const LifeTimeInterval &newInterval)
 {
+    newInterval.validate();
     for (int i = 0, ei = intervals.size(); i != ei; ++i) {
         if (LifeTimeInterval::lessThan(newInterval, intervals.at(i))) {
             intervals.insert(i, newInterval);
