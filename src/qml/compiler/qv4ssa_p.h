@@ -51,7 +51,7 @@ class QQmlEnginePrivate;
 namespace QQmlJS {
 namespace V4IR {
 
-class LifeTimeInterval {
+class Q_AUTOTEST_EXPORT LifeTimeInterval {
 public:
     struct Range {
         int start;
@@ -121,6 +121,20 @@ public:
     void dump(QTextStream &out) const;
     static bool lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
     static bool lessThanForTemp(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
+
+    void validate() const {
+#if !defined(QT_NO_DEBUG)
+        // Validate the new range
+        if (_end != Invalid) {
+            Q_ASSERT(!_ranges.isEmpty());
+            foreach (const Range &range, _ranges) {
+                Q_ASSERT(range.start >= 0);
+                Q_ASSERT(range.end >= 0);
+                Q_ASSERT(range.start <= range.end);
+            }
+        }
+#endif
+    }
 };
 
 class Optimizer

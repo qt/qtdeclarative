@@ -248,7 +248,7 @@ struct MemberExpressionResolver
     unsigned int isQObjectResolver; // neede for IR dump helpers
 };
 
-struct Expr {
+struct Q_AUTOTEST_EXPORT Expr {
     Type type;
 
     Expr(): type(UnknownType) {}
@@ -380,7 +380,7 @@ struct Name: Expr {
     virtual void dump(QTextStream &out) const;
 };
 
-struct Temp: Expr {
+struct Q_AUTOTEST_EXPORT Temp: Expr {
     enum Kind {
         Formal = 0,
         ScopedFormal,
