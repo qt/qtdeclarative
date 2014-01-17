@@ -1432,7 +1432,9 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
-    if (QQmlProfilerService::startProfiling()) {
+    if (!QQmlDebugService::isDebuggingEnabled()) {
+        logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
+    } else if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
 
         logger.debug("Profiling started.");

@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the Qt scene graph research project.
+** This file is part of the test suite of the Qt toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -97,6 +97,8 @@ void NodesTest::initTestCase()
 
 void NodesTest::cleanupTestCase()
 {
+    renderContext->invalidate();
+    delete renderContext;
     context->doneCurrent();
     delete context;
     delete surface;

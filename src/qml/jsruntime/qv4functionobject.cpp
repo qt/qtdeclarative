@@ -131,9 +131,6 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     needsActivation = true;
     strictMode = false;
-#ifndef QT_NO_DEBUG
-     assert(scope->next != (ExecutionContext *)0x1);
-#endif
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));

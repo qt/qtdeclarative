@@ -185,10 +185,13 @@ QAccessible::State QAccessibleQuickItem::state() const
     case QAccessible::PageTab:
     case QAccessible::EditableText:
     case QAccessible::SpinBox:
-    case QAccessible::ComboBox:
     case QAccessible::Terminal:
     case QAccessible::ScrollBar:
         state.focusable = true;
+        break;
+    case QAccessible::ComboBox:
+        state.focusable = true;
+        state.editable = item()->property("editable").toBool();
         break;
     default:
         break;

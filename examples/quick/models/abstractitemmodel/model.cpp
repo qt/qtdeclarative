@@ -67,6 +67,7 @@ void AnimalModel::addAnimal(const Animal &animal)
 }
 
 int AnimalModel::rowCount(const QModelIndex & parent) const {
+    Q_UNUSED(parent);
     return m_animals.count();
 }
 

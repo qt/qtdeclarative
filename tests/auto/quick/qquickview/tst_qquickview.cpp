@@ -186,10 +186,6 @@ void tst_QQuickView::resizemodeitem()
     delete view;
 }
 
-static void silentErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
-{
-}
-
 void tst_QQuickView::errors()
 {
     QQuickView *view = new QQuickView;

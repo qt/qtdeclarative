@@ -91,9 +91,6 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
     c->strictMode = function->strictMode;
     c->outer = function->scope;
-#ifndef QT_NO_DEBUG
-    assert(c->outer->next != (ExecutionContext *)0x1);
-#endif
 
     c->activation = 0;
 
@@ -237,9 +234,6 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
 
     strictMode = true;
     outer = function->scope;
-#ifndef QT_NO_DEBUG
-    assert(outer->next != (ExecutionContext *)0x1);
-#endif
 
     activation = qml.getPointer();
 

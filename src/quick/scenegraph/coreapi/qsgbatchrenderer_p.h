@@ -276,6 +276,9 @@ struct Batch
     mutable uint uploadedThisFrame : 1; // solely for debugging purposes
 
     Buffer vbo;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    Buffer ibo;
+#endif
 
     QDataBuffer<DrawSet> drawSets;
 };
@@ -411,7 +414,7 @@ private:
 
 
     void map(Buffer *buffer, int size);
-    void unmap(Buffer *buffer);
+    void unmap(Buffer *buffer, bool isIndexBuf = false);
 
     void buildRenderListsFromScratch();
     void buildRenderListsForTaggedRoots();
@@ -495,6 +498,9 @@ Batch *Renderer::newBatch()
     } else {
         b = new Batch();
         memset(&b->vbo, 0, sizeof(Buffer));
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        memset(&b->ibo, 0, sizeof(Buffer));
+#endif
     }
     b->init();
     return b;

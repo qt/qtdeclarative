@@ -180,6 +180,7 @@ private slots:
     void pixmapCacheData();
     void scenegraphData();
     void profileOnExit();
+    void controlFromJS();
 };
 
 void QQmlProfilerClient::messageReceived(const QByteArray &message)
@@ -483,6 +484,24 @@ void tst_QQmlProfilerService::profileOnExit()
 
     m_client->setTraceState(true);
 
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+}
+
+void tst_QQmlProfilerService::controlFromJS()
+{
+    connect(true, "controlFromJS.qml");
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(false);
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
     // must start with "StartTrace"

@@ -60,7 +60,7 @@ QQmlApplicationEnginePrivate::~QQmlApplicationEnginePrivate()
 void QQmlApplicationEnginePrivate::cleanUp()
 {
     qDeleteAll(objects);
-#ifndef QT_NO_TRANSLATIONS
+#ifndef QT_NO_TRANSLATION
     qDeleteAll(translators);
 #endif
 }
@@ -71,7 +71,7 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(&statusMapper, SIGNAL(mapped(QObject*)),
             q, SLOT(_q_finishLoad(QObject*)));
     q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
-#ifndef QT_NO_TRANSLATIONS
+#ifndef QT_NO_TRANSLATION
     QTranslator* qtTranslator = new QTranslator;
     if (qtTranslator->load(QLatin1String("qt_") + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         QCoreApplication::installTranslator(qtTranslator);
@@ -83,7 +83,7 @@ void QQmlApplicationEnginePrivate::init()
 
 void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
 {
-#ifndef QT_NO_TRANSLATIONS
+#ifndef QT_NO_TRANSLATION
     if (rootFile.scheme() != QLatin1String("file") && rootFile.scheme() != QLatin1String("qrc"))
         return;
 
@@ -96,6 +96,8 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
     } else {
         delete translator;
     }
+#else
+    Q_UNUSED(rootFile)
 #endif
 }
 

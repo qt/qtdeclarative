@@ -793,7 +793,7 @@ void tst_QQuickPathView::dataModel()
     QCOMPARE(window->rootObject()->property("viewCount").toInt(), model.count());
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 14);
 
-    QVERIFY(pathview->currentIndex() == 0);
+    QCOMPARE(pathview->currentIndex(), 0);
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 0));
 
     QQuickText *text = findItem<QQuickText>(pathview, "myText", 4);
@@ -826,7 +826,7 @@ void tst_QQuickPathView::dataModel()
     QTest::qWait(100);
 
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
-    QVERIFY(pathview->currentIndex() == 1);
+    QCOMPARE(pathview->currentIndex(), 1);
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
     text = findItem<QQuickText>(pathview, "myText", 2);
@@ -1876,7 +1876,7 @@ void tst_QQuickPathView::snapToItem()
     if (enforceRange)
         QVERIFY(pathview->currentIndex() != currentIndex);
     else
-        QVERIFY(pathview->currentIndex() == currentIndex);
+        QCOMPARE(pathview->currentIndex(), currentIndex);
 
 }
 
@@ -1908,7 +1908,7 @@ void tst_QQuickPathView::snapOneItem()
     QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
 
     window->rootObject()->setProperty("snapOne", true);
-    QVERIFY(snapModeSpy.count() == 1);
+    QCOMPARE(snapModeSpy.count(), 1);
     QTRY_VERIFY(!pathview->isMoving()); // ensure stable
 
     int currentIndex = pathview->currentIndex();
@@ -1923,9 +1923,9 @@ void tst_QQuickPathView::snapOneItem()
     QCOMPARE(pathview->offset(), fmodf(3.0 + startOffset - 1.0, 3.0));
 
     if (enforceRange)
-        QVERIFY(pathview->currentIndex() == currentIndex+1);
+        QCOMPARE(pathview->currentIndex(), currentIndex + 1);
     else
-        QVERIFY(pathview->currentIndex() == currentIndex);
+        QCOMPARE(pathview->currentIndex(), currentIndex);
 
 }
 
@@ -2061,7 +2061,7 @@ void tst_QQuickPathView::cacheItemCount()
     pathview->setOffset(0);
 
     pathview->setCacheItemCount(3);
-    QVERIFY(pathview->cacheItemCount() == 3);
+    QCOMPARE(pathview->cacheItemCount(), 3);
 
     QQmlIncubationController controller;
     window->engine()->setIncubationController(&controller);

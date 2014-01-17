@@ -178,7 +178,7 @@ void QQmlProfilerService::sendProfilingData()
 bool QQmlProfilerService::startProfilingImpl()
 {
     bool success = false;
-    if (!profilingEnabled()) {
+    if (QQmlDebugService::isDebuggingEnabled() && !profilingEnabled()) {
         setProfilingEnabled(true);
         sendStartedProfilingMessageImpl();
         success = true;
