@@ -3634,12 +3634,20 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
     LifeTimeInterval newInterval = *this;
     newInterval.setSplitFromInterval(true);
 
+    // search where to split the interval
     for (int i = 0, ei = _ranges.size(); i < ei; ++i) {
-        if (_ranges[i].covers(atPosition)) {
-            while (_ranges.size() > i + 1)
-                _ranges.removeLast();
-            while (newInterval._ranges.size() > ei - i)
-                newInterval._ranges.removeFirst();
+        if (_ranges[i].start <= atPosition) {
+            if (_ranges[i].end >= atPosition) {
+                // split happens in the middle of a range. Keep this range in both the old and the
+                // new interval, and correct the end/start later
+                _ranges.resize(i + 1);
+                newInterval._ranges.remove(0, i);
+                break;
+            }
+        } else {
+            // split happens between two ranges.
+            _ranges.resize(i);
+            newInterval._ranges.remove(0, i);
             break;
         }
     }
@@ -3648,14 +3656,37 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
         newInterval._ranges.removeFirst();
 
     if (newStart == Invalid) {
-        newInterval._ranges.clear();
-        newInterval._end = Invalid;
+        // the temp stays inactive for the rest of its lifetime
+        newInterval = LifeTimeInterval();
     } else {
+        // find the first range where the temp will get active again:
+        while (!newInterval._ranges.isEmpty()) {
+            const Range &range = newInterval._ranges.first();
+            if (range.start > newStart) {
+                // The split position is before the start of the range. Either we managed to skip
+                // over the correct range, or we got an invalid split request. Either way, this
+                // Should Never Happen <TM>.
+                Q_ASSERT(range.start > newStart);
+                return LifeTimeInterval();
+            } else if (range.start <= newStart && range.end >= newStart) {
+                // yay, we found the range that should be the new first range in the new interval!
+                break;
+            } else {
+                // the temp stays inactive for this interval, so remove it.
+                newInterval._ranges.removeFirst();
+            }
+        }
+        Q_ASSERT(!newInterval._ranges.isEmpty());
         newInterval._ranges.first().start = newStart;
         _end = newStart;
     }
 
-    _ranges.last().end = atPosition;
+    // if we're in the middle of a range, set the end to the split position
+    if (_ranges.last().end > atPosition)
+        _ranges.last().end = atPosition;
+
+    validate();
+    newInterval.validate();
 
     return newInterval;
 }
