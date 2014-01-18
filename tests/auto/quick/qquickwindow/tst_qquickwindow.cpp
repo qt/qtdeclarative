@@ -341,6 +341,8 @@ private slots:
 
     void requestActivate();
 
+    void testWindowVisibilityOrder();
+
     void blockClosing();
 
     void crashWhenHoverItemDeleted();
@@ -1589,7 +1591,8 @@ void tst_qquickwindow::requestActivate()
     QVERIFY(windows.at(0)->objectName() == "window2");
 
     window1->show();
-    window1->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(windows.at(0))); //We wait till window 2 comes up
+    window1->requestActivate();                 // and then transfer the focus to window1
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == window1);
     QVERIFY(window1->isActive() == true);
@@ -1615,6 +1618,54 @@ void tst_qquickwindow::requestActivate()
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == windows.at(0));
     QVERIFY(windows.at(0)->isActive());
+    delete window1;
+}
+
+void tst_qquickwindow::testWindowVisibilityOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("windoworder.qml"));
+    QQuickWindow *window1 = qobject_cast<QQuickWindow *>(component.create());
+    QQuickWindow *window2 = window1->property("win2").value<QQuickWindow*>();
+    QQuickWindow *window3 = window1->property("win3").value<QQuickWindow*>();
+    QQuickWindow *window4 = window1->property("win4").value<QQuickWindow*>();
+    QQuickWindow *window5 = window1->property("win5").value<QQuickWindow*>();
+    QVERIFY(window1);
+    QVERIFY(window2);
+    QVERIFY(window3);
+
+    QTest::qWaitForWindowExposed(window3);
+
+    QWindowList windows = QGuiApplication::topLevelWindows();
+    QTRY_COMPARE(windows.size(), 5);
+
+    QVERIFY(window3 == QGuiApplication::focusWindow());
+    QVERIFY(window1->isActive());
+    QVERIFY(window2->isActive());
+    QVERIFY(window3->isActive());
+
+    //Test if window4 is shown 2 seconds after the application startup
+    //with window4 visible window5 (transient child) should also become visible
+    QVERIFY(!window4->isVisible());
+    QVERIFY(!window5->isVisible());
+
+    window4->setVisible(true);
+
+    QTest::qWaitForWindowExposed(window5);
+    QVERIFY(window4->isVisible());
+    QVERIFY(window5->isVisible());
+    window4->hide();
+    window5->hide();
+
+    window3->hide();
+#if defined(Q_OS_OSX)
+    QEXPECT_FAIL("","Focus is not transferred to transient parent on window close (QTBUG-33423)", Continue);
+#endif
+    QTRY_COMPARE(window2 == QGuiApplication::focusWindow(), true);
+
+    window2->hide();
+    QTRY_COMPARE(window1 == QGuiApplication::focusWindow(), true);
 }
 
 void tst_qquickwindow::blockClosing()

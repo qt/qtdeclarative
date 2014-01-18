@@ -14,6 +14,7 @@ OTHER_FILES += \
     data/active.qml \
     data/AnimationsWhileHidden.qml \
     data/Headless.qml \
-    data/showHideAnimate.qml
+    data/showHideAnimate.qml \
+    data/windoworder.qml
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

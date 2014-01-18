@@ -73,7 +73,7 @@ public:
     void setVisible(bool visible) {
         if (!m_complete)
             m_visible = visible;
-        else
+        else if (!transientParent() || transientParent()->isVisible())
             QQuickWindow::setVisible(visible);
     }
 
@@ -101,6 +101,24 @@ protected:
 
     void componentComplete() {
         m_complete = true;
+        if (transientParent() && !transientParent()->isVisible()) {
+            connect(transientParent(), &QQuickWindow::visibleChanged, this,
+                    &QQuickWindowQmlImpl::setWindowVisibility, Qt::QueuedConnection);
+        } else {
+            setWindowVisibility();
+        }
+    }
+
+private Q_SLOTS:
+    void setWindowVisibility()
+    {
+        if (transientParent() && !transientParent()->isVisible())
+            return;
+
+        if (sender()) {
+            disconnect(transientParent(), &QWindow::visibleChanged, this,
+                       &QQuickWindowQmlImpl::setWindowVisibility);
+        }
 
         // We have deferred window creation until we have the full picture of what
         // the user wanted in terms of window state, geometry, visibility, etc.
