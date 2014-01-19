@@ -588,8 +588,7 @@ void QmlObjectCreator::setupBindings()
     qSwap(_currentList, savedList);
 
     QQmlPropertyData *property = 0;
-    bool defaultPropertyQueried = false;
-    QQmlPropertyData *defaultProperty = 0;
+    QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
     QString id = stringAt(_compiledObject->idIndex);
     if (!id.isEmpty()) {
@@ -615,13 +614,8 @@ void QmlObjectCreator::setupBindings()
         if (!property || (i > 0 && (binding - 1)->propertyNameIndex != binding->propertyNameIndex)) {
             if (!name.isEmpty())
                 property = _propertyCache->property(name, _qobject, context);
-            else {
-                if (!defaultPropertyQueried) {
-                    defaultProperty = _propertyCache->defaultProperty();
-                    defaultPropertyQueried = true;
-                }
+            else
                 property = defaultProperty;
-            }
 
             if (property && property->isQList()) {
                 void *argv[1] = { (void*)&_currentList };

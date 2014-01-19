@@ -371,7 +371,7 @@ struct Object
     // it will be the name of the attached type.
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
-    quint32 indexOfDefaultProperty;
+    qint32 indexOfDefaultProperty; // -1 means no default property declared in this object
     quint32 nFunctions;
     quint32 offsetToFunctions;
     quint32 nProperties;

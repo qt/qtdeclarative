@@ -793,8 +793,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
 
     PropertyResolver propertyResolver(propertyCache);
 
-    bool defaultPropertyQueried = false;
-    QQmlPropertyData *defaultProperty = 0;
+    QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
     for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
@@ -815,10 +814,6 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
             bool notInRevision = false;
             pd = propertyResolver.property(propertyName, &notInRevision);
         } else {
-            if (!defaultPropertyQueried) {
-                defaultProperty = propertyCache->defaultProperty();
-                defaultPropertyQueried = true;
-            }
             pd = defaultProperty;
         }
         if (!pd || !pd->isQObject())
@@ -1182,7 +1177,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
 
     PropertyResolver propertyResolver(propertyCache);
 
-    QQmlPropertyData *defaultProperty = propertyCache->defaultProperty();
+    QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
