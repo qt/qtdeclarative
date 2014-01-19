@@ -410,7 +410,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     }
 
     for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next)
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object)
+        if (binding->type == QV4::CompiledData::Binding::Type_Object)
             if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
                 return false;
 
@@ -789,7 +789,8 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
 void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex)
 {
     QQmlPropertyCache *propertyCache = propertyCaches.value(objectIndex);
-    Q_ASSERT(propertyCache);
+    if (!propertyCache)
+        return;
 
     PropertyResolver propertyResolver(propertyCache);
 

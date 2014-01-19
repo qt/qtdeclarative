@@ -1640,7 +1640,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (customParser && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
             continue;
         QQmlPropertyCache *cache = unit->propertyCaches.value(objectIndex);
-        Q_ASSERT(cache);
+        if (!cache)
+            continue;
         if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
             return false;
     }
