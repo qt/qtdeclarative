@@ -80,6 +80,7 @@ public:
     static QList<QString> qmlTypeNames();
     static QList<QQmlType*> qmlTypes();
     static QList<QQmlType*> qmlSingletonTypes();
+    static QList<QQmlType*> qmlAllTypes();
 
     static QQmlType *qmlType(const QString &qualifiedName, int, int);
     static QQmlType *qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);

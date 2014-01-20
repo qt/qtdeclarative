@@ -182,6 +182,20 @@ QByteArray convertToId(const QMetaObject *mo)
     return className;
 }
 
+
+// Collect all metaobjects for types registered with qmlRegisterType() without parameters
+void collectReachableMetaObjectsWithoutQmlName( QSet<const QMetaObject *>& metas ) {
+    foreach (const QQmlType *ty, QQmlMetaType::qmlAllTypes()) {
+        if ( ! metas.contains(ty->metaObject()) ) {
+            if (!ty->isComposite()) {
+                collectReachableMetaObjects(ty, &metas);
+            } else {
+                qmlTypesByCompositeName[ty->elementName()] = ty;
+            }
+       }
+    }
+}
+
 QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                                                       QSet<const QMetaObject *> &noncreatables,
                                                       QSet<const QMetaObject *> &singletons,
@@ -297,6 +311,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             }
         }
     }
+
+    collectReachableMetaObjectsWithoutQmlName(metas);
 
     return metas;
 }
