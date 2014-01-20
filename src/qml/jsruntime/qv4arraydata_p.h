@@ -55,7 +55,8 @@ struct ArrayData;
 struct ArrayVTable
 {
     uint type;
-    void (*freeData)(ArrayData *d);
+    void (*destroy)(ArrayData *d);
+    void (*markObjects)(ArrayData *, ExecutionEngine *e);
     void (*reserve)(ArrayData *d, uint n);
     ReturnedValue (*get)(const ArrayData *d, uint index);
     bool (*put)(ArrayData *d, uint index, ValueRef value);
@@ -126,8 +127,12 @@ struct Q_QML_EXPORT ArrayData
     }
 
 
-    inline void free() {
-        vtable->freeData(this);
+    inline void destroy() {
+        vtable->destroy(this);
+    }
+
+    inline void markObjects(ExecutionEngine *e) {
+        vtable->markObjects(this, e);
     }
 
     inline void push_front(SafeValue *values, uint nValues) {
@@ -164,8 +169,6 @@ struct Q_QML_EXPORT ArrayData
     static void sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
     static uint append(Object *obj, const ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
-    void markObjects(ExecutionEngine *e);
-
 };
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
@@ -182,7 +185,9 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void getHeadRoom(ArrayData *d);
     static void reserve(ArrayData *d, uint n);
 
-    static void freeData(ArrayData *d);
+    static void destroy(ArrayData *d);
+    static void markObjects(ArrayData *d, ExecutionEngine *e);
+
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(ArrayData *d, uint index, ValueRef value);
     static bool putArray(ArrayData *d, uint index, SafeValue *values, uint n);
@@ -211,7 +216,9 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint allocate(ArrayData *d, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
-    static void freeData(ArrayData *d);
+    static void destroy(ArrayData *d);
+    static void markObjects(ArrayData *d, ExecutionEngine *e);
+
     static void reserve(ArrayData *d, uint n);
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(ArrayData *d, uint index, ValueRef value);

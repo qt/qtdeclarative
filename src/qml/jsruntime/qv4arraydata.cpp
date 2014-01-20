@@ -47,7 +47,8 @@ using namespace QV4;
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
     SimpleArrayData::Simple,
-    SimpleArrayData::freeData,
+    SimpleArrayData::destroy,
+    SimpleArrayData::markObjects,
     SimpleArrayData::reserve,
     SimpleArrayData::get,
     SimpleArrayData::put,
@@ -64,7 +65,8 @@ const ArrayVTable SimpleArrayData::static_vtbl =
 const ArrayVTable SparseArrayData::static_vtbl =
 {
     ArrayData::Sparse,
-    SparseArrayData::freeData,
+    SparseArrayData::destroy,
+    SparseArrayData::markObjects,
     SparseArrayData::reserve,
     SparseArrayData::get,
     SparseArrayData::put,
@@ -139,13 +141,20 @@ void ArrayData::ensureAttributes()
 }
 
 
-void SimpleArrayData::freeData(ArrayData *d)
+void SimpleArrayData::destroy(ArrayData *d)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(d);
     delete [] (dd->data - dd->offset);
     if (dd->attrs)
         delete [] (dd->attrs - dd->offset);
     delete dd;
+}
+
+void SimpleArrayData::markObjects(ArrayData *d, ExecutionEngine *e)
+{
+    uint l = static_cast<SimpleArrayData *>(d)->len;
+    for (uint i = 0; i < l; ++i)
+        d->data[i].mark(e);
 }
 
 ReturnedValue SimpleArrayData::get(const ArrayData *d, uint index)
@@ -289,13 +298,20 @@ void SparseArrayData::free(ArrayData *d, uint idx)
 }
 
 
-void SparseArrayData::freeData(ArrayData *d)
+void SparseArrayData::destroy(ArrayData *d)
 {
     delete static_cast<SparseArrayData *>(d)->sparse;
     delete [] d->data;
     if (d->attrs)
         delete [] d->attrs;
     delete d;
+}
+
+void SparseArrayData::markObjects(ArrayData *d, ExecutionEngine *e)
+{
+    uint l = d->alloc;
+    for (uint i = 0; i < l; ++i)
+        d->data[i].mark(e);
 }
 
 void SparseArrayData::reserve(ArrayData *d, uint n)
@@ -453,7 +469,7 @@ ReturnedValue SparseArrayData::pop_front(ArrayData *d)
     ReturnedValue v;
     if (idx != UINT_MAX) {
         v = d->data[idx].asReturnedValue();
-        SparseArrayData::free(d, idx);
+        free(d, idx);
     } else {
         v = Encode::undefined();
     }
@@ -563,13 +579,6 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
     return reinterpret_cast<Property *>(o->arrayData->data + n->value);
 }
 
-void ArrayData::markObjects(ExecutionEngine *e)
-{
-    uint l = (type == Simple) ? static_cast<SimpleArrayData *>(this)->len : alloc;
-    for (uint i = 0; i < l; ++i)
-        data[i].mark(e);
-}
-
 void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint len)
 {
     if (!len)
@@ -637,7 +646,7 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
 
         }
 
-        sparse->ArrayData::free();
+        sparse->ArrayData::destroy();
     } else {
         SimpleArrayData *d = static_cast<SimpleArrayData *>(thisObject->arrayData);
         if (len > d->len)

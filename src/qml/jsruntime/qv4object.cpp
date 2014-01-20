@@ -92,7 +92,7 @@ Object::~Object()
     if (memberData != inlineProperties)
         delete [] memberData;
     if (arrayData)
-        arrayData->free();
+        arrayData->destroy();
     _data = 0;
 }
 
