@@ -103,19 +103,7 @@ static uint toArrayIndex(const char *ch, const char *end, bool *ok)
 
 const ObjectVTable String::static_vtbl =
 {
-    {
-        String::IsExecutionContext,
-        String::IsString,
-        String::IsObject,
-        String::IsFunctionObject,
-        String::IsErrorObject,
-        0,
-        String::MyType,
-        "String",
-        destroy,
-        markObjects,
-        isEqualTo
-    },
+    DEFINE_MANAGED_VTABLE_INT(String),
     0,
     0,
     0 /*collectDeletables*/,

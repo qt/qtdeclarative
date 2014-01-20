@@ -51,11 +51,11 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     , context(context)
     , fullyCreated(false)
 {
-    setArrayType(ArrayData::Complex);
-
     ExecutionEngine *v4 = context->engine;
     Scope scope(v4);
     ScopedObject protectThis(scope, this);
+
+    setArrayType(ArrayData::Complex);
 
     if (context->strictMode) {
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);

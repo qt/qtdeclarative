@@ -91,8 +91,6 @@ Object::~Object()
 {
     if (memberData != inlineProperties)
         delete [] memberData;
-    if (arrayData)
-        arrayData->destroy();
     _data = 0;
 }
 
@@ -235,7 +233,7 @@ void Object::markObjects(Managed *that, ExecutionEngine *e)
         }
     }
     if (o->arrayData)
-        o->arrayData->markObjects(e);
+        o->arrayData->mark(e);
 }
 
 void Object::ensureMemberIndex(uint idx)
@@ -1111,7 +1109,7 @@ void Object::copyArrayData(Object *other)
         Q_ASSERT(!arrayData && other->arrayData);
         if (other->arrayType() == ArrayData::Sparse) {
             SparseArrayData *od = static_cast<SparseArrayData *>(other->arrayData);
-            SparseArrayData *dd = new SparseArrayData;
+            SparseArrayData *dd = new (engine()->memoryManager) SparseArrayData(engine());
             dd->type = ArrayData::Sparse;
             dd->sparse = new SparseArray(*od->sparse);
             dd->freeList = od->freeList;
@@ -1162,7 +1160,7 @@ void Object::initSparseArray()
     if (arrayType() == ArrayData::Sparse)
         return;
 
-    SparseArrayData *data = new SparseArrayData;
+    SparseArrayData *data = new (engine()->memoryManager) SparseArrayData(engine());
     data->type = ArrayData::Sparse;
     data->sparse = new SparseArray;
     if (!arrayData) {
@@ -1178,7 +1176,7 @@ void Object::initSparseArray()
     data->alloc = simple->alloc;
     simple->data = 0;
     simple->attrs = 0;
-    delete simple;
+    // ### explicitly free old data? delete simple;
     arrayData = data;
 
     uint *lastFree = &data->freeList;

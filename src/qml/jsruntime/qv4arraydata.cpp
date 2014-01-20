@@ -46,9 +46,8 @@ using namespace QV4;
 
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
+    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData),
     SimpleArrayData::Simple,
-    SimpleArrayData::destroy,
-    SimpleArrayData::markObjects,
     SimpleArrayData::reserve,
     SimpleArrayData::get,
     SimpleArrayData::put,
@@ -64,9 +63,8 @@ const ArrayVTable SimpleArrayData::static_vtbl =
 
 const ArrayVTable SparseArrayData::static_vtbl =
 {
+    DEFINE_MANAGED_VTABLE_INT(SparseArrayData),
     ArrayData::Sparse,
-    SparseArrayData::destroy,
-    SparseArrayData::markObjects,
     SparseArrayData::reserve,
     SparseArrayData::get,
     SparseArrayData::put,
@@ -141,20 +139,20 @@ void ArrayData::ensureAttributes()
 }
 
 
-void SimpleArrayData::destroy(ArrayData *d)
+void SimpleArrayData::destroy(Managed *d)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(d);
     delete [] (dd->data - dd->offset);
     if (dd->attrs)
         delete [] (dd->attrs - dd->offset);
-    delete dd;
 }
 
-void SimpleArrayData::markObjects(ArrayData *d, ExecutionEngine *e)
+void SimpleArrayData::markObjects(Managed *d, ExecutionEngine *e)
 {
-    uint l = static_cast<SimpleArrayData *>(d)->len;
+    SimpleArrayData *dd = static_cast<SimpleArrayData *>(d);
+    uint l = dd->len;
     for (uint i = 0; i < l; ++i)
-        d->data[i].mark(e);
+        dd->data[i].mark(e);
 }
 
 ReturnedValue SimpleArrayData::get(const ArrayData *d, uint index)
@@ -298,20 +296,21 @@ void SparseArrayData::free(ArrayData *d, uint idx)
 }
 
 
-void SparseArrayData::destroy(ArrayData *d)
+void SparseArrayData::destroy(Managed *d)
 {
-    delete static_cast<SparseArrayData *>(d)->sparse;
-    delete [] d->data;
-    if (d->attrs)
-        delete [] d->attrs;
-    delete d;
+    SparseArrayData *dd = static_cast<SparseArrayData *>(d);
+    delete dd->sparse;
+    delete [] dd->data;
+    if (dd->attrs)
+        delete [] dd->attrs;
 }
 
-void SparseArrayData::markObjects(ArrayData *d, ExecutionEngine *e)
+void SparseArrayData::markObjects(Managed *d, ExecutionEngine *e)
 {
-    uint l = d->alloc;
+    SparseArrayData *dd = static_cast<SparseArrayData *>(d);
+    uint l = dd->alloc;
     for (uint i = 0; i < l; ++i)
-        d->data[i].mark(e);
+        dd->data[i].mark(e);
 }
 
 void SparseArrayData::reserve(ArrayData *d, uint n)
@@ -603,9 +602,9 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
         if (!sparse->sparse->nEntries())
             return;
 
-        SimpleArrayData *d = new SimpleArrayData;
+        SimpleArrayData *d = new (context->engine->memoryManager) SimpleArrayData(context->engine);
         thisObject->arrayData = d;
-        d->vtable->reserve(d, sparse->sparse->nEntries());
+        d->vtable()->reserve(d, sparse->sparse->nEntries());
 
         SparseArrayNode *n = sparse->sparse->begin();
         uint i = 0;
@@ -645,8 +644,7 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
             }
 
         }
-
-        sparse->ArrayData::destroy();
+        // ### explicitly delete sparse
     } else {
         SimpleArrayData *d = static_cast<SimpleArrayData *>(thisObject->arrayData);
         if (len > d->len)

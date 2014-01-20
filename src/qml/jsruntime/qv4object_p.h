@@ -204,12 +204,12 @@ public:
 
     inline void arrayReserve(uint n) {
         arrayCreate();
-        arrayData->vtable->reserve(arrayData, n);
+        arrayData->vtable()->reserve(arrayData, n);
     }
 
     void arrayCreate() {
         if (!arrayData)
-            arrayData = new SimpleArrayData;
+            arrayData = new (engine()->memoryManager) SimpleArrayData(engine());
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif
@@ -370,7 +370,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     } else if (index > 0x1000 && index > 2*arrayData->alloc) {
         initSparseArray();
     } else {
-        arrayData->vtable->reserve(arrayData, index + 1);
+        arrayData->vtable()->reserve(arrayData, index + 1);
     }
     arrayData->setAttributes(index, attributes);
     Property *pd = ArrayData::insert(this, index, attributes.isAccessor());

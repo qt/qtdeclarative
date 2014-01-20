@@ -50,13 +50,20 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+#define V4_ARRAYDATA \
+    public: \
+        Q_MANAGED_CHECK \
+        static const QV4::ArrayVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        template <typename T> \
+        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+
 struct ArrayData;
 
 struct ArrayVTable
 {
+    ManagedVTable managedVTable;
     uint type;
-    void (*destroy)(ArrayData *d);
-    void (*markObjects)(ArrayData *, ExecutionEngine *e);
     void (*reserve)(ArrayData *d, uint n);
     ReturnedValue (*get)(const ArrayData *d, uint index);
     bool (*put)(ArrayData *d, uint index, ValueRef value);
@@ -71,10 +78,10 @@ struct ArrayVTable
 };
 
 
-struct Q_QML_EXPORT ArrayData
+struct Q_QML_EXPORT ArrayData : public Managed
 {
-    ArrayData()
-        : vtable(0)
+    ArrayData(InternalClass *ic)
+        : Managed(ic)
         , alloc(0)
         , type(0)
         , attrs(0)
@@ -89,18 +96,18 @@ struct Q_QML_EXPORT ArrayData
         Custom = 3
     };
 
-    const ArrayVTable *vtable;
     uint alloc;
     uint type;
     PropertyAttributes *attrs;
     SafeValue *data;
 
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
     bool isSparse() const { return this && type == Sparse; }
 
     uint length() const {
         if (!this)
             return 0;
-        return vtable->length(this);
+        return vtable()->length(this);
     }
 
     bool hasAttributes() const {
@@ -109,60 +116,52 @@ struct Q_QML_EXPORT ArrayData
     void ensureAttributes();
     PropertyAttributes attributes(int i) const {
         Q_ASSERT(this);
-        return attrs ? vtable->attribute(this, i) : Attr_Data;
+        return attrs ? vtable()->attribute(this, i) : Attr_Data;
     }
     void setAttributes(uint i, PropertyAttributes a) {
         Q_ASSERT(this);
         if (attrs || a != Attr_Data) {
             ensureAttributes();
             a.resolve();
-            vtable->setAttribute(this, i, a);
+            vtable()->setAttribute(this, i, a);
         }
     }
 
     bool isEmpty(uint i) const {
         if (!this)
             return true;
-        return (vtable->get(this, i) == Primitive::emptyValue().asReturnedValue());
+        return (vtable()->get(this, i) == Primitive::emptyValue().asReturnedValue());
     }
 
-
-    inline void destroy() {
-        vtable->destroy(this);
-    }
-
-    inline void markObjects(ExecutionEngine *e) {
-        vtable->markObjects(this, e);
-    }
 
     inline void push_front(SafeValue *values, uint nValues) {
-        vtable->push_front(this, values, nValues);
+        vtable()->push_front(this, values, nValues);
     }
     inline ReturnedValue pop_front() {
-        return vtable->pop_front(this);
+        return vtable()->pop_front(this);
     }
     inline uint push_back(uint l, uint n, SafeValue *values) {
-        vtable->putArray(this, l, values, n);
+        vtable()->putArray(this, l, values, n);
         return length();
     }
     inline bool deleteIndex(uint index) {
-        return vtable->del(this, index);
+        return vtable()->del(this, index);
     }
     inline uint truncate(uint newLen) {
         if (!this)
             return newLen;
-        return vtable->truncate(this, newLen);
+        return vtable()->truncate(this, newLen);
     }
     bool put(uint index, ValueRef value) {
-        return vtable->put(this, index, value);
+        return vtable()->put(this, index, value);
     }
     bool put(uint index, SafeValue *values, uint n) {
-        return vtable->putArray(this, index, values, n);
+        return vtable()->putArray(this, index, values, n);
     }
     ReturnedValue get(uint i) const {
         if (!this)
             return Primitive::emptyValue().asReturnedValue();
-        return vtable->get(this, i);
+        return vtable()->get(this, i);
     }
     inline Property *getProperty(uint index) const;
 
@@ -173,11 +172,13 @@ struct Q_QML_EXPORT ArrayData
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 {
-    SimpleArrayData()
-        : ArrayData()
+    V4_ARRAYDATA
+
+    SimpleArrayData(ExecutionEngine *engine)
+        : ArrayData(engine->emptyClass)
         , len(0)
         , offset(0)
-    { vtable = &static_vtbl; }
+    { setVTable(staticVTable()); }
 
     uint len;
     uint offset;
@@ -185,8 +186,8 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void getHeadRoom(ArrayData *d);
     static void reserve(ArrayData *d, uint n);
 
-    static void destroy(ArrayData *d);
-    static void markObjects(ArrayData *d, ExecutionEngine *e);
+    static void destroy(Managed *d);
+    static void markObjects(Managed *d, ExecutionEngine *e);
 
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(ArrayData *d, uint index, ValueRef value);
@@ -198,17 +199,17 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static ReturnedValue pop_front(ArrayData *d);
     static uint truncate(ArrayData *d, uint newLen);
     static uint length(const ArrayData *d);
-
-    static const ArrayVTable static_vtbl;
-
 };
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
 {
-    SparseArrayData()
-        : freeList(0)
+    V4_ARRAYDATA
+
+    SparseArrayData(ExecutionEngine *engine)
+        : ArrayData(engine->emptyClass)
+        , freeList(0)
         , sparse(0)
-    { vtable = &static_vtbl; }
+    { setVTable(staticVTable()); }
 
     uint freeList;
     SparseArray *sparse;
@@ -216,8 +217,8 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint allocate(ArrayData *d, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
-    static void destroy(ArrayData *d);
-    static void markObjects(ArrayData *d, ExecutionEngine *e);
+    static void destroy(Managed *d);
+    static void markObjects(Managed *d, ExecutionEngine *e);
 
     static void reserve(ArrayData *d, uint n);
     static ReturnedValue get(const ArrayData *d, uint index);
@@ -230,8 +231,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static ReturnedValue pop_front(ArrayData *d);
     static uint truncate(ArrayData *d, uint newLen);
     static uint length(const ArrayData *d);
-
-    static const ArrayVTable static_vtbl;
 };
 
 

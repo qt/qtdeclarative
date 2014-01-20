@@ -97,7 +97,8 @@ struct ManagedVTable
     uint isObject : 1;
     uint isFunctionObject : 1;
     uint isErrorObject : 1;
-    uint unused : 19;
+    uint isArrayData : 1;
+    uint unused : 18;
     uint type : 8;
     const char *className;
     void (*destroy)(Managed *);
@@ -125,39 +126,31 @@ struct ObjectVTable
     void (*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
-#define DEFINE_MANAGED_VTABLE(classname) \
-const QV4::ManagedVTable classname::static_vtbl =    \
+#define DEFINE_MANAGED_VTABLE_INT(classname) \
 {     \
     classname::IsExecutionContext,   \
     classname::IsString,   \
     classname::IsObject,   \
     classname::IsFunctionObject,   \
     classname::IsErrorObject,   \
+    classname::IsArrayData,   \
     0,                                          \
     classname::MyType,                          \
     #classname,                                 \
     destroy,                                    \
     markObjects,                                \
-    isEqualTo,                                  \
+    isEqualTo                                  \
 }
+
+
+#define DEFINE_MANAGED_VTABLE(classname) \
+const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname)
 
 
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    { \
-        classname::IsExecutionContext,   \
-        classname::IsString,   \
-        classname::IsObject,   \
-        classname::IsFunctionObject,   \
-        classname::IsErrorObject,   \
-        0,                                          \
-        classname::MyType,                          \
-        #classname,                                 \
-        destroy,                                    \
-        markObjects,                                \
-        isEqualTo,                                  \
-    }, \
+    DEFINE_MANAGED_VTABLE_INT(classname), \
     call,                                       \
     construct,                                  \
     0,                                          \
@@ -178,19 +171,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 #define DEFINE_MANAGED_VTABLE_WITH_NAME(classname, name) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {                                               \
-    { \
-        classname::IsExecutionContext,   \
-        classname::IsString,   \
-        classname::IsObject,   \
-        classname::IsFunctionObject,   \
-        classname::IsErrorObject,   \
-        0,                                          \
-        classname::MyType,                          \
-        #name,                                 \
-        destroy,                                    \
-        markObjects,                                \
-        isEqualTo,                                  \
-    }, \
+    DEFINE_MANAGED_VTABLE_INT(name), \
     call,                                       \
     construct,                                  \
     0,                                          \
@@ -211,19 +192,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 #define DEFINE_MANAGED_VTABLE_WITH_DELETABLES(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {                                               \
-    { \
-        classname::IsExecutionContext,   \
-        classname::IsString,   \
-        classname::IsObject,   \
-        classname::IsFunctionObject,   \
-        classname::IsErrorObject,   \
-        0,                                          \
-        classname::MyType,                          \
-        #classname,                                 \
-        destroy,                                    \
-        markObjects,                                \
-        isEqualTo,                                  \
-    }, \
+    DEFINE_MANAGED_VTABLE_INT(classname), \
     call,                                       \
     construct,                                  \
     collectDeletables,                          \
@@ -249,7 +218,8 @@ struct Q_QML_EXPORT Managed
         IsString = false,
         IsObject = false,
         IsFunctionObject = false,
-        IsErrorObject = false
+        IsErrorObject = false,
+        IsArrayData = false
     };
 private:
     void *operator new(size_t);

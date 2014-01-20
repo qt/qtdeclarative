@@ -51,20 +51,7 @@
 
 using namespace QV4;
 
-const ManagedVTable ExecutionContext::static_vtbl =
-{
-    ExecutionContext::IsExecutionContext,
-    ExecutionContext::IsString,
-    ExecutionContext::IsObject,
-    ExecutionContext::IsFunctionObject,
-    ExecutionContext::IsErrorObject,
-    0,
-    ExecutionContext::MyType,
-    "ExecutionContext",
-    destroy,
-    markObjects,
-    isEqualTo
-};
+DEFINE_MANAGED_VTABLE(ExecutionContext);
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
