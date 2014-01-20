@@ -90,10 +90,11 @@ struct ManagedVTable
     uint isErrorObject : 1;
     uint unused : 19;
     uint type : 8;
+    const char *className;
+    void (*destroy)(Managed *);
+    void (*markObjects)(Managed *, ExecutionEngine *e);
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
-    void (*markObjects)(Managed *, ExecutionEngine *e);
-    void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
@@ -108,7 +109,6 @@ struct ManagedVTable
     bool (*isEqualTo)(Managed *m, Managed *other);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
-    const char *className;
 };
 
 #define DEFINE_MANAGED_VTABLE(classname) \
@@ -121,10 +121,11 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     classname::IsErrorObject,   \
     0,                                          \
     classname::MyType,                          \
+    #classname,                                 \
+    destroy,                                    \
+    markObjects,                                \
     call,                                       \
     construct,                                  \
-    markObjects,                                \
-    destroy,                                    \
     0,                                          \
     get,                                        \
     getIndexed,                                 \
@@ -138,8 +139,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     setLookup,                                  \
     isEqualTo,                                  \
     getLength,                                  \
-    advanceIterator,                            \
-    #classname                                  \
+    advanceIterator                            \
 }
 
 #define DEFINE_MANAGED_VTABLE_WITH_NAME(classname, name) \
@@ -152,10 +152,11 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     classname::IsErrorObject,   \
     0,                                          \
     classname::MyType,                          \
+    #name,                                      \
+    destroy,                                    \
+    markObjects,                                \
     call,                                       \
     construct,                                  \
-    markObjects,                                \
-    destroy,                                    \
     0,                                          \
     get,                                        \
     getIndexed,                                 \
@@ -169,8 +170,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     setLookup,                                  \
     isEqualTo,                                  \
     getLength,                                  \
-    advanceIterator,                            \
-    #name                                       \
+    advanceIterator                            \
 }
 
 #define DEFINE_MANAGED_VTABLE_WITH_DELETABLES(classname) \
@@ -183,10 +183,11 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     classname::IsErrorObject,   \
     0,                                          \
     classname::MyType,                          \
+    #classname,                                 \
+    destroy,                                    \
+    markObjects,                                \
     call,                                       \
     construct,                                  \
-    markObjects,                                \
-    destroy,                                    \
     collectDeletables,                          \
     get,                                        \
     getIndexed,                                 \
@@ -200,8 +201,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     setLookup,                                  \
     isEqualTo,                                  \
     getLength,                                  \
-    advanceIterator,                            \
-    #classname                                  \
+    advanceIterator                            \
 }
 
 struct Q_QML_EXPORT Managed

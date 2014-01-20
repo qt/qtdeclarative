@@ -60,10 +60,11 @@ const ManagedVTable ExecutionContext::static_vtbl =
     ExecutionContext::IsErrorObject,
     0,
     ExecutionContext::MyType,
+    "ExecutionContext",
+    destroy,
+    markObjects,
     call,
     construct,
-    markObjects,
-    destroy,
     0 /*collectDeletables*/,
     0,
     0,
@@ -77,8 +78,7 @@ const ManagedVTable ExecutionContext::static_vtbl =
     0,
     isEqualTo,
     0,
-    0,
-    "ExecutionContext",
+    0
 };
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)

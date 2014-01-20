@@ -110,10 +110,11 @@ const ManagedVTable String::static_vtbl =
     String::IsErrorObject,
     0,
     String::MyType,
+    "String",
+    destroy,
+    markObjects,
     call,
     construct,
-    markObjects,
-    destroy,
     0 /*collectDeletables*/,
     get,
     getIndexed,
@@ -128,7 +129,6 @@ const ManagedVTable String::static_vtbl =
     isEqualTo,
     0,
     0 /*advanceIterator*/,
-    "String",
 };
 
 void String::destroy(Managed *that)

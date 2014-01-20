@@ -54,10 +54,11 @@ const ManagedVTable Managed::static_vtbl =
     Managed::IsErrorObject,
     0,
     Managed::MyType,
+    "Managed",
+    destroy,
+    0 /*markObjects*/,
     call,
     construct,
-    0 /*markObjects*/,
-    destroy,
     0 /*collectDeletables*/,
     0,
     0,
@@ -71,8 +72,7 @@ const ManagedVTable Managed::static_vtbl =
     0,
     isEqualTo,
     0,
-    0,
-    "Managed",
+    0
 };
 
 
