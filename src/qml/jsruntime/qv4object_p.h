@@ -102,7 +102,7 @@ struct URIErrorPrototype;
 
 
 struct Q_QML_EXPORT Object: Managed {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(Object)
     enum {
         IsObject = true
@@ -121,6 +121,7 @@ struct Q_QML_EXPORT Object: Managed {
     Object(InternalClass *internalClass);
     ~Object();
 
+    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass->vtable); }
     Object *prototype() const { return internalClass->prototype; }
     bool setPrototype(Object *proto);
 
@@ -231,28 +232,38 @@ public:
     void ensureMemberIndex(uint idx);
 
     inline ReturnedValue get(const StringRef name, bool *hasProperty = 0)
-    { return internalClass->vtable->get(this, name, hasProperty); }
+    { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
-    { return internalClass->vtable->getIndexed(this, idx, hasProperty); }
+    { return vtable()->getIndexed(this, idx, hasProperty); }
     inline void put(const StringRef name, const ValueRef v)
-    { internalClass->vtable->put(this, name, v); }
+    { vtable()->put(this, name, v); }
     inline void putIndexed(uint idx, const ValueRef v)
-    { internalClass->vtable->putIndexed(this, idx, v); }
-    using Managed::get;
-    using Managed::getIndexed;
-    using Managed::put;
-    using Managed::putIndexed;
-    using Managed::query;
-    using Managed::queryIndexed;
-    using Managed::deleteProperty;
-    using Managed::deleteIndexedProperty;
-    using Managed::getLookup;
-    using Managed::setLookup;
-    using Managed::advanceIterator;
-    using Managed::getLength;
+    { vtable()->putIndexed(this, idx, v); }
+    PropertyAttributes query(StringRef name) const
+    { return vtable()->query(this, name); }
+    PropertyAttributes queryIndexed(uint index) const
+    { return vtable()->queryIndexed(this, index); }
+    bool deleteProperty(const StringRef name)
+    { return vtable()->deleteProperty(this, name); }
+    bool deleteIndexedProperty(uint index)
+    { return vtable()->deleteIndexedProperty(this, index); }
+    ReturnedValue getLookup(Lookup *l)
+    { return vtable()->getLookup(this, l); }
+    void setLookup(Lookup *l, const ValueRef v)
+    { vtable()->setLookup(this, l, v); }
+    void advanceIterator(ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
+    { vtable()->advanceIterator(this, it, name, index, p, attributes); }
+    uint getLength() const { return vtable()->getLength(this); }
+
+    inline ReturnedValue construct(CallData *d)
+    { return vtable()->construct(this, d); }
+    inline ReturnedValue call(CallData *d)
+    { return vtable()->call(this, d); }
 protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that, ExecutionEngine *e);
+    static ReturnedValue construct(Managed *m, CallData *);
+    static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
@@ -279,7 +290,7 @@ private:
 };
 
 struct BooleanObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(BooleanObject)
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
@@ -289,13 +300,13 @@ struct BooleanObject: Object {
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
-        Q_ASSERT(internalClass->vtable == &static_vtbl);
+        Q_ASSERT(internalClass->vtable == staticVTable());
         value = Encode(false);
     }
 };
 
 struct NumberObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(NumberObject)
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
@@ -305,13 +316,13 @@ struct NumberObject: Object {
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
-        Q_ASSERT(internalClass->vtable == &static_vtbl);
+        Q_ASSERT(internalClass->vtable == staticVTable());
         value = Encode((int)0);
     }
 };
 
 struct ArrayObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(ArrayObject)
     enum {
         LengthPropertyIndex = 0
@@ -324,7 +335,7 @@ struct ArrayObject: Object {
     void init(ExecutionEngine *engine);
 
     static ReturnedValue getLookup(Managed *m, Lookup *l);
-    using Managed::getLength;
+    using Object::getLength;
     static uint getLength(const Managed *m);
 
     QStringList toQStringList() const;

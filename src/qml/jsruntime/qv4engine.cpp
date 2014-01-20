@@ -202,9 +202,9 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     identifierTable = new IdentifierTable(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
-    executionContextClass = InternalClass::create(this, &ExecutionContext::static_vtbl, 0);
-    stringClass = InternalClass::create(this, &String::static_vtbl, 0);
-    regExpValueClass = InternalClass::create(this, &RegExp::static_vtbl, 0);
+    executionContextClass = InternalClass::create(this, ExecutionContext::staticVTable(), 0);
+    stringClass = InternalClass::create(this, String::staticVTable(), 0);
+    regExpValueClass = InternalClass::create(this, RegExp::staticVTable(), 0);
 
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
@@ -237,69 +237,69 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_toString = newIdentifier(QStringLiteral("toString"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
-    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(InternalClass::create(this, &ObjectPrototype::static_vtbl, 0));
-    objectClass = InternalClass::create(this, &Object::static_vtbl, objectPrototype);
-    Q_ASSERT(objectClass->vtable == &Object::static_vtbl);
+    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(InternalClass::create(this, ObjectPrototype::staticVTable(), 0));
+    objectClass = InternalClass::create(this, Object::staticVTable(), objectPrototype);
+    Q_ASSERT(objectClass->vtable == Object::staticVTable());
 
-    arrayClass = InternalClass::create(this, &ArrayObject::static_vtbl, objectPrototype);
+    arrayClass = InternalClass::create(this, ArrayObject::staticVTable(), objectPrototype);
     arrayClass = arrayClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     ArrayPrototype *arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
-    InternalClass *argsClass = InternalClass::create(this, &ArgumentsObject::static_vtbl, objectPrototype);
+    InternalClass *argsClass = InternalClass::create(this, ArgumentsObject::staticVTable(), objectPrototype);
     argsClass = argsClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
     strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    Q_ASSERT(argumentsObjectClass->vtable == &ArgumentsObject::static_vtbl);
-    Q_ASSERT(strictArgumentsObjectClass->vtable == &ArgumentsObject::static_vtbl);
+    Q_ASSERT(argumentsObjectClass->vtable == ArgumentsObject::staticVTable());
+    Q_ASSERT(strictArgumentsObjectClass->vtable == ArgumentsObject::staticVTable());
 
     initRootContext();
 
-    StringPrototype *stringPrototype = new (memoryManager) StringPrototype(InternalClass::create(this, &StringPrototype::static_vtbl, objectPrototype));
-    stringObjectClass = InternalClass::create(this, &String::static_vtbl, stringPrototype);
+    StringPrototype *stringPrototype = new (memoryManager) StringPrototype(InternalClass::create(this, StringPrototype::staticVTable(), objectPrototype));
+    stringObjectClass = InternalClass::create(this, String::staticVTable(), stringPrototype);
 
-    NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(InternalClass::create(this, &NumberPrototype::static_vtbl, objectPrototype));
-    numberClass = InternalClass::create(this, &NumberObject::static_vtbl, numberPrototype);
+    NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(InternalClass::create(this, NumberPrototype::staticVTable(), objectPrototype));
+    numberClass = InternalClass::create(this, NumberObject::staticVTable(), numberPrototype);
 
-    BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(InternalClass::create(this, &BooleanPrototype::static_vtbl, objectPrototype));
-    booleanClass = InternalClass::create(this, &BooleanObject::static_vtbl, booleanPrototype);
+    BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(InternalClass::create(this, BooleanPrototype::staticVTable(), objectPrototype));
+    booleanClass = InternalClass::create(this, BooleanObject::staticVTable(), booleanPrototype);
 
-    DatePrototype *datePrototype = new (memoryManager) DatePrototype(InternalClass::create(this, &DatePrototype::static_vtbl, objectPrototype));
-    dateClass = InternalClass::create(this, &DateObject::static_vtbl, datePrototype);
+    DatePrototype *datePrototype = new (memoryManager) DatePrototype(InternalClass::create(this, DatePrototype::staticVTable(), objectPrototype));
+    dateClass = InternalClass::create(this, DateObject::staticVTable(), datePrototype);
 
-    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(InternalClass::create(this, &FunctionPrototype::static_vtbl, objectPrototype));
-    functionClass = InternalClass::create(this, &FunctionObject::static_vtbl, functionPrototype);
+    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(InternalClass::create(this, FunctionPrototype::staticVTable(), objectPrototype));
+    functionClass = InternalClass::create(this, FunctionObject::staticVTable(), functionPrototype);
     uint index;
     functionWithProtoClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
-    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(InternalClass::create(this, &RegExpPrototype::static_vtbl, objectPrototype));
-    regExpClass = InternalClass::create(this, &RegExpObject::static_vtbl, regExpPrototype);
+    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype));
+    regExpClass = InternalClass::create(this, RegExpObject::staticVTable(), regExpPrototype);
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(InternalClass::create(this, &ErrorObject::static_vtbl, objectPrototype));
-    errorClass = InternalClass::create(this, &ErrorObject::static_vtbl, errorPrototype);
+    ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(InternalClass::create(this, ErrorObject::staticVTable(), objectPrototype));
+    errorClass = InternalClass::create(this, ErrorObject::staticVTable(), errorPrototype);
     EvalErrorPrototype *evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
-    evalErrorClass = InternalClass::create(this, &EvalErrorObject::static_vtbl, evalErrorPrototype);
+    evalErrorClass = InternalClass::create(this, EvalErrorObject::staticVTable(), evalErrorPrototype);
     RangeErrorPrototype *rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorClass);
-    rangeErrorClass = InternalClass::create(this, &RangeErrorObject::static_vtbl, rangeErrorPrototype);
+    rangeErrorClass = InternalClass::create(this, RangeErrorObject::staticVTable(), rangeErrorPrototype);
     ReferenceErrorPrototype *referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorClass);
-    referenceErrorClass = InternalClass::create(this, &ReferenceErrorObject::static_vtbl, referenceErrorPrototype);
+    referenceErrorClass = InternalClass::create(this, ReferenceErrorObject::staticVTable(), referenceErrorPrototype);
     SyntaxErrorPrototype *syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorClass);
-    syntaxErrorClass = InternalClass::create(this, &SyntaxErrorObject::static_vtbl, syntaxErrorPrototype);
+    syntaxErrorClass = InternalClass::create(this, SyntaxErrorObject::staticVTable(), syntaxErrorPrototype);
     TypeErrorPrototype *typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorClass);
-    typeErrorClass = InternalClass::create(this, &TypeErrorObject::static_vtbl, typeErrorPrototype);
+    typeErrorClass = InternalClass::create(this, TypeErrorObject::staticVTable(), typeErrorPrototype);
     URIErrorPrototype *uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
-    uriErrorClass = InternalClass::create(this, &URIErrorObject::static_vtbl, uRIErrorPrototype);
+    uriErrorClass = InternalClass::create(this, URIErrorObject::staticVTable(), uRIErrorPrototype);
 
-    VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(InternalClass::create(this, &VariantPrototype::static_vtbl, objectPrototype));
-    variantClass = InternalClass::create(this, &VariantObject::static_vtbl, variantPrototype);
+    VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype));
+    variantClass = InternalClass::create(this, VariantObject::staticVTable(), variantPrototype);
     Q_ASSERT(variantClass->prototype == variantPrototype);
     Q_ASSERT(variantPrototype->internalClass->prototype == objectPrototype);
 
@@ -364,8 +364,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(QV4::InternalClass::create(this, &MathObject::static_vtbl, objectPrototype))));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(QV4::InternalClass::create(this, &JsonObject::static_vtbl, objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));

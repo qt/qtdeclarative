@@ -68,7 +68,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
-    Q_MANAGED
+    V4_OBJECT
 protected:
     enum ObjectType { Reference, Copy };
     QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);

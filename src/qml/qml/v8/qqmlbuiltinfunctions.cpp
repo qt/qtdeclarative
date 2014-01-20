@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(QtObject);
+DEFINE_OBJECT_VTABLE(QtObject);
 
 struct StaticQtMetaObject : public QObject
 {
@@ -90,7 +90,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_platform(0)
     , m_application(0)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope scope(v4);
     ScopedObject protectThis(scope, this);
@@ -1178,12 +1178,12 @@ namespace {
 
 struct BindingFunction : public QV4::FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     BindingFunction(FunctionObject *originalFunction)
         : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
         , originalFunction(originalFunction)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         bindingKeyFlag = true;
     }
 
@@ -1203,7 +1203,7 @@ struct BindingFunction : public QV4::FunctionObject
     QV4::FunctionObject *originalFunction;
 };
 
-DEFINE_MANAGED_VTABLE(BindingFunction);
+DEFINE_OBJECT_VTABLE(BindingFunction);
 
 }
 

@@ -69,7 +69,7 @@ struct WithContext;
 
 struct Q_QML_EXPORT ExecutionContext : public Managed
 {
-    Q_MANAGED
+    V4_MANAGED
     Q_MANAGED_TYPE(ExecutionContext)
     enum {
         IsExecutionContext = true

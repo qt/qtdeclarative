@@ -61,7 +61,7 @@ class QQmlDelegateModelItem;
 
 struct DelegateModelGroupFunction: QV4::FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
 
     QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg);
     uint flag;
@@ -71,7 +71,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         , code(code)
         , flag(flag)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
@@ -93,7 +93,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     }
 };
 
-DEFINE_MANAGED_VTABLE(DelegateModelGroupFunction);
+DEFINE_OBJECT_VTABLE(DelegateModelGroupFunction);
 
 
 
@@ -1795,7 +1795,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisI
 
 //---------------------------------------------------------------------------
 
-DEFINE_MANAGED_VTABLE(QQmlDelegateModelItemObject);
+DEFINE_OBJECT_VTABLE(QQmlDelegateModelItemObject);
 
 QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
 {
@@ -3154,11 +3154,11 @@ void QQmlPartsModel::emitModelUpdated(const QQmlChangeSet &changeSet, bool reset
 
 struct QQmlDelegateModelGroupChange : QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3188,16 +3188,16 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     QQmlChangeSet::Change change;
 };
 
-DEFINE_MANAGED_VTABLE(QQmlDelegateModelGroupChange);
+DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
 
 class QQmlDelegateModelGroupChangeArray : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine)
         : Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         setArrayType(QV4::ArrayData::Custom);
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}
@@ -3253,7 +3253,7 @@ public:
 
 };
 
-DEFINE_MANAGED_VTABLE(QQmlDelegateModelGroupChangeArray);
+DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChangeArray);
 
 class QQmlDelegateModelGroupRemoveArray : public QQmlDelegateModelGroupChangeArray
 {

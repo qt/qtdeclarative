@@ -63,22 +63,7 @@ const ManagedVTable ExecutionContext::static_vtbl =
     "ExecutionContext",
     destroy,
     markObjects,
-    call,
-    construct,
-    0 /*collectDeletables*/,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    isEqualTo,
-    0,
-    0
+    isEqualTo
 };
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)

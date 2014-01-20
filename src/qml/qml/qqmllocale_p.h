@@ -131,12 +131,12 @@ private:
 
 class QQmlLocaleData : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     QLocale locale;

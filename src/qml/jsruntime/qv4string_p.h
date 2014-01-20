@@ -52,7 +52,8 @@ struct ExecutionEngine;
 struct Identifier;
 
 struct Q_QML_EXPORT String : public Managed {
-    Q_MANAGED
+    // ### FIXME: Should this be a V4_OBJECT
+    V4_OBJECT
     Q_MANAGED_TYPE(String)
     enum {
         IsString = true

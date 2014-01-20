@@ -71,8 +71,9 @@ using namespace QV4;
 
 struct Print: FunctionObject
 {
+    V4_OBJECT
     Print(ExecutionContext *scope): FunctionObject(scope, QStringLiteral("print")) {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static ReturnedValue call(Managed *, CallData *callData)
@@ -86,29 +87,26 @@ struct Print: FunctionObject
         std::cout << std::endl;
         return Encode::undefined();
     }
-
-    static const ManagedVTable static_vtbl;
 };
 
-DEFINE_MANAGED_VTABLE(Print);
+DEFINE_OBJECT_VTABLE(Print);
 
 struct GC: public FunctionObject
 {
+    V4_OBJECT
     GC(ExecutionContext* scope)
         : FunctionObject(scope, QStringLiteral("gc"))
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
     static ReturnedValue call(Managed *m, CallData *)
     {
         m->engine()->memoryManager->runGC();
         return Encode::undefined();
     }
-
-    static const ManagedVTable static_vtbl;
 };
 
-DEFINE_MANAGED_VTABLE(GC);
+DEFINE_OBJECT_VTABLE(GC);
 
 } // builtins
 

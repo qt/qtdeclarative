@@ -77,7 +77,7 @@ struct QObjectSlotDispatcher;
 
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 
@@ -130,7 +130,7 @@ private:
 
 struct QObjectMethod : public QV4::FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
@@ -161,7 +161,7 @@ private:
 
 struct QmlSignalHandler : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
     QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex);
 

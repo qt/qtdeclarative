@@ -51,7 +51,7 @@ namespace QV4 {
 
 struct BooleanCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     BooleanCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);

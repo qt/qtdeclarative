@@ -43,13 +43,13 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(BooleanCtor);
-DEFINE_MANAGED_VTABLE(BooleanObject);
+DEFINE_OBJECT_VTABLE(BooleanCtor);
+DEFINE_OBJECT_VTABLE(BooleanObject);
 
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Boolean"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)

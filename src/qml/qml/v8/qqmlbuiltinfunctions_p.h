@@ -65,7 +65,7 @@ namespace QV4 {
 
 struct QtObject : Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
 
     static ReturnedValue method_isQtObject(CallContext *ctx);

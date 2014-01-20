@@ -104,7 +104,7 @@ public:
 
 struct QQuickRootItemMarker : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
     QQuickRootItemMarker(QQuickViewPrivate *view);
 

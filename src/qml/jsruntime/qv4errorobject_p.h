@@ -51,7 +51,7 @@ namespace QV4 {
 struct SyntaxErrorObject;
 
 struct ErrorObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(ErrorObject)
     enum {
         IsErrorObject = true
@@ -103,7 +103,7 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    Q_MANAGED
+    V4_OBJECT
     SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
@@ -119,7 +119,7 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, const QString &name);
 
@@ -129,7 +129,7 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     EvalErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -137,7 +137,7 @@ struct EvalErrorCtor: ErrorCtor
 
 struct RangeErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     RangeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -145,7 +145,7 @@ struct RangeErrorCtor: ErrorCtor
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     ReferenceErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -153,7 +153,7 @@ struct ReferenceErrorCtor: ErrorCtor
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     SyntaxErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -161,7 +161,7 @@ struct SyntaxErrorCtor: ErrorCtor
 
 struct TypeErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     TypeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -169,7 +169,7 @@ struct TypeErrorCtor: ErrorCtor
 
 struct URIErrorCtor: ErrorCtor
 {
-    Q_MANAGED
+    V4_OBJECT
     URIErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -188,37 +188,37 @@ struct ErrorPrototype: ErrorObject
 
 struct EvalErrorPrototype: ErrorObject
 {
-    EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct RangeErrorPrototype: ErrorObject
 {
-    RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ErrorObject
 {
-    ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: ErrorObject
 {
-    SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct TypeErrorPrototype: ErrorObject
 {
-    TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct URIErrorPrototype: ErrorObject
 {
-    URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(&static_vtbl); }
+    URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
     void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 

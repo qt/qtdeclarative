@@ -49,7 +49,7 @@ namespace QV4 {
 
 struct MathObject: Object
 {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(MathObject)
     MathObject(InternalClass *ic);
 

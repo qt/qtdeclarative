@@ -62,10 +62,19 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
-#define Q_MANAGED \
+#define V4_MANAGED \
     public: \
         Q_MANAGED_CHECK \
         static const QV4::ManagedVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
+        template <typename T> \
+        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+
+#define V4_OBJECT \
+    public: \
+        Q_MANAGED_CHECK \
+        static const QV4::ObjectVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
 
@@ -93,6 +102,12 @@ struct ManagedVTable
     const char *className;
     void (*destroy)(Managed *);
     void (*markObjects)(Managed *, ExecutionEngine *e);
+    bool (*isEqualTo)(Managed *m, Managed *other);
+};
+
+struct ObjectVTable
+{
+    ManagedVTable managedVTable;
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
@@ -106,14 +121,13 @@ struct ManagedVTable
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
-    bool (*isEqualTo)(Managed *m, Managed *other);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
 #define DEFINE_MANAGED_VTABLE(classname) \
 const QV4::ManagedVTable classname::static_vtbl =    \
-{                                               \
+{     \
     classname::IsExecutionContext,   \
     classname::IsString,   \
     classname::IsObject,   \
@@ -124,6 +138,26 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     #classname,                                 \
     destroy,                                    \
     markObjects,                                \
+    isEqualTo,                                  \
+}
+
+
+#define DEFINE_OBJECT_VTABLE(classname) \
+const QV4::ObjectVTable classname::static_vtbl =    \
+{     \
+    { \
+        classname::IsExecutionContext,   \
+        classname::IsString,   \
+        classname::IsObject,   \
+        classname::IsFunctionObject,   \
+        classname::IsErrorObject,   \
+        0,                                          \
+        classname::MyType,                          \
+        #classname,                                 \
+        destroy,                                    \
+        markObjects,                                \
+        isEqualTo,                                  \
+    }, \
     call,                                       \
     construct,                                  \
     0,                                          \
@@ -137,24 +171,26 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     deleteIndexedProperty,                      \
     getLookup,                                  \
     setLookup,                                  \
-    isEqualTo,                                  \
     getLength,                                  \
     advanceIterator                            \
 }
 
 #define DEFINE_MANAGED_VTABLE_WITH_NAME(classname, name) \
-const QV4::ManagedVTable classname::static_vtbl =    \
+const QV4::ObjectVTable classname::static_vtbl =    \
 {                                               \
-    classname::IsExecutionContext,   \
-    classname::IsString,   \
-    classname::IsObject,   \
-    classname::IsFunctionObject,   \
-    classname::IsErrorObject,   \
-    0,                                          \
-    classname::MyType,                          \
-    #name,                                      \
-    destroy,                                    \
-    markObjects,                                \
+    { \
+        classname::IsExecutionContext,   \
+        classname::IsString,   \
+        classname::IsObject,   \
+        classname::IsFunctionObject,   \
+        classname::IsErrorObject,   \
+        0,                                          \
+        classname::MyType,                          \
+        #name,                                 \
+        destroy,                                    \
+        markObjects,                                \
+        isEqualTo,                                  \
+    }, \
     call,                                       \
     construct,                                  \
     0,                                          \
@@ -168,24 +204,26 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     deleteIndexedProperty,                      \
     getLookup,                                  \
     setLookup,                                  \
-    isEqualTo,                                  \
     getLength,                                  \
     advanceIterator                            \
 }
 
 #define DEFINE_MANAGED_VTABLE_WITH_DELETABLES(classname) \
-const QV4::ManagedVTable classname::static_vtbl =    \
+const QV4::ObjectVTable classname::static_vtbl =    \
 {                                               \
-    classname::IsExecutionContext,   \
-    classname::IsString,   \
-    classname::IsObject,   \
-    classname::IsFunctionObject,   \
-    classname::IsErrorObject,   \
-    0,                                          \
-    classname::MyType,                          \
-    #classname,                                 \
-    destroy,                                    \
-    markObjects,                                \
+    { \
+        classname::IsExecutionContext,   \
+        classname::IsString,   \
+        classname::IsObject,   \
+        classname::IsFunctionObject,   \
+        classname::IsErrorObject,   \
+        0,                                          \
+        classname::MyType,                          \
+        #classname,                                 \
+        destroy,                                    \
+        markObjects,                                \
+        isEqualTo,                                  \
+    }, \
     call,                                       \
     construct,                                  \
     collectDeletables,                          \
@@ -199,14 +237,13 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     deleteIndexedProperty,                      \
     getLookup,                                  \
     setLookup,                                  \
-    isEqualTo,                                  \
     getLength,                                  \
     advanceIterator                            \
 }
 
 struct Q_QML_EXPORT Managed
 {
-    Q_MANAGED
+    V4_MANAGED
     enum {
         IsExecutionContext = false,
         IsString = false,
@@ -269,7 +306,7 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
-        return internalClass->vtable == &T::static_vtbl ? static_cast<T *>(this) : 0;
+        return internalClass->vtable == T::staticVTable() ? static_cast<T *>(this) : 0;
     }
     template <typename T>
     const T *as() const {
@@ -279,7 +316,7 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
-        return internalClass->vtable == &T::static_vtbl ? static_cast<const T *>(this) : 0;
+        return internalClass->vtable == T::staticVTable() ? static_cast<const T *>(this) : 0;
     }
 
     String *asString() { return internalClass->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
@@ -312,35 +349,11 @@ public:
 
     void setVTable(const ManagedVTable *vt);
 
-    ReturnedValue construct(CallData *d);
-    ReturnedValue call(CallData *d);
-    ReturnedValue get(const StringRef name, bool *hasProperty = 0);
-    ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
-    void put(const StringRef name, const ValueRef value);
-    void putIndexed(uint index, const ValueRef value);
-    PropertyAttributes query(StringRef name) const;
-    PropertyAttributes queryIndexed(uint index) const
-    { return internalClass->vtable->queryIndexed(this, index); }
-
-    bool deleteProperty(const StringRef name);
-    bool deleteIndexedProperty(uint index)
-    { return internalClass->vtable->deleteIndexedProperty(this, index); }
-    ReturnedValue getLookup(Lookup *l)
-    { return internalClass->vtable->getLookup(this, l); }
-    void setLookup(Lookup *l, const ValueRef v);
-
     bool isEqualTo(Managed *other)
     { return internalClass->vtable->isEqualTo(this, other); }
-    uint getLength() const { return internalClass->vtable->getLength(this); }
-    void advanceIterator(ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
-    static ReturnedValue construct(Managed *m, CallData *d);
-    static ReturnedValue call(Managed *m, CallData *);
-    static ReturnedValue getLookup(Managed *m, Lookup *);
-    static void setLookup(Managed *m, Lookup *l, const ValueRef v);
     static bool isEqualTo(Managed *m, Managed *other);
-    static uint getLength(const Managed *) { return 0; }
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
@@ -397,13 +410,6 @@ inline FunctionObject *managed_cast(Managed *m)
     return m->asFunctionObject();
 }
 
-
-inline ReturnedValue Managed::construct(CallData *d) {
-    return internalClass->vtable->construct(this, d);
-}
-inline ReturnedValue Managed::call(CallData *d) {
-    return internalClass->vtable->call(this, d);
-}
 
 }
 

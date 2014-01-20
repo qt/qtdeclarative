@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct StringObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(StringObject)
 
     SafeValue value;
@@ -69,7 +69,7 @@ protected:
 
 struct StringCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     StringCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);

@@ -54,7 +54,7 @@ namespace QV4 {
 struct ExecutionContext;
 
 struct QmlBindingWrapper : FunctionObject {
-    Q_MANAGED
+    V4_OBJECT
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!

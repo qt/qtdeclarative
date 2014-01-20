@@ -67,7 +67,7 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(Object);
+DEFINE_OBJECT_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
@@ -406,6 +406,16 @@ bool Object::hasOwnProperty(uint index) const
     if (!queryIndexed(index).isEmpty())
         return true;
     return false;
+}
+
+ReturnedValue Object::construct(Managed *m, CallData *)
+{
+    return m->engine()->currentContext()->throwTypeError();
+}
+
+ReturnedValue Object::call(Managed *m, CallData *)
+{
+    return m->engine()->currentContext()->throwTypeError();
 }
 
 ReturnedValue Object::get(Managed *m, const StringRef name, bool *hasProperty)
@@ -1122,7 +1132,7 @@ void Object::copyArrayData(Object *other)
 uint Object::getLength(const Managed *m)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, const_cast<Managed *>(m)->get(scope.engine->id_length));
+    ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length));
     return v->toUInt32();
 }
 
@@ -1196,7 +1206,7 @@ void Object::initSparseArray()
 }
 
 
-DEFINE_MANAGED_VTABLE(ArrayObject);
+DEFINE_OBJECT_VTABLE(ArrayObject);
 
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)

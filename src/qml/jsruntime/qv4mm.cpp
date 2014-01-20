@@ -522,8 +522,9 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->internalClass->vtable->collectDeletables)
-                    m->internalClass->vtable->collectDeletables(m, deletable);
+                Object *o = m->asObject();
+                if (o && o->vtable()->collectDeletables)
+                    o->vtable()->collectDeletables(m, deletable);
                 m->internalClass->vtable->destroy(m);
 
                 memset(m, 0, size);

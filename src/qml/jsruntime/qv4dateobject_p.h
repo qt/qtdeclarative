@@ -52,7 +52,7 @@ class QDateTime;
 namespace QV4 {
 
 struct DateObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(DateObject)
     SafeValue value;
     DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
@@ -64,14 +64,14 @@ struct DateObject: Object {
 
 protected:
     DateObject(InternalClass *ic): Object(ic) {
-        Q_ASSERT(internalClass->vtable == &static_vtbl);
+        Q_ASSERT(internalClass->vtable == staticVTable());
         value = Primitive::fromDouble(qSNaN());
     }
 };
 
 struct DateCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     DateCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);

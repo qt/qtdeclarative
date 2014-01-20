@@ -68,7 +68,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
-    Q_MANAGED
+    V4_OBJECT
 private:
     QmlTypeWrapper(QV8Engine *engine);
     ~QmlTypeWrapper();

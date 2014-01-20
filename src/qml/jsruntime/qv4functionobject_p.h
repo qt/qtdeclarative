@@ -93,7 +93,7 @@ struct InternalClass;
 struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(FunctionObject)
     enum {
         IsFunctionObject = true
@@ -128,14 +128,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ReturnedValue newInstance();
 
+    using Object::construct;
+    using Object::call;
     static ReturnedValue construct(Managed *that, CallData *);
     static ReturnedValue call(Managed *that, CallData *d);
-    inline ReturnedValue construct(CallData *callData) {
-        return internalClass->vtable->construct(this, callData);
-    }
-    inline ReturnedValue call(CallData *callData) {
-        return internalClass->vtable->call(this, callData);
-    }
 
     static FunctionObject *cast(const Value &v) {
         return v.asFunctionObject();
@@ -161,7 +157,7 @@ inline FunctionObject *value_cast(const Value &v) {
 
 struct FunctionCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     FunctionCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);
@@ -180,7 +176,7 @@ struct FunctionPrototype: FunctionObject
 };
 
 struct BuiltinFunction: FunctionObject {
-    Q_MANAGED
+    V4_OBJECT
     ReturnedValue (*code)(CallContext *);
 
     BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
@@ -191,7 +187,7 @@ struct BuiltinFunction: FunctionObject {
 
 struct IndexedBuiltinFunction: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
 
     ReturnedValue (*code)(CallContext *ctx, uint index);
     uint index;
@@ -201,7 +197,7 @@ struct IndexedBuiltinFunction: FunctionObject
         , code(code)
         , index(index)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static ReturnedValue construct(Managed *m, CallData *)
@@ -214,7 +210,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
 
 struct ScriptFunction: FunctionObject {
-    Q_MANAGED
+    V4_OBJECT
     ScriptFunction(ExecutionContext *scope, Function *function);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -222,7 +218,7 @@ struct ScriptFunction: FunctionObject {
 };
 
 struct SimpleScriptFunction: FunctionObject {
-    Q_MANAGED
+    V4_OBJECT
     SimpleScriptFunction(ExecutionContext *scope, Function *function);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -230,7 +226,7 @@ struct SimpleScriptFunction: FunctionObject {
 };
 
 struct BoundFunction: FunctionObject {
-    Q_MANAGED
+    V4_OBJECT
     FunctionObject *target;
     SafeValue boundThis;
     QVector<SafeValue> boundArgs;

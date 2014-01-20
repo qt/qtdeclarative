@@ -73,7 +73,7 @@ struct QQmlIdObjectsArray;
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
 
@@ -112,7 +112,7 @@ private:
 
 struct QQmlIdObjectsArray : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);

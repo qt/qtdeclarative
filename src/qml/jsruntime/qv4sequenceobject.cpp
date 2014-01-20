@@ -165,11 +165,11 @@ template <> bool convertValueToElement(const ValueRef value)
 template <typename Container>
 class QQmlSequence : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(QmlSequence)
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
+        : QV4::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
         , m_container(container)
         , m_object(0)
         , m_propertyIndex(-1)
@@ -183,7 +183,7 @@ public:
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(InternalClass::create(engine, &static_vtbl, engine->sequencePrototype.asObject()))
+        : QV4::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
         , m_object(object)
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
@@ -521,22 +521,22 @@ private:
 
 typedef QQmlSequence<QStringList> QQmlQStringList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlQStringList);
+DEFINE_OBJECT_VTABLE(QQmlQStringList);
 typedef QQmlSequence<QList<QString> > QQmlStringList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlStringList);
+DEFINE_OBJECT_VTABLE(QQmlStringList);
 typedef QQmlSequence<QList<int> > QQmlIntList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlIntList);
+DEFINE_OBJECT_VTABLE(QQmlIntList);
 typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlUrlList);
+DEFINE_OBJECT_VTABLE(QQmlUrlList);
 typedef QQmlSequence<QList<bool> > QQmlBoolList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlBoolList);
+DEFINE_OBJECT_VTABLE(QQmlBoolList);
 typedef QQmlSequence<QList<qreal> > QQmlRealList;
 template<>
-DEFINE_MANAGED_VTABLE(QQmlRealList);
+DEFINE_OBJECT_VTABLE(QQmlRealList);
 
 #define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
 SequencePrototype::SequencePrototype(InternalClass *ic)

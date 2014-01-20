@@ -101,20 +101,23 @@ static uint toArrayIndex(const char *ch, const char *end, bool *ok)
 }
 
 
-const ManagedVTable String::static_vtbl =
+const ObjectVTable String::static_vtbl =
 {
-    String::IsExecutionContext,
-    String::IsString,
-    String::IsObject,
-    String::IsFunctionObject,
-    String::IsErrorObject,
+    {
+        String::IsExecutionContext,
+        String::IsString,
+        String::IsObject,
+        String::IsFunctionObject,
+        String::IsErrorObject,
+        0,
+        String::MyType,
+        "String",
+        destroy,
+        markObjects,
+        isEqualTo
+    },
     0,
-    String::MyType,
-    "String",
-    destroy,
-    markObjects,
-    call,
-    construct,
+    0,
     0 /*collectDeletables*/,
     get,
     getIndexed,
@@ -126,7 +129,6 @@ const ManagedVTable String::static_vtbl =
     deleteIndexedProperty,
     0 /*getLookup*/,
     0 /*setLookup*/,
-    isEqualTo,
     0,
     0 /*advanceIterator*/,
 };

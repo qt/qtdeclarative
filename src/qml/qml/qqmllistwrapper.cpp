@@ -50,13 +50,13 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(QmlListWrapper);
+DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
 QmlListWrapper::QmlListWrapper(QV8Engine *engine)
     : Object(QV8Engine::getV4(engine)),
       v8(engine)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     setArrayType(ArrayData::Custom);
 }
 

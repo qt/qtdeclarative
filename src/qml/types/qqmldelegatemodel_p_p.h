@@ -161,11 +161,11 @@ protected:
 
 struct QQmlDelegateModelItemObject : QV4::Object
 {
-    Q_MANAGED;
+    V4_OBJECT;
     QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
         : Object(engine)
         , item(item)
-    { setVTable(&static_vtbl); }
+    { setVTable(staticVTable()); }
     ~QQmlDelegateModelItemObject();
 
     static void destroy(Managed *that);

@@ -66,7 +66,7 @@ namespace QV4 {
 class RegExp;
 
 struct RegExpObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(RegExpObject)
     // needs to be compatible with the flags in qv4jsir_p.h
     enum Flags {
@@ -104,7 +104,7 @@ protected:
 
 struct RegExpCtor: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     RegExpCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);

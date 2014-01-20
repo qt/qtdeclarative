@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(VariantObject);
+DEFINE_OBJECT_VTABLE(VariantObject);
 
 VariantObject::VariantObject(InternalClass *ic)
     : Object(ic)

@@ -892,10 +892,10 @@ ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index
     Lookup *l = context->lookups + index;
     SafeValue v;
     v = l->getter(l, callData->thisObject);
-    if (!v.isManaged())
+    if (!v.isObject())
         return context->throwTypeError();
 
-    return v.managed()->call(callData);
+    return v.objectValue()->call(callData);
 }
 
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
@@ -917,10 +917,10 @@ ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef ind
 
 ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
-    if (!func->isManaged())
+    if (!func->isObject())
         return context->throwTypeError();
 
-    return func->managed()->call(callData);
+    return func->objectValue()->call(callData);
 }
 
 
@@ -980,10 +980,10 @@ ReturnedValue __qmljs_construct_property_lookup(ExecutionContext *context, uint 
     Lookup *l = context->lookups + index;
     SafeValue v;
     v = l->getter(l, callData->thisObject);
-    if (!v.isManaged())
+    if (!v.isObject())
         return context->throwTypeError();
 
-    return v.managed()->construct(callData);
+    return v.objectValue()->construct(callData);
 }
 
 

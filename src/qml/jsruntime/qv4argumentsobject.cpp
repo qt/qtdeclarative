@@ -44,7 +44,7 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(ArgumentsObject);
+DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(CallContext *context)
     : Object(context->strictMode ? context->engine->strictArgumentsObjectClass : context->engine->argumentsObjectClass)
@@ -76,7 +76,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
     lp->value = Primitive::fromInt32(context->realArgumentCount);
 
-    Q_ASSERT(internalClass->vtable == &static_vtbl);
+    Q_ASSERT(internalClass->vtable == staticVTable());
 }
 
 void ArgumentsObject::destroy(Managed *that)
@@ -200,7 +200,7 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     return Attr_Accessor;
 }
 
-DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
+DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
 ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
@@ -215,7 +215,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     return o->context->argument(g->index);
 }
 
-DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
+DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
 ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {

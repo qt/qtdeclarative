@@ -67,7 +67,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 {
     Q_ASSERT(scope->inUse);
 
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     function = f;
     function->compilationUnit->ref();
     needsActivation = function->needsActivation();
@@ -88,7 +88,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 {
     Q_ASSERT(scope->inUse);
 
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     function = 0;
     needsActivation = false;
 
@@ -129,18 +129,18 @@ void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
         wrapper->qmlContext->mark(e);
 }
 
-DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
+DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 
 struct CompilationUnitHolder : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
     CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
         : Object(engine)
         , unit(unit)
     {
         unit->ref();
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
     ~CompilationUnitHolder()
     {
@@ -155,7 +155,7 @@ struct CompilationUnitHolder : public QV4::Object
     QV4::CompiledData::CompilationUnit *unit;
 };
 
-DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
+DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext), strictMode(false), inheritContext(true), parsed(false)

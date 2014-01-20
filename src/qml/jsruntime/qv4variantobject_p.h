@@ -66,7 +66,7 @@ namespace QV4 {
 
 struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     VariantObject(InternalClass *ic);
     VariantObject(ExecutionEngine *engine, const QVariant &value);

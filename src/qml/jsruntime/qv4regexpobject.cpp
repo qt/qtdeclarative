@@ -69,14 +69,14 @@ Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyn
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(RegExpObject);
+DEFINE_OBJECT_VTABLE(RegExpObject);
 
 RegExpObject::RegExpObject(InternalClass *ic)
     : Object(ic)
     , value(RegExp::create(ic->engine, QString(), false, false))
     , global(false)
 {
-    Q_ASSERT(internalClass->vtable == &static_vtbl);
+    Q_ASSERT(internalClass->vtable == staticVTable());
     init(ic->engine);
 }
 
@@ -143,7 +143,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
 
 void RegExpObject::init(ExecutionEngine *engine)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
@@ -231,12 +231,12 @@ uint RegExpObject::flags() const
     return f;
 }
 
-DEFINE_MANAGED_VTABLE(RegExpCtor);
+DEFINE_OBJECT_VTABLE(RegExpCtor);
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("RegExp"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)

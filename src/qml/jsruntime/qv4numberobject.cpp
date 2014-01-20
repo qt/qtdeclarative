@@ -48,13 +48,13 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(NumberCtor);
-DEFINE_MANAGED_VTABLE(NumberObject);
+DEFINE_OBJECT_VTABLE(NumberCtor);
+DEFINE_OBJECT_VTABLE(NumberObject);
 
 NumberCtor::NumberCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Number"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)

@@ -479,12 +479,12 @@ V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 class QQuickJSContext2D : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
     QQuickContext2D* context;
 
@@ -535,12 +535,12 @@ protected:
     }
 };
 
-DEFINE_MANAGED_VTABLE(QQuickJSContext2D);
+DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
 
 
 struct QQuickJSContext2DPrototype : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -641,19 +641,19 @@ public:
 
 };
 
-DEFINE_MANAGED_VTABLE(QQuickJSContext2DPrototype);
+DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
 
 
 class QQuickContext2DStyle : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QQuickContext2DStyle(QV4::ExecutionEngine *e)
       : QV4::Object(e)
       , patternRepeatX(false)
       , patternRepeatY(false)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
     QBrush brush;
     bool patternRepeatX:1;
@@ -667,7 +667,7 @@ protected:
     }
 };
 
-DEFINE_MANAGED_VTABLE(QQuickContext2DStyle);
+DEFINE_OBJECT_VTABLE(QQuickContext2DStyle);
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
 {
@@ -866,11 +866,11 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 
 struct QQuickJSContext2DPixelData : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         setArrayType(QV4::ArrayData::Custom);
     }
 
@@ -885,15 +885,15 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     QImage image;
 };
 
-DEFINE_MANAGED_VTABLE(QQuickJSContext2DPixelData);
+DEFINE_OBJECT_VTABLE(QQuickJSContext2DPixelData);
 
 struct QQuickJSContext2DImageData : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         pixelData = QV4::Primitive::undefinedValue();
 
         QV4::Scope scope(engine);
@@ -918,7 +918,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     QV4::SafeValue pixelData;
 };
 
-DEFINE_MANAGED_VTABLE(QQuickJSContext2DImageData);
+DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
 
 static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {

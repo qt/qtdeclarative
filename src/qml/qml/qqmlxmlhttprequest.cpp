@@ -185,14 +185,14 @@ public:
 
 class NamedNodeMap : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
         : Object(engine)
         , list(list)
         , d(data)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
 
         if (d)
             d->addref();
@@ -216,17 +216,17 @@ public:
     NodeImpl *d;
 };
 
-DEFINE_MANAGED_VTABLE(NamedNodeMap);
+DEFINE_OBJECT_VTABLE(NamedNodeMap);
 
 class NodeList : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     NodeList(ExecutionEngine *engine, NodeImpl *data)
         : Object(engine)
         , d(data)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
 
         if (d)
             d->addref();
@@ -249,16 +249,16 @@ public:
     NodeImpl *d;
 };
 
-DEFINE_MANAGED_VTABLE(NodeList);
+DEFINE_OBJECT_VTABLE(NodeList);
 
 class NodePrototype : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     NodePrototype(ExecutionEngine *engine)
         : Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
 
         Scope scope(engine);
         ScopedObject protectThis(scope, this);
@@ -302,17 +302,17 @@ public:
 
 };
 
-DEFINE_MANAGED_VTABLE(NodePrototype);
+DEFINE_OBJECT_VTABLE(NodePrototype);
 
 class Node : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
     Node(ExecutionEngine *engine, NodeImpl *data)
         : Object(engine)
         , d(data)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
 
         if (d)
             d->addref();
@@ -339,7 +339,7 @@ private:
     Node &operator=(const Node &);
 };
 
-DEFINE_MANAGED_VTABLE(Node);
+DEFINE_OBJECT_VTABLE(Node);
 
 class Element : public Node
 {
@@ -1600,12 +1600,12 @@ void QQmlXMLHttpRequest::destroyNetwork()
 
 struct QQmlXMLHttpRequestWrapper : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
         : Object(engine)
         , request(request)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
     ~QQmlXMLHttpRequestWrapper() {
         delete request;
@@ -1618,15 +1618,15 @@ struct QQmlXMLHttpRequestWrapper : public Object
     QQmlXMLHttpRequest *request;
 };
 
-DEFINE_MANAGED_VTABLE(QQmlXMLHttpRequestWrapper);
+DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
         : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         Scope scope(engine);
         ScopedValue protectThis(scope, this);
 
@@ -1688,7 +1688,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     Object *proto;
 };
 
-DEFINE_MANAGED_VTABLE(QQmlXMLHttpRequestCtor);
+DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestCtor);
 
 void QQmlXMLHttpRequestCtor::setupProto()
 {

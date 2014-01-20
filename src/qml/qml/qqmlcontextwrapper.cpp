@@ -59,14 +59,14 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(QmlContextWrapper);
+DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
 QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
     : Object(QV8Engine::getV4(engine)),
       v8(engine), readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
       context(context), scopeObject(scopeObject), idObjectsWrapper(0)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 QmlContextWrapper::~QmlContextWrapper()
@@ -433,13 +433,13 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(const StringRef &name)
     return QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine());
 }
 
-DEFINE_MANAGED_VTABLE(QQmlIdObjectsArray);
+DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
 QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
     : Object(engine)
     , contextWrapper(contextWrapper)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)

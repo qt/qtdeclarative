@@ -57,22 +57,7 @@ const ManagedVTable Managed::static_vtbl =
     "Managed",
     destroy,
     0 /*markObjects*/,
-    call,
-    construct,
-    0 /*collectDeletables*/,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    isEqualTo,
-    0,
-    0
+    isEqualTo
 };
 
 
@@ -195,67 +180,7 @@ void Managed::setVTable(const ManagedVTable *vt)
     internalClass = internalClass->changeVTable(vt);
 }
 
-ReturnedValue Managed::construct(Managed *m, CallData *)
-{
-    return m->engine()->currentContext()->throwTypeError();
-}
-
-ReturnedValue Managed::call(Managed *m, CallData *)
-{
-    return m->engine()->currentContext()->throwTypeError();
-}
-
-ReturnedValue Managed::getLookup(Managed *m, Lookup *)
-{
-    return m->engine()->currentContext()->throwTypeError();
-}
-
-void Managed::setLookup(Managed *m, Lookup *, const ValueRef)
-{
-    m->engine()->currentContext()->throwTypeError();
-}
-
 bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;
-}
-
-ReturnedValue Managed::get(const StringRef name, bool *hasProperty)
-{
-    return internalClass->vtable->get(this, name, hasProperty);
-}
-
-ReturnedValue Managed::getIndexed(uint index, bool *hasProperty)
-{
-    return internalClass->vtable->getIndexed(this, index, hasProperty);
-}
-
-void Managed::put(const StringRef name, const ValueRef value)
-{
-    internalClass->vtable->put(this, name, value);
-}
-
-void Managed::setLookup(Lookup *l, const ValueRef v)
-{
-    internalClass->vtable->setLookup(this, l, v);
-}
-
-void Managed::putIndexed(uint index, const ValueRef value)
-{
-    internalClass->vtable->putIndexed(this, index, value);
-}
-
-PropertyAttributes Managed::query(StringRef name) const
-{
-    return internalClass->vtable->query(this, name);
-}
-
-bool Managed::deleteProperty(const StringRef name)
-{
-    return internalClass->vtable->deleteProperty(this, name);
-}
-
-void Managed::advanceIterator(ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
-{
-    internalClass->vtable->advanceIterator(this, it, name, index, p, attributes);
 }

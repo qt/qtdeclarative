@@ -93,7 +93,7 @@ public:
 
 class RegExp : public Managed
 {
-    Q_MANAGED
+    V4_MANAGED
     Q_MANAGED_TYPE(RegExp)
 public:
     static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
@@ -112,15 +112,6 @@ public:
 protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
-    static ReturnedValue get(Managed *, const StringRef, bool *);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static PropertyAttributes query(const Managed *m, StringRef name);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *, const StringRef);
-    static bool deleteIndexedProperty(Managed *m, uint index);
-    static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *, PropertyAttributes *attributes);
 
 private:
     friend class RegExpCache;

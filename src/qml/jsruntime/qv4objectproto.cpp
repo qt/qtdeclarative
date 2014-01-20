@@ -72,12 +72,12 @@
 using namespace QV4;
 
 
-DEFINE_MANAGED_VTABLE(ObjectCtor);
+DEFINE_OBJECT_VTABLE(ObjectCtor);
 
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Object"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)

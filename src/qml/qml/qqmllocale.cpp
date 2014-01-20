@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_MANAGED_VTABLE(QQmlLocaleData);
+DEFINE_OBJECT_VTABLE(QQmlLocaleData);
 
 #define GET_LOCALE_DATA_RESOURCE(OBJECT) \
     QV4::Scoped<QQmlLocaleData> r(scope, OBJECT.as<QQmlLocaleData>()); \

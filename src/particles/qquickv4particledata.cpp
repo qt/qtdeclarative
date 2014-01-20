@@ -273,11 +273,11 @@ QT_BEGIN_NAMESPACE
 //### Particle data handles are not locked to within certain scopes like QQuickContext2D, but there's no way to reload either...
 struct QV4ParticleData : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
     QV4ParticleData(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
         : Object(engine)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
         this->datum = datum;
     }
 
@@ -287,7 +287,7 @@ struct QV4ParticleData : public QV4::Object
     { that->as<QV4ParticleData>()->~QV4ParticleData(); }
 };
 
-DEFINE_MANAGED_VTABLE(QV4ParticleData);
+DEFINE_OBJECT_VTABLE(QV4ParticleData);
 
 class QV8ParticleDataDeletable : public QV8Engine::Deletable
 {

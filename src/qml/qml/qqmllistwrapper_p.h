@@ -69,7 +69,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
-    Q_MANAGED
+    V4_OBJECT
 protected:
     QmlListWrapper(QV8Engine *engine);
     ~QmlListWrapper();

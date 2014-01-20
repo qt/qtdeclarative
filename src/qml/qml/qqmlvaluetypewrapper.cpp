@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(QmlValueTypeWrapper);
+DEFINE_OBJECT_VTABLE(QmlValueTypeWrapper);
 
 class QmlValueTypeReference : public QmlValueTypeWrapper
 {
@@ -79,7 +79,7 @@ QmlValueTypeWrapper::QmlValueTypeWrapper(QV8Engine *engine, ObjectType objectTyp
     : Object(QV8Engine::getV4(engine)), objectType(objectType)
 {
     v8 = engine;
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 QmlValueTypeWrapper::~QmlValueTypeWrapper()

@@ -101,14 +101,14 @@ V8_DEFINE_EXTENSION(QQmlSqlDatabaseData, databaseData)
 
 class QQmlSqlDatabaseWrapper : public Object
 {
-    Q_MANAGED
+    V4_OBJECT
 
 public:
     enum Type { Database, Query, Rows };
     QQmlSqlDatabaseWrapper(QV8Engine *e)
         : Object(QV8Engine::getV4(e)), type(Database), inTransaction(false), readonly(false), forwardOnly(false)
     {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     ~QQmlSqlDatabaseWrapper() {
@@ -131,7 +131,7 @@ public:
     bool forwardOnly; // type == Rows
 };
 
-DEFINE_MANAGED_VTABLE(QQmlSqlDatabaseWrapper);
+DEFINE_OBJECT_VTABLE(QQmlSqlDatabaseWrapper);
 
 static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
 {

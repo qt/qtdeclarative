@@ -75,12 +75,12 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE(StringObject);
+DEFINE_OBJECT_VTABLE(StringObject);
 
 StringObject::StringObject(InternalClass *ic)
     : Object(ic)
 {
-    Q_ASSERT(internalClass->vtable == &static_vtbl);
+    Q_ASSERT(internalClass->vtable == staticVTable());
 
     Scope scope(engine());
     ScopedObject protectThis(scope, this);
@@ -95,7 +95,7 @@ StringObject::StringObject(InternalClass *ic)
 StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     : Object(engine->stringObjectClass)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
@@ -171,12 +171,12 @@ void StringObject::markObjects(Managed *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-DEFINE_MANAGED_VTABLE(StringCtor);
+DEFINE_OBJECT_VTABLE(StringCtor);
 
 StringCtor::StringCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("String"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue StringCtor::construct(Managed *m, CallData *callData)

@@ -50,12 +50,12 @@ namespace QV4 {
 
 struct ArgumentsGetterFunction: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     uint index;
 
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static ReturnedValue call(Managed *that, CallData *d);
@@ -63,12 +63,12 @@ struct ArgumentsGetterFunction: FunctionObject
 
 struct ArgumentsSetterFunction: FunctionObject
 {
-    Q_MANAGED
+    V4_OBJECT
     uint index;
 
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -76,7 +76,7 @@ struct ArgumentsSetterFunction: FunctionObject
 
 
 struct ArgumentsObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(ArgumentsObject)
     CallContext *context;
     bool fullyCreated;

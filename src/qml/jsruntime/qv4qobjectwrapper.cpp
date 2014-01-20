@@ -241,7 +241,7 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
@@ -1722,7 +1722,7 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     , m_object(object)
     , m_index(index)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     subtype = WrappedQtMethod;
     m_qmlGlobal = qmlGlobal;
 }
@@ -1836,17 +1836,17 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 }
 
-DEFINE_MANAGED_VTABLE(QObjectMethod);
+DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex)
     : Object(engine)
     , m_object(object)
     , m_signalIndex(signalIndex)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
-DEFINE_MANAGED_VTABLE(QmlSignalHandler);
+DEFINE_OBJECT_VTABLE(QmlSignalHandler);
 
 void MultiplyWrappedQObjectMap::insert(QObject *key, Object *value)
 {

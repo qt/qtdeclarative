@@ -71,7 +71,7 @@
 using namespace QV4;
 
 
-DEFINE_MANAGED_VTABLE(FunctionObject);
+DEFINE_OBJECT_VTABLE(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
@@ -222,19 +222,19 @@ InternalClass *FunctionObject::internalClassForConstructor()
     Scope scope(internalClass->engine);
     ScopedObject p(scope, proto);
     if (p)
-        classForConstructor = InternalClass::create(scope.engine, &Object::static_vtbl, p.getPointer());
+        classForConstructor = InternalClass::create(scope.engine, Object::staticVTable(), p.getPointer());
     else
         classForConstructor = scope.engine->objectClass;
 
     return classForConstructor;
 }
 
-DEFINE_MANAGED_VTABLE(FunctionCtor);
+DEFINE_OBJECT_VTABLE(FunctionCtor);
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Function"))
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 // 15.3.2
@@ -394,12 +394,12 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
 
-DEFINE_MANAGED_VTABLE(ScriptFunction);
+DEFINE_OBJECT_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope, function->name, true)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -476,12 +476,12 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     return f->function->code(ctx, f->function->codeData);
 }
 
-DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
+DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope, function->name, true)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -587,13 +587,13 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
 
 
-DEFINE_MANAGED_VTABLE(BuiltinFunction);
+DEFINE_OBJECT_VTABLE(BuiltinFunction);
 
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
@@ -639,16 +639,16 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     return f->code(&ctx, f->index);
 }
 
-DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
+DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
-DEFINE_MANAGED_VTABLE(BoundFunction);
+DEFINE_OBJECT_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
     , target(target)
     , boundArgs(boundArgs)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     subtype = FunctionObject::BoundFunction;
     this->boundThis = boundThis;
 

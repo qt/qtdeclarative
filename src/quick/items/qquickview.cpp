@@ -56,13 +56,13 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_MANAGED_VTABLE(QQuickRootItemMarker);
+DEFINE_OBJECT_VTABLE(QQuickRootItemMarker);
 
 QQuickRootItemMarker::QQuickRootItemMarker(QQuickViewPrivate *view)
     : QV4::Object(QQmlEnginePrivate::getV4Engine(view->engine.data()))
     , view(view)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 }
 
 void QQuickRootItemMarker::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)

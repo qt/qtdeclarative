@@ -83,12 +83,12 @@ struct Q_QML_EXPORT ObjectIterator
 };
 
 struct ForEachIteratorObject: Object {
-    Q_MANAGED
+    V4_OBJECT
     Q_MANAGED_TYPE(ForeachIteratorObject)
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
         : Object(ctx->engine), it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
-        setVTable(&static_vtbl);
+        setVTable(staticVTable());
     }
 
     ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }

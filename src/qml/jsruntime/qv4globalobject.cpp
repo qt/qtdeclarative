@@ -344,12 +344,12 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
     return QString();
 }
 
-DEFINE_MANAGED_VTABLE(EvalFunction);
+DEFINE_OBJECT_VTABLE(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)
 {
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 }
 

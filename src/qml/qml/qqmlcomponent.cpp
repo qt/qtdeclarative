@@ -1069,7 +1069,7 @@ class QQmlComponentIncubator;
 
 class QmlIncubatorObject : public QV4::Object
 {
-    Q_MANAGED
+    V4_OBJECT
 public:
     QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
 
@@ -1093,7 +1093,7 @@ public:
     void setInitialState(QObject *);
 };
 
-DEFINE_MANAGED_VTABLE(QmlIncubatorObject);
+DEFINE_OBJECT_VTABLE(QmlIncubatorObject);
 
 class QQmlComponentIncubator : public QQmlIncubator
 {
@@ -1467,7 +1467,7 @@ QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::Incubat
 {
     incubator.reset(new QQmlComponentIncubator(this, m));
     v8 = engine;
-    setVTable(&static_vtbl);
+    setVTable(staticVTable());
 
     valuemap = QV4::Primitive::undefinedValue();
     qmlGlobal = QV4::Primitive::undefinedValue();
