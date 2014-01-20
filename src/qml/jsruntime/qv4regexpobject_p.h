@@ -106,8 +106,15 @@ struct RegExpCtor: FunctionObject
     Q_MANAGED
     RegExpCtor(ExecutionContext *scope);
 
+    SafeValue lastMatch;
+    SafeString lastInput;
+    int lastMatchStart;
+    int lastMatchEnd;
+    void clearLastMatch();
+
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
 struct RegExpPrototype: RegExpObject
@@ -119,6 +126,13 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_test(CallContext *ctx);
     static ReturnedValue method_toString(CallContext *ctx);
     static ReturnedValue method_compile(CallContext *ctx);
+
+    template <int index>
+    static ReturnedValue method_get_lastMatch_n(CallContext *ctx);
+    static ReturnedValue method_get_lastParen(CallContext *ctx);
+    static ReturnedValue method_get_input(CallContext *ctx);
+    static ReturnedValue method_get_leftContext(CallContext *ctx);
+    static ReturnedValue method_get_rightContext(CallContext *ctx);
 };
 
 }

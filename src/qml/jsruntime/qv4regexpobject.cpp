@@ -238,6 +238,15 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("RegExp"))
 {
     setVTable(&static_vtbl);
+    clearLastMatch();
+}
+
+void RegExpCtor::clearLastMatch()
+{
+    lastMatch = Primitive::nullValue();
+    lastInput = engine()->newIdentifier(QString());
+    lastMatchStart = 0;
+    lastMatchEnd = 0;
 }
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
@@ -300,6 +309,14 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
+void RegExpCtor::markObjects(Managed *that, ExecutionEngine *e)
+{
+    RegExpCtor *This = static_cast<RegExpCtor*>(that);
+    This->lastMatch.mark(e);
+    This->lastInput.mark(e);
+    FunctionObject::markObjects(that, e);
+}
+
 void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
     Scope scope(engine);
@@ -307,6 +324,28 @@ void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 
     ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
     ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));
+
+    // Properties deprecated in the spec but required by "the web" :(
+    ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$&"), method_get_lastMatch_n<0>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$1"), method_get_lastMatch_n<1>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$2"), method_get_lastMatch_n<2>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$3"), method_get_lastMatch_n<3>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$4"), method_get_lastMatch_n<4>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$5"), method_get_lastMatch_n<5>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$6"), method_get_lastMatch_n<6>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$7"), method_get_lastMatch_n<7>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$8"), method_get_lastMatch_n<8>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$9"), method_get_lastMatch_n<9>, 0);
+    ctor->defineAccessorProperty(QStringLiteral("lastParen"), method_get_lastParen, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$+"), method_get_lastParen, 0);
+    ctor->defineAccessorProperty(QStringLiteral("input"), method_get_input, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$_"), method_get_input, 0);
+    ctor->defineAccessorProperty(QStringLiteral("leftContext"), method_get_leftContext, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$`"), method_get_leftContext, 0);
+    ctor->defineAccessorProperty(QStringLiteral("rightContext"), method_get_rightContext, 0);
+    ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, 0);
+
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
@@ -334,7 +373,11 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     uint* matchOffsets = (uint*)alloca(r->value->captureCount() * 2 * sizeof(uint));
-    int result = r->value->match(s, offset, matchOffsets);
+    const int result = r->value->match(s, offset, matchOffsets);
+
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    regExpCtor->clearLastMatch();
+
     if (result == -1) {
         r->lastIndexProperty(ctx)->value = Primitive::fromInt32(0);
         return Encode::null();
@@ -351,9 +394,13 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         array->arrayDataLen = i + 1;
     }
     array->setArrayLengthUnchecked(len);
-
     array->memberData[Index_ArrayIndex].value = Primitive::fromInt32(result);
     array->memberData[Index_ArrayInput].value = arg.asReturnedValue();
+
+    regExpCtor->lastMatch = array;
+    regExpCtor->lastInput = arg->stringValue();
+    regExpCtor->lastMatchStart = matchOffsets[0];
+    regExpCtor->lastMatchEnd = matchOffsets[1];
 
     if (r->global)
         r->lastIndexProperty(ctx)->value = Primitive::fromInt32(matchOffsets[1]);
@@ -393,6 +440,48 @@ ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
     r->value = re->value;
     r->global = re->global;
     return Encode::undefined();
+}
+
+template <int index>
+ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
+{
+    Scope scope(ctx);
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastMatch);
+    ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
+    if (result->isUndefined())
+        return ctx->engine->newString(QString())->asReturnedValue();
+    return result.asReturnedValue();
+}
+
+ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
+{
+    Scope scope(ctx);
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastMatch);
+    ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(lastMatch->arrayLength() - 1) : Encode::undefined());
+    if (result->isUndefined())
+        return ctx->engine->newString(QString())->asReturnedValue();
+    return result.asReturnedValue();
+}
+
+ReturnedValue RegExpPrototype::method_get_input(CallContext *ctx)
+{
+    return static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastInput.asReturnedValue();
+}
+
+ReturnedValue RegExpPrototype::method_get_leftContext(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    QString lastInput = regExpCtor->lastInput->toQString();
+    return ctx->engine->newString(lastInput.left(regExpCtor->lastMatchStart))->asReturnedValue();
+}
+
+ReturnedValue RegExpPrototype::method_get_rightContext(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    QString lastInput = regExpCtor->lastInput->toQString();
+    return ctx->engine->newString(lastInput.mid(regExpCtor->lastMatchEnd))->asReturnedValue();
 }
 
 QT_END_NAMESPACE
