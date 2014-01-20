@@ -182,13 +182,20 @@ QByteArray convertToId(const QMetaObject *mo)
     return className;
 }
 
-QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const QList<QQmlType *> &skip = QList<QQmlType *>())
+QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
+                                                      QSet<const QMetaObject *> &noncreatables,
+                                                      QSet<const QMetaObject *> &singletons,
+                                                      const QList<QQmlType *> &skip = QList<QQmlType *>())
 {
     QSet<const QMetaObject *> metas;
     metas.insert(FriendlyQObject::qtMeta());
 
     QHash<QByteArray, QSet<QByteArray> > extensions;
     foreach (const QQmlType *ty, QQmlMetaType::qmlTypes()) {
+        if (!ty->isCreatable())
+            noncreatables.insert(ty->metaObject());
+        if (ty->isSingleton())
+            singletons.insert(ty->metaObject());
         if (!ty->isComposite()) {
             qmlTypesByCppName[ty->metaObject()->className()].insert(ty);
             if (ty->isExtendedType())
@@ -406,6 +413,12 @@ public:
         qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
 
+        if (compositeType->isCreatable())
+            qml->writeIsCreatable(false);
+
+        if (compositeType->isSingleton())
+            qml->writeIsSingleton(true);
+
         for (int index = mainMeta->classInfoCount() - 1 ; index >= 0 ; --index) {
             QMetaClassInfo classInfo = mainMeta->classInfo(index);
             if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
@@ -437,7 +450,7 @@ public:
         qml->writeEndObject();
     }
 
-    void dump(const QMetaObject *meta)
+    void dump(const QMetaObject *meta, bool isUncreatable, bool isSingleton)
     {
         qml->writeStartObject("Component");
 
@@ -468,6 +481,12 @@ public:
             QStringList exportStrings = exports.keys();
             std::sort(exportStrings.begin(), exportStrings.end());
             qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
+
+            if (isUncreatable)
+                qml->writeIsCreatable(false);
+
+            if (isSingleton)
+                qml->writeIsSingleton(true);
 
             // write meta object revisions
             QStringList metaObjectRevisions;
@@ -622,7 +641,6 @@ private:
     }
 };
 
-
 enum ExitCode {
     EXIT_INVALIDARGUMENTS = 1,
     EXIT_SEGV = 2,
@@ -642,12 +660,12 @@ void sigSegvHandler(int) {
 
 void printUsage(const QString &appName)
 {
-    qWarning() << qPrintable(QString(
+    std::cerr << qPrintable(QString(
                                  "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
-                                 appName));
+                                 appName)) << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -726,14 +744,14 @@ int main(int argc, char *argv[])
                        || arg == QLatin1String("-defaultplatform")) {
                 continue;
             } else {
-                qWarning() << "Invalid argument: " << arg;
+                std::cerr << "Invalid argument: " << qPrintable(arg) << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
         }
 
         if (action == Uri) {
             if (positionalArgs.size() != 3 && positionalArgs.size() != 4) {
-                qWarning() << "Incorrect number of positional arguments";
+                std::cerr << "Incorrect number of positional arguments" << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
             pluginImportUri = positionalArgs[1];
@@ -742,7 +760,7 @@ int main(int argc, char *argv[])
                 pluginImportPath = positionalArgs[3];
         } else if (action == Path) {
             if (positionalArgs.size() != 2 && positionalArgs.size() != 3) {
-                qWarning() << "Incorrect number of positional arguments";
+                std::cerr << "Incorrect number of positional arguments" << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
             pluginImportPath = QDir::fromNativeSeparators(positionalArgs[1]);
@@ -750,7 +768,7 @@ int main(int argc, char *argv[])
                 pluginImportVersion = positionalArgs[2];
         } else if (action == Builtins) {
             if (positionalArgs.size() != 1) {
-                qWarning() << "Incorrect number of positional arguments";
+                std::cerr << "Incorrect number of positional arguments" << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
         }
@@ -760,7 +778,7 @@ int main(int argc, char *argv[])
     if (!pluginImportPath.isEmpty()) {
         QDir cur = QDir::current();
         cur.cd(pluginImportPath);
-        pluginImportPath = cur.absolutePath();
+        pluginImportPath = cur.canonicalPath();
         QDir::setCurrent(pluginImportPath);
         engine.addImportPath(pluginImportPath);
     }
@@ -779,7 +797,9 @@ int main(int argc, char *argv[])
     }
 
     // find all QMetaObjects reachable from the builtin module
-    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine);
+    QSet<const QMetaObject *> uncreatableMetas;
+    QSet<const QMetaObject *> singletonMetas;
+    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas);
     QList<QQmlType *> defaultTypes = QQmlMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
@@ -831,7 +851,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, defaultTypes);
+        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultTypes);
         candidates.subtract(defaultReachable);
 
         // Also eliminate meta objects with the same classname.
@@ -873,7 +893,7 @@ int main(int argc, char *argv[])
     if (relocatable)
         dumper.setRelocatableModuleUri(pluginImportUri);
     foreach (const QMetaObject *meta, nameToMeta) {
-        dumper.dump(meta);
+        dumper.dump(meta, uncreatableMetas.contains(meta), singletonMetas.contains(meta));
     }
     foreach (const QQmlType *compositeType, qmlTypesByCompositeName)
         dumper.dumpComposite(&engine, compositeType, defaultReachableNames);
