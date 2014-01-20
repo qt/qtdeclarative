@@ -15,4 +15,8 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 OTHER_FILES += \
     data/pixmapCacheTest.qml \
-    data/controlFromJS.qml
+    data/controlFromJS.qml \
+    data/test.qml \
+    data/exit.qml \
+    data/scenegraphTest.qml \
+    data/TestImage_2x2.png
