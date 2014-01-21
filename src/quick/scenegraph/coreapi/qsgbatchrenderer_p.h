@@ -194,15 +194,11 @@ struct RenderNodeElement : public Element {
     RenderNodeElement(QSGRenderNode *rn)
         : Element(0)
         , renderNode(rn)
-        , fbo(0)
     {
         isRenderNode = true;
     }
 
-    ~RenderNodeElement();
-
     QSGRenderNode *renderNode;
-    QOpenGLFramebufferObject *fbo;
 };
 
 struct BatchRootInfo {
@@ -436,7 +432,6 @@ private:
     void renderUnmergedBatch(const Batch *batch);
     void updateClip(const QSGClipNode *clipList, const Batch *batch);
     const QMatrix4x4 &matrixForRoot(Node *node);
-    void prepareRenderNode(RenderNodeElement *e);
     void renderRenderNode(Batch *batch);
     void setActiveShader(QSGMaterialShader *program, ShaderManager::Shader *shader);
 
@@ -485,6 +480,7 @@ private:
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
     const QSGClipNode *m_currentClip;
+    ClipType m_currentClipType;
 
     // For minimal OpenGL core profile support
     QOpenGLVertexArrayObject *m_vao;
