@@ -2070,7 +2070,7 @@ QRectF QQuickText::boundingRect() const
     Q_D(const QQuickText);
 
     QRectF rect = d->layedOutTextRect;
-    rect.moveLeft(QQuickTextUtil::alignedX(rect.width(), width(), d->hAlign));
+    rect.moveLeft(QQuickTextUtil::alignedX(rect.width(), width(), effectiveHAlign()));
     rect.moveTop(QQuickTextUtil::alignedY(rect.height(), height(), d->vAlign));
 
     if (d->style != Normal)
@@ -2207,11 +2207,11 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     const QColor linkColor = QColor::fromRgba(d->linkColor);
 
     if (d->richText) {
-        const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), width(), d->hAlign);
+        const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), width(), effectiveHAlign());
         d->ensureDoc();
         node->addTextDocument(QPointF(dx, dy), d->extra->doc, color, d->style, styleColor, linkColor);
     } else if (d->layedOutTextRect.width() > 0) {
-        const qreal dx = QQuickTextUtil::alignedX(d->lineWidth, width(), d->hAlign);
+        const qreal dx = QQuickTextUtil::alignedX(d->lineWidth, width(), effectiveHAlign());
         int unelidedLineCount = d->lineCount;
         if (d->elideLayout)
             unelidedLineCount -= 1;
@@ -2483,7 +2483,7 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
             link = anchorAt(elideLayout, translatedMousePos);
         return link;
     } else if (richText && extra.isAllocated() && extra->doc) {
-        translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect.width(), q->width(), hAlign);
+        translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect.width(), q->width(), q->effectiveHAlign());
         return extra->doc->documentLayout()->anchorAt(translatedMousePos);
     }
     return QString();

@@ -1694,6 +1694,12 @@ void tst_qquicktext::linkInteraction_data()
                 << (PointVector() << metrics.characterRectangle(18, Qt::AlignRight, Qt::AlignBottom).center())
                 << singleLineLink
                 << singleLineLink << singleLineLink;
+        QTest::newRow("click on mirrored link")
+                << singleLineText << 240.
+                << "horizontalAlignment: Text.AlignLeft; LayoutMirroring.enabled: true"
+                << (PointVector() << metrics.characterRectangle(18, Qt::AlignRight, Qt::AlignTop).center())
+                << singleLineLink
+                << singleLineLink << singleLineLink;
         QTest::newRow("click on center aligned link")
                 << singleLineText << 240.
                 << "horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter"
@@ -2510,6 +2516,18 @@ void tst_qquicktext::boundingRect()
     QCOMPARE(text->boundingRect().height(), line.height());
 
     text->setHAlign(QQuickText::AlignRight);
+    QCOMPARE(text->boundingRect().x(), text->width() - line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    QQuickItemPrivate::get(text)->setLayoutMirror(true);
+    QCOMPARE(text->boundingRect().x(), qreal(0));
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    text->setHAlign(QQuickText::AlignLeft);
     QCOMPARE(text->boundingRect().x(), text->width() - line.naturalTextWidth());
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
