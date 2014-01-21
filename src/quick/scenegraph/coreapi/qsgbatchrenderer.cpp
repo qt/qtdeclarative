@@ -757,6 +757,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_nextRenderOrder(0)
     , m_partialRebuild(false)
     , m_partialRebuildRoot(0)
+    , m_useDepthBuffer(true)
     , m_opaqueBatches(16)
     , m_alphaBatches(16)
     , m_batchPool(16)
@@ -815,6 +816,8 @@ Renderer::Renderer(QSGRenderContext *ctx)
         m_vao = new QOpenGLVertexArrayObject(this);
         m_vao->create();
     }
+
+    m_useDepthBuffer = ctx->openglContext()->format().depthBufferSize() > 0;
 }
 
 static void qsg_wipeBuffer(Buffer *buffer, QOpenGLFunctions *funcs)
@@ -1256,7 +1259,7 @@ void Renderer::buildRenderLists(QSGNode *node)
         Q_ASSERT(e);
 
         bool opaque = gn->inheritedOpacity() > OPAQUE_LIMIT && !(gn->activeMaterial()->flags() & QSGMaterial::Blending);
-        if (opaque)
+        if (opaque && m_useDepthBuffer)
             m_opaqueRenderList << e;
         else
             m_alphaRenderList << e;
@@ -1637,10 +1640,13 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
         }
     }
 
-    float *vzorder = (float *) *zData;
-    float zorder = 1.0f - e->order * m_zRange;
-    for (int i=0; i<vCount; ++i)
-        vzorder[i] = zorder;
+    if (m_useDepthBuffer) {
+        float *vzorder = (float *) *zData;
+        float zorder = 1.0f - e->order * m_zRange;
+        for (int i=0; i<vCount; ++i)
+            vzorder[i] = zorder;
+        *zData += vCount * sizeof(float);
+    }
 
     int iCount = g->indexCount();
     quint16 *indices = (quint16 *) *indexData;
@@ -1664,7 +1670,6 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     }
 
     *vertexData += vCount * vSize;
-    *zData += vCount * sizeof(float);
     *indexData += iCount * sizeof(quint16);
     *iBase += vCount;
     *indexCount += iCount;
@@ -1760,8 +1765,9 @@ void Renderer::uploadBatch(Batch *b)
         int bufferSize =  b->vertexCount * g->sizeOfVertex();
         int ibufferSize = 0;
         if (b->merged) {
-            bufferSize += b->vertexCount * sizeof(float);
             ibufferSize = b->indexCount * sizeof(quint16);
+            if (m_useDepthBuffer)
+                bufferSize += b->vertexCount * sizeof(float);
         } else {
             ibufferSize = unmergedIndexSize;
         }
@@ -1783,7 +1789,7 @@ void Renderer::uploadBatch(Batch *b)
 #ifdef QSG_SEPARATE_INDEX_BUFFER
             char *indexData = b->ibo.data;
 #else
-            char *indexData = zData + b->vertexCount * sizeof(float);
+            char *indexData = zData + (m_useDepthBuffer ? b->vertexCount * sizeof(float) : 0);
 #endif
 
             quint16 iOffset = 0;
@@ -1863,7 +1869,7 @@ void Renderer::uploadBatch(Batch *b)
                     dump << ") ";
                     offset += attr.tupleSize * size_of_type(attr.type);
                 }
-                if (b->merged) {
+                if (b->merged && m_useDepthBuffer) {
                     float zorder = ((float*)(b->vbo.data + b->vertexCount * g->sizeOfVertex()))[i];
                     dump << " Z:(" << zorder << ")";
                 }
@@ -2031,7 +2037,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
 
     QSGMaterial *material = gn->activeMaterial();
-    ShaderManager::Shader *sms = m_shaderManager->prepareMaterial(material);
+    ShaderManager::Shader *sms = m_useDepthBuffer ? m_shaderManager->prepareMaterial(material) : m_shaderManager->prepareMaterialNoRewrite(material);
     QSGMaterialShader *program = sms->program;
 
     if (m_currentShader != sms)
@@ -2060,7 +2066,8 @@ void Renderer::renderMergedBatch(const Batch *batch)
             glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (void *) (qintptr) (offset + draw.vertices));
             offset += a.tupleSize * size_of_type(a.type);
         }
-        glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
+        if (m_useDepthBuffer)
+            glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
 
         glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (indexBase + draw.indices));
     }
@@ -2142,8 +2149,10 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         m_current_determinant = m_current_model_view_matrix.determinant();
 
         m_current_projection_matrix = projectionMatrix();
-        m_current_projection_matrix(2, 2) = m_zRange;
-        m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
+        if (m_useDepthBuffer) {
+            m_current_projection_matrix(2, 2) = m_zRange;
+            m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
+        }
 
         program->updateState(state(dirty), material, m_currentMaterial);
 
@@ -2197,17 +2206,22 @@ void Renderer::renderBatches()
     QRect r = viewportRect();
     glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
     glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
-#if defined(QT_OPENGL_ES)
-    glClearDepthf(1);
-#else
-    glClearDepth(1);
-#endif
 
+    if (m_useDepthBuffer) {
+#if defined(QT_OPENGL_ES)
+        glClearDepthf(1);
+#else
+        glClearDepth(1);
+#endif
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(true);
+        glDisable(GL_BLEND);
+    } else {
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(false);
+    }
     glDisable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(true);
     glColorMask(true, true, true, true);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
@@ -2234,7 +2248,8 @@ void Renderer::renderBatches()
     }
 
     glEnable(GL_BLEND);
-    glDepthMask(false);
+    if (m_useDepthBuffer)
+        glDepthMask(false);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     if (Q_LIKELY(renderAlpha)) {

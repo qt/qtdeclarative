@@ -460,6 +460,8 @@ private:
     bool m_partialRebuild;
     QSGNode *m_partialRebuildRoot;
 
+    bool m_useDepthBuffer;
+
     QHash<QSGRenderNode *, RenderNodeElement *> m_renderNodeElements;
     QDataBuffer<Batch *> m_opaqueBatches;
     QDataBuffer<Batch *> m_alphaBatches;
