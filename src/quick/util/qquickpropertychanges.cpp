@@ -127,6 +127,11 @@ QT_BEGIN_NAMESPACE
 
     See the PropertyAction documentation for more details.
 
+    \note The \l{Item::}{visible} and \l{Item::}{enabled} properties of \l Item do not behave
+    exactly the same as other properties in PropertyChanges. Since these properties can be
+    changed implicitly through their parent's state, they should be set explicitly in all PropertyChanges.
+    An item will still not be enabled/visible if one of its parents is not enabled or visible.
+
     \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, {Qt QML}
 */
 
