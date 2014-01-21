@@ -77,6 +77,9 @@
 #if USE(PTHREADS)
 #  include <pthread.h>
 #  include <sys/resource.h>
+#if HAVE(PTHREAD_NP_H)
+#  include <pthread_np.h>
+#endif
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -109,7 +112,11 @@ quintptr getStackLimit()
 #  else
     void* stackBottom = 0;
     pthread_attr_t attr;
+#if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
+    if (pthread_attr_get_np(pthread_self(), &attr) == 0) {
+#else
     if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+#endif
         size_t stackSize = 0;
         pthread_attr_getstack(&attr, &stackBottom, &stackSize);
         pthread_attr_destroy(&attr);
