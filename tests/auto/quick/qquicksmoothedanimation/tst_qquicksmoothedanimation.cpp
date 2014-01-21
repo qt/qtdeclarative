@@ -192,6 +192,9 @@ void tst_qquicksmoothedanimation::valueSource()
 
 void tst_qquicksmoothedanimation::behavior()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QTBUG-36290 - MinGW Animation tests are flaky.");
+#endif
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("smoothedanimationBehavior.qml"));

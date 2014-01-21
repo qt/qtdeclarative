@@ -868,6 +868,9 @@ void tst_QParallelAnimationGroupJob::addAndRemoveDuration()
 
 void tst_QParallelAnimationGroupJob::pauseResume()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QTBUG-36290 - MinGW Animation tests are flaky.");
+#endif
     QParallelAnimationGroupJob group;
     TestAnimation *anim = new TestAnimation(250);      // 0, duration = 250;
     group.appendAnimation(anim);

@@ -470,6 +470,9 @@ void tst_qquickanimations::pathInterpolator()
 
 void tst_qquickanimations::pathInterpolatorBackwardJump()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QTBUG-36290 - MinGW Animation tests are flaky.");
+#endif
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
