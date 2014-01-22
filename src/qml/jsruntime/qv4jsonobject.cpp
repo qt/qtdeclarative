@@ -1058,7 +1058,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     a->arrayReserve(size);
     ScopedValue v(scope);
     for (int i = 0; i < size; i++)
-        a->arrayData->put(i, (v = fromJsonValue(engine, array.at(i))));
+        a->arrayPut(i, (v = fromJsonValue(engine, array.at(i))));
     a->setArrayLengthUnchecked(size);
     return a.asReturnedValue();
 }

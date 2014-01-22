@@ -72,7 +72,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
     } else {
         len = callData->argc;
         a->arrayReserve(len);
-        a->arrayData->put(0, callData->args, len);
+        a->arrayPut(0, callData->args, len);
     }
     a->setArrayLengthUnchecked(len);
 
@@ -305,7 +305,8 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
     if (!ctx->callData->argc) {
         ;
     } else if (!instance->protoHasArray() && instance->arrayData->length() <= len) {
-        len = instance->arrayData->push_back(len, ctx->callData->argc, ctx->callData->args);
+        instance->arrayData->vtable()->putArray(instance.getPointer(), len, ctx->callData->args, ctx->callData->argc);
+        len = instance->arrayData->length();
     } else {
         for (int i = 0; i < ctx->callData->argc; ++i)
             instance->putIndexed(len + i, ctx->callData->args[i]);
@@ -371,7 +372,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
     ScopedValue result(scope);
 
     if (!instance->protoHasArray() && !instance->arrayData->hasAttributes() && instance->arrayData->length() <= len) {
-        result = instance->arrayData->pop_front();
+        result = instance->arrayData->vtable()->pop_front(instance.getPointer());
     } else {
         result = instance->getIndexed(0);
         if (scope.hasException())
@@ -485,7 +486,7 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
         if (scope.hasException())
             return Encode::undefined();
         if (exists)
-            newArray->arrayData->put(i, v);
+            newArray->arrayPut(i, v);
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 
@@ -550,7 +551,7 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
     uint len = instance->getLength();
 
     if (!instance->protoHasArray() && !instance->arrayData->hasAttributes() && instance->arrayData->length() <= len) {
-        instance->arrayData->push_front(ctx->callData->args, ctx->callData->argc);
+        instance->arrayData->vtable()->push_front(instance.getPointer(), ctx->callData->args, ctx->callData->argc);
     } else {
         ScopedValue v(scope);
         for (uint k = len; k > 0; --k) {

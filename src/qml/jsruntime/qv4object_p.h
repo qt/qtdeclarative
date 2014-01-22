@@ -183,12 +183,25 @@ public:
     void copyArrayData(Object *other);
 
     bool setArrayLength(uint newLen);
-
     void setArrayLengthUnchecked(uint l);
 
     void arraySet(uint index, const Property &p, PropertyAttributes attributes = Attr_Data);
-
     void arraySet(uint index, ValueRef value);
+
+    bool arrayPut(uint index, ValueRef value) {
+        return arrayData->vtable()->put(this, index, value);
+    }
+    bool arrayPut(uint index, SafeValue *values, uint n) {
+        return arrayData->vtable()->putArray(this, index, values, n);
+    }
+    void setArrayAttributes(uint i, PropertyAttributes a) {
+        Q_ASSERT(arrayData);
+        if (arrayData->attrs || a != Attr_Data) {
+            arrayData->ensureAttributes();
+            a.resolve();
+            arrayData->vtable()->setAttribute(this, i, a);
+        }
+    }
 
     void push_back(const ValueRef v);
 
@@ -356,7 +369,7 @@ inline void Object::push_back(const ValueRef v)
 
     uint idx = getLength();
     arrayReserve(idx + 1);
-    arrayData->put(idx, v);
+    arrayPut(idx, v);
     setArrayLengthUnchecked(idx + 1);
 }
 
@@ -372,7 +385,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     } else {
         arrayData->vtable()->reserve(arrayData, index + 1);
     }
-    arrayData->setAttributes(index, attributes);
+    setArrayAttributes(index, attributes);
     Property *pd = ArrayData::insert(this, index, attributes.isAccessor());
     pd->value = p.value;
     if (attributes.isAccessor())

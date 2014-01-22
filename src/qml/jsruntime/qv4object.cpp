@@ -857,7 +857,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
     if (internalClass->engine->hasException)
         return false;
 
-    if (!arrayData || arrayData->deleteIndex(index))
+    if (!arrayData || arrayData->vtable()->del(this, index))
         return true;
 
     if (engine()->currentContext()->strictMode)
@@ -1025,7 +1025,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
             if (member.isNull()) {
                 // need to convert the array and the slot
                 initSparseArray();
-                arrayData->setAttributes(index, cattrs);
+                setArrayAttributes(index, cattrs);
                 current = arrayData->getProperty(index);
             }
             current->setGetter(0);
@@ -1036,7 +1036,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
             cattrs.setWritable(false);
             if (member.isNull()) {
                 // need to convert the array and the slot
-                arrayData->setAttributes(index, cattrs);
+                setArrayAttributes(index, cattrs);
                 current = arrayData->getProperty(index);
             }
             current->value = Primitive::undefinedValue();
@@ -1062,7 +1062,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
     if (!member.isNull()) {
         internalClass = internalClass->changeMember(member.getPointer(), cattrs);
     } else {
-        arrayData->setAttributes(index, cattrs);
+        setArrayAttributes(index, cattrs);
     }
     if (cattrs.isAccessor())
         hasAccessorProperty = 1;
@@ -1143,10 +1143,14 @@ bool Object::setArrayLength(uint newLen)
     uint oldLen = getLength();
     bool ok = true;
     if (newLen < oldLen) {
-        uint l = arrayData->truncate(newLen);
-        if (l != newLen)
-            ok = false;
-        newLen = l;
+        if (!arrayData) {
+            Q_ASSERT(!newLen);
+        } else {
+            uint l = arrayData->vtable()->truncate(this, newLen);
+            if (l != newLen)
+                ok = false;
+            newLen = l;
+        }
     } else {
         if (newLen >= 0x100000)
             initSparseArray();
@@ -1221,7 +1225,7 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     arrayReserve(len);
     ScopedValue v(scope);
     for (int ii = 0; ii < len; ++ii)
-        arrayData->put(ii, (v = engine->newString(list.at(ii))));
+        arrayPut(ii, (v = engine->newString(list.at(ii))));
     setArrayLengthUnchecked(len);
 }
 

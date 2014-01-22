@@ -65,7 +65,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         memberData[CallerPropertyIndex] = pd;
 
         arrayReserve(context->callData->argc);
-        arrayData->put(0, context->callData->args, context->callData->argc);
+        arrayPut(0, context->callData->args, context->callData->argc);
         fullyCreated = true;
     } else {
         hasAccessorProperty = 1;
@@ -99,9 +99,9 @@ void ArgumentsObject::fullyCreate()
         mappedArguments.append(context->callData->args[i]);
         arraySet(i, context->engine->argumentsAccessors.at(i), Attr_Accessor);
     }
-    arrayData->put(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
+    arrayPut(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
-        arrayData->setAttributes(i, Attr_Data);
+        setArrayAttributes(i, Attr_Data);
 
     fullyCreated = true;
 }
@@ -121,7 +121,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     if (isMapped) {
         map = *pd;
         mapAttrs = arrayData->attributes(index);
-        arrayData->setAttributes(index, Attr_Data);
+        setArrayAttributes(index, Attr_Data);
         pd = arrayData->getProperty(index);
         pd->value = mappedArguments.at(index);
     }
@@ -138,7 +138,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         map.setter()->call(callData);
 
         if (attrs.isWritable()) {
-            arrayData->setAttributes(index, mapAttrs);
+            setArrayAttributes(index, mapAttrs);
             pd = arrayData->getProperty(index);
             *pd = map;
         }

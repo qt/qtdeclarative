@@ -66,14 +66,14 @@ struct ArrayVTable
     uint type;
     void (*reserve)(ArrayData *d, uint n);
     ReturnedValue (*get)(const ArrayData *d, uint index);
-    bool (*put)(ArrayData *d, uint index, ValueRef value);
-    bool (*putArray)(ArrayData *d, uint index, SafeValue *values, uint n);
-    bool (*del)(ArrayData *d, uint index);
-    void (*setAttribute)(ArrayData *d, uint index, PropertyAttributes attrs);
+    bool (*put)(Object *o, uint index, ValueRef value);
+    bool (*putArray)(Object *o, uint index, SafeValue *values, uint n);
+    bool (*del)(Object *o, uint index);
+    void (*setAttribute)(Object *o, uint index, PropertyAttributes attrs);
     PropertyAttributes (*attribute)(const ArrayData *d, uint index);
-    void (*push_front)(ArrayData *d, SafeValue *values, uint n);
-    ReturnedValue (*pop_front)(ArrayData *d);
-    uint (*truncate)(ArrayData *d, uint newLen);
+    void (*push_front)(Object *o, SafeValue *values, uint n);
+    ReturnedValue (*pop_front)(Object *o);
+    uint (*truncate)(Object *o, uint newLen);
     uint (*length)(const ArrayData *d);
 };
 
@@ -118,14 +118,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
         Q_ASSERT(this);
         return attrs ? vtable()->attribute(this, i) : Attr_Data;
     }
-    void setAttributes(uint i, PropertyAttributes a) {
-        Q_ASSERT(this);
-        if (attrs || a != Attr_Data) {
-            ensureAttributes();
-            a.resolve();
-            vtable()->setAttribute(this, i, a);
-        }
-    }
 
     bool isEmpty(uint i) const {
         if (!this)
@@ -133,31 +125,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
         return (vtable()->get(this, i) == Primitive::emptyValue().asReturnedValue());
     }
 
-
-    inline void push_front(SafeValue *values, uint nValues) {
-        vtable()->push_front(this, values, nValues);
-    }
-    inline ReturnedValue pop_front() {
-        return vtable()->pop_front(this);
-    }
-    inline uint push_back(uint l, uint n, SafeValue *values) {
-        vtable()->putArray(this, l, values, n);
-        return length();
-    }
-    inline bool deleteIndex(uint index) {
-        return vtable()->del(this, index);
-    }
-    inline uint truncate(uint newLen) {
-        if (!this)
-            return newLen;
-        return vtable()->truncate(this, newLen);
-    }
-    bool put(uint index, ValueRef value) {
-        return vtable()->put(this, index, value);
-    }
-    bool put(uint index, SafeValue *values, uint n) {
-        return vtable()->putArray(this, index, values, n);
-    }
     ReturnedValue get(uint i) const {
         if (!this)
             return Primitive::emptyValue().asReturnedValue();
@@ -190,14 +157,14 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void markObjects(Managed *d, ExecutionEngine *e);
 
     static ReturnedValue get(const ArrayData *d, uint index);
-    static bool put(ArrayData *d, uint index, ValueRef value);
-    static bool putArray(ArrayData *d, uint index, SafeValue *values, uint n);
-    static bool del(ArrayData *d, uint index);
-    static void setAttribute(ArrayData *d, uint index, PropertyAttributes attrs);
+    static bool put(Object *o, uint index, ValueRef value);
+    static bool putArray(Object *o, uint index, SafeValue *values, uint n);
+    static bool del(Object *o, uint index);
+    static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static PropertyAttributes attribute(const ArrayData *d, uint index);
-    static void push_front(ArrayData *d, SafeValue *values, uint n);
-    static ReturnedValue pop_front(ArrayData *d);
-    static uint truncate(ArrayData *d, uint newLen);
+    static void push_front(Object *o, SafeValue *values, uint n);
+    static ReturnedValue pop_front(Object *o);
+    static uint truncate(Object *o, uint newLen);
     static uint length(const ArrayData *d);
 };
 
@@ -222,14 +189,14 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 
     static void reserve(ArrayData *d, uint n);
     static ReturnedValue get(const ArrayData *d, uint index);
-    static bool put(ArrayData *d, uint index, ValueRef value);
-    static bool putArray(ArrayData *d, uint index, SafeValue *values, uint n);
-    static bool del(ArrayData *d, uint index);
-    static void setAttribute(ArrayData *d, uint index, PropertyAttributes attrs);
+    static bool put(Object *o, uint index, ValueRef value);
+    static bool putArray(Object *o, uint index, SafeValue *values, uint n);
+    static bool del(Object *o, uint index);
+    static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static PropertyAttributes attribute(const ArrayData *d, uint index);
-    static void push_front(ArrayData *d, SafeValue *values, uint n);
-    static ReturnedValue pop_front(ArrayData *d);
-    static uint truncate(ArrayData *d, uint newLen);
+    static void push_front(Object *o, SafeValue *values, uint n);
+    static ReturnedValue pop_front(Object *o);
+    static uint truncate(Object *o, uint newLen);
     static uint length(const ArrayData *d);
 };
 
