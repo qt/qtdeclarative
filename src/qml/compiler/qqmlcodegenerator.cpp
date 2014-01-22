@@ -1020,14 +1020,12 @@ void QQmlCodeGenerator::collectTypeReferences()
             _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
 
         for (QmlProperty *prop = obj->properties->first; prop; prop = prop->next) {
-            if (prop->type >= QV4::CompiledData::Property::Custom)
-                _typeReferences.add(prop->customTypeNameIndex, prop->location);
+            if (prop->type >= QV4::CompiledData::Property::Custom) {
+                // ### FIXME: We could report the more accurate location here by using prop->location, but the old
+                // compiler can't and the tests expect it to be the object location right now.
+                _typeReferences.add(prop->customTypeNameIndex, obj->location);
+            }
         }
-
-        for (Signal *sig = obj->qmlSignals->first; sig; sig = sig->next)
-            for (SignalParameter *param = sig->parameters->first; param; param = param->next)
-                if (!stringAt(param->customTypeNameIndex).isEmpty())
-                    _typeReferences.add(param->customTypeNameIndex, param->location);
 
         for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
             if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)

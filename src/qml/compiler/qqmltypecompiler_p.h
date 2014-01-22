@@ -67,6 +67,8 @@ struct Location;
 
 struct QQmlTypeCompiler
 {
+    Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
+public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QtQml::ParsedQML *parsedQML);
 
     bool compile();

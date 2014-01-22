@@ -80,13 +80,36 @@ bool QQmlTypeCompiler::compile()
     const QHash<int, QQmlTypeData::TypeReference> &resolvedTypes = typeData->resolvedTypeRefs();
     for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
          resolvedType != end; ++resolvedType) {
-        QQmlCompiledData::TypeReference *ref = new QQmlCompiledData::TypeReference;
+        QScopedPointer<QQmlCompiledData::TypeReference> ref(new QQmlCompiledData::TypeReference);
+        QQmlType *qmlType = resolvedType->type;
         if (resolvedType->typeData) {
+            if (qmlType->isCompositeSingleton()) {
+                QQmlError error;
+                QString reason = tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName());
+                error.setDescription(reason);
+                error.setColumn(resolvedType->location.column);
+                error.setLine(resolvedType->location.line);
+                recordError(error);
+                return false;
+            }
             ref->component = resolvedType->typeData->compiledData();
             ref->component->addref();
-        } else {
-            ref->type = resolvedType->type;
+        } else if (qmlType) {
+            ref->type = qmlType;
             Q_ASSERT(ref->type);
+
+            if (!ref->type->isCreatable()) {
+                QQmlError error;
+                QString reason = ref->type->noCreationReason();
+                if (reason.isEmpty())
+                    reason = tr("Element is not creatable.");
+                error.setDescription(reason);
+                error.setColumn(resolvedType->location.column);
+                error.setLine(resolvedType->location.line);
+                recordError(error);
+                return false;
+            }
+
             if (ref->type->containsRevisionedAttributes()) {
                 QQmlError cacheError;
                 ref->typePropertyCache = engine->cache(ref->type,
@@ -96,7 +119,6 @@ bool QQmlTypeCompiler::compile()
                     cacheError.setColumn(resolvedType->location.column);
                     cacheError.setLine(resolvedType->location.line);
                     recordError(cacheError);
-                    delete ref;
                     return false;
                 }
                 ref->typePropertyCache->addref();
@@ -104,7 +126,7 @@ bool QQmlTypeCompiler::compile()
         }
         ref->majorVersion = resolvedType->majorVersion;
         ref->minorVersion = resolvedType->minorVersion;
-        compiledData->resolvedTypes.insert(resolvedType.key(), ref);
+        compiledData->resolvedTypes.insert(resolvedType.key(), ref.take());
     }
 
     // Build property caches and VME meta object data
