@@ -73,7 +73,6 @@ protected:
 protected Q_SLOTS:
     virtual void accept();
     virtual void reject();
-    void clicked();
 
 private:
     Q_DISABLE_COPY(QQuickMessageDialog)

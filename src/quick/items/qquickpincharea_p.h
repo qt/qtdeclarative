@@ -282,9 +282,11 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     virtual void itemChange(ItemChange change, const ItemChangeData& value);
-
-private Q_SLOTS:
-    void setTouchEventsEnabledForWindow(QWindow *window);
+#ifdef Q_OS_OSX
+    void hoverEnterEvent(QHoverEvent *event);
+    void hoverLeaveEvent(QHoverEvent *event);
+    void setTouchEventsEnabled(bool enable);
+#endif
 
 private:
     void updatePinch();
@@ -292,7 +294,6 @@ private:
     void handleRelease();
 
 private:
-    QWindow *_currentWindow;
     Q_DISABLE_COPY(QQuickPinchArea)
     Q_DECLARE_PRIVATE(QQuickPinchArea)
 };
