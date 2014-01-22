@@ -165,10 +165,6 @@ QAccessible::State QAccessibleQuickItem::state() const
         st.focusable = true;
     if (item()->hasActiveFocus())
         st.focused = true;
-
-    if (role() == QAccessible::ComboBox)
-        st.editable = item()->property("editable").toBool();
-
     return st;
 }
 
