@@ -93,7 +93,6 @@ QT_BEGIN_NAMESPACE
 QQuickMessageDialog::QQuickMessageDialog(QObject *parent)
     : QQuickAbstractMessageDialog(parent)
 {
-    connect(this, SIGNAL(buttonClicked()), this, SLOT(clicked()));
 }
 
 
@@ -116,53 +115,6 @@ QQuickMessageDialog::~QQuickMessageDialog()
     The QML object which implements the actual message dialog. Should be either a
     \l Window or an \l Item.
 */
-
-
-void QQuickMessageDialog::clicked() {
-    switch (m_clickedButton) {
-    // This mapping from buttons to roles is the same as
-    // documented for enum QMessageBox::StandardButton
-    case Ok:
-    case Open:
-    case Save:
-    case SaveAll:
-    case Retry:
-    case Ignore:
-        accept();
-        break;
-    case Cancel:
-    case Close:
-    case Abort:
-        reject();
-        break;
-    case Discard:
-        emit discard();
-        close();
-        break;
-    case Help:
-        emit help();
-        break;
-    case Yes:
-    case YesToAll:
-        emit yes();
-        close();
-        break;
-    case No:
-    case NoToAll:
-        emit no();
-        close();
-        break;
-    case Apply:
-        emit apply();
-        break;
-    case Reset:
-    case RestoreDefaults:
-        emit reset();
-        break;
-    default:
-        qWarning("StandardButton %d has no role", m_clickedButton);
-    }
-}
 
 void QQuickMessageDialog::accept() {
     // enter key is treated like OK

@@ -250,9 +250,11 @@ protected:
     bool shouldFilter(QEvent *event);
     void grabGesture();
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-
-protected Q_SLOTS:
-    void setTouchEventsEnabledForWindow(QWindow *window);
+#ifdef Q_OS_OSX
+    void hoverEnterEvent(QHoverEvent *event);
+    void hoverLeaveEvent(QHoverEvent *event);
+    void setTouchEventsEnabled(bool enable);
+#endif
 
 private:
     void ungrab();
@@ -261,7 +263,6 @@ private:
     QList<QObject*> _releasedTouchPoints;
     QList<QObject*> _pressedTouchPoints;
     QList<QObject*> _movedTouchPoints;
-    QWindow *_currentWindow;
     int _minimumTouchPoints;
     int _maximumTouchPoints;
     bool _stealMouse;
