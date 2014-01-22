@@ -2569,7 +2569,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     text. The link must be in rich text or HTML format and the \a link
     string provides access to the particular link.
 
-    \sa hoveredLink
+    \sa hoveredLink, linkAt()
 */
 
 /*!
@@ -2580,7 +2580,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     embedded in the text. The link must be in rich text or HTML format
     and the \a hoveredLink string provides access to the particular link.
 
-    \sa onLinkHovered
+    \sa onLinkHovered, linkAt()
 */
 
 QString QQuickText::hoveredLink() const
@@ -2678,6 +2678,21 @@ void QQuickText::doLayout()
 {
     Q_D(QQuickText);
     d->updateSize();
+}
+
+/*!
+    \qmlmethod QtQuick::Text::linkAt(real x, real y)
+    \since 5.3
+
+    Returns the link string at point \a x, \a y in content coordinates,
+    or an empty string if no link exists at that point.
+
+    \sa hoveredLink
+*/
+QString QQuickText::linkAt(qreal x, qreal y) const
+{
+    Q_D(const QQuickText);
+    return d->anchorAt(QPointF(x, y));
 }
 
 QT_END_NAMESPACE

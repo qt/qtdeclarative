@@ -1943,6 +1943,7 @@ void tst_qquicktext::linkInteraction()
 
     QCOMPARE(test.hoveredLink, hoverEnterLink);
     QCOMPARE(textObject->hoveredLink(), hoverEnterLink);
+    QCOMPARE(textObject->linkAt(mousePosition.x(), mousePosition.y()), hoverEnterLink);
 
     for (int i = 1; i < mousePositions.count(); ++i) {
         mousePosition = mousePositions.at(i);
@@ -1956,6 +1957,7 @@ void tst_qquicktext::linkInteraction()
 
     QCOMPARE(test.hoveredLink, hoverMoveLink);
     QCOMPARE(textObject->hoveredLink(), hoverMoveLink);
+    QCOMPARE(textObject->linkAt(mousePosition.x(), mousePosition.y()), hoverMoveLink);
 
     {
         QHoverEvent he(QEvent::HoverLeave, mousePosition, QPointF());
@@ -1968,6 +1970,7 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(test.clickedLink, clickedLink);
     QCOMPARE(test.hoveredLink, QString());
     QCOMPARE(textObject->hoveredLink(), QString());
+    QCOMPARE(textObject->linkAt(-1, -1), QString());
 
     delete textObject;
 }
