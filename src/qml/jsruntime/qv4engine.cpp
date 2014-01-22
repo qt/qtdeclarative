@@ -63,6 +63,7 @@
 #include <qv4stringobject_p.h>
 #include <qv4identifiertable_p.h>
 #include "qv4debugging_p.h"
+#include "qv4profiling_p.h"
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
@@ -166,6 +167,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)
+    , profiler(0)
     , globalObject(0)
     , globalCode(0)
     , v8Engine(0)
@@ -401,6 +403,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 ExecutionEngine::~ExecutionEngine()
 {
     delete debugger;
+    delete profiler;
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;
@@ -426,6 +429,12 @@ void ExecutionEngine::enableDebugger()
     Q_ASSERT(!debugger);
     debugger = new Debugging::Debugger(this);
     iselFactory.reset(new QQmlJS::Moth::ISelFactory);
+}
+
+void ExecutionEngine::enableProfiler()
+{
+    Q_ASSERT(!profiler);
+    profiler = new QV4::Profiling::Profiler();
 }
 
 void ExecutionEngine::initRootContext()

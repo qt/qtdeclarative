@@ -61,6 +61,9 @@ namespace QV4 {
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
+namespace Profiling {
+class Profiler;
+} // namespace Profiling
 namespace CompiledData {
 struct CompilationUnit;
 }
@@ -169,6 +172,7 @@ public:
     IdentifierTable *identifierTable;
 
     QV4::Debugging::Debugger *debugger;
+    QV4::Profiling::Profiler *profiler;
 
     Object *globalObject;
 
@@ -291,6 +295,7 @@ public:
     ~ExecutionEngine();
 
     void enableDebugger();
+    void enableProfiler();
 
     ExecutionContext *pushGlobalContext();
     void pushContext(CallContext *context);

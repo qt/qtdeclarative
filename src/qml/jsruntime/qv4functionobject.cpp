@@ -67,6 +67,7 @@
 #include <iostream>
 #include <algorithm>
 #include "qv4alloca_p.h"
+#include "qv4profiling_p.h"
 
 using namespace QV4;
 
@@ -450,7 +451,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function));
     if (result->isObject())
         return result.asReturnedValue();
     return obj.asReturnedValue();
@@ -473,7 +474,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
         QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
-    return f->function->code(ctx, f->function->codeData);
+    return Q_V4_PROFILE(v4, ctx, f->function);
 }
 
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
@@ -544,7 +545,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
-    Scoped<Object> result(scope, f->function->code(&ctx, f->function->codeData));
+    Scoped<Object> result(scope, Q_V4_PROFILE(v4, &ctx, f->function));
 
     if (!result)
         return callData->thisObject.asReturnedValue();
@@ -581,7 +582,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
-    return f->function->code(&ctx, f->function->codeData);
+    return Q_V4_PROFILE(v4, &ctx, f->function);
 }
 
 

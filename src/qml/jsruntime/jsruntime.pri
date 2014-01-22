@@ -42,7 +42,8 @@ SOURCES += \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4qmlextensions.cpp \
-    $$PWD/qv4vme_moth.cpp
+    $$PWD/qv4vme_moth.cpp \
+    $$PWD/qv4profiling.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
@@ -91,7 +92,8 @@ HEADERS += \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4qmlextensions_p.h \
-    $$PWD/qv4vme_moth_p.h
+    $$PWD/qv4vme_moth_p.h \
+    $$PWD/qv4profiling_p.h
 
 # Use SSE2 floating point math on 32 bit instead of the default
 # 387 to make test results pass on 32 and on 64 bit builds.
