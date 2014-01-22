@@ -385,7 +385,7 @@ void QSGDefaultRectangleNode::updateGeometry()
         int borderTail = 0;
         int outerAAHead = 0;
         int outerAATail = 0;
-        bool hasFill = m_color.rgba() != 0 || !stops.isEmpty();
+        bool hasFill = m_color.alpha() > 0 || !stops.isEmpty();
         if (hasFill)
             indexCount += fillIndexCount;
         if (m_antialiasing) {
@@ -609,7 +609,7 @@ void QSGDefaultRectangleNode::updateGeometry()
         int borderTail = 0;
         int outerAAHead = 0;
         int outerAATail = 0;
-        bool hasFill = m_color.rgba() != 0 || !stops.isEmpty();
+        bool hasFill = m_color.alpha() > 0 || !stops.isEmpty();
         if (hasFill)
             indexCount += fillIndexCount;
         if (m_antialiasing) {
