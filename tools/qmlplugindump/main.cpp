@@ -98,14 +98,14 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
     const QMetaObject *meta = object->metaObject();
     if (verbose)
-        qDebug() << "Processing object" << meta->className();
+        std::cerr << "Processing object" << qPrintable( meta->className() ) << std::endl;
     collectReachableMetaObjects(meta, metas);
 
     for (int index = 0; index < meta->propertyCount(); ++index) {
         QMetaProperty prop = meta->property(index);
         if (QQmlMetaType::isQObject(prop.userType())) {
             if (verbose)
-                qDebug() << "  Processing property" << prop.name();
+                std::cerr << "  Processing property" << qPrintable( prop.name() ) << std::endl;
             currentProperty = QString("%1::%2").arg(meta->className(), prop.name());
 
             // if the property was not initialized during construction,
@@ -175,7 +175,7 @@ QByteArray convertToId(const QMetaObject *mo)
     if (!className.isEmpty())
         return className;
 
-    qWarning() << "Found a QMetaObject without a className, generating a random name";
+    std::cerr << "Found a QMetaObject without a className, generating a random name" << std::endl;
     className = QByteArray("error-unknown-name-");
     className.append(QByteArray::number(generatedNames.size()));
     generatedNames.insert(mo, className);
@@ -276,15 +276,15 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             if (ty->isSingleton()) {
                 QQmlType::SingletonInstanceInfo *siinfo = ty->singletonInstanceInfo();
                 if (!siinfo) {
-                    qWarning() << "Internal error, " << tyName
-                               << "(" << QString::fromUtf8(ty->typeName()) << ")"
-                               << " is singleton, but has no singletonInstanceInfo";
+                    std::cerr << "Internal error, " << qPrintable(tyName)
+                              << "(" << qPrintable( QString::fromUtf8(ty->typeName()) ) << ")"
+                              << " is singleton, but has no singletonInstanceInfo" << std::endl;
                     continue;
                 }
                 if (siinfo->qobjectCallback) {
                     if (verbose)
-                        qDebug() << "Trying to get singleton for " << tyName
-                                 << " (" << siinfo->typeName  << ")";
+                        std::cerr << "Trying to get singleton for " << qPrintable(tyName)
+                                  << " (" << qPrintable( siinfo->typeName )  << ")" << std::endl;
                     siinfo->init(engine);
                     collectReachableMetaObjects(object, &metas);
                     object = siinfo->qobjectApi(engine);
@@ -294,8 +294,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                 }
             } else {
                 if (verbose)
-                    qDebug() << "Trying to create object " << tyName
-                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
+                    std::cerr << "Trying to create object " << qPrintable( tyName )
+                              << " (" << qPrintable( QString::fromUtf8(ty->typeName()) )  << ")" << std::endl;
                 object = ty->create();
             }
 
@@ -303,11 +303,11 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
 
             if (object) {
                 if (verbose)
-                    qDebug() << "Got " << tyName
-                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
+                    std::cerr << "Got " << qPrintable( tyName )
+                              << " (" << qPrintable( QString::fromUtf8(ty->typeName()) ) << ")" << std::endl;
                 collectReachableMetaObjects(object, &metas);
             } else {
-                qWarning() << "Could not create" << tyName;
+                std::cerr << "Could not create" << qPrintable(tyName) << std::endl;
             }
         }
     }
@@ -807,7 +807,7 @@ int main(int argc, char *argv[])
         c.create();
         if (!c.errors().isEmpty()) {
             foreach (const QQmlError &error, c.errors())
-                qWarning() << error.toString();
+                std::cerr << qPrintable( error.toString() ) << std::endl;
             return EXIT_IMPORTERROR;
         }
     }
@@ -833,7 +833,7 @@ int main(int argc, char *argv[])
         QByteArray importCode;
         QQmlType *qtObjectType = QQmlMetaType::qmlType(&QObject::staticMetaObject);
         if (!qtObjectType) {
-            qWarning() << "Could not find QtObject type";
+            std::cerr << "Could not find QtObject type" << std::endl;
             importCode = QByteArray("import QtQuick 2.0\n");
         } else {
             QString module = qtObjectType->qmlTypeName();
@@ -862,7 +862,7 @@ int main(int argc, char *argv[])
             c.create();
             if (!c.errors().isEmpty()) {
                 foreach (const QQmlError &error, c.errors())
-                    qWarning() << error.toString();
+                    std::cerr << qPrintable( error.toString() ) << std::endl;
                 return EXIT_IMPORTERROR;
             }
         }
