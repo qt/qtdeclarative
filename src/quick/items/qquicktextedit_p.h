@@ -258,6 +258,8 @@ public:
 
     QString hoveredLink() const;
 
+    Q_REVISION(3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
+
 Q_SIGNALS:
     void textChanged();
     void contentSizeChanged();

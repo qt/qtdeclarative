@@ -2393,12 +2393,14 @@ void tst_qquicktextedit::linkInteraction()
     QCOMPARE(spy.last()[0].toString(), link);
     QCOMPARE(hover.last()[0].toString(), link);
     QCOMPARE(texteditObject->hoveredLink(), link);
+    QCOMPARE(texteditObject->linkAt(linkPos.x(), linkPos.y()), link);
 
     QTest::mouseClick(&window, Qt::LeftButton, 0, textPos.toPoint());
     QTRY_COMPARE(spy.count(), 1);
     QTRY_COMPARE(hover.count(), 2);
     QCOMPARE(hover.last()[0].toString(), QString());
     QCOMPARE(texteditObject->hoveredLink(), QString());
+    QCOMPARE(texteditObject->linkAt(textPos.x(), textPos.y()), QString());
 
     texteditObject->setReadOnly(true);
 
@@ -2408,12 +2410,14 @@ void tst_qquicktextedit::linkInteraction()
     QCOMPARE(spy.last()[0].toString(), link);
     QCOMPARE(hover.last()[0].toString(), link);
     QCOMPARE(texteditObject->hoveredLink(), link);
+    QCOMPARE(texteditObject->linkAt(linkPos.x(), linkPos.y()), link);
 
     QTest::mouseClick(&window, Qt::LeftButton, 0, textPos.toPoint());
     QTRY_COMPARE(spy.count(), 2);
     QTRY_COMPARE(hover.count(), 4);
     QCOMPARE(hover.last()[0].toString(), QString());
     QCOMPARE(texteditObject->hoveredLink(), QString());
+    QCOMPARE(texteditObject->linkAt(textPos.x(), textPos.y()), QString());
 }
 
 void tst_qquicktextedit::cursorDelegate_data()
