@@ -358,6 +358,12 @@ QSGRenderContext::~QSGRenderContext()
     invalidate();
 }
 
+void QSGRenderContext::endSync()
+{
+    qDeleteAll(m_texturesToDelete);
+    m_texturesToDelete.clear();
+}
+
 static QBasicMutex qsg_framerender_mutex;
 
 void QSGRenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fboId)
@@ -474,6 +480,9 @@ void QSGRenderContext::invalidate()
 {
     if (!m_gl)
         return;
+
+    qDeleteAll(m_texturesToDelete);
+    m_texturesToDelete.clear();
 
     qDeleteAll(m_textures.values());
     m_textures.clear();
@@ -617,10 +626,8 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
 void QSGRenderContext::textureFactoryDestroyed(QObject *o)
 {
     m_mutex.lock();
-    QSGTexture *t = m_textures.take(static_cast<QQuickTextureFactory *>(o));
+    m_texturesToDelete << m_textures.take(static_cast<QQuickTextureFactory *>(o));
     m_mutex.unlock();
-    if (t)
-        t->deleteLater();
 }
 
 QT_END_NAMESPACE

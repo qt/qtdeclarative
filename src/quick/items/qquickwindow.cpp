@@ -341,6 +341,8 @@ void QQuickWindowPrivate::syncSceneGraph()
     if (clearBeforeRendering)
         mode |= QSGRenderer::ClearColorBuffer;
     renderer->setClearMode(mode);
+
+    context->endSync();
 }
 
 

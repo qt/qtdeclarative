@@ -94,6 +94,7 @@ public:
     virtual void invalidate();
 
     virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
+    virtual void endSync();
 
     virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
     QSGDepthStencilBufferManager *depthStencilBufferManager();
@@ -124,6 +125,7 @@ protected:
 
     QMutex m_mutex;
     QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
+    QSet<QSGTexture *> m_texturesToDelete;
     QSGAtlasTexture::Manager *m_atlasManager;
 
     QSGDepthStencilBufferManager *m_depthStencilManager;
