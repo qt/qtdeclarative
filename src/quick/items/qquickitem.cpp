@@ -6391,10 +6391,12 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
         while (scope && !scope->isFocusScope() && scope->parentItem())
             scope = scope->parentItem();
         if (d->window) {
-            if (focus)
-                QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
-            else
-                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
+            if (reason != Qt::PopupFocusReason) {
+                if (focus)
+                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
+                else
+                    QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
+            }
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
             // unrelated to a window
