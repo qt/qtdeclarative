@@ -144,7 +144,6 @@ void PowersOfTenCache::GetCachedPowerForBinaryExponentRange(
     int max_exponent,
     DiyFp* power,
     int* decimal_exponent) {
-  (void)max_exponent; // Silence unused parameter warning in release builds
   int kQ = DiyFp::kSignificandSize;
   double k = ceil((min_exponent + kQ - 1) * kD_1_LOG2_10);
   int foo = kCachedPowersOffset;
@@ -153,6 +152,7 @@ void PowersOfTenCache::GetCachedPowerForBinaryExponentRange(
   ASSERT(0 <= index && index < kCachedPowersLength);
   CachedPower cached_power = kCachedPowers[index];
   ASSERT(min_exponent <= cached_power.binary_exponent);
+  (void) max_exponent;  // Mark variable as used.
   ASSERT(cached_power.binary_exponent <= max_exponent);
   *decimal_exponent = cached_power.decimal_exponent;
   *power = DiyFp(cached_power.significand, cached_power.binary_exponent);
