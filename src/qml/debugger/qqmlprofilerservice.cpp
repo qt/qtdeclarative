@@ -41,6 +41,7 @@
 
 #include "qqmlprofilerservice_p.h"
 #include "qqmldebugserver_p.h"
+#include "qv4profileradapter_p.h"
 #include <private/qqmlengine_p.h>
 
 #include <QtCore/qdatastream.h>
@@ -209,7 +210,9 @@ void QQmlProfilerService::engineAboutToBeAdded(QQmlEngine *engine)
 
     QMutexLocker lock(configMutex());
     QQmlProfiler *qmlAdapter = new QQmlProfiler(this);
+    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
     addEngineProfiler(qmlAdapter, engine);
+    addEngineProfiler(v4Adapter, engine);
     QQmlConfigurableDebugService::engineAboutToBeAdded(engine);
 }
 

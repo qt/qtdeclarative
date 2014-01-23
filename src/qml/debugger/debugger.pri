@@ -9,7 +9,8 @@ SOURCES += \
     $$PWD/qv4debugservice.cpp \
     $$PWD/qqmlconfigurabledebugservice.cpp \
     $$PWD/qqmlenginecontrolservice.cpp \
-    $$PWD/qqmlabstractprofileradapter.cpp
+    $$PWD/qqmlabstractprofileradapter.cpp \
+    $$PWD/qv4profileradapter.cpp
 
 HEADERS += \
     $$PWD/qqmldebugservice_p.h \
@@ -29,4 +30,5 @@ HEADERS += \
     $$PWD/qqmlconfigurabledebugservice_p_p.h \
     $$PWD/qqmlenginecontrolservice_p.h \
     $$PWD/qqmlprofilerdefinitions_p.h \
-    $$PWD/qqmlabstractprofileradapter_p.h
+    $$PWD/qqmlabstractprofileradapter_p.h \
+    $$PWD/qv4profileradapter_p.h
