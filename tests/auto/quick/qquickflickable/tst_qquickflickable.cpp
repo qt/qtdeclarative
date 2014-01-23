@@ -1532,9 +1532,9 @@ void tst_qquickflickable::stopAtBounds()
         flickable->setContentX(invert ? 100 : 0);
     }
     if (invert)
-        flick(&view, QPoint(20,20), QPoint(100,100), 100);
+        flick(&view, QPoint(20,20), QPoint(120,120), 100);
     else
-        flick(&view, QPoint(100,100), QPoint(20,20), 100);
+        flick(&view, QPoint(120,120), QPoint(20,20), 100);
 
     QVERIFY(flickable->isFlicking());
     if (transpose) {
