@@ -1189,7 +1189,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
                     continue;
                 }
             } else if ((binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
-                       && (!customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
+                       && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 customBindings << binding;
                 continue;
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object
