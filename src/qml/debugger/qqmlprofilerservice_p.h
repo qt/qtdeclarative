@@ -234,7 +234,7 @@ public:
         MaximumSceneGraphFrameType
     };
 
-    static void initialize();
+    static QQmlProfilerService *instance();
 
     static bool startProfiling();
     static bool stopProfiling();
@@ -242,7 +242,7 @@ public:
     template<EventType DetailType>
     static void addEvent()
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << Event,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << Event,
                                                   1 << DetailType));
     }
 
@@ -251,7 +251,7 @@ public:
         int animCount = QUnifiedTimer::instance()->runningAnimationCount();
 
         if (animCount > 0 && delta > 0) {
-            instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << Event,
+            m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << Event,
                                                       1 << AnimationFrame, QString(), 0, 0,
                                                       1000 / (int)delta /* trim fps to integer */,
                                                       animCount));
@@ -262,7 +262,7 @@ public:
     static void sceneGraphFrame(qint64 value1, qint64 value2 = -1, qint64 value3 = -1,
                                 qint64 value4 = -1, qint64 value5 = -1)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << SceneGraphFrame,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << SceneGraphFrame,
                                                   1 << FrameType1 | 1 << FrameType2,
                                                   value1, value2, value3, value4, value5));
     }
@@ -270,13 +270,13 @@ public:
     template<PixmapEventType PixmapState>
     static void pixmapStateChanged(const QUrl &url)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
                                                   1 << PixmapState, url));
     }
 
     static void pixmapLoadingFinished(const QUrl &url, const QSize &size)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
                 (1 << PixmapLoadingFinished) | ((size.width() > 0 && size.height() > 0) ? (1 << PixmapSizeKnown) : 0),
                 url, size.width(), size.height()));
     }
@@ -284,7 +284,7 @@ public:
     template<PixmapEventType CountType>
     static void pixmapCountChanged(const QUrl &url, int count)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << PixmapCacheEvent,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
                                                   1 << CountType, url, 0, 0, 0, count));
     }
 
@@ -305,7 +305,7 @@ private:
 
     static void startBinding(const QString &fileName, int line, int column, BindingType bindingType)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(),
                                                   (1 << RangeStart | 1 << RangeLocation),
                                                   1 << Binding, fileName, line, column, 0, 0,
                                                   bindingType));
@@ -315,14 +315,14 @@ private:
     // This is somewhat pointless but important for backwards compatibility.
     static void startCompiling(const QString &name)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(),
                        (1 << RangeStart | 1 << RangeLocation | 1 << RangeData), 1 << Compiling,
                        name, 1, 1, 0, 0, QmlBinding));
     }
 
     static void startHandlingSignal(const QString &fileName, int line, int column)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(),
                                                   (1 << RangeStart | 1 << RangeLocation),
                                                   1 << HandlingSignal, fileName, line, column, 0, 0,
                                                   QmlBinding));
@@ -330,7 +330,7 @@ private:
 
     static void startCreating(const QString &typeName, const QUrl &fileName, int line, int column)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(),
                                                   (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
                                                   1 << Creating, typeName, fileName, line, column,
                                                   0, 0, QmlBinding));
@@ -338,21 +338,21 @@ private:
 
     static void startCreating(const QString &typeName)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(),
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(),
                                                   (1 << RangeStart | 1 << RangeData), 1 << Creating,
                                                   typeName, 0, 0, 0, 0, QmlBinding));
     }
 
     static void creatingLocation(const QUrl &fileName, int line, int column)
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << RangeLocation,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << RangeLocation,
                                                   1 << Creating, fileName, line, column));
     }
 
     template<RangeType Range>
     static void endRange()
     {
-        instance->processMessage(QQmlProfilerData(instance->timestamp(), 1 << RangeEnd,
+        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << RangeEnd,
                                                   1 << Range));
     }
 
@@ -375,7 +375,7 @@ private:
     QMutex m_initializeMutex;
     QWaitCondition m_initializeCondition;
 
-    static QQmlProfilerService *instance;
+    static QQmlProfilerService *m_instance;
 
     friend struct QQmlBindingProfiler;
     friend struct QQmlHandlingSignalProfiler;
@@ -454,9 +454,9 @@ public:
     {
         ranges.clear();
         if (running)
-            QQmlProfilerService::instance->endRange<QQmlProfilerService::Creating>();
+            QQmlProfilerService::m_instance->endRange<QQmlProfilerService::Creating>();
         for (int i = 0; i < backgroundRanges.count(); ++i) {
-            QQmlProfilerService::instance->endRange<QQmlProfilerService::Creating>();
+            QQmlProfilerService::m_instance->endRange<QQmlProfilerService::Creating>();
         }
         backgroundRanges.clear();
         running = false;
@@ -465,10 +465,10 @@ public:
     void startBackground(const QString &typeName)
     {
         if (running) {
-            QQmlProfilerService::instance->endRange<QQmlProfilerService::Creating>();
+            QQmlProfilerService::m_instance->endRange<QQmlProfilerService::Creating>();
             running = false;
         }
-        QQmlProfilerService::instance->startCreating(typeName);
+        QQmlProfilerService::m_instance->startCreating(typeName);
         backgroundRanges.push(typeName);
     }
 
@@ -476,13 +476,13 @@ public:
     {
         switchRange();
         setCurrentRange(typeName, url, line, column);
-        QQmlProfilerService::instance->startCreating(typeName, url, line, column);
+        QQmlProfilerService::m_instance->startCreating(typeName, url, line, column);
     }
 
     void stop()
     {
         if (running) {
-            QQmlProfilerService::instance->endRange<QQmlProfilerService::Creating>();
+            QQmlProfilerService::m_instance->endRange<QQmlProfilerService::Creating>();
             running = false;
         }
     }
@@ -492,7 +492,7 @@ public:
         if (ranges.count() > 0) {
             switchRange();
             currentRange = ranges.pop();
-            QQmlProfilerService::instance->startCreating(currentRange.typeName, currentRange.url,
+            QQmlProfilerService::m_instance->startCreating(currentRange.typeName, currentRange.url,
                                                          currentRange.line, currentRange.column);
         }
     }
@@ -508,7 +508,7 @@ public:
         if (backgroundRanges.count() > 0) {
             switchRange();
             setCurrentRange(backgroundRanges.pop(), url, line, column);
-            QQmlProfilerService::instance->creatingLocation(url, line, column);
+            QQmlProfilerService::m_instance->creatingLocation(url, line, column);
         }
     }
 
@@ -517,7 +517,7 @@ private:
     void switchRange()
     {
         if (running)
-            QQmlProfilerService::instance->endRange<QQmlProfilerService::Creating>();
+            QQmlProfilerService::m_instance->endRange<QQmlProfilerService::Creating>();
         else
             running = true;
     }

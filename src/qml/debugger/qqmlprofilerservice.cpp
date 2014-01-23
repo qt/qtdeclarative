@@ -50,7 +50,7 @@
 QT_BEGIN_NAMESPACE
 
 // instance will be set, unset in constructor. Allows static methods to be inlined.
-QQmlProfilerService *QQmlProfilerService::instance = 0;
+QQmlProfilerService *QQmlProfilerService::m_instance = 0;
 Q_GLOBAL_STATIC(QQmlProfilerService, profilerInstance)
 bool QQmlProfilerService::enabled = false;
 
@@ -154,13 +154,14 @@ QQmlProfilerService::QQmlProfilerService()
 QQmlProfilerService::~QQmlProfilerService()
 {
     enabled = false;
-    instance = 0;
+    m_instance = 0;
 }
 
-void QQmlProfilerService::initialize()
+QQmlProfilerService *QQmlProfilerService::instance()
 {
     // just make sure that the service is properly registered
-    instance = profilerInstance();
+    m_instance = profilerInstance();
+    return m_instance;
 }
 
 bool QQmlProfilerService::startProfiling()

@@ -816,7 +816,7 @@ void QQmlEnginePrivate::init()
         QQmlEngineDebugService::instance()->addEngine(q);
         QV4DebugService::instance()->addEngine(q);
         QV4ProfilerService::initialize();
-        QQmlProfilerService::initialize();
+        QQmlProfilerService::instance();
         QDebugMessageService::instance();
     }
 }
