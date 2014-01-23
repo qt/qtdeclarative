@@ -54,6 +54,9 @@
 //
 
 #include "qqmlconfigurabledebugservice_p.h"
+#include "qqmlprofilerdefinitions_p.h"
+#include "qqmlabstractprofileradapter_p.h"
+
 #include <private/qqmlboundsignal_p.h>
 // this contains QUnifiedTimer
 #include <private/qabstractanimation_p.h>
@@ -163,81 +166,22 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlConfigurableDebugService
+class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlConfigurableDebugService, public QQmlProfilerDefinitions
 {
+    Q_OBJECT
 public:
-    enum Message {
-        Event,
-        RangeStart,
-        RangeData,
-        RangeLocation,
-        RangeEnd,
-        Complete, // end of transmission
-        PixmapCacheEvent,
-        SceneGraphFrame,
-
-        MaximumMessage
-    };
-
-    enum EventType {
-        FramePaint,
-        Mouse,
-        Key,
-        AnimationFrame,
-        EndTrace,
-        StartTrace,
-
-        MaximumEventType
-    };
-
-    enum RangeType {
-        Painting,
-        Compiling,
-        Creating,
-        Binding,            //running a binding
-        HandlingSignal,     //running a signal handler
-
-        MaximumRangeType
-    };
-
-    enum BindingType {
-        QmlBinding,
-        V8Binding,
-        V4Binding,
-
-        MaximumBindingType
-    };
-
-    enum PixmapEventType {
-        PixmapSizeKnown,
-        PixmapReferenceCountChanged,
-        PixmapCacheCountChanged,
-        PixmapLoadingStarted,
-        PixmapLoadingFinished,
-        PixmapLoadingError,
-
-        MaximumPixmapEventType
-    };
-
-    enum SceneGraphFrameType {
-        SceneGraphRendererFrame,
-        SceneGraphAdaptationLayerFrame,
-        SceneGraphContextFrame,
-        SceneGraphRenderLoopFrame,
-        SceneGraphTexturePrepare,
-        SceneGraphTextureDeletion,
-        SceneGraphPolishAndSync,
-        SceneGraphWindowsRenderShow,
-        SceneGraphWindowsAnimations,
-        SceneGraphWindowsPolishFrame,
-
-        MaximumSceneGraphFrameType
-    };
 
     static QQmlProfilerService *instance();
+    void engineAboutToBeAdded(QQmlEngine *engine);
+    void engineAboutToBeRemoved(QQmlEngine *engine);
+    void engineAdded(QQmlEngine *engine);
+    void engineRemoved(QQmlEngine *engine);
 
-    static bool startProfiling();
-    static bool stopProfiling();
+    void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
+    void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
+
+    void startProfiling(QQmlEngine *engine);
+    void stopProfiling(QQmlEngine *engine);
 
     template<EventType DetailType>
     static void addEvent()
@@ -290,18 +234,16 @@ public:
 
     qint64 timestamp() {return m_timer.nsecsElapsed();}
 
-    static void sendProfilingData();
-
     QQmlProfilerService();
     ~QQmlProfilerService();
+
+    void dataReady(QQmlAbstractProfilerAdapter *profiler);
 
 protected:
     virtual void stateAboutToBeChanged(State state);
     virtual void messageReceived(const QByteArray &);
 
 private:
-    bool startProfilingImpl();
-    bool stopProfilingImpl();
 
     static void startBinding(const QString &fileName, int line, int column, BindingType bindingType)
     {
@@ -357,6 +299,7 @@ private:
     }
 
     void sendMessages();
+    void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine);
 
     void processMessage(const QQmlProfilerData &message)
     {
@@ -373,12 +316,32 @@ private:
     QVector<QQmlProfilerData> m_data;
     QMutex m_dataMutex;
 
+    QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
+    QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;
+    QList<QQmlEngine *> m_stoppingEngines;
+    QMultiMap<qint64, QQmlAbstractProfilerAdapter *> m_startTimes;
+
     static QQmlProfilerService *m_instance;
 
     friend struct QQmlBindingProfiler;
     friend struct QQmlHandlingSignalProfiler;
     friend struct QQmlVmeProfiler;
     friend struct QQmlCompilingProfiler;
+    friend class QQmlProfiler;
+};
+
+// Temporary shim around QQmlProfilerService to make it look like a QQmlAbstractProfilerAdapter.
+class QQmlProfiler : public QQmlAbstractProfilerAdapter {
+    Q_OBJECT
+public:
+    QQmlProfiler(QQmlProfilerService *service);
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
+
+public slots:
+    void startProfiling();
+    void stopProfiling();
+private:
+    int next;
 };
 
 //

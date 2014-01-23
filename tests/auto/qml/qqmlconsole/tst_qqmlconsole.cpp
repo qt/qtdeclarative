@@ -116,7 +116,7 @@ void tst_qqmlconsole::profiling()
 
     // profiling()
     QTest::ignoreMessage(QtWarningMsg, "Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
-    QTest::ignoreMessage(QtWarningMsg, "Profiling was not started.");
+    QTest::ignoreMessage(QtWarningMsg, "Ignoring console.profileEnd(): the debug service is disabled.");
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();

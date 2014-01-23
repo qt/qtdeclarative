@@ -100,6 +100,7 @@ public:
         Creating,
         Binding,            //running a binding
         HandlingSignal,     //running a signal handler
+        Javascript,
 
         MaximumRangeType
     };
@@ -214,9 +215,16 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         case QQmlProfilerClient::FramePaint:
         case QQmlProfilerClient::Mouse:
         case QQmlProfilerClient::Key:
-        case QQmlProfilerClient::StartTrace:
-        case QQmlProfilerClient::EndTrace:
             break;
+        case QQmlProfilerClient::EndTrace:
+        case QQmlProfilerClient::StartTrace: {
+            int engineId = -1;
+            if (!stream.atEnd()) {
+                stream >> engineId;
+                QVERIFY(engineId >= 0);
+            }
+            break;
+        }
         default: {
             QString failMsg = QString("Unknown event type:") + data.detailType;
             QFAIL(qPrintable(failMsg));

@@ -1422,10 +1422,6 @@ QV4::ReturnedValue ConsoleObject::method_log(CallContext *ctx)
 
 QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 {
-    //DeclarativeDebugTrace cannot handle nested profiling
-    //although v8 can handle several profiling at once,
-    //we do not allow that. Hence, we pass an empty(default) title
-    QString title;
     QV4::ExecutionEngine *v4 = ctx->engine;
 
     QV4::StackFrame frame = v4->currentStackFrame();
@@ -1434,12 +1430,9 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
     if (!QQmlDebugService::isDebuggingEnabled()) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
-    } else if (QQmlProfilerService::startProfiling()) {
-        QV4ProfilerService::instance()->startProfiling(title);
-
-        logger.debug("Profiling started.");
     } else {
-        logger.warning("Profiling is already in progress. First, end current profiling session.");
+        QQmlProfilerService::instance()->startProfiling(v4->v8Engine->engine());
+        logger.debug("Profiling started.");
     }
 
     return QV4::Encode::undefined();
@@ -1447,11 +1440,6 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 
 QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
 {
-    //DeclarativeDebugTrace cannot handle nested profiling
-    //although v8 can handle several profiling at once,
-    //we do not allow that. Hence, we pass an empty(default) title
-    QString title;
-
     QV4::ExecutionEngine *v4 = ctx->engine;
 
     QV4::StackFrame frame = v4->currentStackFrame();
@@ -1459,15 +1447,11 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     const QByteArray baFunction = frame.function.toUtf8();
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
 
-    if (QQmlProfilerService::stopProfiling()) {
-        QV4ProfilerService *profiler = QV4ProfilerService::instance();
-        profiler->stopProfiling(title);
-        QQmlProfilerService::sendProfilingData();
-        profiler->sendProfilingData();
-
-        logger.debug("Profiling ended.");
+    if (!QQmlDebugService::isDebuggingEnabled()) {
+        logger.warning("Ignoring console.profileEnd(): the debug service is disabled.");
     } else {
-        logger.warning("Profiling was not started.");
+        QQmlProfilerService::instance()->stopProfiling(v4->v8Engine->engine());
+        logger.debug("Profiling ended.");
     }
 
     return QV4::Encode::undefined();
