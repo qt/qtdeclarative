@@ -613,10 +613,14 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
-        if (o->arrayType() == ArrayData::Simple && idx < o->arrayData->length())
-            o->arrayPut(idx, value);
-        else
-            o->putIndexed(idx, value);
+        if (o->arrayType() == ArrayData::Simple) {
+            SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData);
+            if (s && idx < s->len && !s->data[idx].isEmpty()) {
+                s->data[idx] = value;
+                return;
+            }
+        }
+        o->putIndexed(idx, value);
         return;
     }
 
