@@ -62,7 +62,7 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 
 QT_BEGIN_NAMESPACE
 

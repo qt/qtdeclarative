@@ -55,7 +55,7 @@
 #include <private/qv8engine_p.h>
 #include <QtCore/QWaitCondition>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
 

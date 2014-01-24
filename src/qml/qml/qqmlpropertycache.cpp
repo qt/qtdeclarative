@@ -50,7 +50,7 @@
 #include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 
 #include <QtCore/qdebug.h>
 

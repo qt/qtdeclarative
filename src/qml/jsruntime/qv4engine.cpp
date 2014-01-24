@@ -40,7 +40,7 @@
 ****************************************************************************/
 #include <qv4engine_p.h>
 #include <qv4context_p.h>
-#include <qv4value_p.h>
+#include <qv4value_inl_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <qv4objectiterator_p.h>

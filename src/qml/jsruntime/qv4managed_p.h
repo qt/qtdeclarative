@@ -45,7 +45,7 @@
 #include <QtCore/QVector>
 #include <QtCore/QDebug>
 #include "qv4global_p.h"
-#include "qv4value_def_p.h"
+#include "qv4value_p.h"
 #include "qv4internalclass_p.h"
 
 QT_BEGIN_NAMESPACE

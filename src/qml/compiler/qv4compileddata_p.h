@@ -45,7 +45,7 @@
 #include <QVector>
 #include <QStringList>
 #include <QHash>
-#include <private/qv4value_def_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4executableallocator_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -46,7 +46,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qv8engine_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE

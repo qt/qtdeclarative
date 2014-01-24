@@ -62,7 +62,7 @@
 #include <private/qv8engine_p.h>
 #include <private/qv4serialize_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4scopedvalue_p.h>

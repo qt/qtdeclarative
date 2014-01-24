@@ -45,7 +45,7 @@
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include "private/qv4value_def_p.h"
+#include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
 
 #include <QtCore/QHash>

@@ -56,7 +56,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 
-#include "qv4value_p.h"
+#include "qv4value_inl_p.h"
 #include "qv4object_p.h"
 
 QT_BEGIN_NAMESPACE

@@ -42,7 +42,7 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global_p.h"
-#include "qv4value_def_p.h"
+#include "qv4value_p.h"
 #include "qv4managed_p.h"
 #include "qv4engine_p.h"
 

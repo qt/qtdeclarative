@@ -55,7 +55,7 @@
 
 #include <qjsvalue.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>

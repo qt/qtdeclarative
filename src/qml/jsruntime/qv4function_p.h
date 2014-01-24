@@ -47,7 +47,7 @@
 #include <QtCore/QByteArray>
 #include <QtCore/qurl.h>
 
-#include "qv4value_def_p.h"
+#include "qv4value_p.h"
 #include <private/qv4compileddata_p.h>
 #include <private/qv4engine_p.h>
 

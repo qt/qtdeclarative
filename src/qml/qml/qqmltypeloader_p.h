@@ -69,7 +69,7 @@
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE

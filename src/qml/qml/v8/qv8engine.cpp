@@ -68,7 +68,7 @@
 #include <QtCore/qdatetime.h>
 #include <private/qsimd_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4mm_p.h>

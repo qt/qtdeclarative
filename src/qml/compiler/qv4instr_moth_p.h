@@ -43,7 +43,7 @@
 #define QV4INSTR_MOTH_P_H
 
 #include <QtCore/qglobal.h>
-#include <private/qv4value_def_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4runtime_p.h>
 

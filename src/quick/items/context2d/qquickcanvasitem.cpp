@@ -54,7 +54,7 @@
 #include <QtCore/QBuffer>
 #include <QtCore/qdatetime.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 

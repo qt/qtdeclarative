@@ -45,7 +45,7 @@
 #include "qjsengine.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "qv4value_p.h"
+#include "qv4value_inl_p.h"
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4dateobject_p.h"

@@ -49,8 +49,8 @@ HEADERS += \
     $$PWD/qv4context_p.h \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4math_p.h \
+    $$PWD/qv4value_inl_p.h \
     $$PWD/qv4value_p.h \
-    $$PWD/qv4value_def_p.h \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
     $$PWD/qv4identifier_p.h \

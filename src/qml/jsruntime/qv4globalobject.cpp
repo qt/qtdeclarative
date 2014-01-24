@@ -41,7 +41,7 @@
 
 #include "qv4globalobject_p.h"
 #include "qv4mm_p.h"
-#include "qv4value_p.h"
+#include "qv4value_inl_p.h"
 #include "qv4context_p.h"
 #include "qv4function_p.h"
 #include "qv4debugging_p.h"

@@ -65,7 +65,7 @@
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>

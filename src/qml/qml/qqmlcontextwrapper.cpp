@@ -46,7 +46,7 @@
 #include <private/qqmlcontext_p.h>
 
 #include <private/qv4engine_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4function_p.h>

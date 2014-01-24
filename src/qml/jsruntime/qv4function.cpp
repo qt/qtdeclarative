@@ -42,7 +42,7 @@
 #include "qv4function_p.h"
 #include "qv4managed_p.h"
 #include "qv4string_p.h"
-#include "qv4value_p.h"
+#include "qv4value_inl_p.h"
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
 

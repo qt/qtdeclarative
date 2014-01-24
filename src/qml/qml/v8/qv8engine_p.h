@@ -68,7 +68,7 @@
 #include <private/qqmlpropertycache_p.h>
 
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4value_inl_p.h>
 #include <private/qv4object_p.h>
 #include <private/qv4identifier_p.h>
 
