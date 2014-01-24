@@ -97,7 +97,7 @@ struct ForEachIteratorObject: Object {
 protected:
     static void markObjects(Managed *that, ExecutionEngine *e);
 
-    SafeValue workArea[2];
+    Value workArea[2];
 };
 
 

@@ -67,11 +67,11 @@ struct ArrayVTable
     ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
     ReturnedValue (*get)(const ArrayData *d, uint index);
     bool (*put)(Object *o, uint index, ValueRef value);
-    bool (*putArray)(Object *o, uint index, SafeValue *values, uint n);
+    bool (*putArray)(Object *o, uint index, Value *values, uint n);
     bool (*del)(Object *o, uint index);
     void (*setAttribute)(Object *o, uint index, PropertyAttributes attrs);
     PropertyAttributes (*attribute)(const ArrayData *d, uint index);
-    void (*push_front)(Object *o, SafeValue *values, uint n);
+    void (*push_front)(Object *o, Value *values, uint n);
     ReturnedValue (*pop_front)(Object *o);
     uint (*truncate)(Object *o, uint newLen);
     uint (*length)(const ArrayData *d);
@@ -95,7 +95,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     uint alloc;
     Type type;
     PropertyAttributes *attrs;
-    SafeValue *data;
+    Value *data;
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
     bool isSparse() const { return this && type == Sparse; }
@@ -154,11 +154,11 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
-    static bool putArray(Object *o, uint index, SafeValue *values, uint n);
+    static bool putArray(Object *o, uint index, Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static PropertyAttributes attribute(const ArrayData *d, uint index);
-    static void push_front(Object *o, SafeValue *values, uint n);
+    static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const ArrayData *d);
@@ -184,11 +184,11 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
-    static bool putArray(Object *o, uint index, SafeValue *values, uint n);
+    static bool putArray(Object *o, uint index, Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static PropertyAttributes attribute(const ArrayData *d, uint index);
-    static void push_front(Object *o, SafeValue *values, uint n);
+    static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const ArrayData *d);

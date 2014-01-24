@@ -328,14 +328,34 @@ struct Q_QML_EXPORT Value
 
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
-    Value &operator=(ReturnedValue v) { val = v; return *this; }
-    template <typename T>
-    inline Value &operator=(Returned<T> *t);
 
     // Section 9.12
     bool sameValue(Value other) const;
 
     inline void mark(ExecutionEngine *e) const;
+
+    Value &operator =(const ScopedValue &v);
+    Value &operator=(ReturnedValue v) { val = v; return *this; }
+    template<typename T>
+    Value &operator=(Returned<T> *t);
+    template<typename T>
+    Value &operator=(T *t) {
+        val = Value::fromManaged(t).val;
+        return *this;
+    }
+
+    template<typename T>
+    Value &operator=(const Scoped<T> &t);
+    Value &operator=(const ValueRef v);
+    Value &operator=(const Value &v) {
+        val = v.val;
+        return *this;
+    }
+    template<typename T>
+    inline Returned<T> *as();
+    template<typename T>
+    inline Referenced<T> asRef();
+
 };
 
 inline Managed *Value::asManaged() const
@@ -404,47 +424,19 @@ inline Value Value::fromManaged(Managed *m)
     return v;
 }
 
-struct SafeValue : public Value
-{
-    SafeValue &operator =(const ScopedValue &v);
-    template<typename T>
-    SafeValue &operator=(Returned<T> *t);
-    SafeValue &operator=(ReturnedValue v) {
-        val = v;
-        return *this;
-    }
-    template<typename T>
-    SafeValue &operator=(T *t) {
-        val = Value::fromManaged(t).val;
-        return *this;
-    }
-
-    template<typename T>
-    SafeValue &operator=(const Scoped<T> &t);
-    SafeValue &operator=(const ValueRef v);
-    SafeValue &operator=(const Value &v) {
-        val = v.val;
-        return *this;
-    }
-    template<typename T>
-    inline Returned<T> *as();
-    template<typename T>
-    inline Referenced<T> asRef();
-};
-
 template <typename T>
-struct Safe : public SafeValue
+struct TypedValue : public Value
 {
     template<typename X>
-    Safe &operator =(X *x) {
+    TypedValue &operator =(X *x) {
         val = Value::fromManaged(x).val;
     }
-    Safe &operator =(T *t);
-    Safe &operator =(const Scoped<T> &v);
-    Safe &operator =(const Referenced<T> &v);
-    Safe &operator =(Returned<T> *t);
+    TypedValue &operator =(T *t);
+    TypedValue &operator =(const Scoped<T> &v);
+    TypedValue &operator =(const Referenced<T> &v);
+    TypedValue &operator =(Returned<T> *t);
 
-    Safe &operator =(const Safe<T> &t);
+    TypedValue &operator =(const TypedValue<T> &t);
 
     bool operator!() const { return !managed(); }
 
@@ -455,7 +447,7 @@ struct Safe : public SafeValue
 
     void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
 };
-typedef Safe<String> SafeString;
+typedef TypedValue<String> StringValue;
 
 template<typename T>
 T *value_cast(const Value &v)

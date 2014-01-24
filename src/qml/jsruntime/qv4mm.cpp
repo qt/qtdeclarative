@@ -355,7 +355,7 @@ Managed *MemoryManager::alloc(std::size_t size)
 
 void MemoryManager::mark()
 {
-    SafeValue *markBase = m_d->engine->jsStackTop;
+    Value *markBase = m_d->engine->jsStackTop;
 
     m_d->engine->markObjects();
 
@@ -698,8 +698,8 @@ void MemoryManager::collectFromStack() const
 
 void MemoryManager::collectFromJSStack() const
 {
-    SafeValue *v = engine()->jsStackBase;
-    SafeValue *top = engine()->jsStackTop;
+    Value *v = engine()->jsStackBase;
+    Value *top = engine()->jsStackTop;
     while (v < top) {
         Managed *m = v->asManaged();
         if (m && m->inUse)

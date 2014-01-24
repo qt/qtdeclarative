@@ -226,7 +226,7 @@ static QVariant variantFromString(const QString &string)
     return QQmlStringConverters::variantFromString(string);
 }
 
-static QV4::ExecutionContext *qmlBindingContext(QQmlEngine *engine, QV4::ExecutionEngine *v4, QV4::SafeValue *qmlBindingWrappers, QQmlContextData *context, QObject *scope, int objIdx)
+static QV4::ExecutionContext *qmlBindingContext(QQmlEngine *engine, QV4::ExecutionEngine *v4, QV4::Value *qmlBindingWrappers, QQmlContextData *context, QObject *scope, int objIdx)
 {
     QV4::Scope valueScope(v4);
     QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, qmlBindingWrappers[objIdx]);
@@ -355,7 +355,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
     QV4::ExecutionEngine *v4 = ep->v4engine();
     QV4::Scope valueScope(v4);
     QV4::ScopedValue tmpValue(valueScope);
-    QV4::SafeValue *qmlBindingWrappers = valueScope.alloc(objects.capacity());
+    QV4::Value *qmlBindingWrappers = valueScope.alloc(objects.capacity());
     std::fill(qmlBindingWrappers, qmlBindingWrappers + objects.capacity(), QV4::Primitive::undefinedValue());
 
     int status = -1; // needed for dbus

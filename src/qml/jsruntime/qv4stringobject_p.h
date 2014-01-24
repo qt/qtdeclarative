@@ -53,7 +53,7 @@ struct StringObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(StringObject)
 
-    SafeValue value;
+    Value value;
     mutable Property tmpProperty;
     StringObject(ExecutionEngine *engine, const ValueRef value);
 

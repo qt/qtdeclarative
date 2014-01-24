@@ -383,8 +383,8 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     if (engine->hasException)
         return Encode::undefined();
 
-    SafeString *meth1 = &engine->id_toString;
-    SafeString *meth2 = &engine->id_valueOf;
+    StringValue *meth1 = &engine->id_toString;
+    StringValue *meth2 = &engine->id_valueOf;
 
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
@@ -894,7 +894,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
 ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Lookup *l = context->lookups + index;
-    SafeValue v;
+    Value v;
     v = l->getter(l, callData->thisObject);
     if (!v.isObject())
         return context->throwTypeError();
@@ -982,7 +982,7 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const String
 ReturnedValue __qmljs_construct_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Lookup *l = context->lookups + index;
-    SafeValue v;
+    Value v;
     v = l->getter(l, callData->thisObject);
     if (!v.isObject())
         return context->throwTypeError();
@@ -1102,7 +1102,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
     }
 }
 
-ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, SafeValue *values, uint length)
+ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
     Scope scope(ctx);
     Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
@@ -1308,7 +1308,7 @@ QV4::ReturnedValue __qmljs_get_qml_singleton(QV4::NoThrowContext *ctx, const QV4
 
 void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx)
 {
-    SafeValue *t = &ctx->callData->thisObject;
+    Value *t = &ctx->callData->thisObject;
     if (t->isObject())
         return;
     if (t->isNullOrUndefined()) {

@@ -107,8 +107,8 @@ struct RegExpCtor: FunctionObject
     V4_OBJECT
     RegExpCtor(ExecutionContext *scope);
 
-    SafeValue lastMatch;
-    SafeString lastInput;
+    Value lastMatch;
+    StringValue lastInput;
     int lastMatchStart;
     int lastMatchEnd;
     void clearLastMatch();

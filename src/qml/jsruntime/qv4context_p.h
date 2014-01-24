@@ -174,7 +174,7 @@ struct CallContext : public ExecutionContext
 
     FunctionObject *function;
     int realArgumentCount;
-    SafeValue *locals;
+    Value *locals;
     Object *activation;
 
     inline ReturnedValue argument(int i);
@@ -192,8 +192,8 @@ struct CatchContext : public ExecutionContext
 {
     CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
 
-    SafeString exceptionVarName;
-    SafeValue exceptionValue;
+    StringValue exceptionVarName;
+    Value exceptionValue;
 };
 
 struct WithContext : public ExecutionContext

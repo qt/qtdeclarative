@@ -197,11 +197,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     // we allow it to grow to 2 times JSStackLimit, as we can overshoot due to garbage collection
     // and ScopedValues allocated outside of JIT'ed methods.
     *jsStack = WTF::PageAllocation::allocate(2*JSStackLimit, WTF::OSAllocator::JSVMStackPages, true);
-    jsStackBase = (SafeValue *)jsStack->base();
+    jsStackBase = (Value *)jsStack->base();
     jsStackTop = jsStackBase;
 
     // set up stack limits
-    jsStackLimit = jsStackBase + JSStackLimit/sizeof(SafeValue);
+    jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
     cStackLimit = getStackLimit();
 
     Scope scope(this);
@@ -457,7 +457,7 @@ Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *
     return f->asReturned<FunctionObject>();
 }
 
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs)
 {
     Q_ASSERT(target);
 

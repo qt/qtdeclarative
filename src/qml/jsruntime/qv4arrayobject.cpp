@@ -629,8 +629,8 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
         if (len > instance->arrayData->length())
             len = instance->arrayData->length();
-        SafeValue *val = instance->arrayData->data;
-        SafeValue *end = val + len;
+        Value *val = instance->arrayData->data;
+        Value *end = val + len;
         val += fromIndex;
         while (val < end) {
             if (!val->isEmpty()) {

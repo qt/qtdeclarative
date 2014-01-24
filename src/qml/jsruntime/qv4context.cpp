@@ -71,13 +71,13 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
         c->lookups = c->compilationUnit->runtimeLookups;
     }
 
-    c->locals = (SafeValue *)(c + 1);
+    c->locals = (Value *)(c + 1);
 
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
 
     c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
-    ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(SafeValue));
+    ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(Value));
     if (callData->argc < static_cast<int>(function->formalParameterCount))
         std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
@@ -214,7 +214,7 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
         lookups = compilationUnit->runtimeLookups;
     }
 
-    locals = (SafeValue *)(this + 1);
+    locals = (Value *)(this + 1);
     if (function->varCount)
         std::fill(locals, locals + function->varCount, Primitive::undefinedValue());
 }

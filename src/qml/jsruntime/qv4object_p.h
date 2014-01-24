@@ -191,7 +191,7 @@ public:
     bool arrayPut(uint index, ValueRef value) {
         return arrayData->vtable()->put(this, index, value);
     }
-    bool arrayPut(uint index, SafeValue *values, uint n) {
+    bool arrayPut(uint index, Value *values, uint n) {
         return arrayData->vtable()->putArray(this, index, values, n);
     }
     void setArrayAttributes(uint i, PropertyAttributes a) {
@@ -304,7 +304,7 @@ private:
 struct BooleanObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(BooleanObject)
-    SafeValue value;
+    Value value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
         value = val;
@@ -320,7 +320,7 @@ protected:
 struct NumberObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(NumberObject)
-    SafeValue value;
+    Value value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
         value = val;

@@ -351,7 +351,7 @@ public:
 
             // space for the callee saved registers
             int frameSize = RegisterSize * calleeSavedRegisterCount;
-            frameSize += savedRegCount * sizeof(QV4::SafeValue); // these get written out as Values, not as native registers
+            frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
@@ -361,8 +361,8 @@ public:
 
         int calculateJSStackFrameSize() const
         {
-            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::SafeValue) - 1 + maxOutgoingArgumentCount) + 1;
-            int frameSize = locals * sizeof(QV4::SafeValue);
+            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
+            int frameSize = locals * sizeof(QV4::Value);
             return frameSize;
         }
 
@@ -372,7 +372,7 @@ public:
             Q_ASSERT(idx < localCount);
 
             Pointer addr = callDataAddress(0);
-            addr.offset -= sizeof(QV4::SafeValue) * (idx + 1);
+            addr.offset -= sizeof(QV4::Value) * (idx + 1);
             return addr;
         }
 
@@ -384,11 +384,11 @@ public:
             Q_ASSERT(argument < maxOutgoingArgumentCount);
 
             const int index = maxOutgoingArgumentCount - argument;
-            return Pointer(Assembler::LocalsRegister, sizeof(QV4::SafeValue) * (-index));
+            return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index));
         }
 
         Pointer callDataAddress(int offset = 0) const {
-            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::SafeValue) * (maxOutgoingArgumentCount - 1)) + offset);
+            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)) + offset);
         }
 
         Address savedRegPointer(int offset) const
@@ -396,7 +396,7 @@ public:
             Q_ASSERT(offset >= 0);
             Q_ASSERT(offset < savedRegCount);
 
-            const int off = offset * sizeof(QV4::SafeValue);
+            const int off = offset * sizeof(QV4::Value);
             return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
         }
 
@@ -657,7 +657,7 @@ public:
 
     void storeUInt32ReturnValue(RegisterID dest)
     {
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::SafeValue)));
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
         storeReturnValue(tmp);
         toUInt32Register(tmp, dest);
     }
@@ -669,7 +669,7 @@ public:
         xor64(ScratchRegister, ReturnValueRegister);
         move64ToDouble(ReturnValueRegister, dest);
 #else
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::SafeValue)));
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
         storeReturnValue(tmp);
         loadDouble(tmp, dest);
 #endif

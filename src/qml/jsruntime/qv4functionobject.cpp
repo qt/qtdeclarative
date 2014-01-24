@@ -352,7 +352,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
         } else {
             int alen = qMin(len, arr->arrayData->length());
             if (alen)
-                memcpy(callData->args, arr->arrayData->data, alen*sizeof(SafeValue));
+                memcpy(callData->args, arr->arrayData->data, alen*sizeof(Value));
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }
@@ -387,7 +387,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         return ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
-    QVector<SafeValue> boundArgs;
+    QVector<Value> boundArgs;
     for (int i = 1; i < ctx->callData->argc; ++i)
         boundArgs += ctx->callData->args[i];
 
@@ -643,7 +643,7 @@ DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
-BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
+BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
     , target(target)
     , boundArgs(boundArgs)
@@ -683,8 +683,8 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->call(callData);
 }
 
@@ -696,8 +696,8 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
         return Encode::undefined();
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->construct(callData);
 }
 

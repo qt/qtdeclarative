@@ -170,7 +170,7 @@ Param traceParam(const Param &param)
         goto catchException
 
 QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
-                            QV4::SafeValue *stack, unsigned stackSize
+                            QV4::Value *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -200,7 +200,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     qDebug("Starting VME with context=%p and code=%p", context, code);
 #endif // DO_TRACE_INSTR
 
-    QV4::SafeString * const runtimeStrings = context->compilationUnit->runtimeStrings;
+    QV4::StringValue * const runtimeStrings = context->compilationUnit->runtimeStrings;
     context->interpreterInstructionPointer = &code;
 
     // setup lookup scopes
@@ -213,9 +213,9 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         }
     }
 
-    QV4::SafeValue **scopes = static_cast<QV4::SafeValue **>(alloca(sizeof(QV4::SafeValue *)*(2 + 2*scopeDepth)));
+    QV4::Value **scopes = static_cast<QV4::Value **>(alloca(sizeof(QV4::Value *)*(2 + 2*scopeDepth)));
     {
-        scopes[0] = const_cast<QV4::SafeValue *>(context->compilationUnit->data->constants());
+        scopes[0] = const_cast<QV4::Value *>(context->compilationUnit->data->constants());
         // stack gets setup in push instruction
         scopes[1] = 0;
         QV4::ExecutionContext *scope = context;
@@ -328,7 +328,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = context->engine->stackPush(stackSize);
-        memset(stack, 0, stackSize * sizeof(QV4::SafeValue));
+        memset(stack, 0, stackSize * sizeof(QV4::Value));
         scopes[1] = stack;
     MOTH_END_INSTR(Push)
 
@@ -343,7 +343,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
             }
         }
 #endif // DO_TRACE_INSTR
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -353,7 +353,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -363,7 +363,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -372,7 +372,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -382,7 +382,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
         TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -392,7 +392,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -475,12 +475,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::SafeValue *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         STOREVALUE(instr.result, __qmljs_builtin_define_array(context, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
-        QV4::SafeValue *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
     STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
@@ -494,7 +494,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -503,7 +503,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -512,7 +512,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(ConstructPropertyLookup)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -522,7 +522,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -532,7 +532,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(ConstructGlobalLookup)
         TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;

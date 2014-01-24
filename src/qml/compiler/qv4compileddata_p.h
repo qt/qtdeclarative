@@ -201,8 +201,8 @@ struct Unit
     const RegExp *regexpAt(int index) const {
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
-    const QV4::SafeValue *constants() const {
-        return reinterpret_cast<const QV4::SafeValue*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    const QV4::Value *constants() const {
+        return reinterpret_cast<const QV4::Value*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
     }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
@@ -508,9 +508,9 @@ struct Q_QML_EXPORT CompilationUnit
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 
-    QV4::SafeString *runtimeStrings; // Array
+    QV4::StringValue *runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
-    QV4::SafeValue *runtimeRegularExpressions;
+    QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
 //    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;

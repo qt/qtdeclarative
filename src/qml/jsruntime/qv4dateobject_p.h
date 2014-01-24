@@ -54,7 +54,7 @@ namespace QV4 {
 struct DateObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(DateObject)
-    SafeValue value;
+    Value value;
     DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
         value = date;
     }

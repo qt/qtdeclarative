@@ -694,7 +694,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
     QQmlPropertyData local;
     if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
-        || name->equals(const_cast<SafeString &>(that->m_destroy)) || name->equals(engine->id_toString))
+        || name->equals(const_cast<StringValue &>(that->m_destroy)) || name->equals(engine->id_toString))
         return QV4::Attr_Data;
     else
         return QV4::Object::query(m, name);

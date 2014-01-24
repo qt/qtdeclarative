@@ -280,7 +280,7 @@ struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate
 {
     PersistentValuePrivate(ReturnedValue v, ExecutionEngine *engine = 0, bool weak = false);
     virtual ~PersistentValuePrivate();
-    SafeValue value;
+    Value value;
     uint refcount;
     bool weak;
     QV4::ExecutionEngine *engine;

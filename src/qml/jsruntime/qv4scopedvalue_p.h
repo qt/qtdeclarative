@@ -75,13 +75,13 @@ struct Scope {
     ~Scope() {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
-        memset(mark, 0, (engine->jsStackTop - mark)*sizeof(SafeValue));
+        memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
         engine->jsStackTop = mark;
     }
 
-    SafeValue *alloc(int nValues) {
-        SafeValue *ptr = engine->jsStackTop;
+    Value *alloc(int nValues) {
+        Value *ptr = engine->jsStackTop;
         engine->jsStackTop += nValues;
 #ifndef QT_NO_DEBUG
         size += nValues;
@@ -94,7 +94,7 @@ struct Scope {
     }
 
     ExecutionEngine *engine;
-    SafeValue *mark;
+    Value *mark;
 #ifndef QT_NO_DEBUG
     mutable int size;
 #endif
@@ -178,17 +178,17 @@ struct ScopedValue
         return *this;
     }
 
-    SafeValue *operator->() {
+    Value *operator->() {
         return ptr;
     }
 
-    const SafeValue *operator->() const {
+    const Value *operator->() const {
         return ptr;
     }
 
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
-    SafeValue *ptr;
+    Value *ptr;
 };
 
 template<typename T>
@@ -339,7 +339,7 @@ struct Scoped
 #endif
     }
 
-    SafeValue *ptr;
+    Value *ptr;
 };
 
 struct CallData
@@ -356,14 +356,14 @@ struct CallData
         return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
     }
 
-    SafeValue thisObject;
-    SafeValue args[1];
+    Value thisObject;
+    Value args[1];
 };
 
 struct ScopedCallData {
     ScopedCallData(Scope &scope, int argc)
     {
-        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue);
+        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value);
         ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));
         ptr->tag = QV4::Value::Integer_Type;
         ptr->argc = argc;
@@ -395,7 +395,7 @@ struct ValueRef {
         : ptr(&v.d->value) {}
     ValueRef(PersistentValuePrivate *p)
         : ptr(&p->value) {}
-    ValueRef(SafeValue &v) { ptr = &v; }
+    ValueRef(Value &v) { ptr = &v; }
     // Important: Do NOT add a copy constructor to this class
     // adding a copy constructor actually changes the calling convention, ie.
     // is not even binary compatible. Adding it would break assumptions made
@@ -426,7 +426,7 @@ struct ValueRef {
     operator Value *() {
         return ptr;
     }
-    SafeValue *operator->() {
+    Value *operator->() {
         return ptr;
     }
 
@@ -440,9 +440,9 @@ struct ValueRef {
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
     // ### get rid of this one!
-    ValueRef(Value *v) { ptr = reinterpret_cast<SafeValue *>(v); }
+    ValueRef(Value *v) { ptr = reinterpret_cast<Value *>(v); }
 private:
-    SafeValue *ptr;
+    Value *ptr;
 };
 
 
@@ -454,11 +454,11 @@ struct Referenced {
     // in the jit'ed code.
     Referenced(const Scoped<T> &v)
         : ptr(v.ptr) {}
-    Referenced(Safe<T> &v) { ptr = &v; }
-    Referenced(SafeValue &v) {
+    Referenced(TypedValue<T> &v) { ptr = &v; }
+    Referenced(Value &v) {
         ptr = value_cast<T>(v) ? &v : 0;
     }
-    static Referenced fromValuePointer(SafeValue *s) {
+    static Referenced fromValuePointer(Value *s) {
         return Referenced(s);
     }
 
@@ -515,7 +515,7 @@ struct Referenced {
     static Referenced null() { return Referenced(Null); }
     bool isNull() const { return !ptr; }
 private:
-    Referenced(SafeValue *v) {
+    Referenced(Value *v) {
         ptr = v;
 #if QT_POINTER_SIZE == 8
        ptr->val = 0;
@@ -525,7 +525,7 @@ private:
     }
     enum _Null { Null };
     Referenced(_Null) { ptr = 0; }
-    SafeValue *ptr;
+    Value *ptr;
 };
 
 typedef Referenced<String> StringRef;
@@ -633,81 +633,74 @@ inline Value &Value::operator=(Returned<T> *t)
     return *this;
 }
 
-inline SafeValue &SafeValue::operator =(const ScopedValue &v)
+inline Value &Value::operator =(const ScopedValue &v)
 {
     val = v.ptr->val;
     return *this;
 }
 
 template<typename T>
-inline SafeValue &SafeValue::operator=(Returned<T> *t)
-{
-    val = t->getPointer()->asReturnedValue();
-    return *this;
-}
-
-template<typename T>
-inline SafeValue &SafeValue::operator=(const Scoped<T> &t)
+inline Value &Value::operator=(const Scoped<T> &t)
 {
     val = t.ptr->val;
     return *this;
 }
 
-inline SafeValue &SafeValue::operator=(const ValueRef v)
+inline Value &Value::operator=(const ValueRef v)
 {
     val = v.asReturnedValue();
     return *this;
 }
 
 template<typename T>
-inline Returned<T> *SafeValue::as()
+inline Returned<T> *Value::as()
 {
     return Returned<T>::create(value_cast<T>(*this));
 }
 
 template<typename T> inline
-Referenced<T> SafeValue::asRef()
+Referenced<T> Value::asRef()
 {
     return Referenced<T>(*this);
 }
 
 template<typename T>
-inline Safe<T> &Safe<T>::operator =(T *t)
+inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 {
     val = t->asReturnedValue();
     return *this;
 }
 
 template<typename T>
-inline Safe<T> &Safe<T>::operator =(const Scoped<T> &v)
+inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
 {
     val = v.ptr->val;
     return *this;
 }
 
 template<typename T>
-inline Safe<T> &Safe<T>::operator=(Returned<T> *t)
+inline TypedValue<T> &TypedValue<T>::operator=(Returned<T> *t)
 {
     val = t->getPointer()->asReturnedValue();
     return *this;
 }
 
 template<typename T>
-inline Safe<T> &Safe<T>::operator =(const Referenced<T> &v)
+inline TypedValue<T> &TypedValue<T>::operator =(const Referenced<T> &v)
 {
     val = v.asReturnedValue();
     return *this;
 }
 
 template<typename T>
-inline Safe<T> &Safe<T>::operator=(const Safe<T> &t)
+inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
 {
     val = t.val;
     return *this;
 }
 
 template<typename T>
-inline Returned<T> * Safe<T>::ret() const
+inline Returned<T> * TypedValue<T>::ret() const
 {
     return Returned<T>::create(static_cast<T *>(managed()));
 }

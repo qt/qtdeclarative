@@ -581,7 +581,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         }
         // dense arrays
         while (it->arrayIndex < o->arrayData->length()) {
-            SafeValue *val = o->arrayData->data + it->arrayIndex;
+            Value *val = o->arrayData->data + it->arrayIndex;
             PropertyAttributes a = o->arrayData->attributes(it->arrayIndex);
             ++it->arrayIndex;
             if (!val->isEmpty()
@@ -1118,7 +1118,7 @@ void Object::copyArrayData(Object *other)
             d->len = static_cast<SimpleArrayData *>(other->arrayData)->len;
             d->offset = 0;
         }
-        memcpy(arrayData->data, other->arrayData->data, arrayData->alloc*sizeof(SafeValue));
+        memcpy(arrayData->data, other->arrayData->data, arrayData->alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }

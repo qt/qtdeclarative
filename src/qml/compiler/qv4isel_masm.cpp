@@ -245,12 +245,12 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, V4IR::Temp *t)
     case V4IR::Temp::Formal:
     case V4IR::Temp::ScopedFormal: {
         loadPtr(Address(context, qOffsetOf(ExecutionContext, callData)), baseReg);
-        offset = sizeof(CallData) + (t->index - 1) * sizeof(SafeValue);
+        offset = sizeof(CallData) + (t->index - 1) * sizeof(Value);
     } break;
     case V4IR::Temp::Local:
     case V4IR::Temp::ScopedLocal: {
         loadPtr(Address(context, qOffsetOf(CallContext, locals)), baseReg);
-        offset = t->index * sizeof(SafeValue);
+        offset = t->index * sizeof(Value);
     } break;
     case V4IR::Temp::StackSlot: {
         return stackSlotPointer(t);
@@ -266,7 +266,7 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    return Pointer(reg, id * sizeof(QV4::SafeString));
+    return Pointer(reg, id * sizeof(QV4::StringValue));
 }
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
@@ -274,7 +274,7 @@ void Assembler::loadStringRef(RegisterID reg, const QString &string)
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, compilationUnit)), reg);
     loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    addPtr(TrustedImmPtr(id * sizeof(QV4::SafeString)), reg);
+    addPtr(TrustedImmPtr(id * sizeof(QV4::StringValue)), reg);
 }
 
 template <typename Result, typename Source>
@@ -615,7 +615,7 @@ void InstructionSelection::run(int functionIndex)
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
     _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
-    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);
+    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     int lastLine = -1;
@@ -1931,7 +1931,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     _as->exceptionReturnLabel = _as->label();
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);
+    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 

@@ -1085,9 +1085,9 @@ public:
     QScopedPointer<QQmlComponentIncubator> incubator;
     QV8Engine *v8;
     QPointer<QObject> parent;
-    QV4::SafeValue valuemap;
-    QV4::SafeValue qmlGlobal;
-    QV4::SafeValue m_statusChanged;
+    QV4::Value valuemap;
+    QV4::Value qmlGlobal;
+    QV4::Value m_statusChanged;
 
     void statusChanged(QQmlIncubator::Status);
     void setInitialState(QObject *);

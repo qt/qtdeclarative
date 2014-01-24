@@ -915,7 +915,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
 
 
 
-    QV4::SafeValue pixelData;
+    QV4::Value pixelData;
 };
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);

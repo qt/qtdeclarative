@@ -52,8 +52,8 @@ namespace QV4 {
 struct FunctionObject;
 
 struct Property {
-    SafeValue value;
-    SafeValue set;
+    Value value;
+    Value set;
 
     // Section 8.10
     inline void fullyPopulated(PropertyAttributes *attrs) {
