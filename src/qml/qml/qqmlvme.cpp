@@ -129,6 +129,7 @@ void QQmlVME::init(QQmlContextData *ctxt, QQmlCompiledData *comp, int start,
 
     rootContext = 0;
     engine = ctxt->engine;
+    profiler.profiler = QQmlEnginePrivate::get(engine)->profiler;
 }
 
 bool QQmlVME::initDeferred(QObject *object)
@@ -168,6 +169,7 @@ bool QQmlVME::initDeferred(QObject *object)
 
     rootContext = 0;
     engine = ctxt->engine;
+    profiler.profiler = QQmlEnginePrivate::get(engine)->profiler;
 
     return true;
 }
@@ -503,7 +505,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.component);
 
-            Q_QML_VME_PROFILE(profiler.startBackground(type.component->name));
+            Q_QML_VME_PROFILE(profiler, startBackground(type.component->name));
 
             states.push(State());
 
@@ -526,7 +528,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(CreateQMLObject)
 
         QML_BEGIN_INSTR(CompleteQMLObject)
-            Q_QML_VME_PROFILE(profiler.foreground(CTXT->url, instr.line, instr.column));
+            Q_QML_VME_PROFILE(profiler, foreground(CTXT->url, instr.line, instr.column));
 
             QObject *o = objects.top();
             Q_ASSERT(o);
@@ -570,7 +572,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(CreateCppObject)
             const QQmlCompiledData::TypeReference &type = TYPES.at(instr.type);
             Q_ASSERT(type.type);
-            Q_QML_VME_PROFILE(profiler.start(type.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
+            Q_QML_VME_PROFILE(profiler, start(type.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
 
             QObject *o = 0;
             void *memory = 0;
@@ -643,7 +645,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CreateSimpleObject)
             const QQmlCompiledData::TypeReference &ref = TYPES.at(instr.type);
-            Q_QML_VME_PROFILE(profiler.start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
+            Q_QML_VME_PROFILE(profiler, start(ref.type->qmlTypeName(), CTXT->url, instr.line, instr.column));
             QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));
             ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);
@@ -823,7 +825,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreScriptString)
 
         QML_BEGIN_INSTR(BeginObject)
-            Q_QML_VME_PROFILE(profiler.push());
+            Q_QML_VME_PROFILE(profiler, push());
             QObject *target = objects.top();
             QQmlParserStatus *status = reinterpret_cast<QQmlParserStatus *>(reinterpret_cast<char *>(target) + instr.castValue);
             parserStatus.push(status);
@@ -1087,7 +1089,7 @@ normalExit:
     objects.deallocate();
     lists.deallocate();
     states.clear();
-    Q_QML_VME_PROFILE(profiler.stop());
+    Q_QML_VME_PROFILE(profiler, stop());
 
     return rv;
 }
@@ -1131,7 +1133,7 @@ void QQmlVME::reset()
     // be reported in the second run because we don't clear() here. We accept
     // that as the collected data will be incomplete anyway and because not
     // calling clear() here is benefitial for the non-profiling case.
-    Q_QML_VME_PROFILE(profiler.clear());
+    Q_QML_VME_PROFILE(profiler, clear(true));
 }
 
 #ifdef QML_THREADED_VME_INTERPRETER
@@ -1191,7 +1193,7 @@ QQmlContextData *QQmlVME::complete(const QQmlInstantiationInterrupt &interrupt)
     if (componentCompleteEnabled()) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!parserStatus.isEmpty()) {
-            Q_QML_VME_PROFILE(profiler.pop());
+            Q_QML_VME_PROFILE(profiler, pop());
             QQmlParserStatus *status = parserStatus.pop();
 #ifdef QML_ENABLE_TRACE
             QQmlData *data = parserStatusData.pop();
@@ -1211,7 +1213,7 @@ QQmlContextData *QQmlVME::complete(const QQmlInstantiationInterrupt &interrupt)
                 return 0;
         }
         parserStatus.deallocate();
-        Q_QML_VME_PROFILE(profiler.clear());
+        Q_QML_VME_PROFILE(profiler, clear());
     }
 
     {

@@ -556,7 +556,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlUseNewCompiler, QML_NEW_COMPILER)
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
-  outputWarningsToStdErr(true),
+  profiler(0), outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
   activeObjectCreator(0),
@@ -595,6 +595,12 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         (*iter)->release();
     for (QHash<int, QQmlCompiledData *>::Iterator iter = m_compositeTypes.begin(); iter != m_compositeTypes.end(); ++iter)
         iter.value()->isRegisteredWithEngine = false;
+    delete profiler;
+}
+
+void QQmlEnginePrivate::enableProfiler()
+{
+    profiler = new QQmlProfiler();
 }
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)

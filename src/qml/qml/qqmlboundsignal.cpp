@@ -50,7 +50,7 @@
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlprofiler_p.h>
 #include <private/qv4debugservice_p.h>
 #include "qqmlinfo.h"
 
@@ -356,14 +356,13 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
     if (QQmlDebugService::isDebuggingEnabled())
         QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->m_index).methodSignature()));
 
-    QQmlHandlingSignalProfiler prof(s->m_expression);
-
     s->m_isEvaluating = true;
 
-    if (s->m_expression && s->m_expression->engine()) {
+    QQmlEngine *engine;
+    if (s->m_expression && (engine = s->m_expression->engine())) {
+        QQmlHandlingSignalProfiler prof(QQmlEnginePrivate::get(engine)->profiler, s->m_expression);
         s->m_expression->evaluate(a);
         if (s->m_expression && s->m_expression->hasError()) {
-            QQmlEngine *engine = s->m_expression->engine();
             QQmlEnginePrivate::warning(engine, s->m_expression->error(engine));
         }
     }

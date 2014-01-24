@@ -49,7 +49,7 @@
 #include <private/qqmlthread_p.h>
 #include <private/qqmlcompiler_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlprofiler_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlcodegenerator_p.h>
 #include <private/qqmltypecompiler_p.h>
@@ -2304,7 +2304,7 @@ void QQmlTypeData::compile()
     m_compiledData->url = finalUrl();
     m_compiledData->name = finalUrlString();
 
-    QQmlCompilingProfiler prof(m_compiledData->name);
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler, m_compiledData->name);
 
     if (m_useNewCompiler) {
         QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, parsedQML.data());

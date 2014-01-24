@@ -68,7 +68,7 @@
 #include <private/qfinitestack_p.h>
 
 #include <private/qqmltrace_p.h>
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -102,6 +102,7 @@ class QQmlVME;
 class QmlObjectCreator;
 class QDir;
 class QQmlIncubator;
+class QQmlProfiler;
 
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h
@@ -146,6 +147,8 @@ public:
     QQmlContext *rootContext;
     bool isDebugging;
     bool useNewCompiler;
+    QQmlProfiler *profiler;
+    void enableProfiler();
 
     bool outputWarningsToStdErr;
 

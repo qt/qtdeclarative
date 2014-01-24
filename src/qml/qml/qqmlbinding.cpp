@@ -46,7 +46,7 @@
 #include "qqmlinfo.h"
 #include "qqmlcompiler_p.h"
 #include "qqmldata_p.h"
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlprofiler_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
@@ -226,7 +226,8 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     trace.addDetail("Column", columnNo);
 
     if (!updatingFlag()) {
-        QQmlBindingProfiler prof(m_url, lineNo, columnNo, QQmlProfilerService::QmlBinding);
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
+        QQmlBindingProfiler prof(ep->profiler, m_url, lineNo, columnNo);
         setUpdatingFlag(true);
 
         QQmlAbstractExpression::DeleteWatcher watcher(this);
@@ -242,7 +243,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             QMetaObject::metacall(*m_coreObject, QMetaObject::WriteProperty, idx, a);
 
         } else {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
             QV4::Scope scope(ep->v4engine());
 
             ep->referenceScarceResources();
