@@ -50,7 +50,9 @@
 #    define alloca _alloca
 #  endif
 #else
+#if !defined(__FreeBSD__) && !defined(__DragonFly__)
 #  include <alloca.h>
+#endif
 #endif
 
 #endif

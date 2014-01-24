@@ -151,8 +151,10 @@ QT_BEGIN_NAMESPACE
 
 #ifdef QML_THREADED_VME_INTERPRETER
 #  define QML_INSTR_HEADER void *code;
+#  define QML_INSTR_HEADER_INIT this->code = 0;
 #else
 #  define QML_INSTR_HEADER quint8 instructionType;
+#  define QML_INSTR_HEADER_INIT this->instructionType = 0;
 #endif
 
 #define QML_INSTR_ENUM(I, FMT)  I,
@@ -547,6 +549,8 @@ FOR_EACH_QML_INSTR(QML_INSTR_META_TEMPLATE);
 template<int Instr>
 class QQmlInstructionData : public QQmlInstructionMeta<Instr>::DataType
 {
+public:
+    QQmlInstructionData() : QQmlInstructionMeta<Instr>::DataType() { QML_INSTR_HEADER_INIT }
 };
 
 QT_END_NAMESPACE

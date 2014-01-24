@@ -90,6 +90,7 @@ public:
     quint16 lineNumber() const { return m_line; }
     quint16 columnNumber() const { return m_column; }
     QString expression() const;
+    QV4::Function *function() const;
     QObject *target() const { return m_target; }
 
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }

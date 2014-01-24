@@ -1681,6 +1681,7 @@ static AST::FunctionDeclaration *convertSignalHandlerExpressionToFunctionDeclara
     AST::FunctionBody *body = new (pool) AST::FunctionBody(elements);
 
     AST::FunctionDeclaration *functionDeclaration = new (pool) AST::FunctionDeclaration(jsEngine->newStringRef(signalName), paramList, body);
+    functionDeclaration->functionToken = statement->firstSourceLocation();
     return functionDeclaration;
 }
 

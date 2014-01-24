@@ -1440,17 +1440,23 @@ void tst_qquickflickable::stopAtBounds_data()
 {
     QTest::addColumn<bool>("transpose");
     QTest::addColumn<bool>("invert");
+    QTest::addColumn<bool>("pixelAligned");
 
-    QTest::newRow("left") << false << false;
-    QTest::newRow("right") << false << true;
-    QTest::newRow("top") << true << false;
-    QTest::newRow("bottom") << true << true;
+    QTest::newRow("left") << false << false << false;
+    QTest::newRow("right") << false << true << false;
+    QTest::newRow("top") << true << false << false;
+    QTest::newRow("bottom") << true << true << false;
+    QTest::newRow("left,pixelAligned") << false << false << true;
+    QTest::newRow("right,pixelAligned") << false << true << true;
+    QTest::newRow("top,pixelAligned") << true << false << true;
+    QTest::newRow("bottom,pixelAligned") << true << true << true;
 }
 
 void tst_qquickflickable::stopAtBounds()
 {
     QFETCH(bool, transpose);
     QFETCH(bool, invert);
+    QFETCH(bool, pixelAligned);
 
     QQuickView view;
     view.setSource(testFileUrl("stopAtBounds.qml"));
@@ -1469,6 +1475,7 @@ void tst_qquickflickable::stopAtBounds()
         flickable->setContentY(invert ? 100 : 0);
     else
         flickable->setContentX(invert ? 100 : 0);
+    flickable->setPixelAligned(pixelAligned);
 
     const int threshold = qApp->styleHints()->startDragDistance();
 
@@ -1518,6 +1525,29 @@ void tst_qquickflickable::stopAtBounds()
     }
 
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    if (transpose) {
+        flickable->setContentY(invert ? 100 : 0);
+    } else {
+        flickable->setContentX(invert ? 100 : 0);
+    }
+    if (invert)
+        flick(&view, QPoint(20,20), QPoint(100,100), 100);
+    else
+        flick(&view, QPoint(100,100), QPoint(20,20), 100);
+
+    QVERIFY(flickable->isFlicking());
+    if (transpose) {
+        if (invert)
+            QTRY_COMPARE(flickable->isAtYBeginning(), true);
+        else
+            QTRY_COMPARE(flickable->isAtYEnd(), true);
+    } else {
+        if (invert)
+            QTRY_COMPARE(flickable->isAtXBeginning(), true);
+        else
+            QTRY_COMPARE(flickable->isAtXEnd(), true);
+    }
 }
 
 void tst_qquickflickable::nestedMouseAreaUsingTouch()

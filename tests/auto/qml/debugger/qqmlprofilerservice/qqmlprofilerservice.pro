@@ -19,4 +19,5 @@ OTHER_FILES += \
     data/test.qml \
     data/exit.qml \
     data/scenegraphTest.qml \
-    data/TestImage_2x2.png
+    data/TestImage_2x2.png \
+    data/signalSourceLocation.qml

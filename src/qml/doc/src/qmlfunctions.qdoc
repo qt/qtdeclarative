@@ -238,7 +238,7 @@
    Usage:
    \code
    // First, define the singleton type provider function (callback).
-   static QJSValue *example_qjsvalue_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
+   static QJSValue example_qjsvalue_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
 

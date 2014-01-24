@@ -1481,6 +1481,7 @@ protected:
     typedef Assembler::Address Address;
     typedef Assembler::Pointer Pointer;
 
+#if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
     {
         // StackFrameRegister points to its old value on the stack, and above
@@ -1488,6 +1489,7 @@ protected:
         // values before reaching the first argument.
         return Address(Assembler::StackFrameRegister, (index + 2) * sizeof(void*));
     }
+#endif
 
     Pointer baseAddressForCallArguments()
     {
