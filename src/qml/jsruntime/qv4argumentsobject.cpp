@@ -91,9 +91,7 @@ void ArgumentsObject::fullyCreate()
 
     uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
     uint argCount = qMin(context->realArgumentCount, context->callData->argc);
-    arrayReserve(argCount);
-    initSparseArray();
-    arrayData->ensureAttributes();
+    ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
     context->engine->requireArgumentsAccessors(numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments.append(context->callData->args[i]);

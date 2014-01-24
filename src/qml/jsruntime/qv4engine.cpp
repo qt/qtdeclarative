@@ -504,6 +504,8 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
     ArrayObject *object = new (memoryManager) ArrayObject(this);
 
     if (count) {
+        Scope scope(this);
+        ScopedValue protectArray(scope, object);
         if (count < 0x1000)
             object->arrayReserve(count);
         object->setArrayLengthUnchecked(count);

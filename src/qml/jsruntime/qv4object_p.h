@@ -197,7 +197,7 @@ public:
     void setArrayAttributes(uint i, PropertyAttributes a) {
         Q_ASSERT(arrayData);
         if (arrayData->attrs || a != Attr_Data) {
-            arrayData->ensureAttributes();
+            ArrayData::ensureAttributes(this);
             a.resolve();
             arrayData->vtable()->setAttribute(this, i, a);
         }
@@ -216,13 +216,12 @@ public:
     }
 
     inline void arrayReserve(uint n) {
-        arrayCreate();
-        arrayData->vtable()->reserve(arrayData, n);
+        ArrayData::realloc(this, ArrayData::Simple, 0, n, false);
     }
 
     void arrayCreate() {
         if (!arrayData)
-            arrayData = new (engine()->memoryManager) SimpleArrayData(engine());
+            ArrayData::realloc(this, ArrayData::Simple, 0, 0, false);
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif
@@ -383,7 +382,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     } else if (index > 0x1000 && index > 2*arrayData->alloc) {
         initSparseArray();
     } else {
-        arrayData->vtable()->reserve(arrayData, index + 1);
+        arrayData->vtable()->reallocate(this, index + 1, false);
     }
     setArrayAttributes(index, attributes);
     Property *pd = ArrayData::insert(this, index, attributes.isAccessor());

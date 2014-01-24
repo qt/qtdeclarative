@@ -64,7 +64,7 @@ struct ArrayVTable
 {
     ManagedVTable managedVTable;
     uint type;
-    void (*reserve)(ArrayData *d, uint n);
+    ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
     ReturnedValue (*get)(const ArrayData *d, uint index);
     bool (*put)(Object *o, uint index, ValueRef value);
     bool (*putArray)(Object *o, uint index, SafeValue *values, uint n);
@@ -82,10 +82,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
 {
     ArrayData(InternalClass *ic)
         : Managed(ic)
-        , alloc(0)
-        , type(0)
-        , attrs(0)
-        , data(0)
     {
     }
 
@@ -97,7 +93,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     };
 
     uint alloc;
-    uint type;
+    Type type;
     PropertyAttributes *attrs;
     SafeValue *data;
 
@@ -113,7 +109,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
     bool hasAttributes() const {
         return this && attrs;
     }
-    void ensureAttributes();
     PropertyAttributes attributes(int i) const {
         Q_ASSERT(this);
         return attrs ? vtable()->attribute(this, i) : Attr_Data;
@@ -132,6 +127,9 @@ struct Q_QML_EXPORT ArrayData : public Managed
     }
     inline Property *getProperty(uint index) const;
 
+    static void ensureAttributes(Object *o);
+    static void realloc(Object *o, Type newType, uint offset, uint alloc, bool enforceAttributes);
+
     static void sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
     static uint append(Object *obj, const ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
@@ -143,15 +141,13 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     SimpleArrayData(ExecutionEngine *engine)
         : ArrayData(engine->emptyClass)
-        , len(0)
-        , offset(0)
     { setVTable(staticVTable()); }
 
     uint len;
     uint offset;
 
-    static void getHeadRoom(ArrayData *d);
-    static void reserve(ArrayData *d, uint n);
+    static void getHeadRoom(Object *o);
+    static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
     static void destroy(Managed *d);
     static void markObjects(Managed *d, ExecutionEngine *e);
@@ -174,20 +170,18 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 
     SparseArrayData(ExecutionEngine *engine)
         : ArrayData(engine->emptyClass)
-        , freeList(0)
-        , sparse(0)
     { setVTable(staticVTable()); }
 
     uint freeList;
     SparseArray *sparse;
 
-    static uint allocate(ArrayData *d, bool doubleSlot = false);
+    static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
     static void destroy(Managed *d);
     static void markObjects(Managed *d, ExecutionEngine *e);
 
-    static void reserve(ArrayData *d, uint n);
+    static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
     static bool putArray(Object *o, uint index, SafeValue *values, uint n);

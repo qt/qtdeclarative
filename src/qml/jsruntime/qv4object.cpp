@@ -1107,22 +1107,18 @@ void Object::copyArrayData(Object *other)
         }
     } else {
         Q_ASSERT(!arrayData && other->arrayData);
+        ArrayData::realloc(this, other->arrayData->type, 0, other->arrayData->alloc, other->arrayData->attrs);
         if (other->arrayType() == ArrayData::Sparse) {
             SparseArrayData *od = static_cast<SparseArrayData *>(other->arrayData);
-            SparseArrayData *dd = new (engine()->memoryManager) SparseArrayData(engine());
-            dd->type = ArrayData::Sparse;
+            SparseArrayData *dd = static_cast<SparseArrayData *>(arrayData);
             dd->sparse = new SparseArray(*od->sparse);
             dd->freeList = od->freeList;
-            arrayData = dd;
-        }
-        arrayReserve(other->arrayData->alloc);
-        if (other->arrayType() != ArrayData::Sparse) {
+        } else {
             SimpleArrayData *d = static_cast<SimpleArrayData *>(arrayData);
             d->len = static_cast<SimpleArrayData *>(other->arrayData)->len;
             d->offset = 0;
         }
         memcpy(arrayData->data, other->arrayData->data, arrayData->alloc*sizeof(SafeValue));
-
     }
     setArrayLengthUnchecked(other->getLength());
 }
@@ -1164,47 +1160,7 @@ void Object::initSparseArray()
     if (arrayType() == ArrayData::Sparse)
         return;
 
-    SparseArrayData *data = new (engine()->memoryManager) SparseArrayData(engine());
-    data->type = ArrayData::Sparse;
-    data->sparse = new SparseArray;
-    if (!arrayData) {
-        arrayData = data;
-        return;
-    }
-    SimpleArrayData *simple = static_cast<SimpleArrayData *>(arrayData);
-
-    uint oldOffset = simple->offset;
-    uint length = simple->ArrayData::length();
-    data->data = simple->data - simple->offset;
-    data->attrs = simple->attrs;
-    data->alloc = simple->alloc;
-    simple->data = 0;
-    simple->attrs = 0;
-    // ### explicitly free old data? delete simple;
-    arrayData = data;
-
-    uint *lastFree = &data->freeList;
-    for (uint i = 0; i < oldOffset; ++i) {
-        *lastFree = i;
-        data->data[i].tag = Value::Empty_Type;
-        lastFree = &data->data[i].uint_32;
-    }
-    for (uint i = 0; i < length; ++i) {
-        if (!data->data[i + oldOffset].isEmpty()) {
-            SparseArrayNode *n = data->sparse->insert(i);
-            n->value = i + oldOffset;
-        } else {
-            *lastFree = i + oldOffset;
-            data->data[i + oldOffset].tag = Value::Empty_Type;
-            lastFree = &data->data[i + oldOffset].uint_32;
-        }
-    }
-    for (uint i = length + oldOffset; i < data->alloc; ++i) {
-        *lastFree = i;
-        data->data[i].tag = Value::Empty_Type;
-        lastFree = &data->data[i].uint_32;
-    }
-    *lastFree = data->alloc;
+    ArrayData::realloc(this, ArrayData::Sparse, 0, 0, false);
 }
 
 

@@ -273,7 +273,7 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
     o->internalClass = o->internalClass->sealed();
 
     if (o->arrayData) {
-        o->arrayData->ensureAttributes();
+        ArrayData::ensureAttributes(o.getPointer());
         for (uint i = 0; i < o->arrayData->alloc; ++i) {
             if (!o->arrayData->isEmpty(i))
                 o->arrayData->attrs[i].setConfigurable(false);
@@ -298,7 +298,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     o->internalClass = o->internalClass->frozen();
 
     if (o->arrayData) {
-        o->arrayData->ensureAttributes();
+        ArrayData::ensureAttributes(o.getPointer());
         for (uint i = 0; i < o->arrayData->alloc; ++i) {
             if (!o->arrayData->isEmpty(i))
                 o->arrayData->attrs[i].setConfigurable(false);
