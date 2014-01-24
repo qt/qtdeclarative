@@ -129,11 +129,10 @@ void tst_qqmlapplicationengine::application()
 
 void tst_qqmlapplicationengine::applicationProperties()
 {
-    QCoreApplication* coreApp = QCoreApplication::instance();
-    QString originalName = coreApp->applicationName();
-    QString originalVersion = coreApp->applicationVersion();
-    QString originalOrganization = coreApp->organizationName();
-    QString originalDomain = coreApp->organizationDomain();
+    const QString originalName = QCoreApplication::applicationName();
+    const QString originalVersion = QCoreApplication::applicationVersion();
+    const QString originalOrganization = QCoreApplication::organizationName();
+    const QString originalDomain = QCoreApplication::organizationDomain();
     QString firstName = QLatin1String("Test A");
     QString firstVersion = QLatin1String("0.0A");
     QString firstOrganization = QLatin1String("Org A");
@@ -143,10 +142,10 @@ void tst_qqmlapplicationengine::applicationProperties()
     QString secondOrganization = QLatin1String("Org B");
     QString secondDomain = QLatin1String("b.org");
 
-    coreApp->setApplicationName(firstName);
-    coreApp->setApplicationVersion(firstVersion);
-    coreApp->setOrganizationName(firstOrganization);
-    coreApp->setOrganizationDomain(firstDomain);
+    QCoreApplication::setApplicationName(firstName);
+    QCoreApplication::setApplicationVersion(firstVersion);
+    QCoreApplication::setOrganizationName(firstOrganization);
+    QCoreApplication::setOrganizationDomain(firstDomain);
 
     QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("applicationTest.qml"));
     QObject* root = test->rootObjects().at(0);
@@ -159,10 +158,10 @@ void tst_qqmlapplicationengine::applicationProperties()
     QCOMPARE(root->property("currentVersion").toString(), secondVersion);
     QCOMPARE(root->property("currentOrganization").toString(), secondOrganization);
     QCOMPARE(root->property("currentDomain").toString(), secondDomain);
-    QCOMPARE(coreApp->applicationName(), secondName);
-    QCOMPARE(coreApp->applicationVersion(), secondVersion);
-    QCOMPARE(coreApp->organizationName(), secondOrganization);
-    QCOMPARE(coreApp->organizationDomain(), secondDomain);
+    QCOMPARE(QCoreApplication::applicationName(), secondName);
+    QCOMPARE(QCoreApplication::applicationVersion(), secondVersion);
+    QCOMPARE(QCoreApplication::organizationName(), secondOrganization);
+    QCOMPARE(QCoreApplication::organizationDomain(), secondDomain);
 
     QObject* application = root->property("applicationInstance").value<QObject*>();
     QVERIFY(application);
@@ -171,10 +170,10 @@ void tst_qqmlapplicationengine::applicationProperties()
     QSignalSpy organizationChanged(application, SIGNAL(organizationChanged()));
     QSignalSpy domainChanged(application, SIGNAL(domainChanged()));
 
-    coreApp->setApplicationName(originalName);
-    coreApp->setApplicationVersion(originalVersion);
-    coreApp->setOrganizationName(originalOrganization);
-    coreApp->setOrganizationDomain(originalDomain);
+    QCoreApplication::setApplicationName(originalName);
+    QCoreApplication::setApplicationVersion(originalVersion);
+    QCoreApplication::setOrganizationName(originalOrganization);
+    QCoreApplication::setOrganizationDomain(originalDomain);
 
     QCOMPARE(nameChanged.count(), 1);
     QCOMPARE(versionChanged.count(), 1);
