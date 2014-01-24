@@ -746,7 +746,7 @@ static bool js_equal(const QString &string, QV4::ValueRef value)
     if (value->isNumber())
         return __qmljs_string_to_number(string) == value->asDouble();
     if (value->isBoolean())
-        return __qmljs_string_to_number(string) == value->booleanValue();
+        return __qmljs_string_to_number(string) == double(value->booleanValue());
     if (value->isObject()) {
         Scope scope(value->objectValue()->engine());
         ScopedValue p(scope, __qmljs_to_primitive(value, PREFERREDTYPE_HINT));

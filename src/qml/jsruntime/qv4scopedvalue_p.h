@@ -65,6 +65,9 @@ struct Scope {
 
     explicit Scope(ExecutionEngine *e)
         : engine(e)
+#ifndef QT_NO_DEBUG
+        , size(0)
+#endif
     {
         mark = engine->jsStackTop;
     }

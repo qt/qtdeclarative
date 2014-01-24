@@ -1836,6 +1836,17 @@ QList<QQmlType*> QQmlMetaType::qmlTypes()
 }
 
 /*!
+    Returns the list of all registered types.
+*/
+QList<QQmlType*> QQmlMetaType::qmlAllTypes()
+{
+    QReadLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    return data->types;
+}
+
+/*!
     Returns the list of registered QML singleton types.
 */
 QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()

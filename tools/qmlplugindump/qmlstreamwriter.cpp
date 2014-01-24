@@ -183,6 +183,16 @@ void QmlStreamWriter::writePotentialLine(const QByteArray &line)
     }
 }
 
+void QmlStreamWriter::writeIsCreatable(bool isCreatable) {
+  writeIndent();
+  m_stream->write(QString("isCreatable: %1\n").arg(isCreatable ? "true" : "false").toUtf8());
+}
+
+void QmlStreamWriter::writeIsSingleton(bool isSingleton) {
+  writeIndent();
+  m_stream->write(QString("isSingleton: %1\n").arg(isSingleton ? "true" : "false").toUtf8());
+}
+
 void QmlStreamWriter::flushPotentialLinesWithNewlines()
 {
     if (m_maybeOneline)

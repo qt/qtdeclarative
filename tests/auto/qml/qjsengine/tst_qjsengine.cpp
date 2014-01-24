@@ -148,6 +148,8 @@ private slots:
     void functionDeclarationsInConditionals();
 
     void arrayPop_QTBUG_35979();
+
+    void regexpLastMatch();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -2703,6 +2705,68 @@ void tst_QJSEngine::arrayPop_QTBUG_35979()
             "x[1] = 3\n"
             "x.toString()\n");
     QCOMPARE(result.toString(), QString("1,3"));
+}
+
+void tst_QJSEngine::regexpLastMatch()
+{
+    QJSEngine eng;
+
+    QCOMPARE(eng.evaluate("RegExp.input").toString(), QString());
+
+    QJSValue hasProperty;
+
+    for (int i = 1; i < 9; ++i) {
+        hasProperty = eng.evaluate("RegExp.hasOwnProperty(\"$" + QString::number(i) + "\")");
+        QVERIFY(hasProperty.isBool());
+        QVERIFY(hasProperty.toBool());
+    }
+
+    hasProperty = eng.evaluate("RegExp.hasOwnProperty(\"$0\")");
+    QVERIFY(hasProperty.isBool());
+    QVERIFY(!hasProperty.toBool());
+
+    hasProperty = eng.evaluate("RegExp.hasOwnProperty(\"$10\")");
+    QVERIFY(!hasProperty.toBool());
+
+    hasProperty = eng.evaluate("RegExp.hasOwnProperty(\"lastMatch\")");
+    QVERIFY(hasProperty.toBool());
+    hasProperty = eng.evaluate("RegExp.hasOwnProperty(\"$&\")");
+    QVERIFY(hasProperty.toBool());
+
+    QJSValue result = eng.evaluate(""
+            "var re = /h(el)l(o)/\n"
+            "var text = \"blah hello world\"\n"
+            "text.match(re)\n");
+    QVERIFY(!result.isError());
+    QJSValue match = eng.evaluate("RegExp.$1");
+    QCOMPARE(match.toString(), QString("el"));
+    match = eng.evaluate("RegExp.$2");
+    QCOMPARE(match.toString(), QString("o"));
+    for (int i = 3; i <= 9; ++i) {
+        match = eng.evaluate("RegExp.$" + QString::number(i));
+        QVERIFY(match.isString());
+        QCOMPARE(match.toString(), QString());
+    }
+    QCOMPARE(eng.evaluate("RegExp.input").toString(), QString("blah hello world"));
+    QCOMPARE(eng.evaluate("RegExp.lastParen").toString(), QString("o"));
+    QCOMPARE(eng.evaluate("RegExp.leftContext").toString(), QString("blah "));
+    QCOMPARE(eng.evaluate("RegExp.rightContext").toString(), QString(" world"));
+
+    QCOMPARE(eng.evaluate("RegExp.lastMatch").toString(), QString("hello"));
+
+    result = eng.evaluate(""
+            "var re = /h(ello)/\n"
+            "var text = \"hello\"\n"
+            "text.match(re)\n");
+    QVERIFY(!result.isError());
+    match = eng.evaluate("RegExp.$1");
+    QCOMPARE(match.toString(), QString("ello"));
+    for (int i = 2; i <= 9; ++i) {
+        match = eng.evaluate("RegExp.$" + QString::number(i));
+        QVERIFY(match.isString());
+        QCOMPARE(match.toString(), QString());
+    }
+
 }
 
 QTEST_MAIN(tst_QJSEngine)

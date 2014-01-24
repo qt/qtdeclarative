@@ -210,10 +210,17 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
     static bool dumped = false;
     if (!dumped && qEnvironmentVariableIsSet("QSG_INFO")) {
         dumped = true;
-        qDebug() << "GL_VENDOR:     " << (const char *) glGetString(GL_VENDOR);
-        qDebug() << "GL_RENDERER:   " << (const char *) glGetString(GL_RENDERER);
-        qDebug() << "GL_VERSION:    " << (const char *) glGetString(GL_VERSION);
-        qDebug() << "GL_EXTENSIONS:\n   " << QByteArray((const char *) glGetString(GL_EXTENSIONS)).replace(" ", "\n    ").constData();
+        QSurfaceFormat format = renderContext->openglContext()->format();
+        qDebug() << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
+        qDebug() << "Depth Buffer:      " << format.depthBufferSize();
+        qDebug() << "Stencil Buffer:    " << format.stencilBufferSize();
+        qDebug() << "Samples:           " << format.samples();
+        qDebug() << "GL_VENDOR:         " << (const char *) glGetString(GL_VENDOR);
+        qDebug() << "GL_RENDERER:       " << (const char *) glGetString(GL_RENDERER);
+        qDebug() << "GL_VERSION:        " << (const char *) glGetString(GL_VERSION);
+        QSet<QByteArray> exts = renderContext->openglContext()->extensions();
+        QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
+        qDebug() << "GL_EXTENSIONS:    " << all.constData();
     }
 
     d->mutex.unlock();
@@ -282,8 +289,10 @@ QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc)
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 {
     QSurfaceFormat format;
-    format.setDepthBufferSize(24);
-    format.setStencilBufferSize(8);
+    static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+    static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
+    format.setDepthBufferSize(useDepth ? 24 : 0);
+    format.setStencilBufferSize(useStencil ? 8 : 0);
     if (QQuickWindow::hasDefaultAlphaBuffer())
         format.setAlphaBufferSize(8);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
@@ -347,6 +356,12 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
 QSGRenderContext::~QSGRenderContext()
 {
     invalidate();
+}
+
+void QSGRenderContext::endSync()
+{
+    qDeleteAll(m_texturesToDelete);
+    m_texturesToDelete.clear();
 }
 
 static QBasicMutex qsg_framerender_mutex;
@@ -465,6 +480,9 @@ void QSGRenderContext::invalidate()
 {
     if (!m_gl)
         return;
+
+    qDeleteAll(m_texturesToDelete);
+    m_texturesToDelete.clear();
 
     qDeleteAll(m_textures.values());
     m_textures.clear();
@@ -608,10 +626,8 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
 void QSGRenderContext::textureFactoryDestroyed(QObject *o)
 {
     m_mutex.lock();
-    QSGTexture *t = m_textures.take(static_cast<QQuickTextureFactory *>(o));
+    m_texturesToDelete << m_textures.take(static_cast<QQuickTextureFactory *>(o));
     m_mutex.unlock();
-    if (t)
-        t->deleteLater();
 }
 
 QT_END_NAMESPACE

@@ -63,6 +63,8 @@ public:
     void writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue);
     void writeArrayBinding(const QString &name, const QStringList &elements);
     void write(const QString &data);
+    void writeIsCreatable(bool isCreatable);
+    void writeIsSingleton(bool isSingleton);
 
 private:
     void writeIndent();

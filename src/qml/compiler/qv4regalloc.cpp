@@ -860,7 +860,6 @@ private:
             if (it->end() < successorStart)
                 continue;
 
-            bool lifeTimeHole = false;
             bool isPhiTarget = false;
             Expr *moveFrom = 0;
 
@@ -906,9 +905,7 @@ private:
                                                   predIt->temp().type);
                         } else {
                             int spillSlot = _assignedSpillSlots.value(predIt->temp(), -1);
-                            if (spillSlot == -1)
-                                lifeTimeHole = true;
-                            else
+                            if (spillSlot != -1)
                                 moveFrom = createTemp(Temp::StackSlot, spillSlot, predIt->temp().type);
                         }
                         break;
@@ -916,9 +913,11 @@ private:
                 }
             }
             if (!moveFrom) {
-#if defined(QT_NO_DEBUG)
-                Q_UNUSED(lifeTimeHole);
-#else
+#if !defined(QT_NO_DEBUG)
+                bool lifeTimeHole = false;
+                if (it->ranges().first().start <= successorStart && it->ranges().last().end >= successorStart)
+                    lifeTimeHole = !it->covers(successorStart);
+
                 Q_ASSERT(!_info->isPhiTarget(it->temp()) || it->isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
@@ -960,9 +959,6 @@ private:
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it->temp().type);
             } else {
                 moveTo = createTemp(Temp::PhysicalRegister, platformRegister(*it), it->temp().type);
-                const int spillSlot = _assignedSpillSlots.value(it->temp(), -1);
-                if (isPhiTarget && spillSlot != -1)
-                    mapping.add(moveFrom, createTemp(Temp::StackSlot, spillSlot, it->temp().type));
             }
 
             // add move to mapping

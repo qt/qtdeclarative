@@ -181,6 +181,7 @@ private slots:
     void scenegraphData();
     void profileOnExit();
     void controlFromJS();
+    void signalSourceLocation();
 };
 
 void QQmlProfilerClient::messageReceived(const QByteArray &message)
@@ -507,6 +508,35 @@ void tst_QQmlProfilerService::controlFromJS()
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+}
+
+void tst_QQmlProfilerService::signalSourceLocation()
+{
+    connect(true, "signalSourceLocation.qml");
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(true);
+    while (!(m_process->output().contains(QLatin1String("500"))))
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
+    m_client->setTraceState(false);
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+
+    QVERIFY(m_client->traceMessages[14].detailData.endsWith("signalSourceLocation.qml"));
+    QVERIFY(m_client->traceMessages[14].line == 8);
+    QVERIFY(m_client->traceMessages[14].column == 28);
+
+    QVERIFY(m_client->traceMessages[16].detailData.endsWith("signalSourceLocation.qml"));
+    QVERIFY(m_client->traceMessages[16].line == 7);
+    QVERIFY(m_client->traceMessages[16].column == 21);
 
     // must end with "EndTrace"
     QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);

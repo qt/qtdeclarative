@@ -57,6 +57,7 @@
 #include <private/qqmlboundsignal_p.h>
 // this contains QUnifiedTimer
 #include <private/qabstractanimation_p.h>
+#include <private/qv4function_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -401,8 +402,20 @@ struct QQmlBindingProfiler {
 struct QQmlHandlingSignalProfiler {
     QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
-        Q_QML_PROFILE(startHandlingSignal(expression->sourceFile(), expression->lineNumber(),
-                                          expression->columnNumber()));
+        if (QQmlProfilerService::enabled) {
+            if (expression->sourceFile().isEmpty()) {
+                QV4::Function *function = expression->function();
+                if (function) {
+                    Q_QML_PROFILE(startHandlingSignal(
+                            function->sourceFile(), function->compiledFunction->location.line,
+                            function->compiledFunction->location.column));
+                }
+            } else {
+                Q_QML_PROFILE(startHandlingSignal(
+                        expression->sourceFile(), expression->lineNumber(),
+                        expression->columnNumber()));
+            }
+        }
     }
 
     ~QQmlHandlingSignalProfiler()

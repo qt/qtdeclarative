@@ -599,11 +599,6 @@ void Element::computeBounds()
     boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
 
-RenderNodeElement::~RenderNodeElement()
-{
-    delete fbo;
-}
-
 bool Batch::isMaterialCompatible(Element *e) const
 {
     // If material has changed between opaque and translucent, it is not compatible
@@ -751,6 +746,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_nextRenderOrder(0)
     , m_partialRebuild(false)
     , m_partialRebuildRoot(0)
+    , m_useDepthBuffer(true)
     , m_opaqueBatches(16)
     , m_alphaBatches(16)
     , m_batchPool(16)
@@ -761,6 +757,8 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_zRange(0)
     , m_currentMaterial(0)
     , m_currentShader(0)
+    , m_currentClip(0)
+    , m_currentClipType(NoClip)
     , m_vao(0)
 {
     setNodeUpdater(new Updater(this));
@@ -809,6 +807,8 @@ Renderer::Renderer(QSGRenderContext *ctx)
         m_vao = new QOpenGLVertexArrayObject(this);
         m_vao->create();
     }
+
+    m_useDepthBuffer = ctx->openglContext()->format().depthBufferSize() > 0;
 }
 
 static void qsg_wipeBuffer(Buffer *buffer, QOpenGLFunctions *funcs)
@@ -1005,6 +1005,8 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
         snode->data = e;
         Q_ASSERT(!m_renderNodeElements.contains(static_cast<QSGRenderNode *>(node)));
         m_renderNodeElements.insert(e->renderNode, e);
+        m_useDepthBuffer = false;
+        m_rebuild |= FullRebuild;
     }
 
     QSGNODE_TRAVERSE(node)
@@ -1250,7 +1252,7 @@ void Renderer::buildRenderLists(QSGNode *node)
         Q_ASSERT(e);
 
         bool opaque = gn->inheritedOpacity() > OPAQUE_LIMIT && !(gn->activeMaterial()->flags() & QSGMaterial::Blending);
-        if (opaque)
+        if (opaque && m_useDepthBuffer)
             m_opaqueRenderList << e;
         else
             m_alphaRenderList << e;
@@ -1631,10 +1633,13 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
         }
     }
 
-    float *vzorder = (float *) *zData;
-    float zorder = 1.0f - e->order * m_zRange;
-    for (int i=0; i<vCount; ++i)
-        vzorder[i] = zorder;
+    if (m_useDepthBuffer) {
+        float *vzorder = (float *) *zData;
+        float zorder = 1.0f - e->order * m_zRange;
+        for (int i=0; i<vCount; ++i)
+            vzorder[i] = zorder;
+        *zData += vCount * sizeof(float);
+    }
 
     int iCount = g->indexCount();
     quint16 *indices = (quint16 *) *indexData;
@@ -1658,7 +1663,6 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     }
 
     *vertexData += vCount * vSize;
-    *zData += vCount * sizeof(float);
     *indexData += iCount * sizeof(quint16);
     *iBase += vCount;
     *indexCount += iCount;
@@ -1754,8 +1758,9 @@ void Renderer::uploadBatch(Batch *b)
         int bufferSize =  b->vertexCount * g->sizeOfVertex();
         int ibufferSize = 0;
         if (b->merged) {
-            bufferSize += b->vertexCount * sizeof(float);
             ibufferSize = b->indexCount * sizeof(quint16);
+            if (m_useDepthBuffer)
+                bufferSize += b->vertexCount * sizeof(float);
         } else {
             ibufferSize = unmergedIndexSize;
         }
@@ -1777,7 +1782,7 @@ void Renderer::uploadBatch(Batch *b)
 #ifdef QSG_SEPARATE_INDEX_BUFFER
             char *indexData = b->ibo.data;
 #else
-            char *indexData = zData + b->vertexCount * sizeof(float);
+            char *indexData = zData + (m_useDepthBuffer ? b->vertexCount * sizeof(float) : 0);
 #endif
 
             quint16 iOffset = 0;
@@ -1857,7 +1862,7 @@ void Renderer::uploadBatch(Batch *b)
                     dump << ") ";
                     offset += attr.tupleSize * size_of_type(attr.type);
                 }
-                if (b->merged) {
+                if (b->merged && m_useDepthBuffer) {
                     float zorder = ((float*)(b->vbo.data + b->vertexCount * g->sizeOfVertex()))[i];
                     dump << " Z:(" << zorder << ")";
                 }
@@ -1907,10 +1912,10 @@ void Renderer::updateClip(const QSGClipNode *clipList, const Batch *batch)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         if (batch->isOpaque)
             glDisable(GL_DEPTH_TEST);
-        ClipType type = updateStencilClip(m_currentClip);
+        m_currentClipType = updateStencilClip(m_currentClip);
         if (batch->isOpaque) {
             glEnable(GL_DEPTH_TEST);
-            if (type & StencilClip)
+            if (m_currentClipType & StencilClip)
                 glDepthMask(true);
         }
     }
@@ -2025,7 +2030,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
 
     QSGMaterial *material = gn->activeMaterial();
-    ShaderManager::Shader *sms = m_shaderManager->prepareMaterial(material);
+    ShaderManager::Shader *sms = m_useDepthBuffer ? m_shaderManager->prepareMaterial(material) : m_shaderManager->prepareMaterialNoRewrite(material);
     QSGMaterialShader *program = sms->program;
 
     if (m_currentShader != sms)
@@ -2054,7 +2059,8 @@ void Renderer::renderMergedBatch(const Batch *batch)
             glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (void *) (qintptr) (offset + draw.vertices));
             offset += a.tupleSize * size_of_type(a.type);
         }
-        glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
+        if (m_useDepthBuffer)
+            glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
 
         glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (indexBase + draw.indices));
     }
@@ -2136,8 +2142,10 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         m_current_determinant = m_current_model_view_matrix.determinant();
 
         m_current_projection_matrix = projectionMatrix();
-        m_current_projection_matrix(2, 2) = m_zRange;
-        m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
+        if (m_useDepthBuffer) {
+            m_current_projection_matrix(2, 2) = m_zRange;
+            m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
+        }
 
         program->updateState(state(dirty), material, m_currentMaterial);
 
@@ -2187,25 +2195,25 @@ void Renderer::renderBatches()
                            << " -> Alpha: " << qsg_countNodesInBatches(m_alphaBatches) << " nodes in " << m_alphaBatches.size() << " batches...";
     }
 
-    for (QHash<QSGRenderNode *, RenderNodeElement *>::const_iterator it = m_renderNodeElements.constBegin();
-         it != m_renderNodeElements.constEnd(); ++it) {
-        prepareRenderNode(it.value());
-    }
-
     QRect r = viewportRect();
     glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
     glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
-#if defined(QT_OPENGL_ES)
-    glClearDepthf(1);
-#else
-    glClearDepth(1);
-#endif
 
+    if (m_useDepthBuffer) {
+#if defined(QT_OPENGL_ES)
+        glClearDepthf(1);
+#else
+        glClearDepth(1);
+#endif
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(true);
+        glDisable(GL_BLEND);
+    } else {
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(false);
+    }
     glDisable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(true);
     glColorMask(true, true, true, true);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
@@ -2232,7 +2240,8 @@ void Renderer::renderBatches()
     }
 
     glEnable(GL_BLEND);
-    glDepthMask(false);
+    if (m_useDepthBuffer)
+        glDepthMask(false);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     if (Q_LIKELY(renderAlpha)) {
@@ -2252,7 +2261,6 @@ void Renderer::renderBatches()
     updateStencilClip(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 }
 
 void Renderer::deleteRemovedElements()
@@ -2404,33 +2412,15 @@ void Renderer::render()
         m_vao->release();
 }
 
-void Renderer::prepareRenderNode(RenderNodeElement *e)
+void Renderer::renderRenderNode(Batch *batch)
 {
-    if (e->fbo && e->fbo->size() != deviceRect().size()) {
-        delete e->fbo;
-        e->fbo = 0;
-    }
+    if (Q_UNLIKELY(debug_render))
+        qDebug() << " -" << batch << "rendernode";
 
-    if (!e->fbo)
-        e->fbo = new QOpenGLFramebufferObject(deviceRect().size(), QOpenGLFramebufferObject::CombinedDepthStencil);
-    e->fbo->bind();
+    Q_ASSERT(batch->first->isRenderNode);
+    RenderNodeElement *e = (RenderNodeElement *) batch->first;
 
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    QSGRenderNode::RenderState state;
-    QMatrix4x4 pm = projectionMatrix();
-    state.projectionMatrix = &pm;
-    state.scissorEnabled = false;
-    state.stencilEnabled = false;
+    setActiveShader(0, 0);
 
     QSGNode *clip = e->renderNode->parent();
     e->renderNode->m_clip_list = 0;
@@ -2441,6 +2431,16 @@ void Renderer::prepareRenderNode(RenderNodeElement *e)
         }
         clip = clip->parent();
     }
+
+    updateClip(e->renderNode->m_clip_list, batch);
+
+    QSGRenderNode::RenderState state;
+    QMatrix4x4 pm = projectionMatrix();
+    state.projectionMatrix = &pm;
+    state.scissorEnabled = m_currentClipType & ScissorClip;
+    state.stencilEnabled = m_currentClipType & StencilClip;
+    state.scissorRect = m_current_scissor_rect;
+    state.stencilValue = m_current_stencil_value;
 
     QSGNode *xform = e->renderNode->parent();
     QMatrix4x4 matrix;
@@ -2463,66 +2463,51 @@ void Renderer::prepareRenderNode(RenderNodeElement *e)
         opacity = opacity->parent();
     }
 
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
     e->renderNode->render(state);
 
     e->renderNode->m_matrix = 0;
+    e->renderNode->m_clip_list = 0;
 
-    bindable()->bind();
-}
-
-void Renderer::renderRenderNode(Batch *batch)
-{
-    updateStencilClip(0);
-    m_currentClip = 0;
-
-    setActiveShader(0, 0);
-
-    if (!m_shaderManager->blitProgram) {
-        m_shaderManager->blitProgram = new QOpenGLShaderProgram();
-
-        QSGShaderSourceBuilder::initializeProgramFromFiles(
-            m_shaderManager->blitProgram,
-            QStringLiteral(":/scenegraph/shaders/rendernode.vert"),
-            QStringLiteral(":/scenegraph/shaders/rendernode.frag"));
-        m_shaderManager->blitProgram->bindAttributeLocation("av", 0);
-        m_shaderManager->blitProgram->bindAttributeLocation("at", 1);
-        m_shaderManager->blitProgram->link();
-
-        Q_ASSERT(m_shaderManager->blitProgram->isLinked());
+    QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
+    if (changes & QSGRenderNode::ViewportState) {
+        QRect r = viewportRect();
+        glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
     }
 
-    RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
-    glBindTexture(GL_TEXTURE_2D, e->fbo->texture());
+    if (changes & QSGRenderNode::StencilState) {
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+        glStencilMask(0xff);
+        glDisable(GL_STENCIL_TEST);
+    }
 
-    m_shaderManager->blitProgram->bind();
+    if (changes & (QSGRenderNode::StencilState | QSGRenderNode::ScissorState)) {
+        glDisable(GL_SCISSOR_TEST);
+        m_currentClip = 0;
+        m_currentClipType = NoClip;
+    }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    if (changes & QSGRenderNode::DepthState)
+        glDisable(GL_DEPTH_TEST);
 
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+    if (changes & QSGRenderNode::ColorState)
+        bindable()->reactivate();
 
-    float z = 1.0f - e->order * m_zRange;
+    if (changes & QSGRenderNode::BlendState) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
-    float av[] = { -1, -1, z,
-                    1, -1, z,
-                   -1,  1, z,
-                    1,  1, z };
-    float at[] = { 0, 0,
-                   1, 0,
-                   0, 1,
-                   1, 1 };
+    if (changes & QSGRenderNode::CullState) {
+        glFrontFace(isMirrored() ? GL_CW : GL_CCW);
+        glDisable(GL_CULL_FACE);
+    }
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, av);
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, at);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 QT_END_NAMESPACE
