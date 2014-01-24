@@ -957,9 +957,6 @@ private:
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it->temp().type);
             } else {
                 moveTo = createTemp(Temp::PhysicalRegister, platformRegister(*it), it->temp().type);
-                const int spillSlot = _assignedSpillSlots.value(it->temp(), -1);
-                if (isPhiTarget && spillSlot != -1)
-                    mapping.add(moveFrom, createTemp(Temp::StackSlot, spillSlot, it->temp().type));
             }
 
             // add move to mapping
