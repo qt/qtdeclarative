@@ -1957,12 +1957,21 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
                           Assembler::ScratchRegister);
                 _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
             } else if (t->type == V4IR::UInt32Type) {
-                Address tmp = addressForArgument(0);
-                _as->storeUInt32((Assembler::RegisterID) t->index, Pointer(tmp));
-                _as->load64(tmp, Assembler::ReturnValueRegister);
+                Assembler::RegisterID srcReg = (Assembler::RegisterID) t->index;
+                Assembler::Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, Assembler::TrustedImm32(0));
+                _as->convertUInt32ToDouble(srcReg, Assembler::FPGpr0, Assembler::ReturnValueRegister);
+                _as->moveDoubleTo64(Assembler::FPGpr0, Assembler::ReturnValueRegister);
+                _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ScratchRegister);
+                _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+                Assembler::Jump done = _as->jump();
+                intRange.link(_as);
+                _as->zeroExtend32ToPtr(srcReg, Assembler::ReturnValueRegister);
+                quint64 tag = QV4::Value::_Integer_Type;
+                _as->or64(Assembler::TrustedImm64(tag << 32),
+                          Assembler::ReturnValueRegister);
+                done.link(_as);
             } else {
-                _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index,
-                                       Assembler::ReturnValueRegister);
+                _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index, Assembler::ReturnValueRegister);
                 quint64 tag;
                 switch (t->type) {
                 case V4IR::SInt32Type:
