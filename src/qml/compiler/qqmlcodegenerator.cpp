@@ -964,6 +964,10 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
                 qualifiedIdElement = qualifiedIdElement->next;
                 currentName += QLatin1Char('.');
                 currentName += qualifiedIdElement->name;
+
+                if (!qualifiedIdElement->name.unicode()->isUpper())
+                    COMPILE_EXCEPTION(qualifiedIdElement->firstSourceLocation(), tr("Expected type name"));
+
                 break;
             }
     }

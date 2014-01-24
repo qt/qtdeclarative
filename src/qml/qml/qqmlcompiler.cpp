@@ -1925,7 +1925,7 @@ bool QQmlCompiler::buildPropertyInNamespace(QQmlImportNamespace *ns,
     for (Property *prop = nsProp->value->properties.first(); prop; prop = nsProp->value->properties.next(prop)) {
 
         if (!isAttachedPropertyName(prop->name()))
-            COMPILE_EXCEPTION(prop, tr("Not an attached property name"));
+            COMPILE_EXCEPTION(prop, tr("Expected type name"));
 
         // Setup attached property data
 
