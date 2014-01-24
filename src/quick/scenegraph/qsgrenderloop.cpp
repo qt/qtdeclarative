@@ -57,7 +57,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -304,7 +304,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     qint64 renderTime = 0, syncTime = 0;
     QElapsedTimer renderTimer;
-    bool profileFrames = qsg_render_timing()  || QQmlProfilerService::enabled;
+    bool profileFrames = qsg_render_timing()  || QQuickProfiler::enabled;
     if (profileFrames)
         renderTimer.start();
 
@@ -343,7 +343,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         lastFrameTime = QTime::currentTime();
     }
 
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphRenderLoopFrame, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRenderLoopFrame, (
             syncTime,
             renderTime,
             swapTime));

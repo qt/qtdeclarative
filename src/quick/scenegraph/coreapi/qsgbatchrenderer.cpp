@@ -48,12 +48,13 @@
 #include <qmath.h>
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QtNumeric>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QOpenGLVertexArrayObject>
 
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 
 #include <algorithm>
 
@@ -133,7 +134,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
         return shader;
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing  || QQmlProfilerService::enabled)
+    if (qsg_render_timing  || QQuickProfiler::enabled)
         qsg_renderer_timer.start();
 #endif
 
@@ -176,7 +177,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (qsg_render_timing)
         qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphContextFrame, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphContextFrame, (
             qsg_renderer_timer.nsecsElapsed()));
 #endif
 
@@ -192,7 +193,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
         return shader;
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing  || QQmlProfilerService::enabled)
+    if (qsg_render_timing  || QQuickProfiler::enabled)
         qsg_renderer_timer.start();
 #endif
 
@@ -212,7 +213,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     if (qsg_render_timing)
         qDebug("   - compiling material: %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphContextFrame, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphContextFrame, (
             qsg_renderer_timer.nsecsElapsed()));
 #endif
 

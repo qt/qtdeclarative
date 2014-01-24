@@ -58,8 +58,6 @@
 #include "qqmlabstractprofileradapter_p.h"
 
 #include <private/qqmlboundsignal_p.h>
-// this contains QUnifiedTimer
-#include <private/qabstractanimation_p.h>
 #include <private/qv4function_p.h>
 
 #include <QtCore/qelapsedtimer.h>
@@ -77,11 +75,6 @@
 
 #define Q_QML_PROFILE(Method)\
     Q_QML_PROFILE_IF_ENABLED(QQmlProfilerService::Method)
-
-#define Q_QML_SG_PROFILE2(Type1, Type2, Params)\
-    Q_QML_PROFILE_IF_ENABLED((QQmlProfilerService::sceneGraphFrame<Type1, Type2> Params))
-
-#define Q_QML_SG_PROFILE1(Type, Params) Q_QML_SG_PROFILE2(Type, Type, Params)
 
 QT_BEGIN_NAMESPACE
 
@@ -183,55 +176,6 @@ public:
     void startProfiling(QQmlEngine *engine);
     void stopProfiling(QQmlEngine *engine);
 
-    template<EventType DetailType>
-    static void addEvent()
-    {
-        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << Event,
-                                                  1 << DetailType));
-    }
-
-    static void animationFrame(qint64 delta)
-    {
-        int animCount = QUnifiedTimer::instance()->runningAnimationCount();
-
-        if (animCount > 0 && delta > 0) {
-            m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << Event,
-                                                      1 << AnimationFrame, QString(), 0, 0,
-                                                      1000 / (int)delta /* trim fps to integer */,
-                                                      animCount));
-        }
-    }
-
-    template<SceneGraphFrameType FrameType1, SceneGraphFrameType FrameType2>
-    static void sceneGraphFrame(qint64 value1, qint64 value2 = -1, qint64 value3 = -1,
-                                qint64 value4 = -1, qint64 value5 = -1)
-    {
-        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << SceneGraphFrame,
-                                                  1 << FrameType1 | 1 << FrameType2,
-                                                  value1, value2, value3, value4, value5));
-    }
-
-    template<PixmapEventType PixmapState>
-    static void pixmapStateChanged(const QUrl &url)
-    {
-        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
-                                                  1 << PixmapState, url));
-    }
-
-    static void pixmapLoadingFinished(const QUrl &url, const QSize &size)
-    {
-        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
-                (1 << PixmapLoadingFinished) | ((size.width() > 0 && size.height() > 0) ? (1 << PixmapSizeKnown) : 0),
-                url, size.width(), size.height()));
-    }
-
-    template<PixmapEventType CountType>
-    static void pixmapCountChanged(const QUrl &url, int count)
-    {
-        m_instance->processMessage(QQmlProfilerData(m_instance->timestamp(), 1 << PixmapCacheEvent,
-                                                  1 << CountType, url, 0, 0, 0, count));
-    }
-
     qint64 timestamp() {return m_timer.nsecsElapsed();}
 
     QQmlProfilerService();
@@ -306,8 +250,6 @@ private:
         QMutexLocker locker(&m_dataMutex);
         m_data.append(message);
     }
-
-    static void animationTimerCallback(qint64 delta);
 
 public:
     static bool enabled;

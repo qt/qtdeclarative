@@ -134,22 +134,12 @@ void QQmlProfilerData::toByteArrays(QList<QByteArray> &messages) const
     }
 }
 
-void QQmlProfilerService::animationTimerCallback(qint64 delta)
-{
-    Q_QML_PROFILE(animationFrame(delta));
-}
-
 QQmlProfilerService::QQmlProfilerService()
     : QQmlConfigurableDebugService(QStringLiteral("CanvasFrameRate"), 1)
 {
     m_timer.start();
 
     QMutexLocker lock(configMutex());
-    // TODO: This is problematic as the service could be enabled at a later point in time. In that
-    //       case we might miss the callback registration.
-    if (state() == Enabled)
-        QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
-
     // If there is no debug server it doesn't matter as we'll never get enabled anyway.
     if (QQmlDebugServer::instance() != 0)
         moveToThread(QQmlDebugServer::instance()->thread());

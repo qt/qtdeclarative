@@ -52,7 +52,7 @@
 
 #include <private/qsgtexture_p.h>
 
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -374,7 +374,7 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
     for (int i=0; i<m_pending_uploads.size(); ++i) {
 
 #ifndef QSG_NO_RENDER_TIMING
-        bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+        bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
         if (profileFrames)
             qsg_renderer_timer.start();
 #endif
@@ -394,7 +394,7 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
                    (int) (qsg_renderer_timer.elapsed()));
         }
 
-        Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTexturePrepare, (
+        Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
                 0,  // bind (not relevant)
                 0,  // convert (not relevant)
                 0,  // swizzle (not relevant)

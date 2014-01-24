@@ -48,7 +48,7 @@
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
 
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 #include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
@@ -164,7 +164,7 @@ void QSGDistanceFieldGlyphCache::update()
         return;
 
 #ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
     if (profileFrames)
         qsg_render_timer.start();
 #endif
@@ -196,7 +196,7 @@ void QSGDistanceFieldGlyphCache::update()
                (int) qsg_render_timer.elapsed());
 
     }
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphAdaptationLayerFrame, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphAdaptationLayerFrame, (
             count,
             renderTime,
             qsg_render_timer.nsecsElapsed() - renderTime));

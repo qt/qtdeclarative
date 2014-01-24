@@ -45,7 +45,7 @@
 #include <qopenglfunctions.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qthread.h>
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
@@ -613,7 +613,7 @@ void QSGPlainTexture::bind()
     m_dirty_texture = false;
 
 #ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
     if (profileFrames)
         qsg_renderer_timer.start();
 #endif
@@ -628,7 +628,7 @@ void QSGPlainTexture::bind()
                        m_texture_size.width(),
                        m_texture_size.height());
             }
-            Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTextureDeletion, (
+            Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTextureDeletion, (
                     qsg_renderer_timer.nsecsElapsed()));
 #endif
         }
@@ -738,7 +738,7 @@ void QSGPlainTexture::bind()
 
     }
 
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphTexturePrepare, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
             bindTime,
             convertTime - bindTime,
             swizzleTime - convertTime,

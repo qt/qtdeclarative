@@ -25,7 +25,8 @@ SOURCES += \
     $$PWD/qquickglobal.cpp \
     $$PWD/qquickanimator.cpp \
     $$PWD/qquickanimatorjob.cpp \
-    $$PWD/qquickanimatorcontroller.cpp
+    $$PWD/qquickanimatorcontroller.cpp \
+    $$PWD/qquickprofiler.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
@@ -58,4 +59,5 @@ HEADERS += \
     $$PWD/qquickanimator_p.h \
     $$PWD/qquickanimator_p_p.h \
     $$PWD/qquickanimatorjob_p.h \
-    $$PWD/qquickanimatorcontroller_p.h
+    $$PWD/qquickanimatorcontroller_p.h \
+    $$PWD/qquickprofiler_p.h

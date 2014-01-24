@@ -54,7 +54,7 @@
 
 #include <qdatetime.h>
 
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qquickprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -227,7 +227,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
 
 #ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
     if (profileFrames)
         frameTimer.start();
     qint64 bindTime = 0;
@@ -287,7 +287,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
                int(renderTime / 1000000));
     }
 
-    Q_QML_SG_PROFILE1(QQmlProfilerService::SceneGraphRendererFrame, (
+    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRendererFrame, (
             preprocessTime,
             updatePassTime - preprocessTime,
             bindTime - updatePassTime,
@@ -375,7 +375,7 @@ void QSGRenderer::preprocess()
     }
 
 #ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
 #endif
