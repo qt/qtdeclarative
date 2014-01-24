@@ -950,20 +950,33 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
 
 bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, QmlObject **object)
 {
-    AST::UiQualifiedId *name = *nameToResolve;
+    AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
-    if (name->name == QStringLiteral("id") && name->next)
-        COMPILE_EXCEPTION(name->identifierToken, tr( "Invalid use of id property"));
+    if (qualifiedIdElement->name == QStringLiteral("id") && qualifiedIdElement->next)
+        COMPILE_EXCEPTION(qualifiedIdElement->identifierToken, tr( "Invalid use of id property"));
+
+    // If it's a namespace, prepend the qualifier and we'll resolve it later to the correct type.
+    QString currentName = qualifiedIdElement->name.toString();
+    if (qualifiedIdElement->next) {
+        foreach (QV4::CompiledData::Import* import, _imports)
+            if (import->qualifierIndex != emptyStringIndex
+                && stringAt(import->qualifierIndex) == currentName) {
+                qualifiedIdElement = qualifiedIdElement->next;
+                currentName += QLatin1Char('.');
+                currentName += qualifiedIdElement->name;
+                break;
+            }
+    }
 
     *object = _object;
-    while (name->next) {
+    while (qualifiedIdElement->next) {
         Binding *binding = New<Binding>();
-        binding->propertyNameIndex = registerString(name->name.toString());
-        binding->location.line = name->identifierToken.startLine;
-        binding->location.column = name->identifierToken.startColumn;
+        binding->propertyNameIndex = registerString(currentName);
+        binding->location.line = qualifiedIdElement->identifierToken.startLine;
+        binding->location.column = qualifiedIdElement->identifierToken.startColumn;
         binding->flags = 0;
 
-        if (name->name.unicode()->isUpper())
+        if (qualifiedIdElement->name.unicode()->isUpper())
             binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
         else
             binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
@@ -974,9 +987,11 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         (*object)->bindings->append(binding);
         *object = _objects[objIndex];
 
-        name = name->next;
+        qualifiedIdElement = qualifiedIdElement->next;
+        if (qualifiedIdElement)
+            currentName = qualifiedIdElement->name.toString();
     }
-    *nameToResolve = name;
+    *nameToResolve = qualifiedIdElement;
     return true;
 }
 

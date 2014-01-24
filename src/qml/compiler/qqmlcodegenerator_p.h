@@ -304,7 +304,7 @@ public:
     QString sourceCode;
     QUrl url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
-    int emptyStringIndex;
+    quint32 emptyStringIndex;
     bool sanityCheckFunctionNames();
 };
 
