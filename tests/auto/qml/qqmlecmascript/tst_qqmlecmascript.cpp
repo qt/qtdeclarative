@@ -384,7 +384,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->rectFProperty(), QRectF(1000.1, -10.9, 400, 90.99));
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
-    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
+    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
     QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
     delete object;
     }
@@ -413,7 +413,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->rectFProperty(), QRectF(1000.1, -10.9, 400, 90.99));
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
-    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
+    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
     QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
     delete object;
     }

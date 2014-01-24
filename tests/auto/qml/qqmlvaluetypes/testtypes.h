@@ -95,10 +95,10 @@ public:
         m_rect(2, 3, 109, 102),
         m_rectf(103.8, 99.2, 88.1, 77.6),
         m_rectfrect(2.0, 3.0, 109.0, 102.0),
-        m_vector2(32.88, 1.3),
-        m_vector(23.88, 3.1, 4.3),
-        m_vector4(54.2, 23.88, 3.1, 4.3),
-        m_quaternion(4.3, 54.2, 23.88, 3.1),
+        m_vector2(32.88f, 1.3f),
+        m_vector(23.88f, 3.1f, 4.3f),
+        m_vector4(54.2f, 23.88f, 3.1f, 4.3f),
+        m_quaternion(4.3f, 54.2f, 23.88f, 3.1f),
         m_matrix(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
     {
         m_font.setFamily("Arial");
