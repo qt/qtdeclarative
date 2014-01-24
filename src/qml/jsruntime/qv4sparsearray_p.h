@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4ARRAY_H
-#define QV4ARRAY_H
+#ifndef QV4SPARSEARRAY_H
+#define QV4SPARSEARRAY_H
 
 #include "qv4global_p.h"
 #include <QtCore/qmap.h>
@@ -61,21 +61,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct SparseArray;
-
-class ArrayElementLessThan
-{
-public:
-    inline ArrayElementLessThan(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn)
-        : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
-
-    bool operator()(const SafeValue &v1, const SafeValue &v2) const;
-
-private:
-    ExecutionContext *m_context;
-    ObjectRef thisObject;
-    const ValueRef m_comparefn;
-};
-
 
 struct SparseArrayNode
 {

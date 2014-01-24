@@ -630,6 +630,47 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
     return reinterpret_cast<Property *>(o->arrayData->data + n->value);
 }
 
+
+class ArrayElementLessThan
+{
+public:
+    inline ArrayElementLessThan(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn)
+        : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
+
+    bool operator()(const SafeValue &v1, const SafeValue &v2) const;
+
+private:
+    ExecutionContext *m_context;
+    ObjectRef thisObject;
+    const ValueRef m_comparefn;
+};
+
+
+bool ArrayElementLessThan::operator()(const SafeValue &v1, const SafeValue &v2) const
+{
+    Scope scope(m_context);
+
+    if (v1.isUndefined() || v1.isEmpty())
+        return false;
+    if (v2.isUndefined() || v2.isEmpty())
+        return true;
+    ScopedObject o(scope, m_comparefn);
+    if (o) {
+        Scope scope(o->engine());
+        ScopedValue result(scope);
+        ScopedCallData callData(scope, 2);
+        callData->thisObject = Primitive::undefinedValue();
+        callData->args[0] = v1;
+        callData->args[1] = v2;
+        result = __qmljs_call_value(m_context, m_comparefn, callData);
+
+        return result->toNumber() < 0;
+    }
+    ScopedString p1s(scope, v1.toString(m_context));
+    ScopedString p2s(scope, v2.toString(m_context));
+    return p1s->toQString() < p2s->toQString();
+}
+
 void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint len)
 {
     if (!len)
