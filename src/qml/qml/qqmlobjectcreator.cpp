@@ -187,7 +187,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
     if (property->isEnum()) {
         QVariant value = binding->valueAsString(&qmlUnit->header);
-        QQmlPropertyPrivate::write(_qobject, *property, value, context);
+        if (!QQmlPropertyPrivate::write(_qobject, *property, value, context))
+            recordError(binding->valueLocation, tr("Invalid property assignment: unknown enumeration"));
         return;
     }
 
@@ -240,7 +241,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: string expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: string expected"));
         }
     }
     break;
@@ -250,7 +251,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: string or string list expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: string or string list expected"));
         }
     }
     break;
@@ -260,7 +261,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: byte array expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: byte array expected"));
         }
     }
     break;
@@ -276,7 +277,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: url expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: url expected"));
         }
     }
     break;
@@ -290,7 +291,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 break;
             }
         }
-        recordError(binding->location, tr("Invalid property assignment: unsigned int expected"));
+        recordError(binding->valueLocation, tr("Invalid property assignment: unsigned int expected"));
     }
     break;
     case QVariant::Int: {
@@ -303,7 +304,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 break;
             }
         }
-        recordError(binding->location, tr("Invalid property assignment: int expected"));
+        recordError(binding->valueLocation, tr("Invalid property assignment: int expected"));
     }
     break;
     case QMetaType::Float: {
@@ -312,7 +313,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: number expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: number expected"));
         }
     }
     break;
@@ -322,7 +323,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: number expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: number expected"));
         }
     }
     break;
@@ -337,7 +338,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             }
         } else {
-            recordError(binding->location, tr("Invalid property assignment: color expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: color expected"));
         }
     }
     break;
@@ -349,7 +350,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: date expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: date expected"));
         }
     }
     break;
@@ -360,7 +361,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: time expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: time expected"));
         }
     }
     break;
@@ -371,7 +372,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: datetime expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: datetime expected"));
         }
     }
     break;
@@ -383,7 +384,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: point expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
         }
     }
     break;
@@ -394,7 +395,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: point expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
         }
     }
     break;
@@ -405,7 +406,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: size expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: size expected"));
         }
     }
     break;
@@ -416,7 +417,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: size expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: size expected"));
         }
     }
     break;
@@ -427,7 +428,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: point expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: rect expected"));
         }
     }
     break;
@@ -438,7 +439,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: point expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
         }
     }
     break;
@@ -448,7 +449,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = &value;
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: boolean expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: boolean expected"));
         }
     }
     break;
@@ -462,7 +463,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = reinterpret_cast<void *>(&vec);
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: 3D vector expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: 3D vector expected"));
         }
     }
     break;
@@ -477,12 +478,12 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             argv[0] = reinterpret_cast<void *>(&vec);
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
         } else {
-            recordError(binding->location, tr("Invalid property assignment: 4D vector expected"));
+            recordError(binding->valueLocation, tr("Invalid property assignment: 4D vector expected"));
         }
     }
     break;
     case QVariant::RegExp:
-        recordError(binding->location, tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
+        recordError(binding->valueLocation, tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
         break;
     default: {
         // generate single literal value assignment to a list property if required
@@ -493,7 +494,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 argv[0] = reinterpret_cast<void *>(&value);
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             } else {
-                recordError(binding->location, tr("Invalid property assignment: real or array of reals expected"));
+                recordError(binding->valueLocation, tr("Invalid property assignment: real or array of reals expected"));
             }
             break;
         } else if (property->propType == qMetaTypeId<QList<int> >()) {
@@ -506,7 +507,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                     QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
                     break;
                 } else {
-                    recordError(binding->location, tr("Invalid property assignment: int or array of ints expected"));
+                    recordError(binding->valueLocation, tr("Invalid property assignment: int or array of ints expected"));
                 }
             }
             break;
@@ -517,7 +518,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 argv[0] = reinterpret_cast<void *>(&value);
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             } else {
-                recordError(binding->location, tr("Invalid property assignment: bool or array of bools expected"));
+                recordError(binding->valueLocation, tr("Invalid property assignment: bool or array of bools expected"));
             }
             break;
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
@@ -529,7 +530,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 argv[0] = reinterpret_cast<void *>(&value);
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             } else {
-                recordError(binding->location, tr("Invalid property assignment: url or array of urls expected"));
+                recordError(binding->valueLocation, tr("Invalid property assignment: url or array of urls expected"));
             }
             break;
         } else if (property->propType == qMetaTypeId<QList<QString> >()) {
@@ -539,7 +540,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 argv[0] = reinterpret_cast<void *>(&value);
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             } else {
-                recordError(binding->location, tr("Invalid property assignment: string or array of strings expected"));
+                recordError(binding->valueLocation, tr("Invalid property assignment: string or array of strings expected"));
             }
             break;
         } else if (property->propType == qMetaTypeId<QJSValue>()) {
@@ -667,6 +668,10 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
     QObject *createdSubObject = 0;
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+        if (_valueTypeProperty) {
+            recordError(binding->location, tr("Unexpected object assignment"));
+            return false;
+        }
         createdSubObject = createInstance(binding->value.objectIndex, _bindingTarget);
         if (!createdSubObject)
             return false;
@@ -866,7 +871,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
                 argv[0] = &createdSubObject;
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             } else {
-                recordError(binding->location, tr("Cannot assign object to property"));
+                recordError(binding->valueLocation, tr("Cannot assign object to property"));
                 return false;
             }
         }

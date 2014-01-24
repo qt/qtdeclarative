@@ -380,6 +380,20 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     const QmlObject *obj = qmlObjects.at(objectIndex);
 
     QQmlPropertyCache *baseTypeCache = 0;
+    QQmlPropertyData *instantiatingProperty = 0;
+    if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+        Q_ASSERT(referencingObjectIndex >= 0);
+        QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex);
+        Q_ASSERT(parentCache);
+        Q_ASSERT(!stringAt(instantiatingBinding->propertyNameIndex).isEmpty());
+
+        bool notInRevision = false;
+        instantiatingProperty = PropertyResolver(parentCache).property(stringAt(instantiatingBinding->propertyNameIndex), &notInRevision);
+        if (instantiatingProperty && instantiatingProperty->isQObject()) {
+            baseTypeCache = enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType);
+            Q_ASSERT(baseTypeCache);
+        }
+    }
 
     bool needVMEMetaObject = obj->properties->count != 0 || obj->qmlSignals->count != 0 || obj->functions->count != 0;
     if (!needVMEMetaObject) {
@@ -393,22 +407,10 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
-                if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-                    QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex);
-                    Q_ASSERT(parentCache);
-                    Q_ASSERT(!stringAt(instantiatingBinding->propertyNameIndex).isEmpty());
-
-                    bool notInRevision = false;
-                    QQmlPropertyData *pd = PropertyResolver(parentCache).property(stringAt(instantiatingBinding->propertyNameIndex), &notInRevision);
-                    Q_ASSERT(pd);
-                    if (QQmlValueTypeFactory::isValueType(pd->propType)) {
-                        needVMEMetaObject = false;
-                        if (!ensureMetaObject(referencingObjectIndex))
-                            return false;
-                    } else if (pd->isQObject()) {
-                        baseTypeCache = enginePrivate->rawPropertyCacheForType(pd->propType);
-                        Q_ASSERT(baseTypeCache);
-                    }
+                if (instantiatingProperty && QQmlValueTypeFactory::isValueType(instantiatingProperty->propType)) {
+                    needVMEMetaObject = false;
+                    if (!ensureMetaObject(referencingObjectIndex))
+                        return false;
                 }
                 break;
             }
@@ -431,10 +433,12 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         baseTypeCache->addref();
     }
 
-    for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next)
-        if (binding->type == QV4::CompiledData::Binding::Type_Object)
-            if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
-                return false;
+    if (propertyCaches.at(objectIndex)) {
+        for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next)
+            if (binding->type == QV4::CompiledData::Binding::Type_Object || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+                if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
+                    return false;
+    }
 
     return true;
 }
@@ -1152,7 +1156,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, con
 
 bool QQmlPropertyValidator::validate()
 {
-    if (!validateObject(qmlUnit->indexOfRootObject))
+    if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
         return false;
     compiler->setCustomParserBindings(customParserBindings);
     return true;
@@ -1179,22 +1183,19 @@ QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::Comp
     return id;
 }
 
-bool QQmlPropertyValidator::validateObject(int objectIndex)
+bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
-    if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
-        return true;
-
     if (isComponent(objectIndex))
         return true;
 
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
-    Q_ASSERT(propertyCache);
+    if (!propertyCache)
+        return true;
 
     QQmlCustomParser *customParser = 0;
     QQmlCompiledData::TypeReference *objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
-    Q_ASSERT(objectType);
-    if (objectType->type)
+    if (objectType && objectType->type)
         customParser = objectType->type->customParser();
     QList<const QV4::CompiledData::Binding*> customBindings;
 
@@ -1223,7 +1224,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
         }
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-            if (!validateObject(binding->value.objectIndex))
+            if (!validateObject(binding->value.objectIndex, binding))
                 return false;
             // Nothing further to check for attached properties.
             if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
@@ -1244,13 +1245,16 @@ bool QQmlPropertyValidator::validateObject(int objectIndex)
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
-                if (objectType->type) {
+                if (objectType && objectType->type) {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType->type->module()).arg(objectType->majorVersion).arg(objectType->minorVersion));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
                 }
             }
         } else {
+           if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+               COMPILE_EXCEPTION(binding, tr("Cannot assign a value directly to a grouped property"));
+
            pd = defaultProperty;
            bindingToDefaultProperty = true;
         }

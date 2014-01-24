@@ -800,6 +800,9 @@ QStringRef QQmlCodeGenerator::textRefAt(const AST::SourceLocation &first, const 
 
 void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST::Statement *statement)
 {
+    AST::SourceLocation loc = statement->firstSourceLocation();
+    binding->valueLocation.line = loc.startLine;
+    binding->valueLocation.column = loc.startColumn;
     binding->type = QV4::CompiledData::Binding::Type_Invalid;
 
     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(statement)) {
@@ -889,6 +892,10 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->propertyNameIndex = propertyNameIndex;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
+
+    const QmlObject *obj = _objects.at(objectIndex);
+    binding->valueLocation = obj->location;
+
     binding->flags = 0;
 
     // No type name on the initializer means it must be a group property
@@ -978,6 +985,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         binding->propertyNameIndex = registerString(currentName);
         binding->location.line = qualifiedIdElement->identifierToken.startLine;
         binding->location.column = qualifiedIdElement->identifierToken.startColumn;
+        binding->valueLocation.line = binding->valueLocation.column = 0;
         binding->flags = 0;
 
         if (qualifiedIdElement->name.unicode()->isUpper())

@@ -70,8 +70,8 @@ struct RegExp;
 
 struct Location
 {
-    int line;
-    int column;
+    qint32 line;
+    qint32 column;
 };
 
 // map from name index to location of first use
@@ -296,6 +296,7 @@ struct Q_QML_EXPORT Binding
     quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
 
     Location location;
+    Location valueLocation;
 
     QString valueAsString(const Unit *unit) const;
     QString valueAsScriptString(const Unit *unit) const;

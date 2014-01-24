@@ -190,7 +190,7 @@ public:
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
 
 private:
-    bool validateObject(int objectIndex);
+    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
