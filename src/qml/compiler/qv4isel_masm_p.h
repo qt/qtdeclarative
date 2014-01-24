@@ -1580,8 +1580,8 @@ private:
     int prepareVariableArguments(V4IR::ExprList* args);
     int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
-    template <typename Retval, typename Arg1, typename Arg2>
-    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
+    template <typename Retval, typename Arg1, typename Arg2, typename Arg3>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         Assembler::RegisterID lookupRegister;
 #if CPU(ARM)
@@ -1595,13 +1595,13 @@ private:
         getterSetter.offset += getterSetterOffset;
 
          _as->generateFunctionCallImp(retval, "lookup getter/setter",
-                                      RelativeCall(getterSetter), lookupAddr, arg1, arg2);
+                                      RelativeCall(getterSetter), lookupAddr, arg1, arg2, arg3);
     }
 
-    template <typename Arg1>
-    void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1)
+    template <typename Retval, typename Arg1, typename Arg2>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        generateLookupCall(index, getterSetterOffset, arg1, Assembler::VoidType());
+        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, Assembler::VoidType());
     }
 
     /// This is a temporary method, and will be removed when registers are fully supported.

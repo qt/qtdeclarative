@@ -1023,107 +1023,19 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         return;
     }
 
-#if 0 // QT_POINTER_SIZE == 8
-    V4IR::Temp *tbase = base->asTemp();
-    V4IR::Temp *tindex = index->asTemp();
-    if (tbase && tindex &&
-        tbase->kind != V4IR::Temp::PhysicalRegister) {
-        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
-        _as->load64(addr, Assembler::ScratchRegister);
-        _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsManaged_Shift), Assembler::ReturnValueRegister);
-        Assembler::Jump notManaged = _as->branch64(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm64(0));
-        // check whether we have an object with a simple array
-        // ### need to check we have an object first!
-        Assembler::Address managedType(Assembler::ScratchRegister, qOffsetOf(QV4::Object, arrayData) + qOffsetOf(QV4::ArrayData, flags));
-        _as->load8(managedType, Assembler::ReturnValueRegister);
-        _as->and32(Assembler::TrustedImm32(QV4::ArrayData::SimpleArray), Assembler::ReturnValueRegister);
-        Assembler::Jump notSimple = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
-
-        bool needNegativeCheck = false;
-        Assembler::Jump fallback, fallback2;
-        if (tindex->kind == V4IR::Temp::PhysicalRegister) {
-            if (tindex->type == V4IR::SInt32Type) {
-                fallback = _as->branch32(Assembler::LessThan, (Assembler::RegisterID)tindex->index, Assembler::TrustedImm32(0));
-                _as->move((Assembler::RegisterID) tindex->index, Assembler::ScratchRegister);
-                needNegativeCheck = true;
-            } else {
-                // double, convert and check if it's a int
-                fallback2 = _as->branchTruncateDoubleToUint32((Assembler::FPRegisterID) tindex->index, Assembler::ScratchRegister);
-                _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr0);
-                fallback = _as->branchDouble(Assembler::DoubleNotEqual, Assembler::FPGpr0, (Assembler::FPRegisterID) tindex->index);
-            }
-        } else {
-            Assembler::Pointer indexAddr = _as->loadTempAddress(Assembler::ReturnValueRegister, tindex);
-            _as->load64(indexAddr, Assembler::ScratchRegister);
-            _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-            _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsNumber_Shift), Assembler::ReturnValueRegister);
-            Assembler::Jump isInteger = _as->branch64(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm64(1));
-
-            // other type, convert to double and check if it's a int
-            // this check is ok to do even if the type is something else than a double, as
-            // that would result in a NaN
-            _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ReturnValueRegister);
-            _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-            _as->move64ToDouble(Assembler::ReturnValueRegister, Assembler::FPGpr0);
-            fallback2 = _as->branchTruncateDoubleToUint32(Assembler::FPGpr0, Assembler::ScratchRegister);
-            _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr1);
-            fallback = _as->branchDouble(Assembler::DoubleNotEqualOrUnordered, Assembler::FPGpr0, Assembler::FPGpr1);
-
-            isInteger.link(_as);
-            _as->or32(Assembler::TrustedImm32(0), Assembler::ScratchRegister);
-            needNegativeCheck = true;
-        }
-
-        // get data, ScratchRegister holds index
-        addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
-        _as->load64(addr, Assembler::ReturnValueRegister);
-        Address dataLen(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData) + qOffsetOf(ArrayData, length));
-        Assembler::Jump outOfRange;
-        if (needNegativeCheck)
-            outOfRange = _as->branch32(Assembler::LessThan, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
-        Assembler::Jump outOfRange2 = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, dataLen);
-        Address arrayData(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData) + qOffsetOf(ArrayData, data));
-        _as->load64(arrayData, Assembler::ReturnValueRegister);
-        Q_ASSERT(sizeof(Property) == (1<<4));
-        _as->lshift64(Assembler::TrustedImm32(4), Assembler::ScratchRegister);
-        _as->add64(Assembler::ReturnValueRegister, Assembler::ScratchRegister);
-        Address value(Assembler::ScratchRegister, qOffsetOf(Property, value));
-        _as->load64(value, Assembler::ReturnValueRegister);
-
-        // check that the value is not empty
-        _as->move(Assembler::ReturnValueRegister, Assembler::ScratchRegister);
-        _as->urshift64(Assembler::TrustedImm32(32), Assembler::ScratchRegister);
-        Assembler::Jump emptyValue = _as->branch32(Assembler::Equal, Assembler::TrustedImm32(QV4::Value::Empty_Type), Assembler::ScratchRegister);
-        _as->storeReturnValue(target);
-
-        Assembler::Jump done = _as->jump();
-
-        emptyValue.link(_as);
-        if (outOfRange.isSet())
-            outOfRange.link(_as);
-        outOfRange2.link(_as);
-        if (fallback.isSet())
-            fallback.link(_as);
-        if (fallback2.isSet())
-            fallback2.link(_as);
-        notSimple.link(_as);
-        notManaged.link(_as);
-
-        generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister,
-                             Assembler::PointerToValue(base), Assembler::PointerToValue(index));
-
-        done.link(_as);
-        return;
-    }
-#endif
-
     generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex)
 {
+    if (useFastLookups) {
+        uint lookup = registerIndexedSetterLookup();
+        generateLookupCall(Assembler::Void, lookup, qOffsetOf(QV4::Lookup, indexedSetter),
+                           Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex),
+                           Assembler::PointerToValue(source));
+        return;
+    }
     generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister,
                          Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex),
                          Assembler::PointerToValue(source));

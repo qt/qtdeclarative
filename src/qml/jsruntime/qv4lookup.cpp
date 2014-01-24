@@ -180,6 +180,63 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const ValueRef object, c
     return indexedGetterFallback(l, object, index);
 }
 
+void Lookup::indexedSetterGeneric(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v)
+{
+    if (object->isObject()) {
+        Object *o = object->objectValue();
+        if (o->arrayData && o->arrayData->type == ArrayData::Simple && index->asArrayIndex() < UINT_MAX) {
+            l->indexedSetter = indexedSetterObjectInt;
+            indexedSetterObjectInt(l, object, index, v);
+            return;
+        }
+    }
+    indexedSetterFallback(l, object, index, v);
+}
+
+void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef value)
+{
+    ExecutionContext *ctx = l->engine->currentContext();
+    Scope scope(ctx);
+    ScopedObject o(scope, object->toObject(ctx));
+    if (scope.engine->hasException)
+        return;
+
+    uint idx = index->asArrayIndex();
+    if (idx < UINT_MAX) {
+        if (o->arrayData && o->arrayData->type == ArrayData::Simple) {
+            SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData);
+            if (s && idx < s->len && !s->data[idx].isEmpty()) {
+                s->data[idx] = value;
+                return;
+            }
+        }
+        o->putIndexed(idx, value);
+        return;
+    }
+
+    ScopedString name(scope, index->toString(ctx));
+    o->put(name, value);
+}
+
+void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v)
+{
+    uint idx = index->asArrayIndex();
+    if (idx == UINT_MAX || !object->isObject()) {
+        indexedSetterGeneric(l, object, index, v);
+        return;
+    }
+
+    Object *o = object->objectValue();
+    if (o->arrayData && o->arrayData->type == ArrayData::Simple) {
+        SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData);
+        if (idx < s->len && !s->data[idx].isEmpty()) {
+            s->data[idx] = v;
+            return;
+        }
+    }
+    indexedSetterFallback(l, object, index, v);
+}
+
 ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
 {
     if (Object *o = object->asObject())

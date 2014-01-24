@@ -71,6 +71,7 @@ struct Q_QML_EXPORT JSUnitGenerator {
     uint registerSetterLookup(const QString &name);
     uint registerGlobalGetterLookup(const QString &name);
     uint registerIndexedGetterLookup();
+    uint registerIndexedSetterLookup();
 
     int registerRegExp(QQmlJS::V4IR::RegExp *regexp);
 

@@ -206,7 +206,7 @@ public:
     void push_back(const ValueRef v);
 
     ArrayData::Type arrayType() const {
-        return arrayData ? (ArrayData::Type)arrayData->type : ArrayData::Simple;
+        return arrayData ? arrayData->type : ArrayData::Simple;
     }
     // ### remove me
     void setArrayType(ArrayData::Type t) {

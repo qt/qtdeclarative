@@ -81,6 +81,15 @@ uint QV4::Compiler::JSUnitGenerator::registerIndexedGetterLookup()
     return lookups.size() - 1;
 }
 
+uint QV4::Compiler::JSUnitGenerator::registerIndexedSetterLookup()
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_IndexedSetter;
+    l.nameIndex = 0;
+    lookups << l;
+    return lookups.size() - 1;
+}
+
 uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 {
     CompiledData::Lookup l;

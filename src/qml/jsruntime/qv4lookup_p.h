@@ -56,6 +56,7 @@ struct Lookup {
     enum { Size = 4 };
     union {
         ReturnedValue (*indexedGetter)(Lookup *l, const ValueRef object, const ValueRef index);
+        void (*indexedSetter)(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
         ReturnedValue (*getter)(Lookup *l, const ValueRef object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionContext *ctx);
         void (*setter)(Lookup *l, const ValueRef object, const ValueRef v);
@@ -77,6 +78,10 @@ struct Lookup {
     static ReturnedValue indexedGetterGeneric(Lookup *l, const ValueRef object, const ValueRef index);
     static ReturnedValue indexedGetterFallback(Lookup *l, const ValueRef object, const ValueRef index);
     static ReturnedValue indexedGetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index);
+
+    static void indexedSetterGeneric(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
+    static void indexedSetterFallback(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef value);
+    static void indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
 
     static ReturnedValue getterGeneric(Lookup *l, const ValueRef object);
     static ReturnedValue getter0(Lookup *l, const ValueRef object);

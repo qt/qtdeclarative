@@ -95,21 +95,24 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup *l = runtimeLookups + i;
 
-            if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_Getter)
+            Lookup::Type type = Lookup::Type(compiledLookups[i].type_and_flags);
+            if (type == CompiledData::Lookup::Type_Getter)
                 l->getter = QV4::Lookup::getterGeneric;
-            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_Setter)
+            else if (type == CompiledData::Lookup::Type_Setter)
                 l->setter = QV4::Lookup::setterGeneric;
-            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_GlobalGetter)
+            else if (type == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
-            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_IndexedGetter)
+            else if (type == CompiledData::Lookup::Type_IndexedGetter)
                 l->indexedGetter = QV4::Lookup::indexedGetterGeneric;
+            else if (type == CompiledData::Lookup::Type_IndexedSetter)
+                l->indexedSetter = QV4::Lookup::indexedSetterGeneric;
 
             for (int j = 0; j < QV4::Lookup::Size; ++j)
                 l->classList[j] = 0;
             l->level = -1;
             l->index = UINT_MAX;
             l->name = runtimeStrings[compiledLookups[i].nameIndex].asString();
-            if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_IndexedGetter)
+            if (type == CompiledData::Lookup::Type_IndexedGetter || type == CompiledData::Lookup::Type_IndexedSetter)
                 l->engine = engine;
         }
     }
