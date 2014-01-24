@@ -46,9 +46,9 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const ObjectRef o, uint flags)
-    : object(*scratch1)
-    , current(*scratch2)
+ObjectIterator::ObjectIterator(ObjectRef scratch1, ObjectRef scratch2, const ObjectRef o, uint flags)
+    : object(scratch1)
+    , current(scratch2)
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
@@ -64,8 +64,8 @@ ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
-    : object(*static_cast<SafeObject *>(scope.alloc(1)))
-    , current(*static_cast<SafeObject *>(scope.alloc(1)))
+    : object(ObjectRef::fromValuePointer(scope.alloc(1)))
+    , current(ObjectRef::fromValuePointer(scope.alloc(1)))
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)

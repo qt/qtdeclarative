@@ -458,6 +458,9 @@ struct Referenced {
     Referenced(SafeValue &v) {
         ptr = value_cast<T>(v) ? &v : 0;
     }
+    static Referenced fromValuePointer(SafeValue *s) {
+        return Referenced(s);
+    }
 
     Referenced &operator=(const Referenced &o)
     { *ptr = *o.ptr; return *this; }
@@ -512,6 +515,14 @@ struct Referenced {
     static Referenced null() { return Referenced(Null); }
     bool isNull() const { return !ptr; }
 private:
+    Referenced(SafeValue *v) {
+        ptr = v;
+#if QT_POINTER_SIZE == 8
+       ptr->val = 0;
+#else
+       *ptr = Value::fromManaged(0);
+#endif
+    }
     enum _Null { Null };
     Referenced(_Null) { ptr = 0; }
     SafeValue *ptr;

@@ -456,7 +456,6 @@ struct Safe : public SafeValue
     void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
 };
 typedef Safe<String> SafeString;
-typedef Safe<Object> SafeObject;
 
 template<typename T>
 T *value_cast(const Value &v)
