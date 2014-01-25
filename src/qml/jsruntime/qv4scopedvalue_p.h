@@ -41,7 +41,7 @@
 #ifndef QV4SCOPEDVALUE_P_H
 #define QV4SCOPEDVALUE_P_H
 
-#include "qv4context_p.h"
+#include "qv4engine_p.h"
 #include "qv4value_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -54,15 +54,7 @@ namespace QV4 {
 struct ScopedValue;
 
 struct Scope {
-    explicit Scope(ExecutionContext *ctx)
-        : engine(ctx->engine)
-#ifndef QT_NO_DEBUG
-        , size(0)
-#endif
-    {
-        mark = engine->jsStackTop;
-    }
-
+    inline explicit Scope(ExecutionContext *ctx);
     explicit Scope(ExecutionEngine *e)
         : engine(e)
 #ifndef QT_NO_DEBUG
@@ -234,7 +226,7 @@ struct Scoped
     Scoped(const Scope &scope, const Value &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine->currentContext(), v);
+        ptr->val = value_convert<T>(scope.engine, v);
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -281,7 +273,7 @@ struct Scoped
     Scoped(const Scope &scope, const ReturnedValue &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine->currentContext(), QV4::Value::fromReturnedValue(v));
+        ptr->val = value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v));
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -701,10 +693,6 @@ template<typename T>
 inline WeakValue &WeakValue::operator=(Returned<T> *obj)
 {
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
-}
-
-inline ReturnedValue CallContext::argument(int i) {
-    return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
 

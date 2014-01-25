@@ -186,9 +186,9 @@ inline String *value_cast(const Value &v) {
 }
 
 template<>
-inline ReturnedValue value_convert<String>(ExecutionContext *ctx, const Value &v)
+inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {
-    return v.toString(ctx)->asReturnedValue();
+    return v.toString(e)->asReturnedValue();
 }
 
 }

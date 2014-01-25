@@ -45,6 +45,7 @@
 #include "qv4value_inl_p.h"
 #include "qv4math_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4context_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>

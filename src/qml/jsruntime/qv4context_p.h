@@ -42,7 +42,7 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global_p.h"
-#include "qv4value_p.h"
+#include "qv4scopedvalue_p.h"
 #include "qv4managed_p.h"
 #include "qv4engine_p.h"
 
@@ -181,6 +181,10 @@ struct CallContext : public ExecutionContext
     bool needsOwnArguments() const;
 };
 
+inline ReturnedValue CallContext::argument(int i) {
+    return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+}
+
 struct GlobalContext : public ExecutionContext
 {
     GlobalContext(ExecutionEngine *engine);
@@ -242,6 +246,15 @@ struct ExecutionContextSaver
         engine->current = savedContext;
     }
 };
+
+inline Scope::Scope(ExecutionContext *ctx)
+    : engine(ctx->engine)
+#ifndef QT_NO_DEBUG
+    , size(0)
+#endif
+{
+    mark = engine->jsStackTop;
+}
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \

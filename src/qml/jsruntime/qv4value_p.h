@@ -300,6 +300,7 @@ struct Q_QML_EXPORT Value
     double toNumberImpl() const;
     QString toQStringNoThrow() const;
     QString toQString() const;
+    String *toString(ExecutionEngine *e) const;
     String *toString(ExecutionContext *ctx) const;
     Object *toObject(ExecutionContext *ctx) const;
 
@@ -505,7 +506,7 @@ T *value_cast(const Value &v)
 }
 
 template<typename T>
-ReturnedValue value_convert(ExecutionContext *ctx, const Value &v);
+ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 
 
 

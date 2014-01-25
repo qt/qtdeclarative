@@ -262,6 +262,11 @@ double Primitive::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
+String *Value::toString(ExecutionEngine *e) const
+{
+    return toString(e->currentContext());
+}
+
 String *Value::toString(ExecutionContext *ctx) const
 {
     if (isString())
