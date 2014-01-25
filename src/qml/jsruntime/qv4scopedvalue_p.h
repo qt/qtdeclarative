@@ -377,67 +377,6 @@ struct ScopedCallData {
     CallData *ptr;
 };
 
-struct ValueRef {
-    ValueRef(const ScopedValue &v)
-        : ptr(v.ptr) {}
-    template <typename T>
-    ValueRef(const Scoped<T> &v)
-        : ptr(v.ptr) {}
-    ValueRef(const PersistentValue &v)
-        : ptr(&v.d->value) {}
-    ValueRef(PersistentValuePrivate *p)
-        : ptr(&p->value) {}
-    ValueRef(Value &v) { ptr = &v; }
-    // Important: Do NOT add a copy constructor to this class
-    // adding a copy constructor actually changes the calling convention, ie.
-    // is not even binary compatible. Adding it would break assumptions made
-    // in the jit'ed code.
-    ValueRef &operator=(const ScopedValue &o)
-    { *ptr = *o.ptr; return *this; }
-    ValueRef &operator=(const ValueRef &o)
-    { *ptr = *o.ptr; return *this; }
-    ValueRef &operator=(const Value &v)
-    { *ptr = v; return *this; }
-    ValueRef &operator=(const ReturnedValue &v) {
-        ptr->val = v;
-        return *this;
-    }
-    template <typename T>
-    ValueRef &operator=(Returned<T> *v) {
-        ptr->val = v->asReturnedValue();
-        return *this;
-    }
-
-    operator const Value *() const {
-        return ptr;
-    }
-    const Value *operator->() const {
-        return ptr;
-    }
-
-    operator Value *() {
-        return ptr;
-    }
-    Value *operator->() {
-        return ptr;
-    }
-
-    static ValueRef fromRawValue(Value *v) {
-        return ValueRef(v);
-    }
-    static const ValueRef fromRawValue(const Value *v) {
-        return ValueRef(const_cast<Value *>(v));
-    }
-
-    ReturnedValue asReturnedValue() const { return ptr->val; }
-
-    // ### get rid of this one!
-    ValueRef(Value *v) { ptr = reinterpret_cast<Value *>(v); }
-private:
-    Value *ptr;
-};
-
-
 template<typename T>
 struct Referenced {
     // Important: Do NOT add a copy constructor to this class
@@ -693,6 +632,29 @@ template<typename T>
 inline WeakValue &WeakValue::operator=(Returned<T> *obj)
 {
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
+}
+
+inline ValueRef::ValueRef(const ScopedValue &v)
+    : ptr(v.ptr)
+{}
+
+template <typename T>
+inline ValueRef::ValueRef(const Scoped<T> &v)
+    : ptr(v.ptr)
+{}
+
+inline ValueRef::ValueRef(const PersistentValue &v)
+    : ptr(&v.d->value)
+{}
+
+inline ValueRef::ValueRef(PersistentValuePrivate *p)
+    : ptr(&p->value)
+{}
+
+inline ValueRef &ValueRef::operator=(const ScopedValue &o)
+{
+    *ptr = *o.ptr;
+    return *this;
 }
 
 

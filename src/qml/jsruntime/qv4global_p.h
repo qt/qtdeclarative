@@ -163,6 +163,10 @@ typedef Referenced<Object> ObjectRef;
 typedef Referenced<ArrayObject> ArrayObjectRef;
 typedef Referenced<FunctionObject> FunctionObjectRef;
 
+struct PersistentValuePrivate;
+class PersistentValue;
+class WeakValue;
+
 
 namespace Global {
     enum {
