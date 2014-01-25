@@ -580,51 +580,6 @@ private:
     CallData *ptr;
 };
 
-struct Encode {
-    static ReturnedValue undefined() {
-        return quint64(Value::Undefined_Type) << Value::Tag_Shift;
-    }
-    static ReturnedValue null() {
-        return quint64(Value::_Null_Type) << Value::Tag_Shift;
-    }
-
-    Encode(bool b) {
-        val = (quint64(Value::_Boolean_Type) << Value::Tag_Shift) | (uint)b;
-    }
-    Encode(double d) {
-        Value v;
-        v.setDouble(d);
-        val = v.val;
-    }
-    Encode(int i) {
-        val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | (uint)i;
-    }
-    Encode(uint i) {
-        if (i <= INT_MAX) {
-            val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | i;
-        } else {
-            Value v;
-            v.setDouble(i);
-            val = v.val;
-        }
-    }
-    Encode(ReturnedValue v) {
-        val = v;
-    }
-
-    template<typename T>
-    Encode(Returned<T> *t) {
-        val = t->getPointer()->asReturnedValue();
-    }
-
-    operator ReturnedValue() const {
-        return val;
-    }
-    quint64 val;
-private:
-    Encode(void *);
-};
-
 
 template <typename T>
 inline Value &Value::operator=(Returned<T> *t)
