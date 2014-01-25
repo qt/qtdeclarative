@@ -6,6 +6,7 @@ SOURCES += \
     $$PWD/qv4context.cpp \
     $$PWD/qv4runtime.cpp \
     $$PWD/qv4value.cpp \
+    $$PWD/qv4persistent.cpp \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
     $$PWD/qv4identifier.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     $$PWD/qv4math_p.h \
     $$PWD/qv4value_inl_p.h \
     $$PWD/qv4value_p.h \
+    $$PWD/qv4persistent_p.h \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
     $$PWD/qv4identifier_p.h \

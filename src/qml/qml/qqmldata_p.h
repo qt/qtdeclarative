@@ -57,6 +57,7 @@
 #include <private/qobject_p.h>
 
 #include <private/qv4value_inl_p.h>
+#include <private/qv4persistent_p.h>
 
 QT_BEGIN_NAMESPACE
 
