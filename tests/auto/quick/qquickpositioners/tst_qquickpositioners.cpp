@@ -1968,6 +1968,14 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *itemA = rootA->findChild<QQuickItem*>(objectName);
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
             QTRY_COMPARE(itemA->x(), itemB->x());
+
+            // after resize (QTBUG-35095)
+            QQuickItem *positionerA = itemA->parentItem();
+            QQuickItem *positionerB = itemB->parentItem();
+            positionerA->setWidth(positionerA->width() * 2);
+            positionerB->setWidth(positionerB->width() * 2);
+            QTRY_VERIFY(!QQuickItemPrivate::get(positionerA)->polishScheduled && !QQuickItemPrivate::get(positionerB)->polishScheduled);
+            QTRY_COMPARE(itemA->x(), itemB->x());
         }
 
         rootA->setProperty("testRightToLeft", false); // layoutDirection: Qt.LeftToRight

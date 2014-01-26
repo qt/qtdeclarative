@@ -97,6 +97,7 @@ private slots:
     void stopAtBounds();
     void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
+    void pressDelayWithLoader();
 
 private:
     void flickWithTouch(QWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
@@ -1532,9 +1533,9 @@ void tst_qquickflickable::stopAtBounds()
         flickable->setContentX(invert ? 100 : 0);
     }
     if (invert)
-        flick(&view, QPoint(20,20), QPoint(100,100), 100);
+        flick(&view, QPoint(20,20), QPoint(120,120), 100);
     else
-        flick(&view, QPoint(100,100), QPoint(20,20), 100);
+        flick(&view, QPoint(120,120), QPoint(20,20), 100);
 
     QVERIFY(flickable->isFlicking());
     if (transpose) {
@@ -1578,6 +1579,23 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     // draggable item should have moved up
     QQuickItem *nested = window->rootObject()->findChild<QQuickItem*>("nested");
     QVERIFY(nested->y() < 100.0);
+}
+
+// QTBUG-31328
+void tst_qquickflickable::pressDelayWithLoader()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("pressDelayWithLoader.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    // do not crash
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
 }
 
 QTEST_MAIN(tst_qquickflickable)

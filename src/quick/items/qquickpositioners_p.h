@@ -187,6 +187,7 @@ private:
     Q_DISABLE_COPY(QQuickColumn)
 };
 
+class QQuickRowPrivate;
 class Q_AUTOTEST_EXPORT QQuickRow: public QQuickBasePositioner
 {
     Q_OBJECT
@@ -208,8 +209,10 @@ protected:
     virtual void reportConflictingAnchors();
 private:
     Q_DISABLE_COPY(QQuickRow)
+    Q_DECLARE_PRIVATE(QQuickRow)
 };
 
+class QQuickGridPrivate;
 class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
 {
     Q_OBJECT
@@ -293,6 +296,7 @@ private:
     HAlignment m_hItemAlign;
     VAlignment m_vItemAlign;
     Q_DISABLE_COPY(QQuickGrid)
+    Q_DECLARE_PRIVATE(QQuickGrid)
 };
 
 class QQuickFlowPrivate;
