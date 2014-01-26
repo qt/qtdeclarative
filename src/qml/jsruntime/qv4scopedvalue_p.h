@@ -378,87 +378,6 @@ struct ScopedCallData {
     CallData *ptr;
 };
 
-template<typename T>
-struct Referenced {
-    // Important: Do NOT add a copy constructor to this class
-    // adding a copy constructor actually changes the calling convention, ie.
-    // is not even binary compatible. Adding it would break assumptions made
-    // in the jit'ed code.
-    Referenced(const Scoped<T> &v)
-        : ptr(v.ptr) {}
-    Referenced(TypedValue<T> &v) { ptr = &v; }
-    Referenced(Value &v) {
-        ptr = value_cast<T>(v) ? &v : 0;
-    }
-    static Referenced fromValuePointer(Value *s) {
-        return Referenced(s);
-    }
-
-    Referenced &operator=(const Referenced &o)
-    { *ptr = *o.ptr; return *this; }
-    Referenced &operator=(T *t)
-    {
-#if QT_POINTER_SIZE == 4
-        ptr->tag = Value::Managed_Type;
-#endif
-        ptr->m = t;
-        return *this;
-    }
-    Referenced &operator=(Returned<T> *t) {
-#if QT_POINTER_SIZE == 4
-        ptr->tag = Value::Managed_Type;
-#endif
-        ptr->m = t->getPointer();
-        return *this;
-    }
-
-    operator const T *() const {
-        return ptr ? static_cast<T*>(ptr->managed()) : 0;
-    }
-    const T *operator->() const {
-        return static_cast<T*>(ptr->managed());
-    }
-
-    operator T *() {
-        return ptr ? static_cast<T*>(ptr->managed()) : 0;
-    }
-    T *operator->() {
-        return static_cast<T*>(ptr->managed());
-    }
-
-    T *getPointer() const {
-        return static_cast<T *>(ptr->managed());
-    }
-    ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Primitive::undefinedValue().asReturnedValue(); }
-    operator Returned<T> *() const { return ptr ? Returned<T>::create(getPointer()) : 0; }
-
-    bool operator==(const Referenced<T> &other) {
-        if (ptr == other.ptr)
-            return true;
-        return ptr && other.ptr && ptr->m == other.ptr->m;
-    }
-    bool operator!=(const Referenced<T> &other) {
-        if (ptr == other.ptr)
-            return false;
-        return !ptr || ptr->m != other.ptr->m;
-    }
-    bool operator!() const { return !ptr || !ptr->managed(); }
-
-    static Referenced null() { return Referenced(Null); }
-    bool isNull() const { return !ptr; }
-private:
-    Referenced(Value *v) {
-        ptr = v;
-#if QT_POINTER_SIZE == 8
-       ptr->val = 0;
-#else
-       *ptr = Value::fromManaged(0);
-#endif
-    }
-    enum _Null { Null };
-    Referenced(_Null) { ptr = 0; }
-    Value *ptr;
-};
 
 typedef Referenced<String> StringRef;
 typedef Referenced<Object> ObjectRef;
@@ -657,6 +576,11 @@ inline ValueRef &ValueRef::operator=(const ScopedValue &o)
     *ptr = *o.ptr;
     return *this;
 }
+
+template<typename T>
+Referenced<T>::Referenced(const Scoped<T> &v)
+    : ptr(v.ptr)
+{}
 
 struct ScopedProperty
 {
