@@ -156,11 +156,12 @@ template<typename T> struct Returned;
 typedef Returned<String> ReturnedString;
 typedef Returned<Object> ReturnedObject;
 typedef Returned<FunctionObject> ReturnedFunctionObject;
-template<typename T> struct ManagedRef;
-typedef ManagedRef<String> StringRef;
-typedef ManagedRef<Object> ObjectRef;
-typedef ManagedRef<ArrayObject> ArrayObjectRef;
-typedef ManagedRef<FunctionObject> FunctionObjectRef;
+struct ManagedRef;
+struct StringRef;
+struct ObjectRef;
+struct ArrayObjectRef;
+struct FunctionObjectRef;
+struct RegExpRef;
 
 struct PersistentValuePrivate;
 class PersistentValue;

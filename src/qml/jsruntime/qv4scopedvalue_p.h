@@ -379,9 +379,9 @@ struct ScopedCallData {
 };
 
 
-typedef ManagedRef<String> StringRef;
-typedef ManagedRef<Object> ObjectRef;
-typedef ManagedRef<FunctionObject> FunctionObjectRef;
+struct StringRef;
+struct ObjectRef;
+struct FunctionObjectRef;
 
 template<typename T>
 inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
@@ -485,12 +485,12 @@ inline TypedValue<T> &TypedValue<T>::operator=(Returned<T> *t)
     return *this;
 }
 
-template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator =(const ManagedRef<T> &v)
-{
-    val = v.asReturnedValue();
-    return *this;
-}
+//template<typename T>
+//inline TypedValue<T> &TypedValue<T>::operator =(const ManagedRef<T> &v)
+//{
+//    val = v.asReturnedValue();
+//    return *this;
+//}
 
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
@@ -517,9 +517,8 @@ PersistentValue::PersistentValue(Returned<T> *obj)
 {
 }
 
-template<typename T>
-inline PersistentValue::PersistentValue(const ManagedRef<T> obj)
-    : d(new PersistentValuePrivate(*obj.ptr))
+inline PersistentValue::PersistentValue(const ManagedRef obj)
+    : d(new PersistentValuePrivate(obj.asReturnedValue()))
 {
 }
 
@@ -529,12 +528,15 @@ inline PersistentValue &PersistentValue::operator=(Returned<T> *obj)
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
 }
 
-template<typename T>
-inline PersistentValue &PersistentValue::operator=(const ManagedRef<T> obj)
+inline PersistentValue &PersistentValue::operator=(const ManagedRef obj)
 {
-    return operator=(*obj.ptr);
+    return operator=(obj.asReturnedValue());
 }
 
+inline PersistentValue &PersistentValue::operator=(const ScopedValue &other)
+{
+    return operator=(other.asReturnedValue());
+}
 
 template<typename T>
 inline WeakValue::WeakValue(Returned<T> *obj)
@@ -572,16 +574,16 @@ inline ValueRef &ValueRef::operator=(const ScopedValue &o)
 }
 
 
-template<typename T>
-ManagedRef<T>::ManagedRef(const ScopedValue v)
+inline Value *extractValuePointer(const ScopedValue &v)
 {
-    ptr = value_cast<T>(*v.ptr) ? v.ptr : 0;
+    return v.ptr;
 }
 
 template<typename T>
-ManagedRef<T>::ManagedRef(const Scoped<T> &v)
-    : ptr(v.ptr)
-{}
+Value *extractValuePointer(const Scoped<T> &v)
+{
+    return v.ptr;
+}
 
 struct ScopedProperty
 {

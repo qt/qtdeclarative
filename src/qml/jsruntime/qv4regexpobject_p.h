@@ -84,7 +84,7 @@ struct RegExpObject: Object {
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
 
-    RegExpObject(ExecutionEngine *engine, ManagedRef<RegExp> value, bool global);
+    RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
 
@@ -101,6 +101,7 @@ protected:
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
+DEFINE_REF(RegExp, Object);
 
 struct RegExpCtor: FunctionObject
 {

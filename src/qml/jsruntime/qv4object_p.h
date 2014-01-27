@@ -422,6 +422,23 @@ inline ReturnedValue value_convert<Object>(ExecutionEngine *e, const Value &v)
     return v.toObject(e->currentContext())->asReturnedValue();
 }
 
+struct ObjectRef : public ManagedRef
+{
+    DEFINE_REF_METHODS(Object, Managed)
+
+    static ObjectRef fromValuePointer(Value *s) {
+        ObjectRef r;
+        r.ptr = s;
+        if (sizeof(void *) == 8)
+            r.ptr->val = 0;
+        else
+            *r.ptr = Value::fromManaged(0);
+        return r;
+    }
+};
+
+DEFINE_REF(ArrayObject, Object);
+
 }
 
 QT_END_NAMESPACE

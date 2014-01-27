@@ -179,7 +179,7 @@ void Debugger::resume(Speed speed)
         return;
 
     if (!m_returnedValue.isUndefined())
-        m_returnedValue = Primitive::undefinedValue();
+        m_returnedValue = Encode::undefined();
 
     clearTemporaryBreakPoints();
     if (speed == StepOver)

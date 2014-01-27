@@ -46,18 +46,18 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(ObjectRef scratch1, ObjectRef scratch2, const ObjectRef o, uint flags)
-    : object(scratch1)
-    , current(scratch2)
+ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags)
+    : object(ObjectRef::fromValuePointer(scratch1))
+    , current(ObjectRef::fromValuePointer(scratch2))
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
 {
-    object = o;
-    current = o;
+    object = o.getPointer();
+    current = o.getPointer();
 
-    if (object && object->asArgumentsObject()) {
+    if (!!object && object->asArgumentsObject()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
@@ -74,7 +74,7 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     object = o;
     current = o;
 
-    if (object && object->asArgumentsObject()) {
+    if (!!object && object->asArgumentsObject()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
@@ -103,7 +103,7 @@ void ObjectIterator::next(StringRef name, uint *index, Property *pd, PropertyAtt
                 Object *o = object;
                 bool shadowed = false;
                 while (o != current) {
-                    if ((name && o->hasOwnProperty(name)) ||
+                    if ((!!name && o->hasOwnProperty(name)) ||
                         (*index != UINT_MAX && o->hasOwnProperty(*index))) {
                         shadowed = true;
                         break;

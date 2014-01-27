@@ -1702,7 +1702,8 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         QV4::ScopedValue rv(scope, engine->fromVariant(value));
-        if (QV4::ManagedRef<QObjectWrapper> qobjectWrapper = rv) {
+        QV4::QObjectWrapperRef qobjectWrapper = rv;
+        if (!!qobjectWrapper) {
             if (QObject *object = qobjectWrapper->object())
                 QQmlData::get(object, true)->setImplicitDestructible();
         }

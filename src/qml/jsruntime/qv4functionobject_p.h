@@ -155,6 +155,8 @@ inline FunctionObject *value_cast(const Value &v) {
     return v.asFunctionObject();
 }
 
+DEFINE_REF(FunctionObject, Object);
+
 struct FunctionCtor: FunctionObject
 {
     V4_OBJECT

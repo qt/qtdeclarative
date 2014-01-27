@@ -74,7 +74,7 @@ struct Q_QML_EXPORT ObjectIterator
     uint memberIndex;
     uint flags;
 
-    ObjectIterator(ObjectRef scratch1, ObjectRef scratch2, const ObjectRef o, uint flags);
+    ObjectIterator(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags);
     ObjectIterator(Scope &scope, const ObjectRef o, uint flags);
     void next(StringRef name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(ValueRef value);
@@ -87,7 +87,7 @@ struct ForEachIteratorObject: Object {
     Q_MANAGED_TYPE(ForeachIteratorObject)
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
-        : Object(ctx->engine), it(ObjectRef::fromValuePointer(workArea), ObjectRef::fromValuePointer(workArea + 1),
+        : Object(ctx->engine), it(workArea, workArea + 1,
                                   o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
         setVTable(staticVTable());
     }

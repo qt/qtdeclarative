@@ -433,7 +433,7 @@ struct TypedValue : public Value
     }
     TypedValue &operator =(T *t);
     TypedValue &operator =(const Scoped<T> &v);
-    TypedValue &operator =(const ManagedRef<T> &v);
+//    TypedValue &operator =(const ManagedRef<T> &v);
     TypedValue &operator =(Returned<T> *t);
 
     TypedValue &operator =(const TypedValue<T> &t);

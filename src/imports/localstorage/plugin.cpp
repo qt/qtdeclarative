@@ -131,6 +131,7 @@ public:
     bool forwardOnly; // type == Rows
 };
 
+DEFINE_REF(QQmlSqlDatabaseWrapper, Object);
 DEFINE_OBJECT_VTABLE(QQmlSqlDatabaseWrapper);
 
 static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
@@ -206,7 +207,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
     return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
 }
 
-static ReturnedValue qmlsqldatabase_rows_index(QV4::ManagedRef<QQmlSqlDatabaseWrapper> r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
+static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapperRef r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     Scope scope(v4);
     QV8Engine *v8 = v4->v8Engine;

@@ -168,7 +168,7 @@ Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit
         Q_ASSERT(vmFunction);
         Scope valueScope(v4);
         ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
-        compilationUnitHolder = holder;
+        compilationUnitHolder = holder.asReturnedValue();
     } else
         vmFunction = 0;
 }
@@ -236,7 +236,7 @@ void Script::parse()
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
         ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
-        compilationUnitHolder = holder;
+        compilationUnitHolder = holder.asReturnedValue();
     }
 
     if (!vmFunction) {

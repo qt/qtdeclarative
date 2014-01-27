@@ -82,6 +82,8 @@ public:
     static bool isEqualTo(Managed *m, Managed *other);
 };
 
+DEFINE_REF(VariantObject, Object);
+
 struct VariantPrototype : VariantObject
 {
 public:
