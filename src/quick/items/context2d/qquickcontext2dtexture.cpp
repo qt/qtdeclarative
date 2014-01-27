@@ -427,7 +427,6 @@ QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTextu
     if (m_fbo) {
         if (!texture) {
             texture = new QSGPlainTexture();
-            texture->setHasMipmaps(false);
             texture->setHasAlphaChannel(true);
             texture->setOwnsTexture(false);
             m_dirtyTexture = true;
@@ -655,7 +654,6 @@ QSGTexture *QQuickContext2DImageTexture::textureForNextFrame(QSGTexture *last)
 
     if (!texture) {
         texture = new QSGPlainTexture();
-        texture->setHasMipmaps(false);
         texture->setHasAlphaChannel(true);
         m_dirtyTexture = true;
     }

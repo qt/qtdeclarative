@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,80 +39,39 @@
 **
 ****************************************************************************/
 
-#ifndef QSGTEXTURE_P_H
-#define QSGTEXTURE_P_H
+import QtQuick 2.3
 
-#include <QtQuick/qtquickglobal.h>
-#include <private/qobject_p.h>
+/*
+    The test verifies that scaled down mipmapped images contains
+    colors from all pixels.
 
-#include <QtGui/qopengl.h>
+    #samples: 2
+                 PixelPos     R    G    B    Error-tolerance
+    #final:        0   0     0.33 0.33 0.33        0.1
+    #final:        1   0     0.33 0.33 0.33        0.1
+*/
 
-#include "qsgtexture.h"
-#include <QtQuick/private/qsgcontext_p.h>
-
-QT_BEGIN_NAMESPACE
-
-class QSGTexturePrivate : public QObjectPrivate
+RenderTestBase
 {
-    Q_DECLARE_PUBLIC(QSGTexture)
-public:
-    QSGTexturePrivate();
-
-    uint wrapChanged : 1;
-    uint filteringChanged : 1;
-
-    uint horizontalWrap : 1;
-    uint verticalWrap : 1;
-    uint mipmapMode : 2;
-    uint filterMode : 2;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGPlainTexture : public QSGTexture
-{
-    Q_OBJECT
-public:
-    QSGPlainTexture();
-    virtual ~QSGPlainTexture();
-
-    void setOwnsTexture(bool owns) { m_owns_texture = owns; }
-    bool ownsTexture() const { return m_owns_texture; }
-
-    void setTextureId(int id);
-    int textureId() const;
-    void setTextureSize(const QSize &size) { m_texture_size = size; }
-    QSize textureSize() const { return m_texture_size; }
-
-    void setHasAlphaChannel(bool alpha) { m_has_alpha = alpha; }
-    bool hasAlphaChannel() const { return m_has_alpha; }
-
-    bool hasMipmaps() const { return mipmapFiltering() != QSGTexture::None; }
-
-    void setImage(const QImage &image);
-    const QImage &image() { return m_image; }
-
-    virtual void bind();
-
-    static QSGPlainTexture *fromImage(const QImage &image) {
-        QSGPlainTexture *t = new QSGPlainTexture();
-        t->setImage(image);
-        return t;
+    Image {
+        x: 0
+        y: 0
+        transformOrigin: Item.TopLeft
+        source: "mipmap_small.png"
+        mipmap: true
+        smooth: false
+        scale: 1 / width;
     }
 
-protected:
-    QImage m_image;
+    Image {
+        x: 1
+        y: 0
+        transformOrigin: Item.TopLeft
+        source: "mipmap_large.png"
+        mipmap: true
+        smooth: false
+        scale: 1 / width;
+    }
 
-    GLuint m_texture_id;
-    QSize m_texture_size;
-    QRectF m_texture_rect;
-
-    uint m_has_alpha : 1;
-    uint m_dirty_texture : 1;
-    uint m_dirty_bind_options : 1;
-    uint m_owns_texture : 1;
-    uint m_mipmaps_generated : 1;
-    uint m_retain_image: 1;
-};
-
-QT_END_NAMESPACE
-
-#endif // QSGTEXTURE_P_H
+    onEnterFinalStage: finalStageComplete = true;
+}

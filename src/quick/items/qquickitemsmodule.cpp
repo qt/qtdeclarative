@@ -272,6 +272,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickText, 3>(uri, 2, 3, "Text");
     qmlRegisterType<QQuickTextEdit, 3>(uri, 2, 3, "TextEdit");
+    qmlRegisterType<QQuickImage, 1>(uri, 2, 3,"Image");
 }
 
 static void initResources()

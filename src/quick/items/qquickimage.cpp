@@ -72,7 +72,7 @@ public:
     QSGTexture *texture() const {
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-            m_texture->setMipmapFiltering(QSGTexture::Nearest);
+            m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
             m_texture->setHorizontalWrapMode(QSGTexture::ClampToEdge);
             m_texture->setVerticalWrapMode(QSGTexture::ClampToEdge);
         }
@@ -83,6 +83,7 @@ public:
 
     QSGTexture *m_texture;
     bool m_smooth;
+    bool m_mipmap;
 };
 
 #include "qquickimage.moc"
@@ -92,6 +93,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     , paintedWidth(0)
     , paintedHeight(0)
     , pixmapChanged(false)
+    , mipmap(false)
     , hAlign(QQuickImage::AlignHCenter)
     , vAlign(QQuickImage::AlignVCenter)
     , provider(0)
@@ -372,6 +374,8 @@ qreal QQuickImage::paintedHeight() const
     no visual or performance effect.
 
     By default, this property is set to true.
+
+    \sa mipmap
 */
 
 /*!
@@ -549,6 +553,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
         QQuickImagePrivate *dd = const_cast<QQuickImagePrivate *>(d);
         dd->provider = new QQuickImageTextureProvider;
         dd->provider->m_smooth = d->smooth;
+        dd->provider->m_mipmap = d->mipmap;
         dd->provider->updateTexture(d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window()));
     }
 
@@ -564,6 +569,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     // Copy over the current texture state into the texture provider...
     if (d->provider) {
         d->provider->m_smooth = d->smooth;
+        d->provider->m_mipmap = d->mipmap;
         d->provider->updateTexture(texture);
     }
 
@@ -673,13 +679,14 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     if (d->pixmapChanged) {
         // force update the texture in the node to trigger reconstruction of
         // geometry and the likes when a atlas segment has changed.
-        if (texture->isAtlasTexture() && (hWrap == QSGTexture::Repeat || vWrap == QSGTexture::Repeat))
+        if (texture->isAtlasTexture() && (hWrap == QSGTexture::Repeat || vWrap == QSGTexture::Repeat || d->mipmap))
             node->setTexture(texture->removedFromAtlas());
         else
             node->setTexture(texture);
         d->pixmapChanged = false;
     }
 
+    node->setMipmapFiltering(d->mipmap ? QSGTexture::Linear : QSGTexture::None);
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
@@ -744,6 +751,40 @@ void QQuickImage::setHorizontalAlignment(HAlignment align)
     update();
     updatePaintedGeometry();
     emit horizontalAlignmentChanged(align);
+}
+
+/*!
+    \qmlproperty bool QtQuick::Image::mipmap
+    \since 5.3
+
+    This property holds whether the image uses mipmap filtering when scaled or
+    transformed.
+
+    Mipmap filtering gives better visual quality when scaling down
+    compared to smooth, but it may come at a performance cost (both when
+    initializing the image and during rendering).
+
+    By default, this property is set to false.
+
+    \sa smooth
+ */
+
+bool QQuickImage::mipmap() const
+{
+    Q_D(const QQuickImage);
+    return d->mipmap;
+}
+
+void QQuickImage::setMipmap(bool use)
+{
+    Q_D(QQuickImage);
+    if (d->mipmap == use)
+        return;
+    d->mipmap = use;
+    emit mipmapChanged(d->mipmap);
+
+    d->pixmapChanged = true;
+    update();
 }
 
 QT_END_NAMESPACE

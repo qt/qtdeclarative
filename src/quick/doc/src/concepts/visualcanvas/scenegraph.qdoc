@@ -729,6 +729,9 @@ with multiple windows.
   QQuickWindow::setColor() will be used in a call to \c glClear(),
   which is potentially faster.
 
+  \li Mipmapped Image items are not placed in global atlas and will
+  not be batched.
+
   \endlist
 
   If an application performs poorly, make sure that rendering is

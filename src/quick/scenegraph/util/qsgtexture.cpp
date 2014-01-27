@@ -533,7 +533,6 @@ QSGPlainTexture::QSGPlainTexture()
     : QSGTexture()
     , m_texture_id(0)
     , m_has_alpha(false)
-    , m_has_mipmaps(false)
     , m_dirty_texture(false)
     , m_dirty_bind_options(false)
     , m_owns_texture(true)
@@ -597,18 +596,11 @@ void QSGPlainTexture::setTextureId(int id)
     m_mipmaps_generated = false;
 }
 
-void QSGPlainTexture::setHasMipmaps(bool mm)
-{
-    m_has_mipmaps = mm;
-    m_mipmaps_generated = false;
-}
-
-
 void QSGPlainTexture::bind()
 {
     if (!m_dirty_texture) {
         glBindTexture(GL_TEXTURE_2D, m_texture_id);
-        if (m_has_mipmaps && !m_mipmaps_generated) {
+        if (mipmapFiltering() != QSGTexture::None && !m_mipmaps_generated) {
             QOpenGLContext *ctx = QOpenGLContext::currentContext();
             ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
             m_mipmaps_generated = true;
@@ -642,10 +634,7 @@ void QSGPlainTexture::bind()
         }
         m_texture_id = 0;
         m_texture_size = QSize();
-        m_has_mipmaps = false;
         m_has_alpha = false;
-
-
 
         return;
     }
@@ -726,7 +715,7 @@ void QSGPlainTexture::bind()
 #endif
 
 
-    if (m_has_mipmaps) {
+    if (mipmapFiltering() != QSGTexture::None) {
         context->functions()->glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmaps_generated = true;
     }

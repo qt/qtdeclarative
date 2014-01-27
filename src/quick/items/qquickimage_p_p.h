@@ -73,6 +73,7 @@ public:
     void setImage(const QImage &img);
 
     bool pixmapChanged : 1;
+    bool mipmap : 1;
     QQuickImage::HAlignment hAlign;
     QQuickImage::VAlignment vAlign;
 

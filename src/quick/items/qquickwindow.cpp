@@ -3094,7 +3094,6 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
         QSGPlainTexture *texture = new QSGPlainTexture();
         texture->setTextureId(id);
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
-        texture->setHasMipmaps(options & TextureHasMipmaps);
         texture->setOwnsTexture(options & TextureOwnsGLTexture);
         texture->setTextureSize(size);
         return texture;

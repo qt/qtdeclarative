@@ -60,6 +60,7 @@ class Q_AUTOTEST_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged)
     Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged)
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION 1)
 
 public:
     QQuickImage(QQuickItem *parent=0);
@@ -91,11 +92,15 @@ public:
     bool isTextureProvider() const { return true; }
     QSGTextureProvider *textureProvider() const;
 
+    bool mipmap() const;
+    void setMipmap(bool use);
+
 Q_SIGNALS:
     void fillModeChanged();
     void paintedGeometryChanged();
     void horizontalAlignmentChanged(HAlignment alignment);
     void verticalAlignmentChanged(VAlignment alignment);
+    void mipmapChanged(bool);
 
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);

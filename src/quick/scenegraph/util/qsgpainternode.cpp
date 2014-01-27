@@ -205,7 +205,6 @@ void QSGPainterNode::update()
 
 void QSGPainterNode::updateTexture()
 {
-    m_texture->setHasMipmaps(m_mipmapping);
     m_texture->setHasAlphaChannel(!m_opaquePainting);
     m_material.setTexture(m_texture);
     m_materialO.setTexture(m_texture);
