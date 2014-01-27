@@ -100,6 +100,7 @@ QStringList Signal::parameterStringList(const QStringList &stringPool) const
 QQmlCodeGenerator::QQmlCodeGenerator(const QSet<QString> &illegalNames)
     : illegalNames(illegalNames)
     , _object(0)
+    , _propertyDeclaration(0)
     , jsGenerator(0)
 {
 }
@@ -708,8 +709,11 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
                  propertyValue += alias.at(2);
              }
              property->aliasPropertyValueIndex = registerString(propertyValue);
-        } else if (node->statement)
-            appendBinding(node->identifierToken, property->nameIndex, node->statement);
+        } else if (node->statement) {
+            qSwap(_propertyDeclaration, property);
+            appendBinding(node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
+            qSwap(_propertyDeclaration, property);
+        }
 
         _object->properties->append(property);
 
@@ -725,8 +729,12 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             _object->indexOfDefaultProperty = _object->properties->count - 1;
         }
 
-        // process QML-like initializers (e.g. property Object o: Object {})
-        AST::Node::accept(node->binding, this);
+        if (node->binding) {
+            qSwap(_propertyDeclaration, property);
+            // process QML-like initializers (e.g. property Object o: Object {})
+            AST::Node::accept(node->binding, this);
+            qSwap(_propertyDeclaration, property);
+        }
     }
 
     return false;
@@ -804,6 +812,8 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST
     binding->valueLocation.line = loc.startLine;
     binding->valueLocation.column = loc.startColumn;
     binding->type = QV4::CompiledData::Binding::Type_Invalid;
+    if (_propertyDeclaration && (_propertyDeclaration->flags & QV4::CompiledData::Property::IsReadOnly))
+        binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(statement)) {
         AST::ExpressionNode *expr = stmt->expression;
@@ -897,6 +907,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->valueLocation = obj->location;
 
     binding->flags = 0;
+
+    if (_propertyDeclaration && (_propertyDeclaration->flags & QV4::CompiledData::Property::IsReadOnly))
+        binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     // No type name on the initializer means it must be a group property
     if (stringAt(_objects.at(objectIndex)->inheritedTypeNameIndex).isEmpty())

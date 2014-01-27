@@ -594,7 +594,7 @@ void QmlObjectCreator::setupBindings()
     QString id = stringAt(_compiledObject->idIndex);
     if (!id.isEmpty()) {
         QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
-        if (idProperty) {
+        if (idProperty && idProperty->isWritable()) {
             QV4::CompiledData::Binding idBinding;
             idBinding.propertyNameIndex = 0; // Not used
             idBinding.flags = 0;
@@ -635,6 +635,17 @@ void QmlObjectCreator::setupBindings()
 
 bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingIndex, const QV4::CompiledData::Binding *binding)
 {
+    if (property && !property->isWritable()
+        && !property->isQList()
+        && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
+        && !(binding->flags & QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration)
+        && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+        && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
+        ) {
+        recordError(binding->valueLocation, tr("Invalid property assignment: \"%1\" is a read-only property").arg(property->name(_qobject)));
+        return false;
+    }
+
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
         QQmlCompiledData::TypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);

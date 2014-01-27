@@ -282,7 +282,8 @@ struct Q_QML_EXPORT Binding
 
     enum Flags {
         IsSignalHandlerExpression = 0x1,
-        IsOnAssignment = 0x2
+        IsOnAssignment = 0x2,
+        InitializerForReadOnlyDeclaration = 0x4
     };
 
     quint32 flags : 16;

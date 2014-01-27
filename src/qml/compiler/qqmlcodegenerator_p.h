@@ -299,6 +299,7 @@ public:
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
     QmlObject *_object;
+    QmlProperty *_propertyDeclaration;
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;

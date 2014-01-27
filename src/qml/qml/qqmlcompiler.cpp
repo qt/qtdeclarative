@@ -3456,7 +3456,7 @@ bool QQmlCompiler::buildBinding(QQmlScript::Value *value,
     Q_ASSERT(prop->parent->metatype);
 
     if (!prop->core.isWritable() && !prop->core.isQList() && !prop->isReadOnlyDeclaration)
-        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
+        COMPILE_EXCEPTION(value, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     JSBindingReference *reference = pool->New<JSBindingReference>();
     reference->expression = value->value;
