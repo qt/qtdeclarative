@@ -170,11 +170,10 @@ class MoveMapping
     struct Move {
         Expr *from;
         Temp *to;
-        int id;
         bool needsSwap;
 
-        Move(Expr *from, Temp *to, int id)
-            : from(from), to(to), id(id), needsSwap(false)
+        Move(Expr *from, Temp *to)
+            : from(from), to(to), needsSwap(false)
         {}
 
         bool operator==(const Move &other) const
@@ -187,7 +186,7 @@ class MoveMapping
     static Moves sourceUsages(Expr *e, const Moves &moves);
 
 public:
-    void add(Expr *from, Temp *to, int id = 0);
+    void add(Expr *from, Temp *to);
     void order();
     void insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
 

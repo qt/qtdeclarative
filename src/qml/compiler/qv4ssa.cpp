@@ -3811,7 +3811,6 @@ void Optimizer::convertOutOfSSA() {
     // There should be no critical edges at this point.
 
     foreach (BasicBlock *bb, function->basicBlocks) {
-        const int id = bb->statements.last()->id;
         MoveMapping moves;
 
         foreach (BasicBlock *successor, bb->out) {
@@ -3820,7 +3819,7 @@ void Optimizer::convertOutOfSSA() {
             foreach (Stmt *s, successor->statements) {
                 if (Phi *phi = s->asPhi()) {
                     moves.add(clone(phi->d->incoming[inIdx], function),
-                              clone(phi->targetTemp, function)->asTemp(), id);
+                              clone(phi->targetTemp, function)->asTemp());
                 } else {
                     break;
                 }
@@ -3946,7 +3945,7 @@ MoveMapping::Moves MoveMapping::sourceUsages(Expr *e, const Moves &moves)
     return usages;
 }
 
-void MoveMapping::add(Expr *from, Temp *to, int id) {
+void MoveMapping::add(Expr *from, Temp *to) {
     if (Temp *t = from->asTemp()) {
         if (overlappingStorage(*t, *to)) {
             // assignments like fp1 = fp1 or var{&1} = double{&1} can safely be skipped.
@@ -3962,7 +3961,7 @@ void MoveMapping::add(Expr *from, Temp *to, int id) {
         }
     }
 
-    Move m(from, to, id);
+    Move m(from, to);
     if (_moves.contains(m))
         return;
     _moves.append(m);
@@ -3995,7 +3994,6 @@ void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) co
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
         move->init(m.to, m.from);
-        move->id = m.id;
         move->swap = m.needsSwap;
         bb->statements.insert(insertionPoint++, move);
     }
