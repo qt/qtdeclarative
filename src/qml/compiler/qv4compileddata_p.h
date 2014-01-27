@@ -74,13 +74,24 @@ struct Location
     qint32 column;
 };
 
-// map from name index to location of first use
-struct TypeReferenceMap : QHash<int, Location>
+struct TypeReference
 {
-    void add(int nameIndex, const Location &loc) {
-        if (contains(nameIndex))
-            return;
-        insert(nameIndex, loc);
+    TypeReference(const Location &loc)
+        : location(loc)
+        , needsCreation(false)
+    {}
+    Location location; // first use
+    bool needsCreation; // whether the type needs to be creatable or not
+};
+
+// map from name index to location of first use
+struct TypeReferenceMap : QHash<int, TypeReference>
+{
+    TypeReference &add(int nameIndex, const Location &loc) {
+        Iterator it = find(nameIndex);
+        if (it != end())
+            return *it;
+        return *insert(nameIndex, loc);
     }
 };
 

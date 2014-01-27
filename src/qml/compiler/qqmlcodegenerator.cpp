@@ -1056,14 +1056,17 @@ void QQmlCodeGenerator::recordError(const AST::SourceLocation &location, const Q
 void QQmlCodeGenerator::collectTypeReferences()
 {
     foreach (QmlObject *obj, _objects) {
-        if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
-            _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
+        if (!stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
+            QV4::CompiledData::TypeReference &r = _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
+            r.needsCreation = true;
+        }
 
         for (QmlProperty *prop = obj->properties->first; prop; prop = prop->next) {
             if (prop->type >= QV4::CompiledData::Property::Custom) {
                 // ### FIXME: We could report the more accurate location here by using prop->location, but the old
                 // compiler can't and the tests expect it to be the object location right now.
-                _typeReferences.add(prop->customTypeNameIndex, obj->location);
+                QV4::CompiledData::TypeReference &r = _typeReferences.add(prop->customTypeNameIndex, obj->location);
+                r.needsCreation = true;
             }
         }
 

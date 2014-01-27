@@ -84,7 +84,7 @@ bool QQmlTypeCompiler::compile()
         QScopedPointer<QQmlCompiledData::TypeReference> ref(new QQmlCompiledData::TypeReference);
         QQmlType *qmlType = resolvedType->type;
         if (resolvedType->typeData) {
-            if (qmlType->isCompositeSingleton()) {
+            if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
                 QQmlError error;
                 QString reason = tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName());
                 error.setDescription(reason);
@@ -99,7 +99,7 @@ bool QQmlTypeCompiler::compile()
             ref->type = qmlType;
             Q_ASSERT(ref->type);
 
-            if (!ref->type->isCreatable()) {
+            if (resolvedType->needsCreation && !ref->type->isCreatable()) {
                 QQmlError error;
                 QString reason = ref->type->noCreationReason();
                 if (reason.isEmpty())

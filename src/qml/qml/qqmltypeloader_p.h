@@ -396,7 +396,7 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0) {}
+        TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
 
         QQmlScript::Location location;
         QQmlType *type;
@@ -404,6 +404,7 @@ public:
         int minorVersion;
         QQmlTypeData *typeData;
         QString prefix; // used by CompositeSingleton types
+        bool needsCreation;
     };
 
     struct ScriptReference

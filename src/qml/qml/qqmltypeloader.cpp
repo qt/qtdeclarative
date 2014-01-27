@@ -2453,8 +2453,8 @@ void QQmlTypeData::resolveTypes()
                 error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(name).arg(error.description()));
             }
 
-            error.setLine(unresolvedRef->line);
-            error.setColumn(unresolvedRef->column);
+            error.setLine(unresolvedRef->location.line);
+            error.setColumn(unresolvedRef->location.column);
 
             errors.prepend(error);
             setError(errors);
@@ -2468,8 +2468,10 @@ void QQmlTypeData::resolveTypes()
         ref.majorVersion = majorVersion;
         ref.minorVersion = minorVersion;
 
-        ref.location.line = unresolvedRef->line;
-        ref.location.column = unresolvedRef->column;
+        ref.location.line = unresolvedRef->location.line;
+        ref.location.column = unresolvedRef->location.column;
+
+        ref.needsCreation = unresolvedRef->needsCreation;
 
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
