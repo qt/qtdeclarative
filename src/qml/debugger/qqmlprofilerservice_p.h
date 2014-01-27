@@ -402,20 +402,19 @@ struct QQmlBindingProfiler {
 struct QQmlHandlingSignalProfiler {
     QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
-        if (QQmlProfilerService::enabled) {
-            if (expression->sourceFile().isEmpty()) {
-                QV4::Function *function = expression->function();
-                if (function) {
-                    Q_QML_PROFILE(startHandlingSignal(
-                            function->sourceFile(), function->compiledFunction->location.line,
-                            function->compiledFunction->location.column));
-                }
+        Q_QML_PROFILE_IF_ENABLED({
+            QV4::Function *function;
+            if (expression->sourceFile().isEmpty() && (function = expression->function())) {
+                QQmlProfilerService::startHandlingSignal(
+                        function->sourceFile(), function->compiledFunction->location.line,
+                        function->compiledFunction->location.column);
+
             } else {
-                Q_QML_PROFILE(startHandlingSignal(
+                QQmlProfilerService::startHandlingSignal(
                         expression->sourceFile(), expression->lineNumber(),
-                        expression->columnNumber()));
+                        expression->columnNumber());
             }
-        }
+        });
     }
 
     ~QQmlHandlingSignalProfiler()
