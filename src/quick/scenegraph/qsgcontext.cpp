@@ -253,32 +253,14 @@ QSGImageNode *QSGContext::createImageNode()
 }
 
 /*!
-    Factory function for scene graph backends of the Text elements which supports native
-    text rendering. Used in special cases where native look and feel is a main objective.
-*/
-QSGGlyphNode *QSGContext::createNativeGlyphNode(QSGRenderContext *rc)
-{
-#if defined(QT_OPENGL_ES) && !defined(QT_OPENGL_ES_2_ANGLE)
-    Q_D(QSGContext);
-    if (d->distanceFieldDisabled)
-        return new QSGDefaultGlyphNode;
-    else
-        return createGlyphNode(rc);
-#else
-    Q_UNUSED(rc);
-    return new QSGDefaultGlyphNode;
-#endif
-}
-
-/*!
     Factory function for scene graph backends of the Text elements;
  */
-QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc)
+QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
 {
     Q_D(QSGContext);
 
-    if (d->distanceFieldDisabled) {
-        return createNativeGlyphNode(rc);
+    if (d->distanceFieldDisabled || preferNativeGlyphNode) {
+        return new QSGDefaultGlyphNode;
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(rc);
         node->setPreferredAntialiasingMode(d->distanceFieldAntialiasing);

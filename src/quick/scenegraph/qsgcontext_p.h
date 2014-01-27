@@ -158,8 +158,7 @@ public:
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc);
-    virtual QSGGlyphNode *createNativeGlyphNode(QSGRenderContext *rc);
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;
