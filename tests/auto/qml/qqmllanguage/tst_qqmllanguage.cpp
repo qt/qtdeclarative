@@ -520,13 +520,11 @@ void tst_qqmllanguage::errors()
 {
     QFETCH(QString, file);
     QFETCH(QString, errorFile);
-    // ### FIXME: re-enable these create "checks" when the new compiler is default and does property binding compatibility tests
-    // in the loader thread.
-//    QFETCH(bool, create);
+    QFETCH(bool, create);
 
     QQmlComponent component(&engine, testFileUrl(file));
 
-    if (/*create && */component.isReady()) {
+    if (create) {
         QObject *object = component.create();
         QVERIFY(object == 0);
     }

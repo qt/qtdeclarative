@@ -191,9 +191,12 @@ public:
 
 private:
     bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
+    bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
+    bool validateObjectBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
+    QQmlEnginePrivate *enginePrivate;
     const QV4::CompiledData::QmlUnit *qmlUnit;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QVector<QQmlPropertyCache *> &propertyCaches;
