@@ -418,9 +418,6 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
-
-    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
-    and QtRendering is always used.
 */
 QQuickTextEdit::RenderType QQuickTextEdit::renderType() const
 {
@@ -2371,7 +2368,7 @@ QQuickTextNode *QQuickTextEditPrivate::createTextNode()
 {
     Q_Q(QQuickTextEdit);
     QQuickTextNode* node = new QQuickTextNode(q);
-    node->setUseNativeRenderer(renderType == QQuickTextEdit::NativeRendering && window->devicePixelRatio() <= 1);
+    node->setUseNativeRenderer(renderType == QQuickTextEdit::NativeRendering);
     node->initEngine(color, selectedTextColor, selectionColor);
     return node;
 }

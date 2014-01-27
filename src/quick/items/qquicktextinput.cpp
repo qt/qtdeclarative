@@ -155,9 +155,6 @@ void QQuickTextInput::setText(const QString &s)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
-
-    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
-    and QtRendering is always used.
 */
 QQuickTextInput::RenderType QQuickTextInput::renderType() const
 {
@@ -1862,7 +1859,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             }
         }
     } else {
-        node->setUseNativeRenderer(d->renderType == NativeRendering && d->window->devicePixelRatio() <= 1);
+        node->setUseNativeRenderer(d->renderType == NativeRendering);
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
