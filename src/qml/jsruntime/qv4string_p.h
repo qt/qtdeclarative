@@ -66,10 +66,6 @@ struct Q_QML_EXPORT String : public Managed {
         StringType_ArrayIndex
     };
 
-    String()
-        : Managed(0), _text(QStringData::sharedNull()), identifier(0)
-        , stringHash(UINT_MAX), largestSubLength(0), len(0)
-    { subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {
