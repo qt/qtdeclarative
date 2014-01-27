@@ -354,34 +354,36 @@ private:
 };
 
 template<typename T>
-struct Referenced {
-    // Important: Do NOT add a copy constructor to this class
+struct ManagedRef {
+    // Important: Do NOT add a copy constructor to this class or any derived class
     // adding a copy constructor actually changes the calling convention, ie.
     // is not even binary compatible. Adding it would break assumptions made
     // in the jit'ed code.
-    Referenced(const Scoped<T> &v);
-    Referenced(TypedValue<T> &v) { ptr = &v; }
-    Referenced(Value &v) {
+    ManagedRef(const ScopedValue);
+    ManagedRef(const Scoped<T> &v);
+    ManagedRef(TypedValue<T> &v) { ptr = &v; }
+    ManagedRef(Value &v) {
         ptr = value_cast<T>(v) ? &v : 0;
     }
-    static Referenced fromValuePointer(Value *s) {
-        return Referenced(s);
+    static ManagedRef fromValuePointer(Value *s) {
+        ManagedRef r(s);
+        if (sizeof(void *) == 8)
+            r.ptr->val = 0;
+        else
+            *r.ptr = Value::fromManaged(0);
+        return r;
     }
 
-    Referenced &operator=(const Referenced &o)
-    { *ptr = *o.ptr; return *this; }
-    Referenced &operator=(T *t)
+    ManagedRef &operator=(T *t)
     {
-#if QT_POINTER_SIZE == 4
-        ptr->tag = Value::Managed_Type;
-#endif
+        if (sizeof(void *) == 4)
+            ptr->tag = Value::Managed_Type;
         ptr->m = t;
         return *this;
     }
-    Referenced &operator=(Returned<T> *t) {
-#if QT_POINTER_SIZE == 4
-        ptr->tag = Value::Managed_Type;
-#endif
+    ManagedRef &operator=(Returned<T> *t) {
+        if (sizeof(void *) == 4)
+            ptr->tag = Value::Managed_Type;
         ptr->m = t->getPointer();
         return *this;
     }
@@ -406,36 +408,24 @@ struct Referenced {
     ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Primitive::undefinedValue().asReturnedValue(); }
     operator Returned<T> *() const { return ptr ? Returned<T>::create(getPointer()) : 0; }
 
-    bool operator==(const Referenced<T> &other) {
+    bool operator==(const ManagedRef<T> &other) {
         if (ptr == other.ptr)
             return true;
         return ptr && other.ptr && ptr->m == other.ptr->m;
     }
-    bool operator!=(const Referenced<T> &other) {
-        if (ptr == other.ptr)
-            return false;
-        return !ptr || ptr->m != other.ptr->m;
+    bool operator!=(const ManagedRef<T> &other) {
+        return !operator==(other);
     }
     bool operator!() const { return !ptr || !ptr->managed(); }
 
-    static Referenced null() { return Referenced(Null); }
+    static ManagedRef null() { return ManagedRef((Value *)0); }
     bool isNull() const { return !ptr; }
-private:
-    Referenced(Value *v) {
+protected:
+    ManagedRef(Value *v) {
         ptr = v;
-#if QT_POINTER_SIZE == 8
-       ptr->val = 0;
-#else
-       *ptr = Value::fromManaged(0);
-#endif
     }
-    enum _Null { Null };
-    Referenced(_Null) { ptr = 0; }
     Value *ptr;
 };
-
-
-typedef Referenced<Managed> ManagedRef;
 
 
 template<>

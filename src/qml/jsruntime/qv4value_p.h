@@ -356,9 +356,6 @@ struct Q_QML_EXPORT Value
     }
     template<typename T>
     inline Returned<T> *as();
-    template<typename T>
-    inline Referenced<T> asRef();
-
 };
 
 inline Managed *Value::asManaged() const
@@ -436,7 +433,7 @@ struct TypedValue : public Value
     }
     TypedValue &operator =(T *t);
     TypedValue &operator =(const Scoped<T> &v);
-    TypedValue &operator =(const Referenced<T> &v);
+    TypedValue &operator =(const ManagedRef<T> &v);
     TypedValue &operator =(Returned<T> *t);
 
     TypedValue &operator =(const TypedValue<T> &t);

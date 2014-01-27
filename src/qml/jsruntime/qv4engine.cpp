@@ -560,7 +560,7 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
     return newRegExpObject(re, global);
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(Referenced<RegExp> re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(ManagedRef<RegExp> re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     return object->asReturned<RegExpObject>();

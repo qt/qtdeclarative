@@ -317,7 +317,7 @@ public:
     Returned<DateObject> *newDateObject(const QDateTime &dt);
 
     Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
-    Returned<RegExpObject> *newRegExpObject(Referenced<RegExp> re, bool global);
+    Returned<RegExpObject> *newRegExpObject(ManagedRef<RegExp> re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
     Returned<Object> *newErrorObject(const ValueRef value);

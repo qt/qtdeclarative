@@ -379,9 +379,9 @@ struct ScopedCallData {
 };
 
 
-typedef Referenced<String> StringRef;
-typedef Referenced<Object> ObjectRef;
-typedef Referenced<FunctionObject> FunctionObjectRef;
+typedef ManagedRef<String> StringRef;
+typedef ManagedRef<Object> ObjectRef;
+typedef ManagedRef<FunctionObject> FunctionObjectRef;
 
 template<typename T>
 inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
@@ -464,12 +464,6 @@ inline Returned<T> *Value::as()
     return Returned<T>::create(value_cast<T>(*this));
 }
 
-template<typename T> inline
-Referenced<T> Value::asRef()
-{
-    return Referenced<T>(*this);
-}
-
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 {
@@ -492,7 +486,7 @@ inline TypedValue<T> &TypedValue<T>::operator=(Returned<T> *t)
 }
 
 template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator =(const Referenced<T> &v)
+inline TypedValue<T> &TypedValue<T>::operator =(const ManagedRef<T> &v)
 {
     val = v.asReturnedValue();
     return *this;
@@ -524,7 +518,7 @@ PersistentValue::PersistentValue(Returned<T> *obj)
 }
 
 template<typename T>
-inline PersistentValue::PersistentValue(const Referenced<T> obj)
+inline PersistentValue::PersistentValue(const ManagedRef<T> obj)
     : d(new PersistentValuePrivate(*obj.ptr))
 {
 }
@@ -536,7 +530,7 @@ inline PersistentValue &PersistentValue::operator=(Returned<T> *obj)
 }
 
 template<typename T>
-inline PersistentValue &PersistentValue::operator=(const Referenced<T> obj)
+inline PersistentValue &PersistentValue::operator=(const ManagedRef<T> obj)
 {
     return operator=(*obj.ptr);
 }
@@ -577,8 +571,15 @@ inline ValueRef &ValueRef::operator=(const ScopedValue &o)
     return *this;
 }
 
+
 template<typename T>
-Referenced<T>::Referenced(const Scoped<T> &v)
+ManagedRef<T>::ManagedRef(const ScopedValue v)
+{
+    ptr = value_cast<T>(*v.ptr) ? v.ptr : 0;
+}
+
+template<typename T>
+ManagedRef<T>::ManagedRef(const Scoped<T> &v)
     : ptr(v.ptr)
 {}
 

@@ -206,7 +206,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
     return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
 }
 
-static ReturnedValue qmlsqldatabase_rows_index(QV4::Referenced<QQmlSqlDatabaseWrapper> r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
+static ReturnedValue qmlsqldatabase_rows_index(QV4::ManagedRef<QQmlSqlDatabaseWrapper> r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     Scope scope(v4);
     QV8Engine *v8 = v4->v8Engine;

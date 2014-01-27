@@ -85,13 +85,13 @@ public:
     template<typename T>
     PersistentValue(Returned<T> *obj);
     template<typename T>
-    PersistentValue(const Referenced<T> obj);
+    PersistentValue(const ManagedRef<T> obj);
     PersistentValue &operator=(const ValueRef other);
     PersistentValue &operator =(ReturnedValue other);
     template<typename T>
     PersistentValue &operator=(Returned<T> *obj);
     template<typename T>
-    PersistentValue &operator=(const Referenced<T> obj);
+    PersistentValue &operator=(const ManagedRef<T> obj);
     ~PersistentValue();
 
     ReturnedValue value() const {
