@@ -881,6 +881,12 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
 
                 bind->addToObject();
+
+                if (!instr.property.isValueTypeVirtual()) {
+                    QQmlData *data = QQmlData::get(target);
+                    Q_ASSERT(data);
+                    data->setPendingBindingBit(target, instr.property.coreIndex);
+                }
             }
         QML_END_INSTR(StoreBinding)
 

@@ -321,6 +321,7 @@ private slots:
     void qtbug_34792();
     void noCaptureWhenWritingProperty();
     void singletonWithEnum();
+    void lazyBindingEvaluation();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -667,7 +668,7 @@ void tst_qqmlecmascript::methods()
 void tst_qqmlecmascript::bindingLoop()
 {
     QQmlComponent component(&engine, testFileUrl("bindingLoop.qml"));
-    QString warning = component.url().toString() + ":5:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
+    QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -7518,6 +7519,18 @@ void tst_qqmlecmascript::singletonWithEnum()
     QVariant prop = obj->property("testValue");
     QVERIFY(prop.type() == QVariant::Int);
     QCOMPARE(prop.toInt(), int(SingletonWithEnum::TestValue));
+}
+
+void tst_qqmlecmascript::lazyBindingEvaluation()
+{
+   QQmlComponent component(&engine, testFileUrl("lazyBindingEvaluation.qml"));
+   QScopedPointer<QObject> obj(component.create());
+   if (obj.isNull())
+       qDebug() << component.errors().first().toString();
+   QVERIFY(!obj.isNull());
+   QVariant prop = obj->property("arrayLength");
+   QVERIFY(prop.type() == QVariant::Int);
+   QCOMPARE(prop.toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

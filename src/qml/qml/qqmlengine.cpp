@@ -777,8 +777,8 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
     while (b && *b->m_mePtr && b->propertyIndex() != coreIndex)
         b = b->nextBinding();
 
-    if (b) {
-        b->m_mePtr = 0;
+    if (b && b->propertyIndex() == coreIndex) {
+        b->clear();
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                             QQmlPropertyPrivate::DontRemoveBinding);
     }
