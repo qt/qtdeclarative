@@ -155,6 +155,10 @@ struct QmlObject
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
 
+    // If set, then declarations for this object (and init bindings for these) should go into the
+    // specified object. Used for declarations inside group properties.
+    QmlObject *declarationsOverride;
+
     // caches to quickly find duplicates
     QSet<QString> propertyNames;
     QSet<QString> signalNames;
@@ -243,9 +247,9 @@ public:
     void accept(AST::Node *node);
 
     // returns index in _objects
-    int defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer);
-    int defineQMLObject(AST::UiObjectDefinition *node)
-    { return defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer); }
+    int defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride = 0);
+    int defineQMLObject(AST::UiObjectDefinition *node, QmlObject *declarationsOverride = 0)
+    { return defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(AST::UiQualifiedId *node);
     QStringRef asStringRef(AST::Node *node);
@@ -265,6 +269,8 @@ public:
     void appendBinding(AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
+
+    PoolList<Binding> *bindingsTarget() const;
 
     bool setId(AST::Statement *value);
 

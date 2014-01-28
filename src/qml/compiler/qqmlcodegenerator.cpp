@@ -77,6 +77,7 @@ void QmlObject::init(MemoryPool *pool, int typeNameIndex, int id, const AST::Sou
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
+    declarationsOverride = 0;
 }
 
 void QmlObject::dump(DebugStream &out)
@@ -222,7 +223,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
         int idx = defineQMLObject(node);
         appendBinding(node->qualifiedTypeNameId->identifierToken, emptyStringIndex, idx);
     } else {
-        int idx = defineQMLObject(/*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer);
+        int idx = defineQMLObject(/*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, /*declarations should go here*/_object);
         appendBinding(node->qualifiedTypeNameId, idx);
     }
     return false;
@@ -315,7 +316,7 @@ bool QQmlCodeGenerator::sanityCheckFunctionNames()
     return true;
 }
 
-int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer)
+int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride)
 {
     QmlObject *obj = New<QmlObject>();
     _objects.append(obj);
@@ -323,11 +324,15 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     qSwap(_object, obj);
 
     _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, location);
+    _object->declarationsOverride = declarationsOverride;
 
-    QSet<QString> propertyNames;
-    QSet<QString> signalNames;
+    // A new object is also a boundary for property declarations.
+    QmlProperty *declaration = 0;
+    qSwap(_propertyDeclaration, declaration);
 
     accept(initializer);
+
+    qSwap(_propertyDeclaration, declaration);
 
     sanityCheckFunctionNames();
 
@@ -515,6 +520,8 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);
 
+    QmlObject *declarationsTarget = _object->declarationsOverride ? _object->declarationsOverride : _object;
+
     if (node->type == AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
         QString signalName = node->name.toString();
@@ -590,7 +597,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         if (illegalNames.contains(signalName))
             COMPILE_EXCEPTION(node->identifierToken, tr("Illegal signal name"));
 
-        _object->qmlSignals->append(signal);
+        declarationsTarget->qmlSignals->append(signal);
     } else {
         const QStringRef &memberType = node->memberType;
         const QStringRef &name = node->name;
@@ -712,7 +719,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             qSwap(_propertyDeclaration, property);
         }
 
-        _object->properties->append(property);
+        declarationsTarget->properties->append(property);
 
         if (node->isDefaultMember) {
             if (_object->indexOfDefaultProperty != -1) {
@@ -747,7 +754,8 @@ bool QQmlCodeGenerator::visit(AST::UiSourceElement *node)
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
         f->index = _functions.size() - 1;
-        _object->functions->append(f);
+        QmlObject *functionDeclarationsTarget = _object->declarationsOverride ? _object->declarationsOverride : _object;
+        functionDeclarationsTarget->functions->append(f);
     } else {
         QQmlError error;
         error.setDescription(QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
@@ -882,7 +890,7 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
     setBindingValue(binding, value);
-    _object->bindings->append(binding);
+    bindingsTarget()->append(binding);
 }
 
 void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
@@ -918,7 +926,14 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
     binding->value.objectIndex = objectIndex;
-    _object->bindings->append(binding);
+    bindingsTarget()->append(binding);
+}
+
+PoolList<Binding> *QQmlCodeGenerator::bindingsTarget() const
+{
+    if (_propertyDeclaration && _object->declarationsOverride)
+        return _object->declarationsOverride->bindings;
+    return _object->bindings;
 }
 
 bool QQmlCodeGenerator::setId(AST::Statement *value)
@@ -1003,7 +1018,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         else
             binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
-        int objIndex = defineQMLObject(0, AST::SourceLocation(), 0);
+        int objIndex = defineQMLObject(0, AST::SourceLocation(), 0, 0);
         binding->value.objectIndex = objIndex;
 
         (*object)->bindings->append(binding);
