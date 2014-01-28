@@ -151,6 +151,167 @@ inline bool isBoolType(V4IR::Expr *e)
     return (e->type == V4IR::BoolType);
 }
 
+/*
+ * stack slot allocation:
+ *
+ * foreach bb do
+ *   foreach stmt do
+ *     if the current statement is not a phi-node:
+ *       purge ranges that end before the current statement
+ *       check for life ranges to activate, and if they don't have a stackslot associated then allocate one
+ *       renumber temps to stack
+ *     for phi nodes: check if all temps (src+dst) are assigned stack slots and marked as allocated
+ *     if it's a jump:
+ *       foreach phi node in the successor:
+ *         allocate slots for each temp (both sources and targets) if they don't have one allocated already
+ *         insert moves before the jump
+ */
+class AllocateStackSlots: protected ConvertTemps
+{
+    const QVector<V4IR::LifeTimeInterval> _intervals;
+    QVector<const V4IR::LifeTimeInterval *> _unhandled;
+    QVector<const V4IR::LifeTimeInterval *> _live;
+    QBitArray _slotIsInUse;
+    V4IR::Function *_function;
+
+public:
+    AllocateStackSlots(const QVector<V4IR::LifeTimeInterval> &intervals)
+        : _intervals(intervals)
+        , _slotIsInUse(intervals.size(), false)
+        , _function(0)
+    {
+        _live.reserve(8);
+        _unhandled.reserve(_intervals.size());
+        for (int i = _intervals.size() - 1; i >= 0; --i)
+            _unhandled.append(&_intervals.at(i));
+    }
+
+    void forFunction(V4IR::Function *function)
+    {
+        V4IR::Optimizer::showMeTheCode(function);
+        _function = function;
+        toStackSlots(function);
+
+//        QTextStream os(stdout, QIODevice::WriteOnly);
+//        os << "Frame layout:" << endl;
+//        foreach (int t, _stackSlotForTemp.keys()) {
+//            os << "\t" << t << " -> " << _stackSlotForTemp[t] << endl;
+//        }
+    }
+
+protected:
+    virtual int allocateFreeSlot()
+    {
+        for (int i = 0, ei = _slotIsInUse.size(); i != ei; ++i) {
+            if (!_slotIsInUse[i]) {
+                if (_nextUnusedStackSlot <= i) {
+                    Q_ASSERT(_nextUnusedStackSlot == i);
+                    _nextUnusedStackSlot = i + 1;
+                }
+                _slotIsInUse[i] = true;
+                return i;
+            }
+        }
+
+        Q_UNREACHABLE();
+        return -1;
+    }
+
+    virtual void process(V4IR::Stmt *s)
+    {
+        Q_ASSERT(s->id > 0);
+
+//        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
+
+        if (V4IR::Phi *phi = s->asPhi()) {
+            visitPhi(phi);
+        } else {
+            // purge ranges no longer alive:
+            for (int i = 0; i < _live.size(); ) {
+                const V4IR::LifeTimeInterval *lti = _live.at(i);
+                if (lti->end() < s->id) {
+//                    qDebug() << "\t - moving temp" << lti->temp().index << "to handled, freeing slot" << _stackSlotForTemp[lti->temp().index];
+                    _live.remove(i);
+                    Q_ASSERT(_slotIsInUse[_stackSlotForTemp[lti->temp().index]]);
+                    _slotIsInUse[_stackSlotForTemp[lti->temp().index]] = false;
+                    continue;
+                } else {
+                    ++i;
+                }
+            }
+
+            // active new ranges:
+            while (!_unhandled.isEmpty()) {
+                const V4IR::LifeTimeInterval *lti = _unhandled.last();
+                if (lti->start() > s->id)
+                    break; // we're done
+                Q_ASSERT(!_stackSlotForTemp.contains(lti->temp().index));
+                _stackSlotForTemp[lti->temp().index] = allocateFreeSlot();
+//                qDebug() << "\t - activating temp" << lti->temp().index << "on slot" << _stackSlotForTemp[lti->temp().index];
+                _live.append(lti);
+                _unhandled.removeLast();
+            }
+
+            s->accept(this);
+        }
+
+        if (V4IR::Jump *jump = s->asJump()) {
+            V4IR::MoveMapping moves;
+            foreach (V4IR::Stmt *succStmt, jump->target->statements) {
+                if (V4IR::Phi *phi = succStmt->asPhi()) {
+                    forceActivation(*phi->targetTemp);
+                    for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
+                        V4IR::Expr *e = phi->d->incoming[i];
+                        if (V4IR::Temp *t = e->asTemp()) {
+                            forceActivation(*t);
+                        }
+                        if (jump->target->in[i] == _currentBasicBlock)
+                            moves.add(phi->d->incoming[i], phi->targetTemp);
+                    }
+                } else {
+                    break;
+                }
+            }
+            moves.order();
+            QList<V4IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
+            foreach (V4IR::Move *move, newMoves)
+                move->accept(this);
+        }
+    }
+
+    void forceActivation(const V4IR::Temp &t)
+    {
+        if (_stackSlotForTemp.contains(t.index))
+            return;
+
+        int i = _unhandled.size() - 1;
+        for (; i >= 0; --i) {
+            const V4IR::LifeTimeInterval *lti = _unhandled[i];
+            if (lti->temp() == t) {
+                _live.append(lti);
+                _unhandled.remove(i);
+                break;
+            }
+        }
+        Q_ASSERT(i >= 0); // check that we always found the entry
+
+        _stackSlotForTemp[t.index] = allocateFreeSlot();
+//        qDebug() << "\t - force activating temp" << t.index << "on slot" << _stackSlotForTemp[t.index];
+    }
+
+    virtual void visitPhi(V4IR::Phi *phi)
+    {
+        Q_UNUSED(phi);
+#if !defined(QT_NO_DEBUG)
+        Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
+        Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
+        foreach (V4IR::Expr *e, phi->d->incoming) {
+            if (V4IR::Temp *t = e->asTemp())
+                Q_ASSERT(_stackSlotForTemp.contains(t->index));
+        }
+#endif // defined(QT_NO_DEBUG)
+    }
+};
 } // anonymous namespace
 
 InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
@@ -195,10 +356,19 @@ void InstructionSelection::run(int functionIndex)
     V4IR::Optimizer opt(_function);
     opt.run(qmlEngine);
     if (opt.isInSSA()) {
-        opt.convertOutOfSSA();
+        static const bool doStackSlotAllocation =
+                qgetenv("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION").isEmpty();
+
+        if (doStackSlotAllocation) {
+            AllocateStackSlots(opt.lifeRanges()).forFunction(_function);
+        } else {
+            opt.convertOutOfSSA();
+            ConvertTemps().toStackSlots(_function);
+        }
         opt.showMeTheCode(_function);
+    } else {
+        ConvertTemps().toStackSlots(_function);
     }
-    ConvertTemps().toStackSlots(_function);
 
     QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);

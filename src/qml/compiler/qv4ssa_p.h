@@ -188,7 +188,7 @@ class MoveMapping
 public:
     void add(Expr *from, Temp *to);
     void order();
-    void insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
+    QList<V4IR::Move *> insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
 
     void dump() const;
 

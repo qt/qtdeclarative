@@ -97,38 +97,52 @@ inline QV4::Primitive convertToValue(V4IR::Const *c)
 
 class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
 {
-    int _nextFreeStackSlot;
-    QHash<V4IR::Temp, int> _stackSlotForTemp;
-
     void renumber(V4IR::Temp *t)
     {
         if (t->kind != V4IR::Temp::VirtualRegister)
             return;
 
-        int stackSlot = _stackSlotForTemp.value(*t, -1);
+        int stackSlot = _stackSlotForTemp.value(t->index, -1);
         if (stackSlot == -1) {
-            stackSlot = _nextFreeStackSlot++;
-            _stackSlotForTemp[*t] = stackSlot;
+            stackSlot = allocateFreeSlot();
+            _stackSlotForTemp[t->index] = stackSlot;
         }
 
         t->kind = V4IR::Temp::StackSlot;
         t->index = stackSlot;
     }
 
+protected:
+    int _nextUnusedStackSlot;
+    QHash<int, int> _stackSlotForTemp;
+    V4IR::BasicBlock *_currentBasicBlock;
+    virtual int allocateFreeSlot()
+    {
+        return _nextUnusedStackSlot++;
+    }
+
+    virtual void process(V4IR::Stmt *s)
+    {
+        s->accept(this);
+    }
+
 public:
     ConvertTemps()
-        : _nextFreeStackSlot(0)
+        : _nextUnusedStackSlot(0)
+        , _currentBasicBlock(0)
     {}
 
     void toStackSlots(V4IR::Function *function)
     {
         _stackSlotForTemp.reserve(function->tempCount);
 
-        foreach (V4IR::BasicBlock *bb, function->basicBlocks)
+        foreach (V4IR::BasicBlock *bb, function->basicBlocks) {
+            _currentBasicBlock = bb;
             foreach (V4IR::Stmt *s, bb->statements)
-                s->accept(this);
+                process(s);
+        }
 
-        function->tempCount = _nextFreeStackSlot;
+        function->tempCount = _nextUnusedStackSlot;
     }
 
 protected:

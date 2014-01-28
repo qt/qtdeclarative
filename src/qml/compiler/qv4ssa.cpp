@@ -3994,15 +3994,21 @@ void MoveMapping::order()
     qSwap(_moves, output);
 }
 
-void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) const
+QList<V4IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) const
 {
+    QList<V4IR::Move *> newMoves;
+    newMoves.reserve(_moves.size());
+
     int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
-        move->init(m.to, m.from);
+        move->init(clone(m.to, function), clone(m.from, function));
         move->swap = m.needsSwap;
         bb->statements.insert(insertionPoint++, move);
+        newMoves.append(move);
     }
+
+    return newMoves;
 }
 
 void MoveMapping::dump() const
