@@ -3552,7 +3552,13 @@ private:
         for (int i = bb->statements.size() - 1; i >= 0; --i) {
             Stmt *s = bb->statements[i];
             if (Phi *phi = s->asPhi()) {
-                live.remove(*phi->targetTemp);
+                LiveRegs::iterator it = live.find(*phi->targetTemp);
+                if (it == live.end()) {
+                    // a phi node target that is only defined, but never used
+                    _intervals[*phi->targetTemp].setFrom(s);
+                } else {
+                    live.erase(it);
+                }
                 continue;
             }
             collector.collect(s);
