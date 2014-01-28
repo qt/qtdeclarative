@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -316,7 +317,7 @@ void Updater::updateStates(QSGNode *n)
 
 void Updater::visitNode(Node *n)
 {
-    if (m_added == 0 && n->dirtyState == 0 && m_force_update == 0 && m_transformChange == 0)
+    if (m_added == 0 && n->dirtyState == 0 && m_force_update == 0 && m_transformChange == 0 && m_opacityChange == 0)
         return;
 
     int count = m_added;
@@ -393,13 +394,10 @@ void Updater::visitOpacityNode(Node *n)
         if (was != is) {
             renderer->m_rebuild = Renderer::FullRebuild;
             n->isOpaque = is;
-        } else if (!is) {
-            renderer->invalidateAlphaBatchesForRoot(m_roots.last());
-            renderer->m_rebuild |= Renderer::BuildBatches;
         }
-        ++m_force_update;
+        ++m_opacityChange;
         SHADOWNODE_TRAVERSE(n) visitNode(*child);
-        --m_force_update;
+        --m_opacityChange;
     } else {
         if (m_added > 0)
             n->isOpaque = on->opacity() > OPAQUE_LIMIT;
@@ -490,9 +488,16 @@ void Updater::visitGeometryNode(Node *n)
         } else {
             renderer->m_rebuild |= Renderer::FullRebuild;
         }
-    } else if (m_transformChange) {
-        Element *e = n->element();
-        e->translateOnlyToRoot = QMatrix4x4_Accessor::isTranslate(*gn->matrix());
+    } else {
+        if (m_transformChange) {
+            Element *e = n->element();
+            e->translateOnlyToRoot = QMatrix4x4_Accessor::isTranslate(*gn->matrix());
+        }
+        if (m_opacityChange) {
+            Element *e = n->element();
+            if (e->batch)
+                renderer->invalidateBatchAndOverlappingRenderOrders(e->batch);
+        }
     }
 
     SHADOWNODE_TRAVERSE(n) visitNode(*child);
@@ -969,12 +974,7 @@ void Renderer::nodeWasTransformed(Node *node, int *vertexCount)
             e->boundsComputed = false;
             if (e->batch) {
                 if (!e->batch->isOpaque) {
-                    if (e->root) {
-                        m_taggedRoots << e->root;
-                        m_rebuild |= BuildRenderListsForTaggedRoots;
-                    } else {
-                        m_rebuild |= FullRebuild;
-                    }
+                    invalidateBatchAndOverlappingRenderOrders(e->batch);
                 } else if (e->batch->merged) {
                     e->batch->needsUpload = true;
                 }
@@ -1174,15 +1174,8 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
             e->boundsComputed = false;
             Batch *b = e->batch;
             if (b) {
-                if (!e->batch->geometryWasChanged(gn)) {
-                    m_rebuild |= Renderer::FullRebuild;
-                } else if (!b->isOpaque) {
-                    if (e->root) {
-                        m_taggedRoots << e->root;
-                        m_rebuild |= BuildRenderListsForTaggedRoots;
-                    } else {
-                        m_rebuild |= FullRebuild;
-                    }
+                if (!e->batch->geometryWasChanged(gn) || !e->batch->isOpaque) {
+                    invalidateBatchAndOverlappingRenderOrders(e->batch);
                 } else {
                     b->needsUpload = true;
                 }
@@ -1195,7 +1188,7 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         if (e) {
             if (e->batch) {
                 if (!e->batch->isMaterialCompatible(e))
-                    m_rebuild = Renderer::FullRebuild;
+                    invalidateBatchAndOverlappingRenderOrders(e->batch);
             } else {
                 m_rebuild |= Renderer::BuildBatches;
             }
@@ -1425,13 +1418,26 @@ void Renderer::buildRenderListsFromScratch()
     buildRenderLists(rootNode());
 }
 
-void Renderer::invalidateAlphaBatchesForRoot(Node *root)
+void Renderer::invalidateBatchAndOverlappingRenderOrders(Batch *batch)
 {
+    Q_ASSERT(batch);
+    Q_ASSERT(batch->first);
+
+    int first = batch->first->order;
+    int last = batch->lastOrderInBatch;
+    batch->invalidate();
+
     for (int i=0; i<m_alphaBatches.size(); ++i) {
         Batch *b = m_alphaBatches.at(i);
-        if (b->root == root || root == 0)
-            b->invalidate();
+        if (b->first) {
+            int bf = b->first->order;
+            int bl = b->lastOrderInBatch;
+            if (bl > first && bf < last)
+                b->invalidate();
+        }
     }
+
+    m_rebuild |= BuildBatches;
 }
 
 /* Clean up batches by making it a consecutive list of "valid"
@@ -1491,6 +1497,8 @@ void Renderer::prepareOpaqueBatches()
                 next = ej;
             }
         }
+
+        batch->lastOrderInBatch = next->order;
     }
 }
 
@@ -1593,6 +1601,8 @@ void Renderer::prepareAlphaBatches()
                 overlapBounds |= ej->bounds;
             }
         }
+
+        batch->lastOrderInBatch = next->order;
     }
 
 
@@ -2324,7 +2334,6 @@ void Renderer::render()
             else if (m_rebuild & BuildBatches)
                 type += " batches";
         }
-
 
         qDebug() << "Renderer::render()" << this << type;
     }

@@ -264,6 +264,8 @@ struct Batch
     int vertexCount;
     int indexCount;
 
+    int lastOrderInBatch;
+
     uint isOpaque : 1;
     uint needsUpload : 1;
     uint merged : 1;
@@ -351,6 +353,7 @@ private:
 
     int m_added;
     int m_transformChange;
+    int m_opacityChange;
 
     QMatrix4x4 m_identityMatrix;
 };
@@ -422,7 +425,7 @@ private:
     void prepareOpaqueBatches();
     bool checkOverlap(int first, int last, const Rect &bounds);
     void prepareAlphaBatches();
-    void invalidateAlphaBatchesForRoot(Node *root);
+    void invalidateBatchAndOverlappingRenderOrders(Batch *batch);
 
     void uploadBatch(Batch *b);
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, quint16 *iBase, int *indexCount);
