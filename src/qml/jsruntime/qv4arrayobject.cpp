@@ -308,7 +308,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         return Encode(newLen);
     }
 
-    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayDataLen <= len && (instance->flags & SimpleArray)) {
         for (int i = 0; i < ctx->callData->argc; ++i) {
             if (!instance->sparseArray) {
                 if (len >= instance->arrayAlloc)

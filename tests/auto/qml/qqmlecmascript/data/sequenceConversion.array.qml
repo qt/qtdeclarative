@@ -141,6 +141,15 @@ Item {
         expected = 7;
         if (poppedVal != expected) success = false;
 
+        // push
+        msco.stringListProperty = [ "one", "two" ]
+        msco.stringListProperty.push("three")
+        expected = [ "one", "two", "three" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        msco.stringListProperty.push("four", "five")
+        expected = [ "one", "two", "three", "four", "five" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+
         // concat
         msco.stringListProperty = [ "one", "two" ]
         stringList = [ "hello", "world" ]
