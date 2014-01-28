@@ -1193,8 +1193,13 @@ QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::Comp
 bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
-    if (isComponent(objectIndex))
-        return true;
+
+    if (isComponent(objectIndex)) {
+        Q_ASSERT(obj->nBindings == 1);
+        const QV4::CompiledData::Binding *componentBinding = obj->bindingTable();
+        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        return validateObject(componentBinding->value.objectIndex, componentBinding);
+    }
 
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
