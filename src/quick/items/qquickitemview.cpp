@@ -66,6 +66,7 @@ FxViewItem::~FxViewItem()
 {
     delete transitionableItem;
     if (ownItem && item) {
+        trackGeometry(false);
         item->setParentItem(0);
         item->deleteLater();
         item = 0;

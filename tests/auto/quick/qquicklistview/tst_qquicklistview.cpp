@@ -218,6 +218,8 @@ private slots:
 
     void highlightItemGeometryChanges();
 
+    void QTBUG_36481();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -7056,6 +7058,15 @@ void tst_QQuickListView::highlightItemGeometryChanges()
         QTRY_COMPARE(listview->highlightItem()->width(), qreal(100 + i * 20));
         QTRY_COMPARE(listview->highlightItem()->height(), qreal(100 + i * 10));
     }
+}
+
+void tst_QQuickListView::QTBUG_36481()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("headerCrash.qml"));
+
+    // just testing that we don't crash when creating
+    QScopedPointer<QObject> object(component.create());
 }
 
 QTEST_MAIN(tst_QQuickListView)
