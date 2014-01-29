@@ -27,7 +27,7 @@
 /*!
 \page qtqml-modules-qmldir.html
 \title Module Definition qmldir Files
-\brief How to write a qmldir file which defines a QML module
+\brief Defines a QML module
 
 There are two distinct types of \c qmldir files:
 \list
@@ -177,6 +177,18 @@ plugin <Name> [<Path>]
             \code
 plugin MyPluginLibrary
            \endcode
+    \row
+        \li C++ Plugin Class
+        \li
+            \code
+              classname <C++ plugin class>
+            \endcode
+        \li Provides the class name of the C++ plugin used by the module.
+
+            This information is required for all the QML modules that depend
+            on a C++ plugin for additional functionality. Qt Quick applications
+            built with static linking cannot resolve the module imports without
+            this information.
 
     \row
         \li Type Information Description File Declaration
