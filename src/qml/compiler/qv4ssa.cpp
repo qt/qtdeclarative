@@ -77,7 +77,8 @@ using namespace V4IR;
 
 namespace {
 
-QTextStream qout(stdout, QIODevice::WriteOnly);
+Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
+#define qout *qout()
 
 void showMeTheCode(Function *function)
 {
