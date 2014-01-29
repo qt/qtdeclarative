@@ -547,8 +547,8 @@ bool QQmlDebugServer::addService(QQmlDebugService *service)
 {
     Q_D(QQmlDebugServer);
 
-    // to be executed in GUI thread
-    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+    // to be executed outside of debugger thread
+    Q_ASSERT(QThread::currentThread() != thread());
 
     {
         QWriteLocker lock(&d->pluginsLock);
@@ -571,8 +571,8 @@ bool QQmlDebugServer::removeService(QQmlDebugService *service)
 {
     Q_D(QQmlDebugServer);
 
-    // to be executed in GUI thread
-    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+    // to be executed outside of debugger thread
+    Q_ASSERT(QThread::currentThread() != thread());
 
     {
         QWriteLocker lock(&d->pluginsLock);
