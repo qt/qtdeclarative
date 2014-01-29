@@ -406,9 +406,9 @@ void tst_QQmlProfilerService::pixmapCacheData()
     m_client->setTraceState(true);
     QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
 
-    QVERIFY(m_process->output().indexOf(QLatin1String("image loaded")) != -1 ||
-            m_process->output().indexOf(QLatin1String("image error")) != -1 );
-
+    while (m_process->output().indexOf(QLatin1String("image loaded")) == -1 &&
+           m_process->output().indexOf(QLatin1String("image error")) == -1)
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
 
     m_client->setTraceState(false);
 
