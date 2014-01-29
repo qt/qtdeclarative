@@ -222,7 +222,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
         int idx = defineQMLObject(node);
         appendBinding(node->qualifiedTypeNameId->identifierToken, emptyStringIndex, idx);
     } else {
-        int idx = defineQMLObject(/*qualfied type name id*/0, node->initializer);
+        int idx = defineQMLObject(/*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer);
         appendBinding(node->qualifiedTypeNameId, idx);
     }
     return false;
@@ -230,7 +230,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
 
 bool QQmlCodeGenerator::visit(AST::UiObjectBinding *node)
 {
-    int idx = defineQMLObject(node->qualifiedTypeNameId, node->initializer);
+    int idx = defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer);
     appendBinding(node->qualifiedId, idx, node->hasOnToken);
     return false;
 }
@@ -315,17 +315,14 @@ bool QQmlCodeGenerator::sanityCheckFunctionNames()
     return true;
 }
 
-int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, AST::UiObjectInitializer *initializer)
+int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer)
 {
     QmlObject *obj = New<QmlObject>();
     _objects.append(obj);
     const int objectIndex = _objects.size() - 1;
     qSwap(_object, obj);
 
-    AST::SourceLocation loc;
-    if (qualifiedTypeNameId)
-        loc = qualifiedTypeNameId->firstSourceLocation();
-    _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, loc);
+    _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, location);
 
     QSet<QString> propertyNames;
     QSet<QString> signalNames;
@@ -1006,7 +1003,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         else
             binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
-        int objIndex = defineQMLObject(0, 0);
+        int objIndex = defineQMLObject(0, AST::SourceLocation(), 0);
         binding->value.objectIndex = objIndex;
 
         (*object)->bindings->append(binding);

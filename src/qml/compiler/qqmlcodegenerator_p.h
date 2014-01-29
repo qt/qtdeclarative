@@ -243,9 +243,9 @@ public:
     void accept(AST::Node *node);
 
     // returns index in _objects
-    int defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, AST::UiObjectInitializer *initializer);
+    int defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer);
     int defineQMLObject(AST::UiObjectDefinition *node)
-    { return defineQMLObject(node->qualifiedTypeNameId, node->initializer); }
+    { return defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer); }
 
     static QString asString(AST::UiQualifiedId *node);
     QStringRef asStringRef(AST::Node *node);
