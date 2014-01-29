@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickTransformPrivate;
-class QQuickTransform : public QObject
+class Q_QUICK_EXPORT QQuickTransform : public QObject
 {
     Q_OBJECT
 public:
