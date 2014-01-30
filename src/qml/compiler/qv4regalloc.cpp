@@ -111,6 +111,13 @@ public:
         return false;
     }
 
+    bool isUsedAt(const Temp &t, int position) {
+        foreach (const Use &use, uses(t))
+            if (use.pos == position)
+                return true;
+        return false;
+    }
+
     int def(const Temp &t) const {
         Q_ASSERT(_defs[t].isValid());
         return _defs[t].defStmt;
@@ -743,17 +750,17 @@ private:
             os << "Intervals live at the start of L" << bb->index << ":" << endl;
             if (_liveAtStart[bb].isEmpty())
                 os << "\t(none)" << endl;
-            foreach (const LifeTimeInterval &i, _liveAtStart[bb]) {
+            foreach (const LifeTimeInterval *i, _liveAtStart[bb]) {
                 os << "\t";
-                i.dump(os);
+                i->dump(os);
                 os << endl;
             }
             os << "Intervals live at the end of L" << bb->index << ":" << endl;
             if (_liveAtEnd[bb].isEmpty())
                 os << "\t(none)" << endl;
-            foreach (const LifeTimeInterval &i, _liveAtEnd[bb]) {
+            foreach (const LifeTimeInterval *i, _liveAtEnd[bb]) {
                 os << "\t";
-                i.dump(os);
+                i->dump(os);
                 os << endl;
             }
 #endif
@@ -1066,6 +1073,8 @@ RegisterAllocator::RegisterAllocator(const QVector<int> &normalRegisters, const 
     : _normalRegisters(normalRegisters)
     , _fpRegisters(fpRegisters)
 {
+    Q_ASSERT(normalRegisters.size() >= 2);
+    Q_ASSERT(fpRegisters.size() >= 2);
 }
 
 RegisterAllocator::~RegisterAllocator()
@@ -1413,9 +1422,20 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
 #endif // DEBUG_REGALLOC
         current.setReg(reg);
         _lastAssignedRegister.insert(current.temp(), reg);
-        Q_ASSERT(nextUseRangeForReg[reg]);
-        Q_ASSERT(!nextUseRangeForReg[reg]->isFixedInterval());
-        split(*nextUseRangeForReg[reg], position);
+        LifeTimeInterval *nextUse = nextUseRangeForReg[reg];
+        Q_ASSERT(nextUse);
+        Q_ASSERT(!nextUse->isFixedInterval());
+
+        if (_info->isUsedAt(nextUse->temp(), position)) {
+            Q_ASSERT(!_info->isUsedAt(current.temp(), position));
+            // the register is used (as an incoming parameter) at the current position, so split
+            // the interval immediately after the (use at the) current position
+            split(*nextUse, position + 1);
+        } else {
+            // the register was used before the current position
+            split(*nextUse, position);
+        }
+
         splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
         // make sure that current does not intersect with the fixed interval for reg
