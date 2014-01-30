@@ -722,6 +722,30 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             return false;
         }
 
+        // Assigning object to signal property?
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
+            if (!property->isFunction()) {
+                recordError(binding->valueLocation, tr("Cannot assign an object to signal property %1").arg(property->name(_qobject)));
+                return false;
+            }
+            QMetaMethod method = QQmlMetaType::defaultMethod(createdSubObject);
+            if (!method.isValid()) {
+                recordError(binding->valueLocation, tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(createdSubObject->metaObject()->className())));
+                return false;
+            }
+
+            QMetaMethod signalMethod = _qobject->metaObject()->method(property->coreIndex);
+            if (!QMetaObject::checkConnectArgs(signalMethod, method)) {
+                recordError(binding->valueLocation, tr("Cannot connect mismatched signal/slot %1 %vs. %2")
+                              .arg(QString::fromLatin1(method.methodSignature().constData()))
+                              .arg(QString::fromLatin1(signalMethod.methodSignature().constData())));
+                return false;
+            }
+
+            QQmlPropertyPrivate::connect(_qobject, property->coreIndex, createdSubObject, method.methodIndex());
+            return true;
+        }
+
         QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
                                                                    QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;

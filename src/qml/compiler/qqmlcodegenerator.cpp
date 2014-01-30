@@ -1794,6 +1794,14 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             parameters = entry.value();
         }
 
+        binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
+
+        // Binding object to signal means connect the signal to the object's default method.
+        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+            binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerObject;
+            continue;
+        }
+
         if (binding->type != QV4::CompiledData::Binding::Type_Script) {
             COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
         }
@@ -1825,7 +1833,6 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         parsedQML->functions[binding->value.compiledScriptIndex] = functionDeclaration;
         binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
-        binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
     }
     return true;
 }

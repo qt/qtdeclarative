@@ -831,7 +831,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
     for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
-        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
             continue;
 
         const QtQml::QmlObject *targetObject = qmlObjects->at(binding->value.objectIndex);
@@ -1259,7 +1259,8 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         bool notInRevision = false;
         QQmlPropertyData *pd = 0;
         if (!name.isEmpty()) {
-            if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
+                || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
                 pd = propertyResolver.signal(name, &notInRevision);
             else
                 pd = propertyResolver.property(name, &notInRevision);
@@ -1287,6 +1288,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
                 && !(binding->flags & QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration)
                 && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+                && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
                 ) {
                 recordError(binding->valueLocation, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                 return false;
@@ -1609,6 +1611,8 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
         return true;
     } else if (property->isQList()) {
         // ### TODO: list error handling
+        return true;
+    } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return true;
     } else if (QQmlValueTypeFactory::isValueType(property->propType)) {
         recordError(binding->location, tr("Unexpected object assignment"));
