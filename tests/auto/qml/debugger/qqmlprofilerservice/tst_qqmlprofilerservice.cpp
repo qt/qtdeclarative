@@ -413,7 +413,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
     m_client->setTraceState(false);
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
-    QVERIFY(m_client->traceMessages.count());
+    QVERIFY(m_client->traceMessages.count() >= 20);
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
@@ -486,6 +486,7 @@ void tst_QQmlProfilerService::profileOnExit()
     m_client->setTraceState(true);
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+    QVERIFY(m_client->traceMessages.count() >= 2);
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
@@ -504,6 +505,7 @@ void tst_QQmlProfilerService::controlFromJS()
 
     m_client->setTraceState(false);
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+    QVERIFY(m_client->traceMessages.count() >= 2);
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
@@ -526,6 +528,7 @@ void tst_QQmlProfilerService::signalSourceLocation()
     m_client->setTraceState(false);
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
+    QVERIFY(m_client->traceMessages.count() >= 17);
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
