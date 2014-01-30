@@ -527,7 +527,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         QString signalName = node->name.toString();
         signal->nameIndex = registerString(signalName);
 
-        AST::SourceLocation loc = node->firstSourceLocation();
+        AST::SourceLocation loc = node->typeToken;
         signal->location.line = loc.startLine;
         signal->location.column = loc.startColumn;
 
