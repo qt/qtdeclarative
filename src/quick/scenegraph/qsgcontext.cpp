@@ -174,6 +174,11 @@ QSGContext::~QSGContext()
 {
 }
 
+QSGRenderContext *QSGContext::createRenderContext()
+{
+    return new QSGRenderContext(this);
+}
+
 /*!
  * This function is used by the Qt WebEngine to set up context sharing
  * across multiple windows. Do not use it for any other purpose.

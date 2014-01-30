@@ -155,6 +155,7 @@ public:
 
     virtual void renderContextInitialized(QSGRenderContext *renderContext);
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
+    virtual QSGRenderContext *createRenderContext();
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

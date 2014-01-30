@@ -213,7 +213,7 @@ QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     , eventPending(false)
 {
     sg = QSGContext::createDefaultContext();
-    rc = new QSGRenderContext(sg);
+    rc = sg->createRenderContext();
 }
 
 QSGGuiThreadRenderLoop::~QSGGuiThreadRenderLoop()

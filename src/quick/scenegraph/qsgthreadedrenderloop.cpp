@@ -709,7 +709,7 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
 
 QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) const
 {
-    return new QSGRenderContext(sg);
+    return sg->createRenderContext();
 }
 
 void QSGThreadedRenderLoop::maybePostPolishRequest(Window *w)
