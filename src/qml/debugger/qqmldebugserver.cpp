@@ -56,6 +56,17 @@
 
 QT_BEGIN_NAMESPACE
 
+// We can't friend the Q_GLOBAL_STATIC to have the constructor available so we need a little
+// workaround here. Using this wrapper we can also make QQmlEnginePrivate's cleanup() available to
+// qAddPostRoutine(). We can't do the cleanup in the destructor because we need a  QApplication to
+// be available when stopping the plugins.
+struct QQmlDebugServerInstanceWrapper {
+    QQmlDebugServer m_instance;
+    void cleanup();
+};
+
+Q_GLOBAL_STATIC(QQmlDebugServerInstanceWrapper, debugServerInstance)
+
 /*
   QQmlDebug Protocol (Version 1):
 
@@ -93,6 +104,7 @@ public:
     QQmlDebugServerPrivate();
 
     void advertisePlugins();
+    void cleanup();
     QQmlDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
 
     QQmlDebugServerConnection *connection;
@@ -114,6 +126,9 @@ private:
                                QQmlDebugService::State newState);
     void _q_sendMessages(const QList<QByteArray> &messages);
 };
+
+void QQmlDebugServerInstanceWrapper::cleanup()
+{ m_instance.d_func()->cleanup(); }
 
 class QQmlDebugServerThread : public QThread
 {
@@ -174,6 +189,35 @@ void QQmlDebugServerPrivate::advertisePlugins()
     QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
 }
 
+void QQmlDebugServerPrivate::cleanup()
+{
+    Q_Q(QQmlDebugServer);
+    {
+        QReadLocker lock(&pluginsLock);
+        foreach (QQmlDebugService *service, plugins.values()) {
+            changeServiceStateCalls.ref();
+            QMetaObject::invokeMethod(q, "_q_changeServiceState", Qt::QueuedConnection,
+                                      Q_ARG(QString, service->name()),
+                                      Q_ARG(QQmlDebugService::State, QQmlDebugService::NotConnected));
+        }
+    }
+
+    // Wait for changeServiceState calls to finish
+    // (while running an event loop because some services
+    // might again use slots to execute stuff in the GUI thread)
+    QEventLoop loop;
+    while (!changeServiceStateCalls.testAndSetOrdered(0, 0))
+        loop.processEvents();
+
+    // Stop the thread while the application is still there.
+    if (thread) {
+        thread->exit();
+        thread->wait();
+        delete thread;
+        thread = 0;
+    }
+}
+
 QQmlDebugServerConnection *QQmlDebugServerPrivate::loadConnectionPlugin(
         const QString &pluginName)
 {
@@ -222,11 +266,13 @@ QQmlDebugServerConnection *QQmlDebugServerPrivate::loadConnectionPlugin(
 
 void QQmlDebugServerThread::run()
 {
-    QQmlDebugServer *server = QQmlDebugServer::instance();
+    QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
+    Q_ASSERT_X(wrapper != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
+    QQmlDebugServer *server = &wrapper->m_instance;
     QQmlDebugServerConnection *connection
             = server->d_func()->loadConnectionPlugin(m_pluginName);
     if (connection) {
-        connection->setServer(QQmlDebugServer::instance());
+        connection->setServer(server);
         connection->setPortRange(m_portFrom, m_portTo, m_block, m_hostAddress);
     } else {
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
@@ -255,112 +301,107 @@ bool QQmlDebugServer::blockingMode() const
     return d->blockingMode;
 }
 
-static QQmlDebugServer *qQmlDebugServer = 0;
-
+QQmlDebugServer *QQmlDebugServer::instance()
+{
+    QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
+    if (wrapper && wrapper->m_instance.d_func()->thread) {
+        QQmlDebugServer *ret = &(wrapper->m_instance);
+        QQmlDebugServerPrivate *d = ret->d_func();
+        QMutexLocker locker(&d->helloMutex);
+        if (d->blockingMode && !d->gotHello)
+            d->helloCondition.wait(&d->helloMutex);
+        return ret;
+    } else {
+        return 0;
+    }
+}
 
 static void cleanup()
 {
-    delete qQmlDebugServer;
-    qQmlDebugServer = 0;
+    QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
+    if (wrapper)
+        wrapper->cleanup();
 }
 
-QQmlDebugServer *QQmlDebugServer::instance()
-{
-    static bool commandLineTested = false;
-
-    if (!commandLineTested) {
-        commandLineTested = true;
-
-        QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-#ifndef QT_QML_NO_DEBUGGER
-        // ### remove port definition when protocol is changed
-        int portFrom = 0;
-        int portTo = 0;
-        bool block = false;
-        bool ok = false;
-        QString hostAddress;
-
-        // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
-        if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-            if (!QQmlEnginePrivate::qml_debugging_enabled) {
-                qWarning() << QString(QLatin1String(
-                                  "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                  "Debugging has not been enabled.")).arg(
-                                  appD->qmljsDebugArgumentsString());
-                return 0;
-            }
-
-            QString pluginName;
-            QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
-                                                                    .split(QLatin1Char(','));
-            QStringList::const_iterator argsItEnd = lstjsDebugArguments.end();
-            QStringList::const_iterator argsIt = lstjsDebugArguments.begin();
-            for (; argsIt != argsItEnd; ++argsIt) {
-                const QString strArgument = *argsIt;
-                if (strArgument.startsWith(QLatin1String("port:"))) {
-                    pluginName = QLatin1String("qmldbg_tcp");
-                    portFrom = strArgument.mid(5).toInt(&ok);
-                    portTo = portFrom;
-                    QStringList::const_iterator argsNext = argsIt + 1;
-                    if (argsNext == argsItEnd)
-                        break;
-                    const QString nextArgument = *argsNext;
-                    if (ok && nextArgument.contains(QRegExp(QStringLiteral("^\\s*\\d+\\s*$")))) {
-                        portTo = nextArgument.toInt(&ok);
-                        ++argsIt;
-                    }
-                } else if (strArgument.startsWith(QLatin1String("host:"))) {
-                    hostAddress = strArgument.mid(5);
-                } else if (strArgument == QLatin1String("block")) {
-                    block = true;
-                } else {
-                    qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
-                                                      "detected. Ignoring the same.")
-                                                       .arg(strArgument);
-                }
-            }
-
-            if (ok) {
-                qQmlDebugServer = new QQmlDebugServer();
-                QQmlDebugServerThread *thread = new QQmlDebugServerThread;
-                qQmlDebugServer->d_func()->thread = thread;
-                qQmlDebugServer->moveToThread(thread);
-                thread->setPluginName(pluginName);
-                thread->setPortRange(portFrom, portTo, block, hostAddress);
-
-                QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
-                d->blockingMode = block;
-
-                QMutexLocker locker(&d->helloMutex);
-                thread->start();
-
-                if (d->blockingMode)
-                    d->helloCondition.wait(&d->helloMutex);
-
-            } else {
-                qWarning() << QString(QLatin1String(
-                                  "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                  "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
-                                  "<ip address>][,block]")).arg(appD->qmljsDebugArgumentsString());
-            }
-        }
-#else
-        if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-            qWarning() << QString(QLatin1String(
-                         "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                         "QtQml is not configured for debugging.")).arg(
-                         appD->qmljsDebugArgumentsString());
-        }
-#endif
-    }
-
-    return qQmlDebugServer;
-}
 
 QQmlDebugServer::QQmlDebugServer()
     : QObject(*(new QQmlDebugServerPrivate))
 {
-    qAddPostRoutine(cleanup);
+    QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
+#ifndef QT_QML_NO_DEBUGGER
+    // ### remove port definition when protocol is changed
+    int portFrom = 0;
+    int portTo = 0;
+    bool block = false;
+    bool ok = false;
+    QString hostAddress;
+
+    // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
+    if (!appD->qmljsDebugArgumentsString().isEmpty()) {
+        if (!QQmlEnginePrivate::qml_debugging_enabled) {
+            qWarning() << QString(QLatin1String(
+                              "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
+                              "Debugging has not been enabled.")).arg(
+                              appD->qmljsDebugArgumentsString());
+            return;
+        }
+
+        QString pluginName;
+        QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
+                                                                .split(QLatin1Char(','));
+        QStringList::const_iterator argsItEnd = lstjsDebugArguments.end();
+        QStringList::const_iterator argsIt = lstjsDebugArguments.begin();
+        for (; argsIt != argsItEnd; ++argsIt) {
+            const QString strArgument = *argsIt;
+            if (strArgument.startsWith(QLatin1String("port:"))) {
+                pluginName = QLatin1String("qmldbg_tcp");
+                portFrom = strArgument.mid(5).toInt(&ok);
+                portTo = portFrom;
+                QStringList::const_iterator argsNext = argsIt + 1;
+                if (argsNext == argsItEnd)
+                    break;
+                const QString nextArgument = *argsNext;
+                if (ok && nextArgument.contains(QRegExp(QStringLiteral("^\\s*\\d+\\s*$")))) {
+                    portTo = nextArgument.toInt(&ok);
+                    ++argsIt;
+                }
+            } else if (strArgument.startsWith(QLatin1String("host:"))) {
+                hostAddress = strArgument.mid(5);
+            } else if (strArgument == QLatin1String("block")) {
+                block = true;
+            } else {
+                qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
+                                                  "detected. Ignoring the same.")
+                                                   .arg(strArgument);
+            }
+        }
+
+        if (ok) {
+            qAddPostRoutine(cleanup);
+            Q_D(QQmlDebugServer);
+            d->thread = new QQmlDebugServerThread;
+            moveToThread(d->thread);
+            d->thread->setPluginName(pluginName);
+            d->thread->setPortRange(portFrom, portTo, block, hostAddress);
+
+            d->blockingMode = block;
+            d->thread->start();
+
+        } else {
+            qWarning() << QString(QLatin1String(
+                              "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
+                              "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
+                              "<ip address>][,block]")).arg(appD->qmljsDebugArgumentsString());
+        }
+    }
+#else
+    if (!appD->qmljsDebugArgumentsString().isEmpty()) {
+        qWarning() << QString(QLatin1String(
+                     "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
+                     "QtQml is not configured for debugging.")).arg(
+                     appD->qmljsDebugArgumentsString());
+    }
+#endif
 }
 
 // called from GUI thread!
@@ -368,28 +409,7 @@ QQmlDebugServer::~QQmlDebugServer()
 {
     Q_D(QQmlDebugServer);
 
-    {
-        QReadLocker lock(&d->pluginsLock);
-        foreach (QQmlDebugService *service, d->plugins.values()) {
-            d->changeServiceStateCalls.ref();
-            QMetaObject::invokeMethod(this, "_q_changeServiceState", Qt::QueuedConnection,
-                                      Q_ARG(QString, service->name()),
-                                      Q_ARG(QQmlDebugService::State, QQmlDebugService::NotConnected));
-        }
-    }
-
-    // Wait for changeServiceState calls to finish
-    // (while running an event loop because some services
-    // might again use slots to execute stuff in the GUI thread)
-    QEventLoop loop;
-    while (!d->changeServiceStateCalls.testAndSetOrdered(0, 0))
-        loop.processEvents();
-
-    if (d->thread) {
-        d->thread->exit();
-        d->thread->wait();
-        delete d->thread;
-    }
+    delete d->thread;
     delete d->connection;
 }
 
@@ -438,6 +458,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             }
             d->connection->send(QList<QByteArray>() << helloAnswer);
 
+            QMutexLocker helloLock(&d->helloMutex);
             d->gotHello = true;
 
             QReadLocker lock(&d->pluginsLock);
@@ -450,7 +471,6 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 d->_q_changeServiceState(iter.value()->name(), newState);
             }
 
-            QMutexLocker helloLock(&d->helloMutex);
             d->helloCondition.wakeAll();
 
         } else if (op == 1) {

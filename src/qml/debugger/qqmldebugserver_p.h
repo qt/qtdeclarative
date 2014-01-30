@@ -89,6 +89,7 @@ private:
     friend class QQmlDebugService;
     friend class QQmlDebugServicePrivate;
     friend class QQmlDebugServerThread;
+    friend struct QQmlDebugServerInstanceWrapper;
     QQmlDebugServer();
     Q_PRIVATE_SLOT(d_func(), void _q_changeServiceState(const QString &serviceName,
                                                         QQmlDebugService::State state))
