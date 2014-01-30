@@ -1745,6 +1745,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
         if (signal) {
             int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
+            sigIndex = propertyCache->originalClone(sigIndex);
             foreach (const QByteArray &param, propertyCache->signalParameterNames(sigIndex))
                 parameters << QString::fromUtf8(param);
         } else {
