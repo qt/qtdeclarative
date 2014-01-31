@@ -531,9 +531,13 @@ void QmlObjectCreator::setupBindings()
             property = 0;
 
         if (!property || (i > 0 && (binding - 1)->propertyNameIndex != binding->propertyNameIndex)) {
-            if (!name.isEmpty())
-                property = _propertyCache->property(name, _qobject, context);
-            else
+            if (!name.isEmpty()) {
+                if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
+                    || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+                    property = PropertyResolver(_propertyCache).signal(name, /*notInRevision*/0, _qobject, context);
+                else
+                    property = _propertyCache->property(name, _qobject, context);
+            } else
                 property = defaultProperty;
 
             if (property && property->isQList()) {

@@ -1252,6 +1252,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 continue;
         }
 
+        // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
+            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+            continue;
+
         QString name = stringAt(binding->propertyNameIndex);
 
         bool bindingToDefaultProperty = false;
@@ -1287,8 +1292,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 && !pd->isQList()
                 && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
                 && !(binding->flags & QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration)
-                && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
-                && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
                 ) {
                 recordError(binding->valueLocation, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                 return false;

@@ -1848,11 +1848,11 @@ void SignalHandlerConverter::recordError(const QV4::CompiledData::Location &loca
     errors << error;
 }
 
-QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision)
+QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, QObject *object, QQmlContextData *context)
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, 0, 0);
+    QQmlPropertyData *d = cache->property(name, object, context);
 
     // Find the first property
     while (d && d->isFunction())
@@ -1867,11 +1867,11 @@ QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRev
 }
 
 
-QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision)
+QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision, QObject *object, QQmlContextData *context)
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, 0, 0);
+    QQmlPropertyData *d = cache->property(name, object, context);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))
@@ -1887,7 +1887,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
     if (name.endsWith(QStringLiteral("Changed"))) {
         QString propName = name.mid(0, name.length() - static_cast<int>(strlen("Changed")));
 
-        d = property(propName, notInRevision);
+        d = property(propName, notInRevision, object, context);
         if (d)
             return cache->signal(d->notifyIndex);
     }

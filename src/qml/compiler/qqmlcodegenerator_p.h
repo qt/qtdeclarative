@@ -341,10 +341,10 @@ struct PropertyResolver
         return cache->property(index);
     }
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0);
+    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, QObject *object = 0, QQmlContextData *context = 0);
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision);
+    QQmlPropertyData *signal(const QString &name, bool *notInRevision, QObject *object = 0, QQmlContextData *context = 0);
 
     QQmlPropertyCache *cache;
 };
