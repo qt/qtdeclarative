@@ -89,6 +89,62 @@ void QmlObject::dump(DebugStream &out)
     out << "}" << endl;
 }
 
+QString QmlObject::sanityCheckFunctionNames(const QList<CompiledFunctionOrExpression> &allFunctions, const QSet<QString> &illegalNames, AST::SourceLocation *errorLocation)
+{
+    QSet<int> functionNames;
+    for (Function *f = functions->first; f; f = f->next) {
+        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(allFunctions.at(f->index).node);
+        Q_ASSERT(function);
+        *errorLocation = function->identifierToken;
+        QString name = function->name.toString();
+        if (functionNames.contains(f->nameIndex))
+            return tr("Duplicate method name");
+        functionNames.insert(f->nameIndex);
+        if (signalNames.contains(f->nameIndex))
+            return tr("Duplicate method name");
+
+        if (name.at(0).isUpper())
+            return tr("Method names cannot begin with an upper case letter");
+        if (illegalNames.contains(name))
+            return tr("Illegal method name");
+    }
+    return QString(); // no error
+}
+
+QString QmlObject::appendSignal(Signal *signal)
+{
+    QmlObject *target = declarationsOverride;
+    if (!target)
+        target = this;
+    if (target->signalNames.contains(signal->nameIndex))
+        return tr("Duplicate signal name");
+    target->signalNames.insert(signal->nameIndex);
+    target->qmlSignals->append(signal);
+    return QString(); // no error
+}
+
+bool QmlObject::appendProperty(QmlProperty *prop, bool isDefaultProperty)
+{
+    QmlObject *target = declarationsOverride;
+    if (!target)
+        target = this;
+    const int index = target->properties->append(prop);
+    if (isDefaultProperty) {
+        if (target->indexOfDefaultProperty != -1)
+            return false;
+        target->indexOfDefaultProperty = index;
+    }
+    return true;
+}
+
+void QmlObject::appendFunction(Function *f)
+{
+    QmlObject *target = declarationsOverride;
+    if (!target)
+        target = this;
+    target->functions->append(f);
+}
+
 QStringList Signal::parameterStringList(const QStringList &stringPool) const
 {
     QStringList result;
@@ -295,27 +351,6 @@ void QQmlCodeGenerator::accept(AST::Node *node)
     AST::Node::acceptChild(node, this);
 }
 
-bool QQmlCodeGenerator::sanityCheckFunctionNames()
-{
-    QSet<QString> functionNames;
-    for (Function *f = _object->functions->first; f; f = f->next) {
-        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(_functions.at(f->index).node);
-        Q_ASSERT(function);
-        QString name = function->name.toString();
-        if (functionNames.contains(name))
-            COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
-        functionNames.insert(name);
-        if (_object->signalNames.contains(name))
-            COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
-
-        if (name.at(0).isUpper())
-            COMPILE_EXCEPTION(function->identifierToken, tr("Method names cannot begin with an upper case letter"));
-        if (illegalNames.contains(name))
-            COMPILE_EXCEPTION(function->identifierToken, tr("Illegal method name"));
-    }
-    return true;
-}
-
 int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, const AST::SourceLocation &location, AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride)
 {
     QmlObject *obj = New<QmlObject>();
@@ -334,9 +369,13 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
 
     qSwap(_propertyDeclaration, declaration);
 
-    sanityCheckFunctionNames();
-
     qSwap(_object, obj);
+
+    AST::SourceLocation loc;
+    QString error = obj->sanityCheckFunctionNames(_functions, illegalNames, &loc);
+    if (!error.isEmpty())
+        recordError(loc, error);
+
     return objectIndex;
 }
 
@@ -520,8 +559,6 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);
 
-    QmlObject *declarationsTarget = _object->declarationsOverride ? _object->declarationsOverride : _object;
-
     if (node->type == AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
         QString signalName = node->name.toString();
@@ -587,17 +624,17 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             p = p->next;
         }
 
-        if (_object->signalNames.contains(signalName))
-            COMPILE_EXCEPTION(node->identifierToken, tr("Duplicate signal name"));
-        _object->signalNames.insert(signalName);
-
         if (signalName.at(0).isUpper())
             COMPILE_EXCEPTION(node->identifierToken, tr("Signal names cannot begin with an upper case letter"));
 
         if (illegalNames.contains(signalName))
             COMPILE_EXCEPTION(node->identifierToken, tr("Illegal signal name"));
 
-        declarationsTarget->qmlSignals->append(signal);
+        QString error = _object->appendSignal(signal);
+        if (!error.isEmpty()) {
+            recordError(node->identifierToken, error);
+            return false;
+        }
     } else {
         const QStringRef &memberType = node->memberType;
         const QStringRef &name = node->name;
@@ -719,18 +756,14 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             qSwap(_propertyDeclaration, property);
         }
 
-        declarationsTarget->properties->append(property);
-
-        if (node->isDefaultMember) {
-            if (_object->indexOfDefaultProperty != -1) {
-                QQmlError error;
-                error.setDescription(QCoreApplication::translate("QQmlParser","Duplicate default property"));
-                error.setLine(node->defaultToken.startLine);
-                error.setColumn(node->defaultToken.startColumn);
-                errors << error;
-                return false;
-            }
-            _object->indexOfDefaultProperty = _object->properties->count - 1;
+        if (!_object->appendProperty(property, node->isDefaultMember)) {
+            Q_ASSERT(node->isDefaultMember);
+            QQmlError error;
+            error.setDescription(QCoreApplication::translate("QQmlParser","Duplicate default property"));
+            error.setLine(node->defaultToken.startLine);
+            error.setColumn(node->defaultToken.startColumn);
+            errors << error;
+            return false;
         }
 
         if (node->binding) {
@@ -754,8 +787,8 @@ bool QQmlCodeGenerator::visit(AST::UiSourceElement *node)
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
         f->index = _functions.size() - 1;
-        QmlObject *functionDeclarationsTarget = _object->declarationsOverride ? _object->declarationsOverride : _object;
-        functionDeclarationsTarget->functions->append(f);
+        f->nameIndex = registerString(funDecl->name.toString());
+        _object->appendFunction(f);
     } else {
         QQmlError error;
         error.setDescription(QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
@@ -890,7 +923,7 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
     setBindingValue(binding, value);
-    bindingsTarget()->append(binding);
+    bindingsTarget()->appendBinding(binding);
 }
 
 void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
@@ -926,14 +959,14 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
     binding->value.objectIndex = objectIndex;
-    bindingsTarget()->append(binding);
+    bindingsTarget()->appendBinding(binding);
 }
 
-PoolList<Binding> *QQmlCodeGenerator::bindingsTarget() const
+QmlObject *QQmlCodeGenerator::bindingsTarget() const
 {
     if (_propertyDeclaration && _object->declarationsOverride)
-        return _object->declarationsOverride->bindings;
-    return _object->bindings;
+        return _object->declarationsOverride;
+    return _object;
 }
 
 bool QQmlCodeGenerator::setId(AST::Statement *value)
@@ -1022,7 +1055,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         int objIndex = defineQMLObject(0, AST::SourceLocation(), 0, 0);
         binding->value.objectIndex = objIndex;
 
-        (*object)->bindings->append(binding);
+        (*object)->appendBinding(binding);
         *object = _objects[objIndex];
 
         qualifiedIdElement = qualifiedIdElement->next;
@@ -1041,10 +1074,10 @@ bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameL
 
     // List items are implement by multiple bindings to the same name, so allow duplicates.
     if (!isListItemOnOrAssignment) {
-        if (_object->propertyNames.contains(name))
+        if (_object->propertyNames.contains(nameIndex))
             COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
 
-        _object->propertyNames.insert(name);
+        _object->propertyNames.insert(nameIndex);
     }
 
     if (name.at(0).isUpper())
@@ -1074,7 +1107,7 @@ void QQmlCodeGenerator::collectTypeReferences()
             r.needsCreation = true;
         }
 
-        for (QmlProperty *prop = obj->properties->first; prop; prop = prop->next) {
+        for (const QmlProperty *prop = obj->firstProperty(); prop; prop = prop->next) {
             if (prop->type >= QV4::CompiledData::Property::Custom) {
                 // ### FIXME: We could report the more accurate location here by using prop->location, but the old
                 // compiler can't and the tests expect it to be the object location right now.
@@ -1083,7 +1116,7 @@ void QQmlCodeGenerator::collectTypeReferences()
             }
         }
 
-        for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+        for (const Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
                 _typeReferences.add(binding->propertyNameIndex, binding->location);
         }
@@ -1141,10 +1174,10 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
     int objectsSize = 0;
     foreach (QmlObject *o, output.objects) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functions->count, o->properties->count, o->qmlSignals->count, o->bindings->count);
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->signalCount(), o->bindingCount());
 
         int signalTableSize = 0;
-        for (Signal *s = o->qmlSignals->first; s; s = s->next)
+        for (const Signal *s = o->firstSignal(); s; s = s->next)
             signalTableSize += QV4::CompiledData::Signal::calculateSize(s->parameters->count);
 
         objectsSize += signalTableSize;
@@ -1187,35 +1220,35 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
 
         quint32 nextOffset = sizeof(QV4::CompiledData::Object);
 
-        objectToWrite->nFunctions = o->functions->count;
+        objectToWrite->nFunctions = o->functionCount();
         objectToWrite->offsetToFunctions = nextOffset;
         nextOffset += objectToWrite->nFunctions * sizeof(quint32);
 
-        objectToWrite->nProperties = o->properties->count;
+        objectToWrite->nProperties = o->propertyCount();
         objectToWrite->offsetToProperties = nextOffset;
         nextOffset += objectToWrite->nProperties * sizeof(QV4::CompiledData::Property);
 
-        objectToWrite->nSignals = o->qmlSignals->count;
+        objectToWrite->nSignals = o->signalCount();
         objectToWrite->offsetToSignals = nextOffset;
         nextOffset += objectToWrite->nSignals * sizeof(quint32);
 
-        objectToWrite->nBindings = o->bindings->count;
+        objectToWrite->nBindings = o->bindingCount();
         objectToWrite->offsetToBindings = nextOffset;
         nextOffset += objectToWrite->nBindings * sizeof(QV4::CompiledData::Binding);
 
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
-        for (Function *f = o->functions->first; f; f = f->next)
+        for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = runtimeFunctionIndices[f->index];
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
-        for (QmlProperty *p = o->properties->first; p; p = p->next) {
+        for (const QmlProperty *p = o->firstProperty(); p; p = p->next) {
             QV4::CompiledData::Property *propertyToWrite = reinterpret_cast<QV4::CompiledData::Property*>(propertiesPtr);
             *propertyToWrite = *p;
             propertiesPtr += sizeof(QV4::CompiledData::Property);
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
-        for (Binding *b = o->bindings->first; b; b = b->next) {
+        for (const Binding *b = o->firstBinding(); b; b = b->next) {
             QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
             *bindingToWrite = *b;
             if (b->type == QV4::CompiledData::Binding::Type_Script)
@@ -1226,7 +1259,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
         quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
         char *signalPtr = objectPtr + nextOffset;
-        for (Signal *s = o->qmlSignals->first; s; s = s->next) {
+        for (const Signal *s = o->firstSignal(); s; s = s->next) {
             *signalOffsetTable++ = signalPtr - objectPtr;
             QV4::CompiledData::Signal *signalToWrite = reinterpret_cast<QV4::CompiledData::Signal*>(signalPtr);
 
@@ -1243,7 +1276,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
             signalPtr += size;
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functions->count, o->properties->count, o->qmlSignals->count, o->bindings->count);
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->signalCount(), o->bindingCount());
         objectPtr += signalTableSize;
     }
 
@@ -1707,7 +1740,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
     // map from signal name defined in qml itself to list of parameters
     QHash<QString, QStringList> customSignals;
 
-    for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+    for (Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         QString propertyName = stringAt(binding->propertyNameIndex);
         // Attached property?
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
@@ -1770,12 +1803,12 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
             // build cache if necessary
             if (customSignals.isEmpty()) {
-                for (Signal *signal = obj->qmlSignals->first; signal; signal = signal->next) {
+                for (const Signal *signal = obj->firstSignal(); signal; signal = signal->next) {
                     const QString &signalName = stringAt(signal->nameIndex);
                     customSignals.insert(signalName, signal->parameterStringList(parsedQML->jsGenerator.strings));
                 }
 
-                for (QmlProperty *property = obj->properties->first; property; property = property->next) {
+                for (const QmlProperty *property = obj->firstProperty(); property; property = property->next) {
                     const QString propName = stringAt(property->nameIndex);
                     customSignals.insert(propName, QStringList());
                 }

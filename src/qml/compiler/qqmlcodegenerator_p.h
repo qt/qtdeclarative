@@ -93,14 +93,14 @@ struct PoolList
     T *last;
     int count;
 
-    void append(T *item) {
+    int append(T *item) {
         item->next = 0;
         if (last)
             last->next = item;
         else
             first = item;
         last = item;
-        ++count;
+        return count++;
     }
 };
 
@@ -137,45 +137,9 @@ struct Function
 {
     AST::FunctionDeclaration *functionDeclaration;
     QV4::CompiledData::Location location;
+    int nameIndex;
     int index; // index in parsedQML::functions
     Function *next;
-};
-
-struct QmlObject
-{
-    int inheritedTypeNameIndex;
-    int idIndex;
-    int indexOfDefaultProperty;
-
-    QV4::CompiledData::Location location;
-    QV4::CompiledData::Location locationOfIdProperty;
-
-    PoolList<QmlProperty> *properties;
-    PoolList<Signal> *qmlSignals;
-    PoolList<Binding> *bindings;
-    PoolList<Function> *functions;
-
-    // If set, then declarations for this object (and init bindings for these) should go into the
-    // specified object. Used for declarations inside group properties.
-    QmlObject *declarationsOverride;
-
-    // caches to quickly find duplicates
-    QSet<QString> propertyNames;
-    QSet<QString> signalNames;
-
-    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const AST::SourceLocation &location = AST::SourceLocation());
-
-    void dump(DebugStream &out);
-};
-
-struct Pragma
-{
-    enum PragmaType {
-        PragmaSingleton = 0x1
-    };
-    quint32 type;
-
-    QV4::CompiledData::Location location;
 };
 
 struct CompiledFunctionOrExpression
@@ -191,6 +155,62 @@ struct CompiledFunctionOrExpression
     AST::Node *node; // FunctionDeclaration, Statement or Expression
     QString name;
     bool disableAcceleratedLookups;
+};
+
+struct QmlObject
+{
+    Q_DECLARE_TR_FUNCTIONS(QmlObject)
+public:
+    int inheritedTypeNameIndex;
+    int idIndex;
+    int indexOfDefaultProperty;
+
+    QV4::CompiledData::Location location;
+    QV4::CompiledData::Location locationOfIdProperty;
+
+    const QmlProperty *firstProperty() const { return properties->first; }
+    int propertyCount() const { return properties->count; }
+    const Signal *firstSignal() const { return qmlSignals->first; }
+    int signalCount() const { return qmlSignals->count; }
+    Binding *firstBinding() const { return bindings->first; }
+    int bindingCount() const { return bindings->count; }
+    const Function *firstFunction() const { return functions->first; }
+    int functionCount() const { return functions->count; }
+
+    // If set, then declarations for this object (and init bindings for these) should go into the
+    // specified object. Used for declarations inside group properties.
+    QmlObject *declarationsOverride;
+
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const AST::SourceLocation &location = AST::SourceLocation());
+
+    void dump(DebugStream &out);
+
+    QString sanityCheckFunctionNames(const QList<CompiledFunctionOrExpression> &allFunctions, const QSet<QString> &illegalNames, AST::SourceLocation *errorLocation);
+
+    QString appendSignal(Signal *signal);
+    bool appendProperty(QmlProperty *prop, bool isDefaultProperty);
+    void appendFunction(Function *f);
+
+    void appendBinding(Binding *b) { bindings->append(b); }
+
+    QSet<int> propertyNames;
+private:
+    PoolList<QmlProperty> *properties;
+    PoolList<Signal> *qmlSignals;
+    PoolList<Binding> *bindings;
+    PoolList<Function> *functions;
+
+    QSet<int> signalNames;
+};
+
+struct Pragma
+{
+    enum PragmaType {
+        PragmaSingleton = 0x1
+    };
+    quint32 type;
+
+    QV4::CompiledData::Location location;
 };
 
 struct ParsedQML
@@ -270,7 +290,7 @@ public:
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
-    PoolList<Binding> *bindingsTarget() const;
+    QmlObject *bindingsTarget() const;
 
     bool setId(AST::Statement *value);
 
@@ -312,7 +332,6 @@ public:
     QUrl url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
     quint32 emptyStringIndex;
-    bool sanityCheckFunctionNames();
 };
 
 struct Q_QML_EXPORT QmlUnitGenerator

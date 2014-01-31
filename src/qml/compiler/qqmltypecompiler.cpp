@@ -407,9 +407,9 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         }
     }
 
-    bool needVMEMetaObject = obj->properties->count != 0 || obj->qmlSignals->count != 0 || obj->functions->count != 0;
+    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
-        for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+        for (const QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
 
                 // On assignments are implemented using value interceptors, which require a VME meta object.
@@ -446,7 +446,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     }
 
     if (propertyCaches.at(objectIndex)) {
-        for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next)
+        for (const QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
             if (binding->type == QV4::CompiledData::Binding::Type_Object || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
                 if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
                     return false;
@@ -469,9 +469,9 @@ bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
 bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache)
 {
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate),
-                                                             obj->properties->count,
-                                                             obj->functions->count + obj->properties->count + obj->qmlSignals->count,
-                                                             obj->qmlSignals->count + obj->properties->count);
+                                                             obj->propertyCount(),
+                                                             obj->functionCount() + obj->propertyCount() + obj->signalCount(),
+                                                             obj->signalCount() + obj->propertyCount());
     propertyCaches[objectIndex] = cache;
 
     struct TypeData {
@@ -526,7 +526,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     int aliasCount = 0;
     int varPropCount = 0;
 
-    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next) {
+    for (const QtQml::QmlProperty *p = obj->firstProperty(); p; p = p->next) {
         if (p->type == QV4::CompiledData::Property::Alias)
             aliasCount++;
         else if (p->type == QV4::CompiledData::Property::Var)
@@ -543,8 +543,8 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     typedef QQmlVMEMetaData VMD;
 
     QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
-                                                              + obj->properties->count * sizeof(VMD::PropertyData)
-                                                              + obj->functions->count * sizeof(VMD::MethodData)
+                                                              + obj->propertyCount() * sizeof(VMD::PropertyData)
+                                                              + obj->functionCount() * sizeof(VMD::MethodData)
                                                               + aliasCount * sizeof(VMD::AliasData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
@@ -580,7 +580,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
         if (ii == NSS_Var && varPropCount == 0) continue;
         else if (ii == NSS_Alias && aliasCount == 0) continue;
 
-        for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next) {
+        for (const QtQml::QmlProperty *p = obj->firstProperty(); p; p = p->next) {
             if ((ii == NSS_Normal && (p->type == QV4::CompiledData::Property::Alias ||
                                       p->type == QV4::CompiledData::Property::Var)) ||
                 ((ii == NSS_Var) && (p->type != QV4::CompiledData::Property::Var)) ||
@@ -598,7 +598,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     }
 
     // Dynamic signals
-    for (QtQml::Signal *s = obj->qmlSignals->first; s; s = s->next) {
+    for (const QtQml::Signal *s = obj->firstSignal(); s; s = s->next) {
         const int paramCount = s->parameters->count;
 
         QList<QByteArray> names;
@@ -656,7 +656,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
 
 
     // Dynamic slots
-    for (QtQml::Function *s = obj->functions->first; s; s = s->next) {
+    for (const QtQml::Function *s = obj->firstFunction(); s; s = s->next) {
         AST::FunctionDeclaration *astFunction = s->functionDeclaration;
 
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
@@ -684,7 +684,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     // Dynamic properties (except var and aliases)
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
     int propertyIdx = 0;
-    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next, ++propertyIdx) {
+    for (const QtQml::QmlProperty *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
 
         if (p->type == QV4::CompiledData::Property::Alias ||
             p->type == QV4::CompiledData::Property::Var)
@@ -760,7 +760,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
 
     // Now do var properties
     propertyIdx = 0;
-    for (QtQml::QmlProperty *p = obj->properties->first; p; p = p->next, ++propertyIdx) {
+    for (const QtQml::QmlProperty *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
 
         if (p->type != QV4::CompiledData::Property::Var)
             continue;
@@ -786,7 +786,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     ((QQmlVMEMetaData *)dynamicData.data())->aliasCount = aliasCount;
 
     // Dynamic slot data - comes after the property data
-    for (QtQml::Function *s = obj->functions->first; s; s = s->next) {
+    for (const QtQml::Function *s = obj->firstFunction(); s; s = s->next) {
         AST::FunctionDeclaration *astFunction = s->functionDeclaration;
         int formalsCount = 0;
         AST::FormalParameterList *param = astFunction->formals;
@@ -827,7 +827,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
 
         PropertyResolver resolver(propertyCache);
 
-        for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+        for (QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                 || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
                 continue;
@@ -984,7 +984,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
 
     QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
-    for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+    for (QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
@@ -1039,7 +1039,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         QtQml::Binding *syntheticBinding = pool->New<QtQml::Binding>();
         *syntheticBinding = *binding;
         syntheticBinding->type = QV4::CompiledData::Binding::Type_Object;
-        syntheticComponent->bindings->append(syntheticBinding);
+        syntheticComponent->appendBinding(syntheticBinding);
 
         binding->value.objectIndex = componentIndex;
 
@@ -1069,17 +1069,17 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         componentRoots.append(i);
 
-        if (obj->functions->count > 0)
+        if (obj->functionCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
-        if (obj->properties->count > 0)
+        if (obj->propertyCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new properties."));
-        if (obj->qmlSignals->count > 0)
+        if (obj->signalCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new signals."));
 
-        if (obj->bindings->count == 0)
+        if (obj->bindingCount() == 0)
             COMPILE_EXCEPTION(obj, tr("Cannot create empty component specification"));
 
-        const QtQml::Binding *rootBinding = obj->bindings->first;
+        const QtQml::Binding *rootBinding = obj->firstBinding();
         if (rootBinding->next || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
             COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
 
@@ -1090,7 +1090,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
     for (int i = 0; i < componentRoots.count(); ++i) {
         const QtQml::QmlObject *component  = qmlObjects->at(componentRoots.at(i));
-        const QtQml::Binding *rootBinding = component->bindings->first;
+        const QtQml::Binding *rootBinding = component->firstBinding();
 
         _componentIndex = i;
         _idToObjectIndex.clear();
@@ -1133,14 +1133,14 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
         _objectIndexToIdInScope->insert(objectIndex, _objectIndexToIdInScope->count());
     }
 
-    for (QtQml::QmlProperty *property = obj->properties->first; property; property = property->next) {
+    for (const QtQml::QmlProperty *property = obj->firstProperty(); property; property = property->next) {
         if (property->type == QV4::CompiledData::Property::Alias) {
             _objectsWithAliases.append(objectIndex);
             break;
         }
     }
 
-    for (QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+    for (const QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
             && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
             && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
@@ -1169,8 +1169,8 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
         int effectiveAliasIndex = 0;
 
-        const QtQml::QmlProperty *p = obj->properties->first;
-        for (int propertyIndex = 0; propertyIndex < obj->properties->count; ++propertyIndex, p = p->next) {
+        const QtQml::QmlProperty *p = obj->firstProperty();
+        for (int propertyIndex = 0; propertyIndex < obj->propertyCount(); ++propertyIndex, p = p->next) {
             if (p->type != QV4::CompiledData::Property::Alias)
                 continue;
 
