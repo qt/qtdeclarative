@@ -140,7 +140,6 @@ public:
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
-    static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 4;
@@ -170,7 +169,6 @@ public:
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
-    static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
     static const FPRegisterID FPGpr1 = JSC::X86Registers::xmm1;
 
@@ -224,7 +222,6 @@ public:
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const RegisterID IntegerOpRegister = JSC::ARMRegisters::r0;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
 
     static const int RegisterSize = 4;
