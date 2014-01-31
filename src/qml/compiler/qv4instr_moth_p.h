@@ -60,7 +60,9 @@ QT_BEGIN_NAMESPACE
     F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
+    F(LoadElementLookup, loadElementLookup) \
     F(StoreElement, storeElement) \
+    F(StoreElementLookup, storeElementLookup) \
     F(LoadProperty, loadProperty) \
     F(GetLookup, getLookup) \
     F(StoreProperty, storeProperty) \
@@ -322,8 +324,22 @@ union Instr
         Param index;
         Param result;
     };
+    struct instr_loadElementLookup {
+        MOTH_INSTR_HEADER
+        uint lookup;
+        Param base;
+        Param index;
+        Param result;
+    };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
+        Param base;
+        Param index;
+        Param source;
+    };
+    struct instr_storeElementLookup {
+        MOTH_INSTR_HEADER
+        uint lookup;
         Param base;
         Param index;
         Param source;
@@ -696,7 +712,9 @@ union Instr
     instr_getGlobalLookup getGlobalLookup;
     instr_storeName storeName;
     instr_loadElement loadElement;
+    instr_loadElementLookup loadElementLookup;
     instr_storeElement storeElement;
+    instr_storeElementLookup storeElementLookup;
     instr_loadProperty loadProperty;
     instr_getLookup getLookup;
     instr_loadQObjectProperty loadQObjectProperty;

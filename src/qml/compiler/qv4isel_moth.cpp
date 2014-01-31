@@ -546,6 +546,15 @@ void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyInde
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
 {
+    if (useFastLookups) {
+        Instruction::LoadElementLookup load;
+        load.lookup = registerIndexedGetterLookup();
+        load.base = getParam(base);
+        load.index = getParam(index);
+        load.result = getResultParam(target);
+        addInstruction(load);
+        return;
+    }
     Instruction::LoadElement load;
     load.base = getParam(base);
     load.index = getParam(index);
@@ -556,6 +565,15 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
 void InstructionSelection::setElement(V4IR::Expr *source, V4IR::Expr *targetBase,
                                       V4IR::Expr *targetIndex)
 {
+    if (useFastLookups) {
+        Instruction::StoreElementLookup store;
+        store.lookup = registerIndexedSetterLookup();
+        store.base = getParam(targetBase);
+        store.index = getParam(targetIndex);
+        store.source = getParam(source);
+        addInstruction(store);
+        return;
+    }
     Instruction::StoreElement store;
     store.base = getParam(targetBase);
     store.index = getParam(targetIndex);

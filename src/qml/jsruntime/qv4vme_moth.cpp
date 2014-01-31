@@ -277,10 +277,21 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_get_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
     MOTH_END_INSTR(LoadElement)
 
+    MOTH_BEGIN_INSTR(LoadElementLookup)
+        QV4::Lookup *l = context->lookups + instr.lookup;
+        STOREVALUE(instr.result, l->indexedGetter(l, VALUEPTR(instr.base), VALUEPTR(instr.index)));
+    MOTH_END_INSTR(LoadElementLookup)
+
     MOTH_BEGIN_INSTR(StoreElement)
         __qmljs_set_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index), VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
+
+    MOTH_BEGIN_INSTR(StoreElementLookup)
+        QV4::Lookup *l = context->lookups + instr.lookup;
+        l->indexedSetter(l, VALUEPTR(instr.base), VALUEPTR(instr.index), VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(StoreElementLookup)
 
     MOTH_BEGIN_INSTR(LoadProperty)
         STOREVALUE(instr.result, __qmljs_get_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name]));
