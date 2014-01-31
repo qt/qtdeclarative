@@ -188,18 +188,19 @@ public:
     QString sanityCheckFunctionNames(const QList<CompiledFunctionOrExpression> &allFunctions, const QSet<QString> &illegalNames, AST::SourceLocation *errorLocation);
 
     QString appendSignal(Signal *signal);
-    bool appendProperty(QmlProperty *prop, bool isDefaultProperty);
+    QString appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const AST::SourceLocation &defaultToken, AST::SourceLocation *errorLocation);
     void appendFunction(Function *f);
 
-    void appendBinding(Binding *b) { bindings->append(b); }
+    QString appendBinding(Binding *b, bool isListBinding, bool bindToDefaultProperty);
 
-    QSet<int> propertyNames;
 private:
     PoolList<QmlProperty> *properties;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
 
+    QSet<int> propertyNames;
+    QSet<int> bindingNames;
     QSet<int> signalNames;
 };
 
@@ -287,8 +288,8 @@ public:
 
     void appendBinding(AST::UiQualifiedId *name, AST::Statement *value);
     void appendBinding(AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
-    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
-    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
+    void appendBinding(const AST::SourceLocation &nameLocation, quint32 propertyNameIndex, AST::Statement *value);
+    void appendBinding(const AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     QmlObject *bindingsTarget() const;
 
@@ -297,8 +298,6 @@ public:
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
     bool resolveQualifiedId(AST::UiQualifiedId **nameToResolve, QmlObject **object);
-
-    bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItemOnOrAssignment = false);
 
     void recordError(const AST::SourceLocation &location, const QString &description);
 

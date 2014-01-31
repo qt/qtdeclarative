@@ -1039,7 +1039,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         QtQml::Binding *syntheticBinding = pool->New<QtQml::Binding>();
         *syntheticBinding = *binding;
         syntheticBinding->type = QV4::CompiledData::Binding::Type_Object;
-        syntheticComponent->appendBinding(syntheticBinding);
+        QString error = syntheticComponent->appendBinding(syntheticBinding, /*isListBinding*/false, /*bindingToDefaultProperty*/false);
+        Q_ASSERT(error.isEmpty());
+        Q_UNUSED(error);
 
         binding->value.objectIndex = componentIndex;
 

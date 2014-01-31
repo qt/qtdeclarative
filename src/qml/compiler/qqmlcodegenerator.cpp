@@ -123,18 +123,29 @@ QString QmlObject::appendSignal(Signal *signal)
     return QString(); // no error
 }
 
-bool QmlObject::appendProperty(QmlProperty *prop, bool isDefaultProperty)
+QString QmlObject::appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const AST::SourceLocation &defaultToken, AST::SourceLocation *errorLocation)
 {
     QmlObject *target = declarationsOverride;
     if (!target)
         target = this;
+
+    if (target->propertyNames.contains(prop->nameIndex))
+        return tr("Duplicate property name");
+
+    if (propertyName.constData()->isUpper())
+        return tr("Property names cannot begin with an upper case letter");
+
+    target->propertyNames.insert(prop->nameIndex);
+
     const int index = target->properties->append(prop);
     if (isDefaultProperty) {
-        if (target->indexOfDefaultProperty != -1)
-            return false;
+        if (target->indexOfDefaultProperty != -1) {
+            *errorLocation = defaultToken;
+            return tr("Duplicate default property");
+        }
         target->indexOfDefaultProperty = index;
     }
-    return true;
+    return QString(); // no error
 }
 
 void QmlObject::appendFunction(Function *f)
@@ -143,6 +154,20 @@ void QmlObject::appendFunction(Function *f)
     if (!target)
         target = this;
     target->functions->append(f);
+}
+
+QString QmlObject::appendBinding(Binding *b, bool isListBinding, bool bindToDefaultProperty)
+{
+    if (!isListBinding && !bindToDefaultProperty
+        && b->type != QV4::CompiledData::Binding::Type_GroupProperty
+        && b->type != QV4::CompiledData::Binding::Type_AttachedProperty
+        && !(b->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
+        if (bindingNames.contains(b->propertyNameIndex))
+            return tr("Property value set multiple times");
+        bindingNames.insert(b->propertyNameIndex);
+    }
+    bindings->append(b);
+    return QString(); // no error
 }
 
 QStringList Signal::parameterStringList(const QStringList &stringPool) const
@@ -702,7 +727,8 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         else
             property->customTypeNameIndex = emptyStringIndex;
 
-        property->nameIndex = registerString(name.toString());
+        const QString propName = name.toString();
+        property->nameIndex = registerString(propName);
 
         AST::SourceLocation loc = node->firstSourceLocation();
         property->location.line = loc.startLine;
@@ -756,13 +782,23 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             qSwap(_propertyDeclaration, property);
         }
 
-        if (!_object->appendProperty(property, node->isDefaultMember)) {
-            Q_ASSERT(node->isDefaultMember);
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Duplicate default property"));
-            error.setLine(node->defaultToken.startLine);
-            error.setColumn(node->defaultToken.startColumn);
-            errors << error;
+        AST::SourceLocation errorLocation;
+        QString error;
+
+        if (illegalNames.contains(propName))
+            error = tr("Illegal property name");
+        else
+            error = _object->appendProperty(property, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
+
+        if (!error.isEmpty()) {
+            if (errorLocation.startLine == 0)
+                errorLocation = node->identifierToken;
+
+            QQmlError qmlError;
+            qmlError.setDescription(error);
+            qmlError.setLine(errorLocation.startLine);
+            qmlError.setColumn(errorLocation.startColumn);
+            errors << qmlError;
             return false;
         }
 
@@ -907,15 +943,14 @@ void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex,
     qSwap(_object, object);
 }
 
-void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, quint32 propertyNameIndex, AST::Statement *value)
 {
-    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
-        return;
-
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         setId(value);
         return;
     }
+
+    const bool bindingToDefaultProperty = (propertyNameIndex == emptyStringIndex);
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
@@ -923,18 +958,20 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
     setBindingValue(binding, value);
-    bindingsTarget()->appendBinding(binding);
+    QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false, bindingToDefaultProperty);
+    if (!error.isEmpty()) {
+        recordError(nameLocation, error);
+    }
 }
 
-void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
-    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex, isListItem | isOnAssignment))
-        return;
-
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
         return;
     }
+
+    const bool bindingToDefaultProperty = (propertyNameIndex == emptyStringIndex);
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
@@ -959,7 +996,10 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
     binding->value.objectIndex = objectIndex;
-    bindingsTarget()->appendBinding(binding);
+    QString error = bindingsTarget()->appendBinding(binding, isListItem, bindingToDefaultProperty);
+    if (!error.isEmpty()) {
+        recordError(nameLocation, error);
+    }
 }
 
 QmlObject *QQmlCodeGenerator::bindingsTarget() const
@@ -1055,7 +1095,11 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         int objIndex = defineQMLObject(0, AST::SourceLocation(), 0, 0);
         binding->value.objectIndex = objIndex;
 
-        (*object)->appendBinding(binding);
+        QString error = (*object)->appendBinding(binding, /*isListBinding*/false, /*bindingToDefaultProperty*/false);
+        if (!error.isEmpty()) {
+            recordError(qualifiedIdElement->identifierToken, error);
+            return false;
+        }
         *object = _objects[objIndex];
 
         qualifiedIdElement = qualifiedIdElement->next;
@@ -1063,29 +1107,6 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
             currentName = qualifiedIdElement->name.toString();
     }
     *nameToResolve = qualifiedIdElement;
-    return true;
-}
-
-bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItemOnOrAssignment)
-{
-    const QString &name = jsGenerator->strings.at(nameIndex);
-    if (name.isEmpty())
-        return true;
-
-    // List items are implement by multiple bindings to the same name, so allow duplicates.
-    if (!isListItemOnOrAssignment) {
-        if (_object->propertyNames.contains(nameIndex))
-            COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
-
-        _object->propertyNames.insert(nameIndex);
-    }
-
-    if (name.at(0).isUpper())
-        COMPILE_EXCEPTION(nameLocation, tr("Property names cannot begin with an upper case letter"));
-
-    if (illegalNames.contains(name))
-        COMPILE_EXCEPTION(nameLocation, tr("Illegal property name"));
-
     return true;
 }
 
