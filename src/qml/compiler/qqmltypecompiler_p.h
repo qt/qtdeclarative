@@ -139,6 +139,30 @@ protected:
     QVector<QQmlPropertyCache*> propertyCaches;
 };
 
+// ### This will go away when the codegen resolves all enums to constant expressions
+// and we replace the constant expression with a literal binding instead of using
+// a script.
+class QQmlEnumTypeResolver : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlEnumTypeResolver)
+public:
+    QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler);
+
+    bool resolveEnumBindings();
+
+private:
+    bool tryQualifiedEnumAssignment(const QmlObject *obj, const QQmlPropertyCache *propertyCache,
+                                    const QQmlPropertyData *prop,
+                                    QtQml::Binding *binding);
+    int evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const;
+
+
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QVector<QQmlPropertyCache *> propertyCaches;
+    const QQmlImports *imports;
+    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
+};
+
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)

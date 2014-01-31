@@ -185,7 +185,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     QV4::Scope scope(v4);
 
     // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
-    if (property->isEnum()) {
+    if (property->isEnum() && !(binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)) {
         QVariant value = binding->valueAsString(&qmlUnit->header);
         bool ok = QQmlPropertyPrivate::write(_qobject, *property, value, context);
         Q_ASSERT(ok);
