@@ -333,6 +333,12 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     case QVariant::DateTime: {
         bool ok = false;
         QDateTime value = QQmlStringConverters::dateTimeFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        // ### VME compatibility :(
+        {
+            const qint64 date = value.date().toJulianDay();
+            const int msecsSinceStartOfDay = value.time().msecsSinceStartOfDay();
+            value = QDateTime(QDate::fromJulianDay(date), QTime::fromMSecsSinceStartOfDay(msecsSinceStartOfDay));
+        }
         Q_ASSERT(ok);
         argv[0] = &value;
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
