@@ -183,6 +183,7 @@ private slots:
     void profileOnExit();
     void controlFromJS();
     void signalSourceLocation();
+    void javascript();
 };
 
 void QQmlProfilerClient::messageReceived(const QByteArray &message)
@@ -552,6 +553,44 @@ void tst_QQmlProfilerService::signalSourceLocation()
     QVERIFY(m_client->traceMessages[19].detailData.endsWith("signalSourceLocation.qml"));
     QVERIFY(m_client->traceMessages[19].line == 7);
     QVERIFY(m_client->traceMessages[19].column == 21);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+}
+
+void tst_QQmlProfilerService::javascript()
+{
+    connect(true, "javascript.qml");
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(true);
+    while (!(m_process->output().contains(QLatin1String("done"))))
+        QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
+    m_client->setTraceState(false);
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+
+    QVERIFY(m_client->traceMessages.count() >= 36);
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+
+    QVERIFY(m_client->traceMessages[32].messageType == QQmlProfilerClient::RangeStart);
+    QVERIFY(m_client->traceMessages[32].detailType == QQmlProfilerClient::Javascript);
+
+    QVERIFY(m_client->traceMessages[33].messageType == QQmlProfilerClient::RangeLocation);
+    QVERIFY(m_client->traceMessages[33].detailType == QQmlProfilerClient::Javascript);
+    QVERIFY(m_client->traceMessages[33].detailData.endsWith("javascript.qml"));
+    QVERIFY(m_client->traceMessages[33].line == 4);
+    QVERIFY(m_client->traceMessages[33].column == 5);
+
+    QVERIFY(m_client->traceMessages[34].messageType == QQmlProfilerClient::RangeData);
+    QVERIFY(m_client->traceMessages[34].detailType == QQmlProfilerClient::Javascript);
+    QVERIFY(m_client->traceMessages[34].detailData == "something");
+
+    QVERIFY(m_client->traceMessages[35].messageType == QQmlProfilerClient::RangeEnd);
+    QVERIFY(m_client->traceMessages[35].detailType == QQmlProfilerClient::Javascript);
 
     // must end with "EndTrace"
     QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
