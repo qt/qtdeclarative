@@ -2377,7 +2377,7 @@ bool QQmlCompiler::buildScriptStringProperty(QQmlScript::Property *prop,
                                             const BindingContext &ctxt)
 {
     if (prop->values.isMany())
-        COMPILE_EXCEPTION(prop->values.first()->nextValue, tr( "Cannot assign multiple values to a script property"));
+        COMPILE_EXCEPTION(prop->values.first(), tr( "Cannot assign multiple values to a script property"));
 
     if (prop->values.first()->object)
         COMPILE_EXCEPTION(prop->values.first(), tr( "Invalid property assignment: script expected"));

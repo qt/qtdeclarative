@@ -994,6 +994,8 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, q
 
     if (isOnAssignment)
         binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
+    if (isListItem)
+        binding->flags |= QV4::CompiledData::Binding::IsListItem;
 
     binding->value.objectIndex = objectIndex;
     QString error = bindingsTarget()->appendBinding(binding, isListItem, bindingToDefaultProperty);

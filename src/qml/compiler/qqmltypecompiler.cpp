@@ -1455,6 +1455,16 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 return false;
             }
 
+            if (!pd->isQList() && (binding->flags & QV4::CompiledData::Binding::IsListItem)) {
+                QString error;
+                if (pd->propType == qMetaTypeId<QQmlScriptString>())
+                    error = tr( "Cannot assign multiple values to a script property");
+                else
+                    error = tr( "Cannot assign multiple values to a singular property");
+                recordError(binding->valueLocation, error);
+                return false;
+            }
+
             if (binding->type < QV4::CompiledData::Binding::Type_Script) {
                 if (!validateLiteralBinding(propertyCache, pd, binding))
                     return false;
