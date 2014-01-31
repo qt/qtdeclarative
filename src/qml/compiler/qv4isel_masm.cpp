@@ -555,6 +555,41 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
+#if (CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))) || (CPU(X86) && OS(LINUX))
+#  define REGALLOC_IS_SUPPORTED
+static QVector<int> getIntRegisters()
+{
+#  if CPU(X86) && OS(LINUX) // x86 with linux
+    static const QVector<int> intRegisters = QVector<int>()
+            << JSC::X86Registers::edx
+            << JSC::X86Registers::ebx;
+#  else // x86_64 with linux or with macos
+    static const QVector<int> intRegisters = QVector<int>()
+            << JSC::X86Registers::edi
+            << JSC::X86Registers::esi
+            << JSC::X86Registers::edx
+            << JSC::X86Registers::r9
+            << JSC::X86Registers::r8
+            << JSC::X86Registers::r13
+            << JSC::X86Registers::r15;
+#  endif
+    return intRegisters;
+}
+
+static QVector<int> getFpRegisters()
+{
+// linux/x86_64, linux/x86, and macos/x86_64:
+    static const QVector<int> fpRegisters = QVector<int>()
+            << JSC::X86Registers::xmm2
+            << JSC::X86Registers::xmm3
+            << JSC::X86Registers::xmm4
+            << JSC::X86Registers::xmm5
+            << JSC::X86Registers::xmm6
+            << JSC::X86Registers::xmm7;
+    return fpRegisters;
+}
+#endif
+
 void InstructionSelection::run(int functionIndex)
 {
     V4IR::Function *function = irModule->functions[functionIndex];
@@ -564,33 +599,12 @@ void InstructionSelection::run(int functionIndex)
     V4IR::Optimizer opt(_function);
     opt.run(qmlEngine);
 
-#if (CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))) || (CPU(X86) && OS(LINUX))
+#ifdef REGALLOC_IS_SUPPORTED
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
     if (opt.isInSSA() && withRegisterAllocator) {
-#if CPU(X86) && OS(LINUX) // x86 with linux
-        static const QVector<int> intRegisters = QVector<int>()
-                << JSC::X86Registers::edx
-                << JSC::X86Registers::ebx;
-#else // x86_64 with linux or with macos
-        static const QVector<int> intRegisters = QVector<int>()
-                << JSC::X86Registers::edi
-                << JSC::X86Registers::esi
-                << JSC::X86Registers::edx
-                << JSC::X86Registers::r9
-                << JSC::X86Registers::r8
-                << JSC::X86Registers::r13
-                << JSC::X86Registers::r15;
-#endif
-        static const QVector<int> fpRegisters = QVector<int>()
-                << JSC::X86Registers::xmm2
-                << JSC::X86Registers::xmm3
-                << JSC::X86Registers::xmm4
-                << JSC::X86Registers::xmm5
-                << JSC::X86Registers::xmm6
-                << JSC::X86Registers::xmm7;
-        RegisterAllocator(intRegisters, fpRegisters).run(_function, opt);
+        RegisterAllocator(getIntRegisters(), getFpRegisters()).run(_function, opt);
     } else
-#endif
+#endif // REGALLOC_IS_SUPPORTED
     {
         if (opt.isInSSA())
             // No register allocator available for this platform, or env. var was set, so:

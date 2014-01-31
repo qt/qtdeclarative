@@ -58,8 +58,8 @@ class RegisterAllocator
 {
     typedef V4IR::LifeTimeInterval LifeTimeInterval;
 
-    const QVector<int> &_normalRegisters;
-    const QVector<int> &_fpRegisters;
+    QVector<int> _normalRegisters;
+    QVector<int> _fpRegisters;
     QScopedPointer<RegAllocInfo> _info;
 
     QVector<LifeTimeInterval> _fixedRegisterRanges, _fixedFPRegisterRanges;
