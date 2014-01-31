@@ -750,7 +750,7 @@ bool QQmlCodeGenerator::visit(AST::UiSourceElement *node)
         _functions << funDecl;
         Function *f = New<Function>();
         f->functionDeclaration = funDecl;
-        AST::SourceLocation loc = funDecl->firstSourceLocation();
+        AST::SourceLocation loc = funDecl->identifierToken;
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
         f->index = _functions.size() - 1;
