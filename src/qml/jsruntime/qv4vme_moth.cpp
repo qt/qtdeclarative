@@ -74,11 +74,6 @@ using namespace QQmlJS::Moth;
 #  define MOTH_BEGIN_INSTR(I) op_##I: \
     MOTH_BEGIN_INSTR_COMMON(I)
 
-#  define MOTH_NEXT_INSTR(I) { \
-    genericInstr = reinterpret_cast<const Instr *>(code); \
-    goto *genericInstr->common.code; \
-    }
-
 #  define MOTH_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const Instr *>(code); \
     goto *genericInstr->common.code; \
@@ -88,10 +83,6 @@ using namespace QQmlJS::Moth;
 #  define MOTH_BEGIN_INSTR(I) \
     case Instr::I: \
     MOTH_BEGIN_INSTR_COMMON(I)
-
-#  define MOTH_NEXT_INSTR(I) { \
-    continue; \
-    }
 
 #  define MOTH_END_INSTR(I) } \
     continue;
