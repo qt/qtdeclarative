@@ -162,7 +162,7 @@ struct QmlObject
     Q_DECLARE_TR_FUNCTIONS(QmlObject)
 public:
     int inheritedTypeNameIndex;
-    int idIndex;
+    quint32 idIndex;
     int indexOfDefaultProperty;
 
     QV4::CompiledData::Location location;
@@ -293,7 +293,7 @@ public:
 
     QmlObject *bindingsTarget() const;
 
-    bool setId(AST::Statement *value);
+    bool setId(const AST::SourceLocation &idLocation, AST::Statement *value);
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.

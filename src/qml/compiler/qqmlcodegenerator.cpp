@@ -946,7 +946,7 @@ void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex,
 void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, quint32 propertyNameIndex, AST::Statement *value)
 {
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
-        setId(value);
+        setId(nameLocation, value);
         return;
     }
 
@@ -1009,7 +1009,7 @@ QmlObject *QQmlCodeGenerator::bindingsTarget() const
     return _object;
 }
 
-bool QQmlCodeGenerator::setId(AST::Statement *value)
+bool QQmlCodeGenerator::setId(const AST::SourceLocation &idLocation, AST::Statement *value)
 {
     AST::SourceLocation loc = value->firstSourceLocation();
     QStringRef str;
@@ -1046,6 +1046,9 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
     QString idQString(str.toString());
     if (illegalNames.contains(idQString))
         COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
+
+    if (_object->idIndex != emptyStringIndex)
+        COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
 
     _object->idIndex = registerString(idQString);
     _object->locationOfIdProperty.line = loc.startLine;
