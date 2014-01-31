@@ -130,8 +130,7 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 
 #if CPU(ARM)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
-    // ### FIXME: remove unused registers.
-    JSC::ARMRegisters::r12,
+    JSC::ARMRegisters::r11,
     JSC::ARMRegisters::r10,
     JSC::ARMRegisters::r9,
     JSC::ARMRegisters::r8,
@@ -586,6 +585,34 @@ static QVector<int> getFpRegisters()
             << JSC::X86Registers::xmm5
             << JSC::X86Registers::xmm6
             << JSC::X86Registers::xmm7;
+    return fpRegisters;
+}
+
+#elif CPU(ARM) && OS(LINUX)
+    // Note: this is not generic for all ARM platforms. Specifically, r9 is platform dependent
+    // (e.g. iOS reserves it). See the ARM GNU Linux abi for details.
+#  define REGALLOC_IS_SUPPORTED
+static QVector<int> getIntRegisters()
+{
+    static const QVector<int> intRegisters = QVector<int>()
+            << JSC::ARMRegisters::r1
+            << JSC::ARMRegisters::r2
+            << JSC::ARMRegisters::r8
+            << JSC::ARMRegisters::r9
+            << JSC::ARMRegisters::r10
+            << JSC::ARMRegisters::r11;
+    return intRegisters;
+}
+
+static QVector<int> getFpRegisters()
+{
+    static const QVector<int> fpRegisters = QVector<int>()
+            << JSC::ARMRegisters::d1
+            << JSC::ARMRegisters::d2
+            << JSC::ARMRegisters::d3
+            << JSC::ARMRegisters::d4
+            << JSC::ARMRegisters::d5
+            << JSC::ARMRegisters::d6;
     return fpRegisters;
 }
 #endif
