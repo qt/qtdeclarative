@@ -1469,7 +1469,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 if (!validateLiteralBinding(propertyCache, pd, binding))
                     return false;
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-                if (!validateObjectBinding(pd, binding))
+                if (!validateObjectBinding(pd, name, binding))
                     return false;
             }
         } else {
@@ -1769,10 +1769,39 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     return true;
 }
 
-bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding)
 {
-    if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
+    if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
+        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Object);
+
+        bool isValueSource = false;
+        bool isPropertyInterceptor = false;
+
+        QQmlType *qmlType = 0;
+        const QV4::CompiledData::Object *targetObject = qmlUnit->objectAt(binding->value.objectIndex);
+        QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex);
+        if (typeRef) {
+            QQmlPropertyCache *cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+            const QMetaObject *mo = cache->firstCppMetaObject();
+            while (mo && !qmlType) {
+                qmlType = QQmlMetaType::qmlType(mo);
+                mo = mo->superClass();
+            }
+            Q_ASSERT(qmlType);
+        }
+
+        if (qmlType) {
+            isValueSource = qmlType->propertyValueSourceCast() != -1;
+            isPropertyInterceptor = qmlType->propertyValueInterceptorCast() != -1;
+        }
+
+        if (!isValueSource && !isPropertyInterceptor) {
+            recordError(binding->valueLocation, tr("\"%1\" cannot operate on \"%2\"").arg(stringAt(targetObject->inheritedTypeNameIndex)).arg(propertyName));
+            return false;
+        }
+
         return true;
+    }
     if (isComponent(binding->value.objectIndex))
         return true;
 
