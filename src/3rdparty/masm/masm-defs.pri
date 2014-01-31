@@ -25,7 +25,7 @@ INCLUDEPATH += $$PWD
 
 disassembler {
     if(isEqual(QT_ARCH, "i386")|isEqual(QT_ARCH, "x86_64")):!win*: DEFINES += WTF_USE_UDIS86=1
-    if(isEqual(QT_ARCH, "arm")):contains(DEFINES, V4_ENABLE_JIT): DEFINES += WTF_USE_ARMV7_DISASSEMBLER=1
+    if(isEqual(QT_ARCH, "arm")): DEFINES += WTF_USE_ARMV7_DISASSEMBLER=1
 } else {
     DEFINES += WTF_USE_UDIS86=0
 }
