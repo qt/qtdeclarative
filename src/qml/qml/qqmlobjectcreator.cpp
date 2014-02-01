@@ -1057,11 +1057,11 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
         vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
-        _ddata->propertyCache = _propertyCache;
-        _ddata->propertyCache->addref();
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
+    _ddata->propertyCache = _propertyCache;
+    _ddata->propertyCache->addref();
 
     _ddata->lineNumber = _compiledObject->location.line;
     _ddata->columnNumber = _compiledObject->location.column;
