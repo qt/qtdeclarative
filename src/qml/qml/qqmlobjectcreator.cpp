@@ -1071,8 +1071,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
     qSwap(_createdBindings, createdBindings);
 
-    setupBindings();
     setupFunctions();
+    setupBindings();
 
     allCreatedBindings.append(_createdBindings);
 
