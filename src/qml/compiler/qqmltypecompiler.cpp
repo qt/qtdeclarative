@@ -526,18 +526,19 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
     int aliasCount = 0;
     int varPropCount = 0;
 
+    PropertyResolver resolver(baseTypeCache);
+
     for (const QtQml::QmlProperty *p = obj->firstProperty(); p; p = p->next) {
         if (p->type == QV4::CompiledData::Property::Alias)
             aliasCount++;
         else if (p->type == QV4::CompiledData::Property::Var)
             varPropCount++;
 
-#if 0 // ### Do this elsewhere
         // No point doing this for both the alias and non alias cases
-        QQmlPropertyData *d = property(obj, p->name);
+        bool notInRevision = false;
+        QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
             COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
-#endif
     }
 
     typedef QQmlVMEMetaData VMD;
