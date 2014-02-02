@@ -323,7 +323,7 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
                 this, SIGNAL(orientationChanged()));
         connect(screen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
                 this, SIGNAL(primaryOrientationChanged()));
-        connect(screen, SIGNAL(virtualGeometryChanged(const QRect &)),
+        connect(screen, SIGNAL(virtualGeometryChanged(QRect)),
                 this, SIGNAL(desktopGeometryChanged()));
         connect(screen, SIGNAL(logicalDotsPerInchChanged(qreal)),
                 this, SIGNAL(logicalPixelDensityChanged()));

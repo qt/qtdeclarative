@@ -96,10 +96,10 @@ void QQuickFolderListModelPrivate::init()
 {
     Q_Q(QQuickFolderListModel);
     qRegisterMetaType<QList<FileProperty> >("QList<FileProperty>");
-    q->connect(&fileInfoThread, SIGNAL(directoryChanged(QString, QList<FileProperty>)),
-               q, SLOT(_q_directoryChanged(QString, QList<FileProperty>)));
-    q->connect(&fileInfoThread, SIGNAL(directoryUpdated(QString, QList<FileProperty>, int, int)),
-               q, SLOT(_q_directoryUpdated(QString, QList<FileProperty>, int, int)));
+    q->connect(&fileInfoThread, SIGNAL(directoryChanged(QString,QList<FileProperty>)),
+               q, SLOT(_q_directoryChanged(QString,QList<FileProperty>)));
+    q->connect(&fileInfoThread, SIGNAL(directoryUpdated(QString,QList<FileProperty>,int,int)),
+               q, SLOT(_q_directoryUpdated(QString,QList<FileProperty>,int,int)));
     q->connect(&fileInfoThread, SIGNAL(sortFinished(QList<FileProperty>)),
                q, SLOT(_q_sortFinished(QList<FileProperty>)));
     q->connect(q, SIGNAL(rowCountChanged()), q, SIGNAL(countChanged()));

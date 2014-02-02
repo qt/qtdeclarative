@@ -271,7 +271,7 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
             m_helper = new Helper();
             m_helper->item = m_target;
             m_controller->m_transforms.insert(m_target, m_helper);
-            QObject::connect(m_target, SIGNAL(destroyed(QObject *)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
+            QObject::connect(m_target, SIGNAL(destroyed(QObject*)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
         } else {
             ++m_helper->ref;
             // Make sure leftovers from previous runs are being used...
