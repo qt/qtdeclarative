@@ -1715,7 +1715,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::RegExp:
         recordError(binding->valueLocation, tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
-        break;
+        return false;
     default: {
         // generate single literal value assignment to a list property if required
         if (property->propType == qMetaTypeId<QList<qreal> >()) {
