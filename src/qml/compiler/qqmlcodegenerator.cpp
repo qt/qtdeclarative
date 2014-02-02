@@ -1738,6 +1738,7 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlEnginePrivate *enginePrivate,
     : enginePrivate(enginePrivate)
     , parsedQML(parsedQML)
     , unit(unit)
+    , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(enginePrivate))->illegalNames())
 {
 }
 
@@ -1806,8 +1807,21 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (signal) {
             int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
             sigIndex = propertyCache->originalClone(sigIndex);
-            foreach (const QByteArray &param, propertyCache->signalParameterNames(sigIndex))
-                parameters << QString::fromUtf8(param);
+
+            bool unnamedParameter = false;
+
+            QList<QByteArray> parameterNames = propertyCache->signalParameterNames(sigIndex);
+            for (int i = 0; i < parameterNames.count(); ++i) {
+                const QString param = QString::fromUtf8(parameterNames.at(i));
+                if (param.isEmpty())
+                    unnamedParameter = true;
+                else if (unnamedParameter) {
+                    COMPILE_EXCEPTION(binding->location, tr("Signal uses unnamed parameter followed by named parameter."));
+                } else if (illegalNames.contains(param)) {
+                    COMPILE_EXCEPTION(binding->location, tr("Signal parameter \"%1\" hides global variable.").arg(param));
+                }
+                parameters += param;
+            }
         } else {
             if (notInRevision) {
                 // Try assinging it as a property later

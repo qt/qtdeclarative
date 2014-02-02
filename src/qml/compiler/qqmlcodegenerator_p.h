@@ -391,6 +391,7 @@ private:
     QQmlEnginePrivate *enginePrivate;
     ParsedQML *parsedQML;
     QQmlCompiledData *unit;
+    const QSet<QString> &illegalNames;
 };
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
