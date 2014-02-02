@@ -49,10 +49,8 @@
 #  ifndef __GNUC__
 #    define alloca _alloca
 #  endif
-#else
-#if !defined(__FreeBSD__) && !defined(__DragonFly__)
+#elif !defined(Q_OS_BSD4) || defined(Q_OS_DARWIN)
 #  include <alloca.h>
-#endif
 #endif
 
 #endif

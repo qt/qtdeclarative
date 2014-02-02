@@ -55,17 +55,12 @@
 #include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4alloca_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
 #else
 #define NO_INLINE __attribute__((noinline))
-#endif
-
-#if defined(Q_OS_WIN)
-#include <malloc.h>
-#else
-#include <alloca.h>
 #endif
 
 /*
