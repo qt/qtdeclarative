@@ -351,7 +351,7 @@ private:
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
-                                                            const QList<QByteArray> &names = QList<QByteArray>());
+                                                            const QList<QByteArray> &names);
     QQmlPropertyData *signal(int, QQmlPropertyCache **) const;
 
     typedef QVector<QQmlPropertyData> IndexCache;

@@ -1195,7 +1195,7 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         int argc = m.parameterCount();
         if (!rv->arguments) {
-            A *args = c->createArgumentsObject(argc);
+            A *args = c->createArgumentsObject(argc, m.parameterNames());
             rv->arguments = args;
         }
         A *args = static_cast<A *>(rv->arguments);
