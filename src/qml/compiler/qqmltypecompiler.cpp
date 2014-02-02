@@ -190,6 +190,11 @@ bool QQmlTypeCompiler::compile()
 
     JSCodeGen jsCodeGen(typeData->finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, compiledData->importCache);
     const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions);
+    QList<QQmlError> jsErrors = jsCodeGen.errors();
+    if (!jsErrors.isEmpty()) {
+        errors << jsErrors;
+        return false;
+    }
 
     QV4::ExecutionEngine *v4 = engine->v4engine();
 
