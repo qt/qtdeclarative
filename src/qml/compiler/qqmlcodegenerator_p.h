@@ -102,6 +102,40 @@ struct PoolList
         last = item;
         return count++;
     }
+
+    void prepend(T *item) {
+        item->next = first;
+        first = item;
+        if (!last)
+            last = first;
+        ++count;
+    }
+
+    template <typename Sortable, typename Base, Sortable Base::*sortMember>
+    T *findSortedInsertionPoint(T *item) const
+    {
+        T *insertPos = 0;
+
+        for (T *it = first; it; it = it->next) {
+            if (!(it->*sortMember < item->*sortMember))
+                break;
+            insertPos = it;
+        }
+
+        return insertPos;
+    }
+
+    void insertAfter(T *insertionPoint, T *item) {
+        if (!insertionPoint) {
+            prepend(item);
+        } else if (insertionPoint == last) {
+            append(item);
+        } else {
+            item->next = insertionPoint->next;
+            insertionPoint->next = item;
+            ++count;
+        }
+    }
 };
 
 struct QmlObject;
@@ -342,6 +376,9 @@ struct Q_QML_EXPORT QmlUnitGenerator
     QV4::CompiledData::QmlUnit *generate(ParsedQML &output, const QVector<int> &runtimeFunctionIndices);
 
 private:
+    typedef bool (Binding::*BindingFilter)() const;
+    char *writeBindings(char *bindingPtr, QmlObject *o, const QVector<int> &runtimeFunctionIndices, BindingFilter filter) const;
+
     int getStringId(const QString &str) const;
 
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;

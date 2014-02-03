@@ -72,6 +72,10 @@ struct Location
 {
     qint32 line;
     qint32 column;
+    inline bool operator<(const Location &other) const {
+        return line < other.line ||
+               (line == other.line && column < other.column);
+    }
 };
 
 struct TypeReference
@@ -313,6 +317,50 @@ struct Q_QML_EXPORT Binding
 
     Location location;
     Location valueLocation;
+
+    bool isValueBinding() const
+    {
+        if (type == Type_AttachedProperty
+            || type == Type_GroupProperty)
+            return false;
+        if (flags & IsSignalHandlerExpression
+            || flags & IsSignalHandlerObject)
+            return false;
+        return true;
+    }
+
+    bool isSignalHandler() const
+    {
+        if (flags & IsSignalHandlerExpression || flags & IsSignalHandlerObject) {
+            Q_ASSERT(!isValueBinding());
+            Q_ASSERT(!isAttachedProperty());
+            Q_ASSERT(!isGroupProperty());
+            return true;
+        }
+        return false;
+    }
+
+    bool isAttachedProperty() const
+    {
+        if (type == Type_AttachedProperty) {
+            Q_ASSERT(!isValueBinding());
+            Q_ASSERT(!isSignalHandler());
+            Q_ASSERT(!isGroupProperty());
+            return true;
+        }
+        return false;
+    }
+
+    bool isGroupProperty() const
+    {
+        if (type == Type_GroupProperty) {
+            Q_ASSERT(!isValueBinding());
+            Q_ASSERT(!isSignalHandler());
+            Q_ASSERT(!isAttachedProperty());
+            return true;
+        }
+        return false;
+    }
 
     QString valueAsString(const Unit *unit) const;
     QString valueAsScriptString(const Unit *unit) const;

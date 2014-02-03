@@ -169,7 +169,14 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
             return tr("Property value set multiple times");
         bindingNames.insert(b->propertyNameIndex);
     }
-    bindings->append(b);
+    if (isListBinding) {
+        bindings->append(b);
+    } else if (bindingToDefaultProperty) {
+        Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::location>(b);
+        bindings->insertAfter(insertionPoint, b);
+    } else {
+        bindings->prepend(b);
+    }
     return QString(); // no error
 }
 
@@ -1273,13 +1280,11 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
-        for (const Binding *b = o->firstBinding(); b; b = b->next) {
-            QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
-            *bindingToWrite = *b;
-            if (b->type == QV4::CompiledData::Binding::Type_Script)
-                bindingToWrite->value.compiledScriptIndex = runtimeFunctionIndices[b->value.compiledScriptIndex];
-            bindingPtr += sizeof(QV4::CompiledData::Binding);
-        }
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBinding);
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isSignalHandler);
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isAttachedProperty);
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isGroupProperty);
+        Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
         quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
@@ -1314,6 +1319,20 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
     }
 
     return qmlUnit;
+}
+
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, QmlObject *o, const QVector<int> &runtimeFunctionIndices, BindingFilter filter) const
+{
+    for (const Binding *b = o->firstBinding(); b; b = b->next) {
+        if (!(b->*(filter))())
+            continue;
+        QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
+        *bindingToWrite = *b;
+        if (b->type == QV4::CompiledData::Binding::Type_Script)
+            bindingToWrite->value.compiledScriptIndex = runtimeFunctionIndices[b->value.compiledScriptIndex];
+        bindingPtr += sizeof(QV4::CompiledData::Binding);
+    }
+    return bindingPtr;
 }
 
 int QmlUnitGenerator::getStringId(const QString &str) const

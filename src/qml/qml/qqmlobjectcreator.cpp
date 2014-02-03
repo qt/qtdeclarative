@@ -536,7 +536,10 @@ void QmlObjectCreator::setupBindings()
         if (name.isEmpty())
             property = 0;
 
-        if (!property || (i > 0 && (binding - 1)->propertyNameIndex != binding->propertyNameIndex)) {
+        if (!property
+            || (i > 0 && ((binding - 1)->propertyNameIndex != binding->propertyNameIndex
+                          || (binding - 1)->flags != binding->flags))
+           ) {
             if (!name.isEmpty()) {
                 if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                     || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
