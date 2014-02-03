@@ -57,7 +57,7 @@ class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
-    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData);
+    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *rootContext = 0);
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize();

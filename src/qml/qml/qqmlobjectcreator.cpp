@@ -79,7 +79,7 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData)
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *rootContext)
     : componentAttached(0)
     , url(compiledData->url)
     , engine(parentContext->engine)
@@ -91,7 +91,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
     , compiledData(compiledData)
-    , rootContext(0)
+    , rootContext(rootContext)
     , _qobject(0)
     , _scopeObject(0)
     , _valueTypeProperty(0)
@@ -126,8 +126,10 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     context->imports->addref();
     context->setParent(parentContext);
 
-    if (!rootContext)
+    if (!rootContext) {
         rootContext = context;
+        rootContext->isRootObjectInCreation = true;
+    }
 
     QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
     for (QHash<int, int>::ConstIterator it = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
@@ -879,6 +881,12 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             }
 
             customParser = type->customParser();
+
+            if (rootContext->isRootObjectInCreation) {
+                QQmlData *ddata = QQmlData::get(instance, /*create*/true);
+                ddata->rootObjectInCreation = true;
+                rootContext->isRootObjectInCreation = false;
+            }
         } else {
             Q_ASSERT(typeRef->component);
             if (typeRef->component->qmlUnit->isSingleton())
@@ -886,7 +894,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef->component);
+            QmlObjectCreator subCreator(context, typeRef->component, rootContext);
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
