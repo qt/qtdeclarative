@@ -2323,12 +2323,14 @@ public:
             propagator.run(t, SInt32Type);
             if (Stmt *defStmt = _defUses.defStmt(t)) {
                 if (Move *m = defStmt->asMove()) {
-                    if (Convert *c = m->source->asConvert())
+                    if (Convert *c = m->source->asConvert()) {
                         c->type = SInt32Type;
-                    else if (Unop *u = m->source->asUnop())
-                        u->type = SInt32Type;
-                    else if (Binop *b = m->source->asBinop())
+                    } else if (Unop *u = m->source->asUnop()) {
+                        if (u->op != OpUMinus)
+                            u->type = SInt32Type;
+                    } else if (Binop *b = m->source->asBinop()) {
                         b->type = SInt32Type;
+                    }
                 }
             }
         }
@@ -2505,6 +2507,29 @@ public:
                     }
 
                     *conversion.expr = source;
+                } else if (Unop *u = (*conversion.expr)->asUnop()) {
+                    // convert:
+                    //   int32{%2} = double{-double{%1}};
+                    // to:
+                    //   double{%3} = double{-double{%1}};
+                    //   int32{%2} = int32{convert(double{%3})};
+                    Temp *tmp = bb->TEMP(bb->newTemp());
+                    tmp->type = u->type;
+                    Move *extraMove = f->New<Move>();
+                    extraMove->init(tmp, u);
+                    _defUses.addTemp(tmp, extraMove, bb);
+
+                    if (Temp *unopOperand = u->expr->asTemp()) {
+                        _defUses.addUse(*unopOperand, extraMove);
+                        _defUses.removeUse(move, *unopOperand);
+                    }
+
+                    int idx = bb->statements.indexOf(conversion.stmt);
+                    Q_ASSERT(idx != -1);
+                    bb->statements.insert(idx, extraMove);
+
+                    *conversion.expr = bb->CONVERT(tmp, conversion.targetType);
+                    _defUses.addUse(*tmp, move);
                 } else {
                     Q_UNREACHABLE();
                 }
