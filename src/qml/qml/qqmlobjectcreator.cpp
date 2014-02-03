@@ -691,7 +691,17 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
                 targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
 
             qmlBinding->setTarget(_bindingTarget, targetCorePropertyData, context);
-            qmlBinding->addToObject();
+
+            if (targetCorePropertyData.isAlias()) {
+                QQmlAbstractBinding *old =
+                    QQmlPropertyPrivate::setBindingNoEnable(_bindingTarget,
+                                                            targetCorePropertyData.coreIndex,
+                                                            targetCorePropertyData.getValueTypeCoreIndex(),
+                                                            qmlBinding);
+                if (old) { old->destroy(); }
+            } else {
+                qmlBinding->addToObject();
+            }
 
             _createdBindings[bindingIndex] = qmlBinding;
             qmlBinding->m_mePtr = &_createdBindings[bindingIndex];
