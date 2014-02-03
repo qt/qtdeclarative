@@ -397,7 +397,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         Q_ASSERT(referencingObjectIndex >= 0);
         QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex);
         Q_ASSERT(parentCache);
-        Q_ASSERT(!stringAt(instantiatingBinding->propertyNameIndex).isEmpty());
+        Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
 
         bool notInRevision = false;
         instantiatingProperty = PropertyResolver(parentCache).property(stringAt(instantiatingBinding->propertyNameIndex), &notInRevision);
@@ -434,8 +434,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         }
     }
 
-    QString typeName = stringAt(obj->inheritedTypeNameIndex);
-    if (!typeName.isEmpty()) {
+    if (obj->inheritedTypeNameIndex != 0) {
         QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
@@ -1004,10 +1003,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
             continue;
 
         QQmlPropertyData *pd = 0;
-        QString propertyName = stringAt(binding->propertyNameIndex);
-        if (!propertyName.isEmpty()) {
+        if (binding->propertyNameIndex != 0) {
             bool notInRevision = false;
-            pd = propertyResolver.property(propertyName, &notInRevision);
+            pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
         } else {
             pd = defaultProperty;
         }
@@ -1045,7 +1043,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         QtQml::Binding *syntheticBinding = pool->New<QtQml::Binding>();
         *syntheticBinding = *binding;
         syntheticBinding->type = QV4::CompiledData::Binding::Type_Object;
-        QString error = syntheticComponent->appendBinding(syntheticBinding, /*isListBinding*/false, /*bindingToDefaultProperty*/false);
+        QString error = syntheticComponent->appendBinding(syntheticBinding, /*isListBinding*/false);
         Q_ASSERT(error.isEmpty());
         Q_UNUSED(error);
 
@@ -1065,7 +1063,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         const QtQml::QmlObject *obj = qmlObjects->at(i);
-        if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
+        if (obj->inheritedTypeNameIndex == 0)
             continue;
 
         QQmlCompiledData::TypeReference *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
@@ -1131,8 +1129,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 {
     const QtQml::QmlObject *obj = qmlObjects->at(objectIndex);
 
-    QString id = stringAt(obj->idIndex);
-    if (!id.isEmpty()) {
+    if (obj->idIndex != 0) {
         if (_idToObjectIndex.contains(obj->idIndex)) {
             recordError(obj->locationOfIdProperty, tr("id is not unique"));
             return false;

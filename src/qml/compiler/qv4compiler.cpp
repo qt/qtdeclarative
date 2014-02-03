@@ -53,6 +53,8 @@ QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module, in
     if (headerSize == -1)
         headerSize = sizeof(QV4::CompiledData::Unit);
     this->headerSize = headerSize;
+    // Make sure the empty string always gets index 0
+    registerString(QString());
 }
 
 int QV4::Compiler::JSUnitGenerator::registerString(const QString &str)

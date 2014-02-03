@@ -161,7 +161,7 @@ struct QmlObject
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObject)
 public:
-    int inheritedTypeNameIndex;
+    quint32 inheritedTypeNameIndex;
     quint32 idIndex;
     int indexOfDefaultProperty;
 
@@ -191,7 +191,7 @@ public:
     QString appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const AST::SourceLocation &defaultToken, AST::SourceLocation *errorLocation);
     void appendFunction(Function *f);
 
-    QString appendBinding(Binding *b, bool isListBinding, bool bindToDefaultProperty);
+    QString appendBinding(Binding *b, bool isListBinding);
 
 private:
     PoolList<QmlProperty> *properties;
@@ -305,7 +305,7 @@ public:
 
     static QQmlScript::LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
 
-    int registerString(const QString &str) const { return jsGenerator->registerString(str); }
+    quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
 
     QString stringAt(int index) const { return jsGenerator->strings.at(index); }
@@ -330,7 +330,6 @@ public:
     QString sourceCode;
     QUrl url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
-    quint32 emptyStringIndex;
 };
 
 struct Q_QML_EXPORT QmlUnitGenerator

@@ -54,6 +54,8 @@
 
 QT_USE_NAMESPACE
 
+static const quint32 emptyStringIndex = 0;
+
 DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
 
 using namespace QtQml;
@@ -156,9 +158,10 @@ void QmlObject::appendFunction(Function *f)
     target->functions->append(f);
 }
 
-QString QmlObject::appendBinding(Binding *b, bool isListBinding, bool bindToDefaultProperty)
+QString QmlObject::appendBinding(Binding *b, bool isListBinding)
 {
-    if (!isListBinding && !bindToDefaultProperty
+    const bool bindingToDefaultProperty = (b->propertyNameIndex == 0);
+    if (!isListBinding && !bindingToDefaultProperty
         && b->type != QV4::CompiledData::Binding::Type_GroupProperty
         && b->type != QV4::CompiledData::Binding::Type_AttachedProperty
         && !(b->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
@@ -231,7 +234,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     this->pool = output->jsParserEngine.pool();
     this->jsGenerator = &output->jsGenerator;
 
-    emptyStringIndex = registerString(QString());
+    Q_ASSERT(registerString(QString()) == emptyStringIndex);
 
     sourceCode = code;
 
@@ -950,15 +953,13 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, q
         return;
     }
 
-    const bool bindingToDefaultProperty = (propertyNameIndex == emptyStringIndex);
-
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
     setBindingValue(binding, value);
-    QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false, bindingToDefaultProperty);
+    QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
         recordError(nameLocation, error);
     }
@@ -970,8 +971,6 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, q
         recordError(nameLocation, tr("Invalid component id specification"));
         return;
     }
-
-    const bool bindingToDefaultProperty = (propertyNameIndex == emptyStringIndex);
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
@@ -987,7 +986,7 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, q
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     // No type name on the initializer means it must be a group property
-    if (stringAt(_objects.at(objectIndex)->inheritedTypeNameIndex).isEmpty())
+    if (_objects.at(objectIndex)->inheritedTypeNameIndex == emptyStringIndex)
         binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
     else
         binding->type = QV4::CompiledData::Binding::Type_Object;
@@ -998,7 +997,7 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, q
         binding->flags |= QV4::CompiledData::Binding::IsListItem;
 
     binding->value.objectIndex = objectIndex;
-    QString error = bindingsTarget()->appendBinding(binding, isListItem, bindingToDefaultProperty);
+    QString error = bindingsTarget()->appendBinding(binding, isListItem);
     if (!error.isEmpty()) {
         recordError(nameLocation, error);
     }
@@ -1100,7 +1099,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
         int objIndex = defineQMLObject(0, AST::SourceLocation(), 0, 0);
         binding->value.objectIndex = objIndex;
 
-        QString error = (*object)->appendBinding(binding, /*isListBinding*/false, /*bindingToDefaultProperty*/false);
+        QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
         if (!error.isEmpty()) {
             recordError(qualifiedIdElement->identifierToken, error);
             return false;
@@ -1128,7 +1127,7 @@ void QQmlCodeGenerator::recordError(const AST::SourceLocation &location, const Q
 void QQmlCodeGenerator::collectTypeReferences()
 {
     foreach (QmlObject *obj, _objects) {
-        if (!stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
+        if (obj->inheritedTypeNameIndex != emptyStringIndex) {
             QV4::CompiledData::TypeReference &r = _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
             r.needsCreation = true;
         }
