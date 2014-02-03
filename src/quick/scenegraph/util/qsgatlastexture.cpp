@@ -143,7 +143,13 @@ Atlas::Atlas(const QSize &size)
     , m_allocated(false)
 {
 
-#ifdef QT_OPENGL_ES
+    m_internalFormat = GL_RGBA;
+    m_externalFormat = GL_BGRA;
+
+#ifndef QT_OPENGL_ES
+    if (QOpenGLContext::currentContext()->isES()) {
+#endif
+
 #if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_NO_SDK)
     QString *deviceName =
             static_cast<QString *>(QGuiApplication::platformNativeInterface()->nativeResourceForIntegration("AndroidDeviceName"));
@@ -153,7 +159,7 @@ Atlas::Atlas(const QSize &size)
                                                         || deviceName->compare(QStringLiteral("samsung SM-T215"), Qt::CaseInsensitive) == 0);
 #else
     static bool wrongfullyReportsBgra8888Support = false;
-#endif
+#endif // ANDROID
 
     const char *ext = (const char *) glGetString(GL_EXTENSIONS);
     if (!wrongfullyReportsBgra8888Support
@@ -165,13 +171,13 @@ Atlas::Atlas(const QSize &size)
     } else if (strstr(ext, "GL_APPLE_texture_format_BGRA8888")) {
         m_internalFormat = GL_RGBA;
         m_externalFormat = GL_BGRA;
-#endif
+#endif // IOS
     } else {
         m_internalFormat = m_externalFormat = GL_RGBA;
     }
-#else
-    m_internalFormat = GL_RGBA;
-    m_externalFormat = GL_BGRA;
+
+#ifndef QT_OPENGL_ES
+    }
 #endif
 
     m_use_bgra_fallback = qEnvironmentVariableIsSet("QSG_ATLAS_USE_BGRA_FALLBACK");
@@ -328,7 +334,8 @@ void Atlas::bind(QSGTexture::Filtering filtering)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        if (!QOpenGLContext::currentContext()->isES())
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
         glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);
 

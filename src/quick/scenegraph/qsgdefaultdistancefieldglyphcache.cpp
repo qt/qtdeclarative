@@ -231,7 +231,8 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    if (!QOpenGLContext::currentContext()->isES())
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     const GLint internalFormat = isCoreProfile() ? GL_R8 : GL_ALPHA;
     const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
 #else
@@ -373,7 +374,8 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    if (!ctx->isES())
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, oldWidth, oldHeight, 0,
                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);

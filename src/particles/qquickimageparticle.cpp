@@ -100,15 +100,15 @@ public:
     TabledMaterial()
     {
         QSGShaderSourceBuilder builder;
+        const bool isES = QOpenGLContext::currentContext()->isES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
 
         m_vertex_code = builder.source();
         builder.clear();
@@ -118,9 +118,9 @@ public:
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -178,14 +178,15 @@ public:
     DeformableMaterial()
     {
         QSGShaderSourceBuilder builder;
+        const bool isES = QOpenGLContext::currentContext()->isES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_vertex_code = builder.source();
         builder.clear();
 
@@ -193,9 +194,9 @@ public:
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -242,6 +243,7 @@ public:
     SpriteMaterial()
     {
         QSGShaderSourceBuilder builder;
+        const bool isES = QOpenGLContext::currentContext()->isES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
@@ -249,9 +251,9 @@ public:
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_vertex_code = builder.source();
         builder.clear();
 
@@ -261,9 +263,9 @@ public:
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -323,22 +325,23 @@ public:
     ColoredMaterial()
     {
         QSGShaderSourceBuilder builder;
+        const bool isES = QOpenGLContext::currentContext()->isES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_vertex_code = builder.source();
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -400,20 +403,21 @@ public:
     SimpleMaterial()
     {
         QSGShaderSourceBuilder builder;
+        const bool isES = QOpenGLContext::currentContext()->isES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_vertex_code = builder.source();
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
         builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         m_fragment_code = builder.source();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -1227,12 +1231,10 @@ void QQuickImageParticle::buildParticleNodes(QSGNode** passThrough)
 
 void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 {
-#ifdef QT_OPENGL_ES_2
-    if (m_count * 4 > 0xffff) {
+    if (QOpenGLContext::currentContext()->isES() && m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
         return;
     }
-#endif
 
     if (count() <= 0)
         return;

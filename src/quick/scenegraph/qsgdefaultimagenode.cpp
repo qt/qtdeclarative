@@ -307,13 +307,11 @@ void QSGDefaultImageNode::preprocess()
         markDirty(DirtyMaterial);
 }
 
-#ifdef QT_OPENGL_ES_2
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
-#endif
 
 namespace {
     struct X { float x, tx; };
@@ -360,15 +358,18 @@ void QSGDefaultImageNode::updateGeometry()
         bool hasTiles = hTiles != 1 || vTiles != 1;
         bool fullTexture = innerSourceRect == QRectF(0, 0, 1, 1);
 
-#ifdef QT_OPENGL_ES_2
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
-        QSize size = t->textureSize();
-        bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-        bool wrapSupported = npotSupported || !isNpot;
-#else
         bool wrapSupported = true;
+
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+#ifndef QT_OPENGL_ES_2
+        if (ctx->isES())
 #endif
+        {
+            bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
+            QSize size = t->textureSize();
+            const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+            wrapSupported = npotSupported || !isNpot;
+        }
 
         // An image can be rendered as a single quad if:
         // - There are no margins, and either:

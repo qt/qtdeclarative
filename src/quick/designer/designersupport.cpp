@@ -94,7 +94,10 @@ void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
         texture->setSize(referencedItem->boundingRect().size().toSize());
         texture->setRecursive(true);
 #ifndef QT_OPENGL_ES
-        texture->setFormat(GL_RGBA8);
+        if (QOpenGLContext::openGLModuleType() == QOpenGLContext::DesktopGL)
+            texture->setFormat(GL_RGBA8);
+        else
+            texture->setFormat(GL_RGBA);
 #else
         texture->setFormat(GL_RGBA);
 #endif

@@ -99,13 +99,8 @@ public:
     QSGContextPrivate()
         : antialiasingMethod(QSGContext::UndecidedAntialiasing)
         , distanceFieldDisabled(qmlDisableDistanceField())
-        , distanceFieldAntialiasing(
-#if !defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
-              QSGGlyphNode::HighQualitySubPixelAntialiasing
-#else
-              QSGGlyphNode::GrayAntialiasing
-#endif
-              )
+        , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
+        , distanceFieldAntialiasingDecided(false)
     {
     }
 
@@ -117,6 +112,7 @@ public:
     QSGContext::AntialiasingMethod antialiasingMethod;
     bool distanceFieldDisabled;
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
+    bool distanceFieldAntialiasingDecided;
 
     static QOpenGLContext *sharedOpenGLContext;
 };
@@ -161,6 +157,8 @@ QSGContext::QSGContext(QObject *parent) :
 {
     Q_D(QSGContext);
     QByteArray mode = qgetenv("QSG_DISTANCEFIELD_ANTIALIASING");
+    if (!mode.isEmpty())
+        d->distanceFieldAntialiasingDecided = true;
     if (mode == "subpixel")
         d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
     else if (mode == "subpixel-lowq")
@@ -210,6 +208,17 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
             else
                 d->antialiasingMethod = VertexAntialiasing;
         }
+    }
+
+    // With OpenGL ES, except for Angle on Windows, use GrayAntialiasing, unless
+    // some value had been requested explicitly. This could not be decided
+    // before without a context. Now the context is ready.
+    if (!d->distanceFieldAntialiasingDecided) {
+        d->distanceFieldAntialiasingDecided = true;
+#ifndef Q_OS_WIN
+        if (renderContext->openglContext()->isES())
+            d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+#endif
     }
 
     static bool dumped = false;

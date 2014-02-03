@@ -269,6 +269,8 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
         return 0;
 
     if (m_dirtyProgram) {
+        const bool isES = QOpenGLContext::currentContext()->isES();
+
         QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(rootNode->material());
         Q_ASSERT(material);
 
@@ -276,17 +278,16 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
         QSGShaderSourceBuilder builder;
         if (s.sourceCode[Key::FragmentShader].isEmpty()) {
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.frag"));
-#if defined(QT_OPENGL_ES_2)
-            builder.removeVersion();
-#endif
+            if (isES)
+                builder.removeVersion();
             s.sourceCode[Key::FragmentShader] = builder.source();
             builder.clear();
         }
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticletemplate.vert"));
-#if defined(QT_OPENGL_ES_2)
-        builder.removeVersion();
-#endif
+        if (isES)
+            builder.removeVersion();
+
         if (s.sourceCode[Key::VertexShader].isEmpty())
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.vert"));
         s.sourceCode[Key::VertexShader] = builder.source() + s.sourceCode[Key::VertexShader];
@@ -310,12 +311,10 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
 
 QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
 {
-#ifdef QT_OPENGL_ES_2
-    if (m_count * 4 > 0xffff) {
+    if (QOpenGLContext::currentContext()->isES() && m_count * 4 > 0xffff) {
         printf("CustomParticle: Too many particles... \n");
         return 0;
     }
-#endif
 
     if (m_count <= 0) {
         printf("CustomParticle: Too few particles... \n");
