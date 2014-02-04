@@ -984,7 +984,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
     QVERIFY(init(TIMER_QMLFILE));
 
     client->connect();
-
+    //We can set the breakpoint after connect() here because the timer is repeating and if we miss
+    //its first iteration we can still catch the second one.
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TIMER_QMLFILE), sourceLine, -1, true);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1004,8 +1005,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
     int sourceLine = 43;
     QVERIFY(init(LOADJSFILE_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
+    client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1025,8 +1026,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
     int actualLine = 49;
     QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
+    client->connect();
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
@@ -1047,8 +1048,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
     int actualLine = 49;
     QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
+    client->connect();
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
@@ -1093,6 +1094,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
     QVERIFY(init(CONDITION_QMLFILE));
 
     client->connect();
+    //The breakpoint is in a timer loop so we can set it after connect().
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(CONDITION_QMLFILE), sourceLine, 1, true, QLatin1String("a > 10"));
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1148,30 +1150,11 @@ void tst_QQmlDebugJS::setBreakpointWhenAttaching()
     QVERIFY(init(QLatin1String(TIMER_QMLFILE), false));
 
     client->connect();
+    //The breakpoint is in a timer loop so we can set it after connect().
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TIMER_QMLFILE), sourceLine);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 }
 */
-
-//void tst_QQmlDebugJS::setBreakpointInFunction()
-//{
-//    //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
-
-//    int actualLine = 31;
-
-//    client->connect();
-//    client->setBreakpoint(QLatin1String(FUNCTION), QLatin1String("doSomethingElse"), -1, -1, true);
-
-//    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
-
-//    QString jsonString(client->response);
-//    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-//    QVariantMap body = value.value("body").toMap();
-
-//    QCOMPARE(body.value("sourceLine").toInt(), actualLine);
-//    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
-//}
 
 #if 0
 void tst_QQmlDebugJS::setBreakpointOnEvent()
@@ -1182,9 +1165,8 @@ void tst_QQmlDebugJS::setBreakpointOnEvent()
 
     QVERIFY(init(TIMER_QMLFILE));
 
-    client->connect();
-
     client->setBreakpoint(QLatin1String(EVENT), QLatin1String("triggered"), -1, -1, true);
+    client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1205,6 +1187,9 @@ void tst_QQmlDebugJS::clearBreakpoint()
     QVERIFY(init(CHANGEBREAKPOINT_QMLFILE));
 
     client->connect();
+    //The breakpoints are in a timer loop so we can set them after connect().
+    //Furthermore the breakpoints should be hit in the right order because setting of breakpoints
+    //can only occur in the QML event loop. (see QCOMPARE for sourceLine2 below)
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(CHANGEBREAKPOINT_QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(CHANGEBREAKPOINT_QMLFILE), sourceLine2, -1, true);
 
@@ -1281,8 +1266,8 @@ void tst_QQmlDebugJS::stepIn()
     int actualLine = 50;
     QVERIFY(init(STEPACTION_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
+    client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::In);
@@ -1305,8 +1290,8 @@ void tst_QQmlDebugJS::stepOut()
     int actualLine = 54;
     QVERIFY(init(STEPACTION_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
+    client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Out);
@@ -1329,9 +1314,9 @@ void tst_QQmlDebugJS::continueDebugging()
     int sourceLine2 = 51;
     QVERIFY(init(STEPACTION_QMLFILE));
 
-    client->connect();
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine2, -1, true);
+    client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Continue);
