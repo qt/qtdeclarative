@@ -3198,6 +3198,9 @@ public:
         : Object(engine)
     {
         setVTable(staticVTable());
+        QV4::Scope scope(engine);
+        QV4::ScopedObject protectThis(scope, this);
+        Q_UNUSED(protectThis);
         setArrayType(QV4::ArrayData::Custom);
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}

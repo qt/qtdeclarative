@@ -175,10 +175,10 @@ public:
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
-        setArrayType(ArrayData::Custom);
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
         Q_UNUSED(protectThis);
+        setArrayType(ArrayData::Custom);
         init();
     }
 
@@ -188,10 +188,10 @@ public:
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
-        setArrayType(ArrayData::Custom);
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
         Q_UNUSED(protectThis);
+        setArrayType(ArrayData::Custom);
         loadReference();
         init();
     }

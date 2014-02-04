@@ -57,6 +57,9 @@ QmlListWrapper::QmlListWrapper(QV8Engine *engine)
       v8(engine)
 {
     setVTable(staticVTable());
+    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::ScopedObject protectThis(scope, this);
+    Q_UNUSED(protectThis);
     setArrayType(ArrayData::Custom);
 }
 
