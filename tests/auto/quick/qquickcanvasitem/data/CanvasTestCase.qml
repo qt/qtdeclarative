@@ -11,10 +11,6 @@ TestCase {
   function cleanupTestCase() {
     wait(100) //wait for a short while to make sure no leaked textures
   }
-  Window {
-    id: win
-    visible: true
-  }
 
   function testData(type) {
     if (type === "2d")
@@ -31,7 +27,7 @@ TestCase {
   }
 
   function createCanvasObject(data) {
-    return component.createObject(win, data.properties);
+    return component.createObject(testCase, data.properties);
   }
 
   function comparePixel(ctx,x,y,r,g,b,a, d)
