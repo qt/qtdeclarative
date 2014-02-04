@@ -58,17 +58,14 @@ class LineShader : public QSGSimpleMaterialShader<LineMaterial>
     QSG_DECLARE_SIMPLE_SHADER(LineShader, LineMaterial)
 
 public:
-    const char *vertexShader() const {
-        QResource r(":/scenegraph/graph/shaders/line.vsh");
-        Q_ASSERT(r.isValid());
-        return (const char *) r.data();
-    }
+    LineShader()
+       : vsh(readResource(":/scenegraph/graph/shaders/line.vsh")),
+         fsh(readResource(":/scenegraph/graph/shaders/line.fsh"))
+    {}
 
-    const char *fragmentShader() const {
-        QResource r(":/scenegraph/graph/shaders/line.fsh");
-        Q_ASSERT(r.isValid());
-        return (const char *) r.data();
-    }
+    const char *vertexShader() const { return vsh.constData(); }
+
+    const char *fragmentShader() const { return fsh.constData(); }
 
     QList<QByteArray> attributes() const {  return QList<QByteArray>() << "pos" << "t"; }
 
@@ -84,7 +81,15 @@ public:
         id_color = program()->uniformLocation("color");
     }
 
+    static QByteArray readResource(const char *path) {
+        QResource r(path);
+        Q_ASSERT(r.isValid());
+        return QByteArray((const char *)r.data(), r.size());
+    }
+
 private:
+    QByteArray vsh;
+    QByteArray fsh;
     int id_color;
     int id_spread;
     int id_size;
