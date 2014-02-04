@@ -80,13 +80,14 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *rootContext)
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext)
     : componentAttached(0)
     , url(compiledData->url)
     , engine(parentContext->engine)
     , qmlUnit(compiledData->qmlUnit)
     , jsUnit(compiledData->compilationUnit)
     , parentContext(parentContext)
+    , creationContext(creationContext)
     , context(0)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
@@ -153,8 +154,8 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
             QQmlScriptData *s = compiledData->scripts.at(i);
             scripts->putIndexed(i, s->scriptValueForContext(context));
         }
-    } else if (parentContext) {
-        context->importedScripts = parentContext->importedScripts;
+    } else if (creationContext) {
+        context->importedScripts = creationContext->importedScripts;
     }
 
     QVector<QQmlParserStatus*> parserStatusCallbacks;
@@ -942,7 +943,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef->component, rootContext);
+            QmlObjectCreator subCreator(context, typeRef->component, creationContext, rootContext);
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;

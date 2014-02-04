@@ -169,6 +169,7 @@ private slots:
     void singletonTypeResolution();
     void importScripts_data();
     void importScripts();
+    void importCreationContext();
     void scarceResources();
     void scarceResources_data();
     void scarceResources_other();
@@ -4208,6 +4209,20 @@ void tst_qqmlecmascript::importScripts()
     }
 
     engine.setImportPathList(importPathList);
+}
+
+void tst_qqmlecmascript::importCreationContext()
+{
+    QQmlComponent component(&engine, testFileUrl("jsimport/creationContext.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    bool success = object->property("success").toBool();
+    if (!success) {
+        QSignalSpy readySpy(object.data(), SIGNAL(loaded()));
+        readySpy.wait();
+    }
+    success = object->property("success").toBool();
+    QVERIFY(success);
 }
 
 void tst_qqmlecmascript::scarceResources_other()

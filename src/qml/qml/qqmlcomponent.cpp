@@ -862,7 +862,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
     if (enginePriv->useNewCompiler) {
-        state.creator = new QmlObjectCreator(context, cc);
+        state.creator = new QmlObjectCreator(context, cc, creationContext);
         rv = state.creator->create(start);
         if (!rv)
             state.errors = state.creator->errors;
@@ -1057,7 +1057,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     p->compiledData = d->cc;
     p->compiledData->addref();
     if (enginePriv->useNewCompiler) {
-        p->creator.reset(new QmlObjectCreator(contextData, d->cc));
+        p->creator.reset(new QmlObjectCreator(contextData, d->cc, d->creationContext));
         p->subComponentToCreate = d->start;
     } else
         p->vme.init(contextData, d->cc, d->start, d->creationContext);

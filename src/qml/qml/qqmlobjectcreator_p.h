@@ -57,7 +57,7 @@ class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
-    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *rootContext = 0);
+    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext = 0);
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize();
@@ -85,6 +85,7 @@ private:
     const QV4::CompiledData::QmlUnit *qmlUnit;
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *parentContext;
+    QQmlContextData *creationContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> resolvedTypes;
     const QVector<QQmlPropertyCache *> propertyCaches;
