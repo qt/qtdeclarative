@@ -55,6 +55,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
+#include <private/qqmlvaluetypeproxybinding_p.h>
 
 QT_USE_NAMESPACE
 
@@ -509,6 +510,17 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     }
 }
 
+static QQmlType *qmlTypeForObject(QObject *object)
+{
+    QQmlType *type = 0;
+    const QMetaObject *mo = object->metaObject();
+    while (mo && !type) {
+        type = QQmlMetaType::qmlType(mo);
+        mo = mo->superClass();
+    }
+    return type;
+}
+
 void QmlObjectCreator::setupBindings()
 {
     QQmlListProperty<void> savedList;
@@ -528,6 +540,36 @@ void QmlObjectCreator::setupBindings()
             idBinding.stringIndex = _compiledObject->idIndex;
             idBinding.location = _compiledObject->location; // ###
             setPropertyValue(idProperty, &idBinding);
+        }
+    }
+
+    // ### this is best done through type-compile-time binding skip lists.
+    if (_valueTypeProperty) {
+        QQmlAbstractBinding *binding =
+            QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
+
+        if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
+            QQmlPropertyPrivate::setBinding(_bindingTarget, _valueTypeProperty->coreIndex, -1, 0);
+            binding->destroy();
+        } else if (binding) {
+            QQmlValueTypeProxyBinding *proxy =
+                static_cast<QQmlValueTypeProxyBinding *>(binding);
+
+            if (qmlTypeForObject(_bindingTarget)) {
+                quint32 bindingSkipList = 0;
+
+                const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
+                for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
+                    if (binding->type != QV4::CompiledData::Binding::Type_Script)
+                        continue;
+                    property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
+                    if (property)
+                        bindingSkipList |= (1 << property->coreIndex);
+                }
+                property = 0;
+
+                proxy->removeBindings(bindingSkipList);
+            }
         }
     }
 
@@ -661,7 +703,8 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
     }
 
     if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
-        && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment))
+        && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
+        && !_valueTypeProperty)
         removeBindingOnProperty(_bindingTarget, property->coreIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
@@ -712,12 +755,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
         if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
             // ### determine value source and interceptor casts ahead of time.
-            QQmlType *type = 0;
-            const QMetaObject *mo = createdSubObject->metaObject();
-            while (mo && !type) {
-                type = QQmlMetaType::qmlType(mo);
-                mo = mo->superClass();
-            }
+            QQmlType *type = qmlTypeForObject(createdSubObject);
             Q_ASSERT(type);
 
             QQmlPropertyData targetCorePropertyData = *property;
