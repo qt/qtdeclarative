@@ -156,6 +156,11 @@ bool QQmlTypeCompiler::compile()
             return false;
     }
 
+    {
+        QQmlAliasAnnotator annotator(this);
+        annotator.annotateBindingsToAliases();
+    }
+
     // Collect imported scripts
     const QList<QQmlTypeData::ScriptReference> &scripts = typeData->resolvedScripts();
     compiledData->scripts.reserve(scripts.count());
@@ -961,6 +966,37 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QByteArray &e
             return v;
     }
     return -1;
+}
+
+
+QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , propertyCaches(typeCompiler->propertyCaches())
+{
+}
+
+void QQmlAliasAnnotator::annotateBindingsToAliases()
+{
+    for (int i = 0; i < qmlObjects.count(); ++i) {
+        QQmlPropertyCache *propertyCache = propertyCaches.at(i);
+        if (!propertyCache)
+            continue;
+
+        const QmlObject *obj = qmlObjects.at(i);
+
+        PropertyResolver resolver(propertyCache);
+        QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+
+        for (QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
+            if (!binding->isValueBinding())
+                continue;
+            bool notInRevision = false;
+            QQmlPropertyData *pd = binding->propertyNameIndex != 0 ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            if (pd && pd->isAlias())
+                binding->flags |= QV4::CompiledData::Binding::IsBindingToAlias;
+        }
+    }
 }
 
 QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler)

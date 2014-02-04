@@ -163,6 +163,18 @@ private:
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
 };
 
+// Annotate properties bound to aliases with a flag
+class QQmlAliasAnnotator : public QQmlCompilePass
+{
+public:
+    QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler);
+
+    void annotateBindingsToAliases();
+private:
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QVector<QQmlPropertyCache *> propertyCaches;
+};
+
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)

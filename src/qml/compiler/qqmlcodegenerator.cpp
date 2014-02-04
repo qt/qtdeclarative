@@ -1280,10 +1280,11 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBinding);
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBindingNoAlias);
         bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isSignalHandler);
         bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isAttachedProperty);
         bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isGroupProperty);
+        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
         quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);

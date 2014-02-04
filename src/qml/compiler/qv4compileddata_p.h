@@ -302,7 +302,8 @@ struct Q_QML_EXPORT Binding
         IsOnAssignment = 0x4,
         InitializerForReadOnlyDeclaration = 0x8,
         IsResolvedEnum = 0x10,
-        IsListItem = 0x20
+        IsListItem = 0x20,
+        IsBindingToAlias = 0x40
     };
 
     quint32 flags : 16;
@@ -328,6 +329,9 @@ struct Q_QML_EXPORT Binding
             return false;
         return true;
     }
+
+    bool isValueBindingNoAlias() const { return isValueBinding() && !(flags & IsBindingToAlias); }
+    bool isValueBindingToAlias() const { return isValueBinding() && (flags & IsBindingToAlias); }
 
     bool isSignalHandler() const
     {
