@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
+    F(Debug, debug) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
@@ -142,11 +143,9 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QQmlJS::Moth::Instr) - 1)
 
 #ifdef MOTH_THREADED_INTERPRETER
-#  define MOTH_INSTR_HEADER void *code; \
-                            unsigned int breakPoint : 1;
+#  define MOTH_INSTR_HEADER void *code;
 #else
-#  define MOTH_INSTR_HEADER quint8 instructionType; \
-                            unsigned int breakPoint : 1;
+#  define MOTH_INSTR_HEADER quint32 instructionType;
 #endif
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,
@@ -233,6 +232,10 @@ union Instr
     struct instr_ret {
         MOTH_INSTR_HEADER
         Param result;
+    };
+    struct instr_debug {
+        MOTH_INSTR_HEADER
+        quint32 breakPoint;
     };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
@@ -703,6 +706,7 @@ union Instr
 
     instr_common common;
     instr_ret ret;
+    instr_debug debug;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_move move;

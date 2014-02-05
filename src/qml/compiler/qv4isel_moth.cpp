@@ -47,6 +47,7 @@
 #include <private/qv4function_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qqmlengine_p.h>
 
 #undef USE_TYPE_INFO
 
@@ -217,7 +218,13 @@ void InstructionSelection::run(int functionIndex)
     QVector<uint> lineNumberMappings;
     lineNumberMappings.reserve(_function->basicBlocks.size() * 2);
 
+    uint currentLine = -1;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+        if (irModule->debugMode) {
+            Instruction::Debug debug;
+            debug.breakPoint = 0;
+            addInstruction(debug);
+        }
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
@@ -237,8 +244,15 @@ void InstructionSelection::run(int functionIndex)
         foreach (V4IR::Stmt *s, _block->statements) {
             _currentStatement = s;
 
-            if (s->location.isValid())
+            if (s->location.isValid()) {
                 lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
+                if (irModule->debugMode && s->location.startLine != currentLine) {
+                    Instruction::Debug debug;
+                    debug.breakPoint = 0;
+                    addInstruction(debug);
+                    currentLine = s->location.startLine;
+                }
+            }
 
             s->accept(this);
         }
@@ -1142,12 +1156,12 @@ void QQmlJS::Moth::InstructionSelection::callBuiltinConvertThisToObject()
 
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
+
 #ifdef MOTH_THREADED_INTERPRETER
     instr.common.code = VME::instructionJumpTable()[static_cast<int>(type)];
 #else
     instr.common.instructionType = type;
 #endif
-    instr.common.breakPoint = 0;
 
     int instructionSize = Instr::size(type);
     if (_codeEnd - _codeNext < instructionSize) {

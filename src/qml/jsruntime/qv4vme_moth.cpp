@@ -64,8 +64,6 @@ using namespace QQmlJS::Moth;
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
     code += InstrMeta<(int)Instr::I>::Size; \
-    if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity())) \
-        debugger->maybeBreakAtInstruction(code, instr.breakPoint); \
     Q_UNUSED(instr); \
     TRACE_INSTR(I)
 
@@ -658,6 +656,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
+
+    MOTH_BEGIN_INSTR(Debug)
+        if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity()))
+            debugger->maybeBreakAtInstruction(code, instr.breakPoint);
+    MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
         VALUE(instr.result) = context->callData->thisObject;
