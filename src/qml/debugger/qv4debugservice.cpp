@@ -1025,7 +1025,7 @@ QV4DebugService *QV4DebugService::instance()
 void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
-
+    QMutexLocker lock(&d->initializeMutex);
     if (engine) {
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (QQmlDebugServer *server = QQmlDebugServer::instance()) {
@@ -1044,6 +1044,7 @@ void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
 void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
+    QMutexLocker lock(&d->initializeMutex);
     if (engine){
         const QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (ee) {
