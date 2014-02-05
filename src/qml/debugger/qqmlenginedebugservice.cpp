@@ -759,7 +759,7 @@ void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaPr
     sendMessage(reply);
 }
 
-void QQmlEngineDebugService::addEngine(QQmlEngine *engine)
+void QQmlEngineDebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(!m_engines.contains(engine));
@@ -767,7 +767,7 @@ void QQmlEngineDebugService::addEngine(QQmlEngine *engine)
     m_engines.append(engine);
 }
 
-void QQmlEngineDebugService::remEngine(QQmlEngine *engine)
+void QQmlEngineDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(m_engines.contains(engine));

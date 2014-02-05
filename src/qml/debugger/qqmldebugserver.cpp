@@ -42,6 +42,12 @@
 #include "qqmldebugserver_p.h"
 #include "qqmldebugservice_p.h"
 #include "qqmldebugservice_p_p.h"
+#include "qqmlenginedebugservice_p.h"
+#include "qv4debugservice_p.h"
+#include "qv4profilerservice_p.h"
+#include "qdebugmessageservice_p.h"
+#include "qqmlprofilerservice_p.h"
+
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -561,6 +567,34 @@ QStringList QQmlDebugServer::serviceNames() const
     Q_D(const QQmlDebugServer);
     QReadLocker lock(&d->pluginsLock);
     return d->plugins.keys();
+}
+
+void QQmlDebugServer::addEngine(QQmlEngine *engine)
+{
+    Q_D(QQmlDebugServer);
+    QReadLocker lock(&d->pluginsLock);
+
+    foreach (QQmlDebugService *service, d->plugins)
+        service->engineAboutToBeAdded(engine);
+
+    // TODO: Later wait here for initialization.
+
+    foreach (QQmlDebugService *service, d->plugins)
+        service->engineAdded(engine);
+}
+
+void QQmlDebugServer::removeEngine(QQmlEngine *engine)
+{
+    Q_D(QQmlDebugServer);
+    QReadLocker lock(&d->pluginsLock);
+
+    foreach (QQmlDebugService *service, d->plugins)
+        service->engineAboutToBeRemoved(engine);
+
+    // TODO: Later wait here for cleanup
+
+    foreach (QQmlDebugService *service, d->plugins)
+        service->engineRemoved(engine);
 }
 
 bool QQmlDebugServer::addService(QQmlDebugService *service)

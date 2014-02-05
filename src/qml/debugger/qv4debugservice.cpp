@@ -1022,7 +1022,7 @@ QV4DebugService *QV4DebugService::instance()
     return v4ServiceInstance();
 }
 
-void QV4DebugService::addEngine(const QQmlEngine *engine)
+void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
 
@@ -1041,7 +1041,7 @@ void QV4DebugService::addEngine(const QQmlEngine *engine)
     }
 }
 
-void QV4DebugService::removeEngine(const QQmlEngine *engine)
+void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
     if (engine){

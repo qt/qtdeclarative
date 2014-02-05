@@ -77,6 +77,8 @@ public:
     QList<QQmlDebugService*> services() const;
     QStringList serviceNames() const;
 
+    void addEngine(QQmlEngine *engine);
+    void removeEngine(QQmlEngine *engine);
 
     bool addService(QQmlDebugService *service);
     bool removeService(QQmlDebugService *service);

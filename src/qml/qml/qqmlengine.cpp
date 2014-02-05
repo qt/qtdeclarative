@@ -62,6 +62,7 @@
 #include "qqmllist_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
+#include <private/qqmldebugserver_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
@@ -813,11 +814,12 @@ void QQmlEnginePrivate::init()
     if (QCoreApplication::instance()->thread() == q->thread() &&
         QQmlEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
-        QQmlEngineDebugService::instance()->addEngine(q);
-        QV4DebugService::instance()->addEngine(q);
-        QV4ProfilerService::initialize();
+        QQmlEngineDebugService::instance();
+        QV4DebugService::instance();
+        QV4ProfilerService::instance();
         QQmlProfilerService::instance();
         QDebugMessageService::instance();
+        QQmlDebugServer::instance()->addEngine(q);
     }
 }
 
@@ -895,10 +897,8 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
-    if (d->isDebugging) {
-        QQmlEngineDebugService::instance()->remEngine(this);
-        QV4DebugService::instance()->removeEngine(this);
-    }
+    if (d->isDebugging)
+        QQmlDebugServer::instance()->removeEngine(this);
 
     // Emit onDestruction signals for the root context before
     // we destroy the contexts, engine, Singleton Types etc. that

@@ -318,6 +318,22 @@ void QQmlDebugService::messageReceived(const QByteArray &)
 {
 }
 
+void QQmlDebugService::engineAboutToBeAdded(QQmlEngine *)
+{
+}
+
+void QQmlDebugService::engineAboutToBeRemoved(QQmlEngine *)
+{
+}
+
+void QQmlDebugService::engineAdded(QQmlEngine *)
+{
+}
+
+void QQmlDebugService::engineRemoved(QQmlEngine *)
+{
+}
+
 QQmlDebugStream::QQmlDebugStream()
     : QDataStream()
 {

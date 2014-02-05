@@ -127,12 +127,6 @@ QV4ProfilerService *QV4ProfilerService::instance()
     return v4ProfilerInstance();
 }
 
-void QV4ProfilerService::initialize()
-{
-    // just make sure that the service is properly registered
-    v4ProfilerInstance();
-}
-
 void QV4ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
     Q_D(QV4ProfilerService);

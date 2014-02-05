@@ -69,8 +69,8 @@ public:
     ~QV4DebugService();
 
     static QV4DebugService *instance();
-    void addEngine(const QQmlEngine *engine);
-    void removeEngine(const QQmlEngine *engine);
+    void engineAboutToBeAdded(QQmlEngine *engine);
+    void engineAboutToBeRemoved(QQmlEngine *engine);
 
     void signalEmitted(const QString &signal);
 

@@ -92,7 +92,6 @@ public:
     ~QV4ProfilerService();
 
     static QV4ProfilerService *instance();
-    static void initialize();
 
 public Q_SLOTS:
     void startProfiling(const QString &title);

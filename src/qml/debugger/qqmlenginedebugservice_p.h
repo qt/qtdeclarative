@@ -96,8 +96,8 @@ public:
         bool hasNotifySignal;
     };
 
-    void addEngine(QQmlEngine *);
-    void remEngine(QQmlEngine *);
+    void engineAboutToBeAdded(QQmlEngine *);
+    void engineAboutToBeRemoved(QQmlEngine *);
     void objectCreated(QQmlEngine *, QObject *);
 
     void setStatesDelegate(QQmlDebugStatesDelegate *);
