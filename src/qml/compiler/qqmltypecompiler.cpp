@@ -851,7 +851,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
             if (!pd)
                 continue;
 
-            if (!pd->isEnum() && !pd->propType != QMetaType::Int)
+            if (!pd->isEnum() && pd->propType != QMetaType::Int)
                 continue;
 
             if (!tryQualifiedEnumAssignment(obj, propertyCache, pd, binding))
