@@ -902,6 +902,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     bool isComponent = false;
     QObject *instance = 0;
     QQmlCustomParser *customParser = 0;
+    QQmlParserStatus *parserStatus = 0;
 
     if (compiledData->isComponent(index)) {
         isComponent = true;
@@ -922,12 +923,8 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             }
 
             const int parserStatusCast = type->parserStatusCast();
-            if (parserStatusCast != -1) {
-                QQmlParserStatus *parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
-                parserStatus->classBegin();
-                _parserStatusCallbacks[index] = parserStatus;
-                parserStatus->d = &_parserStatusCallbacks[index];
-            }
+            if (parserStatusCast != -1)
+                parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
 
             customParser = type->customParser();
 
@@ -976,6 +973,12 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         context->addObject(instance);
 
     ddata->outerContext = context;
+
+    if (parserStatus) {
+        parserStatus->classBegin();
+        _parserStatusCallbacks[index] = parserStatus;
+        parserStatus->d = &_parserStatusCallbacks[index];
+    }
 
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
     if (idEntry != objectIndexToId.constEnd())
