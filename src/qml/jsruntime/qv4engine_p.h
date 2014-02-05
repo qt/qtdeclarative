@@ -121,11 +121,6 @@ struct ExecutionContextSaver;
 
 struct Q_QML_EXPORT ExecutionEngine
 {
-    MemoryManager *memoryManager;
-    ExecutableAllocator *executableAllocator;
-    ExecutableAllocator *regExpAllocator;
-    QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
-
 private:
     friend struct ExecutionContextSaver;
     friend struct ExecutionContext;
@@ -133,9 +128,16 @@ private:
 public:
     ExecutionContext *currentContext() const { return current; }
 
+    Value *jsStackTop;
+    quint32 hasException;
     GlobalContext *rootContext;
 
-    Value *jsStackTop;
+    MemoryManager *memoryManager;
+    ExecutableAllocator *executableAllocator;
+    ExecutableAllocator *regExpAllocator;
+    QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
+
+
     Value *jsStackLimit;
     quintptr cStackLimit;
 
@@ -353,7 +355,6 @@ public:
 
     // Exception handling
     Value exceptionValue;
-    quint32 hasException;
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwException(const ValueRef value);

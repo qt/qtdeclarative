@@ -157,10 +157,10 @@ quintptr getStackLimit()
 
 
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
-    : memoryManager(new QV4::MemoryManager)
+    : current(0)
+    , memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
-    , current(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)

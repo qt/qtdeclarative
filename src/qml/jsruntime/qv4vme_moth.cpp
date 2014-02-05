@@ -150,12 +150,12 @@ Param traceParam(const Param &param)
 
 #define STOREVALUE(param, value) { \
     QV4::ReturnedValue tmp = (value); \
-    if (context->engine->hasException) \
+    if (engine->hasException) \
         goto catchException; \
     VALUE(param) = tmp; \
     }
 #define CHECK_EXCEPTION \
-    if (context->engine->hasException) \
+    if (engine->hasException) \
         goto catchException
 
 QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
@@ -183,7 +183,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     const uchar *exceptionHandler = 0;
 
-    QV4::Debugging::Debugger *debugger = context->engine->debugger;
+    QV4::ExecutionEngine *engine = context->engine;
 
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -658,6 +658,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
+        QV4::Debugging::Debugger *debugger = context->engine->debugger;
         if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity()))
             debugger->maybeBreakAtInstruction(code, instr.breakPoint);
     MOTH_END_INSTR(Debug)
