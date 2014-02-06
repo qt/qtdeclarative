@@ -435,6 +435,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
         int op = -1;
         in >> op;
         if (op == 0) {
+            QWriteLocker lock(&d->pluginsLock);
             int version;
             in >> version >> d->clientPlugins;
 
@@ -449,25 +450,22 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             // the plugins below start sending messages.
 
             QByteArray helloAnswer;
-            {
-                QReadLocker readPluginsLock(&d->pluginsLock);
-                QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
-                QStringList pluginNames;
-                QList<float> pluginVersions;
-                foreach (QQmlDebugService *service, d->plugins.values()) {
-                    pluginNames << service->name();
-                    pluginVersions << service->version();
-                }
-
-                out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
-                    << pluginNames << pluginVersions << s_dataStreamVersion;
+            QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
+            QStringList pluginNames;
+            QList<float> pluginVersions;
+            foreach (QQmlDebugService *service, d->plugins.values()) {
+                pluginNames << service->name();
+                pluginVersions << service->version();
             }
+
+            out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
+                << pluginNames << pluginVersions << s_dataStreamVersion;
+
             d->connection->send(QList<QByteArray>() << helloAnswer);
 
             QMutexLocker helloLock(&d->helloMutex);
             d->gotHello = true;
 
-            QReadLocker lock(&d->pluginsLock);
             QHash<QString, QQmlDebugService*>::ConstIterator iter = d->plugins.constBegin();
             for (; iter != d->plugins.constEnd(); ++iter) {
                 QQmlDebugService::State newState = QQmlDebugService::Unavailable;
@@ -480,12 +478,12 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             d->helloCondition.wakeAll();
 
         } else if (op == 1) {
+            QWriteLocker lock(&d->pluginsLock);
 
             // Service Discovery
             QStringList oldClientPlugins = d->clientPlugins;
             in >> d->clientPlugins;
 
-            QReadLocker lock(&d->pluginsLock);
             QHash<QString, QQmlDebugService*>::ConstIterator iter = d->plugins.constBegin();
             for (; iter != d->plugins.constEnd(); ++iter) {
                 const QString pluginName = iter.key();
@@ -533,7 +531,10 @@ void QQmlDebugServerPrivate::_q_changeServiceState(const QString &serviceName,
 
     QQmlDebugService *service = 0;
     {
-        QReadLocker lock(&pluginsLock);
+        // Write lock here, because this can be called from receiveMessage which already has a write
+        // lock. We cannot downgrade it. We also don't want to give up the write lock and later get
+        // a read lock as that technique has great potential for deadlocks.
+        QWriteLocker lock(&pluginsLock);
         service = plugins.value(serviceName);
     }
 
@@ -604,20 +605,15 @@ bool QQmlDebugServer::addService(QQmlDebugService *service)
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != thread());
 
-    {
-        QWriteLocker lock(&d->pluginsLock);
-        if (!service || d->plugins.contains(service->name()))
-            return false;
-        d->plugins.insert(service->name(), service);
-    }
-    {
-        QReadLocker lock(&d->pluginsLock);
-        d->advertisePlugins();
-        QQmlDebugService::State newState = QQmlDebugService::Unavailable;
-        if (d->clientPlugins.contains(service->name()))
-            newState = QQmlDebugService::Enabled;
-        service->d_func()->state = newState;
-    }
+    QWriteLocker lock(&d->pluginsLock);
+    if (!service || d->plugins.contains(service->name()))
+        return false;
+    d->plugins.insert(service->name(), service);
+    d->advertisePlugins();
+    QQmlDebugService::State newState = QQmlDebugService::Unavailable;
+    if (d->clientPlugins.contains(service->name()))
+        newState = QQmlDebugService::Enabled;
+    service->d_func()->state = newState;
     return true;
 }
 
@@ -628,21 +624,19 @@ bool QQmlDebugServer::removeService(QQmlDebugService *service)
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != thread());
 
-    {
-        QWriteLocker lock(&d->pluginsLock);
-        QQmlDebugService::State newState = QQmlDebugService::NotConnected;
+    QWriteLocker lock(&d->pluginsLock);
+    QQmlDebugService::State newState = QQmlDebugService::NotConnected;
 
-        d->changeServiceStateCalls.ref();
-        QMetaObject::invokeMethod(this, "_q_changeServiceState", Qt::QueuedConnection,
-                                  Q_ARG(QString, service->name()),
-                                  Q_ARG(QQmlDebugService::State, newState));
+    d->changeServiceStateCalls.ref();
+    QMetaObject::invokeMethod(this, "_q_changeServiceState", Qt::QueuedConnection,
+                              Q_ARG(QString, service->name()),
+                              Q_ARG(QQmlDebugService::State, newState));
 
-        if (!service || !d->plugins.contains(service->name()))
-            return false;
-        d->plugins.remove(service->name());
+    if (!service || !d->plugins.contains(service->name()))
+        return false;
+    d->plugins.remove(service->name());
 
-        d->advertisePlugins();
-    }
+    d->advertisePlugins();
 
     return true;
 }
