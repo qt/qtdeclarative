@@ -91,7 +91,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
         c->lookups = c->compilationUnit->runtimeLookups;
     }
 
-    c->locals = (SafeValue *)(c + 1);
+    c->locals = (SafeValue *)((quintptr(c + 1) + 7) & ~7);
 
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
