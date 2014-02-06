@@ -121,9 +121,13 @@ QT_BEGIN_NAMESPACE
     F(BitAnd, bitAnd) \
     F(BitOr, bitOr) \
     F(BitXor, bitXor) \
+    F(Shr, shr) \
+    F(Shl, shl) \
     F(BitAndConst, bitAndConst) \
     F(BitOrConst, bitOrConst) \
     F(BitXorConst, bitXorConst) \
+    F(ShrConst, shrConst) \
+    F(ShlConst, shlConst) \
     F(Mul, mul) \
     F(Sub, sub) \
     F(BinopContext, binopContext) \
@@ -629,6 +633,18 @@ union Instr
         Param rhs;
         Param result;
     };
+    struct instr_shr {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_shl {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
     struct instr_bitAndConst {
         MOTH_INSTR_HEADER
         Param lhs;
@@ -642,6 +658,18 @@ union Instr
         Param result;
     };
     struct instr_bitXorConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_shrConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_shlConst {
         MOTH_INSTR_HEADER
         Param lhs;
         int rhs;
@@ -782,9 +810,13 @@ union Instr
     instr_bitAnd bitAnd;
     instr_bitOr bitOr;
     instr_bitXor bitXor;
+    instr_shr shr;
+    instr_shl shl;
     instr_bitAndConst bitAndConst;
     instr_bitOrConst bitOrConst;
     instr_bitXorConst bitXorConst;
+    instr_shrConst shrConst;
+    instr_shlConst shlConst;
     instr_mul mul;
     instr_sub sub;
     instr_binopContext binopContext;

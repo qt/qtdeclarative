@@ -806,6 +806,38 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
         addInstruction(bitXor);
         return bitXor.result;
     }
+    if (oper == V4IR::OpRShift) {
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::ShrConst shr;
+            shr.lhs = getParam(leftSource);
+            shr.rhs = convertToValue(c).Value::toInt32() & 0x1f;
+            shr.result = getResultParam(target);
+            addInstruction(shr);
+            return shr.result;
+        }
+        Instruction::Shr shr;
+        shr.lhs = getParam(leftSource);
+        shr.rhs = getParam(rightSource);
+        shr.result = getResultParam(target);
+        addInstruction(shr);
+        return shr.result;
+    }
+    if (oper == V4IR::OpLShift) {
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::ShlConst shl;
+            shl.lhs = getParam(leftSource);
+            shl.rhs = convertToValue(c).Value::toInt32() & 0x1f;
+            shl.result = getResultParam(target);
+            addInstruction(shl);
+            return shl.result;
+        }
+        Instruction::Shl shl;
+        shl.lhs = getParam(leftSource);
+        shl.rhs = getParam(rightSource);
+        shl.result = getResultParam(target);
+        addInstruction(shl);
+        return shl.result;
+    }
 
     if (oper == V4IR::OpInstanceof || oper == V4IR::OpIn || oper == V4IR::OpAdd) {
         Instruction::BinopContext binop;
