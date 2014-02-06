@@ -658,6 +658,18 @@ inline ValueRef &ValueRef::operator=(const ScopedValue &o)
     return *this;
 }
 
+struct ScopedProperty
+{
+    ScopedProperty(Scope &scope)
+    {
+        property = reinterpret_cast<Property*>(scope.alloc(sizeof(Property) / sizeof(Value)));
+    }
+
+    Property *operator->() { return property; }
+    operator const Property &() { return *property; }
+
+    Property *property;
+};
 
 }
 
