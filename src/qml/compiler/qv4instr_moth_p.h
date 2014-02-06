@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(Move, move) \
+    F(MoveConst, moveConst) \
     F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
     F(GetGlobalLookup, getGlobalLookup) \
@@ -250,6 +251,11 @@ union Instr
     struct instr_move {
         MOTH_INSTR_HEADER
         Param source;
+        Param result;
+    };
+    struct instr_moveConst {
+        MOTH_INSTR_HEADER
+        QV4::ReturnedValue source;
         Param result;
     };
     struct instr_swapTemps {
@@ -710,6 +716,7 @@ union Instr
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_move move;
+    instr_moveConst moveConst;
     instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
