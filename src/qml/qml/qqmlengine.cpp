@@ -66,6 +66,7 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
+#include <private/qqmlenginecontrolservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
 #include <private/qv4profilerservice_p.h>
@@ -819,6 +820,7 @@ void QQmlEnginePrivate::init()
         QV4ProfilerService::instance();
         QQmlProfilerService::instance();
         QDebugMessageService::instance();
+        QQmlEngineControlService::instance();
         QQmlDebugServer::instance()->addEngine(q);
     }
 }

@@ -7,7 +7,8 @@ SOURCES += \
     $$PWD/qqmlenginedebugservice.cpp \
     $$PWD/qdebugmessageservice.cpp \
     $$PWD/qv4debugservice.cpp \
-    $$PWD/qqmlconfigurabledebugservice.cpp
+    $$PWD/qqmlconfigurabledebugservice.cpp \
+    $$PWD/qqmlenginecontrolservice.cpp
 
 HEADERS += \
     $$PWD/qqmldebugservice_p.h \
@@ -24,4 +25,5 @@ HEADERS += \
     $$PWD/qdebugmessageservice_p.h \
     $$PWD/qv4debugservice_p.h \
     $$PWD/qqmlconfigurabledebugservice_p.h \
-    $$PWD/qqmlconfigurabledebugservice_p_p.h
+    $$PWD/qqmlconfigurabledebugservice_p_p.h \
+    $$PWD/qqmlenginecontrolservice_p.h
