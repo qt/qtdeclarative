@@ -40,11 +40,11 @@
     QSGMaterial, \l QSGMaterialShader and \l QSGMaterialType classes
     directly.
 
-    A simple material consists of two parts, the material state and
+    A simple material consists of two parts: the material state and
     the material shader. The material shader has one instance per
     scene graph and contains the actual OpenGL shader program and
     information about which attributes and uniforms it uses. The
-    material state is what we assign to each individual node, in this
+    material state is what we assign to each individual node; in this
     case to give them different colors.
 
     \snippet scenegraph/simplematerial/simplematerial.cpp 1
@@ -66,7 +66,7 @@
     be compared. It would have been possible to remove the \c
     State::compare() function and instead declare the shader with \l
     QSG_DECLARE_SIMPLE_SHADER(), but this could then reduce performance
-    in certain usecases.
+    in certain use cases.
 
     The state struct is used as a template parameter to
     automatically generate a \l QSGMaterialType for us, so it is
@@ -84,14 +84,14 @@
     \snippet scenegraph/simplematerial/simplematerial.cpp 4
 
     We reimplement the \c attributes function to return the name of
-    the \c aVertex and \c aTexCoord attribute names. These attributes
+    the \c aVertex and \c aTexCoord attributes. These attributes
     will be mapped to attribute indices 0 and 1 in the node's
     geometry.
 
     \snippet scenegraph/simplematerial/simplematerial.cpp 6
 
     Uniforms can be accessed either by name or by index, where index
-    is faster than name, so we reimplement the \c resolveUniforms()
+    is faster than name. We reimplement the \c resolveUniforms()
     function to find the index of the \c color uniform. We do not have
     to worry about resolving \c qt_Opacity or \c qt_Matrix as these
     are handled by the baseclass.
@@ -112,12 +112,12 @@
 
     Since our shader expects both a position and a texture coordinate,
     we use the default attribute set \l
-    QSGGeometry::defaultAttributes_TexturedPoint2D() and define that
+    QSGGeometry::defaultAttributes_TexturedPoint2D() and declare that
     the geometry consists of a total of four vertices. To avoid the
     allocation, we make the QSGGeometry a member of the
     QSGGeometryNode.
 
-    When used the macro \l QSG_DECLARE_SIMPLE_COMPARABLE_SHADER() above,
+    When we used the macro \l QSG_DECLARE_SIMPLE_COMPARABLE_SHADER() above,
     it defined the \c createMaterial() function which we use to
     instantiate materials for our \c State struct.
 
@@ -127,7 +127,7 @@
     the node or to reorder the drawing of the node.
 
     Finally, we tell the node to take ownership of the material, so we
-    do not have to explicitly memorymanage it.
+    do not have to explicitly memory-manage it.
 
     \snippet scenegraph/simplematerial/simplematerial.cpp 8
 
@@ -143,11 +143,11 @@
     GUI thread and \l QQuickItem::updatePaintNode() is one of the few
     places where it is safe to access properties of the QML
     object. Any interaction with the scene graph from a custom \l
-    QQuickItem should be contained to this function. The function is
+    QQuickItem should be contained within this function. The function is
     called on the rendering thread while the GUI thread is blocked.
 
     The first time this function is called for an \c Item instance,
-    the node will be 0 and we create a new one. For every consecutive
+    the node will be 0, and so we create a new one. For every consecutive
     call, the node will be what we returned previously. There are
     scenarios where the scene graph will be removed and rebuilt from
     scratch however, so one should always check the node and recreate
@@ -170,7 +170,7 @@
 
     \snippet scenegraph/simplematerial/main.qml 2
 
-    Then we create a column of three instances of our custom item,
+    Then we create a column containing three instances of our custom item,
     each with a different color.
 
     \snippet scenegraph/simplematerial/main.qml 3
