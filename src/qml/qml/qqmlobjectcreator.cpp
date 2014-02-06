@@ -1001,8 +1001,10 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
-    QV4::ScopedObject jsScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, jsScopeObject));
+    QV4::ScopedValue scopeObjectProtector(valueScope, ddata ? ddata->jsWrapper.value() : 0);
+    Q_UNUSED(scopeObjectProtector);
+    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
     qSwap(_qmlContext, qmlContext);
