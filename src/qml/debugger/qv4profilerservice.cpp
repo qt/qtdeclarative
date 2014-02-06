@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qv4profilerservice_p.h"
-#include "qqmldebugservice_p_p.h"
+#include "qqmlconfigurabledebugservice_p_p.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QMutex>
@@ -81,7 +81,7 @@ QByteArray QV4ProfilerData::toByteArray() const
     return data;
 }
 
-class QV4ProfilerServicePrivate : public QQmlDebugServicePrivate
+class QV4ProfilerServicePrivate : public QQmlConfigurableDebugServicePrivate
 {
     Q_DECLARE_PUBLIC(QV4ProfilerService)
 
@@ -99,23 +99,12 @@ public:
     QList<QV4ProfilerData> m_data;
 
     bool initialized;
-    QMutex initializeMutex;
-    QWaitCondition initializeCondition;
     QList<QString> m_ongoing;
 };
 
 QV4ProfilerService::QV4ProfilerService(QObject *parent)
-    : QQmlDebugService(*(new QV4ProfilerServicePrivate()), QStringLiteral("V8Profiler"), 1, parent)
+    : QQmlConfigurableDebugService(*(new QV4ProfilerServicePrivate()), QStringLiteral("V8Profiler"), 1, parent)
 {
-    Q_D(QV4ProfilerService);
-
-    QMutexLocker lock(&d->initializeMutex);
-
-    if (registerService() == Enabled
-            && QQmlDebugService::blockingMode()) {
-        // let's wait for first message ...
-        d->initializeCondition.wait(&d->initializeMutex);
-    }
 }
 
 QV4ProfilerService::~QV4ProfilerService()
@@ -130,6 +119,7 @@ QV4ProfilerService *QV4ProfilerService::instance()
 void QV4ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
     Q_D(QV4ProfilerService);
+    QMutexLocker lock(configMutex());
 
     if (state() == newState)
         return;
@@ -140,10 +130,6 @@ void QV4ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
                                       Q_ARG(QString, title));
         }
         QMetaObject::invokeMethod(this, "sendProfilingData", Qt::BlockingQueuedConnection);
-    } else {
-        // wake up constructor in blocking mode
-        // (we might got disabled before first message arrived)
-        d->initializeCondition.wakeAll();
     }
 }
 
@@ -157,7 +143,7 @@ void QV4ProfilerService::messageReceived(const QByteArray &message)
     QByteArray title;
     ds >> command >> option;
 
-    QMutexLocker lock(&d->initializeMutex);
+    QMutexLocker lock(configMutex());
 
     if (command == "V8PROFILER") {
         ds >>  title;
@@ -180,7 +166,7 @@ void QV4ProfilerService::messageReceived(const QByteArray &message)
     }
 
     // wake up constructor in blocking mode
-    d->initializeCondition.wakeAll();
+    stopWaiting();
 
     QQmlDebugService::messageReceived(message);
 }

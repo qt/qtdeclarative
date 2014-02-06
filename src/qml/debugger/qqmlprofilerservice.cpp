@@ -137,18 +137,15 @@ void QQmlProfilerService::animationTimerCallback(qint64 delta)
 }
 
 QQmlProfilerService::QQmlProfilerService()
-    : QQmlDebugService(QStringLiteral("CanvasFrameRate"), 1)
+    : QQmlConfigurableDebugService(QStringLiteral("CanvasFrameRate"), 1)
 {
     m_timer.start();
 
-    // don't execute stateAboutToBeChanged(), messageReceived() in parallel
-    QMutexLocker lock(&m_initializeMutex);
-
-    if (registerService() == Enabled) {
+    QMutexLocker lock(configMutex());
+    // TODO: This is problematic as the service could be enabled at a later point in time. In that
+    //       case we might miss the callback registration.
+    if (state() == Enabled)
         QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
-        if (blockingMode())
-            m_initializeCondition.wait(&m_initializeMutex);
-    }
 }
 
 QQmlProfilerService::~QQmlProfilerService()
@@ -228,27 +225,20 @@ void QQmlProfilerService::sendMessages()
 
 void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
-    QMutexLocker lock(&m_initializeMutex);
+    QMutexLocker lock(configMutex());
 
     if (state() == newState)
         return;
 
-    if (state() == Enabled
-            && enabled) {
+    if (newState != Enabled && enabled) {
         stopProfilingImpl();
         sendMessages();
-    }
-
-    if (state() != Enabled) {
-        // wake up constructor in blocking mode
-        // (we might got disabled before first message arrived)
-        m_initializeCondition.wakeAll();
     }
 }
 
 void QQmlProfilerService::messageReceived(const QByteArray &message)
 {
-    QMutexLocker lock(&m_initializeMutex);
+    QMutexLocker lock(configMutex());
 
     QByteArray rwData = message;
     QQmlDebugStream stream(&rwData, QIODevice::ReadOnly);
@@ -263,8 +253,7 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
             sendMessages();
     }
 
-    // wake up constructor in blocking mode
-    m_initializeCondition.wakeAll();
+    stopWaiting();
 }
 
 /*!

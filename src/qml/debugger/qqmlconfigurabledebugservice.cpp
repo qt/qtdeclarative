@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,71 +39,58 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_H
-#define QQMLDEBUGSERVER_H
-
-#include <QtQml/qtqmlglobal.h>
-#include <private/qqmldebugserverconnection_p.h>
-#include <private/qqmldebugservice_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qqmlconfigurabledebugservice_p.h"
+#include "qqmlconfigurabledebugservice_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
+QQmlConfigurableDebugService::QQmlConfigurableDebugService(const QString &name, float version,
+                                                           QObject *parent) :
+    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate), name, version, parent) { init(); }
 
-class QQmlDebugServerPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QObject
+QQmlConfigurableDebugService::QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd,
+                                                           const QString &name, float version,
+                                                           QObject *parent) :
+    QQmlDebugService(dd, name, version, parent) { init(); }
+
+QMutex *QQmlConfigurableDebugService::configMutex()
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlDebugServer)
-    Q_DISABLE_COPY(QQmlDebugServer)
-public:
-    ~QQmlDebugServer();
+    Q_D(QQmlConfigurableDebugService);
+    return &d->configMutex;
+}
 
-    static QQmlDebugServer *instance();
+void QQmlConfigurableDebugService::init()
+{
+    Q_D(QQmlConfigurableDebugService);
+    QMutexLocker lock(&d->configMutex);
+    // If we're not enabled or not blocking, don't wait for configuration
+    d->waitingForConfiguration = (registerService() == Enabled && blockingMode());
+}
 
-    bool hasDebuggingClient() const;
-    bool blockingMode() const;
+void QQmlConfigurableDebugService::stopWaiting()
+{
+    Q_D(QQmlConfigurableDebugService);
+    QMutexLocker lock(&d->configMutex);
+    d->waitingForConfiguration = false;
+    foreach (QQmlEngine *engine, d->waitingEngines)
+        emit attachedToEngine(engine);
+    d->waitingEngines.clear();
+}
 
-    QList<QQmlDebugService*> services() const;
-    QStringList serviceNames() const;
+void QQmlConfigurableDebugService::stateChanged(QQmlDebugService::State newState)
+{
+    if (newState != Enabled)
+        stopWaiting();
+}
 
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
-
-    bool addService(QQmlDebugService *service);
-    bool removeService(QQmlDebugService *service);
-
-    void receiveMessage(const QByteArray &message);
-
-    void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
-
-private slots:
-    void wakeEngine(QQmlEngine *engine);
-
-private:
-    friend class QQmlDebugService;
-    friend class QQmlDebugServicePrivate;
-    friend class QQmlDebugServerThread;
-    friend struct QQmlDebugServerInstanceWrapper;
-    QQmlDebugServer();
-    Q_PRIVATE_SLOT(d_func(), void _q_changeServiceState(const QString &serviceName,
-                                                        QQmlDebugService::State state))
-    Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
-
-public:
-    static int s_dataStreamVersion;
-};
+void QQmlConfigurableDebugService::engineAboutToBeAdded(QQmlEngine *engine)
+{
+    Q_D(QQmlConfigurableDebugService);
+    QMutexLocker lock(&d->configMutex);
+    if (d->waitingForConfiguration)
+        d->waitingEngines.append(engine);
+    else
+        emit attachedToEngine(engine);
+}
 
 QT_END_NAMESPACE
-
-#endif // QQMLDEBUGSERVICE_H

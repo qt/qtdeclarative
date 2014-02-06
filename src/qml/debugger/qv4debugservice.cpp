@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qv4debugservice_p.h"
-#include "qqmldebugservice_p_p.h"
+#include "qqmlconfigurabledebugservice_p_p.h"
 #include "qqmlengine.h"
 #include "qv4debugging_p.h"
 #include "qv4engine_p.h"
@@ -358,7 +358,7 @@ private:
     QHash<QV4::Object *, int> objectRefs;
 };
 
-class QV4DebugServicePrivate : public QQmlDebugServicePrivate
+class QV4DebugServicePrivate : public QQmlConfigurableDebugServicePrivate
 {
     Q_DECLARE_PUBLIC(QV4DebugService)
 
@@ -393,8 +393,6 @@ public:
 
     void processCommand(const QByteArray &command, const QByteArray &data);
 
-    QMutex initializeMutex;
-    QWaitCondition initializeCondition;
     QV4DebuggerAgent debuggerAgent;
 
     QStringList breakOnSignals;
@@ -999,19 +997,9 @@ V8CommandHandler *QV4DebugServicePrivate::v8CommandHandler(const QString &comman
 }
 
 QV4DebugService::QV4DebugService(QObject *parent)
-    : QQmlDebugService(*(new QV4DebugServicePrivate()),
+    : QQmlConfigurableDebugService(*(new QV4DebugServicePrivate()),
                        QStringLiteral("V8Debugger"), 1, parent)
-{
-    Q_D(QV4DebugService);
-
-    // don't execute stateChanged, messageReceived in parallel
-    QMutexLocker lock(&d->initializeMutex);
-
-    if (registerService() == Enabled && blockingMode()) {
-        // let's wait for first message ...
-        d->initializeCondition.wait(&d->initializeMutex);
-    }
-}
+{}
 
 QV4DebugService::~QV4DebugService()
 {
@@ -1025,7 +1013,7 @@ QV4DebugService *QV4DebugService::instance()
 void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
-    QMutexLocker lock(&d->initializeMutex);
+    QMutexLocker lock(configMutex());
     if (engine) {
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (QQmlDebugServer *server = QQmlDebugServer::instance()) {
@@ -1039,12 +1027,13 @@ void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
             }
         }
     }
+    QQmlConfigurableDebugService::engineAboutToBeAdded(engine);
 }
 
 void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     Q_D(QV4DebugService);
-    QMutexLocker lock(&d->initializeMutex);
+    QMutexLocker lock(configMutex());
     if (engine){
         const QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (ee) {
@@ -1060,6 +1049,7 @@ void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
             d->debuggerAgent.removeDebugger(debugger);
         }
     }
+    QQmlConfigurableDebugService::engineAboutToBeRemoved(engine);
 }
 
 void QV4DebugService::signalEmitted(const QString &signal)
@@ -1081,22 +1071,10 @@ void QV4DebugService::signalEmitted(const QString &signal)
     }
 }
 
-void QV4DebugService::stateChanged(QQmlDebugService::State newState)
-{
-    Q_D(QV4DebugService);
-    QMutexLocker lock(&d->initializeMutex);
-
-    if (newState != Enabled) {
-        // wake up constructor in blocking mode
-        // (we might got disabled before first message arrived)
-        d->initializeCondition.wakeAll();
-    }
-}
-
 void QV4DebugService::messageReceived(const QByteArray &message)
 {
     Q_D(QV4DebugService);
-    QMutexLocker lock(&d->initializeMutex);
+    QMutexLocker lock(configMutex());
 
     QQmlDebugStream ms(message);
     QByteArray header;
@@ -1112,7 +1090,7 @@ void QV4DebugService::messageReceived(const QByteArray &message)
 
         if (type == V4_CONNECT) {
             sendMessage(d->packMessage(type));
-            d->initializeCondition.wakeAll();
+            stopWaiting();
         } else if (type == V4_PAUSE) {
             d->debuggerAgent.pauseAll();
             sendSomethingToSomebody(type);

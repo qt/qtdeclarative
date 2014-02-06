@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,12 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_H
-#define QQMLDEBUGSERVER_H
-
-#include <QtQml/qtqmlglobal.h>
-#include <private/qqmldebugserverconnection_p.h>
-#include <private/qqmldebugservice_p.h>
+#ifndef QQMLCONFIGURABLEDEBUGSERVICE_P_H
+#define QQMLCONFIGURABLEDEBUGSERVICE_P_H
 
 //
 //  W A R N I N G
@@ -57,53 +53,26 @@
 // We mean it.
 //
 
+#include "qqmldebugservice_p.h"
+#include "qqmldebugservice_p_p.h"
+
+#include <QMutex>
+
 QT_BEGIN_NAMESPACE
 
+class QQmlEngine;
 
-class QQmlDebugServerPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QObject
+class QQmlConfigurableDebugServicePrivate : public QQmlDebugServicePrivate
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlDebugServer)
-    Q_DISABLE_COPY(QQmlDebugServer)
+    Q_DECLARE_PUBLIC(QQmlConfigurableDebugService)
 public:
-    ~QQmlDebugServer();
+    QQmlConfigurableDebugServicePrivate() : configMutex(QMutex::Recursive) {}
 
-    static QQmlDebugServer *instance();
-
-    bool hasDebuggingClient() const;
-    bool blockingMode() const;
-
-    QList<QQmlDebugService*> services() const;
-    QStringList serviceNames() const;
-
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
-
-    bool addService(QQmlDebugService *service);
-    bool removeService(QQmlDebugService *service);
-
-    void receiveMessage(const QByteArray &message);
-
-    void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
-
-private slots:
-    void wakeEngine(QQmlEngine *engine);
-
-private:
-    friend class QQmlDebugService;
-    friend class QQmlDebugServicePrivate;
-    friend class QQmlDebugServerThread;
-    friend struct QQmlDebugServerInstanceWrapper;
-    QQmlDebugServer();
-    Q_PRIVATE_SLOT(d_func(), void _q_changeServiceState(const QString &serviceName,
-                                                        QQmlDebugService::State state))
-    Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
-
-public:
-    static int s_dataStreamVersion;
+    QMutex configMutex;
+    QList<QQmlEngine *> waitingEngines;
+    bool waitingForConfiguration;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVICE_H
+#endif // QQMLCONFIGURABLEDEBUGSERVICE_P_H

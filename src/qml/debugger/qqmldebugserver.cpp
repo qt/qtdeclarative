@@ -120,6 +120,22 @@ public:
     bool gotHello;
     bool blockingMode;
 
+    class EngineCondition {
+    public:
+        EngineCondition() : numServices(0), condition(new QWaitCondition) {}
+
+        bool waitForServices(QReadWriteLock *locked, int numEngines);
+
+        void wake();
+    private:
+        int numServices;
+
+        // shared pointer to allow for QHash-inflicted copying.
+        QSharedPointer<QWaitCondition> condition;
+    };
+
+    QHash<QQmlEngine *, EngineCondition> engineConditions;
+
     QMutex helloMutex;
     QWaitCondition helloCondition;
     QQmlDebugServerThread *thread;
@@ -573,12 +589,12 @@ QStringList QQmlDebugServer::serviceNames() const
 void QQmlDebugServer::addEngine(QQmlEngine *engine)
 {
     Q_D(QQmlDebugServer);
-    QReadLocker lock(&d->pluginsLock);
+    QWriteLocker lock(&d->pluginsLock);
 
     foreach (QQmlDebugService *service, d->plugins)
         service->engineAboutToBeAdded(engine);
 
-    // TODO: Later wait here for initialization.
+    d->engineConditions[engine].waitForServices(&d->pluginsLock, d->plugins.count());
 
     foreach (QQmlDebugService *service, d->plugins)
         service->engineAdded(engine);
@@ -587,12 +603,12 @@ void QQmlDebugServer::addEngine(QQmlEngine *engine)
 void QQmlDebugServer::removeEngine(QQmlEngine *engine)
 {
     Q_D(QQmlDebugServer);
-    QReadLocker lock(&d->pluginsLock);
+    QWriteLocker lock(&d->pluginsLock);
 
     foreach (QQmlDebugService *service, d->plugins)
         service->engineAboutToBeRemoved(engine);
 
-    // TODO: Later wait here for cleanup
+    d->engineConditions[engine].waitForServices(&d->pluginsLock, d->plugins.count());
 
     foreach (QQmlDebugService *service, d->plugins)
         service->engineRemoved(engine);
@@ -604,6 +620,12 @@ bool QQmlDebugServer::addService(QQmlDebugService *service)
 
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != thread());
+
+    connect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
+            this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
+    connect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
+            this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
+
 
     QWriteLocker lock(&d->pluginsLock);
     if (!service || d->plugins.contains(service->name()))
@@ -654,6 +676,33 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
 
     QMetaObject::invokeMethod(this, "_q_sendMessages", Qt::QueuedConnection,
                               Q_ARG(QList<QByteArray>, prefixedMessages));
+}
+
+void QQmlDebugServer::wakeEngine(QQmlEngine *engine)
+{
+    // to be executed in debugger thread
+    Q_ASSERT(QThread::currentThread() == thread());
+
+    Q_D(QQmlDebugServer);
+    QWriteLocker lock(&d->pluginsLock);
+    d->engineConditions[engine].wake();
+}
+
+bool QQmlDebugServerPrivate::EngineCondition::waitForServices(QReadWriteLock *locked, int num)
+{
+    // to be executed outside of debugger thread
+    Q_ASSERT(QThread::currentThread() != QQmlDebugServer::instance()->thread());
+
+    Q_ASSERT_X(numServices == 0, Q_FUNC_INFO, "Request to wait again before previous wait finished");
+    numServices = num;
+    return condition->wait(locked);
+}
+
+void QQmlDebugServerPrivate::EngineCondition::wake()
+{
+    if (--numServices == 0)
+        condition->wakeAll();
+    Q_ASSERT_X(numServices >=0, Q_FUNC_INFO, "Woken more often than #services.");
 }
 
 QT_END_NAMESPACE

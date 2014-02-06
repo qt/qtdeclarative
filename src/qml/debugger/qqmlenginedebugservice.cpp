@@ -765,6 +765,7 @@ void QQmlEngineDebugService::engineAboutToBeAdded(QQmlEngine *engine)
     Q_ASSERT(!m_engines.contains(engine));
 
     m_engines.append(engine);
+    emit attachedToEngine(engine);
 }
 
 void QQmlEngineDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
@@ -773,6 +774,7 @@ void QQmlEngineDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
     Q_ASSERT(m_engines.contains(engine));
 
     m_engines.removeAll(engine);
+    emit detachedFromEngine(engine);
 }
 
 void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)

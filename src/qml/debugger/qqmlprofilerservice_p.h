@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include <private/qqmldebugservice_p.h>
+#include "qqmlconfigurabledebugservice_p.h"
 #include <private/qqmlboundsignal_p.h>
 // this contains QUnifiedTimer
 #include <private/qabstractanimation_p.h>
@@ -163,7 +163,7 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlConfigurableDebugService
 {
 public:
     enum Message {
@@ -372,8 +372,6 @@ private:
     QElapsedTimer m_timer;
     QVector<QQmlProfilerData> m_data;
     QMutex m_dataMutex;
-    QMutex m_initializeMutex;
-    QWaitCondition m_initializeCondition;
 
     static QQmlProfilerService *m_instance;
 

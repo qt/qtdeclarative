@@ -109,6 +109,10 @@ protected:
     virtual void engineAdded(QQmlEngine *);
     virtual void engineRemoved(QQmlEngine *);
 
+signals:
+    void attachedToEngine(QQmlEngine *);
+    void detachedFromEngine(QQmlEngine *);
+
 private:
     friend class QQmlDebugServer;
     friend class QQmlDebugServerPrivate;

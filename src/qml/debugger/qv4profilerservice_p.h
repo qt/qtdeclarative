@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include <private/qqmldebugservice_p.h>
+#include <private/qqmlconfigurabledebugservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +74,7 @@ struct Q_AUTOTEST_EXPORT QV4ProfilerData
 class QQmlEngine;
 class QV4ProfilerServicePrivate;
 
-class Q_AUTOTEST_EXPORT QV4ProfilerService : public QQmlDebugService
+class Q_AUTOTEST_EXPORT QV4ProfilerService : public QQmlConfigurableDebugService
 {
     Q_OBJECT
 public:

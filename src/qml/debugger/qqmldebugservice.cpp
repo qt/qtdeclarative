@@ -318,12 +318,14 @@ void QQmlDebugService::messageReceived(const QByteArray &)
 {
 }
 
-void QQmlDebugService::engineAboutToBeAdded(QQmlEngine *)
+void QQmlDebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
+    emit attachedToEngine(engine);
 }
 
-void QQmlDebugService::engineAboutToBeRemoved(QQmlEngine *)
+void QQmlDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
+    emit detachedFromEngine(engine);
 }
 
 void QQmlDebugService::engineAdded(QQmlEngine *)

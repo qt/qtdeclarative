@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "qqmldebugservice_p.h"
+#include "qqmlconfigurabledebugservice_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -61,7 +61,7 @@ namespace QV4 { struct ExecutionEngine; }
 class QQmlEngine;
 class QV4DebugServicePrivate;
 
-class QV4DebugService : public QQmlDebugService
+class QV4DebugService : public QQmlConfigurableDebugService
 {
     Q_OBJECT
 public:
@@ -75,7 +75,6 @@ public:
     void signalEmitted(const QString &signal);
 
 protected:
-    void stateChanged(State newState);
     void messageReceived(const QByteArray &);
     void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
