@@ -91,7 +91,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         p->changeStatus(QQmlIncubator::Loading);
 
         if (!watcher.hasRecursed()) {
-            QQmlVME::Interrupt i;
+            QQmlInstantiationInterrupt i;
             p->incubate(i);
         }
     } else {
@@ -254,7 +254,7 @@ void QQmlIncubationController::incubatingObjectCountChanged(int incubatingObject
     Q_UNUSED(incubatingObjectCount);
 }
 
-void QQmlIncubatorPrivate::forceCompletion(QQmlVME::Interrupt &i)
+void QQmlIncubatorPrivate::forceCompletion(QQmlInstantiationInterrupt &i)
 {
     while (QQmlIncubator::Loading == status) {
         while (QQmlIncubator::Loading == status && !waitingFor.isEmpty())
@@ -264,7 +264,7 @@ void QQmlIncubatorPrivate::forceCompletion(QQmlVME::Interrupt &i)
     }
 }
 
-void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
+void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
 {
     if (!compiledData)
         return;
@@ -345,7 +345,7 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 
             QQmlContextData *ctxt = 0;
             if (enginePriv->useNewCompiler)
-                ctxt = creator->finalize();
+                ctxt = creator->finalize(i);
             else
                 ctxt = vme.complete(i);
             if (ctxt) {
@@ -391,7 +391,7 @@ void QQmlIncubationController::incubateFor(int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlVME::Interrupt i(msecs * 1000000);
+    QQmlInstantiationInterrupt i(msecs * 1000000);
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
@@ -410,7 +410,7 @@ void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlVME::Interrupt i(flag, msecs * 1000000);
+    QQmlInstantiationInterrupt i(flag, msecs * 1000000);
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
@@ -609,7 +609,7 @@ returns, the incubator will not be in the Loading state.
 */
 void QQmlIncubator::forceCompletion()
 {
-    QQmlVME::Interrupt i;
+    QQmlInstantiationInterrupt i;
     d->forceCompletion(i);
 }
 

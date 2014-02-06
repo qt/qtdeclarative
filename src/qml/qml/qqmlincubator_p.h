@@ -104,8 +104,8 @@ public:
 
     void clear();
 
-    void forceCompletion(QQmlVME::Interrupt &i);
-    void incubate(QQmlVME::Interrupt &i);
+    void forceCompletion(QQmlInstantiationInterrupt &i);
+    void incubate(QQmlInstantiationInterrupt &i);
 };
 
 QT_END_NAMESPACE

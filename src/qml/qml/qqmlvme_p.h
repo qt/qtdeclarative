@@ -102,28 +102,28 @@ Q_DECLARE_TYPEINFO(QQmlVMETypes::List, Q_PRIMITIVE_TYPE  | Q_MOVABLE_TYPE);
 template<>
 class QTypeInfo<QQmlVMETypes::State> : public QTypeInfoMerger<QQmlVMETypes::State, QBitField> {}; //Q_DECLARE_TYPEINFO
 
+class QQmlInstantiationInterrupt {
+public:
+    inline QQmlInstantiationInterrupt();
+    inline QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs=0);
+    inline QQmlInstantiationInterrupt(int nsecs);
+
+    inline void reset();
+    inline bool shouldInterrupt() const;
+private:
+    enum Mode { None, Time, Flag };
+    Mode mode;
+    struct {
+        QElapsedTimer timer;
+        int nsecs;
+    };
+    volatile bool *runWhile;
+};
+
 class Q_QML_PRIVATE_EXPORT QQmlVME
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlVME)
 public:
-    class Interrupt {
-    public:
-        inline Interrupt();
-        inline Interrupt(volatile bool *runWhile, int nsecs=0);
-        inline Interrupt(int nsecs);
-
-        inline void reset();
-        inline bool shouldInterrupt() const;
-    private:
-        enum Mode { None, Time, Flag };
-        Mode mode;
-        struct {
-            QElapsedTimer timer;
-            int nsecs;
-        };
-        volatile bool *runWhile;
-    };
-
     QQmlVME() : data(0), componentAttached(0) {}
     QQmlVME(void *data) : data(data), componentAttached(0) {}
 
@@ -136,8 +136,8 @@ public:
     bool initDeferred(QObject *);
     void reset();
 
-    QObject *execute(QList<QQmlError> *errors, const Interrupt & = Interrupt());
-    QQmlContextData *complete(const Interrupt & = Interrupt());
+    QObject *execute(QList<QQmlError> *errors, const QQmlInstantiationInterrupt & = QQmlInstantiationInterrupt());
+    QQmlContextData *complete(const QQmlInstantiationInterrupt & = QQmlInstantiationInterrupt());
 
     static void enableComponentComplete();
     static void disableComponentComplete();
@@ -146,7 +146,7 @@ public:
 private:
     friend class QQmlVMEGuard;
 
-    QObject *run(QList<QQmlError> *errors, const Interrupt &
+    QObject *run(QList<QQmlError> *errors, const QQmlInstantiationInterrupt &
 #ifdef QML_THREADED_VME_INTERPRETER
                  , void *const**storeJumpTable = 0
 #endif
@@ -207,28 +207,28 @@ private:
     QQmlGuardedContextData *m_contexts;
 };
 
-QQmlVME::Interrupt::Interrupt()
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
     : mode(None), nsecs(0), runWhile(0)
 {
 }
 
-QQmlVME::Interrupt::Interrupt(volatile bool *runWhile, int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs)
     : mode(Flag), nsecs(nsecs), runWhile(runWhile)
 {
 }
 
-QQmlVME::Interrupt::Interrupt(int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(int nsecs)
     : mode(Time), nsecs(nsecs), runWhile(0)
 {
 }
 
-void QQmlVME::Interrupt::reset()
+void QQmlInstantiationInterrupt::reset()
 {
     if (mode == Time || nsecs)
         timer.start();
 }
 
-bool QQmlVME::Interrupt::shouldInterrupt() const
+bool QQmlInstantiationInterrupt::shouldInterrupt() const
 {
     if (mode == None) {
         return false;

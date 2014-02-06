@@ -914,7 +914,8 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 {
     if (state->completePending) {
         if (enginePriv->useNewCompiler) {
-            state->creator->finalize();
+            QQmlInstantiationInterrupt interrupt;
+            state->creator->finalize(interrupt);
         } else {
             state->vme.complete();
         }

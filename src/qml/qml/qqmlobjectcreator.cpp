@@ -1048,13 +1048,16 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     return result ? instance : 0;
 }
 
-QQmlContextData *QmlObjectCreator::finalize()
+QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
     {
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
 
     while (!allCreatedBindings->isEmpty()) {
+        if (interrupt.shouldInterrupt())
+            return 0;
+
         QQmlAbstractBinding *b = allCreatedBindings->pop();
         if (!b)
             continue;
@@ -1077,10 +1080,8 @@ QQmlContextData *QmlObjectCreator::finalize()
                 status->componentComplete();
             }
 
-    #if 0 // ###
-                if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-                    return 0;
-    #endif
+            if (interrupt.shouldInterrupt())
+                return 0;
         }
     }
 
@@ -1093,10 +1094,6 @@ QQmlContextData *QmlObjectCreator::finalize()
             void *args[] = { 0 };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
-#if 0 // ###
-        if (watcher.hasRecursed())
-            return 0;
-#endif
     }
     finalizeCallbacks.clear();
     }
@@ -1113,10 +1110,8 @@ QQmlContextData *QmlObjectCreator::finalize()
         // ### designer if (componentCompleteEnabled())
             emit a->completed();
 
-#if 0 // ###
-        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+        if (interrupt.shouldInterrupt())
             return 0;
-#endif
     }
     }
 

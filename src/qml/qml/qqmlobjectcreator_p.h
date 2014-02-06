@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
+class QQmlInstantiationInterrupt;
 
 class QmlObjectCreator
 {
@@ -62,7 +63,7 @@ public:
     ~QmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
-    QQmlContextData *finalize();
+    QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
 
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;

@@ -184,7 +184,7 @@ struct ActiveVMERestorer
 };
 }
 
-QObject *QQmlVME::execute(QList<QQmlError> *errors, const Interrupt &interrupt)
+QObject *QQmlVME::execute(QList<QQmlError> *errors, const QQmlInstantiationInterrupt &interrupt)
 {
     Q_ASSERT(states.count() >= 1);
 
@@ -330,7 +330,7 @@ static QV4::ExecutionContext *qmlBindingContext(QQmlEngine *engine, QV4::Executi
         removeBindingOnProperty(o, index)
 
 QObject *QQmlVME::run(QList<QQmlError> *errors,
-                              const Interrupt &interrupt
+                              const QQmlInstantiationInterrupt &interrupt
 #ifdef QML_THREADED_VME_INTERPRETER
                               , void * const **storeJumpTable
 #endif
@@ -1134,14 +1134,14 @@ void *const *QQmlVME::instructionJumpTable()
     static void * const *jumpTable = 0;
     if (!jumpTable) {
         QQmlVME dummy;
-        QQmlVME::Interrupt i;
+        QQmlInstantiationInterrupt i;
         dummy.run(0, i, &jumpTable);
     }
     return jumpTable;
 }
 #endif
 
-QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
+QQmlContextData *QQmlVME::complete(const QQmlInstantiationInterrupt &interrupt)
 {
     Q_ASSERT(engine ||
              (bindValues.isEmpty() &&
