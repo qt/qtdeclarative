@@ -334,7 +334,9 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = context->engine->stackPush(stackSize);
+#ifndef QT_NO_DEBUG
         memset(stack, 0, stackSize * sizeof(QV4::Value));
+#endif
         scopes[1] = stack;
     MOTH_END_INSTR(Push)
 
