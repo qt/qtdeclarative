@@ -337,7 +337,7 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
     // FIXME: do something more useful with this info
-    if (target->type & V4IR::NumberType)
+    if (target->type & V4IR::NumberType && !(source->type & V4IR::NumberType))
         unop(V4IR::OpUPlus, source, target);
     else
         copyValue(source, target);
