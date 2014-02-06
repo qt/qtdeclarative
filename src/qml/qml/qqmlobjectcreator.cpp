@@ -80,7 +80,8 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext)
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext,
+                                   QFiniteStack<QQmlAbstractBinding *> *inheritedBindingStack, QFiniteStack<QQmlParserStatus *> *inheritedParserStatusStack)
     : componentAttached(0)
     , url(compiledData->url)
     , engine(parentContext->engine)
@@ -92,6 +93,9 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
+    , allCreatedBindings(0)
+    , allParserStatusCallbacks(0)
+    , ownBindingAndParserStatusStacks(false)
     , compiledData(compiledData)
     , rootContext(rootContext)
     , _qobject(0)
@@ -105,11 +109,47 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
 {
     if (!compiledData->isInitialized())
         compiledData->initialize(engine);
+
+    if (inheritedBindingStack) {
+        Q_ASSERT(rootContext);
+        Q_ASSERT(inheritedParserStatusStack);
+        allCreatedBindings = inheritedBindingStack;
+        allParserStatusCallbacks = inheritedParserStatusStack;
+        ownBindingAndParserStatusStacks = false;
+    } else {
+        ownBindingAndParserStatusStacks = true;
+        allCreatedBindings = new QFiniteStack<QQmlAbstractBinding*>;
+        allCreatedBindings->allocate(compiledData->totalBindingsCount);
+        allParserStatusCallbacks = new QFiniteStack<QQmlParserStatus*>;
+        allParserStatusCallbacks->allocate(compiledData->totalParserStatusCount);
+    }
+}
+
+QmlObjectCreator::~QmlObjectCreator()
+{
+    if (ownBindingAndParserStatusStacks) {
+        for (int i = 0; i < allCreatedBindings->count(); ++i) {
+            QQmlAbstractBinding *b = allCreatedBindings->at(i);
+            if (b)
+                b->m_mePtr = 0;
+        }
+        for (int i = 0; i < allParserStatusCallbacks->count(); ++i) {
+            QQmlParserStatus *ps = allParserStatusCallbacks->at(i);
+            if (ps)
+                ps->d = 0;
+        }
+
+        delete allCreatedBindings;
+        delete allParserStatusCallbacks;
+    }
 }
 
 QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
 {
     int objectToCreate;
+
+    Q_ASSERT(!ownBindingAndParserStatusStacks || allCreatedBindings->isEmpty());
+    Q_ASSERT(!ownBindingAndParserStatusStacks || allParserStatusCallbacks->isEmpty());
 
     if (subComponentIndex == -1) {
         objectIndexToId = compiledData->objectIndexToIdForRoot;
@@ -158,10 +198,6 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
         context->importedScripts = creationContext->importedScripts;
     }
 
-    QVector<QQmlParserStatus*> parserStatusCallbacks;
-    parserStatusCallbacks.resize(qmlUnit->nObjects);
-    qSwap(_parserStatusCallbacks, parserStatusCallbacks);
-
     QObject *instance = createInstance(objectToCreate, parent);
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
@@ -171,9 +207,6 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
 
         context->contextObject = instance;
     }
-
-    qSwap(_parserStatusCallbacks, parserStatusCallbacks);
-    allParserStatusCallbacks.prepend(parserStatusCallbacks);
 
     return instance;
 }
@@ -602,14 +635,14 @@ void QmlObjectCreator::setupBindings()
 
         }
 
-        if (!setPropertyValue(property, i, binding))
+        if (!setPropertyBinding(property, binding))
             return;
     }
 
     qSwap(_currentList, savedList);
 }
 
-bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingIndex, const QV4::CompiledData::Binding *binding)
+bool QmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
@@ -747,8 +780,8 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
                 qmlBinding->addToObject();
             }
 
-            _createdBindings[bindingIndex] = qmlBinding;
-            qmlBinding->m_mePtr = &_createdBindings[bindingIndex];
+            allCreatedBindings->push(qmlBinding);
+            qmlBinding->m_mePtr = &allCreatedBindings->top();
         }
         return true;
     }
@@ -940,7 +973,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef->component, creationContext, rootContext);
+            QmlObjectCreator subCreator(context, typeRef->component, creationContext, rootContext, allCreatedBindings, allParserStatusCallbacks);
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
@@ -948,8 +981,6 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             }
             if (subCreator.componentAttached)
                 subCreator.componentAttached->add(&componentAttached);
-            allCreatedBindings << subCreator.allCreatedBindings;
-            allParserStatusCallbacks << subCreator.allParserStatusCallbacks;
         }
         // ### use no-event variant
         if (parent)
@@ -976,8 +1007,8 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
     if (parserStatus) {
         parserStatus->classBegin();
-        _parserStatusCallbacks[index] = parserStatus;
-        parserStatus->d = &_parserStatusCallbacks[index];
+        allParserStatusCallbacks->push(parserStatus);
+        parserStatus->d = &allParserStatusCallbacks->top();
     }
 
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
@@ -1023,45 +1054,34 @@ QQmlContextData *QmlObjectCreator::finalize()
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
 
-    Q_ASSERT(allCreatedBindings.isEmpty() || allCreatedBindings.isDetached());
-
-    for (QLinkedList<QVector<QQmlAbstractBinding*> >::Iterator it = allCreatedBindings.begin(), end = allCreatedBindings.end();
-         it != end; ++it) {
-        const QVector<QQmlAbstractBinding *> &bindings = *it;
-        for (int i = 0; i < bindings.count(); ++i) {
-            QQmlAbstractBinding *b = bindings.at(i);
-            if (!b)
-                continue;
-            b->m_mePtr = 0;
-            QQmlData *data = QQmlData::get(b->object());
-            Q_ASSERT(data);
-            data->clearPendingBindingBit(b->propertyIndex());
-            b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                          QQmlPropertyPrivate::DontRemoveBinding);
-        }
+    while (!allCreatedBindings->isEmpty()) {
+        QQmlAbstractBinding *b = allCreatedBindings->pop();
+        if (!b)
+            continue;
+        b->m_mePtr = 0;
+        QQmlData *data = QQmlData::get(b->object());
+        Q_ASSERT(data);
+        data->clearPendingBindingBit(b->propertyIndex());
+        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
+                      QQmlPropertyPrivate::DontRemoveBinding);
     }
     }
 
     if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
-        for (QLinkedList<QVector<QQmlParserStatus*> >::ConstIterator it = allParserStatusCallbacks.constBegin(), end = allParserStatusCallbacks.constEnd();
-             it != end; ++it) {
-            const QVector<QQmlParserStatus *> &parserStatusCallbacks = *it;
-            for (int i = parserStatusCallbacks.count() - 1; i >= 0; --i) {
-                QQmlParserStatus *status = parserStatusCallbacks.at(i);
+        while (!allParserStatusCallbacks->isEmpty()) {
+            QQmlParserStatus *status = allParserStatusCallbacks->pop();
 
-                if (status && status->d) {
-                    status->d = 0;
-                    status->componentComplete();
-                }
+            if (status && status->d) {
+                status->d = 0;
+                status->componentComplete();
+            }
 
     #if 0 // ###
                 if (watcher.hasRecursed() || interrupt.shouldInterrupt())
                     return 0;
     #endif
-            }
         }
-        allParserStatusCallbacks.clear();
     }
 
     {
@@ -1135,14 +1155,10 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_vmeMetaObject, vmeMetaObject);
 
     QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
-    qSwap(_createdBindings, createdBindings);
 
     setupFunctions();
     setupBindings();
 
-    allCreatedBindings.append(_createdBindings);
-
-    qSwap(_createdBindings, createdBindings);
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_ddata, declarativeData);

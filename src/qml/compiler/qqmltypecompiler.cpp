@@ -244,6 +244,27 @@ bool QQmlTypeCompiler::compile()
     if (!validator.validate())
         return false;
 
+    // Collect some data for instantiation later.
+    int bindingCount = 0;
+    int parserStatusCount = 0;
+    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+        bindingCount += obj->nBindings;
+        if (QQmlCompiledData::TypeReference *typeRef = compiledData->resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+            if (QQmlType *qmlType = typeRef->type) {
+                if (qmlType->parserStatusCast() != -1)
+                    ++parserStatusCount;
+            }
+            if (typeRef->component) {
+                bindingCount += typeRef->component->totalBindingsCount;
+                parserStatusCount += typeRef->component->totalParserStatusCount;
+            }
+        }
+    }
+
+    compiledData->totalBindingsCount = bindingCount;
+    compiledData->totalParserStatusCount = parserStatusCount;
+
     return errors.isEmpty();
 }
 

@@ -114,6 +114,7 @@ T &QFiniteStack<T>::top()
 template<typename T>
 void QFiniteStack<T>::push(const T &o)
 {
+    Q_ASSERT(_size < _alloc);
     if (QTypeInfo<T>::isComplex) {
         new (_array + _size++) T(o);
     } else {
@@ -124,6 +125,7 @@ void QFiniteStack<T>::push(const T &o)
 template<typename T>
 T QFiniteStack<T>::pop()
 {
+    Q_ASSERT(_size > 0);
     --_size;
 
     if (QTypeInfo<T>::isComplex) {

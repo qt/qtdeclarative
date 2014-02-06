@@ -46,7 +46,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlcompiler_p.h>
 #include <private/qqmltypecompiler_p.h>
-#include <QLinkedList>
+#include <private/qfinitestack_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +57,9 @@ class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
-    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext = 0);
+    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext = 0,
+                     QFiniteStack<QQmlAbstractBinding*> *inheritedBindingStack = 0, QFiniteStack<QQmlParserStatus*> *inheritedParserStatusStack = 0);
+    ~QmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize();
@@ -73,7 +75,7 @@ private:
     bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty);
 
     void setupBindings();
-    bool setPropertyValue(QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
+    bool setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
@@ -91,8 +93,9 @@ private:
     const QVector<QQmlPropertyCache *> propertyCaches;
     const QVector<QByteArray> vmeMetaObjectData;
     QHash<int, int> objectIndexToId;
-    QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
-    QLinkedList<QVector<QQmlParserStatus*> > allParserStatusCallbacks;
+    QFiniteStack<QQmlAbstractBinding*> *allCreatedBindings;
+    QFiniteStack<QQmlParserStatus*> *allParserStatusCallbacks;
+    bool ownBindingAndParserStatusStacks;
     QQmlCompiledData *compiledData;
     QQmlContextData *rootContext;
 
@@ -105,10 +108,8 @@ private:
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
     QQmlVMEMetaObject *_vmeMetaObject;
-    QVector<QQmlAbstractBinding*> _createdBindings;
     QQmlListProperty<void> _currentList;
     QV4::ExecutionContext *_qmlContext;
-    QVector<QQmlParserStatus*> _parserStatusCallbacks;
 };
 
 QT_END_NAMESPACE
