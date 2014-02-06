@@ -129,7 +129,11 @@ public:
             }
         }
     }
-    QString name() const { return m_name; }
+    QString name() const {
+        if (m_state.passwordEdit)
+            return QString();
+        return m_name;
+    }
     void setName(const QString &name) {
         if (name != m_name) {
             m_name = name;
