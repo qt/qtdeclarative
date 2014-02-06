@@ -991,7 +991,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
     QQmlData *ddata = QQmlData::get(instance, /*create*/true);
     ddata->setImplicitDestructible();
-    if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject) {
+    if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject || ddata->rootObjectInCreation) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
