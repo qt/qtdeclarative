@@ -158,8 +158,7 @@ Param traceParam(const Param &param)
     if (engine->hasException) \
         goto catchException
 
-QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
-                            QV4::Value *stack, unsigned stackSize
+QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -180,6 +179,9 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 #endif
+
+    QV4::Value *stack = 0;
+    unsigned stackSize = 0;
 
     const uchar *exceptionHandler = 0;
 
@@ -719,7 +721,7 @@ void **VME::instructionJumpTable()
     static void **jumpTable = 0;
     if (!jumpTable) {
         const uchar *code = 0;
-        VME().run(0, code, 0, 0, &jumpTable);
+        VME().run(0, code, &jumpTable);
     }
     return jumpTable;
 }

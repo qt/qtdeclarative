@@ -60,8 +60,7 @@ public:
 #endif
 
 private:
-    QV4::ReturnedValue run(QV4::ExecutionContext *, const uchar *code,
-            QV4::Value *stack = 0, unsigned stackSize = 0
+    QV4::ReturnedValue run(QV4::ExecutionContext *, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif
