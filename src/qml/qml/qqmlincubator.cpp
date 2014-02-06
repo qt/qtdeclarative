@@ -98,7 +98,10 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         incubatorList.insert(p.data());
         incubatorCount++;
 
-        p->vmeGuard.guard(&p->vme);
+        if (useNewCompiler)
+            p->vmeGuard.guard(p->creator.data());
+        else
+            p->vmeGuard.guard(&p->vme);
         p->changeStatus(QQmlIncubator::Loading);
 
         if (incubationController)
@@ -379,7 +382,10 @@ finishIncubate:
             }
         }
     } else {
-        vmeGuard.guard(&vme);
+        if (enginePriv->useNewCompiler)
+            vmeGuard.guard(creator.data());
+        else
+            vmeGuard.guard(&vme);
     }
 }
 

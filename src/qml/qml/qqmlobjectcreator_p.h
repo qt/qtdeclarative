@@ -70,6 +70,8 @@ public:
 
     QList<QQmlError> errors;
 
+    QQmlContextData *parentContextData() const { return parentContext; }
+
 private:
     QObject *createInstance(int index, QObject *parent = 0);
 

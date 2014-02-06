@@ -1307,6 +1307,14 @@ void QQmlVMEGuard::guard(QQmlVME *vme)
         m_contexts[m_contextCount - 1] = vme->rootContext.contextData();
 }
 
+void QQmlVMEGuard::guard(QmlObjectCreator *creator)
+{
+    clear();
+    m_contextCount = 1;
+    m_contexts = new QQmlGuardedContextData[m_contextCount];
+    m_contexts[0] = creator->parentContextData();
+}
+
 void QQmlVMEGuard::clear()
 {
     delete [] m_objects;

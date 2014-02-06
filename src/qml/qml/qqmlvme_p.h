@@ -196,6 +196,7 @@ public:
     ~QQmlVMEGuard();
 
     void guard(QQmlVME *);
+    void guard(QmlObjectCreator *);
     void clear();
 
     bool isOK() const;
