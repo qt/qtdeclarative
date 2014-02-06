@@ -65,7 +65,7 @@ public:
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
 
-    QQmlComponentAttached *componentAttached;
+    QQmlComponentAttached **componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
     QList<QQmlError> errors;
@@ -101,6 +101,7 @@ private:
     bool ownBindingAndParserStatusStacks;
     QQmlCompiledData *compiledData;
     QQmlContextData *rootContext;
+    QQmlComponentAttached *componentAttachedImpl;
 
     QObject *_qobject;
     QObject *_scopeObject;

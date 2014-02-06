@@ -992,7 +992,7 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     if (p->activeVME) { // XXX should only be allowed during begin
         a->add(&p->activeVME->componentAttached);
     } else if (p->activeObjectCreator) {
-        a->add(&p->activeObjectCreator->componentAttached);
+        a->add(p->activeObjectCreator->componentAttached);
     } else {
         QQmlData *d = QQmlData::get(obj);
         Q_ASSERT(d);

@@ -110,6 +110,9 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     if (!compiledData->isInitialized())
         compiledData->initialize(engine);
 
+    componentAttachedImpl = 0;
+    componentAttached = &componentAttachedImpl;
+
     if (inheritedBindingStack) {
         Q_ASSERT(rootContext);
         Q_ASSERT(inheritedParserStatusStack);
@@ -974,13 +977,12 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 return 0;
             }
             QmlObjectCreator subCreator(context, typeRef->component, creationContext, rootContext, allCreatedBindings, allParserStatusCallbacks);
+            subCreator.componentAttached = componentAttached;
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
                 return 0;
             }
-            if (subCreator.componentAttached)
-                subCreator.componentAttached->add(&componentAttached);
         }
         // ### use no-event variant
         if (parent)
@@ -1100,8 +1102,8 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
 
     {
     QQmlTrace trace("VME Component.onCompleted Callbacks");
-    while (componentAttached) {
-        QQmlComponentAttached *a = componentAttached;
+    while (componentAttachedImpl) {
+        QQmlComponentAttached *a = componentAttachedImpl;
         a->rem();
         QQmlData *d = QQmlData::get(a->parent());
         Q_ASSERT(d);
