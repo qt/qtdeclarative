@@ -662,24 +662,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         STOREVALUE(instr.result, instr.alu(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(BinopContext)
 
-    MOTH_BEGIN_INSTR(AddNumberParams)
-        double lhs = VALUE(instr.lhs).asDouble();
-        double rhs = VALUE(instr.rhs).asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs + rhs);
-    MOTH_END_INSTR(AddNumberParams)
-
-    MOTH_BEGIN_INSTR(MulNumberParams)
-        double lhs = VALUE(instr.lhs).asDouble();
-        double rhs = VALUE(instr.rhs).asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs * rhs);
-    MOTH_END_INSTR(MulNumberParams)
-
-    MOTH_BEGIN_INSTR(SubNumberParams)
-        double lhs = VALUE(instr.lhs).asDouble();
-        double rhs = VALUE(instr.rhs).asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs - rhs);
-    MOTH_END_INSTR(SubNumberParams)
-
     MOTH_BEGIN_INSTR(Ret)
         context->engine->stackPop(stackSize);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());

@@ -132,9 +132,6 @@ QT_BEGIN_NAMESPACE
     F(Mul, mul) \
     F(Sub, sub) \
     F(BinopContext, binopContext) \
-    F(AddNumberParams, addNumberParams) \
-    F(MulNumberParams, mulNumberParams) \
-    F(SubNumberParams, subNumberParams) \
     F(LoadThis, loadThis) \
     F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
@@ -699,24 +696,6 @@ union Instr
         Param rhs;
         Param result;
     };
-    struct instr_addNumberParams {
-        MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
-    };
-    struct instr_mulNumberParams {
-        MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
-    };
-    struct instr_subNumberParams {
-        MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
-    };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
         Param result;
@@ -826,9 +805,6 @@ union Instr
     instr_mul mul;
     instr_sub sub;
     instr_binopContext binopContext;
-    instr_addNumberParams addNumberParams;
-    instr_mulNumberParams mulNumberParams;
-    instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
     instr_loadQmlIdArray loadQmlIdArray;
     instr_loadQmlImportedScripts loadQmlImportedScripts;

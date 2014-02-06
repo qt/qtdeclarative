@@ -697,37 +697,6 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
 
 Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
-    if (isNumberType(leftSource) && isNumberType(rightSource)) {
-        switch (oper) {
-        case V4IR::OpAdd: {
-            Instruction::AddNumberParams instr;
-            instr.lhs = getParam(leftSource);
-            instr.rhs = getParam(rightSource);
-            instr.result = getResultParam(target);
-            addInstruction(instr);
-            return instr.result;
-        }
-        case V4IR::OpMul: {
-            Instruction::MulNumberParams instr;
-            instr.lhs = getParam(leftSource);
-            instr.rhs = getParam(rightSource);
-            instr.result = getResultParam(target);
-            addInstruction(instr);
-            return instr.result;
-        }
-        case V4IR::OpSub: {
-            Instruction::SubNumberParams instr;
-            instr.lhs = getParam(leftSource);
-            instr.rhs = getParam(rightSource);
-            instr.result = getResultParam(target);
-            addInstruction(instr);
-            return instr.result;
-        }
-        default:
-            break;
-        }
-    }
-
     if (oper == V4IR::OpAdd) {
         Instruction::Add add;
         add.lhs = getParam(leftSource);
