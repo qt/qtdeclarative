@@ -306,12 +306,7 @@ inline QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    int n;
-    if (value->integerCompatible())
-        n = value->int_32;
-    else
-        n = value->toInt32();
-
+    int n = value->toInt32();
     return Encode((int)~n);
 }
 
@@ -328,9 +323,6 @@ inline ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRe
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
-        return Encode(left->integerValue() | right->integerValue());
-
     int lval = left->toInt32();
     int rval = right->toInt32();
     return Encode(lval | rval);
@@ -340,9 +332,6 @@ inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueR
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
-        return Encode(left->integerValue() ^ right->integerValue());
-
     int lval = left->toInt32();
     int rval = right->toInt32();
     return Encode(lval ^ rval);
@@ -351,9 +340,6 @@ inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueR
 inline ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
-
-    if (QV4::Value::integerCompatible(*left, *right))
-        return Encode(left->integerValue() & right->integerValue());
 
     int lval = left->toInt32();
     int rval = right->toInt32();
