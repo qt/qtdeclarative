@@ -552,14 +552,19 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(Jump)
 
-    MOTH_BEGIN_INSTR(CJump)
-        uint cond = __qmljs_to_boolean(VALUEPTR(instr.condition));
+    MOTH_BEGIN_INSTR(JumpEq)
+        bool cond = VALUEPTR(instr.condition)->toBoolean();
         TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
-        if (instr.invert)
-            cond = !cond;
         if (cond)
             code = ((uchar *)&instr.offset) + instr.offset;
-    MOTH_END_INSTR(CJump)
+    MOTH_END_INSTR(JumpEq)
+
+    MOTH_BEGIN_INSTR(JumpNe)
+        bool cond = VALUEPTR(instr.condition)->toBoolean();
+        TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
+        if (!cond)
+            code = ((uchar *)&instr.offset) + instr.offset;
+    MOTH_END_INSTR(JumpNe)
 
     MOTH_BEGIN_INSTR(UNot)
         STOREVALUE(instr.result, __qmljs_not(VALUEPTR(instr.source)));

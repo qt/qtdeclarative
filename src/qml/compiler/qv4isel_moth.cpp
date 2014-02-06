@@ -918,16 +918,16 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         Q_UNIMPLEMENTED();
     }
 
-    Instruction::CJump jump;
-    jump.offset = 0;
-    jump.condition = condition;
-
     if (s->iftrue == _nextBlock) {
-        jump.invert = true;
+        Instruction::JumpNe jump;
+        jump.offset = 0;
+        jump.condition = condition;
         ptrdiff_t falseLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
         _patches[s->iffalse].append(falseLoc);
     } else {
-        jump.invert = false;
+        Instruction::JumpEq jump;
+        jump.offset = 0;
+        jump.condition = condition;
         ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
         _patches[s->iftrue].append(trueLoc);
 

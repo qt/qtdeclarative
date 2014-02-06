@@ -107,7 +107,8 @@ QT_BEGIN_NAMESPACE
     F(CreateActivationProperty, createActivationProperty) \
     F(ConstructGlobalLookup, constructGlobalLookup) \
     F(Jump, jump) \
-    F(CJump, cjump) \
+    F(JumpEq, jumpEq) \
+    F(JumpNe, jumpNe) \
     F(UNot, unot) \
     F(UNotBool, unotBool) \
     F(UPlus, uplus) \
@@ -556,11 +557,15 @@ union Instr
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
     };
-    struct instr_cjump {
+    struct instr_jumpEq {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
         Param condition;
-        bool invert;
+    };
+    struct instr_jumpNe {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
+        Param condition;
     };
     struct instr_unot {
         MOTH_INSTR_HEADER
@@ -796,7 +801,8 @@ union Instr
     instr_createActivationProperty createActivationProperty;
     instr_constructGlobalLookup constructGlobalLookup;
     instr_jump jump;
-    instr_cjump cjump;
+    instr_jumpEq jumpEq;
+    instr_jumpNe jumpNe;
     instr_unot unot;
     instr_unotBool unotBool;
     instr_uplus uplus;
