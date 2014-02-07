@@ -2209,9 +2209,6 @@ public:
 
     void run(Function *f)
     {
-
-        QTextStream os(stderr, QIODevice::WriteOnly);
-
         QVector<UntypedTemp> knownOk;
         QList<UntypedTemp> candidates = _defUses.defsUntyped();
         while (!candidates.isEmpty()) {
