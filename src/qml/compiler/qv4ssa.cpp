@@ -3388,6 +3388,18 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                             continue;
                         }
                     }
+                    if (rightConst) { // mask right hand side of shift operations
+                        switch (binop->op) {
+                        case OpLShift:
+                        case OpRShift:
+                        case OpURShift:
+                            rightConst->value = QV4::Primitive::toInt32(rightConst->value) & 0x1f;
+                            rightConst->type = SInt32Type;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
 
                     // TODO: More constant binary expression evaluation
                     // TODO: If the result of the move is only used in one single cjump, then
