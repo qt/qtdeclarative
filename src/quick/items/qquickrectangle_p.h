@@ -81,7 +81,7 @@ private:
     bool m_valid : 1;
 };
 
-class Q_AUTOTEST_EXPORT QQuickGradientStop : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
 {
     Q_OBJECT
 
@@ -105,7 +105,7 @@ private:
     QColor m_color;
 };
 
-class Q_AUTOTEST_EXPORT QQuickGradient : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
 {
     Q_OBJECT
 
@@ -117,6 +117,8 @@ public:
     ~QQuickGradient();
 
     QQmlListProperty<QQuickGradientStop> stops();
+
+    QGradientStops gradientStops() const;
 
 Q_SIGNALS:
     void updated();

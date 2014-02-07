@@ -255,6 +255,18 @@ QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
     return QQmlListProperty<QQuickGradientStop>(this, m_stops);
 }
 
+QGradientStops QQuickGradient::gradientStops() const
+{
+    QGradientStops stops;
+    for (int i = 0; i < m_stops.size(); ++i){
+        int j = 0;
+        while (j < stops.size() && stops.at(j).first < m_stops[i]->position())
+            j++;
+        stops.insert(j, QGradientStop(m_stops.at(i)->position(), m_stops.at(i)->color()));
+    }
+    return stops;
+}
+
 void QQuickGradient::doUpdate()
 {
     emit updated();
@@ -480,13 +492,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     QGradientStops stops;
     if (d->gradient) {
-        QList<QQuickGradientStop *> qxstops = d->gradient->m_stops;
-        for (int i = 0; i < qxstops.size(); ++i){
-            int j = 0;
-            while (j < stops.size() && stops.at(j).first < qxstops[i]->position())
-                j++;
-            stops.insert(j, QGradientStop(qxstops.at(i)->position(), qxstops.at(i)->color()));
-        }
+        stops = d->gradient->gradientStops();
     }
     rectangle->setGradientStops(stops);
 
