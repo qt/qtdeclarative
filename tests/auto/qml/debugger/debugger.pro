@@ -3,6 +3,8 @@ TEMPLATE = subdirs
 PUBLICTESTS += \
     qqmlenginedebugservice \
     qqmldebugjs \
+    qqmlinspector \
+    qqmlprofilerservice \
     qpacketprotocol \
 #    qv4profilerservice \
 #    qdebugmessageservice \

@@ -869,8 +869,31 @@ void QQuickColumn::reportConflictingAnchors()
   \sa Grid::spacing
 */
 
+class QQuickRowPrivate : public QQuickBasePositionerPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickRow)
+
+public:
+    QQuickRowPrivate()
+        : QQuickBasePositionerPrivate()
+    {}
+
+    void effectiveLayoutDirectionChange()
+    {
+        Q_Q(QQuickRow);
+        // For RTL layout the positioning changes when the width changes.
+        if (getEffectiveLayoutDirection(q) == Qt::RightToLeft)
+            addItemChangeListener(this, QQuickItemPrivate::Geometry);
+        else
+            removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        // Don't postpone, as it might be the only trigger for visible changes.
+        q->prePositioning();
+        emit q->effectiveLayoutDirectionChanged();
+    }
+};
+
 QQuickRow::QQuickRow(QQuickItem *parent)
-: QQuickBasePositioner(Horizontal, parent)
+: QQuickBasePositioner(*new QQuickRowPrivate, Horizontal, parent)
 {
 }
 /*!
@@ -900,14 +923,8 @@ void QQuickRow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate* >(QQuickBasePositionerPrivate::get(this));
     if (d->layoutDirection != layoutDirection) {
         d->layoutDirection = layoutDirection;
-        // For RTL layout the positioning changes when the width changes.
-        if (d->layoutDirection == Qt::RightToLeft)
-            d->addItemChangeListener(d, QQuickItemPrivate::Geometry);
-        else
-            d->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-        prePositioning();
         emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
+        d->effectiveLayoutDirectionChange();
     }
 }
 /*!
@@ -1111,8 +1128,33 @@ void QQuickRow::reportConflictingAnchors()
 
   \sa rows, columns
 */
+
+class QQuickGridPrivate : public QQuickBasePositionerPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickGrid)
+
+public:
+    QQuickGridPrivate()
+        : QQuickBasePositionerPrivate()
+    {}
+
+    void effectiveLayoutDirectionChange()
+    {
+        Q_Q(QQuickGrid);
+        // For RTL layout the positioning changes when the width changes.
+        if (getEffectiveLayoutDirection(q) == Qt::RightToLeft)
+            addItemChangeListener(this, QQuickItemPrivate::Geometry);
+        else
+            removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        // Don't postpone, as it might be the only trigger for visible changes.
+        q->prePositioning();
+        emit q->effectiveLayoutDirectionChanged();
+        emit q->effectiveHorizontalAlignmentChanged(q->effectiveHAlign());
+    }
+};
+
 QQuickGrid::QQuickGrid(QQuickItem *parent)
-    : QQuickBasePositioner(Both, parent)
+    : QQuickBasePositioner(*new QQuickGridPrivate, Both, parent)
     , m_rows(-1)
     , m_columns(-1)
     , m_rowSpacing(-1)
@@ -1260,15 +1302,8 @@ void QQuickGrid::setLayoutDirection(Qt::LayoutDirection layoutDirection)
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate*>(QQuickBasePositionerPrivate::get(this));
     if (d->layoutDirection != layoutDirection) {
         d->layoutDirection = layoutDirection;
-        // For RTL layout the positioning changes when the width changes.
-        if (d->layoutDirection == Qt::RightToLeft)
-            d->addItemChangeListener(d, QQuickItemPrivate::Geometry);
-        else
-            d->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-        prePositioning();
         emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
-        emit effectiveHorizontalAlignmentChanged(effectiveHAlign());
+        d->effectiveLayoutDirectionChange();
     }
 }
 
@@ -1652,6 +1687,14 @@ public:
         : QQuickBasePositionerPrivate(), flow(QQuickFlow::LeftToRight)
     {}
 
+    void effectiveLayoutDirectionChange()
+    {
+        Q_Q(QQuickFlow);
+        // Don't postpone, as it might be the only trigger for visible changes.
+        q->prePositioning();
+        emit q->effectiveLayoutDirectionChanged();
+    }
+
     QQuickFlow::Flow flow;
 };
 
@@ -1724,9 +1767,8 @@ void QQuickFlow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
     Q_D(QQuickFlow);
     if (d->layoutDirection != layoutDirection) {
         d->layoutDirection = layoutDirection;
-        prePositioning();
         emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
+        d->effectiveLayoutDirectionChange();
     }
 }
 
