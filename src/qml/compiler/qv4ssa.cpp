@@ -244,20 +244,27 @@ public:
     }
 };
 
+inline bool unescapableTemp(Temp *t, Function *f)
+{
+    switch (t->kind) {
+    case Temp::Formal:
+    case Temp::ScopedFormal:
+    case Temp::ScopedLocal:
+        return false;
+    case Temp::Local:
+        return !f->variablesCanEscape();
+    default:
+        return true;
+    }
+}
+
 inline Temp *unescapableTemp(Expr *e, Function *f)
 {
     Temp *t = e->asTemp();
     if (!t)
         return 0;
 
-    switch (t->kind) {
-    case Temp::VirtualRegister:
-        return t;
-    case Temp::Local:
-        return f->variablesCanEscape() ? 0 : t;
-    default:
-        return 0;
-    }
+    return unescapableTemp(t, f) ? t : 0;
 }
 
 class BasicBlockSet
@@ -776,20 +783,8 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     Function *function;
     bool isCollectable(Temp *t) const
     {
-        switch (t->kind) {
-        case Temp::Formal:
-        case Temp::ScopedFormal:
-        case Temp::ScopedLocal:
-            return false;
-        case Temp::Local:
-            return !function->variablesCanEscape();
-        case Temp::VirtualRegister:
-            return true;
-        default:
-            // PhysicalRegister and StackSlot can only get inserted later.
-            Q_ASSERT(!"Invalid temp kind!");
-            return false;
-        }
+        Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
+        return unescapableTemp(t, function);
     }
 
 public:
@@ -999,19 +994,8 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
 
     bool isRenamable(Temp *t) const
     {
-        switch (t->kind) {
-        case Temp::Formal:
-        case Temp::ScopedFormal:
-        case Temp::ScopedLocal:
-            return false;
-        case Temp::Local:
-            return !function->variablesCanEscape();
-        case Temp::VirtualRegister:
-            return true;
-        default:
-            Q_ASSERT(!"Invalid temp kind!");
-            return false;
-        }
+        Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
+        return unescapableTemp(t, function);
     }
 
     struct TodoAction {
@@ -1335,19 +1319,8 @@ private:
     Stmt *_stmt;
 
     bool isCollectible(Temp *t) const {
-        switch (t->kind) {
-        case Temp::Formal:
-        case Temp::ScopedFormal:
-        case Temp::ScopedLocal:
-            return false;
-        case Temp::Local:
-            return !function->variablesCanEscape();
-        case Temp::VirtualRegister:
-            return true;
-        default:
-            Q_UNREACHABLE();
-            return false;
-        }
+        Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
+        return unescapableTemp(t, function);
     }
 
     void addUse(Temp *t) {
@@ -1726,16 +1699,7 @@ private:
 
     bool isCollectable(Temp *t) const
     {
-        switch (t->kind) {
-        case Temp::Formal:
-        case Temp::ScopedFormal:
-        case Temp::ScopedLocal:
-            return false;
-        case Temp::Local:
-            return !function->variablesCanEscape();
-        default:
-            return true;
-        }
+        return unescapableTemp(t, function);
     }
 
 protected:
@@ -2010,21 +1974,10 @@ private:
     }
 
     bool isAlwaysVar(Temp *t) {
-        switch (t->kind) {
-        case Temp::Formal:
-        case Temp::ScopedFormal:
-        case Temp::ScopedLocal:
-            t->type = VarType;
-            return true;
-        case Temp::Local:
-            if (function->variablesCanEscape()) {
-                t->type = VarType;
-                return true;
-            }
+        if (unescapableTemp(t, function))
             return false;
-        default:
-            return false;
-        }
+        t->type = VarType;
+        return true;
     }
 
     void setType(Expr *e, DiscoveredType ty) {
@@ -3543,19 +3496,8 @@ protected:
     virtual void visitRegExp(RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *e) {
-        switch (e->kind) {
-        case Temp::Local:
-            if (!function->variablesCanEscape())
-                inputs.append(*e);
-            break;
-
-        case Temp::VirtualRegister:
+        if (unescapableTemp(e, function))
             inputs.append(*e);
-            break;
-
-        default:
-            break;
-        }
     }
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
@@ -3577,7 +3519,7 @@ protected:
     virtual void visitMove(Move *s) {
         s->source->accept(this);
         if (Temp *t = s->target->asTemp()) {
-            if ((t->kind == Temp::Local && !function->variablesCanEscape()) || t->kind == Temp::VirtualRegister)
+            if (unescapableTemp(t, function))
                 outputs.append(*t);
             else
                 s->target->accept(this);
