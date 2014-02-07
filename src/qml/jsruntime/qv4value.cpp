@@ -98,6 +98,7 @@ double Value::toNumberImpl() const
     case QV4::Value::Null_Type:
     case QV4::Value::Boolean_Type:
     case QV4::Value::Integer_Type:
+        return int_32;
     default: // double
         Q_UNREACHABLE();
     }

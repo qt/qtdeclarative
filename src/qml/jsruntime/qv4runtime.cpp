@@ -729,10 +729,10 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
 QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() > r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() > r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() > r->asDouble();
     if (l->isString() && r->isString())
         return r->stringValue()->compare(l->stringValue());
 
@@ -752,10 +752,10 @@ QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() < r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() < r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() < r->asDouble();
     if (l->isString() && r->isString())
         return l->stringValue()->compare(r->stringValue());
 
@@ -775,10 +775,10 @@ QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() >= r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() >= r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() >= r->asDouble();
     if (l->isString() && r->isString())
         return !l->stringValue()->compare(r->stringValue());
 
@@ -798,10 +798,10 @@ QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() <= r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() <= r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() <= r->asDouble();
     if (l->isString() && r->isString())
         return !r->stringValue()->compare(l->stringValue());
 
