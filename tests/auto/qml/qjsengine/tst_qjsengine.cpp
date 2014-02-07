@@ -47,6 +47,7 @@
 #include <qgraphicsitem.h>
 #include <qstandarditemmodel.h>
 #include <QtCore/qnumeric.h>
+#include <qqmlengine.h>
 #include <stdlib.h>
 
 #ifdef Q_CC_MSVC
@@ -87,6 +88,7 @@ private slots:
     void newQObject();
     void newQObject_ownership();
     void newQObject_deletedEngine();
+    void exceptionInSlot();
     void globalObjectProperties();
     void globalObjectEquals();
     void globalObjectProperties_enumerate();
@@ -150,6 +152,9 @@ private slots:
     void arrayPop_QTBUG_35979();
 
     void regexpLastMatch();
+
+signals:
+    void testSignal();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -510,6 +515,25 @@ void tst_QJSEngine::newQObject_deletedEngine()
         engine.globalObject().setProperty("obj", object);
     }
     QTRY_VERIFY(spy.count());
+}
+
+void tst_QJSEngine::exceptionInSlot()
+{
+    QJSEngine engine;
+    QJSValue wrappedThis = engine.newQObject(this);
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    engine.globalObject().setProperty("testCase", wrappedThis);
+    engine.evaluate(
+            "var called = false\n"
+            "function throwingSlot() {\n"
+            "    called = true\n"
+            "    throw 42;\n"
+            "}\n"
+            "testCase.testSignal.connect(throwingSlot)\n"
+            );
+    QCOMPARE(engine.globalObject().property("called").toBool(), false);
+    emit testSignal();
+    QCOMPARE(engine.globalObject().property("called").toBool(), true);
 }
 
 void tst_QJSEngine::globalObjectProperties()
