@@ -244,7 +244,7 @@ public:
     }
 };
 
-inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
+inline Temp *unescapableTemp(Expr *e, Function *f)
 {
     Temp *t = e->asTemp();
     if (!t)
@@ -254,7 +254,7 @@ inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
     case Temp::VirtualRegister:
         return t;
     case Temp::Local:
-        return variablesCanEscape ? 0 : t;
+        return f->variablesCanEscape() ? 0 : t;
     default:
         return 0;
     }
@@ -773,7 +773,7 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     QSet<Temp> killed;
 
     BasicBlock *currentBB;
-    const bool variablesCanEscape;
+    Function *function;
     bool isCollectable(Temp *t) const
     {
         switch (t->kind) {
@@ -782,7 +782,7 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
         case Temp::ScopedLocal:
             return false;
         case Temp::Local:
-            return !variablesCanEscape;
+            return !function->variablesCanEscape();
         case Temp::VirtualRegister:
             return true;
         default:
@@ -794,7 +794,7 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
 
 public:
     VariableCollector(Function *function)
-        : variablesCanEscape(function->variablesCanEscape())
+        : function(function)
     {
         _defsites.reserve(function->tempCount);
 
@@ -989,7 +989,6 @@ void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
 class VariableRenamer: public StmtVisitor, public ExprVisitor
 {
     Function *function;
-    const bool variablesCanEscape;
     unsigned tempCount;
 
     typedef QHash<unsigned, int> Mapping; // maps from existing/old temp number to the new and unique temp number.
@@ -1006,7 +1005,7 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
         case Temp::ScopedLocal:
             return false;
         case Temp::Local:
-            return !variablesCanEscape;
+            return !function->variablesCanEscape();
         case Temp::VirtualRegister:
             return true;
         default:
@@ -1058,7 +1057,6 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
 public:
     VariableRenamer(Function *f)
         : function(f)
-        , variablesCanEscape(f->variablesCanEscape())
         , tempCount(0)
         , processed(f->basicBlocks)
     {
@@ -1329,7 +1327,7 @@ public:
     };
 
 private:
-    const bool _variablesCanEscape;
+    Function *function;
     QHash<UntypedTemp, DefUse> _defUses;
     QHash<Stmt *, QList<Temp> > _usesPerStatement;
 
@@ -1343,7 +1341,7 @@ private:
         case Temp::ScopedLocal:
             return false;
         case Temp::Local:
-            return !_variablesCanEscape;
+            return !function->variablesCanEscape();
         case Temp::VirtualRegister:
             return true;
         default:
@@ -1374,7 +1372,7 @@ private:
 
 public:
     DefUsesCalculator(Function *function)
-        : _variablesCanEscape(function->variablesCanEscape())
+        : function(function)
     {
         foreach (BasicBlock *bb, function->basicBlocks) {
             _block = bb;
@@ -1687,15 +1685,15 @@ public:
 class EliminateDeadCode: public ExprVisitor {
     DefUsesCalculator &_defUses;
     StatementWorklist &_worklist;
-    const bool _variablesCanEscape;
+    Function *function;
     bool _sideEffect;
     QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, bool variablesCanEscape)
+    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, Function *function)
         : _defUses(defUses)
         , _worklist(worklist)
-        , _variablesCanEscape(variablesCanEscape)
+        , function(function)
     {
         _collectedTemps.reserve(8);
     }
@@ -1734,7 +1732,7 @@ private:
         case Temp::ScopedLocal:
             return false;
         case Temp::Local:
-            return !_variablesCanEscape;
+            return !function->variablesCanEscape();
         default:
             return true;
         }
@@ -1930,7 +1928,7 @@ protected:
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
     QQmlEnginePrivate *qmlEngine;
-    bool _variablesCanEscape;
+    Function *function;
     const DefUsesCalculator &_defUses;
     QHash<Temp, DiscoveredType> _tempTypes;
     QSet<Stmt *> _worklist;
@@ -1950,8 +1948,8 @@ public:
         , _ty(UnknownType)
     {}
 
-    void run(Function *function) {
-        _variablesCanEscape = function->variablesCanEscape();
+    void run(Function *f) {
+        function = f;
 
         // TODO: the worklist handling looks a bit inefficient... check if there is something better
         _worklist.clear();
@@ -2019,9 +2017,11 @@ private:
             t->type = VarType;
             return true;
         case Temp::Local:
-            if (_variablesCanEscape)
+            if (function->variablesCanEscape()) {
                 t->type = VarType;
-            return _variablesCanEscape;
+                return true;
+            }
+            return false;
         default:
             return false;
         }
@@ -2248,7 +2248,6 @@ protected:
 class ReverseInference
 {
     const DefUsesCalculator &_defUses;
-    bool _variablesCanExcape;
 
 public:
     ReverseInference(const DefUsesCalculator &defUses)
@@ -2257,7 +2256,6 @@ public:
 
     void run(Function *f)
     {
-        _variablesCanExcape = f->variablesCanEscape();
 
         QTextStream os(stderr, QIODevice::WriteOnly);
 
@@ -2303,13 +2301,13 @@ public:
                 default:
                     continue;
                 }
-                if (Temp *lt = unescapableTemp(b->left, _variablesCanExcape))
+                if (Temp *lt = unescapableTemp(b->left, f))
                     candidates.append(*lt);
-                if (Temp *rt = unescapableTemp(b->right, _variablesCanExcape))
+                if (Temp *rt = unescapableTemp(b->right, f))
                     candidates.append(*rt);
             } else if (Unop *u = m->source->asUnop()) {
                 if (u->op == OpCompl || u->op == OpUPlus) {
-                    if (Temp *t = unescapableTemp(u->expr, _variablesCanExcape))
+                    if (Temp *t = unescapableTemp(u->expr, f))
                         candidates.append(*t);
                 }
             } else {
@@ -3240,8 +3238,6 @@ bool tryOptimizingComparison(Expr *&expr)
 
 void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &df)
 {
-    const bool variablesCanEscape = function->variablesCanEscape();
-
     StatementWorklist W(function);
     ExprReplacer replaceUses(defUses, function);
 
@@ -3302,10 +3298,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                 }
             }
 
-            if (Temp *targetTemp = unescapableTemp(m->target, variablesCanEscape)) {
+            if (Temp *targetTemp = unescapableTemp(m->target, function)) {
                 // dead code elimination:
                 if (defUses.useCount(*targetTemp) == 0) {
-                    EliminateDeadCode(defUses, W, variablesCanEscape).run(m->source, s);
+                    EliminateDeadCode(defUses, W, function).run(m->source, s);
                     if (!m->source)
                         W.clear(s);
                     continue;
@@ -3344,7 +3340,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                 }
 
                 // copy propagation:
-                if (Temp *sourceTemp = unescapableTemp(m->source, variablesCanEscape)) {
+                if (Temp *sourceTemp = unescapableTemp(m->source, function)) {
                     QVector<Stmt *> newT2Uses = replaceUses(targetTemp, sourceTemp);
                     W += newT2Uses;
                     defUses.removeUse(s, *sourceTemp);
@@ -3527,13 +3523,13 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
-    const bool variablesCanEscape;
+    Function *function;
 
 public:
     QList<Temp> inputs;
     QList<Temp> outputs;
 
-    InputOutputCollector(bool variablesCanEscape): variablesCanEscape(variablesCanEscape) {}
+    InputOutputCollector(Function *f): function(f) {}
 
     void collect(Stmt *s) {
         inputs.clear();
@@ -3549,7 +3545,7 @@ protected:
     virtual void visitTemp(Temp *e) {
         switch (e->kind) {
         case Temp::Local:
-            if (!variablesCanEscape)
+            if (!function->variablesCanEscape())
                 inputs.append(*e);
             break;
 
@@ -3581,7 +3577,7 @@ protected:
     virtual void visitMove(Move *s) {
         s->source->accept(this);
         if (Temp *t = s->target->asTemp()) {
-            if ((t->kind == Temp::Local && !variablesCanEscape) || t->kind == Temp::VirtualRegister)
+            if ((t->kind == Temp::Local && !function->variablesCanEscape()) || t->kind == Temp::VirtualRegister)
                 outputs.append(*t);
             else
                 s->target->accept(this);
@@ -3631,7 +3627,7 @@ public:
 
         for (int i = function->basicBlocks.size() - 1; i >= 0; --i) {
             BasicBlock *bb = function->basicBlocks[i];
-            buildIntervals(bb, startEndLoops.value(bb, 0), function->variablesCanEscape());
+            buildIntervals(bb, startEndLoops.value(bb, 0), function);
         }
 
         _sortedRanges.reserve(_intervals.size());
@@ -3667,7 +3663,7 @@ public:
     }
 
 private:
-    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, bool variablesCanEscape)
+    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, Function *function)
     {
         LiveRegs live;
         foreach (BasicBlock *successor, bb->out) {
@@ -3688,7 +3684,7 @@ private:
         foreach (const Temp &opd, live)
             _intervals[opd].addRange(bb->statements.first()->id, bb->statements.last()->id);
 
-        InputOutputCollector collector(variablesCanEscape);
+        InputOutputCollector collector(function);
         for (int i = bb->statements.size() - 1; i >= 0; --i) {
             Stmt *s = bb->statements[i];
             if (Phi *phi = s->asPhi()) {
