@@ -3367,16 +3367,16 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                         Expr *casted = 0;
                         switch (binop->op) {
                         case OpBitAnd:
-                            if (leftConst && !rightConst && leftConst->value == 0xffffffff)
-                                casted = rightConst;
-                            else if (!leftConst && rightConst && rightConst->value == 0xffffffff)
-                                casted = leftConst;
+                            if (leftConst && !rightConst && QV4::Primitive::toUInt32(leftConst->value) == 0xffffffff)
+                                casted = binop->right;
+                            else if (!leftConst && rightConst && QV4::Primitive::toUInt32(rightConst->value) == 0xffffffff)
+                                casted = binop->left;
                             break;
                         case OpBitOr:
-                            if (leftConst && !rightConst && leftConst->value == 0)
-                                casted = rightConst;
-                            else if (!leftConst && rightConst && rightConst->value == 0)
-                                casted = leftConst;
+                            if (leftConst && !rightConst && QV4::Primitive::toInt32(leftConst->value) == 0)
+                                casted = binop->right;
+                            else if (!leftConst && rightConst && QV4::Primitive::toUInt32(rightConst->value) == 0)
+                                casted = binop->left;
                             break;
                         default:
                             break;
