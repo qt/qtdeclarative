@@ -1201,20 +1201,22 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
     } else {
         _as->load32(addr, Assembler::ScratchRegister);
         _as->store32((Assembler::RegisterID) registerTemp->index, addr);
-        addr.offset += 4;
-        quint32 tag;
-        switch (registerTemp->type) {
-        case V4IR::BoolType:
-            tag = QV4::Value::_Boolean_Type;
-            break;
-        case V4IR::SInt32Type:
-            tag = QV4::Value::_Integer_Type;
-            break;
-        default:
-            tag = QV4::Value::Undefined_Type;
-            Q_UNREACHABLE();
+        if (registerTemp->type != stackTemp->type) {
+            addr.offset += 4;
+            quint32 tag;
+            switch (registerTemp->type) {
+            case V4IR::BoolType:
+                tag = QV4::Value::_Boolean_Type;
+                break;
+            case V4IR::SInt32Type:
+                tag = QV4::Value::_Integer_Type;
+                break;
+            default:
+                tag = QV4::Value::Undefined_Type;
+                Q_UNREACHABLE();
+            }
+            _as->store32(Assembler::TrustedImm32(tag), addr);
         }
-        _as->store32(Assembler::TrustedImm32(tag), addr);
         _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
     }
 }
