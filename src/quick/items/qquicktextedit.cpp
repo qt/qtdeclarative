@@ -2011,6 +2011,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
     QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
+    QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -2243,6 +2244,11 @@ void QQuickTextEdit::updateWholeDocument()
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
+}
+
+void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
+{
+    markDirtyNodesForRange(block.position(), block.position() + block.length(), 0);
 }
 
 void QQuickTextEdit::updateCursor()

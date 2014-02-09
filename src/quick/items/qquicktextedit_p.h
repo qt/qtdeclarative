@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextDocument;
 class QQuickTextEditPrivate;
+class QTextBlock;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 {
     Q_OBJECT
@@ -326,6 +328,7 @@ private Q_SLOTS:
     void createCursor();
     void q_canPasteChanged();
     void updateWholeDocument();
+    void invalidateBlock(const QTextBlock &block);
     void updateCursor();
     void q_updateAlignment();
     void updateSize();
