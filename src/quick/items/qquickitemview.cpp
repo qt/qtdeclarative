@@ -1381,7 +1381,7 @@ qreal QQuickItemView::originX() const
     if (d->layoutOrientation() == Qt::Horizontal
             && effectiveLayoutDirection() == Qt::RightToLeft
             && contentWidth() < width()) {
-        return d->lastPosition() - d->footerSize();
+        return -d->lastPosition() - d->footerSize();
     }
     return QQuickFlickable::originX();
 }
@@ -1392,7 +1392,7 @@ qreal QQuickItemView::originY() const
     if (d->layoutOrientation() == Qt::Vertical
             && d->verticalLayoutDirection == QQuickItemView::BottomToTop
             && contentHeight() < height()) {
-        return d->lastPosition() - d->footerSize();
+        return -d->lastPosition() - d->footerSize();
     }
     return QQuickFlickable::originY();
 }

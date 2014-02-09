@@ -3919,7 +3919,8 @@ void tst_QQuickListView::extents()
     QFETCH(QPointF, minPos);
     QFETCH(QPointF, maxPos);
     QFETCH(QPointF, origin_empty);
-    QFETCH(QPointF, origin_nonEmpty);
+    QFETCH(QPointF, origin_short);
+    QFETCH(QPointF, origin_long);
 
     QQuickView *window = getView();
 
@@ -3956,12 +3957,20 @@ void tst_QQuickListView::extents()
 
     QCOMPARE(listview->originX(), origin_empty.x());
     QCOMPARE(listview->originY(), origin_empty.y());
-    for (int i=0; i<30; i++)
+
+    for (int i=0; i<3; i++)
         model.addItem("Item" + QString::number(i), "");
     listview->forceLayout();
     QTRY_COMPARE(listview->count(), model.count());
-    QCOMPARE(listview->originX(), origin_nonEmpty.x());
-    QCOMPARE(listview->originY(), origin_nonEmpty.y());
+    QCOMPARE(listview->originX(), origin_short.x());
+    QCOMPARE(listview->originY(), origin_short.y());
+
+    for (int i=3; i<30; i++)
+        model.addItem("Item" + QString::number(i), "");
+    listview->forceLayout();
+    QTRY_COMPARE(listview->count(), model.count());
+    QCOMPARE(listview->originX(), origin_long.x());
+    QCOMPARE(listview->originY(), origin_long.y());
 
     releaseView(window);
 }
@@ -3976,7 +3985,8 @@ void tst_QQuickListView::extents_data()
     QTest::addColumn<QPointF>("minPos");
     QTest::addColumn<QPointF>("maxPos");
     QTest::addColumn<QPointF>("origin_empty");
-    QTest::addColumn<QPointF>("origin_nonEmpty");
+    QTest::addColumn<QPointF>("origin_short");
+    QTest::addColumn<QPointF>("origin_long");
 
     // header is 240x20 (or 20x320 in Horizontal orientation)
     // footer is 240x30 (or 30x320 in Horizontal orientation)
@@ -3985,25 +3995,25 @@ void tst_QQuickListView::extents_data()
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
             << QPointF(0, -20) << QPointF(0, 0)
             << QPointF(0, 20) << QPointF(240, 20)
-            << QPointF(0, -20) << QPointF(0, -20);
+            << QPointF(0, -20) << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("Vertical, BottomToTop")
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
             << QPointF(0, 0) << QPointF(0, -30)
             << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
-            << QPointF(0, -30) << QPointF(0, (-30.0 * 30) - 30);
+            << QPointF(0, -30) << QPointF(0, (-30.0 * 3) - 30) << QPointF(0, (-30.0 * 30) - 30);
 
     QTest::newRow("Horizontal, LeftToRight")
             << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
             << QPointF(-20, 0) << QPointF(0, 0)
             << QPointF(20, 0) << QPointF(20, 320)
-            << QPointF(-20, 0) << QPointF(-20, 0);
+            << QPointF(-20, 0) << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("Horizontal, RightToLeft")
             << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
             << QPointF(0, 0) << QPointF(-30, 0)
             << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
-            << QPointF(-30, 0) << QPointF((-240.0 * 30) - 30, 0);
+            << QPointF(-30, 0) << QPointF((-240.0 * 3) - 30, 0) << QPointF((-240.0 * 30) - 30, 0);
 }
 
 void tst_QQuickListView::resetModel_headerFooter()
