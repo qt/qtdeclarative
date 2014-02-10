@@ -1,5 +1,3 @@
-include(../../3rdparty/masm/masm-defs.pri)
-
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
@@ -13,9 +11,7 @@ HEADERS += \
     $$PWD/qv4isel_moth_p.h \
     $$PWD/qv4isel_util_p.h \
     $$PWD/qv4ssa_p.h \
-    $$PWD/qv4regalloc_p.h \
     $$PWD/qqmlcodegenerator_p.h \
-    $$PWD/qv4isel_masm_p.h \
     $$PWD/qqmltypecompiler_p.h
 
 SOURCES += \
@@ -27,9 +23,5 @@ SOURCES += \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
     $$PWD/qv4ssa.cpp \
-    $$PWD/qv4regalloc.cpp \
     $$PWD/qqmlcodegenerator.cpp \
-    $$PWD/qv4isel_masm.cpp \
     $$PWD/qqmltypecompiler.cpp
-
-include(../../3rdparty/masm/masm.pri)
