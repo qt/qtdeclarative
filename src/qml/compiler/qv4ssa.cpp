@@ -1440,7 +1440,8 @@ public:
     {
         QVector<Stmt*> defStmts;
         foreach (const Temp &usedVar, usedVars(s)) {
-            defStmts += defStmt(usedVar);
+            if (Stmt *ds = defStmt(usedVar))
+                defStmts += ds;
             removeUse(s, usedVar);
         }
         if (Move *m = s->asMove()) {
@@ -1561,15 +1562,136 @@ void cleanupPhis(DefUsesCalculator &defUses)
     }
 }
 
+class StatementWorklist
+{
+    QVector<Stmt *> worklist;
+    QBitArray inWorklist;
+    QHash<Stmt*,Stmt**> ref;
+
+public:
+    StatementWorklist(Function *function)
+    {
+        QVector<Stmt *> w;
+        int stmtCount = 0;
+
+        // Put in all statements, and number them on the fly. The numbering is used to index the
+        // bit array.
+        foreach (BasicBlock *bb, function->basicBlocks) {
+            for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
+                Stmt **s = &bb->statements[i];
+                (*s)->id = stmtCount++;
+                w.append(*s);
+                ref.insert(*s, s);
+            }
+        }
+
+        // For QVector efficiency reasons, we process statements from the back. However, it is more
+        // effective to process the statements in ascending order. So we need to invert the
+        // order.
+        worklist.reserve(w.size());
+        for (int i = w.size() - 1; i >= 0; --i)
+            worklist.append(w.at(i));
+
+        inWorklist = QBitArray(stmtCount, true);
+    }
+
+    // This will clear the entry for the statement in the basic block. After processing all
+    // statements, the cleanup method needs to be run to remove all null-pointers.
+    void clear(Stmt *stmt)
+    {
+        Q_ASSERT(!inWorklist.at(stmt->id));
+        *ref[stmt] = 0;
+    }
+
+    void replace(Stmt *oldStmt, Stmt *newStmt)
+    {
+        Q_ASSERT(oldStmt);
+        Q_ASSERT(newStmt);
+
+        if (newStmt->id == -1)
+            newStmt->id = oldStmt->id;
+        *ref[oldStmt] = newStmt;
+    }
+
+    void cleanup(Function *function)
+    {
+        foreach (BasicBlock *bb, function->basicBlocks) {
+            for (int i = 0; i < bb->statements.size();) {
+                if (bb->statements[i]) {
+                    bb->statements[i]->id = -1;
+                    ++i;
+                } else {
+                    bb->statements.remove(i);
+                }
+            }
+        }
+    }
+
+    StatementWorklist &operator+=(const QVector<Stmt *> &stmts)
+    {
+        foreach (Stmt *s, stmts)
+            this->operator+=(s);
+
+        return *this;
+    }
+
+
+    StatementWorklist &operator+=(Stmt *s)
+    {
+        if (!s)
+            return *this;
+
+        Q_ASSERT(s->id >= 0);
+        Q_ASSERT(s->id < inWorklist.size());
+
+        if (!inWorklist.at(s->id)) {
+            worklist.append(s);
+            inWorklist.setBit(s->id);
+        }
+
+        return *this;
+    }
+
+    StatementWorklist &operator-=(Stmt *s)
+    {
+        Q_ASSERT(s->id >= 0);
+        Q_ASSERT(s->id < inWorklist.size());
+
+        if (inWorklist.at(s->id)) {
+            worklist.remove(worklist.indexOf(s));
+            inWorklist.clearBit(s->id);
+        }
+
+        return *this;
+    }
+
+    bool isEmpty() const
+    {
+        return worklist.isEmpty();
+    }
+
+    Stmt *takeOne()
+    {
+        if (isEmpty())
+            return 0;
+
+        Stmt *s = worklist.last();
+        Q_ASSERT(s->id < inWorklist.size());
+        worklist.removeLast();
+        inWorklist.clearBit(s->id);
+        return s;
+    }
+};
+
 class EliminateDeadCode: public ExprVisitor {
     DefUsesCalculator &_defUses;
-    QVector<Stmt *> _worklist;
+    StatementWorklist &_worklist;
     const bool _variablesCanEscape;
     bool _sideEffect;
     QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUsesCalculator &defUses, QVector<Stmt *> worklist, bool variablesCanEscape)
+    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, bool variablesCanEscape)
         : _defUses(defUses)
         , _worklist(worklist)
         , _variablesCanEscape(variablesCanEscape)
@@ -2949,7 +3071,7 @@ namespace {
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
 /// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W,
+void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, StatementWorklist &W,
              DominatorTree &df)
 {
     // TODO: change this to mark the block as deleted, but leave it alone so that other references
@@ -3016,9 +3138,8 @@ void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector
             if (!s)
                 continue;
 
-            W << defUses.removeDefUses(s);
-            for (int idx = W.indexOf(s); idx != -1; idx = W.indexOf(s))
-                W.remove(idx);
+            W += defUses.removeDefUses(s);
+            W -= s;
 
             // clean-up the statement's data
             s->destroyData();
@@ -3095,23 +3216,11 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
 {
     const bool variablesCanEscape = function->variablesCanEscape();
 
-    QHash<Stmt*,Stmt**> ref;
-    QVector<Stmt *> W;
-    foreach (BasicBlock *bb, function->basicBlocks) {
-        for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
-            Stmt **s = &bb->statements[i];
-            if ((*s)->asJump())
-                continue; // nothing do do there
-            W.append(*s);
-            ref.insert(*s, s);
-        }
-    }
-
+    StatementWorklist W(function);
     ExprReplacer replaceUses(defUses, function);
 
     while (!W.isEmpty()) {
-        Stmt *s = W.last();
-        W.removeLast();
+        Stmt *s = W.takeOne();
         if (!s)
             continue;
 
@@ -3120,7 +3229,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
             if (Const *c = isConstPhi(phi)) {
                 W += replaceUses(phi->targetTemp, c);
                 defUses.removeDef(*phi->targetTemp);
-                *ref[s] = 0;
+                W.clear(s);
                 continue;
             }
 
@@ -3136,7 +3245,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                     defUses.addUses(*t2, QList<Stmt*>::fromVector(newT2Uses));
                 }
                 defUses.removeDef(*t);
-                *ref[s] = 0;
+                W.clear(s);
                 continue;
             }
         } else  if (Move *m = s->asMove()) {
@@ -3160,7 +3269,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                 if (defUses.useCount(*targetTemp) == 0) {
                     EliminateDeadCode(defUses, W, variablesCanEscape).run(m->source, s);
                     if (!m->source)
-                        *ref[s] = 0;
+                        W.clear(s);
                     continue;
                 }
 
@@ -3171,7 +3280,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                         // optimization passes have to be changed to cope with them.
                         W += replaceUses(targetTemp, sourceConst);
                         defUses.removeDef(*targetTemp);
-                        *ref[s] = 0;
+                        W.clear(s);
                     }
                     continue;
                 }
@@ -3182,7 +3291,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                         c->init(SInt32Type, enumValue);
                         W += replaceUses(targetTemp, c);
                         defUses.removeDef(*targetTemp);
-                        *ref[s] = 0;
+                        W.clear(s);
                         defUses.removeUse(s, *member->base->asTemp());
                         continue;
                     } else if (member->attachedPropertiesIdOrEnumValue != 0 && member->property && member->base->asTemp()) {
@@ -3203,7 +3312,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                     defUses.removeUse(s, *sourceTemp);
                     defUses.addUses(*sourceTemp, QList<Stmt*>::fromVector(newT2Uses));
                     defUses.removeDef(*targetTemp);
-                    *ref[s] = 0;
+                    W.clear(s);
                     continue;
                 }
 
@@ -3362,7 +3471,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                     jump->target = cjump->iffalse;
                     purgeBB(cjump->iftrue, function, defUses, W, df);
                 }
-                *ref[s] = jump;
+                W.replace(s, jump);
 
                 continue;
             } else if (cjump->cond->asBinop()) {
@@ -3376,14 +3485,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
         }
     }
 
-    foreach (BasicBlock *bb, function->basicBlocks) {
-        for (int i = 0; i < bb->statements.size();) {
-            if (bb->statements[i])
-                ++i;
-            else
-                bb->statements.remove(i);
-        }
-    }
+    W.cleanup(function);
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
