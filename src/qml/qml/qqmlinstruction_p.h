@@ -253,6 +253,7 @@ union QQmlInstruction
         QML_INSTR_HEADER
         int property;
         ushort line;
+        ushort column;
     };
     struct instr_fetchValue {
         QML_INSTR_HEADER

@@ -1379,6 +1379,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         Instruction::FetchObject fetch;
         fetch.property = prop->index;
         fetch.line = prop->location.start.line;
+        fetch.column = prop->location.start.column;
         output->addInstruction(fetch);
 
         if (!prop->value->synthdata.isEmpty()) {

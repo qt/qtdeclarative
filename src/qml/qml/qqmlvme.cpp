@@ -92,6 +92,17 @@ using namespace QQmlVMETypes;
         goto exceptionExit; \
     }
 
+#define VME_EXCEPTION_WITH_COLUMN(desc, line, column) \
+    { \
+        QQmlError error; \
+        error.setDescription(desc.trimmed()); \
+        error.setLine(line); \
+        error.setColumn(column); \
+        error.setUrl(COMP->url); \
+        *errors << error; \
+        goto exceptionExit; \
+    }
+
 bool QQmlVME::s_enableComponentComplete = true;
 
 void QQmlVME::init(QQmlContextData *ctxt, QQmlCompiledData *comp, int start,
@@ -992,7 +1003,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                                   instr.property, a);
 
             if (!obj)
-                VME_EXCEPTION(tr("Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.property).name())), instr.line);
+                VME_EXCEPTION_WITH_COLUMN(tr("Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.property).name())), instr.line, instr.column);
 
             objects.push(obj);
             qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
