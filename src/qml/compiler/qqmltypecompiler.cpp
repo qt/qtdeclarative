@@ -1825,7 +1825,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
         // otherwise, try a custom type assignment
         QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType);
         if (!converter) {
-            recordError(binding->location, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType::typeName(property->propType))));
+            recordError(binding->valueLocation, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType::typeName(property->propType))));
             return false;
         }
     }
