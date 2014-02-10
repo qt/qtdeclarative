@@ -42,9 +42,9 @@
 #define QV4ISEL_MASM_P_H
 
 #include "private/qv4global_p.h"
-#include "qv4jsir_p.h"
-#include "qv4isel_p.h"
-#include "qv4isel_util_p.h"
+#include "private/qv4jsir_p.h"
+#include "private/qv4isel_p.h"
+#include "private/qv4isel_util_p.h"
 #include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
 
