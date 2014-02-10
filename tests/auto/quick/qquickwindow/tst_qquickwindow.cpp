@@ -295,6 +295,8 @@ private slots:
         QWindowSystemInterface::registerTouchDevice(touchDeviceWithVelocity);
     }
 
+    void openglContextCreatedSignal();
+    void aboutToStopSignal();
 
     void constantUpdates();
     void constantUpdatesOnWindow_data();
@@ -358,7 +360,38 @@ private:
     QTouchDevice *touchDeviceWithVelocity;
 };
 
-//If the item calls update inside updatePaintNode, it should schedule another update
+Q_DECLARE_METATYPE(QOpenGLContext *);
+
+void tst_qquickwindow::openglContextCreatedSignal()
+{
+    qRegisterMetaType<QOpenGLContext *>();
+
+    QQuickWindow window;
+    QSignalSpy spy(&window, SIGNAL(openglContextCreated(QOpenGLContext *)));
+
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    QVERIFY(spy.size() > 0);
+
+    QVariant ctx = spy.at(0).at(0);
+    QCOMPARE(qVariantValue<QOpenGLContext *>(ctx), window.openglContext());
+}
+
+void tst_qquickwindow::aboutToStopSignal()
+{
+    QQuickWindow window;
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    QSignalSpy spy(&window, SIGNAL(sceneGraphAboutToStop()));
+
+    window.hide();
+
+    QVERIFY(spy.count() > 0);
+}
+
+//If the item calls update inside updatePaintNode, it should schedule another sync pass
 void tst_qquickwindow::constantUpdates()
 {
     QQuickWindow window;
@@ -366,10 +399,12 @@ void tst_qquickwindow::constantUpdates()
     ConstantUpdateItem item(window.contentItem());
     window.show();
 
-    QSignalSpy spy(&window, SIGNAL(beforeSynchronizing()));
+    QSignalSpy beforeSpy(&window, SIGNAL(beforeSynchronizing()));
+    QSignalSpy afterSpy(&window, SIGNAL(afterSynchronizing()));
 
     QTRY_VERIFY(item.iterations > 10);
-    QTRY_VERIFY(spy.count() > 10);
+    QTRY_VERIFY(beforeSpy.count() > 10);
+    QTRY_VERIFY(afterSpy.count() > 10);
 }
 
 void tst_qquickwindow::constantUpdatesOnWindow_data()

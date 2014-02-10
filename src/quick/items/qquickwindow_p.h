@@ -201,6 +201,8 @@ public:
     void updateDirtyNode(QQuickItem *);
 
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
+    void fireOpenGLContextCreated(QOpenGLContext *context) { Q_EMIT q_func()->openglContextCreated(context); }
+    void fireAboutToStop() { Q_EMIT q_func()->sceneGraphAboutToStop(); }
 
     QSGRenderContext *context;
     QSGRenderer *renderer;

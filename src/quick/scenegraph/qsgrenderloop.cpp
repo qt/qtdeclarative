@@ -241,6 +241,7 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     if (gl)
         gl->makeCurrent(window);
+    cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
 
     if (m_windows.size() == 0) {
@@ -268,7 +269,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    if (!QQuickWindowPrivate::get(window)->isRenderable() || !m_windows.contains(window))
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable() || !m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
@@ -294,10 +296,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             if (!signalEmitted)
                 qFatal("%s", qPrintable(nonTranslatedMsg));
         } else {
+            cd->fireOpenGLContextCreated(gl);
             current = gl->makeCurrent(window);
         }
         if (current)
-            QQuickWindowPrivate::get(window)->context->initialize(gl);
+            cd->context->initialize(gl);
     } else {
         current = gl->makeCurrent(window);
     }
@@ -308,7 +311,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!current)
         return;
 
-    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
 
     emit window->afterAnimating();

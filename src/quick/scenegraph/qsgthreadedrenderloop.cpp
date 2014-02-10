@@ -378,6 +378,7 @@ bool QSGRenderThread::event(QEvent *e)
 
         mutex.lock();
         if (window) {
+            QQuickWindowPrivate::get(window)->fireAboutToStop();
             QSG_RT_DEBUG(" - removed window...");
             window = 0;
         }
@@ -927,6 +928,8 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
                     qFatal("%s", qPrintable(nonTranslatedMsg));
                 return;
             }
+
+            QQuickWindowPrivate::get(w->window)->fireOpenGLContextCreated(w->thread->gl);
 
             w->thread->gl->moveToThread(w->thread);
             QSG_GUI_DEBUG(w->window, " - OpenGL context created...");

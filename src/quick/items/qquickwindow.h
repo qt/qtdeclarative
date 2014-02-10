@@ -138,16 +138,21 @@ public:
 
 Q_SIGNALS:
     void frameSwapped();
+    Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
     void beforeSynchronizing();
+    Q_REVISION(2) void afterSynchronizing();
     void beforeRendering();
     void afterRendering();
-    void afterAnimating();
+    Q_REVISION(2) void afterAnimating();
+    Q_REVISION(2) void sceneGraphAboutToStop();
+
     Q_REVISION(1) void closing(QQuickCloseEvent *close);
     void colorChanged(const QColor &);
     Q_REVISION(1) void activeFocusItemChanged();
-    void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+    Q_REVISION(2) void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+
 
 public Q_SLOTS:
     void update();

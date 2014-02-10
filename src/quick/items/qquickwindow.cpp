@@ -353,6 +353,8 @@ void QQuickWindowPrivate::syncSceneGraph()
     renderer->setClearMode(mode);
 
     renderer->setCustomRenderMode(customRenderMode);
+
+    emit q->afterSynchronizing();
     context->endSync();
 }
 
@@ -3042,6 +3044,27 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \fn void QQuickWindow::afterSynchronizing()
+
+    This signal is emitted after the scene graph is synchronized with the QML state.
+
+    This signal can be used to do preparation required after calls to
+    QQuickItem::updatePaintNode(), while the GUI thread is still locked.
+
+    The GL context used for rendering the scene graph will be bound at this point.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \warning Make very sure that a signal handler for afterSynchronizing leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
+
+    \since 5.3
+ */
+
+/*!
     \fn void QQuickWindow::beforeRendering()
 
     This signal is emitted before the scene starts rendering.
@@ -3089,6 +3112,50 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     Unlike the other similar signals, this one is emitted on the gui thread instead
     of the render thread. It can be used to synchronize external animation systems
     with the QML content.
+
+    \since 5.3
+ */
+
+/*!
+    \fn void QQuickWindow::openglContextCreated(QOpenGLContext *context)
+
+    This signal is emitted on the gui thread when the OpenGL \a context
+    for this window is created, before it is made current.
+
+    Some implementations will share the same OpenGL context between
+    multiple QQuickWindow instances. The openglContextCreated() signal
+    will in this case only be emitted for the first window, when the
+    OpenGL context is actually created.
+
+    QQuickWindow::openglContext() will still return 0 for this window
+    until after the QQuickWindow::sceneGraphInitialize() has been
+    emitted.
+
+    \since 5.3
+ */
+
+/*!
+    \fn void QQuickWindow::sceneGraphAboutToStop()
+
+    This signal is emitted on the render thread when the scene graph is
+    about to stop rendering. This happens usually because the window
+    has been hidden.
+
+    Applications may use this signal to release resources, but should be
+    prepared to reinstantiated them again fast. The scene graph and the
+    OpenGL context are not released at this time.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \warning Make very sure that a signal handler for afterRendering() leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
+
+    \sa scenegraphInvalidated()
+
+    \since 5.3
  */
 
 

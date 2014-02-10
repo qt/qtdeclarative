@@ -214,6 +214,9 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
                 qFatal("%s", qPrintable(nonTranslatedMsg));
             return;
         }
+
+        QQuickWindowPrivate::get(window)->fireOpenGLContextCreated(m_gl);
+
         QSG_RENDER_TIMING_SAMPLE(time_created);
         RLDEBUG(" - making current");
         bool current = m_gl->makeCurrent(window);
@@ -269,6 +272,7 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     m_gl->makeCurrent(window);
+    cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
 
     // If this is the last tracked window, check for persistent SG and GL and
