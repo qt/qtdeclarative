@@ -91,7 +91,7 @@ public:
     // --- old compiler
     QQmlVME vme;
     // --- new compiler
-    QScopedPointer<QmlObjectCreator> creator;
+    QScopedPointer<QQmlObjectCreator> creator;
     int subComponentToCreate;
     // ---
     QQmlVMEGuard vmeGuard;

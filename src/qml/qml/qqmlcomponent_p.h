@@ -115,7 +115,7 @@ public:
         }
 
         // --- new compiler
-        QmlObjectCreator *creator;
+        QQmlObjectCreator *creator;
         // --- old compiler
         QQmlVME vme;
         // ---

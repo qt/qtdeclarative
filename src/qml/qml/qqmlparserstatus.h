@@ -62,7 +62,7 @@ private:
     friend class QQmlComponent;
     friend class QQmlComponentPrivate;
     friend class QQmlEnginePrivate;
-    friend class QmlObjectCreator;
+    friend class QQmlObjectCreator;
     QQmlParserStatus **d;
 };
 

@@ -99,7 +99,7 @@ class QQmlCleanup;
 class QQmlDelayedError;
 class QQuickWorkerScriptEngine;
 class QQmlVME;
-class QmlObjectCreator;
+class QQmlObjectCreator;
 class QDir;
 class QQmlIncubator;
 class QQmlProfiler;
@@ -173,7 +173,7 @@ public:
     // --- old compiler:
     QQmlVME *activeVME;
     // --- new compiler:
-    QmlObjectCreator *activeObjectCreator;
+    QQmlObjectCreator *activeObjectCreator;
     // ---
 
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;

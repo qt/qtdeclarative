@@ -54,13 +54,13 @@ class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
 
-class QmlObjectCreator
+class QQmlObjectCreator
 {
-    Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
+    Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
     struct SharedState;
 public:
-    QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext);
-    ~QmlObjectCreator();
+    QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext);
+    ~QQmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
@@ -74,7 +74,7 @@ public:
     QQmlContextData *parentContextData() const { return parentContext; }
 
 private:
-    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, SharedState *inheritedSharedState);
+    QQmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, SharedState *inheritedSharedState);
 
     void init(QQmlContextData *parentContext);
 

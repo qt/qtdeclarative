@@ -62,12 +62,12 @@ QT_USE_NAMESPACE
 namespace {
 struct ActiveOCRestorer
 {
-    ActiveOCRestorer(QmlObjectCreator *creator, QQmlEnginePrivate *ep)
+    ActiveOCRestorer(QQmlObjectCreator *creator, QQmlEnginePrivate *ep)
     : ep(ep), oldCreator(ep->activeObjectCreator) { ep->activeObjectCreator = creator; }
     ~ActiveOCRestorer() { ep->activeObjectCreator = oldCreator; }
 
     QQmlEnginePrivate *ep;
-    QmlObjectCreator *oldCreator;
+    QQmlObjectCreator *oldCreator;
 };
 }
 
@@ -80,7 +80,7 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext)
     : compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
@@ -97,7 +97,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     sharedState->rootContext = 0;
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, SharedState *inheritedSharedState)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, SharedState *inheritedSharedState)
     : compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
@@ -108,7 +108,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     sharedState = inheritedSharedState;
 }
 
-void QmlObjectCreator::init(QQmlContextData *providedParentContext)
+void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
 {
     parentContext = providedParentContext;
     engine = parentContext->engine;
@@ -128,7 +128,7 @@ void QmlObjectCreator::init(QQmlContextData *providedParentContext)
     _qmlContext = 0;
 }
 
-QmlObjectCreator::~QmlObjectCreator()
+QQmlObjectCreator::~QQmlObjectCreator()
 {
     if (sharedState.flag()) {
         for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
@@ -145,7 +145,7 @@ QmlObjectCreator::~QmlObjectCreator()
     }
 }
 
-QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
+QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
 {
     int objectToCreate;
 
@@ -209,7 +209,7 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     return instance;
 }
 
-void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
                                                                QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
@@ -553,7 +553,7 @@ static QQmlType *qmlTypeForObject(QObject *object)
     return type;
 }
 
-void QmlObjectCreator::setupBindings()
+void QQmlObjectCreator::setupBindings()
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -640,7 +640,7 @@ void QmlObjectCreator::setupBindings()
     qSwap(_currentList, savedList);
 }
 
-bool QmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
@@ -897,7 +897,7 @@ bool QmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4:
     return true;
 }
 
-void QmlObjectCreator::setupFunctions()
+void QQmlObjectCreator::setupFunctions()
 {
     QV4::Scope scope(_qmlContext);
     QV4::ScopedValue function(scope);
@@ -916,7 +916,7 @@ void QmlObjectCreator::setupFunctions()
     }
 }
 
-void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
+void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
     error.setUrl(compiledData->url);
@@ -926,7 +926,7 @@ void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, 
     errors << error;
 }
 
-QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
+QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 {
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
@@ -971,7 +971,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef->component, sharedState.data());
+            QQmlObjectCreator subCreator(context, typeRef->component, sharedState.data());
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
@@ -1044,7 +1044,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     return result ? instance : 0;
 }
 
-QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
+QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
     {
     QQmlTrace trace("VME Binding Enable");
@@ -1114,7 +1114,7 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
     return sharedState->rootContext;
 }
 
-bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
