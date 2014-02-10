@@ -378,11 +378,11 @@ void tst_QQuickAccessible::hitTest()
 
 void tst_QQuickAccessible::checkableTest()
 {
-    QQuickView *window = new QQuickView();
+    QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("checkbuttons.qml"));
     window->show();
 
-    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window);
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window.data());
     QVERIFY(iface);
     QAccessibleInterface *root = iface->child(0);
 
