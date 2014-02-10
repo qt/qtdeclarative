@@ -1133,6 +1133,10 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_ddata, declarativeData);
     qSwap(_bindingTarget, bindingTarget);
 
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue scopeObjectProtector(valueScope);
+
     QQmlVMEMetaObject *vmeMetaObject = 0;
     const QByteArray data = vmeMetaObjectData.value(index);
     if (!data.isEmpty()) {
@@ -1140,6 +1144,7 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
         vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
+        scopeObjectProtector = _ddata->jsWrapper.value();
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
