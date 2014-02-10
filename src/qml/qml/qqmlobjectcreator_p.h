@@ -57,15 +57,16 @@ class QQmlInstantiationInterrupt;
 class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
+    struct SharedState;
 public:
-    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext = 0,
-                     QFiniteStack<QQmlAbstractBinding*> *inheritedBindingStack = 0, QFiniteStack<QQmlParserStatus*> *inheritedParserStatusStack = 0);
+    QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext);
     ~QmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
 
-    QQmlComponentAttached **componentAttached;
+    QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
+
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
     QList<QQmlError> errors;
@@ -73,6 +74,10 @@ public:
     QQmlContextData *parentContextData() const { return parentContext; }
 
 private:
+    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, SharedState *inheritedSharedState);
+
+    void init(QQmlContextData *parentContext);
+
     QObject *createInstance(int index, QObject *parent = 0);
 
     bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty);
@@ -85,23 +90,24 @@ private:
     QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    QUrl url;
+    struct SharedState {
+        QQmlContextData *rootContext;
+        QQmlContextData *creationContext;
+        QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
+        QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
+        QQmlComponentAttached *componentAttached;
+    };
+
     QQmlEngine *engine;
-    const QV4::CompiledData::QmlUnit *qmlUnit;
-    const QV4::CompiledData::CompilationUnit *jsUnit;
-    QQmlContextData *parentContext;
-    QQmlContextData *creationContext;
-    QQmlContextData *context;
-    const QHash<int, QQmlCompiledData::TypeReference*> resolvedTypes;
-    const QVector<QQmlPropertyCache *> propertyCaches;
-    const QVector<QByteArray> vmeMetaObjectData;
-    QHash<int, int> objectIndexToId;
-    QFiniteStack<QQmlAbstractBinding*> *allCreatedBindings;
-    QFiniteStack<QQmlParserStatus*> *allParserStatusCallbacks;
-    bool ownBindingAndParserStatusStacks;
     QQmlCompiledData *compiledData;
-    QQmlContextData *rootContext;
-    QQmlComponentAttached *componentAttachedImpl;
+    const QV4::CompiledData::QmlUnit *qmlUnit;
+    QQmlContextData *parentContext;
+    QQmlContextData *context;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QVector<QQmlPropertyCache *> &propertyCaches;
+    const QVector<QByteArray> &vmeMetaObjectData;
+    QHash<int, int> objectIndexToId;
+    QFlagPointer<SharedState> sharedState;
 
     QObject *_qobject;
     QObject *_scopeObject;

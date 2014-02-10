@@ -80,79 +80,74 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, QQmlContextData *rootContext,
-                                   QFiniteStack<QQmlAbstractBinding *> *inheritedBindingStack, QFiniteStack<QQmlParserStatus *> *inheritedParserStatusStack)
-    : componentAttached(0)
-    , url(compiledData->url)
-    , engine(parentContext->engine)
-    , qmlUnit(compiledData->qmlUnit)
-    , jsUnit(compiledData->compilationUnit)
-    , parentContext(parentContext)
-    , creationContext(creationContext)
-    , context(0)
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext)
+    : compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
-    , allCreatedBindings(0)
-    , allParserStatusCallbacks(0)
-    , ownBindingAndParserStatusStacks(false)
-    , compiledData(compiledData)
-    , rootContext(rootContext)
-    , _qobject(0)
-    , _scopeObject(0)
-    , _valueTypeProperty(0)
-    , _compiledObject(0)
-    , _ddata(0)
-    , _propertyCache(0)
-    , _vmeMetaObject(0)
-    , _qmlContext(0)
 {
+    init(parentContext);
+
+    sharedState = new SharedState;
+    sharedState.setFlag(); // We own it, so we must delete it
+    sharedState->componentAttached = 0;
+    sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
+    sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
+    sharedState->creationContext = creationContext;
+    sharedState->rootContext = 0;
+}
+
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, SharedState *inheritedSharedState)
+    : compiledData(compiledData)
+    , resolvedTypes(compiledData->resolvedTypes)
+    , propertyCaches(compiledData->propertyCaches)
+    , vmeMetaObjectData(compiledData->datas)
+{
+    init(parentContext);
+
+    sharedState = inheritedSharedState;
+}
+
+void QmlObjectCreator::init(QQmlContextData *providedParentContext)
+{
+    parentContext = providedParentContext;
+    engine = parentContext->engine;
+
     if (!compiledData->isInitialized())
         compiledData->initialize(engine);
 
-    componentAttachedImpl = 0;
-    componentAttached = &componentAttachedImpl;
-
-    if (inheritedBindingStack) {
-        Q_ASSERT(rootContext);
-        Q_ASSERT(inheritedParserStatusStack);
-        allCreatedBindings = inheritedBindingStack;
-        allParserStatusCallbacks = inheritedParserStatusStack;
-        ownBindingAndParserStatusStacks = false;
-    } else {
-        ownBindingAndParserStatusStacks = true;
-        allCreatedBindings = new QFiniteStack<QQmlAbstractBinding*>;
-        allCreatedBindings->allocate(compiledData->totalBindingsCount);
-        allParserStatusCallbacks = new QFiniteStack<QQmlParserStatus*>;
-        allParserStatusCallbacks->allocate(compiledData->totalParserStatusCount);
-    }
+    qmlUnit = compiledData->qmlUnit;
+    context = 0;
+    _qobject = 0;
+    _scopeObject = 0;
+    _valueTypeProperty = 0;
+    _compiledObject = 0;
+    _ddata = 0;
+    _propertyCache = 0;
+    _vmeMetaObject = 0;
+    _qmlContext = 0;
 }
 
 QmlObjectCreator::~QmlObjectCreator()
 {
-    if (ownBindingAndParserStatusStacks) {
-        for (int i = 0; i < allCreatedBindings->count(); ++i) {
-            QQmlAbstractBinding *b = allCreatedBindings->at(i);
+    if (sharedState.flag()) {
+        for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
+            QQmlAbstractBinding *b = sharedState->allCreatedBindings.at(i);
             if (b)
                 b->m_mePtr = 0;
         }
-        for (int i = 0; i < allParserStatusCallbacks->count(); ++i) {
-            QQmlParserStatus *ps = allParserStatusCallbacks->at(i);
+        for (int i = 0; i < sharedState->allParserStatusCallbacks.count(); ++i) {
+            QQmlParserStatus *ps = sharedState->allParserStatusCallbacks.at(i);
             if (ps)
                 ps->d = 0;
         }
-
-        delete allCreatedBindings;
-        delete allParserStatusCallbacks;
+        delete sharedState.data();
     }
 }
 
 QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
 {
     int objectToCreate;
-
-    Q_ASSERT(!ownBindingAndParserStatusStacks || allCreatedBindings->isEmpty());
-    Q_ASSERT(!ownBindingAndParserStatusStacks || allParserStatusCallbacks->isEmpty());
 
     if (subComponentIndex == -1) {
         objectIndexToId = compiledData->objectIndexToIdForRoot;
@@ -171,9 +166,9 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     context->imports->addref();
     context->setParent(parentContext);
 
-    if (!rootContext) {
-        rootContext = context;
-        rootContext->isRootObjectInCreation = true;
+    if (!sharedState->rootContext) {
+        sharedState->rootContext = context;
+        sharedState->rootContext->isRootObjectInCreation = true;
     }
 
     QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
@@ -197,8 +192,8 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
             QQmlScriptData *s = compiledData->scripts.at(i);
             scripts->putIndexed(i, s->scriptValueForContext(context));
         }
-    } else if (creationContext) {
-        context->importedScripts = creationContext->importedScripts;
+    } else if (sharedState->creationContext) {
+        context->importedScripts = sharedState->creationContext->importedScripts;
     }
 
     QObject *instance = createInstance(objectToCreate, parent);
@@ -302,7 +297,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
         QString string = binding->valueAsString(&qmlUnit->header);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : this->url.resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compiledData->url.resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -497,7 +492,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(&qmlUnit->header);
-            QUrl u = urlString.isEmpty() ? QUrl() : this->url.resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->url.resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             argv[0] = reinterpret_cast<void *>(&value);
@@ -745,7 +740,7 @@ bool QmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4:
         removeBindingOnProperty(_bindingTarget, property->coreIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+        QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
 
         QV4::Scope scope(_qmlContext);
         QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
@@ -783,8 +778,8 @@ bool QmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4:
                 qmlBinding->addToObject();
             }
 
-            allCreatedBindings->push(qmlBinding);
-            qmlBinding->m_mePtr = &allCreatedBindings->top();
+            sharedState->allCreatedBindings.push(qmlBinding);
+            qmlBinding->m_mePtr = &sharedState->allCreatedBindings.top();
         }
         return true;
     }
@@ -909,7 +904,7 @@ void QmlObjectCreator::setupFunctions()
 
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
-        QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[*functionIdx];
+        QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[*functionIdx];
         const QString name = runtimeFunction->name->toQString();
 
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
@@ -924,7 +919,7 @@ void QmlObjectCreator::setupFunctions()
 void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setUrl(url);
+    error.setUrl(compiledData->url);
     error.setLine(location.line);
     error.setColumn(location.column);
     error.setDescription(description);
@@ -964,10 +959,10 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
             customParser = type->customParser();
 
-            if (rootContext->isRootObjectInCreation) {
+            if (sharedState->rootContext->isRootObjectInCreation) {
                 QQmlData *ddata = QQmlData::get(instance, /*create*/true);
                 ddata->rootObjectInCreation = true;
-                rootContext->isRootObjectInCreation = false;
+                sharedState->rootContext->isRootObjectInCreation = false;
             }
         } else {
             Q_ASSERT(typeRef->component);
@@ -976,8 +971,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
-            QmlObjectCreator subCreator(context, typeRef->component, creationContext, rootContext, allCreatedBindings, allParserStatusCallbacks);
-            subCreator.componentAttached = componentAttached;
+            QmlObjectCreator subCreator(context, typeRef->component, sharedState.data());
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
@@ -1009,8 +1003,8 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
     if (parserStatus) {
         parserStatus->classBegin();
-        allParserStatusCallbacks->push(parserStatus);
-        parserStatus->d = &allParserStatusCallbacks->top();
+        sharedState->allParserStatusCallbacks.push(parserStatus);
+        parserStatus->d = &sharedState->allParserStatusCallbacks.top();
     }
 
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
@@ -1056,11 +1050,11 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
 
-    while (!allCreatedBindings->isEmpty()) {
+    while (!sharedState->allCreatedBindings.isEmpty()) {
         if (interrupt.shouldInterrupt())
             return 0;
 
-        QQmlAbstractBinding *b = allCreatedBindings->pop();
+        QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
         if (!b)
             continue;
         b->m_mePtr = 0;
@@ -1074,8 +1068,8 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
 
     if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
-        while (!allParserStatusCallbacks->isEmpty()) {
-            QQmlParserStatus *status = allParserStatusCallbacks->pop();
+        while (!sharedState->allParserStatusCallbacks.isEmpty()) {
+            QQmlParserStatus *status = sharedState->allParserStatusCallbacks.pop();
 
             if (status && status->d) {
                 status->d = 0;
@@ -1102,8 +1096,8 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
 
     {
     QQmlTrace trace("VME Component.onCompleted Callbacks");
-    while (componentAttachedImpl) {
-        QQmlComponentAttached *a = componentAttachedImpl;
+    while (sharedState->componentAttached) {
+        QQmlComponentAttached *a = sharedState->componentAttached;
         a->rem();
         QQmlData *d = QQmlData::get(a->parent());
         Q_ASSERT(d);
@@ -1117,7 +1111,7 @@ QQmlContextData *QmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrup
     }
     }
 
-    return rootContext;
+    return sharedState->rootContext;
 }
 
 bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty)
