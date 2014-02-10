@@ -1605,28 +1605,6 @@ private:
         generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, Assembler::VoidType());
     }
 
-    /// This is a temporary method, and will be removed when registers are fully supported.
-    void storeTarget(int argumentNumber, V4IR::Temp *target)
-    {
-        if (target->kind == V4IR::Temp::PhysicalRegister) {
-            Address addr = _as->stackLayout().savedRegPointer(argumentNumber);
-            if (target->type == V4IR::DoubleType)
-                _as->loadDouble(addr, (Assembler::FPRegisterID) target->index);
-            else if (target->type == V4IR::SInt32Type)
-                generateFunctionCall((Assembler::RegisterID) target->index,
-                                     QV4::__qmljs_value_to_int32,
-                                     Assembler::Pointer(addr));
-            else if (target->type == V4IR::UInt32Type)
-                generateFunctionCall((Assembler::RegisterID) target->index,
-                                     QV4::__qmljs_value_to_uint32,
-                                     Assembler::Pointer(addr));
-            else if (target->type == V4IR::BoolType)
-                _as->load32(addr, (Assembler::RegisterID) target->index);
-            else
-                Q_ASSERT(!"WIP!");
-        }
-    }
-
     V4IR::BasicBlock *_block;
     QSet<V4IR::Jump *> _removableJumps;
     Assembler* _as;
