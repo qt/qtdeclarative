@@ -229,6 +229,8 @@ private slots:
     void maskCharacter_data();
     void maskCharacter();
     void fixup();
+    void baselineOffset_data();
+    void baselineOffset();
 
 private:
     void simulateKey(QWindow *, int key);
@@ -6356,6 +6358,95 @@ void tst_qquicktextinput::fixup()
     input->setFocus(false);
     QVERIFY(!input->hasActiveFocus());
     QCOMPARE(input->text(), QStringLiteral("ok"));
+}
+
+typedef qreal (*ExpectedBaseline)(QQuickTextInput *item);
+Q_DECLARE_METATYPE(ExpectedBaseline)
+
+static qreal expectedBaselineTop(QQuickTextInput *item)
+{
+    QFontMetricsF fm(item->font());
+    return fm.ascent();
+}
+
+static qreal expectedBaselineBottom(QQuickTextInput *item)
+{
+    QFontMetricsF fm(item->font());
+    return item->height() - item->contentHeight() + fm.ascent();
+}
+
+static qreal expectedBaselineCenter(QQuickTextInput *item)
+{
+    QFontMetricsF fm(item->font());
+    return ((item->height() - item->contentHeight()) / 2) + fm.ascent();
+}
+
+static qreal expectedBaselineMultilineBottom(QQuickTextInput *item)
+{
+    QFontMetricsF fm(item->font());
+    return item->height() - item->contentHeight() + fm.ascent();
+}
+
+void tst_qquicktextinput::baselineOffset_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QByteArray>("bindings");
+    QTest::addColumn<ExpectedBaseline>("expectedBaseline");
+    QTest::addColumn<ExpectedBaseline>("expectedBaselineEmpty");
+
+    QTest::newRow("normal")
+            << "Typography"
+            << QByteArray()
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("top align")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("bottom align")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+
+    QTest::newRow("center align")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignVCenter")
+            << &expectedBaselineCenter
+            << &expectedBaselineCenter;
+
+    QTest::newRow("multiline bottom aligned")
+            << "The quick brown fox jumps over the lazy dog"
+            << QByteArray("height: 200; width: 30; verticalAlignment: Text.AlignBottom; wrapMode: TextInput.WordWrap")
+            << &expectedBaselineMultilineBottom
+            << &expectedBaselineBottom;
+}
+
+void tst_qquicktextinput::baselineOffset()
+{
+    QFETCH(QString, text);
+    QFETCH(QByteArray, bindings);
+    QFETCH(ExpectedBaseline, expectedBaseline);
+    QFETCH(ExpectedBaseline, expectedBaselineEmpty);
+
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.0\n"
+            "TextInput {\n"
+                + bindings + "\n"
+            "}", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *item = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(item);
+    QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
+    item->setText(text);
+    QCOMPARE(item->baselineOffset(), expectedBaseline(item));
+    item->setText(QString());
+    QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
 }
 
 QTEST_MAIN(tst_qquicktextinput)

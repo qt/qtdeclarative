@@ -2855,6 +2855,18 @@ void QQuickTextInputPrivate::updateLayout()
     else
         q->setImplicitHeight(height);
 
+
+    QFontMetricsF fm(font);
+    qreal yoff = 0;
+    if (q->heightValid()) {
+        const qreal itemHeight = q->height();
+        if (vAlign == QQuickTextInput::AlignBottom)
+            yoff = itemHeight - height;
+        else if (vAlign == QQuickTextInput::AlignVCenter)
+            yoff = (itemHeight - height)/2;
+    }
+    q->setBaselineOffset(fm.ascent() + yoff);
+
     if (previousSize != contentSize)
         emit q->contentSizeChanged();
 }
