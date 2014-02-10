@@ -1908,6 +1908,9 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
     } else if (QQmlValueTypeFactory::isValueType(property->propType)) {
         recordError(binding->location, tr("Unexpected object assignment"));
         return false;
+    } else if (property->propType == qMetaTypeId<QQmlScriptString>()) {
+        recordError(binding->valueLocation, tr("Invalid property assignment: script expected"));
+        return false;
     } else {
         // We want to raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
