@@ -1564,6 +1564,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
 bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
+    if (property->isQList()) {
+        recordError(binding->valueLocation, tr("Cannot assign primitives to lists"));
+        return false;
+    }
+
     if (property->isEnum()) {
         if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)
             return true;
@@ -1829,6 +1834,22 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     return true;
 }
 
+/*!
+    Returns true if from can be assigned to a (QObject) property of type
+    to.
+*/
+bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo)
+{
+    QQmlPropertyCache *toMo = enginePrivate->rawPropertyCacheForType(to);
+
+    while (fromMo) {
+        if (fromMo == toMo)
+            return true;
+        fromMo = fromMo->parent();
+    }
+    return false;
+}
+
 bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding)
 {
     if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
@@ -1873,7 +1894,14 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
         // We can convert everything to QVariant :)
         return true;
     } else if (property->isQList()) {
-        // ### TODO: list error handling
+        const int listType = enginePrivate->listType(property->propType);
+        if (!QQmlMetaType::isInterface(listType)) {
+            QQmlPropertyCache *source = propertyCaches.value(binding->value.objectIndex);
+            if (!canCoerce(listType, source)) {
+                recordError(binding->valueLocation, tr("Cannot assign object to list"));
+                return false;
+            }
+        }
         return true;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return true;

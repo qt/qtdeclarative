@@ -232,6 +232,8 @@ private:
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
+    bool canCoerce(int to, QQmlPropertyCache *fromMo);
+
     QQmlEnginePrivate *enginePrivate;
     const QV4::CompiledData::QmlUnit *qmlUnit;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
