@@ -180,6 +180,8 @@ void QQuickBehavior::write(const QVariant &value)
     if (!bypass)
         qmlExecuteDeferred(this);
     if (!d->animation || bypass) {
+        if (d->animationInstance)
+            d->animationInstance->stop();
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
         d->targetValue = value;
         return;

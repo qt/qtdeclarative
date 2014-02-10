@@ -47,6 +47,7 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickbehavior_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquicksmoothedanimation_p.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 
@@ -82,6 +83,7 @@ private slots:
     void startOnCompleted();
     void multipleChangesToValueType();
     void currentValue();
+    void disabledWriteWhileRunning();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -546,6 +548,91 @@ void tst_qquickbehaviors::currentValue()
         QVERIFY(target->x() > qreal(50) && target->x() < qreal(80));
 
         delete item;
+    }
+}
+
+void tst_qquickbehaviors::disabledWriteWhileRunning()
+{
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("disabledWriteWhileRunning.qml"));
+        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(root);
+
+        QQuickRectangle *myRect = qobject_cast<QQuickRectangle*>(root->findChild<QQuickRectangle*>("MyRect"));
+        QQuickBehavior *myBehavior = qobject_cast<QQuickBehavior*>(root->findChild<QQuickBehavior*>("MyBehavior"));
+        QQuickNumberAnimation *myAnimation = qobject_cast<QQuickNumberAnimation*>(root->findChild<QQuickNumberAnimation*>("MyAnimation"));
+        QVERIFY(myRect);
+        QVERIFY(myBehavior);
+        QVERIFY(myAnimation);
+
+        // initial values
+        QCOMPARE(myBehavior->enabled(), true);
+        QCOMPARE(myAnimation->isRunning(), false);
+        QCOMPARE(myRect->x(), qreal(0));
+
+        // start animation
+        myRect->setProperty("x", 200);
+        QCOMPARE(myAnimation->isRunning(), true);
+        QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
+
+        // set disabled while animation is in progress
+        myBehavior->setProperty("enabled", false);
+        QCOMPARE(myAnimation->isRunning(), true);
+
+        // force new value while disabled and previous animation is in progress.
+        // animation should be stopped and value stay at forced value
+        myRect->setProperty("x", 100);
+        QCOMPARE(myAnimation->isRunning(), false);
+        QCOMPARE(myRect->x(), qreal(100));
+        QTest::qWait(200);
+        QCOMPARE(myRect->x(), qreal(100));
+
+        delete root;
+    }
+
+    //test additional complications with SmoothedAnimation
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("disabledWriteWhileRunning2.qml"));
+        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QVERIFY(root);
+
+        QQuickRectangle *myRect = qobject_cast<QQuickRectangle*>(root->findChild<QQuickRectangle*>("MyRect"));
+        QQuickBehavior *myBehavior = qobject_cast<QQuickBehavior*>(root->findChild<QQuickBehavior*>("MyBehavior"));
+        QQuickSmoothedAnimation *myAnimation = qobject_cast<QQuickSmoothedAnimation*>(root->findChild<QQuickNumberAnimation*>("MyAnimation"));
+        QVERIFY(myRect);
+        QVERIFY(myBehavior);
+        QVERIFY(myAnimation);
+
+        // initial values
+        QCOMPARE(myBehavior->enabled(), true);
+        QCOMPARE(myAnimation->isRunning(), false);
+        QCOMPARE(myRect->x(), qreal(0));
+
+        // start animation
+        myRect->setProperty("x", 200);
+        QCOMPARE(myAnimation->isRunning(), true);
+        QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
+
+        //set second value
+        myRect->setProperty("x", 300);
+        QCOMPARE(myAnimation->isRunning(), true);
+        QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
+
+        // set disabled while animation is in progress
+        myBehavior->setProperty("enabled", false);
+        QCOMPARE(myAnimation->isRunning(), true);
+
+        // force new value while disabled and previous animation is in progress.
+        // animation should be stopped and value stay at forced value
+        myRect->setProperty("x", 100);
+        QCOMPARE(myAnimation->isRunning(), false);
+        QCOMPARE(myRect->x(), qreal(100));
+        QTest::qWait(200);
+        QCOMPARE(myRect->x(), qreal(100));
+
+        delete root;
     }
 }
 
