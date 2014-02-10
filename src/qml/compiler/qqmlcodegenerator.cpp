@@ -1059,8 +1059,8 @@ bool QQmlCodeGenerator::setId(const AST::SourceLocation &idLocation, AST::Statem
         COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
 
     _object->idIndex = registerString(idQString);
-    _object->locationOfIdProperty.line = loc.startLine;
-    _object->locationOfIdProperty.column = loc.startColumn;
+    _object->locationOfIdProperty.line = idLocation.startLine;
+    _object->locationOfIdProperty.column = idLocation.startColumn;
 
     return true;
 }
