@@ -371,7 +371,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager() : blitProgram(0) { }
+    ShaderManager(QSGRenderContext *ctx) : blitProgram(0), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders.values());
         qDeleteAll(stockShaders.values());
@@ -388,6 +388,7 @@ public:
     QHash<QSGMaterialType *, Shader *> stockShaders;
 
     QOpenGLShaderProgram *blitProgram;
+    QSGRenderContext *context;
 };
 
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
