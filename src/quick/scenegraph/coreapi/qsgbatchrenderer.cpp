@@ -284,6 +284,7 @@ void Updater::updateStates(QSGNode *n)
 
     m_added = 0;
     m_transformChange = 0;
+    m_opacityChange = 0;
 
     Node *sn = renderer->m_nodes.value(n, 0);
     Q_ASSERT(sn);
