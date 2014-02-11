@@ -148,6 +148,7 @@ protected:
     void addNodesToPreprocess(QSGNode *node);
     void removeNodesToPreprocess(QSGNode *node);
 
+    void markNodeDirtyState(QSGNode *node, QSGNode::DirtyState state) { node->m_dirtyState |= state; }
 
     QColor m_clear_color;
     ClearMode m_clear_mode;
