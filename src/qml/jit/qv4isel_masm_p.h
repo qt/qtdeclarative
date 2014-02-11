@@ -158,12 +158,6 @@ protected:
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
 
-    Assembler::Jump genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest);
-    Assembler::Jump genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
-                                   V4IR::Expr *rightSource, V4IR::Temp *target);
-    void doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
-                     V4IR::Temp *target);
-    Assembler::Jump branchDouble(bool invertCondition, V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
     bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
                           V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
     void visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
@@ -173,8 +167,6 @@ protected:
     bool visitCJumpNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
                                  V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
     void visitCJumpEqual(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
-    bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
-                    V4IR::Temp *target);
 
 private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);

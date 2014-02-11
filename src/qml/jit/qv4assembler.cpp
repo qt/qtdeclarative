@@ -370,4 +370,100 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::L
     NULL_OP // OpOr
 };
 
+
+// Try to load the source expression into the destination FP register. This assumes that two
+// general purpose (integer) registers are available: the ScratchRegister and the
+// ReturnValueRegister. It returns a Jump if no conversion can be performed.
+Assembler::Jump Assembler::genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest)
+{
+    switch (src->type) {
+    case V4IR::DoubleType:
+        moveDouble(toDoubleRegister(src, dest), dest);
+        return Assembler::Jump();
+    case V4IR::SInt32Type:
+        convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister),
+                                  dest);
+        return Assembler::Jump();
+    case V4IR::UInt32Type:
+        convertUInt32ToDouble(toUInt32Register(src, Assembler::ScratchRegister),
+                                   dest, Assembler::ReturnValueRegister);
+        return Assembler::Jump();
+    case V4IR::BoolType:
+        // TODO?
+        return jump();
+    default:
+        break;
+    }
+
+    V4IR::Temp *sourceTemp = src->asTemp();
+    Q_ASSERT(sourceTemp);
+
+    // It's not a number type, so it cannot be in a register.
+    Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister || sourceTemp->type == V4IR::BoolType);
+
+    Assembler::Pointer tagAddr = loadTempAddress(Assembler::ScratchRegister, sourceTemp);
+    tagAddr.offset += 4;
+    load32(tagAddr, Assembler::ScratchRegister);
+
+    // check if it's an int32:
+    Assembler::Jump isNoInt = branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::_Integer_Type));
+    convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister), dest);
+    Assembler::Jump intDone = jump();
+
+    // not an int, check if it's a double:
+    isNoInt.link(this);
+#if QT_POINTER_SIZE == 8
+    and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(0));
+#else
+    and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::NotDouble_Mask));
+#endif
+    toDoubleRegister(src, dest);
+    intDone.link(this);
+
+    return isNoDbl;
+}
+
+#ifndef QT_NO_DEBUG
+namespace {
+inline bool isPregOrConst(V4IR::Expr *e)
+{
+    if (V4IR::Temp *t = e->asTemp())
+        return t->kind == V4IR::Temp::PhysicalRegister;
+    return e->asConst() != 0;
+}
+} // anonymous namespace
+#endif
+
+Assembler::Jump Assembler::branchDouble(bool invertCondition, V4IR::AluOp op,
+                                                   V4IR::Expr *left, V4IR::Expr *right)
+{
+    Q_ASSERT(isPregOrConst(left));
+    Q_ASSERT(isPregOrConst(right));
+    Q_ASSERT(left->asConst() == 0 || right->asConst() == 0);
+
+    Assembler::DoubleCondition cond;
+    switch (op) {
+    case V4IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
+    case V4IR::OpLt: cond = Assembler::DoubleLessThan; break;
+    case V4IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
+    case V4IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
+    case V4IR::OpEqual:
+    case V4IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
+    case V4IR::OpNotEqual:
+    case V4IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
+    default:
+        Q_UNREACHABLE();
+    }
+    if (invertCondition)
+        cond = JSC::MacroAssembler::invert(cond);
+
+    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left), toDoubleRegister(right));
+}
+
+
 #endif

@@ -498,6 +498,8 @@ public:
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
                                 V4IR::BasicBlock *currentBlock, V4IR::BasicBlock *trueBlock,
                                 V4IR::BasicBlock *falseBlock);
+    Jump genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest);
+    Assembler::Jump branchDouble(bool invertCondition, V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
 
     Pointer loadTempAddress(RegisterID baseReg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
