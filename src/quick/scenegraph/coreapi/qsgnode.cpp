@@ -648,10 +648,7 @@ void QSGNode::setFlags(Flags f, bool enabled)
 
 
 /*!
-    Marks this node with the states in \a bits as dirty.
-
-    When a node is marked dirty, it recursively marks the parent chain
-    as dirty and notify all connected renderers that the has dirty states.
+    Notifies all connected renderers that the node has dirty \a bits.
  */
 
 void QSGNode::markDirty(DirtyState bits)
