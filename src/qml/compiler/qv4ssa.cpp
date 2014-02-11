@@ -3248,6 +3248,18 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
                 W.clear(s);
                 continue;
             }
+
+            // dead code elimination:
+            if (defUses.useCount(*phi->targetTemp) == 0) {
+                foreach (Expr *in, phi->d->incoming) {
+                    if (Temp *t = in->asTemp())
+                        W += defUses.defStmt(*t);
+                }
+
+                defUses.removeDef(*phi->targetTemp);
+                W.clear(s);
+                continue;
+            }
         } else  if (Move *m = s->asMove()) {
             if (Convert *convert = m->source->asConvert()) {
                 if (Const *sourceConst = convert->expr->asConst()) {
