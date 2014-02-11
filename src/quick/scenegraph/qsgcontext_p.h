@@ -112,6 +112,9 @@ public:
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
 
+    void compileShader(QSGMaterialShader *shader);
+    void initializeShader(QSGMaterialShader *shader);
+
 Q_SIGNALS:
     void initialized();
     void invalidated();
@@ -155,6 +158,7 @@ public:
 
     virtual void renderContextInitialized(QSGRenderContext *renderContext);
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
+    virtual QSGRenderContext *createRenderContext();
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

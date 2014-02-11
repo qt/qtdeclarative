@@ -568,7 +568,7 @@ any items added to this list for an \l Item are automatically added to its
 list of \l {Item::children}{children}.
 
 Default properties can be useful for reassigning the children of an item. See
-the  \l{declarative/ui-components/tabwidget}{TabWidget example}, which uses a
+the  \l{declarative/customitems/tabwidget}{TabWidget example}, which uses a
 default property to automatically reassign children of the TabWidget as
 children of an inner ListView.
 

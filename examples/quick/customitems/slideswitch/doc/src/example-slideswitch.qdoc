@@ -34,7 +34,7 @@
 
 This example shows how to create a reusable switch component in QML.
 
-The code for this example can be found in the \c examples/quick/ui-components/slideswitch directory.
+The code for this example can be found in the \c examples/quick/customitems/slideswitch directory.
 
 The objects that compose the switch are:
 
@@ -48,12 +48,12 @@ The objects that compose the switch are:
 \endlist
 
 \section1 Switch.qml
-\snippet ui-components/slideswitch/content/Switch.qml 0
+\snippet customitems/slideswitch/content/Switch.qml 0
 
 \section1 Walkthrough
 
 \section2 Interface
-\snippet ui-components/slideswitch/content/Switch.qml 1
+\snippet customitems/slideswitch/content/Switch.qml 1
 
 This property is the interface of the switch. By default, the switch is off and this property is \c false.
 It can be used to activate/disactivate the switch or to query its current state.
@@ -76,14 +76,14 @@ Item {
 the text will only be visible when the switch is on.
 
 \section2 Images and user interaction
-\snippet ui-components/slideswitch/content/Switch.qml 4
+\snippet customitems/slideswitch/content/Switch.qml 4
 
 First, we create the background image of the switch.
 In order for the switch to toggle when the user clicks on the background, we add a \l{MouseArea} as a child item of the image.
 A \c MouseArea has a \c onClicked property that is triggered when the item is clicked. For the moment we will just call a
 \c toggle() function. We will see what this function does in a moment.
 
-\snippet ui-components/slideswitch/content/Switch.qml 5
+\snippet customitems/slideswitch/content/Switch.qml 5
 
 Then, we place the image of the knob on top of the background.
 The interaction here is a little more complex. We want the knob to move with the finger when it is clicked. That is what the \c drag
@@ -91,7 +91,7 @@ property of the \c MouseArea is for. We also want to toggle the switch if the kn
 in the \c dorelease() function that is called in the \c onReleased property.
 
 \section2 States
-\snippet ui-components/slideswitch/content/Switch.qml 6
+\snippet customitems/slideswitch/content/Switch.qml 6
 
 We define the two states of the switch:
 \list
@@ -105,13 +105,13 @@ For more information on states see \l{Qt Quick States}.
 
 We add two JavaScript functions to our switch:
 
-\snippet ui-components/slideswitch/content/Switch.qml 2
+\snippet customitems/slideswitch/content/Switch.qml 2
 
 This first function is called when the background image or the knob are clicked. We simply want the switch to toggle between the two
 states (\e on and \e off).
 
 
-\snippet ui-components/slideswitch/content/Switch.qml 3
+\snippet customitems/slideswitch/content/Switch.qml 3
 
 This second function is called when the knob is released and we want to make sure that the knob does not end up between states
 (neither \e on nor \e off). If it is the case call the \c toggle() function otherwise we do nothing.
@@ -119,7 +119,7 @@ This second function is called when the knob is released and we want to make sur
 For more information on scripts see \l{JavaScript Expressions in QML Documents}.
 
 \section2 Transition
-\snippet ui-components/slideswitch/content/Switch.qml 7
+\snippet customitems/slideswitch/content/Switch.qml 7
 
 At this point, when the switch toggles between the two states the knob will instantly change its \c x position between 1 and 78.
 In order for the knob to move smoothly we add a transition that will animate the \c x property with an easing curve for a duration of 200ms.
@@ -128,5 +128,5 @@ For more information on transitions see \l{Animation and Transitions in Qt Quick
 
 \section1 Usage
 The switch can be used in a QML file, like this:
-\snippet ui-components/slideswitch/slideswitch.qml 0
+\snippet customitems/slideswitch/slideswitch.qml 0
 */

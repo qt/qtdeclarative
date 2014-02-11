@@ -1202,6 +1202,8 @@ QQuickKeysAttached::QQuickKeysAttached(QObject *parent)
     Q_D(QQuickKeysAttached);
     m_processPost = false;
     d->item = qmlobject_cast<QQuickItem*>(parent);
+    if (d->item != parent)
+        qWarning() << "Could not attach Keys property to: " << parent << " is not an Item";
 }
 
 QQuickKeysAttached::~QQuickKeysAttached()

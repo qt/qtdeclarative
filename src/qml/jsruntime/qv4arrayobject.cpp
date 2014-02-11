@@ -304,7 +304,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 
     if (!ctx->callData->argc) {
         ;
-    } else if (!instance->protoHasArray() && instance->arrayData->length() <= len) {
+    } else if (!instance->protoHasArray() && instance->arrayData->length() <= len && instance->arrayType() == ArrayData::Simple) {
         instance->arrayData->vtable()->putArray(instance.getPointer(), len, ctx->callData->args, ctx->callData->argc);
         len = instance->arrayData->length();
     } else {

@@ -66,6 +66,7 @@ FxViewItem::~FxViewItem()
 {
     delete transitionableItem;
     if (ownItem && item) {
+        trackGeometry(false);
         item->setParentItem(0);
         item->deleteLater();
         item = 0;
@@ -1415,7 +1416,7 @@ qreal QQuickItemView::originX() const
     if (d->layoutOrientation() == Qt::Horizontal
             && effectiveLayoutDirection() == Qt::RightToLeft
             && contentWidth() < width()) {
-        return d->lastPosition() - d->footerSize();
+        return -d->lastPosition() - d->footerSize();
     }
     return QQuickFlickable::originX();
 }
@@ -1426,7 +1427,7 @@ qreal QQuickItemView::originY() const
     if (d->layoutOrientation() == Qt::Vertical
             && d->verticalLayoutDirection == QQuickItemView::BottomToTop
             && contentHeight() < height()) {
-        return d->lastPosition() - d->footerSize();
+        return -d->lastPosition() - d->footerSize();
     }
     return QQuickFlickable::originY();
 }
