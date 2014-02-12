@@ -1531,6 +1531,18 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object) {
                 if (!validateObjectBinding(pd, name, binding))
                     return false;
+            } else if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+                if (QQmlValueTypeFactory::isValueType(pd->propType)) {
+                    if (!QQmlValueTypeFactory::valueType(pd->propType)) {
+                        recordError(binding->location, tr("Invalid grouped property access"));
+                        return false;
+                    }
+                } else {
+                    if (!enginePrivate->propertyCacheForType(pd->propType)) {
+                        recordError(binding->location, tr("Invalid grouped property access"));
+                        return false;
+                    }
+                }
             }
         } else {
             if (customParser) {
