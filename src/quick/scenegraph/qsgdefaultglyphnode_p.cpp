@@ -69,7 +69,7 @@ static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
 class QSGTextMaskShader : public QSGMaterialShader
 {
 public:
-    QSGTextMaskShader(QFontEngineGlyphCache::Type cacheType);
+    QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat);
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
@@ -81,7 +81,7 @@ protected:
     int m_color_id;
     int m_textureScale_id;
 
-    QFontEngineGlyphCache::Type m_cacheType;
+    QFontEngine::GlyphFormat m_glyphFormat;
 };
 
 char const *const *QSGTextMaskShader::attributeNames() const
@@ -90,9 +90,9 @@ char const *const *QSGTextMaskShader::attributeNames() const
     return attr;
 }
 
-QSGTextMaskShader::QSGTextMaskShader(QFontEngineGlyphCache::Type cacheType)
+QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
     : QSGMaterialShader(*new QSGMaterialShaderPrivate),
-      m_cacheType(cacheType)
+      m_glyphFormat(glyphFormat)
 {
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/textmask.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/textmask.frag"));
@@ -162,8 +162,8 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
 class QSG8BitTextMaskShader : public QSGTextMaskShader
 {
 public:
-    QSG8BitTextMaskShader(QFontEngineGlyphCache::Type cacheType)
-        : QSGTextMaskShader(cacheType)
+    QSG8BitTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGTextMaskShader(glyphFormat)
     {
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/8bittextmask.frag"));
     }
@@ -186,8 +186,8 @@ void QSG8BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *n
 class QSG24BitTextMaskShader : public QSGTextMaskShader
 {
 public:
-    QSG24BitTextMaskShader(QFontEngineGlyphCache::Type cacheType)
-        : QSGTextMaskShader(cacheType)
+    QSG24BitTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGTextMaskShader(glyphFormat)
         , m_useSRGB(false)
     {
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/24bittextmask.frag"));
@@ -207,7 +207,7 @@ void QSG24BitTextMaskShader::initialize()
     // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
     // but using sRGB looks okay.
     if (strstr((const char *) glGetString(GL_EXTENSIONS), "GL_ARB_framebuffer_sRGB")
-            && m_cacheType == QFontEngineGlyphCache::Raster_RGBMask
+            && m_glyphFormat == QFontEngine::Format_A32
             && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
         m_useSRGB = true;
     }
@@ -259,8 +259,8 @@ void QSG24BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *
 class QSGStyledTextShader : public QSG8BitTextMaskShader
 {
 public:
-    QSGStyledTextShader(QFontEngineGlyphCache::Type cacheType)
-        : QSG8BitTextMaskShader(cacheType)
+    QSGStyledTextShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSG8BitTextMaskShader(glyphFormat)
     {
         setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/styledtext.vert"));
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/styledtext.frag"));
@@ -330,27 +330,27 @@ void QSGStyledTextShader::updateState(const RenderState &state,
 class QSGOutlinedTextShader : public QSGStyledTextShader
 {
 public:
-    QSGOutlinedTextShader(QFontEngineGlyphCache::Type cacheType)
-        : QSGStyledTextShader(cacheType)
+    QSGOutlinedTextShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGStyledTextShader(glyphFormat)
     {
         setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/outlinedtext.vert"));
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/outlinedtext.frag"));
     }
 };
 
-QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, int cacheType)
+QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
     : m_texture(0)
     , m_glyphCache(0)
     , m_font(font)
 {
-    init(cacheType);
+    init(glyphFormat);
 }
 
 QSGTextMaskMaterial::~QSGTextMaskMaterial()
 {
 }
 
-void QSGTextMaskMaterial::init(int cacheType)
+void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
 {
     Q_ASSERT(m_font.isValid());
 
@@ -367,17 +367,14 @@ void QSGTextMaskMaterial::init(int cacheType)
 
     QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
     if (fontD->fontEngine != 0) {
-        if (cacheType < 0) {
-            cacheType = fontD->fontEngine->glyphFormat < 0
-                        ? QFontEngineGlyphCache::Raster_RGBMask
-                        : fontD->fontEngine->glyphFormat;
+        if (glyphFormat == QFontEngine::Format_None) {
+            glyphFormat = fontD->fontEngine->glyphFormat != QFontEngine::Format_None
+                        ? fontD->fontEngine->glyphFormat
+                        : QFontEngine::Format_A32;
         }
-        m_glyphCache = fontD->fontEngine->glyphCache(ctx,
-                                                     QFontEngineGlyphCache::Type(cacheType),
-                                                     QTransform());
-        if (!m_glyphCache || int(m_glyphCache->cacheType()) != cacheType) {
-            m_glyphCache = new QOpenGLTextureGlyphCache(QFontEngineGlyphCache::Type(cacheType),
-                                                        QTransform());
+        m_glyphCache = fontD->fontEngine->glyphCache(ctx, glyphFormat, QTransform());
+        if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
+            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, QTransform());
             fontD->fontEngine->setGlyphCache(ctx, m_glyphCache.data());
             QSGRenderContext *sg = QSGRenderContext::from(ctx);
             Q_ASSERT(sg);
@@ -406,7 +403,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
                     fixedPointPositions.data());
     cache->fillInPendingGlyphs();
 
-    int margin = fontD->fontEngine->glyphMargin(cache->cacheType());
+    int margin = fontD->fontEngine->glyphMargin(cache->glyphFormat());
 
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
@@ -461,7 +458,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 QSGMaterialType *QSGTextMaskMaterial::type() const
 {
     static QSGMaterialType rgb, gray;
-    return glyphCache()->cacheType() == QFontEngineGlyphCache::Raster_RGBMask ? &rgb : &gray;
+    return glyphCache()->glyphFormat() == QFontEngine::Format_A32 ? &rgb : &gray;
 }
 
 QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
@@ -471,10 +468,10 @@ QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
 
 QSGMaterialShader *QSGTextMaskMaterial::createShader() const
 {
-    QFontEngineGlyphCache::Type type = glyphCache()->cacheType();
-    return type == QFontEngineGlyphCache::Raster_RGBMask
-           ? (QSGMaterialShader *) new QSG24BitTextMaskShader(type)
-           : (QSGMaterialShader *) new QSG8BitTextMaskShader(type);
+    QFontEngine::GlyphFormat glyphFormat = glyphCache()->glyphFormat();
+    return glyphFormat == QFontEngine::Format_A32
+           ? (QSGMaterialShader *) new QSG24BitTextMaskShader(glyphFormat)
+           : (QSGMaterialShader *) new QSG8BitTextMaskShader(glyphFormat);
 }
 
 static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
@@ -530,7 +527,7 @@ int QSGTextMaskMaterial::cacheTextureHeight() const
 
 
 QSGStyledTextMaterial::QSGStyledTextMaterial(const QRawFont &font)
-    : QSGTextMaskMaterial(font, QFontEngineGlyphCache::Raster_A8)
+    : QSGTextMaskMaterial(font, QFontEngine::Format_A8)
 {
 }
 
@@ -542,7 +539,7 @@ QSGMaterialType *QSGStyledTextMaterial::type() const
 
 QSGMaterialShader *QSGStyledTextMaterial::createShader() const
 {
-    return new QSGStyledTextShader(glyphCache()->cacheType());
+    return new QSGStyledTextShader(glyphCache()->glyphFormat());
 }
 
 int QSGStyledTextMaterial::compare(const QSGMaterial *o) const
@@ -572,7 +569,7 @@ QSGMaterialType *QSGOutlinedTextMaterial::type() const
 
 QSGMaterialShader *QSGOutlinedTextMaterial::createShader() const
 {
-    return new QSGOutlinedTextShader(glyphCache()->cacheType());
+    return new QSGOutlinedTextShader(glyphCache()->glyphFormat());
 }
 
 QT_END_NAMESPACE
