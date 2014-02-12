@@ -619,6 +619,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     node->setSubSourceRect(QRectF(0, 0, hTiles, vTiles));
     node->setMirror(d->mirror);
 
+    node->setMipmapFiltering(QSGTexture::None);
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
     if (innerSourceRect == QRectF(0, 0, 1, 1) && (vTiles > 1 || hTiles > 1)) {
         node->setHorizontalWrapMode(QSGTexture::Repeat);
