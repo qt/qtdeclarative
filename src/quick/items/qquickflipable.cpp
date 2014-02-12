@@ -127,7 +127,7 @@ public:
     state, and \l {Animation and Transitions in Qt Quick} for more information on how
     animations work within transitions.
 
-    \sa {declarative/ui-components/flipable}{Flipable example}
+    \sa {declarative/customitems/flipable}{Flipable example}
 */
 QQuickFlipable::QQuickFlipable(QQuickItem *parent)
 : QQuickItem(*(new QQuickFlipablePrivate), parent)

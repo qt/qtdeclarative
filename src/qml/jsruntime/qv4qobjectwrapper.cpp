@@ -317,7 +317,6 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         return QV4::Object::get(this, name, hasProperty);
     }
 
-    QQmlData::flushPendingBinding(m_object, result->coreIndex);
     QQmlData *ddata = QQmlData::get(m_object, false);
 
     if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
@@ -337,6 +336,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
 ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired)
 {
     QV4::Scope scope(ctx);
+
+    QQmlData::flushPendingBinding(object, property->coreIndex);
 
     if (property->isFunction() && !property->isVarProperty()) {
         if (property->isVMEFunction()) {
@@ -774,11 +775,13 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             }
 
             f->call(callData);
-            if (scope.hasException()) {
-                QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
-                if (error.description().isEmpty())
-                    error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
-                QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
+            if (scope.hasException() && v4->v8Engine) {
+                if (QQmlEngine *qmlEngine = v4->v8Engine->engine()) {
+                    QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+                    if (error.description().isEmpty())
+                        error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
+                    QQmlEnginePrivate::get(qmlEngine)->warning(error);
+                }
             }
         }
         break;

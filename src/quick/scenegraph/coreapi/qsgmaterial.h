@@ -103,7 +103,7 @@ protected:
     Q_DECLARE_PRIVATE(QSGMaterialShader)
     QSGMaterialShader(QSGMaterialShaderPrivate &dd);
 
-    friend class QSGContext;
+    friend class QSGRenderContext;
     friend class QSGBatchRenderer::ShaderManager;
 
     void setShaderSourceFile(QOpenGLShader::ShaderType type, const QString &sourceFile);

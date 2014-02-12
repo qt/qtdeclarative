@@ -122,7 +122,7 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 
 #if CPU(X86)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
-    // Not used: JSC::X86Registers::ebx,
+    JSC::X86Registers::ebx, // temporary register
     JSC::X86Registers::esi, // ContextRegister
     JSC::X86Registers::edi  // LocalsRegister
 };

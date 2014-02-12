@@ -665,7 +665,7 @@ is finished.
     \dots 8
     \snippet qml/flickableScrollbar.qml 1
 
-    \sa {declarative/ui-components/scrollbar}{scrollbar example}
+    \sa {declarative/customitems/scrollbar}{scrollbar example}
 */
 QQuickFlickable::QQuickFlickable(QQuickItem *parent)
   : QQuickItem(*(new QQuickFlickablePrivate), parent)

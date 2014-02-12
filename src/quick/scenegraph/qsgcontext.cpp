@@ -174,6 +174,11 @@ QSGContext::~QSGContext()
 {
 }
 
+QSGRenderContext *QSGContext::createRenderContext()
+{
+    return new QSGRenderContext(this);
+}
+
 /*!
  * This function is used by the Qt WebEngine to set up context sharing
  * across multiple windows. Do not use it for any other purpose.
@@ -420,6 +425,20 @@ QSGRenderContext *QSGRenderContext::from(QOpenGLContext *context)
 void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 {
     m_fontEnginesToClean << engine;
+}
+
+/*!
+    compile/initialize are protected member functions of QSGMaterialShader.
+    We expose them here for custom renderers.
+ */
+void QSGRenderContext::compileShader(QSGMaterialShader *shader)
+{
+    shader->compile();
+}
+
+void QSGRenderContext::initializeShader(QSGMaterialShader *shader)
+{
+    shader->initialize();
 }
 
 /*!

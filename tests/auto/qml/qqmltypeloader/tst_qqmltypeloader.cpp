@@ -67,6 +67,7 @@ void tst_QQMLTypeLoader::testLoadComplete()
     QTRY_VERIFY(rootObject != 0);
     QTRY_COMPARE(rootObject->property("created").toInt(), 2);
     QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
+    delete window;
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

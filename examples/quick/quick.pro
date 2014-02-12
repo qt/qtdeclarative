@@ -30,5 +30,4 @@ qtHaveModule(widgets) {
 }
 
 EXAMPLE_FILES = \
-    ui-components \
     shared

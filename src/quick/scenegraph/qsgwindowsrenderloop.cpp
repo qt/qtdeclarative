@@ -85,7 +85,7 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
     qsg_debug_timer.start();
 #endif
 
-    m_rc = new QSGRenderContext(m_sg);
+    m_rc = m_sg->createRenderContext();
 
     m_animationDriver = m_sg->createAnimationDriver(m_sg);
     m_animationDriver->install();
