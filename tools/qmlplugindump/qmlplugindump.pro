@@ -9,7 +9,7 @@ SOURCES += \
 HEADERS += \
     qmlstreamwriter.h
 
-mac {
+macx {
     # Prevent qmlplugindump from popping up in the dock when launched.
     # We embed the Info.plist file, so the application doesn't need to
     # be a bundle.
