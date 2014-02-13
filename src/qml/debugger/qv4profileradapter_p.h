@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "jsruntime/qv4profiling_p.h"
+#include "qv4profiling_p.h"
 #include "qqmlabstractprofileradapter_p.h"
 
 #include <QStack>
