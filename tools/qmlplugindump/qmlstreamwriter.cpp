@@ -105,6 +105,11 @@ void QmlStreamWriter::writeScriptBinding(const QString &name, const QString &rhs
     writePotentialLine(QString("%1: %2").arg(name, rhs).toUtf8());
 }
 
+void QmlStreamWriter::writeBooleanBinding(const QString &name, bool value)
+{
+    writeScriptBinding(name, value ? QLatin1String("true") : QLatin1String("false"));
+}
+
 void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &elements)
 {
     flushPotentialLinesWithNewlines();
@@ -181,16 +186,6 @@ void QmlStreamWriter::writePotentialLine(const QByteArray &line)
     if (m_pendingLineLength >= 80) {
         flushPotentialLinesWithNewlines();
     }
-}
-
-void QmlStreamWriter::writeIsCreatable(bool isCreatable) {
-  writeIndent();
-  m_stream->write(QString("isCreatable: %1\n").arg(isCreatable ? "true" : "false").toUtf8());
-}
-
-void QmlStreamWriter::writeIsSingleton(bool isSingleton) {
-  writeIndent();
-  m_stream->write(QString("isSingleton: %1\n").arg(isSingleton ? "true" : "false").toUtf8());
 }
 
 void QmlStreamWriter::flushPotentialLinesWithNewlines()
