@@ -428,6 +428,7 @@ public:
         const QString exportString = getExportString(qmlTyName, compositeType->majorVersion(), compositeType->minorVersion());
         qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
+        qml->writeBooleanBinding(QLatin1String("isComposite"), true);
 
         if (!compositeType->isCreatable())
             qml->writeBooleanBinding(QLatin1String("isCreatable"), false);
