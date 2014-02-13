@@ -44,6 +44,11 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QDebug>
 
+#if defined(Q_OS_MAC)
+// For _PC_CASE_SENSITIVE
+#include <unistd.h>
+#endif
+
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
 
