@@ -59,7 +59,7 @@ QAnimationJobChangeListener::~QAnimationJobChangeListener()
 }
 
 QQmlAnimationTimer::QQmlAnimationTimer() :
-    QAbstractAnimationTimer(), lastTick(0), lastDelta(0),
+    QAbstractAnimationTimer(), lastTick(0),
     currentAnimationIdx(0), insideTick(false),
     startAnimationPending(false), stopTimerPending(false),
     runningLeafAnimations(0)
@@ -103,7 +103,6 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
         return;
 
     lastTick += delta;
-    lastDelta = delta;
 
     //we make sure we only call update time if the time has actually changed
     //it might happen in some cases that the time doesn't change because events are delayed
@@ -142,8 +141,7 @@ void QQmlAnimationTimer::startAnimations()
 {
     startAnimationPending = false;
     //force timer to update, which prevents large deltas for our newly added animations
-    if (!animations.isEmpty())
-        QUnifiedTimer::instance()->maybeUpdateAnimationsToCurrentTime();
+    QUnifiedTimer::instance()->maybeUpdateAnimationsToCurrentTime();
 
     //we transfer the waiting animations into the "really running" state
     animations += animationsToStart;
@@ -155,12 +153,11 @@ void QQmlAnimationTimer::startAnimations()
 void QQmlAnimationTimer::stopTimer()
 {
     stopTimerPending = false;
-    if (animations.isEmpty()) {
+    if (animations.isEmpty() && !startAnimationPending) {
         QUnifiedTimer::resumeAnimationTimer(this);
         QUnifiedTimer::stopAnimationTimer(this);
         // invalidate the start reference time
         lastTick = 0;
-        lastDelta = 0;
     }
 }
 

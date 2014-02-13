@@ -43,7 +43,7 @@
 
 #include "qquickanimation_p_p.h"
 #include <private/qqmlproperty_p.h>
-#include "private/qparallelanimationgroupjob_p.h"
+#include "private/qcontinuinganimationgroupjob_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -93,7 +93,7 @@ public:
 
     bool useMass : 1;
     bool haveModulus : 1;
-    bool useDelta : 1;
+    bool skipUpdate : 1;
     typedef QHash<QQmlProperty, QSpringAnimation*> ActiveAnimationHash;
 
     void clearTemplate() { animationTemplate = 0; }
@@ -160,7 +160,7 @@ QSpringAnimation::QSpringAnimation(QQuickSpringAnimationPrivate *priv)
     , modulus(0.0)
     , useMass(false)
     , haveModulus(false)
-    , useDelta(false)
+    , skipUpdate(false)
     , animationTemplate(priv)
 {
 }
@@ -194,11 +194,10 @@ int QSpringAnimation::duration() const
 void QSpringAnimation::restart()
 {
     if (isRunning() || (stopTime != -1 && (animationTemplate->elapsed.elapsed() - stopTime) < DELAY_STOP_TIMER_INTERVAL)) {
-        useDelta = true;
+        skipUpdate = true;
         init();
-        lastTime = 0;
     } else {
-        useDelta = false;
+        skipUpdate = false;
         //init() will be triggered when group starts
     }
 }
@@ -211,16 +210,17 @@ void QSpringAnimation::init()
 
 void QSpringAnimation::updateCurrentTime(int time)
 {
+    if (skipUpdate) {
+        skipUpdate = false;
+        return;
+    }
+
     if (mode == Track) {
         stop();
         return;
     }
 
-    int elapsed = useDelta ? QQmlAnimationTimer::instance()->currentDelta() : time - lastTime;
-    if (useDelta) {
-        startTime = time - elapsed;
-        useDelta = false;
-    }
+    int elapsed = time - lastTime;
 
     if (!elapsed)
         return;
@@ -534,7 +534,7 @@ QAbstractAnimationJob* QQuickSpringAnimation::transition(QQuickStateActions &act
     Q_D(QQuickSpringAnimation);
     Q_UNUSED(direction);
 
-    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
+    QContinuingAnimationGroupJob *wrapperGroup = new QContinuingAnimationGroupJob();
 
     QQuickStateActions dataActions = QQuickNumberAnimation::createTransitionActions(actions, modified, defaultTarget);
     if (!dataActions.isEmpty()) {

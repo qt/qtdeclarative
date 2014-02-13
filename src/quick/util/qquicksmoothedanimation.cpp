@@ -43,6 +43,7 @@
 #include "qquicksmoothedanimation_p_p.h"
 
 #include "qquickanimation_p_p.h"
+#include "private/qcontinuinganimationgroupjob_p.h"
 
 #include <qqmlproperty.h>
 #include <private/qqmlproperty_p.h>
@@ -78,7 +79,7 @@ QSmoothedAnimation::QSmoothedAnimation(QQuickSmoothedAnimationPrivate *priv)
     : QAbstractAnimationJob(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QQuickSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
-      useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this)), animationTemplate(priv)
+      skipUpdate(false), delayedStopTimer(new QSmoothedAnimationTimer(this)), animationTemplate(priv)
 {
     delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
     delayedStopTimer->setSingleShot(true);
@@ -120,11 +121,11 @@ void QSmoothedAnimation::prepareForRestart()
     initialVelocity = trackVelocity;
     if (isRunning()) {
         //we are joining a new wrapper group while running, our times need to be restarted
-        useDelta = true;
+        skipUpdate = true;
         init();
         lastTime = 0;
     } else {
-        useDelta = false;
+        skipUpdate = false;
         //we'll be started when the group starts, which will force an init()
     }
 }
@@ -242,12 +243,15 @@ qreal QSmoothedAnimation::easeFollow(qreal time_seconds)
 
 void QSmoothedAnimation::updateCurrentTime(int t)
 {
+    if (skipUpdate) {
+        skipUpdate = false;
+        return;
+    }
+
     if (!isRunning() && !isPaused()) // This can happen if init() stops the animation in some cases
         return;
 
-    qreal time_seconds = useDelta ? qreal(QQmlAnimationTimer::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
-    if (useDelta)
-        useDelta = false;
+    qreal time_seconds = qreal(t - lastTime) / 1000.;
 
     qreal value = easeFollow(time_seconds);
     value *= (invert? -1.0: 1.0);
@@ -403,7 +407,7 @@ QAbstractAnimationJob* QQuickSmoothedAnimation::transition(QQuickStateActions &a
 
     QQuickStateActions dataActions = QQuickPropertyAnimation::createTransitionActions(actions, modified, defaultTarget);
 
-    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
+    QContinuingAnimationGroupJob *wrapperGroup = new QContinuingAnimationGroupJob();
 
     if (!dataActions.isEmpty()) {
         QSet<QAbstractAnimationJob*> anims;
