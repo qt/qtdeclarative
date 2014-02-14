@@ -448,11 +448,12 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj.asReturnedValue();
     ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
+    ExecutionContextSaver ctxSaver(context);
+    ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
+
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
-    ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
     if (result->isObject())
         return result.asReturnedValue();
     return obj.asReturnedValue();
@@ -471,11 +472,13 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     CallContext *ctx = context->newCallContext(f, callData);
 
+    ExecutionContextSaver ctxSaver(context);
+    ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
+
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function->compiledFunction);
 
-    ExecutionContextSaver ctxSaver(context);
-    return f->function->code(ctx, f->function->codeData);
+    return result.asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
@@ -543,10 +546,10 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext() == &ctx);
 
+    Scoped<Object> result(scope, f->function->code(&ctx, f->function->codeData));
+
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
-
-    Scoped<Object> result(scope, f->function->code(&ctx, f->function->codeData));
 
     if (!result)
         return callData->thisObject.asReturnedValue();
@@ -580,10 +583,12 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext() == &ctx);
 
+    ScopedValue result(scope, f->function->code(&ctx, f->function->codeData));
+
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
-    return f->function->code(&ctx, f->function->codeData);
+    return result.asReturnedValue();
 }
 
 
