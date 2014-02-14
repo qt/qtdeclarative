@@ -1095,6 +1095,8 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX) {
+        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
+            o->initSparseArray();
         o->arraySet(idx, val);
     } else {
         ScopedValue v(scope, val ? *val : Primitive::undefinedValue());

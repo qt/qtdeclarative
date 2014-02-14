@@ -226,8 +226,13 @@ static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariant
     QV4::ScopedObject o(scope, e->newObject());
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);
-    for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
-        o->put((s = e->newString(iter.key())), (v = engine->fromVariant(iter.value())));
+    for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter) {
+        s = e->newString(iter.key());
+        uint idx = s->asArrayIndex();
+        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
+            o->initSparseArray();
+        o->put(s, (v = engine->fromVariant(iter.value())));
+    }
     return o.asReturnedValue();
 }
 
