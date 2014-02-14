@@ -818,23 +818,13 @@ void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp
     } else if (sourceTemp->kind == IR::Temp::StackSlot) {
         if (targetTemp->kind == IR::Temp::StackSlot) {
             // Note: a swap for two stack-slots can involve different types.
-#if CPU(X86_64)
-            _as->load64(_as->stackSlotPointer(targetTemp), Assembler::ReturnValueRegister);
-            _as->load64(_as->stackSlotPointer(sourceTemp), Assembler::ScratchRegister);
-            _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(targetTemp));
-            _as->store64(Assembler::ReturnValueRegister, _as->stackSlotPointer(sourceTemp));
-#else
-            Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
             Assembler::Pointer sAddr = _as->stackSlotPointer(sourceTemp);
             Assembler::Pointer tAddr = _as->stackSlotPointer(targetTemp);
-            _as->load32(sAddr, Assembler::ScratchRegister);
-            _as->store32(Assembler::ScratchRegister, tAddr);
-            sAddr.offset += 4;
-            tAddr.offset += 4;
-            _as->load32(sAddr, Assembler::ScratchRegister);
-            _as->store32(Assembler::ScratchRegister, tAddr);
-            _as->storeDouble(tReg, _as->stackSlotPointer(sourceTemp));
-#endif
+            // use the implementation in JSC::MacroAssembler, as it doesn't do bit swizzling
+            _as->JSC::MacroAssembler::loadDouble(sAddr, Assembler::FPGpr0);
+            _as->JSC::MacroAssembler::loadDouble(tAddr, Assembler::FPGpr1);
+            _as->JSC::MacroAssembler::storeDouble(Assembler::FPGpr1, sAddr);
+            _as->JSC::MacroAssembler::storeDouble(Assembler::FPGpr0, tAddr);
             return;
         }
     }
