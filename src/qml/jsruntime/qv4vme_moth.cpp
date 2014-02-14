@@ -58,8 +58,8 @@
 #  define TRACE(n, str, ...)
 #endif // DO_TRACE_INSTR
 
-using namespace QQmlJS;
-using namespace QQmlJS::Moth;
+using namespace QV4;
+using namespace QV4::Moth;
 
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \

@@ -46,31 +46,28 @@
 using namespace QV4;
 using namespace JIT;
 
-using namespace QQmlJS;
-using namespace MASM;
-
 #define stringIfyx(s) #s
 #define stringIfy(s) stringIfyx(s)
 #define setOp(operation) \
     do { call = operation; name = stringIfy(operation); } while (0)
 
-void Unop::generate(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target)
+void Unop::generate(IR::Temp *source, IR::Temp *target)
 {
     UnaryOpName call = 0;
     const char *name = 0;
     switch (op) {
-    case V4IR::OpNot:
+    case IR::OpNot:
         generateNot(source, target);
         return;
-    case V4IR::OpUMinus:
+    case IR::OpUMinus:
         generateUMinus(source, target);
         return;
-    case V4IR::OpUPlus: setOp(__qmljs_uplus); break;
-    case V4IR::OpCompl:
+    case IR::OpUPlus: setOp(__qmljs_uplus); break;
+    case IR::OpCompl:
         generateCompl(source, target);
         return;
-    case V4IR::OpIncrement: setOp(__qmljs_increment); break;
-    case V4IR::OpDecrement: setOp(__qmljs_decrement); break;
+    case IR::OpIncrement: setOp(__qmljs_increment); break;
+    case IR::OpDecrement: setOp(__qmljs_decrement); break;
     default:
         Q_UNREACHABLE();
     } // switch
@@ -80,16 +77,16 @@ void Unop::generate(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target)
     }
 }
 
-void Unop::generateUMinus(V4IR::Temp *source, V4IR::Temp *target)
+void Unop::generateUMinus(IR::Temp *source, IR::Temp *target)
 {
-    if (source->type == V4IR::SInt32Type) {
+    if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             tReg = (Assembler::RegisterID) target->index;
         Assembler::RegisterID sReg = as->toInt32Register(source, tReg);
         as->move(sReg, tReg);
         as->neg32(tReg);
-        if (target->kind != V4IR::Temp::PhysicalRegister)
+        if (target->kind != IR::Temp::PhysicalRegister)
             as->storeInt32(tReg, target);
         return;
     }
@@ -97,27 +94,27 @@ void Unop::generateUMinus(V4IR::Temp *source, V4IR::Temp *target)
     as->generateFunctionCallImp(target, "__qmljs_uminus", __qmljs_uminus, Assembler::PointerToValue(source));
 }
 
-void Unop::generateNot(V4IR::Temp *source, V4IR::Temp *target)
+void Unop::generateNot(IR::Temp *source, IR::Temp *target)
 {
-    if (source->type == V4IR::BoolType) {
+    if (source->type == IR::BoolType) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             tReg = (Assembler::RegisterID) target->index;
         as->xor32(Assembler::TrustedImm32(0x1), as->toInt32Register(source, tReg), tReg);
-        if (target->kind != V4IR::Temp::PhysicalRegister)
+        if (target->kind != IR::Temp::PhysicalRegister)
             as->storeBool(tReg, target);
         return;
-    } else if (source->type == V4IR::SInt32Type) {
+    } else if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             tReg = (Assembler::RegisterID) target->index;
         as->compare32(Assembler::Equal,
                       as->toInt32Register(source, Assembler::ScratchRegister), Assembler::TrustedImm32(0),
                       tReg);
-        if (target->kind != V4IR::Temp::PhysicalRegister)
+        if (target->kind != IR::Temp::PhysicalRegister)
             as->storeBool(tReg, target);
         return;
-    } else if (source->type == V4IR::DoubleType) {
+    } else if (source->type == IR::DoubleType) {
         // ###
     }
     // ## generic implementation testing for int/bool
@@ -125,14 +122,14 @@ void Unop::generateNot(V4IR::Temp *source, V4IR::Temp *target)
     as->generateFunctionCallImp(target, "__qmljs_not", __qmljs_not, Assembler::PointerToValue(source));
 }
 
-void Unop::generateCompl(V4IR::Temp *source, V4IR::Temp *target)
+void Unop::generateCompl(IR::Temp *source, IR::Temp *target)
 {
-    if (source->type == V4IR::SInt32Type) {
+    if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             tReg = (Assembler::RegisterID) target->index;
         as->xor32(Assembler::TrustedImm32(0xffffffff), as->toInt32Register(source, tReg), tReg);
-        if (target->kind != V4IR::Temp::PhysicalRegister)
+        if (target->kind != IR::Temp::PhysicalRegister)
             as->storeInt32(tReg, target);
         return;
     }

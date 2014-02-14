@@ -60,6 +60,7 @@
 #undef CONST
 #endif
 
+using namespace QV4;
 using namespace QQmlJS;
 using namespace AST;
 
@@ -426,7 +427,7 @@ Codegen::Codegen(bool strict)
 void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
-                                  V4IR::Module *module,
+                                  QV4::IR::Module *module,
                                   CompilationMode mode,
                                   const QStringList &inheritedLocals)
 {
@@ -448,7 +449,7 @@ void Codegen::generateFromProgram(const QString &fileName,
 void Codegen::generateFromFunctionExpression(const QString &fileName,
                                              const QString &sourceCode,
                                              AST::FunctionExpression *ast,
-                                             V4IR::Module *module)
+                                             QV4::IR::Module *module)
 {
     _module = module;
     _module->setFileName(fileName);
@@ -479,7 +480,7 @@ void Codegen::leaveEnvironment()
     _env = _env->parent;
 }
 
-void Codegen::enterLoop(Statement *node, V4IR::BasicBlock *startBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock)
+void Codegen::enterLoop(Statement *node, IR::BasicBlock *startBlock, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock)
 {
     if (startBlock)
         startBlock->markAsGroupStart();
@@ -496,7 +497,7 @@ void Codegen::leaveLoop()
     delete current;
 }
 
-V4IR::Expr *Codegen::member(V4IR::Expr *base, const QString *name)
+IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
 {
     if (hasError)
         return 0;
@@ -510,7 +511,7 @@ V4IR::Expr *Codegen::member(V4IR::Expr *base, const QString *name)
     }
 }
 
-V4IR::Expr *Codegen::subscript(V4IR::Expr *base, V4IR::Expr *index)
+IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
 {
     if (hasError)
         return 0;
@@ -531,7 +532,7 @@ V4IR::Expr *Codegen::subscript(V4IR::Expr *base, V4IR::Expr *index)
     return _block->SUBSCRIPT(base->asTemp(), index->asTemp());
 }
 
-V4IR::Expr *Codegen::argument(V4IR::Expr *expr)
+IR::Expr *Codegen::argument(IR::Expr *expr)
 {
     if (expr && ! expr->asTemp()) {
         const unsigned t = _block->newTemp();
@@ -542,7 +543,7 @@ V4IR::Expr *Codegen::argument(V4IR::Expr *expr)
 }
 
 // keeps references alive, converts other expressions to temps
-V4IR::Expr *Codegen::reference(V4IR::Expr *expr)
+IR::Expr *Codegen::reference(IR::Expr *expr)
 {
     if (hasError)
         return 0;
@@ -555,29 +556,29 @@ V4IR::Expr *Codegen::reference(V4IR::Expr *expr)
     return expr;
 }
 
-V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
+IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
 {
     if (hasError)
         return 0;
 
-    Q_ASSERT(op != V4IR::OpIncrement);
-    Q_ASSERT(op != V4IR::OpDecrement);
+    Q_ASSERT(op != IR::OpIncrement);
+    Q_ASSERT(op != IR::OpDecrement);
 
-    if (V4IR::Const *c = expr->asConst()) {
-        if (c->type == V4IR::NumberType) {
+    if (IR::Const *c = expr->asConst()) {
+        if (c->type == IR::NumberType) {
             switch (op) {
-            case V4IR::OpNot:
-                return _block->CONST(V4IR::BoolType, !c->value);
-            case V4IR::OpUMinus:
-                return _block->CONST(V4IR::NumberType, -c->value);
-            case V4IR::OpUPlus:
+            case IR::OpNot:
+                return _block->CONST(IR::BoolType, !c->value);
+            case IR::OpUMinus:
+                return _block->CONST(IR::NumberType, -c->value);
+            case IR::OpUPlus:
                 return expr;
-            case V4IR::OpCompl:
-                return _block->CONST(V4IR::NumberType, ~QV4::Primitive::toInt32(c->value));
-            case V4IR::OpIncrement:
-                return _block->CONST(V4IR::NumberType, c->value + 1);
-            case V4IR::OpDecrement:
-                return _block->CONST(V4IR::NumberType, c->value - 1);
+            case IR::OpCompl:
+                return _block->CONST(IR::NumberType, ~QV4::Primitive::toInt32(c->value));
+            case IR::OpIncrement:
+                return _block->CONST(IR::NumberType, c->value + 1);
+            case IR::OpDecrement:
+                return _block->CONST(IR::NumberType, c->value - 1);
             default:
                 break;
             }
@@ -592,56 +593,56 @@ V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
     return _block->UNOP(op, expr->asTemp());
 }
 
-V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
+IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
     if (hasError)
         return 0;
 
-    if (V4IR::Const *c1 = left->asConst()) {
-        if (V4IR::Const *c2 = right->asConst()) {
-            if (c1->type == V4IR::NumberType && c2->type == V4IR::NumberType) {
+    if (IR::Const *c1 = left->asConst()) {
+        if (IR::Const *c2 = right->asConst()) {
+            if (c1->type == IR::NumberType && c2->type == IR::NumberType) {
                 switch (op) {
-                case V4IR::OpAdd: return _block->CONST(V4IR::NumberType, c1->value + c2->value);
-                case V4IR::OpAnd: return _block->CONST(V4IR::BoolType, c1->value ? c2->value : 0);
-                case V4IR::OpBitAnd: return _block->CONST(V4IR::NumberType, int(c1->value) & int(c2->value));
-                case V4IR::OpBitOr: return _block->CONST(V4IR::NumberType, int(c1->value) | int(c2->value));
-                case V4IR::OpBitXor: return _block->CONST(V4IR::NumberType, int(c1->value) ^ int(c2->value));
-                case V4IR::OpDiv: return _block->CONST(V4IR::NumberType, c1->value / c2->value);
-                case V4IR::OpEqual: return _block->CONST(V4IR::BoolType, c1->value == c2->value);
-                case V4IR::OpNotEqual: return _block->CONST(V4IR::BoolType, c1->value != c2->value);
-                case V4IR::OpStrictEqual: return _block->CONST(V4IR::BoolType, c1->value == c2->value);
-                case V4IR::OpStrictNotEqual: return _block->CONST(V4IR::BoolType, c1->value != c2->value);
-                case V4IR::OpGe: return _block->CONST(V4IR::BoolType, c1->value >= c2->value);
-                case V4IR::OpGt: return _block->CONST(V4IR::BoolType, c1->value > c2->value);
-                case V4IR::OpLe: return _block->CONST(V4IR::BoolType, c1->value <= c2->value);
-                case V4IR::OpLt: return _block->CONST(V4IR::BoolType, c1->value < c2->value);
-                case V4IR::OpLShift: return _block->CONST(V4IR::NumberType, QV4::Primitive::toInt32(c1->value) << (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case V4IR::OpMod: return _block->CONST(V4IR::NumberType, std::fmod(c1->value, c2->value));
-                case V4IR::OpMul: return _block->CONST(V4IR::NumberType, c1->value * c2->value);
-                case V4IR::OpOr: return _block->CONST(V4IR::NumberType, c1->value ? c1->value : c2->value);
-                case V4IR::OpRShift: return _block->CONST(V4IR::NumberType, QV4::Primitive::toInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case V4IR::OpSub: return _block->CONST(V4IR::NumberType, c1->value - c2->value);
-                case V4IR::OpURShift: return _block->CONST(V4IR::NumberType,QV4::Primitive::toUInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
+                case IR::OpAdd: return _block->CONST(IR::NumberType, c1->value + c2->value);
+                case IR::OpAnd: return _block->CONST(IR::BoolType, c1->value ? c2->value : 0);
+                case IR::OpBitAnd: return _block->CONST(IR::NumberType, int(c1->value) & int(c2->value));
+                case IR::OpBitOr: return _block->CONST(IR::NumberType, int(c1->value) | int(c2->value));
+                case IR::OpBitXor: return _block->CONST(IR::NumberType, int(c1->value) ^ int(c2->value));
+                case IR::OpDiv: return _block->CONST(IR::NumberType, c1->value / c2->value);
+                case IR::OpEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
+                case IR::OpNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
+                case IR::OpStrictEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
+                case IR::OpStrictNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
+                case IR::OpGe: return _block->CONST(IR::BoolType, c1->value >= c2->value);
+                case IR::OpGt: return _block->CONST(IR::BoolType, c1->value > c2->value);
+                case IR::OpLe: return _block->CONST(IR::BoolType, c1->value <= c2->value);
+                case IR::OpLt: return _block->CONST(IR::BoolType, c1->value < c2->value);
+                case IR::OpLShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) << (QV4::Primitive::toUInt32(c2->value) & 0x1f));
+                case IR::OpMod: return _block->CONST(IR::NumberType, std::fmod(c1->value, c2->value));
+                case IR::OpMul: return _block->CONST(IR::NumberType, c1->value * c2->value);
+                case IR::OpOr: return _block->CONST(IR::NumberType, c1->value ? c1->value : c2->value);
+                case IR::OpRShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
+                case IR::OpSub: return _block->CONST(IR::NumberType, c1->value - c2->value);
+                case IR::OpURShift: return _block->CONST(IR::NumberType,QV4::Primitive::toUInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
 
-                case V4IR::OpInstanceof:
-                case V4IR::OpIn:
+                case IR::OpInstanceof:
+                case IR::OpIn:
                     break;
 
-                case V4IR::OpIfTrue: // unary ops
-                case V4IR::OpNot:
-                case V4IR::OpUMinus:
-                case V4IR::OpUPlus:
-                case V4IR::OpCompl:
-                case V4IR::OpIncrement:
-                case V4IR::OpDecrement:
-                case V4IR::OpInvalid:
+                case IR::OpIfTrue: // unary ops
+                case IR::OpNot:
+                case IR::OpUMinus:
+                case IR::OpUPlus:
+                case IR::OpCompl:
+                case IR::OpIncrement:
+                case IR::OpDecrement:
+                case IR::OpInvalid:
                     break;
                 }
             }
         }
-    } else if (op == V4IR::OpAdd) {
-        if (V4IR::String *s1 = left->asString()) {
-            if (V4IR::String *s2 = right->asString()) {
+    } else if (op == IR::OpAdd) {
+        if (IR::String *s1 = left->asString()) {
+            if (IR::String *s2 = right->asString()) {
                 return _block->STRING(_function->newString(*s1->value + *s2->value));
             }
         }
@@ -665,7 +666,7 @@ V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
     return _block->BINOP(op, left, right);
 }
 
-V4IR::Expr *Codegen::call(V4IR::Expr *base, V4IR::ExprList *args)
+IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
 {
     if (hasError)
         return 0;
@@ -673,14 +674,14 @@ V4IR::Expr *Codegen::call(V4IR::Expr *base, V4IR::ExprList *args)
     return _block->CALL(base, args);
 }
 
-void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
+void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
     if (hasError)
         return;
 
     Q_ASSERT(target->isLValue());
 
-    if (op != V4IR::OpInvalid) {
+    if (op != IR::OpInvalid) {
         move(target, binop(op, target, source));
         return;
     }
@@ -699,7 +700,7 @@ void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
     _block->MOVE(target, source);
 }
 
-void Codegen::cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+void Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (hasError)
         return;
@@ -751,7 +752,7 @@ void Codegen::statement(ExpressionNode *ast)
     }
 }
 
-void Codegen::condition(ExpressionNode *ast, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+void Codegen::condition(ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (ast) {
         Result r(iftrue, iffalse);
@@ -832,7 +833,7 @@ void Codegen::sourceElements(SourceElements *ast)
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
-    V4IR::Expr *initializer = 0;
+    IR::Expr *initializer = 0;
     if (!ast->expression)
         return;
     Result expr = expression(ast->expression);
@@ -1044,22 +1045,22 @@ bool Codegen::visit(ArrayLiteral *ast)
     if (hasError)
         return false;
 
-    V4IR::ExprList *args = 0;
-    V4IR::ExprList *current = 0;
+    IR::ExprList *args = 0;
+    IR::ExprList *current = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next) {
-            V4IR::ExprList *arg = _function->New<V4IR::ExprList>();
+            IR::ExprList *arg = _function->New<IR::ExprList>();
             if (!current) {
                 args = arg;
             } else {
                 current->next = arg;
             }
             current = arg;
-            current->expr = _block->CONST(V4IR::MissingType, 0);
+            current->expr = _block->CONST(IR::MissingType, 0);
         }
         Result expr = expression(it->expression);
 
-        V4IR::ExprList *arg = _function->New<V4IR::ExprList>();
+        IR::ExprList *arg = _function->New<IR::ExprList>();
         if (!current) {
             args = arg;
         } else {
@@ -1067,7 +1068,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         }
         current = arg;
 
-        V4IR::Expr *exp = *expr;
+        IR::Expr *exp = *expr;
         if (exp->asTemp() || exp->asConst()) {
             current->expr = exp;
         } else {
@@ -1077,18 +1078,18 @@ bool Codegen::visit(ArrayLiteral *ast)
         }
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next) {
-        V4IR::ExprList *arg = _function->New<V4IR::ExprList>();
+        IR::ExprList *arg = _function->New<IR::ExprList>();
         if (!current) {
             args = arg;
         } else {
             current->next = arg;
         }
         current = arg;
-        current->expr = _block->CONST(V4IR::MissingType, 0);
+        current->expr = _block->CONST(IR::MissingType, 0);
     }
 
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->CALL(_block->NAME(V4IR::Name::builtin_define_array, 0, 0), args));
+    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_array, 0, 0), args));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1104,21 +1105,21 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     return false;
 }
 
-static V4IR::AluOp baseOp(int op)
+static IR::AluOp baseOp(int op)
 {
     switch ((QSOperator::Op) op) {
-    case QSOperator::InplaceAnd: return V4IR::OpBitAnd;
-    case QSOperator::InplaceSub: return V4IR::OpSub;
-    case QSOperator::InplaceDiv: return V4IR::OpDiv;
-    case QSOperator::InplaceAdd: return V4IR::OpAdd;
-    case QSOperator::InplaceLeftShift: return V4IR::OpLShift;
-    case QSOperator::InplaceMod: return V4IR::OpMod;
-    case QSOperator::InplaceMul: return V4IR::OpMul;
-    case QSOperator::InplaceOr: return V4IR::OpBitOr;
-    case QSOperator::InplaceRightShift: return V4IR::OpRShift;
-    case QSOperator::InplaceURightShift: return V4IR::OpURShift;
-    case QSOperator::InplaceXor: return V4IR::OpBitXor;
-    default: return V4IR::OpInvalid;
+    case QSOperator::InplaceAnd: return IR::OpBitAnd;
+    case QSOperator::InplaceSub: return IR::OpSub;
+    case QSOperator::InplaceDiv: return IR::OpDiv;
+    case QSOperator::InplaceAdd: return IR::OpAdd;
+    case QSOperator::InplaceLeftShift: return IR::OpLShift;
+    case QSOperator::InplaceMod: return IR::OpMod;
+    case QSOperator::InplaceMul: return IR::OpMul;
+    case QSOperator::InplaceOr: return IR::OpBitOr;
+    case QSOperator::InplaceRightShift: return IR::OpRShift;
+    case QSOperator::InplaceURightShift: return IR::OpURShift;
+    case QSOperator::InplaceXor: return IR::OpBitXor;
+    default: return IR::OpInvalid;
     }
 }
 
@@ -1129,13 +1130,13 @@ bool Codegen::visit(BinaryExpression *ast)
 
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
-            V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
             condition(ast->left, iftrue, _expr.iffalse);
             _block = iftrue;
             condition(ast->right, _expr.iftrue, _expr.iffalse);
         } else {
-            V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-            V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
             const unsigned r = _block->newTemp();
 
@@ -1151,13 +1152,13 @@ bool Codegen::visit(BinaryExpression *ast)
         return false;
     } else if (ast->op == QSOperator::Or) {
         if (_expr.accept(cx)) {
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
             condition(ast->left, _expr.iftrue, iffalse);
             _block = iffalse;
             condition(ast->right, _expr.iftrue, _expr.iffalse);
         } else {
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-            V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
             const unsigned r = _block->newTemp();
             move(_block->TEMP(r), *expression(ast->left));
@@ -1172,7 +1173,7 @@ bool Codegen::visit(BinaryExpression *ast)
         return false;
     }
 
-    V4IR::Expr* left = *expression(ast->left);
+    IR::Expr* left = *expression(ast->left);
 
     switch (ast->op) {
     case QSOperator::Or:
@@ -1182,7 +1183,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Assign: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        V4IR::Expr* right = *expression(ast->right);
+        IR::Expr* right = *expression(ast->right);
         if (!left->isLValue()) {
             throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
@@ -1212,7 +1213,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceXor: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        V4IR::Expr* right = *expression(ast->right);
+        IR::Expr* right = *expression(ast->right);
         if (!left->isLValue()) {
             throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
             return false;
@@ -1245,12 +1246,12 @@ bool Codegen::visit(BinaryExpression *ast)
             left = _block->TEMP(t);
         }
 
-        V4IR::Expr* right = *expression(ast->right);
+        IR::Expr* right = *expression(ast->right);
 
         if (_expr.accept(cx)) {
-            cjump(binop(V4IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
+            cjump(binop(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
         } else {
-            V4IR::Expr *e = binop(V4IR::binaryOperator(ast->op), left, right);
+            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
             if (e->asConst() || e->asString())
                 _expr.code = e;
             else {
@@ -1279,9 +1280,9 @@ bool Codegen::visit(BinaryExpression *ast)
             left = _block->TEMP(t);
         }
 
-        V4IR::Expr* right = *expression(ast->right);
+        IR::Expr* right = *expression(ast->right);
 
-        V4IR::Expr *e = binop(V4IR::binaryOperator(ast->op), left, right);
+        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
         if (e->asConst() || e->asString())
             _expr.code = e;
         else {
@@ -1303,11 +1304,11 @@ bool Codegen::visit(CallExpression *ast)
         return false;
 
     Result base = expression(ast->base);
-    V4IR::ExprList *args = 0, **args_it = &args;
+    IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
         Result arg = expression(it->expression);
-        V4IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<V4IR::ExprList>();
+        IR::Expr *actual = argument(*arg);
+        *args_it = _function->New<IR::ExprList>();
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
@@ -1320,9 +1321,9 @@ bool Codegen::visit(ConditionalExpression *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     const unsigned t = _block->newTemp();
 
@@ -1348,16 +1349,16 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError)
         return false;
 
-    V4IR::Expr* expr = *expression(ast->expression);
+    IR::Expr* expr = *expression(ast->expression);
     // Temporaries cannot be deleted
-    V4IR::Temp *t = expr->asTemp();
+    IR::Temp *t = expr->asTemp();
     if (t && t->index < static_cast<unsigned>(_env->members.size())) {
         // Trying to delete a function argument might throw.
         if (_function->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.code = _block->CONST(V4IR::BoolType, 0);
+        _expr.code = _block->CONST(IR::BoolType, 0);
         return false;
     }
     if (_function->isStrict && expr->asName()) {
@@ -1367,7 +1368,7 @@ bool Codegen::visit(DeleteExpression *ast)
 
     // [[11.4.1]] Return true if it's not a reference
     if (expr->asConst() || expr->asString()) {
-        _expr.code = _block->CONST(V4IR::BoolType, 1);
+        _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
 
@@ -1375,17 +1376,17 @@ bool Codegen::visit(DeleteExpression *ast)
     // perform the call to allow for side effects.
     if (expr->asCall()) {
         _block->EXP(expr);
-        _expr.code = _block->CONST(V4IR::BoolType, 1);
+        _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
     if (expr->asTemp() && expr->asTemp()->index >=  static_cast<unsigned>(_env->members.size())) {
-        _expr.code = _block->CONST(V4IR::BoolType, 1);
+        _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
 
-    V4IR::ExprList *args = _function->New<V4IR::ExprList>();
+    IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(reference(expr));
-    _expr.code = call(_block->NAME(V4IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
+    _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
     return false;
 }
 
@@ -1397,7 +1398,7 @@ bool Codegen::visit(FalseLiteral *)
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iffalse);
     } else {
-        _expr.code = _block->CONST(V4IR::BoolType, 0);
+        _expr.code = _block->CONST(IR::BoolType, 0);
     }
     return false;
 }
@@ -1422,14 +1423,14 @@ bool Codegen::visit(FunctionExpression *ast)
     return false;
 }
 
-V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
+IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
     if (hasError)
         return 0;
 
     uint scope = 0;
     Environment *e = _env;
-    V4IR::Function *f = _function;
+    IR::Function *f = _function;
 
     while (f && e->parent) {
         if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
@@ -1438,7 +1439,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         int index = e->findMember(name);
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
-            V4IR::Temp *t = _block->LOCAL(index, scope);
+            IR::Temp *t = _block->LOCAL(index, scope);
             if (name == QStringLiteral("arguments") || name == QStringLiteral("eval"))
                 t->isArgumentsOrEval = true;
             return t;
@@ -1456,7 +1457,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     }
 
     // This hook allows implementing QML lookup semantics
-    if (V4IR::Expr *fallback = fallbackNameLookup(name, line, col))
+    if (IR::Expr *fallback = fallbackNameLookup(name, line, col))
         return fallback;
 
     if (!e->parent && (!f || !f->insideWithOrCatch) && _env->compilationMode != EvalCode && e->compilationMode != QmlBinding)
@@ -1467,7 +1468,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 
 }
 
-V4IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
+IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
 {
     Q_UNUSED(name)
     Q_UNUSED(line)
@@ -1499,7 +1500,7 @@ bool Codegen::visit(NewExpression *ast)
         return false;
 
     Result base = expression(ast->expression);
-    V4IR::Expr *expr = *base;
+    IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
@@ -1515,18 +1516,18 @@ bool Codegen::visit(NewMemberExpression *ast)
         return false;
 
     Result base = expression(ast->base);
-    V4IR::Expr *expr = *base;
+    IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
     }
 
-    V4IR::ExprList *args = 0, **args_it = &args;
+    IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
         Result arg = expression(it->expression);
-        V4IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<V4IR::ExprList>();
+        IR::Expr *actual = argument(*arg);
+        *args_it = _function->New<IR::ExprList>();
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
@@ -1543,7 +1544,7 @@ bool Codegen::visit(NotExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned r = _block->newTemp();
-    move(_block->TEMP(r), unop(V4IR::OpNot, *expr));
+    move(_block->TEMP(r), unop(IR::OpNot, *expr));
     _expr.code = _block->TEMP(r);
     return false;
 }
@@ -1554,7 +1555,7 @@ bool Codegen::visit(NullExpression *)
         return false;
 
     if (_expr.accept(cx)) _block->JUMP(_expr.iffalse);
-    else _expr.code = _block->CONST(V4IR::NullType, 0);
+    else _expr.code = _block->CONST(IR::NullType, 0);
 
     return false;
 }
@@ -1568,7 +1569,7 @@ bool Codegen::visit(NumericLiteral *ast)
         if (ast->value) _block->JUMP(_expr.iftrue);
         else _block->JUMP(_expr.iffalse);
     } else {
-        _expr.code = _block->CONST(V4IR::NumberType, ast->value);
+        _expr.code = _block->CONST(IR::NumberType, ast->value);
     }
     return false;
 }
@@ -1580,7 +1581,7 @@ struct ObjectPropertyValue {
         , setter(-1)
     {}
 
-    V4IR::Expr *value;
+    IR::Expr *value;
     int getter; // index in _module->functions or -1 if not set
     int setter;
 
@@ -1627,10 +1628,10 @@ bool Codegen::visit(ObjectLiteral *ast)
         }
     }
 
-    V4IR::ExprList *args = 0;
+    IR::ExprList *args = 0;
 
     if (!valueMap.isEmpty()) {
-        V4IR::ExprList *current;
+        IR::ExprList *current;
         for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
             if (QV4::String::toArrayIndex(it.key()) != UINT_MAX) {
                 ++it;
@@ -1638,40 +1639,40 @@ bool Codegen::visit(ObjectLiteral *ast)
             }
 
             if (!args) {
-                args = _function->New<V4IR::ExprList>();
+                args = _function->New<IR::ExprList>();
                 current = args;
             } else {
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
             }
 
             current->expr = _block->NAME(it.key(), 0, 0);
 
             if (it->value) {
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
-                current->expr = _block->CONST(V4IR::BoolType, true);
+                current->expr = _block->CONST(IR::BoolType, true);
 
                 unsigned value = _block->newTemp();
                 move(_block->TEMP(value), it->value);
 
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
                 current->expr = _block->TEMP(value);
             } else {
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
-                current->expr = _block->CONST(V4IR::BoolType, false);
+                current->expr = _block->CONST(IR::BoolType, false);
 
                 unsigned getter = _block->newTemp();
                 unsigned setter = _block->newTemp();
-                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
 
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
                 current->expr = _block->TEMP(getter);
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
                 current->expr = _block->TEMP(setter);
             }
@@ -1681,7 +1682,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     }
 
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->CALL(_block->NAME(V4IR::Name::builtin_define_object_literal,
+    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_object_literal,
          ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), args));
 
     // What's left are array entries
@@ -1690,13 +1691,13 @@ bool Codegen::visit(ObjectLiteral *ast)
         unsigned getter = 0;
         unsigned setter = 0;
         for (QMap<QString, ObjectPropertyValue>::const_iterator it = valueMap.constBegin(); it != valueMap.constEnd(); ++it) {
-            V4IR::ExprList *args = _function->New<V4IR::ExprList>();
-            V4IR::ExprList *current = args;
+            IR::ExprList *args = _function->New<IR::ExprList>();
+            IR::ExprList *current = args;
             current->expr = _block->TEMP(t);
-            current->next = _function->New<V4IR::ExprList>();
+            current->next = _function->New<IR::ExprList>();
             current = current->next;
             current->expr = _block->NAME(it.key(), 0, 0);
-            current->next = _function->New<V4IR::ExprList>();
+            current->next = _function->New<IR::ExprList>();
             current = current->next;
 
             if (it->value) {
@@ -1705,22 +1706,22 @@ bool Codegen::visit(ObjectLiteral *ast)
                 move(_block->TEMP(value), it->value);
                 // __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
                 current->expr = _block->TEMP(value);
-                _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_define_property, 0, 0), args));
+                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_property, 0, 0), args));
             } else {
                 if (!getter) {
                     getter = _block->newTemp();
                     setter = _block->newTemp();
                 }
-                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
 
 
                 // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
                 current->expr = _block->TEMP(getter);
-                current->next = _function->New<V4IR::ExprList>();
+                current->next = _function->New<IR::ExprList>();
                 current = current->next;
                 current->expr = _block->TEMP(setter);
-                _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_define_getter_setter, 0, 0), args));
+                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_getter_setter, 0, 0), args));
             }
         }
     }
@@ -1743,10 +1744,10 @@ bool Codegen::visit(PostDecrementExpression *ast)
         return false;
 
     const unsigned oldValue = _block->newTemp();
-    move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
+    move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr));
 
     const unsigned  newValue = _block->newTemp();
-    move(_block->TEMP(newValue), binop(V4IR::OpSub, _block->TEMP(oldValue), _block->CONST(V4IR::NumberType, 1)));
+    move(_block->TEMP(newValue), binop(IR::OpSub, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1)));
     move(*expr, _block->TEMP(newValue));
 
     if (!_expr.accept(nx))
@@ -1769,10 +1770,10 @@ bool Codegen::visit(PostIncrementExpression *ast)
         return false;
 
     const unsigned oldValue = _block->newTemp();
-    move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
+    move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr));
 
     const unsigned  newValue = _block->newTemp();
-    move(_block->TEMP(newValue), binop(V4IR::OpAdd, _block->TEMP(oldValue), _block->CONST(V4IR::NumberType, 1)));
+    move(_block->TEMP(newValue), binop(IR::OpAdd, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1)));
     move(*expr, _block->TEMP(newValue));
 
     if (!_expr.accept(nx))
@@ -1794,7 +1795,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
         return false;
-    V4IR::Expr *op = binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1));
+    IR::Expr *op = binop(IR::OpSub, *expr, _block->CONST(IR::NumberType, 1));
     if (_expr.accept(nx)) {
         move(*expr, op);
     } else {
@@ -1819,7 +1820,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
         return false;
-    V4IR::Expr *op = binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1));
+    IR::Expr *op = binop(IR::OpAdd, unop(IR::OpUPlus, *expr), _block->CONST(IR::NumberType, 1));
     if (_expr.accept(nx)) {
         move(*expr, op);
     } else {
@@ -1865,7 +1866,7 @@ bool Codegen::visit(TildeExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(V4IR::OpCompl, *expr));
+    move(_block->TEMP(t), unop(IR::OpCompl, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1878,7 +1879,7 @@ bool Codegen::visit(TrueLiteral *)
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iftrue);
     } else {
-        _expr.code = _block->CONST(V4IR::BoolType, 1);
+        _expr.code = _block->CONST(IR::BoolType, 1);
     }
     return false;
 }
@@ -1889,9 +1890,9 @@ bool Codegen::visit(TypeOfExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
-    V4IR::ExprList *args = _function->New<V4IR::ExprList>();
+    IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(reference(*expr));
-    _expr.code = call(_block->NAME(V4IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
+    _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
     return false;
 }
 
@@ -1902,7 +1903,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(V4IR::OpUMinus, *expr));
+    move(_block->TEMP(t), unop(IR::OpUMinus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1914,7 +1915,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(V4IR::OpUPlus, *expr));
+    move(_block->TEMP(t), unop(IR::OpUPlus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1925,7 +1926,7 @@ bool Codegen::visit(VoidExpression *ast)
         return false;
 
     statement(ast->expression);
-    _expr.code = _block->CONST(V4IR::UndefinedType, 0);
+    _expr.code = _block->CONST(IR::UndefinedType, 0);
     return false;
 }
 
@@ -1947,17 +1948,17 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 {
     Loop *loop = 0;
     qSwap(_loop, loop);
-    QStack<V4IR::BasicBlock *> exceptionHandlers;
+    QStack<IR::BasicBlock *> exceptionHandlers;
     qSwap(_exceptionHandlers, exceptionHandlers);
 
     ScopeAndFinally *scopeAndFinally = 0;
 
     enterEnvironment(ast);
-    V4IR::Function *function = _module->newFunction(name, _function);
+    IR::Function *function = _module->newFunction(name, _function);
     int functionIndex = _module->functions.count() - 1;
 
-    V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock(), 0);
-    V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
+    IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock(), 0);
+    IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), 0, IR::Function::DontInsertBlock);
     function->hasDirectEval = _env->hasDirectEval || _env->compilationMode == EvalCode;
     function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->usesThis = _env->usesThis;
@@ -1979,7 +1980,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             const QString &local = it.key();
             function->LOCAL(local);
             (*it).index = t;
-            entryBlock->MOVE(entryBlock->LOCAL(t, 0), entryBlock->CONST(V4IR::UndefinedType, 0));
+            entryBlock->MOVE(entryBlock->LOCAL(t, 0), entryBlock->CONST(IR::UndefinedType, 0));
             ++t;
         }
     } else {
@@ -1993,27 +1994,27 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             }
         }
 
-        V4IR::ExprList *args = 0;
+        IR::ExprList *args = 0;
         for (Environment::MemberMap::const_iterator it = _env->members.constBegin(); it != _env->members.constEnd(); ++it) {
             const QString &local = it.key();
-            V4IR::ExprList *next = function->New<V4IR::ExprList>();
+            IR::ExprList *next = function->New<IR::ExprList>();
             next->expr = entryBlock->NAME(local, 0, 0);
             next->next = args;
             args = next;
         }
         if (args) {
-            V4IR::ExprList *next = function->New<V4IR::ExprList>();
-            next->expr = entryBlock->CONST(V4IR::BoolType, false); // ### Investigate removal of bool deletable
+            IR::ExprList *next = function->New<IR::ExprList>();
+            next->expr = entryBlock->CONST(IR::BoolType, false); // ### Investigate removal of bool deletable
             next->next = args;
             args = next;
 
-            entryBlock->EXP(entryBlock->CALL(entryBlock->NAME(V4IR::Name::builtin_declare_vars, 0, 0), args));
+            entryBlock->EXP(entryBlock->CALL(entryBlock->NAME(IR::Name::builtin_declare_vars, 0, 0), args));
         }
     }
 
     unsigned returnAddress = entryBlock->newTemp();
 
-    entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(V4IR::UndefinedType, 0));
+    entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
     exitBlock->RET(exitBlock->TEMP(returnAddress));
 
     qSwap(_function, function);
@@ -2041,12 +2042,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
     if (_function->usesArgumentsObject) {
         move(identifier(QStringLiteral("arguments"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
-             _block->CALL(_block->NAME(V4IR::Name::builtin_setup_argument_object,
+             _block->CALL(_block->NAME(IR::Name::builtin_setup_argument_object,
                      ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
     if (_function->usesThis && !_function->isStrict) {
         // make sure we convert this to an object
-        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_convert_this_to_object,
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_convert_this_to_object,
                 ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
 
@@ -2198,9 +2199,9 @@ bool Codegen::visit(DoWhileStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *loopbody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *loopcond = _function->newBasicBlock(loopbody, exceptionHandler());
-    V4IR::BasicBlock *loopend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *loopbody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *loopcond = _function->newBasicBlock(loopbody, exceptionHandler());
+    IR::BasicBlock *loopend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     enterLoop(ast, loopbody, loopend, loopcond);
 
@@ -2248,19 +2249,19 @@ bool Codegen::visit(ForEachStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
-    V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
+    IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     enterLoop(ast, foreachin, foreachend, foreachin);
 
     int objectToIterateOn = _block->newTemp();
     move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
-    V4IR::ExprList *args = _function->New<V4IR::ExprList>();
+    IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(objectToIterateOn));
 
     int iterator = _block->newTemp();
-    move(_block->TEMP(iterator), _block->CALL(_block->NAME(V4IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
     _block->JUMP(foreachin);
 
@@ -2272,12 +2273,12 @@ bool Codegen::visit(ForEachStatement *ast)
 
     _block = foreachin;
 
-    args = _function->New<V4IR::ExprList>();
+    args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(iterator));
-    move(_block->TEMP(temp), _block->CALL(_block->NAME(V4IR::Name::builtin_foreach_next_property_name, 0, 0), args));
+    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
     int null = _block->newTemp();
-    move(_block->TEMP(null), _block->CONST(V4IR::NullType, 0));
-    cjump(_block->BINOP(V4IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
+    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
     _block = foreachend;
 
     leaveLoop();
@@ -2289,10 +2290,10 @@ bool Codegen::visit(ForStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
-    V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
-    V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
+    IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
+    IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     statement(ast->initialiser);
     _block->JUMP(forcond);
@@ -2325,9 +2326,9 @@ bool Codegen::visit(IfStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(groupStartBlock(), exceptionHandler()) : 0;
-    V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(groupStartBlock(), exceptionHandler()) : 0;
+    IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     condition(ast->expression, iftrue, ast->ko ? iffalse : endif);
 
@@ -2372,7 +2373,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
-        V4IR::BasicBlock *breakBlock = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+        IR::BasicBlock *breakBlock = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
         enterLoop(ast->statement, 0, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
         _block->JUMP(breakBlock);
@@ -2388,9 +2389,9 @@ bool Codegen::visit(LocalForEachStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
-    V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
+    IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     enterLoop(ast, foreachin, foreachend, foreachin);
 
@@ -2398,9 +2399,9 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     int iterator = _block->newTemp();
     move(_block->TEMP(iterator), *expression(ast->expression));
-    V4IR::ExprList *args = _function->New<V4IR::ExprList>();
+    IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(iterator));
-    move(_block->TEMP(iterator), _block->CALL(_block->NAME(V4IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
     _block->JUMP(foreachin);
 
@@ -2412,12 +2413,12 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     _block = foreachin;
 
-    args = _function->New<V4IR::ExprList>();
+    args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(iterator));
-    move(_block->TEMP(temp), _block->CALL(_block->NAME(V4IR::Name::builtin_foreach_next_property_name, 0, 0), args));
+    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
     int null = _block->newTemp();
-    move(_block->TEMP(null), _block->CONST(V4IR::NullType, 0));
-    cjump(_block->BINOP(V4IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
+    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
     _block = foreachend;
 
     leaveLoop();
@@ -2429,10 +2430,10 @@ bool Codegen::visit(LocalForStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
-    V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
-    V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
+    IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
+    IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     variableDeclarationList(ast->declarations);
     _block->JUMP(forcond);
@@ -2484,15 +2485,15 @@ bool Codegen::visit(SwitchStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *switchend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *switchend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     if (ast->block) {
         Result lhs = expression(ast->expression);
-        V4IR::BasicBlock *switchcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+        IR::BasicBlock *switchcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
         _block->JUMP(switchcond);
-        V4IR::BasicBlock *previousBlock = 0;
+        IR::BasicBlock *previousBlock = 0;
 
-        QHash<Node *, V4IR::BasicBlock *> blockMap;
+        QHash<Node *, IR::BasicBlock *> blockMap;
 
         enterLoop(ast, 0, switchend, 0);
 
@@ -2547,18 +2548,18 @@ bool Codegen::visit(SwitchStatement *ast)
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             Result rhs = expression(clause->expression);
-            V4IR::BasicBlock *iftrue = blockMap[clause];
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-            cjump(binop(V4IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
+            IR::BasicBlock *iftrue = blockMap[clause];
+            IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
 
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             Result rhs = expression(clause->expression);
-            V4IR::BasicBlock *iftrue = blockMap[clause];
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-            cjump(binop(V4IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
+            IR::BasicBlock *iftrue = blockMap[clause];
+            IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
 
@@ -2580,9 +2581,9 @@ bool Codegen::visit(ThrowStatement *ast)
 
     Result expr = expression(ast->expression);
     move(_block->TEMP(_returnAddress), *expr);
-    V4IR::ExprList *throwArgs = _function->New<V4IR::ExprList>();
+    IR::ExprList *throwArgs = _function->New<IR::ExprList>();
     throwArgs->expr = _block->TEMP(_returnAddress);
-    _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
     return false;
 }
 
@@ -2599,23 +2600,23 @@ bool Codegen::visit(TryStatement *ast)
         return false;
     }
 
-    V4IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
+    IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
 
     // We always need a finally body to clean up the exception handler
     // exceptions thrown in finally get catched by the surrounding catch block
-    V4IR::BasicBlock *finallyBody = 0;
-    V4IR::BasicBlock *catchBody = 0;
-    V4IR::BasicBlock *catchExceptionHandler = 0;
-    V4IR::BasicBlock *end = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, V4IR::Function::DontInsertBlock);
+    IR::BasicBlock *finallyBody = 0;
+    IR::BasicBlock *catchBody = 0;
+    IR::BasicBlock *catchExceptionHandler = 0;
+    IR::BasicBlock *end = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, IR::Function::DontInsertBlock);
 
     if (ast->finallyExpression)
-        finallyBody = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, V4IR::Function::DontInsertBlock);
+        finallyBody = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, IR::Function::DontInsertBlock);
 
     if (ast->catchExpression) {
         // exception handler for the catch body
-        catchExceptionHandler = _function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
+        catchExceptionHandler = _function->newBasicBlock(groupStartBlock(), 0, IR::Function::DontInsertBlock);
         pushExceptionHandler(catchExceptionHandler);
-        catchBody =  _function->newBasicBlock(groupStartBlock(), catchExceptionHandler, V4IR::Function::DontInsertBlock);
+        catchBody =  _function->newBasicBlock(groupStartBlock(), catchExceptionHandler, IR::Function::DontInsertBlock);
         popExceptionHandler();
         pushExceptionHandler(catchBody);
     } else {
@@ -2623,7 +2624,7 @@ bool Codegen::visit(TryStatement *ast)
         pushExceptionHandler(finallyBody);
     }
 
-    V4IR::BasicBlock *tryBody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *tryBody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     _block->JUMP(tryBody);
 
     ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression);
@@ -2641,26 +2642,26 @@ bool Codegen::visit(TryStatement *ast)
         _block = catchBody;
 
         ++_function->insideWithOrCatch;
-        V4IR::ExprList *catchArgs = _function->New<V4IR::ExprList>();
+        IR::ExprList *catchArgs = _function->New<IR::ExprList>();
         catchArgs->init(_block->STRING(_function->newString(ast->catchExpression->name.toString())));
-        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_push_catch_scope, 0, 0), catchArgs));
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchArgs));
         {
             ScopeAndFinally scope(_scopeAndFinally, ScopeAndFinally::CatchScope);
             _scopeAndFinally = &scope;
             statement(ast->catchExpression->statement);
             _scopeAndFinally = scope.parent;
         }
-        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
         --_function->insideWithOrCatch;
         _block->JUMP(finallyBody ? finallyBody : end);
         popExceptionHandler();
 
         _function->insertBasicBlock(catchExceptionHandler);
-        catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
+        catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
         if (finallyBody || surroundingExceptionHandler)
             catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
         else
-            catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(V4IR::Name::builtin_rethrow, 0, 0), 0));
+            catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
     }
 
     _scopeAndFinally = tcf.parent;
@@ -2670,14 +2671,14 @@ bool Codegen::visit(TryStatement *ast)
         _block = finallyBody;
 
         int hasException = _block->newTemp();
-        move(_block->TEMP(hasException), _block->CALL(_block->NAME(V4IR::Name::builtin_unwind_exception, /*line*/0, /*column*/0), 0));
+        move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_unwind_exception, /*line*/0, /*column*/0), 0));
 
         if (ast->finallyExpression && ast->finallyExpression->statement)
             statement(ast->finallyExpression->statement);
 
-        V4IR::ExprList *arg = _function->New<V4IR::ExprList>();
+        IR::ExprList *arg = _function->New<IR::ExprList>();
         arg->expr = _block->TEMP(hasException);
-        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_throw, /*line*/0, /*column*/0), arg));
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), arg));
         _block->JUMP(end);
     }
 
@@ -2697,7 +2698,7 @@ void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
         case ScopeAndFinally::WithScope:
             // fall through
         case ScopeAndFinally::CatchScope:
-            _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0)));
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
             _scopeAndFinally = _scopeAndFinally->parent;
             --_function->insideWithOrCatch;
             break;
@@ -2728,9 +2729,9 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
-    V4IR::BasicBlock *whilecond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *whilebody = _function->newBasicBlock(whilecond, exceptionHandler());
-    V4IR::BasicBlock *whileend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *whilecond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *whilebody = _function->newBasicBlock(whilecond, exceptionHandler());
+    IR::BasicBlock *whileend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     enterLoop(ast, whilecond, whileend, whilecond);
 
@@ -2756,24 +2757,24 @@ bool Codegen::visit(WithStatement *ast)
     _function->hasWith = true;
 
     // need an exception handler for with to cleanup the with scope
-    V4IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
+    IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
     if (!exceptionHandler())
-        withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(V4IR::Name::builtin_rethrow, 0, 0), 0));
+        withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
     else
         withExceptionHandler->JUMP(exceptionHandler());
 
     pushExceptionHandler(withExceptionHandler);
 
-    V4IR::BasicBlock *withBlock = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *withBlock = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     _block->JUMP(withBlock);
     _block = withBlock;
     int withObject = _block->newTemp();
     _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
-    V4IR::ExprList *args = _function->New<V4IR::ExprList>();
+    IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(withObject));
-    _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_push_with_scope, 0, 0), args));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
 
     ++_function->insideWithOrCatch;
     {
@@ -2783,10 +2784,10 @@ bool Codegen::visit(WithStatement *ast)
         _scopeAndFinally = scope.parent;
     }
     --_function->insideWithOrCatch;
-    _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
     popExceptionHandler();
 
-    V4IR::BasicBlock *next = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
+    IR::BasicBlock *next = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     _block->JUMP(next);
     _block = next;
 
@@ -2829,14 +2830,14 @@ bool Codegen::visit(UiSourceElement *)
     return false;
 }
 
-bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, const SourceLocation& loc)
+bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr *expr, const SourceLocation& loc)
 {
     if (!_env->isStrict)
         return false;
-    if (V4IR::Name *n = expr->asName()) {
+    if (IR::Name *n = expr->asName()) {
         if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
             return false;
-    } else if (V4IR::Temp *t = expr->asTemp()) {
+    } else if (IR::Temp *t = expr->asTemp()) {
         if (!t->isArgumentsOrEval)
             return false;
     } else {

@@ -62,9 +62,8 @@
 #  include <udis86.h>
 #endif
 
-using namespace QQmlJS;
-using namespace QQmlJS::MASM;
 using namespace QV4;
+using namespace QV4::JIT;
 
 CompilationUnit::~CompilationUnit()
 {
@@ -142,7 +141,7 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
+Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
                      int maxArgCountForBuiltins)
     : _stackLayout(function, maxArgCountForBuiltins)
     , _constTable(this)
@@ -153,14 +152,14 @@ Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::
 {
 }
 
-void Assembler::registerBlock(V4IR::BasicBlock* block, V4IR::BasicBlock *nextBlock)
+void Assembler::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
 {
     _addrs[block] = label();
     catchBlock = block->catchBlock;
     _nextBlock = nextBlock;
 }
 
-void Assembler::jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target)
+void Assembler::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
 {
     Q_UNUSED(current);
 
@@ -168,7 +167,7 @@ void Assembler::jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target)
         _patches[target].append(jump());
 }
 
-void Assembler::addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump)
+void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
 {
     _patches[targetBlock].append(targetJump);
 }
@@ -181,20 +180,20 @@ void Assembler::addPatch(DataLabelPtr patch, Label target)
     _dataLabelPatches.append(p);
 }
 
-void Assembler::addPatch(DataLabelPtr patch, V4IR::BasicBlock *target)
+void Assembler::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
 {
     _labelPatches[target].append(patch);
 }
 
-void Assembler::generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
-                                       V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock)
+void Assembler::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
+                                       IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
 {
     generateCJumpOnCompare(NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
 }
 
 void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left,TrustedImm32 right,
-                                       V4IR::BasicBlock *currentBlock,  V4IR::BasicBlock *trueBlock,
-                                       V4IR::BasicBlock *falseBlock)
+                                       IR::BasicBlock *currentBlock,  IR::BasicBlock *trueBlock,
+                                       IR::BasicBlock *falseBlock)
 {
     if (trueBlock == _nextBlock) {
         Jump target = branch32(invert(cond), left, right);
@@ -207,8 +206,8 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left
 }
 
 void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
-                                       V4IR::BasicBlock *currentBlock,  V4IR::BasicBlock *trueBlock,
-                                       V4IR::BasicBlock *falseBlock)
+                                       IR::BasicBlock *currentBlock,  IR::BasicBlock *trueBlock,
+                                       IR::BasicBlock *falseBlock)
 {
     if (trueBlock == _nextBlock) {
         Jump target = branch32(invert(cond), left, right);
@@ -220,7 +219,7 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left
     }
 }
 
-Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, V4IR::Temp *t)
+Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, IR::Temp *t)
 {
     int32_t offset = 0;
     int scope = t->scope;
@@ -235,17 +234,17 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, V4IR::Temp *t)
         }
     }
     switch (t->kind) {
-    case V4IR::Temp::Formal:
-    case V4IR::Temp::ScopedFormal: {
+    case IR::Temp::Formal:
+    case IR::Temp::ScopedFormal: {
         loadPtr(Address(context, qOffsetOf(ExecutionContext, callData)), baseReg);
         offset = sizeof(CallData) + (t->index - 1) * sizeof(Value);
     } break;
-    case V4IR::Temp::Local:
-    case V4IR::Temp::ScopedLocal: {
+    case IR::Temp::Local:
+    case IR::Temp::ScopedLocal: {
         loadPtr(Address(context, qOffsetOf(CallContext, locals)), baseReg);
         offset = t->index * sizeof(Value);
     } break;
-    case V4IR::Temp::StackSlot: {
+    case IR::Temp::StackSlot: {
         return stackSlotPointer(t);
     } break;
     default:
@@ -270,7 +269,7 @@ void Assembler::loadStringRef(RegisterID reg, const QString &string)
     addPtr(TrustedImmPtr(id * sizeof(QV4::StringValue)), reg);
 }
 
-void Assembler::storeValue(QV4::Primitive value, V4IR::Temp* destination)
+void Assembler::storeValue(QV4::Primitive value, IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);
     storeValue(value, addr);
@@ -329,7 +328,7 @@ void Assembler::leaveStandardStackFrame()
 #define NULL_OP \
     { 0, 0, 0, 0, 0 }
 
-const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::LastAluOp + 1] = {
+const Assembler::BinaryOperationInfo Assembler::binaryOperations[IR::LastAluOp + 1] = {
     NULL_OP, // OpInvalid
     NULL_OP, // OpIfTrue
     NULL_OP, // OpNot
@@ -374,32 +373,32 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::L
 // Try to load the source expression into the destination FP register. This assumes that two
 // general purpose (integer) registers are available: the ScratchRegister and the
 // ReturnValueRegister. It returns a Jump if no conversion can be performed.
-Assembler::Jump Assembler::genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest)
+Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRegisterID dest)
 {
     switch (src->type) {
-    case V4IR::DoubleType:
+    case IR::DoubleType:
         moveDouble(toDoubleRegister(src, dest), dest);
         return Assembler::Jump();
-    case V4IR::SInt32Type:
+    case IR::SInt32Type:
         convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister),
                                   dest);
         return Assembler::Jump();
-    case V4IR::UInt32Type:
+    case IR::UInt32Type:
         convertUInt32ToDouble(toUInt32Register(src, Assembler::ScratchRegister),
                                    dest, Assembler::ReturnValueRegister);
         return Assembler::Jump();
-    case V4IR::BoolType:
+    case IR::BoolType:
         // TODO?
         return jump();
     default:
         break;
     }
 
-    V4IR::Temp *sourceTemp = src->asTemp();
+    IR::Temp *sourceTemp = src->asTemp();
     Q_ASSERT(sourceTemp);
 
     // It's not a number type, so it cannot be in a register.
-    Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister || sourceTemp->type == V4IR::BoolType);
+    Q_ASSERT(sourceTemp->kind != IR::Temp::PhysicalRegister || sourceTemp->type == IR::BoolType);
 
     Assembler::Pointer tagAddr = loadTempAddress(Assembler::ScratchRegister, sourceTemp);
     tagAddr.offset += 4;
@@ -430,17 +429,17 @@ Assembler::Jump Assembler::genTryDoubleConversion(V4IR::Expr *src, Assembler::FP
 
 #ifndef QT_NO_DEBUG
 namespace {
-inline bool isPregOrConst(V4IR::Expr *e)
+inline bool isPregOrConst(IR::Expr *e)
 {
-    if (V4IR::Temp *t = e->asTemp())
-        return t->kind == V4IR::Temp::PhysicalRegister;
+    if (IR::Temp *t = e->asTemp())
+        return t->kind == IR::Temp::PhysicalRegister;
     return e->asConst() != 0;
 }
 } // anonymous namespace
 #endif
 
-Assembler::Jump Assembler::branchDouble(bool invertCondition, V4IR::AluOp op,
-                                                   V4IR::Expr *left, V4IR::Expr *right)
+Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
+                                                   IR::Expr *left, IR::Expr *right)
 {
     Q_ASSERT(isPregOrConst(left));
     Q_ASSERT(isPregOrConst(right));
@@ -448,14 +447,14 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, V4IR::AluOp op,
 
     Assembler::DoubleCondition cond;
     switch (op) {
-    case V4IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
-    case V4IR::OpLt: cond = Assembler::DoubleLessThan; break;
-    case V4IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
-    case V4IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
-    case V4IR::OpEqual:
-    case V4IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
-    case V4IR::OpNotEqual:
-    case V4IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
+    case IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
+    case IR::OpLt: cond = Assembler::DoubleLessThan; break;
+    case IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
+    case IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
+    case IR::OpEqual:
+    case IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
+    case IR::OpNotEqual:
+    case IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
     default:
         Q_UNREACHABLE();
     }

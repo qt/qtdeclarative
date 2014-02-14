@@ -807,7 +807,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->unit = unit;
     this->unitRoot = root;
     this->output = out;
-    this->jsModule.reset(new QQmlJS::V4IR::Module(enginePrivate->v4engine()->debugger));
+    this->jsModule.reset(new IR::Module(enginePrivate->v4engine()->debugger));
     this->jsModule->isQmlModule = true;
 
     // Compile types
@@ -933,7 +933,7 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
     if (!jsModule->functions.isEmpty()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         QV4::Compiler::JSUnitGenerator jsUnitGenerator(jsModule.data());
-        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(enginePrivate, v4->executableAllocator, jsModule.data(), &jsUnitGenerator));
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(enginePrivate, v4->executableAllocator, jsModule.data(), &jsUnitGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/true);
         output->compilationUnit = jsUnit;
@@ -1051,7 +1051,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     // Must do id property first.  This is to ensure that the id given to any
     // id reference created matches the order in which the objects are
     // instantiated
-    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+    for (QQmlScript::Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
         if (prop->name() == id_string) {
             COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
             break;
@@ -1059,12 +1059,12 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     }
 
     // Merge
-    Property *defaultProperty = 0;
-    Property *skipProperty = 0;
+    QQmlScript::Property *defaultProperty = 0;
+    QQmlScript::Property *skipProperty = 0;
     if (obj->defaultProperty) {
         defaultProperty = obj->defaultProperty;
 
-        Property *explicitProperty = 0;
+        QQmlScript::Property *explicitProperty = 0;
 
         QString defaultPropertyName = obj->metatype->defaultPropertyName();
         if (!defaultPropertyName.isEmpty()) {
@@ -1072,7 +1072,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
             QHashedStringRef r(*s);
 
             if (obj->propertiesHashField.test(r.hash())) {
-                for (Property *ep = obj->properties.first(); ep; ep = obj->properties.next(ep)) {
+                for (QQmlScript::Property *ep = obj->properties.first(); ep; ep = obj->properties.next(ep)) {
                     if (ep->name() == r) {
                         explicitProperty = ep;
                         break;
@@ -1089,9 +1089,9 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
             skipProperty = explicitProperty; // We merge the values into defaultProperty
 
             // Find the correct insertion point
-            Value *insertPos = 0;
+            QQmlScript::Value *insertPos = 0;
 
-            for (Value *v = defaultProperty->values.first(); v; v = Property::ValueList::next(v)) {
+            for (QQmlScript::Value *v = defaultProperty->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
                 if (!(v->location.start < explicitProperty->values.first()->location.start))
                     break;
                 insertPos = v;
@@ -1106,7 +1106,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
         cp = output->types.at(obj->type).type->customParser();
 
     // Build all explicit properties specified
-    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+    for (QQmlScript::Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
         if (prop == skipProperty)
             continue;
@@ -1144,7 +1144,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
 
     // Build the default property
     if (defaultProperty)  {
-        Property *prop = defaultProperty;
+        QQmlScript::Property *prop = defaultProperty;
 
         bool canDefer = false;
         if (isCustomParser) {
@@ -1282,7 +1282,7 @@ void QQmlCompiler::genObject(QQmlScript::Object *obj, bool parentToSuper)
 
 void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
 {
-    for (Property *prop = obj->scriptStringProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->scriptStringProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         Q_ASSERT(prop->scriptStringScope != -1);
         const QString &script = prop->values.first()->value.asScript();
         Instruction::StoreScriptString ss;
@@ -1299,7 +1299,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
     }
 
     bool seenDefer = false;
-    for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->valueProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         if (prop->isDeferred) {
             seenDefer = true;
             continue;
@@ -1321,7 +1321,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         dinit.listStackSize = compileState->listDepth.maxDepth();
         output->addInstruction(dinit);
 
-        for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+        for (QQmlScript::Property *prop = obj->valueProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
             if (!prop->isDeferred)
                 continue;
             genValueProperty(prop, obj);
@@ -1333,11 +1333,11 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         output->instruction(deferIdx)->defer.deferCount = output->nextInstructionIndex() - nextInstructionIndex;
     }
 
-    for (Property *prop = obj->signalProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->signalProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
 
         QQmlScript::Value *v = prop->values.first();
 
-        if (v->type == Value::SignalObject) {
+        if (v->type == QQmlScript::Value::SignalObject) {
 
             genObject(v->object);
 
@@ -1346,7 +1346,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
             assign.signal = output->indexForString(prop->name().toString());
             output->addInstruction(assign);
 
-        } else if (v->type == Value::SignalExpression) {
+        } else if (v->type == QQmlScript::Value::SignalExpression) {
 
             Instruction::StoreSignal store;
             store.runtimeFunctionIndex = compileState->jsCompileData[v->signalData.signalScopeObject].runtimeFunctionIndices.at(v->signalData.functionIndex);
@@ -1363,7 +1363,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
 
     }
 
-    for (Property *prop = obj->attachedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->attachedProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         Instruction::FetchAttached fetch;
         fetch.id = prop->index;
         fetch.line = prop->location.start.line;
@@ -1375,7 +1375,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         output->addInstruction(pop);
     }
 
-    for (Property *prop = obj->groupedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->groupedProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         Instruction::FetchObject fetch;
         fetch.property = prop->index;
         fetch.line = prop->location.start.line;
@@ -1399,25 +1399,25 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         output->addInstruction(pop);
     }
 
-    for (Property *prop = obj->valueTypeProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->valueTypeProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         if (!prop->isAlias)
             genValueTypeProperty(obj, prop);
     }
 
-    for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->valueProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         if (prop->isDeferred)
             continue;
         if (prop->isAlias)
             genValueProperty(prop, obj);
     }
 
-    for (Property *prop = obj->valueTypeProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+    for (QQmlScript::Property *prop = obj->valueTypeProperties.first(); prop; prop = QQmlScript::Object::PropertyList::next(prop)) {
         if (prop->isAlias)
             genValueTypeProperty(obj, prop);
     }
 }
 
-void QQmlCompiler::genValueTypeProperty(QQmlScript::Object *obj,QQmlScript::Property *prop)
+void QQmlCompiler::genValueTypeProperty(QQmlScript::Object *obj, QQmlScript::Property *prop)
 {
     Instruction::FetchValueType fetch;
     fetch.property = prop->index;
@@ -1427,7 +1427,7 @@ void QQmlCompiler::genValueTypeProperty(QQmlScript::Object *obj,QQmlScript::Prop
     if (obj->type == -1 || output->types.at(obj->type).component) {
         // We only have to do this if this is a composite type.  If it is a builtin
         // type it can't possibly already have bindings that need to be cleared.
-        for (Property *vprop = prop->value->valueProperties.first(); vprop; vprop = Object::PropertyList::next(vprop)) {
+        for (QQmlScript::Property *vprop = prop->value->valueProperties.first(); vprop; vprop = QQmlScript::Object::PropertyList::next(vprop)) {
             if (!vprop->values.isEmpty()) {
                 Q_ASSERT(vprop->index >= 0 && vprop->index < 32);
                 fetch.bindingSkipList |= (1 << vprop->index);
@@ -1437,7 +1437,7 @@ void QQmlCompiler::genValueTypeProperty(QQmlScript::Object *obj,QQmlScript::Prop
 
     output->addInstruction(fetch);
 
-    for (Property *vprop = prop->value->valueProperties.first(); vprop; vprop = Object::PropertyList::next(vprop)) {
+    for (QQmlScript::Property *vprop = prop->value->valueProperties.first(); vprop; vprop = QQmlScript::Object::PropertyList::next(vprop)) {
         genPropertyAssignment(vprop, prop->value, prop);
     }
 
@@ -1513,7 +1513,7 @@ bool QQmlCompiler::buildComponent(QQmlScript::Object *obj,
     compileState->objectDepth.push();
 
     // Find, check and set the "id" property (if any)
-    Property *idProp = 0;
+    QQmlScript::Property *idProp = 0;
     if (obj->properties.isMany() ||
        (obj->properties.isOne() && obj->properties.first()->name() != id_string))
         COMPILE_EXCEPTION(obj->properties.first(), tr("Component elements may not contain properties other than id"));
@@ -1606,7 +1606,7 @@ bool QQmlCompiler::buildSubObject(QQmlScript::Object *obj, const BindingContext 
     Q_ASSERT(ctxt.isSubContext()); // sub-objects must always be in a binding
                                    // sub-context
 
-    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+    for (QQmlScript::Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
         if (isSignalPropertyName(prop->name())) {
             COMPILE_CHECK(buildSignal(prop, obj, ctxt));
         } else {
@@ -1738,9 +1738,9 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
 
         if (prop->values.first()->object) {
             COMPILE_CHECK(buildObject(prop->values.first()->object, ctxt));
-            prop->values.first()->type = Value::SignalObject;
+            prop->values.first()->type = QQmlScript::Value::SignalObject;
         } else {
-            prop->values.first()->type = Value::SignalExpression;
+            prop->values.first()->type = QQmlScript::Value::SignalExpression;
 
             if (!prop->values.first()->value.isScript())
                 COMPILE_EXCEPTION(prop, tr("Cannot assign a value to a signal (expecting a script to be run)"));
@@ -1923,7 +1923,7 @@ bool QQmlCompiler::buildPropertyInNamespace(QQmlImportNamespace *ns,
     if (!nsProp->value)
         COMPILE_EXCEPTION(nsProp, tr("Invalid use of namespace"));
 
-    for (Property *prop = nsProp->value->properties.first(); prop; prop = nsProp->value->properties.next(prop)) {
+    for (QQmlScript::Property *prop = nsProp->value->properties.first(); prop; prop = nsProp->value->properties.next(prop)) {
 
         if (!isAttachedPropertyName(prop->name()))
             COMPILE_EXCEPTION(prop, tr("Expected type name"));
@@ -1970,9 +1970,9 @@ void QQmlCompiler::genListProperty(QQmlScript::Property *prop,
     fetch.type = listType;
     output->addInstruction(fetch);
 
-    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
 
-        if (v->type == Value::CreatedObject) {
+        if (v->type == QQmlScript::Value::CreatedObject) {
 
             genObject(v->object);
             if (listTypeIsInterface) {
@@ -1984,7 +1984,7 @@ void QQmlCompiler::genListProperty(QQmlScript::Property *prop,
                 output->addInstruction(store);
             }
 
-        } else if (v->type == Value::PropertyBinding) {
+        } else if (v->type == QQmlScript::Value::PropertyBinding) {
 
             genBindingAssignment(v, prop, obj);
 
@@ -2000,13 +2000,13 @@ void QQmlCompiler::genPropertyAssignment(QQmlScript::Property *prop,
                                         QQmlScript::Object *obj,
                                         QQmlScript::Property *valueTypeProperty)
 {
-    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
 
-        Q_ASSERT(v->type == Value::CreatedObject ||
-                 v->type == Value::PropertyBinding ||
-                 v->type == Value::Literal);
+        Q_ASSERT(v->type == QQmlScript::Value::CreatedObject ||
+                 v->type == QQmlScript::Value::PropertyBinding ||
+                 v->type == QQmlScript::Value::Literal);
 
-        if (v->type == Value::CreatedObject) {
+        if (v->type == QQmlScript::Value::CreatedObject) {
 
             genObject(v->object);
 
@@ -2040,11 +2040,11 @@ void QQmlCompiler::genPropertyAssignment(QQmlScript::Property *prop,
                 output->addInstruction(store);
 
             }
-        } else if (v->type == Value::PropertyBinding) {
+        } else if (v->type == QQmlScript::Value::PropertyBinding) {
 
             genBindingAssignment(v, prop, obj, valueTypeProperty);
 
-        } else if (v->type == Value::Literal) {
+        } else if (v->type == QQmlScript::Value::Literal) {
 
             genLiteralAssignment(prop, v);
 
@@ -2052,12 +2052,12 @@ void QQmlCompiler::genPropertyAssignment(QQmlScript::Property *prop,
 
     }
 
-    for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->onValues.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
 
-        Q_ASSERT(v->type == Value::ValueSource ||
-                 v->type == Value::ValueInterceptor);
+        Q_ASSERT(v->type == QQmlScript::Value::ValueSource ||
+                 v->type == QQmlScript::Value::ValueInterceptor);
 
-        if (v->type == Value::ValueSource) {
+        if (v->type == QQmlScript::Value::ValueSource) {
             genObject(v->object, valueTypeProperty?true:false);
 
             Instruction::StoreValueSource store;
@@ -2069,7 +2069,7 @@ void QQmlCompiler::genPropertyAssignment(QQmlScript::Property *prop,
             store.castValue = valueType->propertyValueSourceCast();
             output->addInstruction(store);
 
-        } else if (v->type == Value::ValueInterceptor) {
+        } else if (v->type == QQmlScript::Value::ValueInterceptor) {
             genObject(v->object, valueTypeProperty?true:false);
 
             Instruction::StoreValueInterceptor store;
@@ -2101,7 +2101,7 @@ bool QQmlCompiler::buildIdProperty(QQmlScript::Property *prop,
     if (compileState->ids.value(val))
         COMPILE_EXCEPTION(prop, tr("id is not unique"));
 
-    prop->values.first()->type = Value::Id;
+    prop->values.first()->type = QQmlScript::Value::Id;
 
     obj->id = val;
     addId(val, obj);
@@ -2186,7 +2186,7 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
         if (prop->type >= 0 && valueType) {
             if (!prop->values.isEmpty()) {
                 // Only error if we are assigning values, and not e.g. a property interceptor
-                for (Property *dotProp = prop->value->properties.first(); dotProp; dotProp = prop->value->properties.next(dotProp)) {
+                for (QQmlScript::Property *dotProp = prop->value->properties.first(); dotProp; dotProp = prop->value->properties.next(dotProp)) {
                     if (!dotProp->values.isEmpty()) {
                         if (prop->values.first()->location < prop->value->location) {
                             COMPILE_EXCEPTION(prop->value, tr( "Property has already been assigned a value"));
@@ -2202,7 +2202,7 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
             }
 
             if (prop->isAlias) {
-                for (Property *vtProp = prop->value->properties.first(); vtProp; vtProp = prop->value->properties.next(vtProp)) {
+                for (QQmlScript::Property *vtProp = prop->value->properties.first(); vtProp; vtProp = prop->value->properties.next(vtProp)) {
                     vtProp->isAlias = true;
                 }
             }
@@ -2214,14 +2214,14 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
             // assignment to the value type as a whole. Therefore we need to look
             // for (and build) assignments to the entire value type before looking
             // for any onValue assignments.
-            for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+            for (QQmlScript::Value *v = prop->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
                 if (v->object) {
                     COMPILE_EXCEPTION(v->object, tr("Objects cannot be assigned to value types"));
                 }
                 COMPILE_CHECK(buildPropertyLiteralAssignment(prop, obj, v, ctxt));
             }
 
-            for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
+            for (QQmlScript::Value *v = prop->onValues.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
                 Q_ASSERT(v->object);
                 COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, obj, v, ctxt));
             }
@@ -2262,7 +2262,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
         COMPILE_EXCEPTION(obj, tr("Invalid property use"));
     obj->metatype = enginePrivate->cache(type);
 
-    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+    for (QQmlScript::Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
         QQmlPropertyData *d = property(obj, prop->name());
         if (d == 0)
@@ -2293,7 +2293,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
                     COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, value, &isEnumAssignment));
 
                 if (isEnumAssignment) {
-                    value->type = Value::Literal;
+                    value->type = QQmlScript::Value::Literal;
                 } else {
                     JSBindingReference *reference = pool->New<JSBindingReference>();
                     reference->expression = value->value;
@@ -2302,15 +2302,15 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
                     reference->bindingContext = ctxt;
                     reference->bindingContext.owner++;
                     addBindingReference(reference);
-                    value->type = Value::PropertyBinding;
+                    value->type = QQmlScript::Value::PropertyBinding;
                 }
             } else  {
                 COMPILE_CHECK(testLiteralAssignment(prop, value));
-                value->type = Value::Literal;
+                value->type = QQmlScript::Value::Literal;
             }
         }
 
-        for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
+        for (QQmlScript::Value *v = prop->onValues.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
             Q_ASSERT(v->object);
 
             COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, baseObj, v, ctxt));
@@ -2343,9 +2343,9 @@ bool QQmlCompiler::buildListProperty(QQmlScript::Property *prop,
     bool listTypeIsInterface = QQmlMetaType::isInterface(listType);
 
     bool assignedBinding = false;
-    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
         if (v->object) {
-            v->type = Value::CreatedObject;
+            v->type = QQmlScript::Value::CreatedObject;
             COMPILE_CHECK(buildObject(v->object, ctxt));
 
             // We check object coercian here.  We check interface assignment
@@ -2399,7 +2399,7 @@ bool QQmlCompiler::buildPropertyAssignment(QQmlScript::Property *prop,
     if (prop->values.isMany())
         COMPILE_EXCEPTION(prop->values.first(), tr( "Cannot assign multiple values to a singular property") );
 
-    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->values.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
         if (v->object) {
 
             COMPILE_CHECK(buildPropertyObjectAssignment(prop, obj, v, ctxt));
@@ -2411,7 +2411,7 @@ bool QQmlCompiler::buildPropertyAssignment(QQmlScript::Property *prop,
         }
     }
 
-    for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
+    for (QQmlScript::Value *v = prop->onValues.first(); v; v = QQmlScript::Property::ValueList::next(v)) {
         Q_ASSERT(v->object);
         COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, obj, v, ctxt));
     }
@@ -2436,14 +2436,14 @@ bool QQmlCompiler::buildPropertyObjectAssignment(QQmlScript::Property *prop,
         // Assigning an object to an interface ptr property
         COMPILE_CHECK(buildObject(v->object, ctxt));
 
-        v->type = Value::CreatedObject;
+        v->type = QQmlScript::Value::CreatedObject;
 
     } else if (prop->type == QMetaType::QVariant) {
 
         // Assigning an object to a QVariant
         COMPILE_CHECK(buildObject(v->object, ctxt));
 
-        v->type = Value::CreatedObject;
+        v->type = QQmlScript::Value::CreatedObject;
     } else {
         // Normally buildObject() will set this up, but we need the static
         // meta object earlier to test for assignability.  It doesn't matter
@@ -2472,15 +2472,15 @@ bool QQmlCompiler::buildPropertyObjectAssignment(QQmlScript::Property *prop,
             // Simple assignment
             COMPILE_CHECK(buildObject(v->object, ctxt));
 
-            v->type = Value::CreatedObject;
+            v->type = QQmlScript::Value::CreatedObject;
         } else if (propertyMetaObject && propertyMetaObject->metaObject() == &QQmlComponent::staticMetaObject) {
             // Automatic "Component" insertion
             QQmlScript::Object *root = v->object;
-            QQmlScript::Object *component = pool->New<Object>();
+            QQmlScript::Object *component = pool->New<QQmlScript::Object>();
             component->type = componentTypeRef();
             component->metatype = enginePrivate->cache(&QQmlComponent::staticMetaObject);
             component->location = root->location;
-            QQmlScript::Value *componentValue = pool->New<Value>();
+            QQmlScript::Value *componentValue = pool->New<QQmlScript::Value>();
             componentValue->object = root;
             component->getDefaultProperty()->addValue(componentValue);
             v->object = component;
@@ -2536,7 +2536,7 @@ bool QQmlCompiler::buildPropertyOnAssignment(QQmlScript::Property *prop,
 
         if (isPropertyInterceptor && baseObj->synthdata.isEmpty())
             buildDynamicMeta(baseObj, ForceCreation);
-        v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
+        v->type = isPropertyValue ? QQmlScript::Value::ValueSource : QQmlScript::Value::ValueInterceptor;
     } else {
         COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(elementName(v->object)).arg(prop->name().toString()));
     }
@@ -2559,7 +2559,7 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
             bool isEnumAssignment = false;
             COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, v, &isEnumAssignment));
             if (isEnumAssignment) {
-                v->type = Value::Literal;
+                v->type = QQmlScript::Value::Literal;
                 return true;
             }
         }
@@ -2572,7 +2572,7 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
 
         COMPILE_CHECK(testLiteralAssignment(prop, v));
 
-        v->type = Value::Literal;
+        v->type = QQmlScript::Value::Literal;
     }
 
     return true;
@@ -2618,7 +2618,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         bool ok;
         int enumval = evaluateEnum(typeName.toString(), enumValue.toUtf8(), &ok);
         if (ok) {
-            v->type = Value::Literal;
+            v->type = QQmlScript::Value::Literal;
             v->value = QQmlScript::Variant((double)enumval);
             *isAssignment = true;
         }
@@ -2660,7 +2660,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     if (!ok)
         return true;
 
-    v->type = Value::Literal;
+    v->type = QQmlScript::Value::Literal;
     v->value = QQmlScript::Variant((double)value);
     *isAssignment = true;
 
@@ -2671,7 +2671,7 @@ QQmlBinding::Identifier QQmlCompiler::bindingIdentifier(const Variant &value, co
 {
     JSBindingReference *reference = pool->New<JSBindingReference>();
     reference->expression = value;
-    reference->property = pool->New<Property>();
+    reference->property = pool->New<QQmlScript::Property>();
     reference->property->setName(name);
     reference->value = 0;
     reference->bindingContext = QQmlCompilerTypes::BindingContext(customParser->object);
@@ -2712,7 +2712,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
     QHashField methodNames;
 
     // Check properties
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
         const QQmlScript::Object::DynamicProperty &prop = *p;
 
         if (prop.isDefaultProperty) {
@@ -2722,7 +2722,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
         }
 
         if (propNames.testAndSet(prop.name.hash())) {
-            for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p;
+            for (QQmlScript::Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p;
                  p2 = obj->dynamicProperties.next(p2)) {
                 if (p2->name == prop.name) {
                     COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
@@ -2745,11 +2745,11 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
         }
     }
 
-    for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
+    for (QQmlScript::Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
         const QQmlScript::Object::DynamicSignal &currSig = *s;
 
         if (methodNames.testAndSet(currSig.name.hash())) {
-            for (Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2 != s;
+            for (QQmlScript::Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2 != s;
                  s2 = obj->dynamicSignals.next(s2)) {
                 if (s2->name == currSig.name)
                     COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name"));
@@ -2762,16 +2762,16 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
             COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
     }
 
-    for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+    for (QQmlScript::Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
         const QQmlScript::Object::DynamicSlot &currSlot = *s;
 
         if (methodNames.testAndSet(currSlot.name.hash())) {
-            for (Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2;
+            for (QQmlScript::Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2;
                  s2 = obj->dynamicSignals.next(s2)) {
                 if (s2->name == currSlot.name)
                     COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
             }
-            for (Object::DynamicSlot *s2 = obj->dynamicSlots.first(); s2 != s;
+            for (QQmlScript::Object::DynamicSlot *s2 = obj->dynamicSlots.first(); s2 != s;
                  s2 = obj->dynamicSlots.next(s2)) {
                 if (s2->name == currSlot.name)
                     COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
@@ -2789,13 +2789,13 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 
 bool QQmlCompiler::mergeDynamicMetaProperties(QQmlScript::Object *obj)
 {
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
          p = obj->dynamicProperties.next(p)) {
 
-        if (!p->defaultValue || p->type == Object::DynamicProperty::Alias)
+        if (!p->defaultValue || p->type == QQmlScript::Object::DynamicProperty::Alias)
             continue;
 
-        Property *property = 0;
+        QQmlScript::Property *property = 0;
         if (p->isDefaultProperty) {
             property = obj->getDefaultProperty();
         } else {
@@ -2849,29 +2849,29 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     Q_ASSERT(obj->synthCache == 0);
 
     struct TypeData {
-        Object::DynamicProperty::Type dtype;
+        QQmlScript::Object::DynamicProperty::Type dtype;
         int metaType;
     } builtinTypes[] = {
-        { Object::DynamicProperty::Var, qMetaTypeId<QJSValue>() },
-        { Object::DynamicProperty::Variant, QMetaType::QVariant },
-        { Object::DynamicProperty::Int, QMetaType::Int },
-        { Object::DynamicProperty::Bool, QMetaType::Bool },
-        { Object::DynamicProperty::Real, QMetaType::Double },
-        { Object::DynamicProperty::String, QMetaType::QString },
-        { Object::DynamicProperty::Url, QMetaType::QUrl },
-        { Object::DynamicProperty::Color, QMetaType::QColor },
-        { Object::DynamicProperty::Font, QMetaType::QFont },
-        { Object::DynamicProperty::Time, QMetaType::QTime },
-        { Object::DynamicProperty::Date, QMetaType::QDate },
-        { Object::DynamicProperty::DateTime, QMetaType::QDateTime },
-        { Object::DynamicProperty::Rect, QMetaType::QRectF },
-        { Object::DynamicProperty::Point, QMetaType::QPointF },
-        { Object::DynamicProperty::Size, QMetaType::QSizeF },
-        { Object::DynamicProperty::Vector2D, QMetaType::QVector2D },
-        { Object::DynamicProperty::Vector3D, QMetaType::QVector3D },
-        { Object::DynamicProperty::Vector4D, QMetaType::QVector4D },
-        { Object::DynamicProperty::Matrix4x4, QMetaType::QMatrix4x4 },
-        { Object::DynamicProperty::Quaternion, QMetaType::QQuaternion }
+        { QQmlScript::Object::DynamicProperty::Var, qMetaTypeId<QJSValue>() },
+        { QQmlScript::Object::DynamicProperty::Variant, QMetaType::QVariant },
+        { QQmlScript::Object::DynamicProperty::Int, QMetaType::Int },
+        { QQmlScript::Object::DynamicProperty::Bool, QMetaType::Bool },
+        { QQmlScript::Object::DynamicProperty::Real, QMetaType::Double },
+        { QQmlScript::Object::DynamicProperty::String, QMetaType::QString },
+        { QQmlScript::Object::DynamicProperty::Url, QMetaType::QUrl },
+        { QQmlScript::Object::DynamicProperty::Color, QMetaType::QColor },
+        { QQmlScript::Object::DynamicProperty::Font, QMetaType::QFont },
+        { QQmlScript::Object::DynamicProperty::Time, QMetaType::QTime },
+        { QQmlScript::Object::DynamicProperty::Date, QMetaType::QDate },
+        { QQmlScript::Object::DynamicProperty::DateTime, QMetaType::QDateTime },
+        { QQmlScript::Object::DynamicProperty::Rect, QMetaType::QRectF },
+        { QQmlScript::Object::DynamicProperty::Point, QMetaType::QPointF },
+        { QQmlScript::Object::DynamicProperty::Size, QMetaType::QSizeF },
+        { QQmlScript::Object::DynamicProperty::Vector2D, QMetaType::QVector2D },
+        { QQmlScript::Object::DynamicProperty::Vector3D, QMetaType::QVector3D },
+        { QQmlScript::Object::DynamicProperty::Vector4D, QMetaType::QVector4D },
+        { QQmlScript::Object::DynamicProperty::Matrix4x4, QMetaType::QMatrix4x4 },
+        { QQmlScript::Object::DynamicProperty::Quaternion, QMetaType::QQuaternion }
     };
     static const int builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
 
@@ -2906,12 +2906,12 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     int aliasCount = 0;
     int varPropCount = 0;
 
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
          p = obj->dynamicProperties.next(p)) {
 
-        if (p->type == Object::DynamicProperty::Alias)
+        if (p->type == QQmlScript::Object::DynamicProperty::Alias)
             aliasCount++;
-        else if (p->type == Object::DynamicProperty::Var)
+        else if (p->type == QQmlScript::Object::DynamicProperty::Var)
             varPropCount++;
 
         if (p->name.isLatin1()) {
@@ -2925,14 +2925,14 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
     }
 
-    for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
+    for (QQmlScript::Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
         if (s->name.isLatin1()) {
             s->nameIndex = cStringNameCount;
             cStringNameCount += s->name.length();
         }
     }
 
-    for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+    for (QQmlScript::Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
         if (s->name.isLatin1()) {
             s->nameIndex = cStringNameCount;
             cStringNameCount += s->name.length();
@@ -2944,7 +2944,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         cache->_dynamicStringData.resize(cStringNameCount);
         cStringData = cache->_dynamicStringData.data();
 
-        for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+        for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
              p = obj->dynamicProperties.next(p)) {
 
             if (p->nameIndex == -1) continue;
@@ -2956,7 +2956,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             *myData++ = 'g'; *myData++ = 'e'; *myData++ = 'd';
         }
 
-        for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+        for (QQmlScript::Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
 
             if (s->nameIndex == -1) continue;
 
@@ -2965,7 +2965,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 *myData++ = s->name.at(ii).unicode();
         }
 
-        for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s;
+        for (QQmlScript::Object::DynamicSignal *s = obj->dynamicSignals.first(); s;
              s = obj->dynamicSignals.next(s)) {
 
             if (s->nameIndex == -1) continue;
@@ -3017,13 +3017,13 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         if (ii == NSS_Var && varPropCount == 0) continue;
         else if (ii == NSS_Alias && aliasCount == 0) continue;
 
-        for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+        for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
              p = obj->dynamicProperties.next(p)) {
 
-            if ((ii == NSS_Normal && (p->type == Object::DynamicProperty::Alias ||
-                                      p->type == Object::DynamicProperty::Var)) ||
-                ((ii == NSS_Var) && (p->type != Object::DynamicProperty::Var)) ||
-                ((ii == NSS_Alias) && (p->type != Object::DynamicProperty::Alias)))
+            if ((ii == NSS_Normal && (p->type == QQmlScript::Object::DynamicProperty::Alias ||
+                                      p->type == QQmlScript::Object::DynamicProperty::Var)) ||
+                ((ii == NSS_Var) && (p->type != QQmlScript::Object::DynamicProperty::Var)) ||
+                ((ii == NSS_Alias) && (p->type != QQmlScript::Object::DynamicProperty::Alias)))
                 continue;
 
             quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
@@ -3043,7 +3043,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     }
 
     // Dynamic signals
-    for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
+    for (QQmlScript::Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
         int paramCount = s->parameterNames.count();
 
         QList<QByteArray> names;
@@ -3059,7 +3059,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     names.append(s->parameterNames.at(i).toString().toUtf8());
                 } else {
                     // lazily resolved type
-                    Q_ASSERT(s->parameterTypes.at(i) == Object::DynamicProperty::Custom);
+                    Q_ASSERT(s->parameterTypes.at(i) == QQmlScript::Object::DynamicProperty::Custom);
                     QQmlType *qmltype = 0;
                     if (!unit->imports().resolveType(s->parameterTypeNames.at(i).toString(), &qmltype, 0, 0, 0))
                         COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(s->parameterTypeNames.at(i).toString()));
@@ -3110,7 +3110,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
 
     // Dynamic slots
-    for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+    for (QQmlScript::Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
         int paramCount = s->parameterNames.count();
 
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
@@ -3137,11 +3137,11 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
     // Dynamic properties (except var and aliases)
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
          p = obj->dynamicProperties.next(p)) {
 
-        if (p->type == Object::DynamicProperty::Alias ||
-            p->type == Object::DynamicProperty::Var)
+        if (p->type == QQmlScript::Object::DynamicProperty::Alias ||
+            p->type == QQmlScript::Object::DynamicProperty::Var)
             continue;
 
         int propertyType = 0;
@@ -3152,11 +3152,11 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             propertyType = builtinTypes[p->type].metaType;
             vmePropertyType = propertyType;
 
-            if (p->type == Object::DynamicProperty::Variant)
+            if (p->type == QQmlScript::Object::DynamicProperty::Variant)
                 propertyFlags |= QQmlPropertyData::IsQVariant;
         } else {
-            Q_ASSERT(p->type == Object::DynamicProperty::CustomList ||
-                     p->type == Object::DynamicProperty::Custom);
+            Q_ASSERT(p->type == QQmlScript::Object::DynamicProperty::CustomList ||
+                     p->type == QQmlScript::Object::DynamicProperty::Custom);
 
             QQmlType *qmltype = 0;
             if (!unit->imports().resolveType(p->customType.toString(), &qmltype, 0, 0, 0))
@@ -3170,7 +3170,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
                 QQmlCompiledData *data = tdata->compiledData();
 
-                if (p->type == Object::DynamicProperty::Custom) {
+                if (p->type == QQmlScript::Object::DynamicProperty::Custom) {
                     propertyType = data->metaTypeId;
                     vmePropertyType = QMetaType::QObjectStar;
                 } else {
@@ -3180,7 +3180,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
                 tdata->release();
             } else {
-                if (p->type == Object::DynamicProperty::Custom) {
+                if (p->type == QQmlScript::Object::DynamicProperty::Custom) {
                     propertyType = qmltype->typeId();
                     vmePropertyType = QMetaType::QObjectStar;
                 } else {
@@ -3189,13 +3189,13 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 }
             }
 
-            if (p->type == Object::DynamicProperty::Custom)
+            if (p->type == QQmlScript::Object::DynamicProperty::Custom)
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;
             else
                 propertyFlags |= QQmlPropertyData::IsQList;
         }
 
-        if (!p->isReadOnly && p->type != Object::DynamicProperty::CustomList)
+        if (!p->isReadOnly && p->type != QQmlScript::Object::DynamicProperty::CustomList)
             propertyFlags |= QQmlPropertyData::IsWritable;
 
         if (p->nameIndex != -1) {
@@ -3219,10 +3219,10 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     }
 
     // Now do var properties
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p && varPropCount;
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p && varPropCount;
          p = obj->dynamicProperties.next(p)) {
 
-        if (p->type != Object::DynamicProperty::Var)
+        if (p->type != QQmlScript::Object::DynamicProperty::Var)
             continue;
 
         quint32 propertyFlags = QQmlPropertyData::IsVarProperty;
@@ -3254,7 +3254,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     ((QQmlVMEMetaData *)dynamicData.data())->aliasCount = aliasCount;
 
     // Dynamic slot data - comes after the property data
-    for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+    for (QQmlScript::Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
         VMD::MethodData methodData = { /*runtimeFunctionIndex*/ 0, // To be filled in later
                                        s->parameterNames.count(),
                                        s->location.start.line };
@@ -3296,10 +3296,10 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
     int effectivePropertyIndex = cache->propertyIndexCacheStart + cache->propertyIndexCache.count();
     int effectiveAliasIndex = 0;
 
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+    for (QQmlScript::Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
          p = obj->dynamicProperties.next(p)) {
 
-        if (p->type != Object::DynamicProperty::Alias)
+        if (p->type != QQmlScript::Object::DynamicProperty::Alias)
             continue;
 
         if (!p->defaultValue)
@@ -3465,7 +3465,7 @@ bool QQmlCompiler::buildBinding(QQmlScript::Value *value,
     reference->value = value;
     reference->bindingContext = ctxt;
     addBindingReference(reference);
-    value->type = Value::PropertyBinding;
+    value->type = QQmlScript::Value::PropertyBinding;
 
     return true;
 }
@@ -3503,7 +3503,7 @@ bool QQmlCompiler::buildLiteralBinding(QQmlScript::Value *v,
                         reference->text = text;
                         reference->n = n;
                         v->bindingReference = reference;
-                        v->type = Value::PropertyBinding;
+                        v->type = QQmlScript::Value::PropertyBinding;
                         return true;
                     }
 
@@ -3532,7 +3532,7 @@ bool QQmlCompiler::buildLiteralBinding(QQmlScript::Value *v,
                         reference->comment = comment;
                         reference->n = n;
                         v->bindingReference = reference;
-                        v->type = Value::PropertyBinding;
+                        v->type = QQmlScript::Value::PropertyBinding;
                         return true;
                     }
 
@@ -3614,7 +3614,7 @@ int QQmlCompiler::genContextCache()
 
     QVector<QQmlContextData::ObjectIdMapping> cache(compileState->ids.count());
     int i = 0;
-    for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o), ++i)
+    for (QQmlScript::Object *o = compileState->ids.first(); o; o = compileState->ids.next(o), ++i)
         cache[i] = QQmlContextData::ObjectIdMapping(o->id, o->idIndex);
 
     output->contextCaches.append(cache);
@@ -3635,7 +3635,7 @@ bool QQmlCompiler::completeComponentBuild()
     if (componentStats)
         componentStats->componentStat.ids = compileState->ids.count();
 
-    for (Object *aliasObject = compileState->aliasingObjects.first(); aliasObject;
+    for (QQmlScript::Object *aliasObject = compileState->aliasingObjects.first(); aliasObject;
          aliasObject = compileState->aliasingObjects.next(aliasObject))
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
@@ -3677,7 +3677,7 @@ bool QQmlCompiler::completeComponentBuild()
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {
             idMapping.reserve(compileState->ids.count());
-            for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) {
+            for (QQmlScript::Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) {
                 JSCodeGen::IdMapping m;
                 m.name = o->id;
                 m.idIndex = o->idIndex;

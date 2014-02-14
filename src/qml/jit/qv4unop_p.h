@@ -48,29 +48,25 @@ QT_BEGIN_NAMESPACE
 
 #if ENABLE(ASSEMBLER)
 
-namespace QQmlJS {
-namespace MASM {
-class Assembler;
-}
-}
-
 namespace QV4 {
 namespace JIT {
 
+class Assembler;
+
 struct Unop {
-    Unop(QQmlJS::MASM::Assembler *assembler, QQmlJS::V4IR::AluOp operation)
+    Unop(Assembler *assembler, IR::AluOp operation)
         : as(assembler)
         , op(operation)
     {}
 
-    void generate(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target);
+    void generate(IR::Temp *source, IR::Temp *target);
 
-    void generateUMinus(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target);
-    void generateNot(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target);
-    void generateCompl(QQmlJS::V4IR::Temp *source, QQmlJS::V4IR::Temp *target);
+    void generateUMinus(IR::Temp *source, IR::Temp *target);
+    void generateNot(IR::Temp *source, IR::Temp *target);
+    void generateCompl(IR::Temp *source, IR::Temp *target);
 
-    QQmlJS::MASM::Assembler *as;
-    QQmlJS::V4IR::AluOp op;
+    Assembler *as;
+    IR::AluOp op;
 };
 
 }

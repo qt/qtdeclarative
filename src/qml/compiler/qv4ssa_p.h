@@ -48,8 +48,8 @@ QT_BEGIN_NAMESPACE
 class QTextStream;
 class QQmlEnginePrivate;
 
-namespace QQmlJS {
-namespace V4IR {
+namespace QV4 {
+namespace IR {
 
 class Q_AUTOTEST_EXPORT LifeTimeInterval {
 public:
@@ -88,7 +88,7 @@ public:
 
     void setTemp(const Temp &temp) { this->_temp = temp; }
     Temp temp() const { return _temp; }
-    bool isFP() const { return _temp.type == V4IR::DoubleType; }
+    bool isFP() const { return _temp.type == IR::DoubleType; }
 
     void setFrom(Stmt *from);
     void addRange(int from, int to);
@@ -155,7 +155,7 @@ public:
 
     QVector<LifeTimeInterval> lifeRanges() const;
 
-    QSet<V4IR::Jump *> calculateOptionalJumps();
+    QSet<IR::Jump *> calculateOptionalJumps();
 
     static void showMeTheCode(Function *function);
 
@@ -188,7 +188,7 @@ class MoveMapping
 public:
     void add(Expr *from, Temp *to);
     void order();
-    QList<V4IR::Move *> insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
+    QList<IR::Move *> insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
 
     void dump() const;
 
@@ -198,12 +198,12 @@ private:
                     QList<Move> &swaps) const;
 };
 
-} // V4IR namespace
-} // QQmlJS namespace
+} // IR namespace
+} // QV4 namespace
 
 
-Q_DECLARE_TYPEINFO(QQmlJS::V4IR::LifeTimeInterval, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QQmlJS::V4IR::LifeTimeInterval::Range, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::IR::LifeTimeInterval, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::IR::LifeTimeInterval::Range, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

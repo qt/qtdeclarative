@@ -174,12 +174,12 @@ int main(int argc, char *argv[])
     switch (mode) {
     case use_masm:
     case use_moth: {
-        QQmlJS::EvalISelFactory* iSelFactory = 0;
+        QV4::EvalISelFactory* iSelFactory = 0;
         if (mode == use_moth) {
-            iSelFactory = new QQmlJS::Moth::ISelFactory;
+            iSelFactory = new QV4::Moth::ISelFactory;
 #ifdef V4_ENABLE_JIT
         } else {
-            iSelFactory = new QQmlJS::MASM::ISelFactory;
+            iSelFactory = new QV4::JIT::ISelFactory;
 #endif // V4_ENABLE_JIT
         }
 

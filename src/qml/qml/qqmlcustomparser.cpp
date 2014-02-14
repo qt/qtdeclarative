@@ -101,7 +101,7 @@ QQmlCustomParserNodePrivate::fromObject(QQmlScript::Object *root)
         rootNode.d->name = root->typeReference->name;
     rootNode.d->location = root->location.start;
 
-    for (Property *p = root->properties.first(); p; p = root->properties.next(p)) {
+    for (QQmlScript::Property *p = root->properties.first(); p; p = root->properties.next(p)) {
         rootNode.d->properties << fromProperty(p);
     }
 
@@ -347,7 +347,7 @@ QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledD
     return compiler->bindingIdentifier(binding, this);
 }
 
-AST::Node *QQmlCustomParser::astForBinding(int scriptIndex) const
+QQmlJS::AST::Node *QQmlCustomParser::astForBinding(int scriptIndex) const
 {
     return compiler->astForBinding(scriptIndex);
 }

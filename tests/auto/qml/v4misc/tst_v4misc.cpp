@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 extern Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed; // from qhash.cpp
 QT_END_NAMESPACE
 
-using namespace QT_PREPEND_NAMESPACE(QQmlJS::V4IR);
+using namespace QT_PREPEND_NAMESPACE(QV4::IR);
 
 void tst_v4misc::initTestCase()
 {

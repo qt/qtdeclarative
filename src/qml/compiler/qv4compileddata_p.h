@@ -50,13 +50,10 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace V4IR {
+namespace QV4 {
+namespace IR {
 struct Function;
 }
-}
-
-namespace QV4 {
 
 struct Function;
 struct ExecutionContext;

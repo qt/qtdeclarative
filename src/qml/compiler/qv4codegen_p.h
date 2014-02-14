@@ -81,20 +81,20 @@ public:
     void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
-                             V4IR::Module *module,
+                             QV4::IR::Module *module,
                              CompilationMode mode = GlobalCode,
                              const QStringList &inheritedLocals = QStringList());
     void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
-                             V4IR::Module *module);
+                             QV4::IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };
     struct Result {
-        V4IR::Expr *code;
-        V4IR::BasicBlock *iftrue;
-        V4IR::BasicBlock *iffalse;
+        QV4::IR::Expr *code;
+        QV4::IR::BasicBlock *iftrue;
+        QV4::IR::BasicBlock *iffalse;
         Format format;
         Format requested;
 
@@ -105,15 +105,15 @@ protected:
             , format(ex)
             , requested(requested) {}
 
-        explicit Result(V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+        explicit Result(QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse)
             : code(0)
             , iftrue(iftrue)
             , iffalse(iffalse)
             , format(ex)
             , requested(cx) {}
 
-        inline V4IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
-        inline V4IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
+        inline QV4::IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
+        inline QV4::IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
 
         bool accept(Format f)
         {
@@ -254,35 +254,35 @@ protected:
     struct Loop {
         AST::LabelledStatement *labelledStatement;
         AST::Statement *node;
-        V4IR::BasicBlock *groupStartBlock;
-        V4IR::BasicBlock *breakBlock;
-        V4IR::BasicBlock *continueBlock;
+        QV4::IR::BasicBlock *groupStartBlock;
+        QV4::IR::BasicBlock *breakBlock;
+        QV4::IR::BasicBlock *continueBlock;
         Loop *parent;
         ScopeAndFinally *scopeAndFinally;
 
-        Loop(AST::Statement *node, V4IR::BasicBlock *groupStartBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock, Loop *parent)
+        Loop(AST::Statement *node, QV4::IR::BasicBlock *groupStartBlock, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock, Loop *parent)
             : labelledStatement(0), node(node), groupStartBlock(groupStartBlock), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
     };
 
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
-    void enterLoop(AST::Statement *node, V4IR::BasicBlock *startBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock);
+    void enterLoop(AST::Statement *node, QV4::IR::BasicBlock *startBlock, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock);
     void leaveLoop();
-    V4IR::BasicBlock *groupStartBlock() const
+    QV4::IR::BasicBlock *groupStartBlock() const
     {
         for (Loop *it = _loop; it; it = it->parent)
             if (it->groupStartBlock)
                 return it->groupStartBlock;
         return 0;
     }
-    V4IR::BasicBlock *exceptionHandler() const
+    QV4::IR::BasicBlock *exceptionHandler() const
     {
         if (_exceptionHandlers.isEmpty())
             return 0;
         return _exceptionHandlers.top();
     }
-    void pushExceptionHandler(V4IR::BasicBlock *handler)
+    void pushExceptionHandler(QV4::IR::BasicBlock *handler)
     {
         handler->isExceptionHandler = true;
         _exceptionHandlers.push(handler);
@@ -293,15 +293,15 @@ protected:
         _exceptionHandlers.pop();
     }
 
-    V4IR::Expr *member(V4IR::Expr *base, const QString *name);
-    V4IR::Expr *subscript(V4IR::Expr *base, V4IR::Expr *index);
-    V4IR::Expr *argument(V4IR::Expr *expr);
-    V4IR::Expr *reference(V4IR::Expr *expr);
-    V4IR::Expr *unop(V4IR::AluOp op, V4IR::Expr *expr);
-    V4IR::Expr *binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
-    V4IR::Expr *call(V4IR::Expr *base, V4IR::ExprList *args);
-    void move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op = V4IR::OpInvalid);
-    void cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    QV4::IR::Expr *member(QV4::IR::Expr *base, const QString *name);
+    QV4::IR::Expr *subscript(QV4::IR::Expr *base, QV4::IR::Expr *index);
+    QV4::IR::Expr *argument(QV4::IR::Expr *expr);
+    QV4::IR::Expr *reference(QV4::IR::Expr *expr);
+    QV4::IR::Expr *unop(QV4::IR::AluOp op, QV4::IR::Expr *expr);
+    QV4::IR::Expr *binop(QV4::IR::AluOp op, QV4::IR::Expr *left, QV4::IR::Expr *right);
+    QV4::IR::Expr *call(QV4::IR::Expr *base, QV4::IR::ExprList *args);
+    void move(QV4::IR::Expr *target, QV4::IR::Expr *source, QV4::IR::AluOp op = QV4::IR::OpInvalid);
+    void cjump(QV4::IR::Expr *cond, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
 
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
@@ -313,7 +313,7 @@ protected:
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
-    void condition(AST::ExpressionNode *ast, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    void condition(AST::ExpressionNode *ast, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
     Result expression(AST::ExpressionNode *ast);
     QString propertyName(AST::PropertyName *ast);
     Result sourceElement(AST::SourceElement *ast);
@@ -327,9 +327,9 @@ protected:
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
-    V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+    QV4::IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
     // Hook provided to implement QML lookup semantics
-    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
     virtual void beginFunctionBodyHook() {}
 
     // nodes
@@ -436,7 +436,7 @@ protected:
     virtual bool visit(AST::UiScriptBinding *ast);
     virtual bool visit(AST::UiSourceElement *ast);
 
-    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
+    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(QV4::IR::Expr* expr, const AST::SourceLocation &loc);
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
@@ -447,10 +447,10 @@ protected:
     Result _expr;
     QString _property;
     UiMember _uiMember;
-    V4IR::Module *_module;
-    V4IR::Function *_function;
-    V4IR::BasicBlock *_block;
-    V4IR::BasicBlock *_exitBlock;
+    QV4::IR::Module *_module;
+    QV4::IR::Function *_function;
+    QV4::IR::BasicBlock *_block;
+    QV4::IR::BasicBlock *_exitBlock;
     unsigned _returnAddress;
     Environment *_env;
     Loop *_loop;
@@ -458,7 +458,7 @@ protected:
     ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
-    QStack<V4IR::BasicBlock *> _exceptionHandlers;
+    QStack<QV4::IR::BasicBlock *> _exceptionHandlers;
     bool _strictMode;
 
     bool _fileNameIsUrl;

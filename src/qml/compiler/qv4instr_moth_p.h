@@ -143,7 +143,7 @@ QT_BEGIN_NAMESPACE
 #  define MOTH_THREADED_INTERPRETER
 #endif
 
-#define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QQmlJS::Moth::Instr) - 1)
+#define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
 #ifdef MOTH_THREADED_INTERPRETER
 #  define MOTH_INSTR_HEADER void *code;
@@ -152,10 +152,10 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,
-#define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QQmlJS::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
+#define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QV4::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
 
 
-namespace QQmlJS {
+namespace QV4 {
 namespace Moth {
 
 struct Param {
@@ -839,7 +839,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 };
 
 } // namespace Moth
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

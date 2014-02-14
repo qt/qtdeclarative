@@ -52,18 +52,18 @@ namespace QV4 {
 namespace JIT {
 
 struct Binop {
-    Binop(QQmlJS::MASM::Assembler *assembler, QQmlJS::V4IR::AluOp operation)
+    Binop(Assembler *assembler, IR::AluOp operation)
         : as(assembler)
         , op(operation)
     {}
 
-    void generate(QQmlJS::V4IR::Expr *lhs, QQmlJS::V4IR::Expr *rhs, QQmlJS::V4IR::Temp *target);
-    void doubleBinop(QQmlJS::V4IR::Expr *lhs, QQmlJS::V4IR::Expr *rhs, QQmlJS::V4IR::Temp *target);
-    bool int32Binop(QQmlJS::V4IR::Expr *leftSource, QQmlJS::V4IR::Expr *rightSource, QQmlJS::V4IR::Temp *target);
-    QQmlJS::MASM::Assembler::Jump genInlineBinop(QQmlJS::V4IR::Expr *leftSource, QQmlJS::V4IR::Expr *rightSource, QQmlJS::V4IR::Temp *target);
+    void generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target);
+    void doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target);
+    bool int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    Assembler::Jump genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
 
-    QQmlJS::MASM::Assembler *as;
-    QQmlJS::V4IR::AluOp op;
+    Assembler *as;
+    IR::AluOp op;
 };
 
 }

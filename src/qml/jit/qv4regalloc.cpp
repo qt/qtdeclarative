@@ -63,10 +63,10 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_TYPEINFO(Use, Q_MOVABLE_TYPE);
 
-using namespace QQmlJS::V4IR;
+using namespace QV4::IR;
 
-namespace QQmlJS {
-namespace MASM {
+namespace QV4 {
+namespace JIT {
 
 class RegAllocInfo: public IRDecoder
 {
@@ -95,7 +95,7 @@ class RegAllocInfo: public IRDecoder
 public:
     RegAllocInfo(): _currentStmt(0) {}
 
-    void collect(Function *function)
+    void collect(IR::Function *function)
     {
         foreach (BasicBlock *bb, function->basicBlocks) {
             foreach (Stmt *s, bb->statements) {
@@ -194,33 +194,33 @@ public:
 #endif // DEBUG_REGALLOC
 
 protected: // IRDecoder
-    virtual void callBuiltinInvalid(V4IR::Name *, V4IR::ExprList *, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofMember(V4IR::Expr *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofSubscript(V4IR::Expr *, V4IR::Expr *, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofValue(V4IR::Expr *, V4IR::Temp *) {}
-    virtual void callBuiltinDeleteMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinDeleteSubscript(V4IR::Temp *, V4IR::Expr *, V4IR::Temp *) {}
-    virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
-    virtual void callBuiltinThrow(V4IR::Expr *) {}
+    virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Temp *) {}
+    virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Temp *) {}
+    virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Temp *) {}
+    virtual void callBuiltinTypeofName(const QString &, IR::Temp *) {}
+    virtual void callBuiltinTypeofValue(IR::Expr *, IR::Temp *) {}
+    virtual void callBuiltinDeleteMember(IR::Temp *, const QString &, IR::Temp *) {}
+    virtual void callBuiltinDeleteSubscript(IR::Temp *, IR::Expr *, IR::Temp *) {}
+    virtual void callBuiltinDeleteName(const QString &, IR::Temp *) {}
+    virtual void callBuiltinDeleteValue(IR::Temp *) {}
+    virtual void callBuiltinThrow(IR::Expr *) {}
     virtual void callBuiltinReThrow() {}
-    virtual void callBuiltinUnwindException(V4IR::Temp *) {}
+    virtual void callBuiltinUnwindException(IR::Temp *) {}
     virtual void callBuiltinPushCatchScope(const QString &) {};
-    virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinForeachNextProperty(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPushWithScope(V4IR::Temp *) {}
+    virtual void callBuiltinForeachIteratorObject(IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinForeachNextProperty(IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinForeachNextPropertyname(IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinPushWithScope(IR::Temp *) {}
     virtual void callBuiltinPopScope() {}
     virtual void callBuiltinDeclareVar(bool , const QString &) {}
-    virtual void callBuiltinDefineGetterSetter(V4IR::Temp *, const QString &, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinDefineProperty(V4IR::Temp *, const QString &, V4IR::Expr *) {}
-    virtual void callBuiltinDefineArray(V4IR::Temp *, V4IR::ExprList *) {}
-    virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *, V4IR::ExprList *) {}
-    virtual void callBuiltinSetupArgumentObject(V4IR::Temp *) {}
+    virtual void callBuiltinDefineGetterSetter(IR::Temp *, const QString &, IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinDefineProperty(IR::Temp *, const QString &, IR::Expr *) {}
+    virtual void callBuiltinDefineArray(IR::Temp *, IR::ExprList *) {}
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, IR::ExprList *) {}
+    virtual void callBuiltinSetupArgumentObject(IR::Temp *) {}
     virtual void callBuiltinConvertThisToObject() {}
 
-    virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
     {
         addDef(result);
         addUses(value, Use::CouldHaveRegister);
@@ -228,8 +228,8 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
-                              V4IR::Temp *result)
+    virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
+                              IR::Temp *result)
     {
         Q_UNUSED(name)
 
@@ -239,8 +239,8 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args,
-                               V4IR::Temp *result)
+    virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
+                               IR::Temp *result)
     {
         addDef(result);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -249,7 +249,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void convertType(V4IR::Temp *source, V4IR::Temp *target)
+    virtual void convertType(IR::Temp *source, IR::Temp *target)
     {
         addDef(target);
 
@@ -320,14 +320,14 @@ protected: // IRDecoder
             addHint(target, source);
     }
 
-    virtual void constructActivationProperty(V4IR::Name *, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void constructActivationProperty(IR::Name *, IR::ExprList *args, IR::Temp *result)
     {
         addDef(result);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void constructProperty(V4IR::Temp *base, const QString &, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void constructProperty(IR::Temp *base, const QString &, IR::ExprList *args, IR::Temp *result)
     {
         addDef(result);
         addUses(base, Use::CouldHaveRegister);
@@ -335,7 +335,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
     {
         addDef(result);
         addUses(value, Use::CouldHaveRegister);
@@ -343,18 +343,18 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadThisObject(V4IR::Temp *temp)
+    virtual void loadThisObject(IR::Temp *temp)
     {
         addDef(temp);
     }
 
-    virtual void loadQmlIdArray(V4IR::Temp *temp)
+    virtual void loadQmlIdArray(IR::Temp *temp)
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void loadQmlImportedScripts(V4IR::Temp *temp)
+    virtual void loadQmlImportedScripts(IR::Temp *temp)
     {
         addDef(temp);
         addCall();
@@ -382,21 +382,21 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
+    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
     {
         Q_UNUSED(sourceConst);
 
         addDef(targetTemp);
     }
 
-    virtual void loadString(const QString &str, V4IR::Temp *targetTemp)
+    virtual void loadString(const QString &str, IR::Temp *targetTemp)
     {
         Q_UNUSED(str);
 
         addDef(targetTemp);
     }
 
-    virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
     {
         Q_UNUSED(sourceRegexp);
 
@@ -404,19 +404,19 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getActivationProperty(const V4IR::Name *, V4IR::Temp *temp)
+    virtual void getActivationProperty(const IR::Name *, IR::Temp *temp)
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void setActivationProperty(V4IR::Expr *source, const QString &)
+    virtual void setActivationProperty(IR::Expr *source, const QString &)
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target)
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target)
     {
         Q_UNUSED(closure);
 
@@ -424,35 +424,35 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getProperty(V4IR::Expr *base, const QString &, V4IR::Temp *target)
+    virtual void getProperty(IR::Expr *base, const QString &, IR::Temp *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &)
+    virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &)
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int /*propertyIndex*/)
+    virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int /*propertyIndex*/)
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, int /*attachedPropertiesId*/, V4IR::Temp *target)
+    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, int /*attachedPropertiesId*/, IR::Temp *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
+    virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -460,7 +460,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex)
+    virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex)
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
@@ -468,14 +468,14 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
     {
         addDef(targetTemp);
         addUses(sourceTemp, Use::CouldHaveRegister);
         addHint(targetTemp, sourceTemp);
     }
 
-    virtual void swapValues(V4IR::Temp *, V4IR::Temp *)
+    virtual void swapValues(IR::Temp *, IR::Temp *)
     {
         // Inserted by the register allocator, so it cannot occur here.
         Q_UNREACHABLE();
@@ -486,7 +486,7 @@ protected: // IRDecoder
         addDef(targetTemp);
 
         bool needsCall = true;
-        if (oper == OpNot && sourceTemp->type == V4IR::BoolType && targetTemp->type == V4IR::BoolType)
+        if (oper == OpNot && sourceTemp->type == IR::BoolType && targetTemp->type == IR::BoolType)
             needsCall = false;
 
 #if 0 // TODO: change masm to generate code
@@ -561,8 +561,8 @@ protected: // IRDecoder
         }
     }
 
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s)
+    virtual void visitJump(IR::Jump *) {}
+    virtual void visitCJump(IR::CJump *s)
     {
         if (Temp *t = s->cond->asTemp()) {
 #if 0 // TODO: change masm to generate code
@@ -582,10 +582,10 @@ protected: // IRDecoder
         }
     }
 
-    virtual void visitRet(V4IR::Ret *s)
+    virtual void visitRet(IR::Ret *s)
     { addUses(s->expr->asTemp(), Use::CouldHaveRegister); }
 
-    virtual void visitPhi(V4IR::Phi *s)
+    virtual void visitPhi(IR::Phi *s)
     {
         addDef(s->targetTemp, true);
         foreach (Expr *e, s->d->incoming) {
@@ -597,7 +597,7 @@ protected: // IRDecoder
     }
 
 protected:
-    virtual void callBuiltin(V4IR::Call *c, V4IR::Temp *result)
+    virtual void callBuiltin(IR::Call *c, IR::Temp *result)
     {
         addDef(result);
         addUses(c->base->asTemp(), Use::CouldHaveRegister);
@@ -656,26 +656,26 @@ private:
     }
 };
 
-} // MASM namespace
-} // MOTH namespace
+} // JIT namespace
+} // QV4 namespace
 QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-using namespace QT_PREPEND_NAMESPACE(QQmlJS::MASM);
-using namespace QT_PREPEND_NAMESPACE(QQmlJS::V4IR);
-using namespace QT_PREPEND_NAMESPACE(QQmlJS);
+using namespace QT_PREPEND_NAMESPACE(QV4::JIT);
+using namespace QT_PREPEND_NAMESPACE(QV4::IR);
+using namespace QT_PREPEND_NAMESPACE(QV4);
 
 namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     const QVector<LifeTimeInterval> &_intervals;
     QVector<const LifeTimeInterval *> _unprocessed;
-    Function *_function;
+    IR::Function *_function;
 #if !defined(QT_NO_DEBUG)
     RegAllocInfo *_info;
 #endif
-    const QHash<V4IR::Temp, int> &_assignedSpillSlots;
-    QHash<V4IR::Temp, const LifeTimeInterval *> _intervalForTemp;
+    const QHash<IR::Temp, int> &_assignedSpillSlots;
+    QHash<IR::Temp, const LifeTimeInterval *> _intervalForTemp;
     const QVector<int> &_intRegs;
     const QVector<int> &_fpRegs;
 
@@ -687,8 +687,8 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QVector<LifeTimeInterval> &intervals, Function *function, RegAllocInfo *info,
-                    const QHash<V4IR::Temp, int> &assignedSpillSlots,
+    ResolutionPhase(const QVector<LifeTimeInterval> &intervals, IR::Function *function, RegAllocInfo *info,
+                    const QHash<IR::Temp, int> &assignedSpillSlots,
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
         , _function(function)
@@ -1041,8 +1041,8 @@ protected:
     }
 
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
@@ -1084,7 +1084,7 @@ RegisterAllocator::~RegisterAllocator()
 {
 }
 
-void RegisterAllocator::run(Function *function, const Optimizer &opt)
+void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 {
     _activeSpillSlots.resize(function->tempCount);
 
@@ -1141,7 +1141,7 @@ static inline LifeTimeInterval createFixedInterval(int reg, bool isFP, int range
 {
     Temp t;
     t.init(Temp::PhysicalRegister, reg, 0);
-    t.type = isFP ? V4IR::DoubleType : V4IR::SInt32Type;
+    t.type = isFP ? IR::DoubleType : IR::SInt32Type;
     LifeTimeInterval i;
     i.setTemp(t);
     i.setReg(reg);

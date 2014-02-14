@@ -41,8 +41,8 @@
 
 #include "qv4instr_moth_p.h"
 
-using namespace QQmlJS;
-using namespace QQmlJS::Moth;
+using namespace QV4;
+using namespace QV4::Moth;
 
 int Instr::size(Type type)
 {

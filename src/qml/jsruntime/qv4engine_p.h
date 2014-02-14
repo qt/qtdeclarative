@@ -138,7 +138,7 @@ public:
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
-    QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
+    QScopedPointer<EvalISelFactory> iselFactory;
 
 
     Value *jsStackLimit;
@@ -291,7 +291,7 @@ public:
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
 
-    ExecutionEngine(QQmlJS::EvalISelFactory *iselFactory = 0);
+    ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
     void enableDebugger();

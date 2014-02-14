@@ -203,7 +203,7 @@ bool QQmlTypeCompiler::compile()
 
     QV4::ExecutionEngine *v4 = engine->v4engine();
 
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
+    QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
     isel->setUseFastLookups(false);
     QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
 
@@ -350,7 +350,7 @@ QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
     return &compiledData->customParserData;
 }
 
-MemoryPool *QQmlTypeCompiler::memoryPool()
+QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
 {
     return parsedQML->jsParserEngine.pool();
 }
@@ -688,7 +688,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
 
     // Dynamic slots
     for (const QtQml::Function *s = obj->firstFunction(); s; s = s->next) {
-        AST::FunctionDeclaration *astFunction = s->functionDeclaration;
+        QQmlJS::AST::FunctionDeclaration *astFunction = s->functionDeclaration;
 
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
 
@@ -702,7 +702,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
-        AST::FormalParameterList *param = astFunction->formals;
+        QQmlJS::AST::FormalParameterList *param = astFunction->formals;
         while (param) {
             parameterNames << param->name.toUtf8();
             param = param->next;
@@ -818,9 +818,9 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
 
     // Dynamic slot data - comes after the property data
     for (const QtQml::Function *s = obj->firstFunction(); s; s = s->next) {
-        AST::FunctionDeclaration *astFunction = s->functionDeclaration;
+        QQmlJS::AST::FunctionDeclaration *astFunction = s->functionDeclaration;
         int formalsCount = 0;
-        AST::FormalParameterList *param = astFunction->formals;
+        QQmlJS::AST::FormalParameterList *param = astFunction->formals;
         while (param) {
             formalsCount++;
             param = param->next;
@@ -1392,7 +1392,7 @@ const QQmlImports &QQmlPropertyValidator::imports() const
     return *compiler->imports();
 }
 
-AST::Node *QQmlPropertyValidator::astForBinding(int scriptIndex) const
+QQmlJS::AST::Node *QQmlPropertyValidator::astForBinding(int scriptIndex) const
 {
     // ####
     int reverseIndex = runtimeFunctionIndices.indexOf(scriptIndex);

@@ -46,40 +46,37 @@
 using namespace QV4;
 using namespace JIT;
 
-using namespace QQmlJS;
-using namespace MASM;
-
 namespace {
-inline bool isPregOrConst(V4IR::Expr *e)
+inline bool isPregOrConst(IR::Expr *e)
 {
-    if (V4IR::Temp *t = e->asTemp())
-        return t->kind == V4IR::Temp::PhysicalRegister;
+    if (IR::Temp *t = e->asTemp())
+        return t->kind == IR::Temp::PhysicalRegister;
     return e->asConst() != 0;
 }
 } // anonymous namespace
 
-void Binop::generate(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
+void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
 {
-    if (op != V4IR::OpMod
-            && lhs->type == V4IR::DoubleType && rhs->type == V4IR::DoubleType
+    if (op != IR::OpMod
+            && lhs->type == IR::DoubleType && rhs->type == IR::DoubleType
             && isPregOrConst(lhs) && isPregOrConst(rhs)) {
         doubleBinop(lhs, rhs, target);
         return;
     }
-    if (lhs->type == V4IR::SInt32Type && rhs->type == V4IR::SInt32Type) {
+    if (lhs->type == IR::SInt32Type && rhs->type == IR::SInt32Type) {
         if (int32Binop(lhs, rhs, target))
             return;
     }
 
     Assembler::Jump done;
-    if (lhs->type != V4IR::StringType && rhs->type != V4IR::StringType)
+    if (lhs->type != IR::StringType && rhs->type != IR::StringType)
         done = genInlineBinop(lhs, rhs, target);
 
     // TODO: inline var===null and var!==null
     Assembler::BinaryOperationInfo info = Assembler::binaryOperation(op);
 
-    if (op == V4IR::OpAdd &&
-            (lhs->type == V4IR::StringType || rhs->type == V4IR::StringType)) {
+    if (op == IR::OpAdd &&
+            (lhs->type == IR::StringType || rhs->type == IR::StringType)) {
         const Assembler::BinaryOperationInfo stringAdd = OPCONTEXT(__qmljs_add_string);
         info = stringAdd;
     }
@@ -102,30 +99,30 @@ void Binop::generate(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
 
 }
 
-void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
+void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
 {
     Q_ASSERT(lhs->asConst() == 0 || rhs->asConst() == 0);
     Q_ASSERT(isPregOrConst(lhs));
     Q_ASSERT(isPregOrConst(rhs));
     Assembler::FPRegisterID targetReg;
-    if (target->kind == V4IR::Temp::PhysicalRegister)
+    if (target->kind == IR::Temp::PhysicalRegister)
         targetReg = (Assembler::FPRegisterID) target->index;
     else
         targetReg = Assembler::FPGpr0;
 
     switch (op) {
-    case V4IR::OpAdd:
+    case IR::OpAdd:
         as->addDouble(as->toDoubleRegister(lhs), as->toDoubleRegister(rhs),
                        targetReg);
         break;
-    case V4IR::OpMul:
+    case IR::OpMul:
         as->mulDouble(as->toDoubleRegister(lhs), as->toDoubleRegister(rhs),
                        targetReg);
         break;
-    case V4IR::OpSub:
+    case IR::OpSub:
 #if CPU(X86) || CPU(X86_64)
-        if (V4IR::Temp *rightTemp = rhs->asTemp()) {
-            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+        if (IR::Temp *rightTemp = rhs->asTemp()) {
+            if (rightTemp->kind == IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
                 as->moveDouble(targetReg, Assembler::FPGpr0);
                 as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
                 as->subDouble(Assembler::FPGpr0, targetReg);
@@ -133,7 +130,7 @@ void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
             }
         } else if (rhs->asConst() && targetReg == Assembler::FPGpr0) {
             Q_ASSERT(lhs->asTemp());
-            Q_ASSERT(lhs->asTemp()->kind == V4IR::Temp::PhysicalRegister);
+            Q_ASSERT(lhs->asTemp()->kind == IR::Temp::PhysicalRegister);
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
             Assembler::FPRegisterID reg = (Assembler::FPRegisterID) lhs->asTemp()->index;
             as->moveDouble(as->toDoubleRegister(rhs, reg), reg);
@@ -145,10 +142,10 @@ void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
         as->subDouble(as->toDoubleRegister(lhs), as->toDoubleRegister(rhs),
                        targetReg);
         break;
-    case V4IR::OpDiv:
+    case IR::OpDiv:
 #if CPU(X86) || CPU(X86_64)
-        if (V4IR::Temp *rightTemp = rhs->asTemp()) {
-            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+        if (IR::Temp *rightTemp = rhs->asTemp()) {
+            if (rightTemp->kind == IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
                 as->moveDouble(targetReg, Assembler::FPGpr0);
                 as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
                 as->divDouble(Assembler::FPGpr0, targetReg);
@@ -156,7 +153,7 @@ void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
             }
         } else if (rhs->asConst() && targetReg == Assembler::FPGpr0) {
             Q_ASSERT(lhs->asTemp());
-            Q_ASSERT(lhs->asTemp()->kind == V4IR::Temp::PhysicalRegister);
+            Q_ASSERT(lhs->asTemp()->kind == IR::Temp::PhysicalRegister);
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
             Assembler::FPRegisterID reg = (Assembler::FPRegisterID) lhs->asTemp()->index;
             as->moveDouble(as->toDoubleRegister(rhs, reg), reg);
@@ -168,7 +165,7 @@ void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
                        targetReg);
         break;
     default: {
-        Q_ASSERT(target->type == V4IR::BoolType);
+        Q_ASSERT(target->type == IR::BoolType);
         Assembler::Jump trueCase = as->branchDouble(false, op, lhs, rhs);
         as->storeBool(false, target);
         Assembler::Jump done = as->jump();
@@ -178,25 +175,25 @@ void Binop::doubleBinop(V4IR::Expr *lhs, V4IR::Expr *rhs, V4IR::Temp *target)
     } return;
     }
 
-    if (target->kind != V4IR::Temp::PhysicalRegister)
+    if (target->kind != IR::Temp::PhysicalRegister)
         as->storeDouble(Assembler::FPGpr0, target);
 }
 
 
-bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
 {
-    Q_ASSERT(leftSource->type == V4IR::SInt32Type);
+    Q_ASSERT(leftSource->type == IR::SInt32Type);
     Assembler::RegisterID targetReg;
-    if (target->kind == V4IR::Temp::PhysicalRegister)
+    if (target->kind == IR::Temp::PhysicalRegister)
         targetReg = (Assembler::RegisterID) target->index;
     else
         targetReg = Assembler::ReturnValueRegister;
 
     switch (op) {
-    case V4IR::OpBitAnd: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
-        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
-                && target->kind == V4IR::Temp::PhysicalRegister
+    case IR::OpBitAnd: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
+                && target->kind == IR::Temp::PhysicalRegister
                 && target->index == rightSource->asTemp()->index) {
             as->and32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
                        (Assembler::RegisterID) target->index);
@@ -208,10 +205,10 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
                    targetReg);
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpBitOr: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
-        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
-                && target->kind == V4IR::Temp::PhysicalRegister
+    case IR::OpBitOr: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
+                && target->kind == IR::Temp::PhysicalRegister
                 && target->index == rightSource->asTemp()->index) {
             as->or32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
                        (Assembler::RegisterID) target->index);
@@ -223,10 +220,10 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
                   targetReg);
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpBitXor: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
-        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
-                && target->kind == V4IR::Temp::PhysicalRegister
+    case IR::OpBitXor: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
+                && target->kind == IR::Temp::PhysicalRegister
                 && target->index == rightSource->asTemp()->index) {
             as->xor32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
                        (Assembler::RegisterID) target->index);
@@ -238,10 +235,10 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
                    targetReg);
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpLShift: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpLShift: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
-        if (V4IR::Const *c = rightSource->asConst()) {
+        if (IR::Const *c = rightSource->asConst()) {
             as->lshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
                           Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
@@ -253,10 +250,10 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
         }
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpRShift: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpRShift: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
-        if (V4IR::Const *c = rightSource->asConst()) {
+        if (IR::Const *c = rightSource->asConst()) {
             as->rshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
                           Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
@@ -267,10 +264,10 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
         }
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpURShift:
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpURShift:
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
-        if (V4IR::Const *c = rightSource->asConst()) {
+        if (IR::Const *c = rightSource->asConst()) {
             as->urshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
                            Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
@@ -281,11 +278,11 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
         }
         as->storeUInt32(targetReg, target);
         return true;
-    case V4IR::OpAdd: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpAdd: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         Assembler::RegisterID targetReg;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             targetReg = (Assembler::RegisterID) target->index;
         else
             targetReg = Assembler::ReturnValueRegister;
@@ -295,11 +292,11 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
                    targetReg);
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpSub: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpSub: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
-        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
-                && target->kind == V4IR::Temp::PhysicalRegister
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
+                && target->kind == IR::Temp::PhysicalRegister
                 && target->index == rightSource->asTemp()->index) {
             Assembler::RegisterID targetReg = (Assembler::RegisterID) target->index;
             as->move(targetReg, Assembler::ScratchRegister);
@@ -310,7 +307,7 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
         }
 
         Assembler::RegisterID targetReg;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             targetReg = (Assembler::RegisterID) target->index;
         else
             targetReg = Assembler::ReturnValueRegister;
@@ -319,11 +316,11 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
         as->sub32(as->toInt32Register(rightSource, Assembler::ScratchRegister), targetReg);
         as->storeInt32(targetReg, target);
     } return true;
-    case V4IR::OpMul: {
-        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+    case IR::OpMul: {
+        Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         Assembler::RegisterID targetReg;
-        if (target->kind == V4IR::Temp::PhysicalRegister)
+        if (target->kind == IR::Temp::PhysicalRegister)
             targetReg = (Assembler::RegisterID) target->index;
         else
             targetReg = Assembler::ReturnValueRegister;
@@ -338,17 +335,17 @@ bool Binop::int32Binop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Te
     }
 }
 
-static inline Assembler::FPRegisterID getFreeFPReg(V4IR::Expr *shouldNotOverlap, unsigned hint)
+static inline Assembler::FPRegisterID getFreeFPReg(IR::Expr *shouldNotOverlap, unsigned hint)
 {
-    if (V4IR::Temp *t = shouldNotOverlap->asTemp())
-        if (t->type == V4IR::DoubleType)
-            if (t->kind == V4IR::Temp::PhysicalRegister)
+    if (IR::Temp *t = shouldNotOverlap->asTemp())
+        if (t->type == IR::DoubleType)
+            if (t->kind == IR::Temp::PhysicalRegister)
                 if (t->index == hint)
                     return Assembler::FPRegisterID(hint + 1);
     return Assembler::FPRegisterID(hint);
 }
 
-Assembler::Jump Binop::genInlineBinop(V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
 {
     Assembler::Jump done;
 
@@ -361,7 +358,7 @@ Assembler::Jump Binop::genInlineBinop(V4IR::Expr *leftSource, V4IR::Expr *rightS
     // Note: FPGPr0 can still not be used, because uint32->double conversion uses it as a scratch
     //       register.
     switch (op) {
-    case V4IR::OpAdd: {
+    case IR::OpAdd: {
         Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
         Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
@@ -376,7 +373,7 @@ Assembler::Jump Binop::genInlineBinop(V4IR::Expr *leftSource, V4IR::Expr *rightS
         if (rightIsNoDbl.isSet())
             rightIsNoDbl.link(as);
     } break;
-    case V4IR::OpMul: {
+    case IR::OpMul: {
         Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
         Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
@@ -391,7 +388,7 @@ Assembler::Jump Binop::genInlineBinop(V4IR::Expr *leftSource, V4IR::Expr *rightS
         if (rightIsNoDbl.isSet())
             rightIsNoDbl.link(as);
     } break;
-    case V4IR::OpSub: {
+    case IR::OpSub: {
         Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
         Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
@@ -406,7 +403,7 @@ Assembler::Jump Binop::genInlineBinop(V4IR::Expr *leftSource, V4IR::Expr *rightS
         if (rightIsNoDbl.isSet())
             rightIsNoDbl.link(as);
     } break;
-    case V4IR::OpDiv: {
+    case IR::OpDiv: {
         Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
         Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);

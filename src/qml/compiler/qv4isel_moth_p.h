@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
+namespace QV4 {
 namespace Moth {
 
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
@@ -64,11 +64,11 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 };
 
 class Q_QML_EXPORT InstructionSelection:
-        public V4IR::IRDecoder,
+        public IR::IRDecoder,
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
@@ -76,66 +76,66 @@ public:
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
-    virtual void visitJump(V4IR::Jump *);
-    virtual void visitCJump(V4IR::CJump *);
-    virtual void visitRet(V4IR::Ret *);
+    virtual void visitJump(IR::Jump *);
+    virtual void visitCJump(IR::CJump *);
+    virtual void visitRet(IR::Ret *);
 
-    virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callBuiltinTypeofMember(V4IR::Expr *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinTypeofSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *result);
-    virtual void callBuiltinTypeofName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp *result);
-    virtual void callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result);
-    virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinDeleteValue(V4IR::Temp *result);
-    virtual void callBuiltinThrow(V4IR::Expr *arg);
+    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
+    virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index, IR::Temp *result);
+    virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinTypeofValue(IR::Expr *value, IR::Temp *result);
+    virtual void callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Expr *index, IR::Temp *result);
+    virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinDeleteValue(IR::Temp *result);
+    virtual void callBuiltinThrow(IR::Expr *arg);
     virtual void callBuiltinReThrow();
-    virtual void callBuiltinUnwindException(V4IR::Temp *);
+    virtual void callBuiltinUnwindException(IR::Temp *);
     virtual void callBuiltinPushCatchScope(const QString &exceptionName);
-    virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
-    virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
-    virtual void callBuiltinPushWithScope(V4IR::Temp *arg);
+    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
+    virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
+    virtual void callBuiltinPushWithScope(IR::Temp *arg);
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
-    virtual void callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter);
-    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Expr *value);
-    virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
-    virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
-    virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result);
+    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
+    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Expr *value);
+    virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, IR::ExprList *args);
+    virtual void callBuiltinSetupArgumentObject(IR::Temp *result);
     virtual void callBuiltinConvertThisToObject();
-    virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
-    virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void loadThisObject(V4IR::Temp *temp);
-    virtual void loadQmlIdArray(V4IR::Temp *temp);
-    virtual void loadQmlImportedScripts(V4IR::Temp *temp);
-    virtual void loadQmlContextObject(V4IR::Temp *temp);
-    virtual void loadQmlScopeObject(V4IR::Temp *temp);
-    virtual void loadQmlSingleton(const QString &name, V4IR::Temp *temp);
-    virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
-    virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
-    virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
-    virtual void getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp);
-    virtual void setActivationProperty(V4IR::Expr *source, const QString &targetName);
-    virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
-    virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
-    virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
-    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex);
-    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, V4IR::Temp *target);
-    virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
-    virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);
-    virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
-    virtual void swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
-    virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
-    virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
+    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
+    virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args, IR::Temp *result);
+    virtual void convertType(IR::Temp *source, IR::Temp *target);
+    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
+    virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
+    virtual void loadThisObject(IR::Temp *temp);
+    virtual void loadQmlIdArray(IR::Temp *temp);
+    virtual void loadQmlImportedScripts(IR::Temp *temp);
+    virtual void loadQmlContextObject(IR::Temp *temp);
+    virtual void loadQmlScopeObject(IR::Temp *temp);
+    virtual void loadQmlSingleton(const QString &name, IR::Temp *temp);
+    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
+    virtual void loadString(const QString &str, IR::Temp *targetTemp);
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
+    virtual void getActivationProperty(const IR::Name *name, IR::Temp *temp);
+    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
+    virtual void getProperty(IR::Expr *base, const QString &name, IR::Temp *target);
+    virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
+    virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex);
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Temp *target);
+    virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target);
+    virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex);
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
 
 private:
-    Param binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
+    Param binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
 
     struct Instruction {
 #define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
@@ -145,9 +145,9 @@ private:
         Instruction();
     };
 
-    Param getParam(V4IR::Expr *e);
+    Param getParam(IR::Expr *e);
 
-    Param getResultParam(V4IR::Temp *result)
+    Param getResultParam(IR::Temp *result)
     {
         if (result)
             return getParam(result);
@@ -155,8 +155,8 @@ private:
             return Param::createTemp(scratchTempIndex());
     }
 
-    void simpleMove(V4IR::Move *);
-    void prepareCallArgs(V4IR::ExprList *, quint32 &, quint32 * = 0);
+    void simpleMove(IR::Move *);
+    void prepareCallArgs(IR::ExprList *, quint32 &, quint32 * = 0);
 
     int scratchTempIndex() const { return _function->tempCount; }
     int callDataStart() const { return scratchTempIndex() + 1; }
@@ -171,28 +171,28 @@ private:
 
     QQmlEnginePrivate *qmlEngine;
 
-    V4IR::BasicBlock *_block;
-    V4IR::BasicBlock *_nextBlock;
+    IR::BasicBlock *_block;
+    IR::BasicBlock *_nextBlock;
 
-    QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
-    QHash<V4IR::BasicBlock *, ptrdiff_t> _addrs;
+    QHash<IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
+    QHash<IR::BasicBlock *, ptrdiff_t> _addrs;
 
     uchar *_codeStart;
     uchar *_codeNext;
     uchar *_codeEnd;
 
-    QSet<V4IR::Jump *> _removableJumps;
-    V4IR::Stmt *_currentStatement;
+    QSet<IR::Jump *> _removableJumps;
+    IR::Stmt *_currentStatement;
 
     CompilationUnit *compilationUnit;
-    QHash<V4IR::Function *, QByteArray> codeRefs;
+    QHash<IR::Function *, QByteArray> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return false; }
@@ -207,7 +207,7 @@ ptrdiff_t InstructionSelection::addInstruction(const InstrData<InstrT> &data)
 }
 
 } // namespace Moth
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

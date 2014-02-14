@@ -80,11 +80,11 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         const CompiledData::RegExp *re = data->regexpAt(i);
         int flags = 0;
         if (re->flags & CompiledData::RegExp::RegExp_Global)
-            flags |= QQmlJS::V4IR::RegExp::RegExp_Global;
+            flags |= IR::RegExp::RegExp_Global;
         if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
-            flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
+            flags |= IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
-            flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
+            flags |= IR::RegExp::RegExp_Multiline;
         runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
     }
 

@@ -648,14 +648,14 @@ void Debugger::applyPendingBreakPoints()
 void Debugger::setBreakOnInstruction(Function *function, qptrdiff codeOffset, bool onoff)
 {
     uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
-    QQmlJS::Moth::Instr::instr_debug *debug = reinterpret_cast<QQmlJS::Moth::Instr::instr_debug *>(codePtr);
+    Moth::Instr::instr_debug *debug = reinterpret_cast<Moth::Instr::instr_debug *>(codePtr);
     debug->breakPoint = onoff;
 }
 
 bool Debugger::hasBreakOnInstruction(Function *function, qptrdiff codeOffset)
 {
     uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
-    QQmlJS::Moth::Instr::instr_debug *debug = reinterpret_cast<QQmlJS::Moth::Instr::instr_debug *>(codePtr);
+    Moth::Instr::instr_debug *debug = reinterpret_cast<Moth::Instr::instr_debug *>(codePtr);
     return debug->breakPoint;
 }
 

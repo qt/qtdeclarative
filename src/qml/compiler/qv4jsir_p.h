@@ -81,7 +81,7 @@ namespace QV4 {
 struct ExecutionContext;
 }
 
-namespace QQmlJS {
+namespace QV4 {
 
 inline bool isNegative(double d)
 {
@@ -93,7 +93,7 @@ inline bool isNegative(double d)
 
 }
 
-namespace V4IR {
+namespace IR {
 
 struct BasicBlock;
 struct Function;
@@ -176,7 +176,7 @@ enum AluOp {
     LastAluOp = OpOr
 };
 AluOp binaryOperator(int op);
-const char *opname(V4IR::AluOp op);
+const char *opname(IR::AluOp op);
 
 enum Type {
     UnknownType   = 0,
@@ -618,7 +618,7 @@ struct Stmt {
 
     Data *d;
     int id;
-    AST::SourceLocation location;
+    QQmlJS::AST::SourceLocation location;
 
     Stmt(): d(0), id(-1) {}
     virtual ~Stmt()
@@ -740,7 +740,7 @@ struct Phi: Stmt {
 };
 
 struct Q_QML_EXPORT Module {
-    MemoryPool pool;
+    QQmlJS::MemoryPool pool;
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
@@ -764,7 +764,7 @@ typedef QHash<int, int> PropertyDependencyMap;
 
 struct Function {
     Module *module;
-    MemoryPool *pool;
+    QQmlJS::MemoryPool *pool;
     const QString *name;
     QVector<BasicBlock *> basicBlocks;
     int tempCount;
@@ -850,7 +850,7 @@ struct BasicBlock {
     QBitArray liveOut;
     int index;
     bool isExceptionHandler;
-    AST::SourceLocation nextLocation;
+    QQmlJS::AST::SourceLocation nextLocation;
 
     BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
         : function(function)
@@ -931,12 +931,12 @@ private:
     bool _groupStart;
 };
 
-class CloneExpr: protected V4IR::ExprVisitor
+class CloneExpr: protected IR::ExprVisitor
 {
 public:
-    explicit CloneExpr(V4IR::BasicBlock *block = 0);
+    explicit CloneExpr(IR::BasicBlock *block = 0);
 
-    void setBasicBlock(V4IR::BasicBlock *block);
+    void setBasicBlock(IR::BasicBlock *block);
 
     template <typename _Expr>
     _Expr *operator()(_Expr *expr)
@@ -985,7 +985,7 @@ public:
     }
 
 protected:
-    V4IR::ExprList *clone(V4IR::ExprList *list);
+    IR::ExprList *clone(IR::ExprList *list);
 
     virtual void visitConst(Const *);
     virtual void visitString(String *);
@@ -1002,13 +1002,13 @@ protected:
     virtual void visitMember(Member *);
 
 private:
-    V4IR::BasicBlock *block;
-    V4IR::Expr *cloned;
+    IR::BasicBlock *block;
+    IR::Expr *cloned;
 };
 
 } // end of namespace IR
 
-} // end of namespace QQmlJS
+} // end of namespace QV4
 
 QT_END_NAMESPACE
 

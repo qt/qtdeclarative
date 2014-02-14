@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
+namespace QV4 {
 
 inline bool canConvertToSignedInteger(double value)
 {
@@ -63,43 +63,43 @@ inline bool canConvertToUnsignedInteger(double value)
     return uval == value && !(value == 0 && isNegative(value));
 }
 
-inline QV4::Primitive convertToValue(V4IR::Const *c)
+inline Primitive convertToValue(IR::Const *c)
 {
     switch (c->type) {
-    case V4IR::MissingType:
-        return QV4::Primitive::emptyValue();
-    case V4IR::NullType:
-        return QV4::Primitive::nullValue();
-    case V4IR::UndefinedType:
-        return QV4::Primitive::undefinedValue();
-    case V4IR::BoolType:
-        return QV4::Primitive::fromBoolean(c->value != 0);
-    case V4IR::SInt32Type:
-        return QV4::Primitive::fromInt32(int(c->value));
-    case V4IR::UInt32Type:
-        return QV4::Primitive::fromUInt32(unsigned(c->value));
-    case V4IR::DoubleType:
-        return QV4::Primitive::fromDouble(c->value);
-    case V4IR::NumberType: {
+    case IR::MissingType:
+        return Primitive::emptyValue();
+    case IR::NullType:
+        return Primitive::nullValue();
+    case IR::UndefinedType:
+        return Primitive::undefinedValue();
+    case IR::BoolType:
+        return Primitive::fromBoolean(c->value != 0);
+    case IR::SInt32Type:
+        return Primitive::fromInt32(int(c->value));
+    case IR::UInt32Type:
+        return Primitive::fromUInt32(unsigned(c->value));
+    case IR::DoubleType:
+        return Primitive::fromDouble(c->value);
+    case IR::NumberType: {
         int ival = (int)c->value;
         if (canConvertToSignedInteger(c->value)) {
-            return QV4::Primitive::fromInt32(ival);
+            return Primitive::fromInt32(ival);
         } else {
-            return QV4::Primitive::fromDouble(c->value);
+            return Primitive::fromDouble(c->value);
         }
     }
     default:
         Q_UNREACHABLE();
     }
     // unreachable, but the function must return something
-    return QV4::Primitive::undefinedValue();
+    return Primitive::undefinedValue();
 }
 
-class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
+class ConvertTemps: protected IR::StmtVisitor, protected IR::ExprVisitor
 {
-    void renumber(V4IR::Temp *t)
+    void renumber(IR::Temp *t)
     {
-        if (t->kind != V4IR::Temp::VirtualRegister)
+        if (t->kind != IR::Temp::VirtualRegister)
             return;
 
         int stackSlot = _stackSlotForTemp.value(t->index, -1);
@@ -108,20 +108,20 @@ class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
             _stackSlotForTemp[t->index] = stackSlot;
         }
 
-        t->kind = V4IR::Temp::StackSlot;
+        t->kind = IR::Temp::StackSlot;
         t->index = stackSlot;
     }
 
 protected:
     int _nextUnusedStackSlot;
     QHash<int, int> _stackSlotForTemp;
-    V4IR::BasicBlock *_currentBasicBlock;
+    IR::BasicBlock *_currentBasicBlock;
     virtual int allocateFreeSlot()
     {
         return _nextUnusedStackSlot++;
     }
 
-    virtual void process(V4IR::Stmt *s)
+    virtual void process(IR::Stmt *s)
     {
         s->accept(this);
     }
@@ -132,13 +132,13 @@ public:
         , _currentBasicBlock(0)
     {}
 
-    void toStackSlots(V4IR::Function *function)
+    void toStackSlots(IR::Function *function)
     {
         _stackSlotForTemp.reserve(function->tempCount);
 
-        foreach (V4IR::BasicBlock *bb, function->basicBlocks) {
+        foreach (IR::BasicBlock *bb, function->basicBlocks) {
             _currentBasicBlock = bb;
-            foreach (V4IR::Stmt *s, bb->statements)
+            foreach (IR::Stmt *s, bb->statements)
                 process(s);
         }
 
@@ -146,35 +146,35 @@ public:
     }
 
 protected:
-    virtual void visitConst(V4IR::Const *) {}
-    virtual void visitString(V4IR::String *) {}
-    virtual void visitRegExp(V4IR::RegExp *) {}
-    virtual void visitName(V4IR::Name *) {}
-    virtual void visitTemp(V4IR::Temp *e) { renumber(e); }
-    virtual void visitClosure(V4IR::Closure *) {}
-    virtual void visitConvert(V4IR::Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(V4IR::Call *e) {
+    virtual void visitConst(IR::Const *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
+    virtual void visitName(IR::Name *) {}
+    virtual void visitTemp(IR::Temp *e) { renumber(e); }
+    virtual void visitClosure(IR::Closure *) {}
+    virtual void visitConvert(IR::Convert *e) { e->expr->accept(this); }
+    virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitCall(IR::Call *e) {
         e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
+        for (IR::ExprList *it = e->args; it; it = it->next)
             it->expr->accept(this);
     }
-    virtual void visitNew(V4IR::New *e) {
+    virtual void visitNew(IR::New *e) {
         e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
+        for (IR::ExprList *it = e->args; it; it = it->next)
             it->expr->accept(this);
     }
-    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitMove(V4IR::Move *s) { s->target->accept(this); s->source->accept(this); }
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(V4IR::Phi *) { Q_UNREACHABLE(); }
+    virtual void visitSubscript(IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(IR::Member *e) { e->base->accept(this); }
+    virtual void visitExp(IR::Exp *s) { s->expr->accept(this); }
+    virtual void visitMove(IR::Move *s) { s->target->accept(this); s->source->accept(this); }
+    virtual void visitJump(IR::Jump *) {}
+    virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
+    virtual void visitPhi(IR::Phi *) { Q_UNREACHABLE(); }
 };
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

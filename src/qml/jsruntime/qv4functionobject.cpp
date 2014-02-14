@@ -274,13 +274,13 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     if (!fe)
         return v4->currentContext()->throwSyntaxError(QLatin1String("Parse error"));
 
-    QQmlJS::V4IR::Module module(v4->debugger != 0);
+    IR::Module module(v4->debugger != 0);
 
     QQmlJS::RuntimeCodegen cg(v4->currentContext(), f->strictMode);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 

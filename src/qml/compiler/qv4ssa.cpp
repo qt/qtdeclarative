@@ -72,15 +72,15 @@
 
 QT_USE_NAMESPACE
 
-using namespace QQmlJS;
-using namespace V4IR;
+using namespace QV4;
+using namespace IR;
 
 namespace {
 
 Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 #define qout *qout()
 
-void showMeTheCode(Function *function)
+void showMeTheCode(IR::Function *function)
 {
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
     if (showCode) {
@@ -244,7 +244,7 @@ public:
     }
 };
 
-inline bool unescapableTemp(Temp *t, Function *f)
+inline bool unescapableTemp(Temp *t, IR::Function *f)
 {
     switch (t->kind) {
     case Temp::Formal:
@@ -258,7 +258,7 @@ inline bool unescapableTemp(Temp *t, Function *f)
     }
 }
 
-inline Temp *unescapableTemp(Expr *e, Function *f)
+inline Temp *unescapableTemp(Expr *e, IR::Function *f)
 {
     Temp *t = e->asTemp();
     if (!t)
@@ -780,7 +780,7 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     QSet<Temp> killed;
 
     BasicBlock *currentBB;
-    Function *function;
+    IR::Function *function;
     bool isCollectable(Temp *t) const
     {
         Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
@@ -788,7 +788,7 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     }
 
 public:
-    VariableCollector(Function *function)
+    VariableCollector(IR::Function *function)
         : function(function)
     {
         _defsites.reserve(function->tempCount);
@@ -837,8 +837,8 @@ protected:
     virtual void visitConvert(Convert *e) { e->expr->accept(this); };
 
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -892,7 +892,7 @@ protected:
     }
 };
 
-void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
+void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
 #if defined(SHOW_SSA)
     qout << "-> inserted phi node for variable ";
     a.dump(qout);
@@ -983,7 +983,7 @@ void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
 //     mapping[t] = c
 class VariableRenamer: public StmtVisitor, public ExprVisitor
 {
-    Function *function;
+    IR::Function *function;
     unsigned tempCount;
 
     typedef QHash<unsigned, int> Mapping; // maps from existing/old temp number to the new and unique temp number.
@@ -1039,7 +1039,7 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
     QVector<TodoAction> todo;
 
 public:
-    VariableRenamer(Function *f)
+    VariableRenamer(IR::Function *f)
         : function(f)
         , tempCount(0)
         , processed(f->basicBlocks)
@@ -1216,8 +1216,8 @@ protected:
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
 
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -1244,7 +1244,7 @@ protected:
     }
 };
 
-void convertToSSA(Function *function, const DominatorTree &df)
+void convertToSSA(IR::Function *function, const DominatorTree &df)
 {
 #ifdef SHOW_SSA
     qout << "Converting function ";
@@ -1311,7 +1311,7 @@ public:
     };
 
 private:
-    Function *function;
+    IR::Function *function;
     QHash<UntypedTemp, DefUse> _defUses;
     QHash<Stmt *, QList<Temp> > _usesPerStatement;
 
@@ -1344,7 +1344,7 @@ private:
     }
 
 public:
-    DefUsesCalculator(Function *function)
+    DefUsesCalculator(IR::Function *function)
         : function(function)
     {
         foreach (BasicBlock *bb, function->basicBlocks) {
@@ -1464,8 +1464,8 @@ protected:
     virtual void visitTemp(Temp *e) { addUse(e); }
 
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
@@ -1541,7 +1541,7 @@ class StatementWorklist
     QHash<Stmt*,Stmt**> ref;
 
 public:
-    StatementWorklist(Function *function)
+    StatementWorklist(IR::Function *function)
     {
         QVector<Stmt *> w;
         int stmtCount = 0;
@@ -1585,7 +1585,7 @@ public:
         *ref[oldStmt] = newStmt;
     }
 
-    void cleanup(Function *function)
+    void cleanup(IR::Function *function)
     {
         foreach (BasicBlock *bb, function->basicBlocks) {
             for (int i = 0; i < bb->statements.size();) {
@@ -1658,12 +1658,12 @@ public:
 class EliminateDeadCode: public ExprVisitor {
     DefUsesCalculator &_defUses;
     StatementWorklist &_worklist;
-    Function *function;
+    IR::Function *function;
     bool _sideEffect;
     QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, Function *function)
+    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, IR::Function *function)
         : _defUses(defUses)
         , _worklist(worklist)
         , function(function)
@@ -1704,8 +1704,8 @@ private:
 
 protected:
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
 
     virtual void visitName(Name *e)
     {
@@ -1841,8 +1841,8 @@ public:
 
 protected:
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *e) {
         if (theTemp == UntypedTemp(*e)) {
@@ -1892,7 +1892,7 @@ protected:
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
     QQmlEnginePrivate *qmlEngine;
-    Function *function;
+    IR::Function *function;
     const DefUsesCalculator &_defUses;
     QHash<Temp, DiscoveredType> _tempTypes;
     QSet<Stmt *> _worklist;
@@ -1912,7 +1912,7 @@ public:
         , _ty(UnknownType)
     {}
 
-    void run(Function *f) {
+    void run(IR::Function *f) {
         function = f;
 
         // TODO: the worklist handling looks a bit inefficient... check if there is something better
@@ -2017,8 +2017,8 @@ protected:
         } else
             _ty = TypingResult(e->type);
     }
-    virtual void visitString(String *) { _ty = TypingResult(StringType); }
-    virtual void visitRegExp(RegExp *) { _ty = TypingResult(VarType); }
+    virtual void visitString(IR::String *) { _ty = TypingResult(StringType); }
+    virtual void visitRegExp(IR::RegExp *) { _ty = TypingResult(VarType); }
     virtual void visitName(Name *) { _ty = TypingResult(VarType); }
     virtual void visitTemp(Temp *e) {
         if (isAlwaysVar(e))
@@ -2207,7 +2207,7 @@ public:
         : _defUses(defUses)
     {}
 
-    void run(Function *f)
+    void run(IR::Function *f)
     {
         QVector<UntypedTemp> knownOk;
         QList<UntypedTemp> candidates = _defUses.defsUntyped();
@@ -2361,7 +2361,7 @@ void convertConst(Const *c, Type targetType)
 class TypePropagation: public StmtVisitor, public ExprVisitor {
     DefUsesCalculator &_defUses;
     Type _ty;
-    Function *_f;
+    IR::Function *_f;
 
     bool run(Expr *&e, Type requestedType = UnknownType, bool insertConversion = true) {
         qSwap(_ty, requestedType);
@@ -2412,7 +2412,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
 public:
     TypePropagation(DefUsesCalculator &defUses) : _defUses(defUses), _ty(UnknownType) {}
 
-    void run(Function *f) {
+    void run(IR::Function *f) {
         _f = f;
         foreach (BasicBlock *bb, f->basicBlocks) {
             _conversions.clear();
@@ -2423,7 +2423,7 @@ public:
             }
 
             foreach (const Conversion &conversion, _conversions) {
-                V4IR::Move *move = conversion.stmt->asMove();
+                IR::Move *move = conversion.stmt->asMove();
 
                 // Note: isel only supports move into member when source is a temp, so convert
                 // is not a supported source.
@@ -2497,8 +2497,8 @@ protected:
         }
     }
 
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
     virtual void visitClosure(Closure *) {}
@@ -2605,7 +2605,7 @@ protected:
     }
 };
 
-void splitCriticalEdges(Function *f, DominatorTree &df)
+void splitCriticalEdges(IR::Function *f, DominatorTree &df)
 {
     for (int i = 0, ei = f->basicBlocks.size(); i != ei; ++i) {
         BasicBlock *bb = f->basicBlocks[i];
@@ -2687,7 +2687,7 @@ void splitCriticalEdges(Function *f, DominatorTree &df)
 // the same reason.
 class BlockScheduler
 {
-    Function *function;
+    IR::Function *function;
     const DominatorTree &dominatorTree;
 
     struct WorkForGroup
@@ -2793,7 +2793,7 @@ class BlockScheduler
     }
 
 public:
-    BlockScheduler(Function *function, const DominatorTree &dominatorTree)
+    BlockScheduler(IR::Function *function, const DominatorTree &dominatorTree)
         : function(function)
         , dominatorTree(dominatorTree)
         , emitted(function->basicBlocks)
@@ -2832,7 +2832,7 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 }
 #endif
 
-void cleanupBasicBlocks(Function *function, bool renumber)
+void cleanupBasicBlocks(IR::Function *function, bool renumber)
 {
     showMeTheCode(function);
 
@@ -2921,7 +2921,7 @@ inline Const *isConstPhi(Phi *phi)
     return 0;
 }
 
-static Expr *clone(Expr *e, Function *function) {
+static Expr *clone(Expr *e, IR::Function *function) {
     if (Temp *t = e->asTemp()) {
         return CloneExpr::cloneTemp(t, function);
     } else if (Const *c = e->asConst()) {
@@ -2937,12 +2937,12 @@ static Expr *clone(Expr *e, Function *function) {
 class ExprReplacer: public StmtVisitor, public ExprVisitor
 {
     DefUsesCalculator &_defUses;
-    Function* _function;
+    IR::Function* _function;
     Temp *_toReplace;
     Expr *_replacement;
 
 public:
-    ExprReplacer(DefUsesCalculator &defUses, Function *function)
+    ExprReplacer(DefUsesCalculator &defUses, IR::Function *function)
         : _defUses(defUses)
         , _function(function)
         , _toReplace(0)
@@ -2976,8 +2976,8 @@ public:
 
 protected:
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
     virtual void visitClosure(Closure *) {}
@@ -3045,7 +3045,7 @@ namespace {
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
 /// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, StatementWorklist &W,
+void purgeBB(BasicBlock *bb, IR::Function *func, DefUsesCalculator &defUses, StatementWorklist &W,
              DominatorTree &df)
 {
     // TODO: change this to mark the block as deleted, but leave it alone so that other references
@@ -3186,7 +3186,7 @@ bool tryOptimizingComparison(Expr *&expr)
 }
 } // anonymous namespace
 
-void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &df)
+void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTree &df)
 {
     StatementWorklist W(function);
     ExprReplacer replaceUses(defUses, function);
@@ -3485,13 +3485,13 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses, DominatorTree &
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
-    Function *function;
+    IR::Function *function;
 
 public:
     QList<Temp> inputs;
     QList<Temp> outputs;
 
-    InputOutputCollector(Function *f): function(f) {}
+    InputOutputCollector(IR::Function *f): function(f) {}
 
     void collect(Stmt *s) {
         inputs.clear();
@@ -3501,8 +3501,8 @@ public:
 
 protected:
     virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *e) {
         if (unescapableTemp(e, function))
@@ -3564,7 +3564,7 @@ class LifeRanges {
     QVector<LifeTimeInterval> _sortedRanges;
 
 public:
-    LifeRanges(Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
+    LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
     {
         int id = 0;
         foreach (BasicBlock *bb, function->basicBlocks) {
@@ -3614,7 +3614,7 @@ public:
     }
 
 private:
-    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, Function *function)
+    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, IR::Function *function)
     {
         LiveRegs live;
         foreach (BasicBlock *successor, bb->out) {
@@ -3999,7 +3999,7 @@ QSet<Jump *> Optimizer::calculateOptionalJumps()
     return optional;
 }
 
-void Optimizer::showMeTheCode(Function *function)
+void Optimizer::showMeTheCode(IR::Function *function)
 {
     ::showMeTheCode(function);
 }
@@ -4084,14 +4084,14 @@ void MoveMapping::order()
     qSwap(_moves, output);
 }
 
-QList<V4IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) const
+QList<IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, IR::Function *function, bool atEnd) const
 {
-    QList<V4IR::Move *> newMoves;
+    QList<IR::Move *> newMoves;
     newMoves.reserve(_moves.size());
 
     int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
-        V4IR::Move *move = function->New<V4IR::Move>();
+        IR::Move *move = function->New<IR::Move>();
         move->init(clone(m.to, function), clone(m.from, function));
         move->swap = m.needsSwap;
         bb->statements.insert(insertionPoint++, move);
