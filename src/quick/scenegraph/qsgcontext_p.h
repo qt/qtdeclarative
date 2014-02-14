@@ -115,9 +115,6 @@ public:
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
 
-    void compileShader(QSGMaterialShader *shader);
-    void initializeShader(QSGMaterialShader *shader);
-
 Q_SIGNALS:
     void initialized();
     void invalidated();
