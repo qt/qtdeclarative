@@ -825,6 +825,10 @@ struct InstrMeta {
         typedef Instr::instr_##FMT DataType; \
         static const DataType &data(const Instr &instr) { return instr.FMT; } \
         static void setData(Instr &instr, const DataType &v) { instr.FMT = v; } \
+        static void setDataNoCommon(Instr &instr, const DataType &v) \
+        { memcpy(reinterpret_cast<char *>(&instr.FMT) + sizeof(Instr::instr_common), \
+                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_common), \
+                 Size - sizeof(Instr::instr_common)); } \
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE

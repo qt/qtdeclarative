@@ -202,7 +202,7 @@ template<int InstrT>
 ptrdiff_t InstructionSelection::addInstruction(const InstrData<InstrT> &data)
 {
     Instr genericInstr;
-    InstrMeta<InstrT>::setData(genericInstr, data);
+    InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
     return addInstructionHelper(static_cast<Instr::Type>(InstrT), genericInstr);
 }
 
