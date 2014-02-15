@@ -481,7 +481,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
         QV4::Value *args = stack + instr.args;
-    STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCount));
+    STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)

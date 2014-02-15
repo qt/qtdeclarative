@@ -367,8 +367,21 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
         }
 
         IR::ExprList *arrayEntries = args;
+        bool needSparseArray = false;
+        for (IR::ExprList *it = arrayEntries; it; it = it->next) {
+            uint index = it->expr->asConst()->value;
+            if (index > 16)  {
+                needSparseArray = true;
+                break;
+            }
+            it = it->next;
+            bool isData = it->expr->asConst()->value;
+            it = it->next;
+            if (!isData)
+                it = it->next;
+        }
 
-        callBuiltinDefineObjectLiteral(result, keyValuePairsCount, keyValuePairs, arrayEntries);
+        callBuiltinDefineObjectLiteral(result, keyValuePairsCount, keyValuePairs, arrayEntries, needSparseArray);
     } return;
 
     case IR::Name::builtin_setup_argument_object:

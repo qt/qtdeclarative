@@ -131,7 +131,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinPopScope() = 0;
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
     virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args) = 0;
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries) = 0;
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray) = 0;
     virtual void callBuiltinSetupArgumentObject(IR::Temp *result) = 0;
     virtual void callBuiltinConvertThisToObject() = 0;
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result) = 0;

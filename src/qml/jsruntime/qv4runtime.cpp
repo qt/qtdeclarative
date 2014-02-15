@@ -1100,11 +1100,17 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
     return a.asReturnedValue();
 }
 
-ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCount)
+ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(ctx);
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Scoped<Object> o(scope, ctx->engine->newObject(klass));
+
+    {
+        bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;
+        if (needSparseArray)
+            o->initSparseArray();
+    }
 
     for (uint i = 0; i < klass->size; ++i) {
         if (klass->propertyData[i].isData())
@@ -1120,18 +1126,15 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
     ScopedValue entry(scope);
     for (int i = 0; i < arrayValueCount; ++i) {
         uint idx = args->toUInt32();
-        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
-            o->initSparseArray();
         ++args;
         entry = *args++;
         o->arraySet(idx, entry);
     }
 
     ScopedProperty pd(scope);
-    for (int i = 0; i < arrayGetterSetterCount; ++i) {
+    uint arrayGetterSetterCount = arrayGetterSetterCountAndFlags & ((1 << 30) - 1);
+    for (uint i = 0; i < arrayGetterSetterCount; ++i) {
         uint idx = args->toUInt32();
-        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
-            o->initSparseArray();
         ++args;
         pd->value = *args;
         ++args;

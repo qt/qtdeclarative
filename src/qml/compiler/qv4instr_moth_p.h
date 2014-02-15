@@ -488,8 +488,8 @@ union Instr
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
-        int arrayValueCount;
-        int arrayGetterSetterCount;
+        uint arrayValueCount;
+        uint arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
         quint32 args;
         Param result;
     };

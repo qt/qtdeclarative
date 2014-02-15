@@ -1260,7 +1260,7 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
 {
     int argLocation = outgoingArgumentTempStart();
 
@@ -1300,7 +1300,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     }
 
     // Process array values
-    int arrayValueCount = 0;
+    uint arrayValueCount = 0;
     it = arrayEntries;
     while (it) {
         IR::Const *index = it->expr->asConst();
@@ -1332,7 +1332,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     }
 
     // Process array getter/setter pairs
-    int arrayGetterSetterCount = 0;
+    uint arrayGetterSetterCount = 0;
     it = arrayEntries;
     while (it) {
         IR::Const *index = it->expr->asConst();
@@ -1374,7 +1374,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     Instruction::CallBuiltinDefineObjectLiteral call;
     call.internalClassId = classId;
     call.arrayValueCount = arrayValueCount;
-    call.arrayGetterSetterCount = arrayGetterSetterCount;
+    call.arrayGetterSetterCountAndFlags = arrayGetterSetterCount | (needSparseArray << 30);
     call.args = outgoingArgumentTempStart();
     call.result = getResultParam(result);
     addInstruction(call);

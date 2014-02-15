@@ -214,7 +214,7 @@ protected: // IRDecoder
     virtual void callBuiltinPopScope() {}
     virtual void callBuiltinDeclareVar(bool , const QString &) {}
     virtual void callBuiltinDefineArray(IR::Temp *, IR::ExprList *) {}
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, int, IR::ExprList *, IR::ExprList *) {}
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, int, IR::ExprList *, IR::ExprList *, bool) {}
     virtual void callBuiltinSetupArgumentObject(IR::Temp *) {}
     virtual void callBuiltinConvertThisToObject() {}
 

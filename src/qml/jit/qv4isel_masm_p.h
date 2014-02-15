@@ -95,7 +95,7 @@ protected:
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries);
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray);
     virtual void callBuiltinSetupArgumentObject(IR::Temp *result);
     virtual void callBuiltinConvertThisToObject();
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);

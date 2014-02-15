@@ -492,7 +492,7 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
                          baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
 {
     Q_ASSERT(result);
 
@@ -516,7 +516,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     }
 
     it = arrayEntries;
-    int arrayValueCount = 0;
+    uint arrayValueCount = 0;
     while (it) {
         uint index = it->expr->asConst()->value;
         it = it->next;
@@ -541,7 +541,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     }
 
     it = arrayEntries;
-    int arrayGetterSetterCount = 0;
+    uint arrayGetterSetterCount = 0;
     while (it) {
         uint index = it->expr->asConst()->value;
         it = it->next;
@@ -570,7 +570,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
 
     generateFunctionCall(result, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
                          baseAddressForCallArguments(), Assembler::TrustedImm32(classId),
-                         Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount));
+                         Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
 }
 
 void InstructionSelection::callBuiltinSetupArgumentObject(IR::Temp *result)
