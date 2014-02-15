@@ -347,48 +347,29 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
         }
     } return;
 
-    case IR::Name::builtin_define_getter_setter: {
-        if (!call->args)
-            return;
-        IR::ExprList *args = call->args;
-        IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        IR::Temp *getter = args->expr->asTemp();
-        args = args->next;
-        assert(args);
-        IR::Temp *setter = args->expr->asTemp();
-
-        callBuiltinDefineGetterSetter(object, *name->id, getter, setter);
-    } return;
-
-    case IR::Name::builtin_define_property: {
-        if (!call->args)
-            return;
-        IR::ExprList *args = call->args;
-        IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        IR::Expr *value = args->expr;
-
-        callBuiltinDefineProperty(object, *name->id, value);
-    } return;
-
     case IR::Name::builtin_define_array:
         callBuiltinDefineArray(result, call->args);
         return;
 
-    case IR::Name::builtin_define_object_literal:
-        callBuiltinDefineObjectLiteral(result, call->args);
-        return;
+    case IR::Name::builtin_define_object_literal: {
+        IR::ExprList *args = call->args;
+        const int keyValuePairsCount = args->expr->asConst()->value;
+        args = args->next;
+
+        IR::ExprList *keyValuePairs = args;
+        for (int i = 0; i < keyValuePairsCount; ++i) {
+            args = args->next; // name
+            bool isData = args->expr->asConst()->value;
+            args = args->next; // isData flag
+            args = args->next; // value or getter
+            if (!isData)
+                args = args->next; // setter
+        }
+
+        IR::ExprList *arrayEntries = args;
+
+        callBuiltinDefineObjectLiteral(result, keyValuePairsCount, keyValuePairs, arrayEntries);
+    } return;
 
     case IR::Name::builtin_setup_argument_object:
         callBuiltinSetupArgumentObject(result);

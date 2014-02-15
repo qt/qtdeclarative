@@ -151,14 +151,14 @@ void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QV4::IR::Function
     lineNumberMappingsPerFunction.insert(function, mappings);
 }
 
-int QV4::Compiler::JSUnitGenerator::registerJSClass(QV4::IR::ExprList *args)
+int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *args)
 {
     // ### re-use existing class definitions.
 
     QList<CompiledData::JSClassMember> members;
 
-    QV4::IR::ExprList *it = args;
-    while (it) {
+    IR::ExprList *it = args;
+    for (int i = 0; i < count; ++i, it = it->next) {
         CompiledData::JSClassMember member;
 
         QV4::IR::Name *name = it->expr->asName();
@@ -173,8 +173,6 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(QV4::IR::ExprList *args)
 
         if (!isData)
             it = it->next;
-
-        it = it->next;
     }
 
     jsClasses << members;

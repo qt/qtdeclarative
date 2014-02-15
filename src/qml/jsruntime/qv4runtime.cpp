@@ -1087,23 +1087,6 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, const St
     ctx->createMutableBinding(name, deletable);
 }
 
-void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, ValueRef val)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, object->asObject());
-    assert(o);
-
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX) {
-        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
-            o->initSparseArray();
-        o->arraySet(idx, val);
-    } else {
-        ScopedValue v(scope, val ? *val : Primitive::undefinedValue());
-        o->insertMember(name, v);
-    }
-}
-
 ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
     Scope scope(ctx);
@@ -1117,24 +1100,7 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
     return a.asReturnedValue();
 }
 
-void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef getter, const ValueRef setter)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, object->asObject());
-    Q_ASSERT(!!o);
-
-    uint idx = name->asArrayIndex();
-    Property pd;
-    pd.value = getter;
-    pd.set = setter;
-    if (idx != UINT_MAX) {
-        o->arraySet(idx, pd, Attr_Accessor);
-    } else {
-        o->insertMember(name, pd, Attr_Accessor);
-    }
-}
-
-ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)
+ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCount)
 {
     Scope scope(ctx);
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
@@ -1149,6 +1115,29 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
             o->memberData[i].set = *args;
             args++;
         }
+    }
+
+    ScopedValue entry(scope);
+    for (int i = 0; i < arrayValueCount; ++i) {
+        uint idx = args->toUInt32();
+        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
+            o->initSparseArray();
+        ++args;
+        entry = *args++;
+        o->arraySet(idx, entry);
+    }
+
+    ScopedProperty pd(scope);
+    for (int i = 0; i < arrayGetterSetterCount; ++i) {
+        uint idx = args->toUInt32();
+        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
+            o->initSparseArray();
+        ++args;
+        pd->value = *args;
+        ++args;
+        pd->set = *args;
+        ++args;
+        o->arraySet(idx, pd, Attr_Accessor);
     }
 
     return o.asReturnedValue();

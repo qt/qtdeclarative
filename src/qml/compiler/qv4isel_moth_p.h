@@ -98,10 +98,8 @@ protected:
     virtual void callBuiltinPushWithScope(IR::Temp *arg);
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
-    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
-    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Expr *value);
     virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, IR::ExprList *args);
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries);
     virtual void callBuiltinSetupArgumentObject(IR::Temp *result);
     virtual void callBuiltinConvertThisToObject();
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);

@@ -261,6 +261,9 @@ bool Codegen::ScanFunctions::visit(ObjectLiteral *ast)
 {
     int argc = 0;
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+        QString key = it->assignment->name->asString();
+        if (QV4::String::toArrayIndex(key) != UINT_MAX)
+            ++argc;
         ++argc;
         if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
             ++argc;
@@ -774,17 +777,6 @@ Codegen::Result Codegen::expression(ExpressionNode *ast)
         qSwap(_expr, r);
     }
     return r;
-}
-
-QString Codegen::propertyName(PropertyName *ast)
-{
-    QString p;
-    if (ast) {
-        qSwap(_property, p);
-        accept(ast);
-        qSwap(_property, p);
-    }
-    return p;
 }
 
 Codegen::Result Codegen::sourceElement(SourceElement *ast)
@@ -1597,8 +1589,8 @@ bool Codegen::visit(ObjectLiteral *ast)
     QMap<QString, ObjectPropertyValue> valueMap;
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+        QString name = it->assignment->name->asString();
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
-            QString name = propertyName(nv->name);
             Result value = expression(nv->value);
             ObjectPropertyValue &v = valueMap[name];
             if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
@@ -1609,7 +1601,6 @@ bool Codegen::visit(ObjectLiteral *ast)
 
             valueMap[name].value = *value;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            QString name = propertyName(gs->name);
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
             if (v.value ||
@@ -1628,103 +1619,98 @@ bool Codegen::visit(ObjectLiteral *ast)
         }
     }
 
-    IR::ExprList *args = 0;
+    // The linked-list arguments to builtin_define_object_literal
+    // begin with a CONST counting the number of key/value pairs, followed by the
+    // key value pairs, followed by the array entries.
+    IR::ExprList *args = _function->New<IR::ExprList>();
 
-    if (!valueMap.isEmpty()) {
-        IR::ExprList *current;
-        for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
-            if (QV4::String::toArrayIndex(it.key()) != UINT_MAX) {
-                ++it;
-                continue;
-            }
+    IR::Const *entryCountParam = _function->New<IR::Const>();
+    entryCountParam->init(IR::SInt32Type, 0);
+    args->expr = entryCountParam;
+    args->next = 0;
 
-            if (!args) {
-                args = _function->New<IR::ExprList>();
-                current = args;
+    IR::ExprList *keyValueEntries = 0;
+    IR::ExprList *currentKeyValueEntry = 0;
+    int keyValueEntryCount = 0;
+    IR::ExprList *arrayEntries = 0;
+
+    IR::ExprList *currentArrayEntry = 0;
+
+    for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
+        IR::ExprList **currentPtr = 0;
+        uint keyAsIndex = QV4::String::toArrayIndex(it.key());
+        if (keyAsIndex != UINT_MAX) {
+            if (!arrayEntries) {
+                arrayEntries = _function->New<IR::ExprList>();
+                currentArrayEntry = arrayEntries;
             } else {
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
+                currentArrayEntry->next = _function->New<IR::ExprList>();
+                currentArrayEntry = currentArrayEntry->next;
             }
-
-            current->expr = _block->NAME(it.key(), 0, 0);
-
-            if (it->value) {
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->CONST(IR::BoolType, true);
-
-                unsigned value = _block->newTemp();
-                move(_block->TEMP(value), it->value);
-
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->TEMP(value);
+            currentPtr = &currentArrayEntry;
+            IR::Const *idx = _function->New<IR::Const>();
+            idx->init(IR::UInt32Type, keyAsIndex);
+            (*currentPtr)->expr = idx;
+        } else {
+            if (!keyValueEntries) {
+                keyValueEntries = _function->New<IR::ExprList>();
+                currentKeyValueEntry = keyValueEntries;
             } else {
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->CONST(IR::BoolType, false);
-
-                unsigned getter = _block->newTemp();
-                unsigned setter = _block->newTemp();
-                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
-
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->TEMP(getter);
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->TEMP(setter);
+                currentKeyValueEntry->next = _function->New<IR::ExprList>();
+                currentKeyValueEntry = currentKeyValueEntry->next;
             }
-
-            it = valueMap.erase(it);
+            currentPtr = &currentKeyValueEntry;
+            (*currentPtr)->expr = _block->NAME(it.key(), 0, 0);
+            keyValueEntryCount++;
         }
+
+        IR::ExprList *&current = *currentPtr;
+        if (it->value) {
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->CONST(IR::BoolType, true);
+
+            unsigned value = _block->newTemp();
+            move(_block->TEMP(value), it->value);
+
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->TEMP(value);
+        } else {
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->CONST(IR::BoolType, false);
+
+            unsigned getter = _block->newTemp();
+            unsigned setter = _block->newTemp();
+            move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
+            move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
+
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->TEMP(getter);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->TEMP(setter);
+        }
+
+        it = valueMap.erase(it);
+    }
+
+    entryCountParam->value = keyValueEntryCount;
+
+    if (keyValueEntries)
+        args->next = keyValueEntries;
+    if (arrayEntries) {
+        if (currentKeyValueEntry)
+            currentKeyValueEntry->next = arrayEntries;
+        else
+            args->next = arrayEntries;
     }
 
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_object_literal,
          ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), args));
-
-    // What's left are array entries
-    if (!valueMap.isEmpty()) {
-        unsigned value = 0;
-        unsigned getter = 0;
-        unsigned setter = 0;
-        for (QMap<QString, ObjectPropertyValue>::const_iterator it = valueMap.constBegin(); it != valueMap.constEnd(); ++it) {
-            IR::ExprList *args = _function->New<IR::ExprList>();
-            IR::ExprList *current = args;
-            current->expr = _block->TEMP(t);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->NAME(it.key(), 0, 0);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-
-            if (it->value) {
-                if (!value)
-                    value = _block->newTemp();
-                move(_block->TEMP(value), it->value);
-                // __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
-                current->expr = _block->TEMP(value);
-                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_property, 0, 0), args));
-            } else {
-                if (!getter) {
-                    getter = _block->newTemp();
-                    setter = _block->newTemp();
-                }
-                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
-
-
-                // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
-                current->expr = _block->TEMP(getter);
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->TEMP(setter);
-                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_getter_setter, 0, 0), args));
-            }
-        }
-    }
 
     _expr.code = _block->TEMP(t);
     return false;
@@ -2070,33 +2056,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     leaveEnvironment();
 
     return functionIndex;
-}
-
-bool Codegen::visit(IdentifierPropertyName *ast)
-{
-    if (hasError)
-        return false;
-
-    _property = ast->id.toString();
-    return false;
-}
-
-bool Codegen::visit(NumericLiteralPropertyName *ast)
-{
-    if (hasError)
-        return false;
-
-    _property = QString::number(ast->id, 'g', 16);
-    return false;
-}
-
-bool Codegen::visit(StringLiteralPropertyName *ast)
-{
-    if (hasError)
-        return false;
-
-    _property = ast->id.toString();
-    return false;
 }
 
 bool Codegen::visit(FunctionSourceElement *ast)

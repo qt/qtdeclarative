@@ -213,10 +213,8 @@ protected: // IRDecoder
     virtual void callBuiltinPushWithScope(IR::Temp *) {}
     virtual void callBuiltinPopScope() {}
     virtual void callBuiltinDeclareVar(bool , const QString &) {}
-    virtual void callBuiltinDefineGetterSetter(IR::Temp *, const QString &, IR::Temp *, IR::Temp *) {}
-    virtual void callBuiltinDefineProperty(IR::Temp *, const QString &, IR::Expr *) {}
     virtual void callBuiltinDefineArray(IR::Temp *, IR::ExprList *) {}
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, IR::ExprList *) {}
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, int, IR::ExprList *, IR::ExprList *) {}
     virtual void callBuiltinSetupArgumentObject(IR::Temp *) {}
     virtual void callBuiltinConvertThisToObject() {}
 

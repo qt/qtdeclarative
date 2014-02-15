@@ -427,12 +427,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_pop_scope";
     case IR::Name::builtin_declare_vars:
         return "builtin_declare_vars";
-    case IR::Name::builtin_define_property:
-        return "builtin_define_property";
     case IR::Name::builtin_define_array:
         return "builtin_define_array";
-    case IR::Name::builtin_define_getter_setter:
-        return "builtin_define_getter_setter";
     case IR::Name::builtin_define_object_literal:
         return "builtin_define_object_literal";
     case IR::Name::builtin_setup_argument_object:

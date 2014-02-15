@@ -76,7 +76,7 @@ public:
     uint registerSetterLookup(const QString &name) { return jsGenerator->registerSetterLookup(name); }
     uint registerGlobalGetterLookup(const QString &name) { return jsGenerator->registerGlobalGetterLookup(name); }
     int registerRegExp(IR::RegExp *regexp) { return jsGenerator->registerRegExp(regexp); }
-    int registerJSClass(IR::ExprList *args) { return jsGenerator->registerJSClass(args); }
+    int registerJSClass(int count, IR::ExprList *args) { return jsGenerator->registerJSClass(count, args); }
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator() const { return jsGenerator; }
 
 protected:
@@ -130,10 +130,8 @@ public: // to implement by subclasses:
     virtual void callBuiltinPushWithScope(IR::Temp *arg) = 0;
     virtual void callBuiltinPopScope() = 0;
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
-    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter) = 0;
-    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Expr *value) = 0;
     virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args) = 0;
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, IR::ExprList *args) = 0;
+    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries) = 0;
     virtual void callBuiltinSetupArgumentObject(IR::Temp *result) = 0;
     virtual void callBuiltinConvertThisToObject() = 0;
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result) = 0;

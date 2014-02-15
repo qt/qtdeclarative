@@ -603,6 +603,8 @@ public:
     virtual SourceLocation lastSourceLocation() const
     { return propertyNameToken; }
 
+    virtual QString asString() const = 0;
+
 // attributes
     SourceLocation propertyNameToken;
 };
@@ -610,7 +612,11 @@ public:
 class QML_PARSER_EXPORT PropertyAssignment: public Node
 {
 public:
-    PropertyAssignment() {}
+    PropertyAssignment(PropertyName *n)
+        : name(n)
+    {}
+// attributes
+    PropertyName *name;
 };
 
 class QML_PARSER_EXPORT PropertyAssignmentList: public Node
@@ -658,7 +664,7 @@ public:
     QQMLJS_DECLARE_AST_NODE(PropertyNameAndValue)
 
     PropertyNameAndValue(PropertyName *n, ExpressionNode *v)
-        : name(n), value(v)
+        : PropertyAssignment(n), value(v)
     { kind = K; }
 
     virtual void accept0(Visitor *visitor);
@@ -670,7 +676,6 @@ public:
     { return value->lastSourceLocation(); }
 
 // attributes
-    PropertyName *name;
     SourceLocation colonToken;
     ExpressionNode *value;
     SourceLocation commaToken;
@@ -687,11 +692,11 @@ public:
     };
 
     PropertyGetterSetter(PropertyName *n, FunctionBody *b)
-        : type(Getter), name(n), formals(0), functionBody (b)
+        : PropertyAssignment(n), type(Getter), formals(0), functionBody (b)
     { kind = K; }
 
     PropertyGetterSetter(PropertyName *n, FormalParameterList *f, FunctionBody *b)
-        : type(Setter), name(n), formals(f), functionBody (b)
+        : PropertyAssignment(n), type(Setter), formals(f), functionBody (b)
     { kind = K; }
 
     virtual void accept0(Visitor *visitor);
@@ -705,7 +710,6 @@ public:
 // attributes
     Type type;
     SourceLocation getSetToken;
-    PropertyName *name;
     SourceLocation lparenToken;
     FormalParameterList *formals;
     SourceLocation rparenToken;
@@ -724,6 +728,8 @@ public:
 
     virtual void accept0(Visitor *visitor);
 
+    virtual QString asString() const { return id.toString(); }
+
 // attributes
     QStringRef id;
 };
@@ -738,6 +744,8 @@ public:
 
     virtual void accept0(Visitor *visitor);
 
+    virtual QString asString() const { return id.toString(); }
+
 // attributes
     QStringRef id;
 };
@@ -751,6 +759,8 @@ public:
         id (n) { kind = K; }
 
     virtual void accept0(Visitor *visitor);
+
+    virtual QString asString() const { return QString::number(id, 'g', 16); }
 
 // attributes
     double id;

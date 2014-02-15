@@ -1252,26 +1252,6 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
-{
-    Instruction::CallBuiltinDefineGetterSetter call;
-    call.object = getParam(object);
-    call.name = registerString(name);
-    call.getter = getParam(getter);
-    call.setter = getParam(setter);
-    addInstruction(call);
-}
-
-void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name,
-                                                     IR::Expr *value)
-{
-    Instruction::CallBuiltinDefineProperty call;
-    call.object = getParam(object);
-    call.name = registerString(name);
-    call.value = getParam(value);
-    addInstruction(call);
-}
-
 void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
 {
     Instruction::CallBuiltinDefineArray call;
@@ -1280,13 +1260,16 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries)
 {
     int argLocation = outgoingArgumentTempStart();
 
-    const int classId = registerJSClass(args);
-    IR::ExprList *it = args;
-    while (it) {
+    const int classId = registerJSClass(keyValuePairCount, keyValuePairs);
+
+    // Process key/value pairs first
+    IR::ExprList *it = keyValuePairs;
+    for (int i = 0; i < keyValuePairCount; ++i, it = it->next) {
+        // Skip name
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
@@ -1314,12 +1297,84 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, IR::
             addInstruction(move);
             ++argLocation;
         }
+    }
 
+    // Process array values
+    int arrayValueCount = 0;
+    it = arrayEntries;
+    while (it) {
+        IR::Const *index = it->expr->asConst();
+        it = it->next;
+
+        bool isData = it->expr->asConst()->value;
+        it = it->next;
+
+        if (!isData) {
+            it = it->next; // getter
+            it = it->next; // setter
+            continue;
+        }
+
+        ++arrayValueCount;
+
+        Instruction::MoveConst indexMove;
+        indexMove.source = convertToValue(index).asReturnedValue();
+        indexMove.result = Param::createTemp(argLocation);
+        addInstruction(indexMove);
+        ++argLocation;
+
+        Instruction::Move move;
+        move.source = getParam(it->expr);
+        move.result = Param::createTemp(argLocation);
+        addInstruction(move);
+        ++argLocation;
+        it = it->next;
+    }
+
+    // Process array getter/setter pairs
+    int arrayGetterSetterCount = 0;
+    it = arrayEntries;
+    while (it) {
+        IR::Const *index = it->expr->asConst();
+        it = it->next;
+
+        bool isData = it->expr->asConst()->value;
+        it = it->next;
+
+        if (isData) {
+            it = it->next; // value
+            continue;
+        }
+
+        ++arrayGetterSetterCount;
+
+        Instruction::MoveConst indexMove;
+        indexMove.source = convertToValue(index).asReturnedValue();
+        indexMove.result = Param::createTemp(argLocation);
+        addInstruction(indexMove);
+        ++argLocation;
+
+        // getter
+        Instruction::Move moveGetter;
+        moveGetter.source = getParam(it->expr);
+        moveGetter.result = Param::createTemp(argLocation);
+        addInstruction(moveGetter);
+        ++argLocation;
+        it = it->next;
+
+        // setter
+        Instruction::Move moveSetter;
+        moveSetter.source = getParam(it->expr);
+        moveSetter.result = Param::createTemp(argLocation);
+        addInstruction(moveSetter);
+        ++argLocation;
         it = it->next;
     }
 
     Instruction::CallBuiltinDefineObjectLiteral call;
     call.internalClassId = classId;
+    call.arrayValueCount = arrayValueCount;
+    call.arrayGetterSetterCount = arrayGetterSetterCount;
     call.args = outgoingArgumentTempStart();
     call.result = getResultParam(result);
     addInstruction(call);

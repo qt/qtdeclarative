@@ -483,27 +483,6 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
                          Assembler::TrustedImm32(deletable), Assembler::PointerToString(name));
 }
 
-void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
-{
-    Q_ASSERT(object);
-    Q_ASSERT(getter);
-    Q_ASSERT(setter);
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter, Assembler::ContextRegister,
-                         Assembler::Reference(object), Assembler::PointerToString(name), Assembler::PointerToValue(getter), Assembler::PointerToValue(setter));
-}
-
-void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name,
-                                                     IR::Expr *value)
-{
-    Q_ASSERT(object);
-    Q_ASSERT(value->asTemp() || value->asConst());
-
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
-                         Assembler::ContextRegister, Assembler::Reference(object),
-                         Assembler::PointerToString(name),
-                         Assembler::PointerToValue(value));
-}
-
 void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
 {
     Q_ASSERT(result);
@@ -513,16 +492,16 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
                          baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries)
 {
     Q_ASSERT(result);
 
     int argc = 0;
 
-    const int classId = registerJSClass(args);
+    const int classId = registerJSClass(keyValuePairCount, keyValuePairs);
 
-    IR::ExprList *it = args;
-    while (it) {
+    IR::ExprList *it = keyValuePairs;
+    for (int i = 0; i < keyValuePairCount; ++i, it = it->next) {
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
@@ -534,12 +513,64 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, IR::
             it = it->next;
             _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
         }
+    }
 
+    it = arrayEntries;
+    int arrayValueCount = 0;
+    while (it) {
+        uint index = it->expr->asConst()->value;
+        it = it->next;
+
+        bool isData = it->expr->asConst()->value;
+        it = it->next;
+
+        if (!isData) {
+            it = it->next; // getter
+            it = it->next; // setter
+            continue;
+        }
+
+        ++arrayValueCount;
+
+        // Index
+        _as->storeValue(QV4::Primitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
+
+        // Value
+        _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
+        it = it->next;
+    }
+
+    it = arrayEntries;
+    int arrayGetterSetterCount = 0;
+    while (it) {
+        uint index = it->expr->asConst()->value;
+        it = it->next;
+
+        bool isData = it->expr->asConst()->value;
+        it = it->next;
+
+        if (isData) {
+            it = it->next; // value
+            continue;
+        }
+
+        ++arrayGetterSetterCount;
+
+        // Index
+        _as->storeValue(QV4::Primitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
+
+        // Getter
+        _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
+        it = it->next;
+
+        // Setter
+        _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
         it = it->next;
     }
 
     generateFunctionCall(result, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
-                         baseAddressForCallArguments(), Assembler::TrustedImm32(classId));
+                         baseAddressForCallArguments(), Assembler::TrustedImm32(classId),
+                         Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount));
 }
 
 void InstructionSelection::callBuiltinSetupArgumentObject(IR::Temp *result)

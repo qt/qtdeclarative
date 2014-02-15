@@ -315,7 +315,6 @@ protected:
     void statement(AST::ExpressionNode *ast);
     void condition(AST::ExpressionNode *ast, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
     Result expression(AST::ExpressionNode *ast);
-    QString propertyName(AST::PropertyName *ast);
     Result sourceElement(AST::SourceElement *ast);
     UiMember uiObjectMember(AST::UiObjectMember *ast);
 
@@ -396,11 +395,6 @@ protected:
     virtual bool visit(AST::UnaryPlusExpression *ast);
     virtual bool visit(AST::VoidExpression *ast);
     virtual bool visit(AST::FunctionDeclaration *ast);
-
-    // property names
-    virtual bool visit(AST::IdentifierPropertyName *ast);
-    virtual bool visit(AST::NumericLiteralPropertyName *ast);
-    virtual bool visit(AST::StringLiteralPropertyName *ast);
 
     // source elements
     virtual bool visit(AST::FunctionSourceElement *ast);

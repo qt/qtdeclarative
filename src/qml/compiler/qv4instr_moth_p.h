@@ -95,8 +95,6 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
-    F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
-    F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
     F(CallBuiltinSetupArgumentsObject, callBuiltinSetupArgumentsObject) \
@@ -481,19 +479,6 @@ union Instr
         int varName;
         bool isDeletable;
     };
-    struct instr_callBuiltinDefineGetterSetter {
-        MOTH_INSTR_HEADER
-        int name;
-        Param object;
-        Param getter;
-        Param setter;
-    };
-    struct instr_callBuiltinDefineProperty {
-        MOTH_INSTR_HEADER
-        int name;
-        Param object;
-        Param value;
-    };
     struct instr_callBuiltinDefineArray {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -503,6 +488,8 @@ union Instr
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
+        int arrayValueCount;
+        int arrayGetterSetterCount;
         quint32 args;
         Param result;
     };
@@ -768,8 +755,6 @@ union Instr
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
-    instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
-    instr_callBuiltinDefineProperty callBuiltinDefineProperty;
     instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
     instr_callBuiltinSetupArgumentsObject callBuiltinSetupArgumentsObject;

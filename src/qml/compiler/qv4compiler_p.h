@@ -79,7 +79,7 @@ struct Q_QML_EXPORT JSUnitGenerator {
 
     void registerLineNumberMapping(IR::Function *function, const QVector<uint> &mappings);
 
-    int registerJSClass(IR::ExprList *args);
+    int registerJSClass(int count, IR::ExprList *args);
 
     QV4::CompiledData::Unit *generateUnit(int *totalUnitSize = 0);
     // Returns bytes written
