@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,40 +39,17 @@
 **
 ****************************************************************************/
 
-#ifndef QAccessibleQuickView_H
-#define QAccessibleQuickView_H
+#ifndef QQUICKACCESSIBLEFACTORY_H
+#define QQUICKACCESSIBLEFACTORY_H
 
-#include <QtGui/qaccessibleobject.h>
-#include <QtQuick/qquickwindow.h>
+#include <QtGui/qaccessible.h>
 
 QT_BEGIN_NAMESPACE
-
 #ifndef QT_NO_ACCESSIBILITY
 
-class QAccessibleQuickWindow : public QAccessibleObject
-{
-public:
-    QAccessibleQuickWindow(QQuickWindow *object);
+QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject *object);
 
-    QAccessibleInterface *parent() const;
-    QAccessibleInterface *child(int index) const;
-
-    QAccessible::Role role() const;
-    QAccessible::State state() const;
-    QRect rect() const;
-
-    int childCount() const;
-    int indexOfChild(const QAccessibleInterface *iface) const;
-    QString text(QAccessible::Text text) const;
-    QAccessibleInterface *childAt(int x, int y) const;
-
-private:
-    QQuickWindow *window() const { return static_cast<QQuickWindow*>(object()); }
-    QQuickItem *rootItem() const;
-};
-
-#endif // QT_NO_ACCESSIBILITY
-
+#endif
 QT_END_NAMESPACE
 
-#endif // QAccessibleQuickView_H
+#endif

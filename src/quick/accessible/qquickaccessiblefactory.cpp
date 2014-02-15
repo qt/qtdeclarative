@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,50 +39,16 @@
 **
 ****************************************************************************/
 
+#include "qquickaccessiblefactory_p.h"
 
-#include "qqmlaccessible.h"
-#include "qaccessiblequickview.h"
-#include "qaccessiblequickitem.h"
-
-#include <QtQuick/QQuickWindow>
-#include <QtQuick/QQuickItem>
+#include "qaccessiblequickview_p.h"
+#include "qaccessiblequickitem_p.h"
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickaccessibleattached_p.h>
-
-#include <qaccessibleplugin.h>
-#include <qvariant.h>
-#include <qplugin.h>
-#include <qaccessible.h>
-
-#ifndef QT_NO_ACCESSIBILITY
 
 QT_BEGIN_NAMESPACE
+#ifndef QT_NO_ACCESSIBILITY
 
-class AccessibleQuickFactory : public QAccessiblePlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QAccessibleFactoryInterface" FILE "accessible.json")
-
-public:
-    AccessibleQuickFactory();
-
-    QStringList keys() const;
-    QAccessibleInterface *create(const QString &classname, QObject *object);
-};
-
-AccessibleQuickFactory::AccessibleQuickFactory()
-{
-}
-
-QStringList AccessibleQuickFactory::keys() const
-{
-    QStringList list;
-    list << QLatin1String("QQuickWindow");
-    list << QLatin1String("QQuickItem");
-    return list;
-}
-
-QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, QObject *object)
+QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject *object)
 {
     if (classname == QLatin1String("QQuickWindow")) {
         return new QAccessibleQuickWindow(qobject_cast<QQuickWindow *>(object));
@@ -98,8 +64,5 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
     return 0;
 }
 
+#endif
 QT_END_NAMESPACE
-
-#include "main.moc"
-
-#endif // QT_NO_ACCESSIBILITY

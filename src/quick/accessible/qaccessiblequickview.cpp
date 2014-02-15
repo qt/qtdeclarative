@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include "qaccessiblequickview.h"
+#include "qaccessiblequickview_p.h"
 
 #include <QtGui/qguiapplication.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
 
-#include "qaccessiblequickitem.h"
-#include "qqmlaccessible.h"
+#include "qaccessiblequickitem_p.h"
+#include "qqmlaccessible_p.h"
 
 #ifndef QT_NO_ACCESSIBILITY
 

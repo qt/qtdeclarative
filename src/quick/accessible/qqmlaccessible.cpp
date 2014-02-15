@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <qnamespace.h>
-#include "qqmlaccessible.h"
+#include "qqmlaccessible_p.h"
 
 #ifndef QT_NO_ACCESSIBILITY
 
@@ -148,8 +148,8 @@ void QQmlAccessible::doAction(const QString &actionName)
 {
     // Look for and call the accessible[actionName]Action() function on the item.
     // This allows for overriding the default action handling.
-    const QByteArray functionName = "accessible" + actionName.toLatin1() + "Action";
-    if (object()->metaObject()->indexOfMethod(functionName + "()") != -1) {
+    const QByteArray functionName = QByteArrayLiteral("accessible") + actionName.toLatin1() + QByteArrayLiteral("Action");
+    if (object()->metaObject()->indexOfMethod(QByteArray(functionName + QByteArrayLiteral("()"))) != -1) {
         QMetaObject::invokeMethod(object(), functionName);
         return;
     }

@@ -44,6 +44,7 @@
 #include <private/qquickutilmodule_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickitemsmodule_p.h>
+#include <private/qquickaccessiblefactory_p.h>
 
 #include <private/qqmlenginedebugservice_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
@@ -189,6 +190,10 @@ void QQmlQtQuick2Module::defineModule()
     qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
 
     QQuickValueTypes::registerValueTypes();
+
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::installFactory(&qQuickAccessibleFactory);
+#endif
 
     if (QQmlDebugService::isDebuggingEnabled()) {
         QQmlEngineDebugService::instance()->setStatesDelegate(
