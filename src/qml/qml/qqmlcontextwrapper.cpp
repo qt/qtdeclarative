@@ -288,6 +288,13 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         return;
     }
 
+    PropertyAttributes attrs;
+    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
+    if (pd) {
+        wrapper->putValue(pd, attrs, value);
+        return;
+    }
+
     if (wrapper->isNullWrapper) {
         if (wrapper && wrapper->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
@@ -298,13 +305,6 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         }
 
         Object::put(m, name, value);
-        return;
-    }
-
-    PropertyAttributes attrs;
-    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
-    if (pd) {
-        wrapper->putValue(pd, attrs, value);
         return;
     }
 
