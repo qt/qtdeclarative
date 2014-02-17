@@ -57,10 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-//### profiler is broken: it no longer exports symbols
-#undef Q_QUICK_PROFILE
-#define Q_QUICK_PROFILE(x)
-
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 void QQuickWidgetPrivate::init(QQmlEngine* e)

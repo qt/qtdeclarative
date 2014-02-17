@@ -53,8 +53,9 @@
 // We mean it.
 //
 
-#include "private/qqmlabstractprofileradapter_p.h"
-#include <private/qabstractanimation_p.h>
+#include <private/qtquickglobal_p.h>
+#include <QtCore/private/qabstractanimation_p.h>
+#include <QtQml/private/qqmlabstractprofileradapter_p.h>
 #include <QUrl>
 #include <QSize>
 #include <QMutex>
@@ -139,7 +140,7 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
 
 Q_DECLARE_TYPEINFO(QQuickProfilerData, Q_MOVABLE_TYPE);
 
-class QQuickProfiler : public QQmlAbstractProfilerAdapter {
+class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QQmlAbstractProfilerAdapter {
     Q_OBJECT
 public:
 
