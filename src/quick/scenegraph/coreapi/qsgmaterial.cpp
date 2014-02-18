@@ -257,9 +257,6 @@ const char *QSGMaterialShader::fragmentShader() const
 
     State that is global for all uses of the shader, independent of the geometry
     that is being drawn, can be setup in this function.
-
-    If reimplemented, make sure to either call the base class implementation to
-    enable the vertex attribute registers.
  */
 
 void QSGMaterialShader::activate()
@@ -271,9 +268,6 @@ void QSGMaterialShader::activate()
 /*!
     This function is called by the scene graph to indicate that geometry will
     no longer to be rendered using this shader.
-
-    If reimplemented, make sure to either call the base class implementation to
-    disable the vertex attribute registers.
  */
 
 void QSGMaterialShader::deactivate()

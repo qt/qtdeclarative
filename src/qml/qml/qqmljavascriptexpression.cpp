@@ -138,8 +138,12 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
 
+    // All code that follows must check with watcher before it accesses data members
+    // incase we have been deleted.
+    DeleteWatcher watcher(this);
+
     Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    GuardCapture capture(context->engine, this);
+    GuardCapture capture(context->engine, this, &watcher);
 
     QQmlEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
     ep->propertyCapture = notifyOnValueChanged()?&capture:0;
@@ -147,10 +151,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
-
-    // All code that follows must check with watcher before it accesses data members
-    // incase we have been deleted.
-    DeleteWatcher watcher(this);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
@@ -196,24 +196,25 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
 void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
 {
-    if (expression) {
+    if (watcher->wasDeleted())
+        return;
 
-        // Try and find a matching guard
-        while (!guards.isEmpty() && !guards.first()->isConnected(n))
-            guards.takeFirst()->Delete();
+    Q_ASSERT(expression);
+    // Try and find a matching guard
+    while (!guards.isEmpty() && !guards.first()->isConnected(n))
+        guards.takeFirst()->Delete();
 
-        Guard *g = 0;
-        if (!guards.isEmpty()) {
-            g = guards.takeFirst();
-            g->cancelNotify();
-            Q_ASSERT(g->isConnected(n));
-        } else {
-            g = Guard::New(expression, engine);
-            g->connect(n);
-        }
-
-        expression->activeGuards.prepend(g);
+    Guard *g = 0;
+    if (!guards.isEmpty()) {
+        g = guards.takeFirst();
+        g->cancelNotify();
+        Q_ASSERT(g->isConnected(n));
+    } else {
+        g = Guard::New(expression, engine);
+        g->connect(n);
     }
+
+    expression->activeGuards.prepend(g);
 }
 
 /*! \internal
@@ -223,42 +224,44 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
 */
 void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, int n)
 {
-    if (expression) {
-        if (n == -1) {
-            if (!errorString) {
-                errorString = new QStringList;
-                QString preamble = QLatin1String("QQmlExpression: Expression ") +
-                                   expression->m_vtable->expressionIdentifier(expression) +
-                                   QLatin1String(" depends on non-NOTIFYable properties:");
-                errorString->append(preamble);
-            }
+    if (watcher->wasDeleted())
+        return;
 
-            const QMetaObject *metaObj = o->metaObject();
-            QMetaProperty metaProp = metaObj->property(c);
-
-            QString error = QLatin1String("    ") +
-                            QString::fromUtf8(metaObj->className()) +
-                            QLatin1String("::") +
-                            QString::fromUtf8(metaProp.name());
-            errorString->append(error);
-        } else {
-
-            // Try and find a matching guard
-            while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
-                guards.takeFirst()->Delete();
-
-            Guard *g = 0;
-            if (!guards.isEmpty()) {
-                g = guards.takeFirst();
-                g->cancelNotify();
-                Q_ASSERT(g->isConnected(o, n));
-            } else {
-                g = Guard::New(expression, engine);
-                g->connect(o, n, engine);
-            }
-
-            expression->activeGuards.prepend(g);
+    Q_ASSERT(expression);
+    if (n == -1) {
+        if (!errorString) {
+            errorString = new QStringList;
+            QString preamble = QLatin1String("QQmlExpression: Expression ") +
+                    expression->m_vtable->expressionIdentifier(expression) +
+                    QLatin1String(" depends on non-NOTIFYable properties:");
+            errorString->append(preamble);
         }
+
+        const QMetaObject *metaObj = o->metaObject();
+        QMetaProperty metaProp = metaObj->property(c);
+
+        QString error = QLatin1String("    ") +
+                QString::fromUtf8(metaObj->className()) +
+                QLatin1String("::") +
+                QString::fromUtf8(metaProp.name());
+        errorString->append(error);
+    } else {
+
+        // Try and find a matching guard
+        while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
+            guards.takeFirst()->Delete();
+
+        Guard *g = 0;
+        if (!guards.isEmpty()) {
+            g = guards.takeFirst();
+            g->cancelNotify();
+            Q_ASSERT(g->isConnected(o, n));
+        } else {
+            g = Guard::New(expression, engine);
+            g->connect(o, n, engine);
+        }
+
+        expression->activeGuards.prepend(g);
     }
 }
 
