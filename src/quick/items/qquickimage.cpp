@@ -676,6 +676,14 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                   sourceRect.width() / d->pix.width(),
                   sourceRect.height() / d->pix.height());
 
+    if (targetRect.isEmpty()
+        || !qIsFinite(targetRect.width()) || !qIsFinite(targetRect.height())
+        || nsrect.isEmpty()
+        || !qIsFinite(nsrect.width()) || !qIsFinite(nsrect.height())) {
+        delete node;
+        return 0;
+    }
+
     if (d->pixmapChanged) {
         // force update the texture in the node to trigger reconstruction of
         // geometry and the likes when a atlas segment has changed.
