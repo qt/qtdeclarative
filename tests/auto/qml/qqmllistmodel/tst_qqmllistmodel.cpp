@@ -1232,6 +1232,7 @@ void tst_qqmllistmodel::datetime_data()
     QTest::newRow("dt1") << "{append({'date':dt0});get(0).date=dt1;get(0).date}" << dt1;
     QTest::newRow("dt2") << "{append({'date':dt0});set(0,{'date':dt1});get(0).date}" << dt1;
     QTest::newRow("dt3") << "{append({'date':dt0});get(0).date=undefined;get(0).date}" << dt;
+    QTest::newRow("dt4") << "{append({'date':dt0});setProperty(0,'date',dt1);get(0).date}" << dt1;
 }
 
 void tst_qqmllistmodel::datetime()

@@ -219,6 +219,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
         case QVariant::Bool:        type = Role::Bool;        break;
         case QVariant::String:      type = Role::String;      break;
         case QVariant::Map:         type = Role::VariantMap;  break;
+        case QVariant::DateTime:    type = Role::DateTime;    break;
         default:                    type = Role::Invalid;     break;
     }
 
