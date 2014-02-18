@@ -327,6 +327,7 @@ void tst_SceneGraph::render_data()
           << "data/render_OutOfFloatRange.qml"
           << "data/render_StackingOrder.qml"
           << "data/render_Mipmap.qml"
+          << "data/render_ImageFiltering.qml"
         ;
 
     QRegExp sampleCount("#samples: *(\\d+)");
