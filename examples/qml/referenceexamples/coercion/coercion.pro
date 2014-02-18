@@ -1,4 +1,4 @@
-QT += qml
+QT = core qml
 
 SOURCES += main.cpp \
            person.cpp \

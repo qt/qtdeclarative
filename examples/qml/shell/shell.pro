@@ -1,4 +1,4 @@
-QT += qml
+QT = core qml
 
 win32: CONFIG += console
 mac:CONFIG -= app_bundle

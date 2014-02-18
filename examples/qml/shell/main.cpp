@@ -44,7 +44,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
 
-#include <QtGui/QGuiApplication>
+#include <QtCore/QCoreApplication>
 
 #include <QtQml/qjsengine.h>
 
@@ -95,7 +95,7 @@ static void interactive(QJSEngine *eng)
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
     QScopedPointer<QJSEngine> eng(new QJSEngine());
     {
         QJSValue globalObject = eng->globalObject();
