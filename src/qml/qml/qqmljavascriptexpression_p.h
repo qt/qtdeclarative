@@ -161,8 +161,8 @@ private:
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 
     struct GuardCapture : public QQmlEnginePrivate::PropertyCapture {
-        GuardCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e)
-        : engine(engine), expression(e), errorString(0) { }
+        GuardCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, DeleteWatcher *w)
+        : engine(engine), expression(e), watcher(w), errorString(0) { }
 
         ~GuardCapture()  {
             Q_ASSERT(guards.isEmpty());
@@ -174,6 +174,7 @@ private:
 
         QQmlEngine *engine;
         QQmlJavaScriptExpression *expression;
+        DeleteWatcher *watcher;
         QFieldList<Guard, &Guard::next> guards;
         QStringList *errorString;
     };

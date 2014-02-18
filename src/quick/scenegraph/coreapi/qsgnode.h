@@ -161,6 +161,7 @@ protected:
 private:
     friend class QSGRootNode;
     friend class QSGBatchRenderer::Renderer;
+    friend class QSGRenderer;
 
     void init();
     void destroy();

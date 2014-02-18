@@ -1872,7 +1872,7 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        QRectF viewBounds(0, position(), q->width(), q->height());
+        QRectF viewBounds(q->contentX(),  q->contentY(), q->width(), q->height());
         for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
              it != releasePendingTransition.end(); ) {
             FxViewItem *item = *it;

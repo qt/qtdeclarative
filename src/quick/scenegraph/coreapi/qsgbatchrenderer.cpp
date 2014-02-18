@@ -143,11 +143,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     QOpenGLShaderProgram *p = s->program();
-    p->addShaderFromSourceCode(QOpenGLShader::Vertex,
-                               qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile));
-    p->addShaderFromSourceCode(QOpenGLShader::Fragment,
-                               s->fragmentShader());
-
     char const *const *attr = s->attributeNames();
     int i;
     for (i = 0; attr[i]; ++i) {
@@ -155,14 +150,10 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
             p->bindAttributeLocation(attr[i], i);
     }
     p->bindAttributeLocation("_qt_order", i);
-
-    p->link();
-    if (!p->isLinked()) {
-        qDebug() << "Renderer failed shader compilation:" << endl << p->log();
+    context->compile(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
+    context->initialize(s);
+    if (!p->isLinked())
         return 0;
-    }
-
-    s->initialize();
 
     shader = new Shader;
     shader->program = s;
@@ -198,8 +189,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 #endif
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
-    s->compile();
-    s->initialize();
+    context->compile(s, material);
+    context->initialize(s);
 
     shader = new Shader();
     shader->program = s;
@@ -292,6 +283,7 @@ void Updater::updateStates(QSGNode *n)
 
     m_added = 0;
     m_transformChange = 0;
+    m_opacityChange = 0;
 
     Node *sn = renderer->m_nodes.value(n, 0);
     Q_ASSERT(sn);
@@ -779,7 +771,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
 
     m_shaderManager = ctx->findChild<ShaderManager *>(QStringLiteral("__qt_ShaderManager"), Qt::FindDirectChildrenOnly);
     if (!m_shaderManager) {
-        m_shaderManager = new ShaderManager();
+        m_shaderManager = new ShaderManager(ctx);
         m_shaderManager->setObjectName(QStringLiteral("__qt_ShaderManager"));
         m_shaderManager->setParent(ctx);
         QObject::connect(ctx, SIGNAL(invalidated()), m_shaderManager, SLOT(invalidated()), Qt::DirectConnection);
