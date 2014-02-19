@@ -188,7 +188,34 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         }
     } else if (messageType == QQmlProfilerService::Complete) {
         emit complete();
+    } else if (messageType == QQmlProfilerService::SceneGraphFrame) {
+        int sgEventType;
+        int count = 0;
+        qint64 params[5];
 
+        stream >> sgEventType;
+        while (!stream.atEnd()) {
+            stream >> params[count++];
+        }
+        while (count<5)
+            params[count++] = 0;
+        emit sceneGraphFrame((QQmlProfilerService::SceneGraphFrameType)sgEventType, time,
+                             params[0], params[1], params[2], params[3], params[4]);
+        d->maximumTime = qMax(time, d->maximumTime);
+    } else if (messageType == QQmlProfilerService::PixmapCacheEvent) {
+        int pixEvTy, width = 0, height = 0, refcount = 0;
+        QString pixUrl;
+        stream >> pixEvTy >> pixUrl;
+        if (pixEvTy == (int)QQmlProfilerService::PixmapReferenceCountChanged ||
+                pixEvTy == (int)QQmlProfilerService::PixmapCacheCountChanged) {
+            stream >> refcount;
+        } else if (pixEvTy == (int)QQmlProfilerService::PixmapSizeKnown) {
+            stream >> width >> height;
+            refcount = 1;
+        }
+        emit pixmapCache((QQmlProfilerService::PixmapEventType)pixEvTy, time,
+                         QmlEventLocation(pixUrl,0,0), width, height, refcount);
+        d->maximumTime = qMax(time, d->maximumTime);
     } else {
         int range;
         stream >> range;

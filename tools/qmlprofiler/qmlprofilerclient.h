@@ -103,6 +103,11 @@ signals:
                const QStringList &data,
                const QmlEventLocation &location);
     void frame(qint64 time, int frameRate, int animationCount, int threadId);
+    void sceneGraphFrame(QQmlProfilerService::SceneGraphFrameType type, qint64 time,
+                         qint64 numericData1, qint64 numericData2, qint64 numericData3,
+                         qint64 numericData4, qint64 numericData5);
+    void pixmapCache(QQmlProfilerService::PixmapEventType, qint64 time,
+                     const QmlEventLocation &location, int width, int height, int refCount);
 
 protected:
     virtual void messageReceived(const QByteArray &);

@@ -64,7 +64,8 @@ public:
 
     static QString getHashStringForQmlEvent(const QmlEventLocation &location, int eventType);
     static QString getHashStringForV8Event(const QString &displayName, const QString &function);
-    static QString qmlRangeTypeAsString(QQmlProfilerService::RangeType typeEnum);
+    static QString qmlRangeTypeAsString(QQmlProfilerService::RangeType type);
+    static QString qmlMessageAsString(QQmlProfilerService::Message type);
     static QString rootEventName();
     static QString rootEventDescription();
 
@@ -89,6 +90,11 @@ public slots:
     void addV8Event(int depth, const QString &function, const QString &filename,
                     int lineNumber, double totalTime, double selfTime);
     void addFrameEvent(qint64 time, int framerate, int animationcount, int threadId);
+    void addSceneGraphFrameEvent(QQmlProfilerService::SceneGraphFrameType type, qint64 time,
+                                 qint64 numericData1, qint64 numericData2, qint64 numericData3,
+                                 qint64 numericData4, qint64 numericData5);
+    void addPixmapCacheEvent(QQmlProfilerService::PixmapEventType type, qint64 time,
+                             const QmlEventLocation &location, int width, int height, int refcount);
 
     void complete();
     bool save(const QString &filename);

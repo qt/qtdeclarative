@@ -47,36 +47,49 @@
 #include <QFile>
 #include <QXmlStreamReader>
 
-#include <algorithm>
+const char PROFILER_FILE_VERSION[] = "1.02";
 
-namespace Constants {
-    const char TYPE_PAINTING_STR[] = "Painting";
-    const char TYPE_COMPILING_STR[] = "Compiling";
-    const char TYPE_CREATING_STR[] = "Creating";
-    const char TYPE_BINDING_STR[] = "Binding";
-    const char TYPE_HANDLINGSIGNAL_STR[] = "HandlingSignal";
-    const char PROFILER_FILE_VERSION[] = "1.02";
+static const char *RANGE_TYPE_STRINGS[] = {
+    "Painting",
+    "Compiling",
+    "Creating",
+    "Binding",
+    "HandlingSignal",
+    "Javascript"
+};
 
-    // Save animation frames in "Qt5 style", 3 would mean Qt4
-    const int ANIMATION_FRAME_TYPE = 4;
-}
+Q_STATIC_ASSERT(sizeof(RANGE_TYPE_STRINGS) ==
+                QQmlProfilerDefinitions::MaximumRangeType * sizeof(const char *));
+
+static const char *MESSAGE_STRINGS[] = {
+    "Event",
+    "RangeStart",
+    "RangeData",
+    "RangeLocation",
+    "RangeEnd",
+    "Complete",
+    "PixmapCache",
+    "SceneGraph"
+};
+
+Q_STATIC_ASSERT(sizeof(MESSAGE_STRINGS) ==
+                QQmlProfilerDefinitions::MaximumMessage * sizeof(const char *));
 
 struct QmlRangeEventData {
     QmlRangeEventData() {} // never called
-    QmlRangeEventData(const QString &_displayName,
-                 const QQmlProfilerService::BindingType &_bindingType,
-                 const QString &_eventHashStr,
-                 const QmlEventLocation &_location,
-                 const QString &_details,
-                 const QQmlProfilerService::RangeType &_eventType)
-        : displayName(_displayName),eventHashStr(_eventHashStr),location(_location),
-          details(_details),eventType(_eventType),bindingType(_bindingType) {}
+    QmlRangeEventData(const QString &_displayName, int _detailType, const QString &_eventHashStr,
+                      const QmlEventLocation &_location, const QString &_details,
+                      QQmlProfilerService::Message _message,
+                      QQmlProfilerService::RangeType _rangeType)
+        : displayName(_displayName), eventHashStr(_eventHashStr), location(_location),
+          details(_details), message(_message), rangeType(_rangeType), detailType(_detailType) {}
     QString displayName;
     QString eventHashStr;
     QmlEventLocation location;
     QString details;
-    QQmlProfilerService::RangeType eventType;
-    QQmlProfilerService::BindingType bindingType;
+    QQmlProfilerService::Message message;
+    QQmlProfilerService::RangeType rangeType;
+    int detailType; // can be BindingType, PixmapCacheEventType or SceneGraphFrameType
 };
 
 struct QmlRangeEventStartInstance {
@@ -84,13 +97,33 @@ struct QmlRangeEventStartInstance {
     QmlRangeEventStartInstance(qint64 _startTime, qint64 _duration, int _frameRate,
                   int _animationCount, int _threadId, QmlRangeEventData *_data)
         : startTime(_startTime), duration(_duration), frameRate(_frameRate),
-          animationCount(_animationCount), threadId(_threadId), data(_data)
+          animationCount(_animationCount), threadId(_threadId), numericData4(-1), numericData5(-1),
+          data(_data)
+        { }
+
+    QmlRangeEventStartInstance(qint64 _startTime, qint64 _numericData1, qint64 _numericData2,
+                               qint64 _numericData3, qint64 _numericData4, qint64 _numericData5,
+                               QmlRangeEventData *_data)
+        : startTime(_startTime), duration(-1), numericData1(_numericData1),
+          numericData2(_numericData2), numericData3(_numericData3), numericData4(_numericData4),
+          numericData5(_numericData5), data(_data)
         { }
     qint64 startTime;
     qint64 duration;
-    int frameRate;
-    int animationCount;
-    int threadId;
+    union {
+        int frameRate;
+        qint64 numericData1;
+    };
+    union {
+        int animationCount;
+        qint64 numericData2;
+    };
+    union {
+        int threadId;
+        qint64 numericData3;
+    };
+    qint64 numericData4;
+    qint64 numericData5;
     QmlRangeEventData *data;
 };
 
@@ -182,27 +215,20 @@ QString QmlProfilerData::getHashStringForV8Event(const QString &displayName, con
     return QString(QStringLiteral("%1:%2")).arg(displayName, function);
 }
 
-QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerService::RangeType typeEnum)
+QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerService::RangeType type)
 {
-    switch (typeEnum) {
-    case QQmlProfilerService::Painting:
-        return QLatin1String(Constants::TYPE_PAINTING_STR);
-        break;
-    case QQmlProfilerService::Compiling:
-        return QLatin1String(Constants::TYPE_COMPILING_STR);
-        break;
-    case QQmlProfilerService::Creating:
-        return QLatin1String(Constants::TYPE_CREATING_STR);
-        break;
-    case QQmlProfilerService::Binding:
-        return QLatin1String(Constants::TYPE_BINDING_STR);
-        break;
-    case QQmlProfilerService::HandlingSignal:
-        return QLatin1String(Constants::TYPE_HANDLINGSIGNAL_STR);
-        break;
-    default:
-        return QString::number((int)typeEnum);
-    }
+    if (type * sizeof(QString) < sizeof(RANGE_TYPE_STRINGS))
+        return QLatin1String(RANGE_TYPE_STRINGS[type]);
+    else
+        return QString::number(type);
+}
+
+QString QmlProfilerData::qmlMessageAsString(QQmlProfilerService::Message type)
+{
+    if (type * sizeof(QString) < sizeof(MESSAGE_STRINGS))
+        return QLatin1String(MESSAGE_STRINGS[type]);
+    else
+        return QString::number(type);
 }
 
 void QmlProfilerData::setTraceStartTime(qint64 time)
@@ -268,7 +294,8 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerService::RangeType type,
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(displayName, bindingType, eventHashStr, location, details, type);
+        newEvent = new QmlRangeEventData(displayName, bindingType, eventHashStr, location, details,
+                                         QQmlProfilerService::MaximumMessage, type);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
@@ -289,13 +316,64 @@ void QmlProfilerData::addFrameEvent(qint64 time, int framerate, int animationcou
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(displayName, QQmlProfilerService::QmlBinding, eventHashStr, QmlEventLocation(), details, QQmlProfilerService::Painting);
+        newEvent = new QmlRangeEventData(displayName, QQmlProfilerService::AnimationFrame,
+                                         eventHashStr,
+                                         QmlEventLocation(), details,
+                                         QQmlProfilerService::Event,
+                                         QQmlProfilerService::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
     QmlRangeEventStartInstance rangeEventStartInstance(time, -1, framerate, animationcount,
                                                        threadId, newEvent);
 
+    d->startInstanceList.append(rangeEventStartInstance);
+}
+
+void QmlProfilerData::addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time, qint64 numericData1, qint64 numericData2, qint64 numericData3, qint64 numericData4, qint64 numericData5)
+{
+    setState(AcquiringData);
+
+    QString eventHashStr = QString::fromLatin1("SceneGraph:%1").arg(type);
+    QmlRangeEventData *newEvent;
+    if (d->eventDescriptions.contains(eventHashStr)) {
+        newEvent = d->eventDescriptions[eventHashStr];
+    } else {
+        newEvent = new QmlRangeEventData(QStringLiteral("<SceneGraph>"), type, eventHashStr,
+                                         QmlEventLocation(), QString(),
+                                         QQmlProfilerService::SceneGraphFrame,
+                                         QQmlProfilerService::MaximumRangeType);
+        d->eventDescriptions.insert(eventHashStr, newEvent);
+    }
+
+    QmlRangeEventStartInstance rangeEventStartInstance(time, numericData1, numericData2,
+                                                       numericData3, numericData4, numericData5,
+                                                       newEvent);
+    d->startInstanceList.append(rangeEventStartInstance);
+}
+
+void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type,
+                                          qint64 time, const QmlEventLocation &location,
+                                          int width, int height, int refcount)
+{
+    setState(AcquiringData);
+
+    QString filePath = QUrl(location.filename).path();
+
+    QString eventHashStr = filePath.mid(filePath.lastIndexOf(QLatin1Char('/')) + 1) +
+            QStringLiteral(":") + QString::number(type);
+    QmlRangeEventData *newEvent;
+    if (d->eventDescriptions.contains(eventHashStr)) {
+        newEvent = d->eventDescriptions[eventHashStr];
+    } else {
+        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr, location, QString(),
+                                         QQmlProfilerService::PixmapCacheEvent,
+                                         QQmlProfilerService::MaximumRangeType);
+        d->eventDescriptions.insert(eventHashStr, newEvent);
+    }
+
+    QmlRangeEventStartInstance rangeEventStartInstance(time, width, height, refcount, 0, 0,
+                                                       newEvent);
     d->startInstanceList.append(rangeEventStartInstance);
 }
 
@@ -378,9 +456,8 @@ void QmlProfilerData::computeQmlTime()
 
     for (int i = 0; i < d->startInstanceList.count(); i++) {
         qint64 st = d->startInstanceList[i].startTime;
-        int type = d->startInstanceList[i].data->eventType;
 
-        if (type == QQmlProfilerService::Painting) {
+        if (d->startInstanceList[i].data->rangeType == QQmlProfilerService::Painting) {
             continue;
         }
 
@@ -474,7 +551,7 @@ bool QmlProfilerData::save(const QString &filename)
     stream.writeStartDocument();
 
     stream.writeStartElement(QStringLiteral("trace"));
-    stream.writeAttribute(QStringLiteral("version"), QLatin1String(Constants::PROFILER_FILE_VERSION));
+    stream.writeAttribute(QStringLiteral("version"), PROFILER_FILE_VERSION);
 
     stream.writeAttribute(QStringLiteral("traceStart"), QString::number(traceStartTime()));
     stream.writeAttribute(QStringLiteral("traceEnd"), QString::number(traceEndTime()));
@@ -486,35 +563,78 @@ bool QmlProfilerData::save(const QString &filename)
         stream.writeStartElement(QStringLiteral("event"));
         stream.writeAttribute(QStringLiteral("index"), QString::number(d->eventDescriptions.keys().indexOf(eventData->eventHashStr)));
         stream.writeTextElement(QStringLiteral("displayname"), eventData->displayName);
-        stream.writeTextElement(QStringLiteral("type"), qmlRangeTypeAsString(eventData->eventType));
+        if (eventData->rangeType != QQmlProfilerService::MaximumRangeType)
+            stream.writeTextElement(QStringLiteral("type"),
+                                    qmlRangeTypeAsString(eventData->rangeType));
+        else
+            stream.writeTextElement(QStringLiteral("type"),
+                                    qmlMessageAsString(eventData->message));
         if (!eventData->location.filename.isEmpty()) {
             stream.writeTextElement(QStringLiteral("filename"), eventData->location.filename);
             stream.writeTextElement(QStringLiteral("line"), QString::number(eventData->location.line));
             stream.writeTextElement(QStringLiteral("column"), QString::number(eventData->location.column));
         }
         stream.writeTextElement(QStringLiteral("details"), eventData->details);
-        if (eventData->eventType == QQmlProfilerService::Binding)
-            stream.writeTextElement(QStringLiteral("bindingType"), QString::number((int)eventData->bindingType));
-        else if (eventData->eventType == QQmlProfilerService::Painting)
+        if (eventData->rangeType == QQmlProfilerService::Binding)
+            stream.writeTextElement(QStringLiteral("bindingType"),
+                                    QString::number((int)eventData->detailType));
+        else if (eventData->message == QQmlProfilerService::Event &&
+                 eventData->detailType == QQmlProfilerService::AnimationFrame)
             stream.writeTextElement(QStringLiteral("animationFrame"),
-                                    QString::number(Constants::ANIMATION_FRAME_TYPE));
+                                    QString::number((int)eventData->detailType));
+        else if (eventData->message == QQmlProfilerService::PixmapCacheEvent)
+            stream.writeTextElement(QStringLiteral("cacheEventType"),
+                                    QString::number((int)eventData->detailType));
+        else if (eventData->message == QQmlProfilerService::SceneGraphFrame)
+            stream.writeTextElement(QStringLiteral("sgEventType"),
+                                    QString::number((int)eventData->detailType));
         stream.writeEndElement();
     }
     stream.writeEndElement(); // eventData
 
     stream.writeStartElement(QStringLiteral("profilerDataModel"));
-    foreach (const QmlRangeEventStartInstance &rangedEvent, d->startInstanceList) {
+    foreach (const QmlRangeEventStartInstance &event, d->startInstanceList) {
         stream.writeStartElement(QStringLiteral("range"));
-        stream.writeAttribute(QStringLiteral("startTime"), QString::number(rangedEvent.startTime));
-        if (rangedEvent.duration >= 0)
+        stream.writeAttribute(QStringLiteral("startTime"), QString::number(event.startTime));
+        if (event.duration >= 0)
             stream.writeAttribute(QStringLiteral("duration"),
-                                  QString::number(rangedEvent.duration));
-        stream.writeAttribute(QStringLiteral("eventIndex"), QString::number(d->eventDescriptions.keys().indexOf(rangedEvent.data->eventHashStr)));
-        if (rangedEvent.data->eventType == QQmlProfilerService::Painting && rangedEvent.animationCount >= 0) {
-            // animation frame
-            stream.writeAttribute(QStringLiteral("framerate"), QString::number(rangedEvent.frameRate));
-            stream.writeAttribute(QStringLiteral("animationcount"), QString::number(rangedEvent.animationCount));
-            stream.writeAttribute(QStringLiteral("thread"), QString::number(rangedEvent.threadId));
+                                  QString::number(event.duration));
+        stream.writeAttribute(QStringLiteral("eventIndex"), QString::number(d->eventDescriptions.keys().indexOf(event.data->eventHashStr)));
+        if (event.data->message == QQmlProfilerService::Event &&
+                event.data->detailType == QQmlProfilerService::AnimationFrame) {
+            // special: animation frame
+            stream.writeAttribute(QStringLiteral("framerate"), QString::number(event.frameRate));
+            stream.writeAttribute(QStringLiteral("animationcount"), QString::number(event.animationCount));
+            stream.writeAttribute(QStringLiteral("thread"), QString::number(event.threadId));
+        } else if (event.data->message == QQmlProfilerService::PixmapCacheEvent) {
+            // special: pixmap cache event
+            if (event.data->detailType == QQmlProfilerService::PixmapSizeKnown) {
+                stream.writeAttribute(QStringLiteral("width"),
+                                      QString::number(event.numericData1));
+                stream.writeAttribute(QStringLiteral("height"),
+                                      QString::number(event.numericData2));
+            } else if (event.data->detailType == QQmlProfilerService::PixmapReferenceCountChanged ||
+                    event.data->detailType == QQmlProfilerService::PixmapCacheCountChanged) {
+                stream.writeAttribute(QStringLiteral("refCount"),
+                                      QString::number(event.numericData3));
+            }
+        } else if (event.data->message == QQmlProfilerService::SceneGraphFrame) {
+            // special: scenegraph frame events
+            if (event.numericData1 > 0)
+                stream.writeAttribute(QStringLiteral("timing1"),
+                                      QString::number(event.numericData1));
+            if (event.numericData2 > 0)
+                stream.writeAttribute(QStringLiteral("timing2"),
+                                      QString::number(event.numericData2));
+            if (event.numericData3 > 0)
+                stream.writeAttribute(QStringLiteral("timing3"),
+                                      QString::number(event.numericData3));
+            if (event.numericData4 > 0)
+                stream.writeAttribute(QStringLiteral("timing4"),
+                                      QString::number(event.numericData4));
+            if (event.numericData5 > 0)
+                stream.writeAttribute(QStringLiteral("timing5"),
+                                      QString::number(event.numericData5));
         }
         stream.writeEndElement();
     }

@@ -109,6 +109,15 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int,int)));
+    connect(&m_qmlProfilerClient, SIGNAL(sceneGraphFrame(QQmlProfilerService::SceneGraphFrameType,
+                                         qint64,qint64,qint64,qint64,qint64,qint64)),
+            &m_profilerData, SLOT(addSceneGraphFrameEvent(QQmlProfilerService::SceneGraphFrameType,
+                                  qint64,qint64,qint64,qint64,qint64,qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(pixmapCache(QQmlProfilerService::PixmapEventType,qint64,
+                                                     QmlEventLocation,int,int,int)),
+            &m_profilerData, SLOT(addPixmapCacheEvent(QQmlProfilerService::PixmapEventType,qint64,
+                                                      QmlEventLocation,int,int,int)));
+
     connect(&m_qmlProfilerClient, SIGNAL(complete()), this, SLOT(qmlComplete()));
 
     connect(&m_v8profilerClient, SIGNAL(enabledChanged()), this, SLOT(profilerClientEnabled()));
