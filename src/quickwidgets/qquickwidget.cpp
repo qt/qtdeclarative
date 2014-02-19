@@ -746,6 +746,10 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     Q_D(QQuickWidget);
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
+    // Use the constructor taking localPos and screenPos. That puts localPos into the
+    // event's localPos and windowPos, and screenPos into the event's screenPos. This way
+    // the windowPos in e is ignored and is replaced by localPos. This is necessary
+    // because QQuickWindow thinks of itself as a top-level window always.
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     d->offscreenWindow->mouseMoveEvent(&mappedEvent);
 }
@@ -784,18 +788,43 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
     d->offscreenWindow->mouseReleaseEvent(&mappedEvent);
 }
 
+#ifndef QT_NO_WHEELEVENT
+/*! \reimp */
+void QQuickWidget::wheelEvent(QWheelEvent *e)
+{
+    Q_D(QQuickWidget);
+    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+
+    // Wheel events only have local and global positions, no need to map.
+    d->offscreenWindow->wheelEvent(e);
+}
+#endif
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
     Q_D(QQuickWidget);
-    if (e->type() == QEvent::Timer) {
+
+    switch (e->type()) {
+    case QEvent::Timer:
         d->eventPending = false;
         killTimer(d->updateTimer);
         d->updateTimer = 0;
         if (d->updatePending)
             d->renderSceneGraph();
         return true;
+
+    case QEvent::TouchBegin:
+    case QEvent::TouchEnd:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchCancel:
+        // Touch events only have local and global positions, no need to map.
+        return d->offscreenWindow->event(e);
+
+    default:
+        break;
     }
+
     return QWidget::event(e);
 }
 

@@ -115,6 +115,10 @@ protected:
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
 
+#ifndef QT_NO_WHEELEVENT
+    virtual void wheelEvent(QWheelEvent *);
+#endif
+
     bool event(QEvent *);
 
 private:
