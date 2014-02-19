@@ -1921,7 +1921,11 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         }
 
         if (binding->type != QV4::CompiledData::Binding::Type_Script) {
-            COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
+            if (binding->type < QV4::CompiledData::Binding::Type_Script) {
+                COMPILE_EXCEPTION(binding->location, tr("Cannot assign a value to a signal (expecting a script to be run)"));
+            } else {
+                COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
+            }
         }
 
         QQmlJS::Engine &jsEngine = parsedQML->jsParserEngine;
