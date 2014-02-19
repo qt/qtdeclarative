@@ -2407,7 +2407,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
         }
 
         if (!qmlUnit->header.stringAt(target->idIndex).isEmpty()) {
-            error(binding, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
+            error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
         }
 

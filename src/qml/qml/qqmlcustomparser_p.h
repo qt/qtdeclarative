@@ -149,8 +149,11 @@ protected:
     void error(const QString& description);
     void error(const QQmlCustomParserProperty&, const QString& description);
     void error(const QQmlCustomParserNode&, const QString& description);
-    void error(const QV4::CompiledData::Binding *binding, const QString& description);
-    void error(const QV4::CompiledData::Object *object, const QString& description);
+    void error(const QV4::CompiledData::Binding *binding, const QString& description)
+    { error(binding->location, description); }
+    void error(const QV4::CompiledData::Object *object, const QString& description)
+    { error(object->location, description); }
+    void error(const QV4::CompiledData::Location &location, const QString& description);
 
     int evaluateEnum(const QByteArray&, bool *ok) const;
 
