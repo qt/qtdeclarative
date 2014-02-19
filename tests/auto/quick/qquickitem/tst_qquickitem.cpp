@@ -40,11 +40,13 @@
 ****************************************************************************/
 
 #include <qtest.h>
+#include <qsignalspy.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickview.h>
 #include "private/qquickfocusscope_p.h"
+#include "private/qquickwindow_p.h"
 #include "private/qquickitem_p.h"
 #include <qpa/qwindowsysteminterface.h>
 #include <QDebug>
@@ -156,6 +158,8 @@ private slots:
     void touchEventAcceptIgnore();
     void polishOutsideAnimation();
     void polishOnCompleted();
+    void polishLaterWhenVisible();
+    void polishWhenOtherHidden();
 
     void wheelEvent_data();
     void wheelEvent();
@@ -1394,6 +1398,63 @@ void tst_qquickitem::polishOnCompleted()
     QVERIFY(item);
 
     QTRY_VERIFY(item->wasPolished);
+}
+
+void tst_qquickitem::polishLaterWhenVisible()
+{
+    QQuickWindow window;
+    QQuickWindowPrivate *wp = QQuickWindowPrivate::get(&window);
+    window.resize(200, 200);
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    TestPolishItem *item = new TestPolishItem(window.contentItem());
+    item->setSize(QSizeF(200, 100));
+    item->setVisible(false);
+    item->polish();
+
+    QVERIFY(!wp->itemsToPolish.contains(item));
+    window.grabWindow(); // trigger QQuickWindowPrivate::polishItems()
+    QVERIFY(!item->wasPolished);
+
+    item->setVisible(true);
+    QVERIFY(wp->itemsToPolish.contains(item));
+    window.grabWindow(); // trigger QQuickWindowPrivate::polishItems()
+    QVERIFY(item->wasPolished);
+    QVERIFY(!wp->itemsToPolish.contains(item));
+}
+
+void tst_qquickitem::polishWhenOtherHidden()
+{
+    QQuickWindow window;
+    QQuickWindowPrivate *wp = QQuickWindowPrivate::get(&window);
+    window.resize(200, 200);
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    // a hidden item pending for polish...
+    TestPolishItem *hiddenItem = new TestPolishItem(window.contentItem());
+    hiddenItem->setSize(QSizeF(200, 100));
+    hiddenItem->setVisible(false);
+    hiddenItem->polish();
+
+    QVERIFY(!wp->itemsToPolish.contains(hiddenItem));
+    window.grabWindow(); // trigger QQuickWindowPrivate::polishItems()
+    QVERIFY(!hiddenItem->wasPolished);
+
+    // ...should not block a visible item from being polished
+    TestPolishItem *visibleItem = new TestPolishItem(window.contentItem());
+    visibleItem->setSize(QSizeF(200, 100));
+    visibleItem->setVisible(true);
+    visibleItem->polish();
+
+    QVERIFY(wp->itemsToPolish.contains(visibleItem));
+    QVERIFY(!wp->itemsToPolish.contains(hiddenItem));
+    window.grabWindow(); // trigger QQuickWindowPrivate::polishItems()
+    QVERIFY(visibleItem->wasPolished);
+    QVERIFY(!hiddenItem->wasPolished);
+    QVERIFY(!wp->itemsToPolish.contains(visibleItem));
+    QVERIFY(!wp->itemsToPolish.contains(hiddenItem));
 }
 
 void tst_qquickitem::wheelEvent_data()

@@ -258,23 +258,16 @@ void QQuickWindowPrivate::polishItems()
 {
     int maxPolishCycles = 100000;
 
-    int removedItems;
-    do {
-        removedItems = 0;
+    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
         QSet<QQuickItem *> itms = itemsToPolish;
+        itemsToPolish.clear();
 
         for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
             QQuickItem *item = *it;
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-            if (item->isVisible() || (itemPrivate->extra.isAllocated() && itemPrivate->extra->effectRefCount>0)) {
-                itemPrivate->polishScheduled = false;
-                itemsToPolish.remove(item);
-                item->updatePolish();
-                ++removedItems;
-            }
+            QQuickItemPrivate::get(item)->polishScheduled = false;
+            item->updatePolish();
         }
-    } while (removedItems > 0 && --maxPolishCycles > 0);
+    }
 
     if (maxPolishCycles == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
