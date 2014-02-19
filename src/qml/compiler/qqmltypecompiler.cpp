@@ -465,6 +465,17 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         Q_ASSERT(typeRef);
         baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
         Q_ASSERT(baseTypeCache);
+    } else if (instantiatingBinding && instantiatingBinding->isAttachedProperty()) {
+        QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(instantiatingBinding->propertyNameIndex);
+        Q_ASSERT(typeRef);
+        Q_ASSERT(typeRef->type);
+        const QMetaObject *attachedMo = typeRef->type->attachedPropertiesType();
+        if (!attachedMo) {
+            recordError(instantiatingBinding->location, tr("Non-existent attached object"));
+            return false;
+        }
+        baseTypeCache = enginePrivate->cache(attachedMo);
+        Q_ASSERT(baseTypeCache);
     }
 
     if (needVMEMetaObject) {
@@ -477,9 +488,10 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
 
     if (propertyCaches.at(objectIndex)) {
         for (const QtQml::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
-            if (binding->type == QV4::CompiledData::Binding::Type_Object || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+            if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
                     return false;
+            }
     }
 
     return true;
