@@ -1483,6 +1483,17 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         QString name = stringAt(binding->propertyNameIndex);
 
+        if (name.constData()->isUpper()) {
+            QQmlType *type = 0;
+            QQmlImportNamespace *typeNamespace = 0;
+            compiler->imports()->resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
+            if (typeNamespace)
+                recordError(binding->location, tr("Invalid use of namespace"));
+            else
+                recordError(binding->location, tr("Invalid attached object assignment"));
+            return false;
+        }
+
         bool bindingToDefaultProperty = false;
 
         bool notInRevision = false;
