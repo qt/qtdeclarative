@@ -259,9 +259,8 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
 
     QQmlJS::AST::UiObjectDefinition *rootObject = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(program->members->member);
     Q_ASSERT(rootObject);
-    output->indexOfRootObject = defineQMLObject(rootObject);
-
-    collectTypeReferences();
+    if (defineQMLObject(&output->indexOfRootObject, rootObject))
+        collectTypeReferences();
 
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
@@ -311,10 +310,14 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectDefinition *node)
         lastId = lastId->next;
     bool isType = lastId->name.unicode()->isUpper();
     if (isType) {
-        int idx = defineQMLObject(node);
+        int idx = 0;
+        if (!defineQMLObject(&idx, node))
+            return false;
         appendBinding(node->qualifiedTypeNameId->identifierToken, emptyStringIndex, idx);
     } else {
-        int idx = defineQMLObject(/*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, /*declarations should go here*/_object);
+        int idx = 0;
+        if (!defineQMLObject(&idx, /*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, /*declarations should go here*/_object))
+            return false;
         appendBinding(node->qualifiedTypeNameId, idx);
     }
     return false;
@@ -322,7 +325,9 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectDefinition *node)
 
 bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectBinding *node)
 {
-    int idx = defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer);
+    int idx = 0;
+    if (!defineQMLObject(&idx, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer))
+        return false;
     appendBinding(node->qualifiedId, idx, node->hasOnToken);
     return false;
 }
@@ -346,7 +351,9 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
     while (member) {
         QQmlJS::AST::UiObjectDefinition *def = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(member->member);
 
-        int idx = defineQMLObject(def);
+        int idx = 0;
+        if (!defineQMLObject(&idx, def))
+            return false;
         appendBinding(name->identifierToken, registerString(name->name.toString()), idx, /*isListItem*/ true);
 
         member = member->next;
@@ -386,11 +393,20 @@ void QQmlCodeGenerator::accept(QQmlJS::AST::Node *node)
     QQmlJS::AST::Node::acceptChild(node, this);
 }
 
-int QQmlCodeGenerator::defineQMLObject(QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride)
+bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride)
 {
+    if (QQmlJS::AST::UiQualifiedId *lastName = qualifiedTypeNameId) {
+        while (lastName->next)
+            lastName = lastName->next;
+        if (!lastName->name.constData()->isUpper()) {
+            recordError(lastName->identifierToken, tr("Expected type name"));
+            return false;
+        }
+    }
+
     QmlObject *obj = New<QmlObject>();
     _objects.append(obj);
-    const int objectIndex = _objects.size() - 1;
+    *objectIndex = _objects.size() - 1;
     qSwap(_object, obj);
 
     _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, location);
@@ -406,12 +422,17 @@ int QQmlCodeGenerator::defineQMLObject(QQmlJS::AST::UiQualifiedId *qualifiedType
 
     qSwap(_object, obj);
 
+    if (!errors.isEmpty())
+        return false;
+
     QQmlJS::AST::SourceLocation loc;
     QString error = obj->sanityCheckFunctionNames(_functions, illegalNames, &loc);
-    if (!error.isEmpty())
+    if (!error.isEmpty()) {
         recordError(loc, error);
+        return false;
+    }
 
-    return objectIndex;
+    return true;
 }
 
 bool QQmlCodeGenerator::visit(QQmlJS::AST::UiImport *node)
@@ -1103,7 +1124,9 @@ bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToRe
         else
             binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
-        int objIndex = defineQMLObject(0, QQmlJS::AST::SourceLocation(), 0, 0);
+        int objIndex = 0;
+        if (!defineQMLObject(&objIndex, 0, QQmlJS::AST::SourceLocation(), 0, 0))
+            return false;
         binding->value.objectIndex = objIndex;
 
         QString error = (*object)->appendBinding(binding, /*isListBinding*/false);

@@ -302,9 +302,9 @@ public:
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    int defineQMLObject(QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride = 0);
-    int defineQMLObject(QQmlJS::AST::UiObjectDefinition *node, QmlObject *declarationsOverride = 0)
-    { return defineQMLObject(node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride = 0);
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, QmlObject *declarationsOverride = 0)
+    { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
     QStringRef asStringRef(QQmlJS::AST::Node *node);
