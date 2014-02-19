@@ -1143,8 +1143,14 @@ bool QQmlComponentAndAliasResolver::resolve()
             COMPILE_EXCEPTION(obj, tr("Cannot create empty component specification"));
 
         const QtQml::Binding *rootBinding = obj->firstBinding();
+
+        for (const QtQml::Binding *b = rootBinding; b; b = b->next) {
+            if (b->propertyNameIndex != 0)
+                COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
+        }
+
         if (rootBinding->next || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
-            COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
+            COMPILE_EXCEPTION(obj, tr("Invalid component body specification"));
 
         componentBoundaries.append(rootBinding->value.objectIndex);
     }
