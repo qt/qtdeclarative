@@ -204,7 +204,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
 void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 {
-    Q_ASSERT(!s_renderLoopInstance);
+    Q_ASSERT(s_renderLoopInstance->isNull());
     s_renderLoopInstance->reset(instance);
 }
 
