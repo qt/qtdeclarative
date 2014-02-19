@@ -166,14 +166,14 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
 /*!
     \class QQuickWidget
-    \since 5.0
-    \brief The QQuickWidget class provides a window for displaying a Qt Quick user interface.
+    \since 5.3
+    \brief The QQuickWidget class provides a widget for displaying a Qt Quick user interface.
 
     \inmodule QtQuick
 
-    This is a convenience subclass of QQuickWindow which
-    will automatically load and display a QML scene when given the URL of the main source file. Alternatively,
-    you can instantiate your own objects using QQmlComponent and place them in a manually setup QQuickWindow.
+    This is a convenience wrapper for QQuickWindow which will automatically load and display a QML
+    scene when given the URL of the main source file. Alternatively, you can instantiate your own
+    objects using QQmlComponent and place them in a manually setup QQuickWidget.
 
     Typical usage:
 
@@ -191,6 +191,16 @@ void QQuickWidgetPrivate::renderSceneGraph()
     is SizeViewToRootObject, which will load the component and resize it to the
     size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
+
+    \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
+    The restrictions on stacking order do not apply, making QQuickWidget the more flexible
+    alternative behaving more like an ordinary widget. This comes at the expense of
+    performance. Unlike QQuickWindow and QQuickView, QQuickWidget involves rendering into OpenGL
+    framebuffer objects. This will naturally carry a minor performance hit.
+
+    \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
+    some of the benefits of threaded rendering, for example Animator classes and vsync driven
+    animations, will not be available.
 
     \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
 */

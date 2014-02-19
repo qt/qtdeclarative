@@ -42,6 +42,12 @@ QtQml
 QtQuick
 ------
 
+- Introduced QQuickWidget. This is the equivalent of QQuickView in the
+  QWidget world. It allows easy and flexible embedding of QtQuick
+  scenes into widget-based application windows without the
+  restrictions imposed by QWidget::createWindowContainer().
+
+
 ****************************************************************************
 *                          Database Drivers                                *
 ****************************************************************************
