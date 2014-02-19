@@ -61,28 +61,18 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistance
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
     , m_blitProgram(0)
+    , m_blitBuffer(QOpenGLBuffer::VertexBuffer)
     , m_fboGuard(0)
 #if !defined(QT_OPENGL_ES_2)
     , m_funcs(0)
 #endif
 {
-    m_blitVertexCoordinateArray[0] = -1.0f;
-    m_blitVertexCoordinateArray[1] = -1.0f;
-    m_blitVertexCoordinateArray[2] =  1.0f;
-    m_blitVertexCoordinateArray[3] = -1.0f;
-    m_blitVertexCoordinateArray[4] =  1.0f;
-    m_blitVertexCoordinateArray[5] =  1.0f;
-    m_blitVertexCoordinateArray[6] = -1.0f;
-    m_blitVertexCoordinateArray[7] =  1.0f;
-
-    m_blitTextureCoordinateArray[0] = 0.0f;
-    m_blitTextureCoordinateArray[1] = 0.0f;
-    m_blitTextureCoordinateArray[2] = 1.0f;
-    m_blitTextureCoordinateArray[3] = 0.0f;
-    m_blitTextureCoordinateArray[4] = 1.0f;
-    m_blitTextureCoordinateArray[5] = 1.0f;
-    m_blitTextureCoordinateArray[6] = 0.0f;
-    m_blitTextureCoordinateArray[7] = 1.0f;
+    m_blitBuffer.create();
+    m_blitBuffer.bind();
+    static GLfloat buffer[16] = {1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+                                 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+    m_blitBuffer.allocate(buffer, sizeof(buffer));
+    m_blitBuffer.release();
 
     m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
 }
@@ -415,12 +405,13 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     glViewport(0, 0, oldWidth, oldHeight);
 
-    ctx->functions()->glVertexAttribPointer(QT_VERTEX_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_blitVertexCoordinateArray);
-    ctx->functions()->glVertexAttribPointer(QT_TEXTURE_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_blitTextureCoordinateArray);
+    m_blitBuffer.bind();
 
     m_blitProgram->bind();
     m_blitProgram->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
     m_blitProgram->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
+    m_blitProgram->setAttributeBuffer(int(QT_VERTEX_COORDS_ATTR), GL_FLOAT, 0, 2);
+    m_blitProgram->setAttributeBuffer(int(QT_TEXTURE_COORDS_ATTR), GL_FLOAT, 8, 2);
     m_blitProgram->disableAttributeArray(int(QT_OPACITY_ATTR));
     m_blitProgram->setUniformValue("imageTexture", GLuint(0));
 
@@ -456,6 +447,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     m_blitProgram->disableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
     m_blitProgram->disableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
+    m_blitBuffer.release();
 }
 
 bool QSGDefaultDistanceFieldGlyphCache::useTextureResizeWorkaround() const

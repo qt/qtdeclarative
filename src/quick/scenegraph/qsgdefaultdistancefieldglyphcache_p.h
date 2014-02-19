@@ -45,6 +45,7 @@
 #include "qsgadaptationlayer_p.h"
 #include <QtGui/qopenglfunctions.h>
 #include <qopenglshaderprogram.h>
+#include <qopenglbuffer.h>
 #include <QtGui/private/qopenglengineshadersource_p.h>
 #include <private/qsgareaallocator_p.h>
 
@@ -133,8 +134,7 @@ private:
     QSGAreaAllocator *m_areaAllocator;
 
     QOpenGLShaderProgram *m_blitProgram;
-    GLfloat m_blitVertexCoordinateArray[8];
-    GLfloat m_blitTextureCoordinateArray[8];
+    QOpenGLBuffer m_blitBuffer;
 
     QOpenGLSharedResourceGuard *m_fboGuard;
 #if !defined(QT_OPENGL_ES_2)
