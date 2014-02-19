@@ -442,6 +442,8 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     d->polishItems();
     QSG_RENDER_TIMING_SAMPLE(time_polished);
 
+    emit window->afterAnimating();
+
     RLDEBUG(" - syncing");
     d->syncSceneGraph();
     QSG_RENDER_TIMING_SAMPLE(time_synced);

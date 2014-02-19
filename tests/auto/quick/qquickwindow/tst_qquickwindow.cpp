@@ -351,6 +351,8 @@ private slots:
     void cursor();
 #endif
 
+    void animatingSignal();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -1655,6 +1657,19 @@ void tst_qquickwindow::qobjectEventFilter_mouse()
 
     // clean up mouse press state for the next tests
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, point);
+}
+
+void tst_qquickwindow::animatingSignal()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    QSignalSpy spy(&window, SIGNAL(afterAnimating()));
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QTRY_VERIFY(spy.count() > 1);
 }
 
 QTEST_MAIN(tst_qquickwindow)

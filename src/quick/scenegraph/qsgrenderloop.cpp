@@ -302,6 +302,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
 
+    emit window->afterAnimating();
+
     qint64 renderTime = 0, syncTime = 0;
     QElapsedTimer renderTimer;
     bool profileFrames = qsg_render_timing()  || QQuickProfiler::enabled;

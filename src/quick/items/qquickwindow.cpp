@@ -3044,6 +3044,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     do so can result in the scene not rendering properly.
  */
 
+/*!
+    \fn void QQuickWindow::afterAnimating()
+
+    This signal is emitted on the gui thread before requesting the render thread to
+    perform the synchronization of the scene graph.
+
+    Unlike the other similar signals, this one is emitted on the gui thread instead
+    of the render thread. It can be used to synchronize external animation systems
+    with the QML content.
+ */
 
 
 /*!

@@ -1096,6 +1096,8 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w)
 
     w->updateDuringSync = false;
 
+    emit w->window->afterAnimating();
+
     QSG_GUI_DEBUG(w->window, " - lock for sync...");
     w->thread->mutex.lock();
     m_locked = true;
