@@ -95,7 +95,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     renderControl = new QQuickRenderControl;
     offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
-    offscreenWindow->create();
+    // Do not call create() on offscreenWindow.
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
@@ -155,7 +155,9 @@ void QQuickWidgetPrivate::renderSceneGraph()
         qWarning("QQuickWidget: render scenegraph with no context");
         return;
     }
-    context->makeCurrent(offscreenWindow);
+
+    Q_ASSERT(q->window()->windowHandle()->handle());
+    context->makeCurrent(q->window()->windowHandle());
     renderControl->polishItems();
     renderControl->sync();
     renderControl->render();
@@ -493,20 +495,25 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
 
 void QQuickWidgetPrivate::createContext()
 {
+    Q_Q(QQuickWidget);
     if (context)
         return;
 
     context = new QOpenGLContext();
-    context->setFormat(offscreenWindow->requestedFormat());
+    context->setFormat(q->window()->windowHandle()->requestedFormat());
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
     if (!context->create()) {
-        qWarning("QtQuick: failed to create OpenGL context");
+        qWarning("QQuickWidget: failed to create OpenGL context");
         delete context;
         context = 0;
     }
 
-    renderControl->initialize(context);
+    Q_ASSERT(q->window()->windowHandle()->handle());
+    if (context->makeCurrent(q->window()->windowHandle()))
+        renderControl->initialize(context);
+    else
+        qWarning("QQuickWidget: failed to make window surface current");
 }
 
 void QQuickWidget::createFramebufferObject()
@@ -518,7 +525,7 @@ void QQuickWidget::createFramebufferObject()
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
-        qWarning("createFBO with no context");
+        qWarning("QQuickWidget: Attempted to create FBO with no context");
         return;
     }
 
@@ -526,10 +533,17 @@ void QQuickWidget::createFramebufferObject()
         context->setShareContext(QWidgetPrivate::get(window())->shareContext());
         context->create();
     }
-    context->makeCurrent(d->offscreenWindow);
+
+    Q_ASSERT(window()->windowHandle()->handle());
+    context->makeCurrent(window()->windowHandle());
     d->fbo = new QOpenGLFramebufferObject(size());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
+
+    // Sanity check: The window must not have an underlying platform window.
+    // Having one would mean create() was called and platforms that only support
+    // a single native window were in trouble.
+    Q_ASSERT(!d->offscreenWindow->handle());
 }
 
 void QQuickWidget::destroyFramebufferObject()
@@ -690,7 +704,9 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         qWarning("QQuickWidget::resizeEvent() no OpenGL context");
         return;
     }
-    context->makeCurrent(d->offscreenWindow);
+
+    Q_ASSERT(window()->windowHandle()->handle());
+    context->makeCurrent(window()->windowHandle());
     d->renderControl->render();
     glFlush();
     context->doneCurrent();

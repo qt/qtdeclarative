@@ -114,9 +114,13 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
     Q_D(QQuickRenderControl);
     if (!d->window)
         return;
-    bool current = gl->makeCurrent(d->window);
-    if (current)
-        QQuickWindowPrivate::get(d->window)->context->initialize(gl);
+
+    // It is the caller's responsiblity to make a context/surface current.
+    // It cannot be done here since the surface to use may not be the
+    // surface belonging to window. In fact window may not have a native
+    // window/surface at all.
+
+    QQuickWindowPrivate::get(d->window)->context->initialize(gl);
 }
 
 void QQuickRenderControl::invalidate()

@@ -361,6 +361,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {
     QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
+    if (!renderer)
+        return;
+
     animationController->advance();
     emit q->beforeRendering();
     int fboId = 0;
