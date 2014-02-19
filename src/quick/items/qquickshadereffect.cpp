@@ -478,6 +478,19 @@ void QQuickShaderEffectCommon::sourceDestroyed(QObject *object)
     }
 }
 
+static bool qquick_uniqueInUniformData(QQuickItem *source, const QVector<QQuickShaderEffectMaterial::UniformData> *uniformData, int typeToSkip, int indexToSkip)
+{
+    for (int s=0; s<QQuickShaderEffectMaterialKey::ShaderTypeCount; ++s) {
+        for (int i=0; i<uniformData[s].size(); ++i) {
+            if (s == typeToSkip && i == indexToSkip)
+                continue;
+            const QQuickShaderEffectMaterial::UniformData &d = uniformData[s][i];
+            if (d.specialType == QQuickShaderEffectMaterial::UniformData::Sampler && qvariant_cast<QObject *>(d.value) == source)
+                return false;
+        }
+    }
+    return true;
+}
 
 void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
                                                bool *textureProviderChanged)
@@ -490,7 +503,13 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
         if (source) {
             if (item->window())
                 QQuickItemPrivate::get(source)->derefWindow();
-            QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+
+            // QObject::disconnect() will disconnect all matching connections. If the same
+            // source has been attached to two separate samplers, then changing one of them
+            // would trigger both to be disconnected. Without the connection we'll end up
+            // with a dangling pointer in the uniformData.
+            if (qquick_uniqueInUniformData(source, uniformData, shaderType, index))
+                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
         }
 
         d.value = item->property(d.name.constData());
