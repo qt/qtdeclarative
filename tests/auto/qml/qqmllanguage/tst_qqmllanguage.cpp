@@ -265,7 +265,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        DETERMINE_ERRORS(errorfile,actual,expected);\
+        DETERMINE_ERRORS(errorfile,expected,actual);\
         if (qgetenv("DEBUG") != "" && expected != actual) \
             qWarning() << "Expected:" << expected << "Actual:" << actual;  \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
