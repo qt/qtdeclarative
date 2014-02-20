@@ -1482,9 +1482,13 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
             if (!validateObject(binding->value.objectIndex, binding))
                 return false;
-            // Nothing further to check for attached properties.
-            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+                if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
+                    recordError(binding->location, tr("Attached properties cannot be used here"));
+                    return false;
+                }
                 continue;
+            }
         }
 
         // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
