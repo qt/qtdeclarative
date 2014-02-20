@@ -286,6 +286,7 @@ public:
         , pendingUpdate(0)
         , sleeping(false)
         , syncResultedInChanges(false)
+        , exposeCycle(NoExpose)
         , active(false)
         , window(0)
         , stopEventProcessing(false)
@@ -331,6 +332,12 @@ public:
         RepaintRequest      = 0x02
     };
 
+    enum ExposeCycle {
+        NoExpose,
+        ExposePendingSync,
+        ExposePendingSwap
+    };
+
     QSGThreadedRenderLoop *wm;
     QOpenGLContext *gl;
     QSGRenderContext *sgrc;
@@ -340,6 +347,7 @@ public:
     uint pendingUpdate;
     bool sleeping;
     bool syncResultedInChanges;
+    ExposeCycle exposeCycle;
 
     volatile bool active;
 
@@ -366,9 +374,10 @@ bool QSGRenderThread::event(QEvent *e)
         QSG_RT_DEBUG("WM_Expose");
         WMExposeEvent *se = static_cast<WMExposeEvent *>(e);
         Q_ASSERT(!window || window == se->window);
-        pendingUpdate |= RepaintRequest;
         windowSize = se->size;
         window = se->window;
+        Q_ASSERT(exposeCycle == NoExpose);
+        exposeCycle = ExposePendingSync;
         return true; }
 
     case WM_Obscure: {
@@ -393,6 +402,10 @@ bool QSGRenderThread::event(QEvent *e)
             stopEventProcessing = true;
         if (window)
             pendingUpdate |= SyncRequest;
+        if (exposeCycle == ExposePendingSync) {
+            pendingUpdate |= RepaintRequest;
+            exposeCycle = ExposePendingSwap;
+        }
         return true;
 
     case WM_TryRelease: {
@@ -600,6 +613,19 @@ void QSGRenderThread::syncAndRender()
     }
 
     QSG_RT_DEBUG(" - rendering done");
+
+    // Though it would be more correct to put this block directly after
+    // fireFrameSwapped in the if (current) branch above, we don't do
+    // that to avoid blocking the GUI thread in the case where it
+    // has started rendering with a bad window, causing makeCurrent to
+    // fail or if the window has a bad size.
+    mutex.lock();
+    if (exposeCycle == ExposePendingSwap) {
+        QSG_RT_DEBUG(" - waking GUI after expose");
+        exposeCycle = NoExpose;
+        waitCondition.wakeOne();
+    }
+    mutex.unlock();
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing)
@@ -952,6 +978,15 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
 
     w->thread->postEvent(new WMExposeEvent(w->window));
     polishAndSync(w);
+
+    w->thread->mutex.lock();
+    if (w->thread->exposeCycle != QSGRenderThread::NoExpose) {
+        QSG_GUI_DEBUG(w->window, " - waiting for swap to complete...");
+        w->thread->waitCondition.wait(&w->thread->mutex);
+    }
+    Q_ASSERT(w->thread->exposeCycle == QSGRenderThread::NoExpose);
+    w->thread->mutex.unlock();
+    QSG_GUI_DEBUG(w->window, " - handleExposure completed...");
 
     startOrStopAnimationTimer();
 }
