@@ -167,8 +167,8 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
         && !(b->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
         if (bindingNames.contains(b->propertyNameIndex))
             return tr("Property value set multiple times");
-        bindingNames.insert(b->propertyNameIndex);
     }
+    bindingNames.insert(b->propertyNameIndex);
     if (isListBinding) {
         bindings->append(b);
     } else if (bindingToDefaultProperty) {
@@ -347,6 +347,13 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
 
     qSwap(_object, object);
 
+    const int propertyNameIndex = registerString(name->name.toString());
+
+    if (bindingsTarget()->hasBinding(propertyNameIndex)) {
+        recordError(name->identifierToken, tr("Property value set multiple times"));
+        return false;
+    }
+
     QQmlJS::AST::UiArrayMemberList *member = node->members;
     while (member) {
         QQmlJS::AST::UiObjectDefinition *def = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(member->member);
@@ -354,7 +361,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
         int idx = 0;
         if (!defineQMLObject(&idx, def))
             return false;
-        appendBinding(name->identifierToken, registerString(name->name.toString()), idx, /*isListItem*/ true);
+        appendBinding(name->identifierToken, propertyNameIndex, idx, /*isListItem*/ true);
 
         member = member->next;
     }

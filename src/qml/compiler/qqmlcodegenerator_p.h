@@ -226,6 +226,7 @@ public:
     void appendFunction(QtQml::Function *f);
 
     QString appendBinding(Binding *b, bool isListBinding);
+    bool hasBinding(int nameIndex) const { return bindingNames.contains(nameIndex); }
 
 private:
     PoolList<QmlProperty> *properties;
