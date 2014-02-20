@@ -1160,6 +1160,7 @@ void QQmlCodeGenerator::collectTypeReferences()
         if (obj->inheritedTypeNameIndex != emptyStringIndex) {
             QV4::CompiledData::TypeReference &r = _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
             r.needsCreation = true;
+            r.errorWhenNotFound = true;
         }
 
         for (const QmlProperty *prop = obj->firstProperty(); prop; prop = prop->next) {
@@ -1168,6 +1169,7 @@ void QQmlCodeGenerator::collectTypeReferences()
                 // compiler can't and the tests expect it to be the object location right now.
                 QV4::CompiledData::TypeReference &r = _typeReferences.add(prop->customTypeNameIndex, obj->location);
                 r.needsCreation = true;
+                r.errorWhenNotFound = true;
             }
         }
 

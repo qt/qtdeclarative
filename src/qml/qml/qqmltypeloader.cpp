@@ -2414,6 +2414,8 @@ void QQmlTypeData::resolveTypes()
 
         TypeReference ref; // resolved reference
 
+        const bool reportErrors = unresolvedRef->errorWhenNotFound;
+
         int majorVersion = -1;
         int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
@@ -2434,7 +2436,7 @@ void QQmlTypeData::resolveTypes()
             }
         }
 
-        if (!typeFound || typeNamespace) {
+        if ((!typeFound || typeNamespace) && reportErrors) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})
             //  - type with unknown namespace (UnknownNamespace.SomeType {})
@@ -2461,7 +2463,7 @@ void QQmlTypeData::resolveTypes()
             return;
         }
 
-        if (ref.type->isComposite()) {
+        if (ref.type && ref.type->isComposite()) {
             ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
             addDependency(ref.typeData);
         }

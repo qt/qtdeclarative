@@ -468,8 +468,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     } else if (instantiatingBinding && instantiatingBinding->isAttachedProperty()) {
         QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
-        Q_ASSERT(typeRef->type);
-        const QMetaObject *attachedMo = typeRef->type->attachedPropertiesType();
+        const QMetaObject *attachedMo = typeRef->type ? typeRef->type->attachedPropertiesType() : 0;
         if (!attachedMo) {
             recordError(instantiatingBinding->location, tr("Non-existent attached object"));
             return false;

@@ -80,9 +80,11 @@ struct TypeReference
     TypeReference(const Location &loc)
         : location(loc)
         , needsCreation(false)
+        , errorWhenNotFound(false)
     {}
     Location location; // first use
-    bool needsCreation; // whether the type needs to be creatable or not
+    bool needsCreation : 1; // whether the type needs to be creatable or not
+    bool errorWhenNotFound: 1;
 };
 
 // map from name index to location of first use
