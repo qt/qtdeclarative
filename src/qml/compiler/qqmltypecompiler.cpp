@@ -1425,7 +1425,9 @@ QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::Comp
     return id;
 }
 
-bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding)
+typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
+
+bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
 
@@ -1446,6 +1448,29 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         customParser = objectType->type->customParser();
     QList<const QV4::CompiledData::Binding*> customBindings;
 
+    struct GroupPropertyFinder {
+        bool operator()(const QV4::CompiledData::Binding *binding, quint32 name) const {
+            return binding->propertyNameIndex < name;
+        }
+    };
+
+    // Collect group properties first for sanity checking
+    // vector values are sorted by property name string index.
+    GroupPropertyVector groupProperties;
+    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+        if (!binding->isGroupProperty())
+                continue;
+
+        if (populatingValueTypeGroupProperty) {
+            recordError(binding->location, tr("Property assignment expected"));
+            return false;
+        }
+
+        GroupPropertyVector::const_iterator pos = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, GroupPropertyFinder());
+        groupProperties.insert(pos, binding);
+    }
+
     PropertyResolver propertyResolver(propertyCache);
 
     QString defaultPropertyName;
@@ -1459,7 +1484,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         defaultProperty = propertyCache->defaultProperty();
     }
 
-    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
 
         if (customParser) {
@@ -1479,18 +1504,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             }
         }
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-            if (!validateObject(binding->value.objectIndex, binding))
-                return false;
-            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-                if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
-                    recordError(binding->location, tr("Attached properties cannot be used here"));
-                    return false;
-                }
-                continue;
-            }
-        }
-
         // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
             || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
@@ -1498,7 +1511,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         QString name = stringAt(binding->propertyNameIndex);
 
-        if (name.constData()->isUpper()) {
+        if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType *type = 0;
             QQmlImportNamespace *typeNamespace = 0;
             compiler->imports()->resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
@@ -1537,13 +1550,32 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
            bindingToDefaultProperty = true;
         }
 
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            if (!validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::valueType(pd->propType)))
+                return false;
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+                if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
+                    recordError(binding->location, tr("Attached properties cannot be used here"));
+                    return false;
+                }
+                continue;
+            }
+        }
+
         if (pd) {
+            GroupPropertyVector::const_iterator assignedGroupProperty = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, GroupPropertyFinder());
+            const bool assigningToGroupProperty = assignedGroupProperty != groupProperties.constEnd() && !(binding->propertyNameIndex < (*assignedGroupProperty)->propertyNameIndex);
+
             if (!pd->isWritable()
                 && !pd->isQList()
                 && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
                 && !(binding->flags & QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration)
                 ) {
-                recordError(binding->valueLocation, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
+
+                if (assigningToGroupProperty && binding->type < QV4::CompiledData::Binding::Type_Object)
+                    recordError(binding->valueLocation, tr("Cannot assign a value directly to a grouped property"));
+                else
+                    recordError(binding->valueLocation, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                 return false;
             }
 
@@ -1554,6 +1586,20 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 else
                     error = tr( "Cannot assign multiple values to a singular property");
                 recordError(binding->valueLocation, error);
+                return false;
+            }
+
+            if (!bindingToDefaultProperty
+                && !binding->isGroupProperty()
+                && assigningToGroupProperty) {
+                QV4::CompiledData::Location loc = binding->valueLocation;
+                if (loc < (*assignedGroupProperty)->valueLocation)
+                    loc = (*assignedGroupProperty)->valueLocation;
+
+                if (pd && QQmlValueTypeFactory::isValueType(pd->propType))
+                    recordError(loc, tr("Property has already been assigned a value"));
+                else
+                    recordError(loc, tr("Cannot assign a value directly to a grouped property"));
                 return false;
             }
 

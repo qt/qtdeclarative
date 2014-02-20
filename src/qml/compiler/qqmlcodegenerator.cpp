@@ -165,10 +165,10 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
         && b->type != QV4::CompiledData::Binding::Type_GroupProperty
         && b->type != QV4::CompiledData::Binding::Type_AttachedProperty
         && !(b->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
-        if (bindingNames.contains(b->propertyNameIndex))
+        Binding *existing = findBinding(b->propertyNameIndex);
+        if (existing && existing->isValueBinding() == b->isValueBinding() && !(existing->flags & QV4::CompiledData::Binding::IsOnAssignment))
             return tr("Property value set multiple times");
     }
-    bindingNames.insert(b->propertyNameIndex);
     if (isListBinding) {
         bindings->append(b);
     } else if (bindingToDefaultProperty) {
@@ -178,6 +178,14 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
         bindings->prepend(b);
     }
     return QString(); // no error
+}
+
+Binding *QmlObject::findBinding(quint32 nameIndex) const
+{
+    for (Binding *b = bindings->first; b; b = b->next)
+        if (b->propertyNameIndex == nameIndex)
+            return b;
+    return 0;
 }
 
 QStringList Signal::parameterStringList(const QStringList &stringPool) const
@@ -313,7 +321,8 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectDefinition *node)
         int idx = 0;
         if (!defineQMLObject(&idx, node))
             return false;
-        appendBinding(node->qualifiedTypeNameId->identifierToken, emptyStringIndex, idx);
+        const QQmlJS::AST::SourceLocation nameLocation = node->qualifiedTypeNameId->identifierToken;
+        appendBinding(nameLocation, nameLocation, emptyStringIndex, idx);
     } else {
         int idx = 0;
         if (!defineQMLObject(&idx, /*qualfied type name id*/0, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, /*declarations should go here*/_object))
@@ -340,6 +349,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiScriptBinding *node)
 
 bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
 {
+    const QQmlJS::AST::SourceLocation qualifiedNameLocation = node->qualifiedId->identifierToken;
     QmlObject *object = 0;
     QQmlJS::AST::UiQualifiedId *name = node->qualifiedId;
     if (!resolveQualifiedId(&name, &object))
@@ -349,7 +359,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
 
     const int propertyNameIndex = registerString(name->name.toString());
 
-    if (bindingsTarget()->hasBinding(propertyNameIndex)) {
+    if (bindingsTarget()->findBinding(propertyNameIndex) != 0) {
         recordError(name->identifierToken, tr("Property value set multiple times"));
         return false;
     }
@@ -361,7 +371,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
         int idx = 0;
         if (!defineQMLObject(&idx, def))
             return false;
-        appendBinding(name->identifierToken, propertyNameIndex, idx, /*isListItem*/ true);
+        appendBinding(qualifiedNameLocation, name->identifierToken, propertyNameIndex, idx, /*isListItem*/ true);
 
         member = member->next;
     }
@@ -816,7 +826,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
              property->aliasPropertyValueIndex = registerString(propertyValue);
         } else if (node->statement) {
             qSwap(_propertyDeclaration, property);
-            appendBinding(node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
+            appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
             qSwap(_propertyDeclaration, property);
         }
 
@@ -963,25 +973,27 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
 
 void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value)
 {
+    const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     QmlObject *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
     qSwap(_object, object);
-    appendBinding(name->identifierToken, registerString(name->name.toString()), value);
+    appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), value);
     qSwap(_object, object);
 }
 
 void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
 {
+    const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     QmlObject *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
     qSwap(_object, object);
-    appendBinding(name->identifierToken, registerString(name->name.toString()), objectIndex, /*isListItem*/false, isOnAssignment);
+    appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), objectIndex, /*isListItem*/false, isOnAssignment);
     qSwap(_object, object);
 }
 
-void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
+void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
 {
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         setId(nameLocation, value);
@@ -996,11 +1008,11 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &nameLoc
     setBindingValue(binding, value);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
-        recordError(nameLocation, error);
+        recordError(qualifiedNameLocation, error);
     }
 }
 
-void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
+void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
@@ -1034,7 +1046,7 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &nameLoc
     binding->value.objectIndex = objectIndex;
     QString error = bindingsTarget()->appendBinding(binding, isListItem);
     if (!error.isEmpty()) {
-        recordError(nameLocation, error);
+        recordError(qualifiedNameLocation, error);
     }
 }
 
@@ -1119,29 +1131,47 @@ bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToRe
 
     *object = _object;
     while (qualifiedIdElement->next) {
-        Binding *binding = New<Binding>();
-        binding->propertyNameIndex = registerString(currentName);
-        binding->location.line = qualifiedIdElement->identifierToken.startLine;
-        binding->location.column = qualifiedIdElement->identifierToken.startColumn;
-        binding->valueLocation.line = binding->valueLocation.column = 0;
-        binding->flags = 0;
+        const quint32 propertyNameIndex = registerString(currentName);
+        const bool isAttachedProperty = qualifiedIdElement->name.unicode()->isUpper();
 
-        if (qualifiedIdElement->name.unicode()->isUpper())
-            binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
-        else
-            binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
-
-        int objIndex = 0;
-        if (!defineQMLObject(&objIndex, 0, QQmlJS::AST::SourceLocation(), 0, 0))
-            return false;
-        binding->value.objectIndex = objIndex;
-
-        QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
-        if (!error.isEmpty()) {
-            recordError(qualifiedIdElement->identifierToken, error);
-            return false;
+        Binding *binding = (*object)->findBinding(propertyNameIndex);
+        if (binding) {
+            if (isAttachedProperty) {
+                if (!binding->isAttachedProperty())
+                    binding = 0;
+            } else if (!binding->isGroupProperty()) {
+                binding = 0;
+            }
         }
-        *object = _objects[objIndex];
+        if (!binding) {
+            binding = New<Binding>();
+            binding->propertyNameIndex = propertyNameIndex;
+            binding->location.line = qualifiedIdElement->identifierToken.startLine;
+            binding->location.column = qualifiedIdElement->identifierToken.startColumn;
+            binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;
+            binding->valueLocation.column = qualifiedIdElement->next->identifierToken.startColumn;
+            binding->flags = 0;
+
+            if (isAttachedProperty)
+                binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
+            else
+                binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
+
+            int objIndex = 0;
+            if (!defineQMLObject(&objIndex, 0, QQmlJS::AST::SourceLocation(), 0, 0))
+                return false;
+            binding->value.objectIndex = objIndex;
+
+            QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
+            if (!error.isEmpty()) {
+                recordError(qualifiedIdElement->identifierToken, error);
+                return false;
+            }
+            *object = _objects.at(objIndex);
+        } else {
+            Q_ASSERT(binding->isAttachedProperty() || binding->isGroupProperty());
+            *object = _objects.at(binding->value.objectIndex);
+        }
 
         qualifiedIdElement = qualifiedIdElement->next;
         if (qualifiedIdElement)

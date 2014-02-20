@@ -226,7 +226,7 @@ public:
     void appendFunction(QtQml::Function *f);
 
     QString appendBinding(Binding *b, bool isListBinding);
-    bool hasBinding(int nameIndex) const { return bindingNames.contains(nameIndex); }
+    Binding *findBinding(quint32 nameIndex) const;
 
 private:
     PoolList<QmlProperty> *properties;
@@ -235,7 +235,6 @@ private:
     PoolList<Function> *functions;
 
     QSet<int> propertyNames;
-    QSet<int> bindingNames;
     QSet<int> signalNames;
 };
 
@@ -323,8 +322,8 @@ public:
 
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value);
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
-    void appendBinding(const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
-    void appendBinding(const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
+    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
+    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     QmlObject *bindingsTarget() const;
 
