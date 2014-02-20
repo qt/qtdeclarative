@@ -396,6 +396,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
         acceleration = acceleration * -1.0f;
 
     int time = static_cast<int>(-1000 * velocity / acceleration);
+    if (time <= 0) return -1;
 
     QQuickTimeLinePrivate::Op op(QQuickTimeLinePrivate::Op::Accel, time, velocity, acceleration, d->order++);
     d->add(timeLineValue, op);
@@ -428,6 +429,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
         acceleration = acceleration * -1.0f;
 
     int time = static_cast<int>(-1000 * velocity / acceleration);
+    if (time <= 0) return -1;
 
     QQuickTimeLinePrivate::Op op(QQuickTimeLinePrivate::Op::Accel, time, velocity, acceleration, d->order++);
     d->add(timeLineValue, op);
@@ -450,6 +452,7 @@ int QQuickTimeLine::accelDistance(QQuickTimeLineValue &timeLineValue, qreal velo
     Q_ASSERT((distance >= 0.0f) == (velocity >= 0.0f));
 
     int time = static_cast<int>(1000 * (2.0f * distance) / velocity);
+    if (time <= 0) return -1;
 
     QQuickTimeLinePrivate::Op op(QQuickTimeLinePrivate::Op::AccelDistance, time, velocity, distance, d->order++);
     d->add(timeLineValue, op);
