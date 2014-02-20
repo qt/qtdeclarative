@@ -423,6 +423,7 @@ public:
     void setCursorBlinkPeriod(int msec);
 
     void updateLayout();
+    void updateBaselineOffset();
 
     qreal getImplicitWidth() const;
 

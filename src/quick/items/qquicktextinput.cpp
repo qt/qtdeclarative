@@ -1710,6 +1710,8 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
     if (!d->inLayout) {
         if (newGeometry.width() != oldGeometry.width())
             d->updateLayout();
+        else if (newGeometry.height() != oldGeometry.height() && d->vAlign != QQuickTextInput::AlignTop)
+            d->updateBaselineOffset();
         updateCursorRectangle();
     }
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
@@ -2855,20 +2857,33 @@ void QQuickTextInputPrivate::updateLayout()
     else
         q->setImplicitHeight(height);
 
-
-    QFontMetricsF fm(font);
-    qreal yoff = 0;
-    if (q->heightValid()) {
-        const qreal itemHeight = q->height();
-        if (vAlign == QQuickTextInput::AlignBottom)
-            yoff = itemHeight - height;
-        else if (vAlign == QQuickTextInput::AlignVCenter)
-            yoff = (itemHeight - height)/2;
-    }
-    q->setBaselineOffset(fm.ascent() + yoff);
+    updateBaselineOffset();
 
     if (previousSize != contentSize)
         emit q->contentSizeChanged();
+}
+
+/*!
+    \internal
+    \brief QQuickTextInputPrivate::updateBaselineOffset
+
+    Assumes contentSize.height() is already calculated.
+ */
+void QQuickTextInputPrivate::updateBaselineOffset()
+{
+    Q_Q(QQuickTextInput);
+    if (!q->isComponentComplete())
+        return;
+    QFontMetricsF fm(font);
+    qreal yoff = 0;
+    if (q->heightValid()) {
+        const qreal surplusHeight = q->height() - contentSize.height();
+        if (vAlign == QQuickTextInput::AlignBottom)
+            yoff = surplusHeight;
+        else if (vAlign == QQuickTextInput::AlignVCenter)
+            yoff = surplusHeight/2;
+    }
+    q->setBaselineOffset(fm.ascent() + yoff);
 }
 
 #ifndef QT_NO_CLIPBOARD
