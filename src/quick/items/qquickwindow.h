@@ -79,6 +79,11 @@ public:
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 
+    enum SceneGraphError {
+        ContextNotAvailable = 1
+    };
+    Q_ENUMS(SceneGraphError)
+
     QQuickWindow(QWindow *parent = 0);
 
     virtual ~QQuickWindow();
@@ -142,6 +147,7 @@ Q_SIGNALS:
     Q_REVISION(1) void closing(QQuickCloseEvent *close);
     void colorChanged(const QColor &);
     Q_REVISION(1) void activeFocusItemChanged();
+    void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
 
 public Q_SLOTS:
     void update();

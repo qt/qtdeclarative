@@ -281,9 +281,18 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (QSGContext::sharedOpenGLContext())
             gl->setShareContext(QSGContext::sharedOpenGLContext());
         if (!gl->create()) {
-            qWarning("QtQuick: failed to create OpenGL context");
             delete gl;
             gl = 0;
+            QString formatStr;
+            QDebug(&formatStr) << window->requestedFormat();
+            QString contextType = QLatin1String(QOpenGLFunctions::isES() ? "EGL" : "OpenGL");
+            const char *msg = QT_TRANSLATE_NOOP("QSGGuiThreadRenderLoop", "Failed to create %1 context for format %2");
+            QString translatedMsg = tr(msg).arg(contextType).arg(formatStr);
+            QString nonTranslatedMsg = QString(QLatin1String(msg)).arg(contextType).arg(formatStr);
+            bool signalEmitted = QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
+                                                                             translatedMsg);
+            if (!signalEmitted)
+                qFatal("%s", qPrintable(nonTranslatedMsg));
         } else {
             current = gl->makeCurrent(window);
         }

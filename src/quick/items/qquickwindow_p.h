@@ -184,6 +184,8 @@ public:
 
     bool isRenderable() const;
 
+    bool emitError(QQuickWindow::SceneGraphError error, const QString &msg);
+
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
     QQuickItem *dirtyItemList;

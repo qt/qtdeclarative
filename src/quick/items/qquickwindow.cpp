@@ -2675,6 +2675,17 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
 }
 
+bool QQuickWindowPrivate::emitError(QQuickWindow::SceneGraphError error, const QString &msg)
+{
+    Q_Q(QQuickWindow);
+    static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWindow::sceneGraphError);
+    if (q->isSignalConnected(errorSignal)) {
+        emit q->sceneGraphError(error, msg);
+        return true;
+    }
+    return false;
+}
+
 void QQuickWindow::maybeUpdate()
 {
     Q_D(QQuickWindow);
@@ -2747,6 +2758,21 @@ QOpenGLContext *QQuickWindow::openglContext() const
     should be released.
 
     This signal will be emitted from the scene graph rendering thread.
+ */
+
+/*!
+    \fn void QQuickWindow::sceneGraphError(SceneGraphError error, const QString &message)
+
+    This signal is emitted when an error occurred during scene graph initialization.
+
+    Applications should connect to this signal if they wish to handle errors,
+    like OpenGL context creation failures, in a custom way. When no slot is
+    connected to the signal, the behavior will be different: Quick will print
+    the message, or show a message box, and terminate the application.
+
+    This signal will be emitted from the gui thread.
+
+    \since 5.3
  */
 
 /*!
@@ -2980,6 +3006,20 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     will delete the GL texture when the texture object is deleted.
 
     \value TextureCanUseAtlas The image can be uploaded into a texture atlas.
+ */
+
+/*!
+    \enum QQuickWindow::SceneGraphError
+
+    This enum describes the error in a sceneGraphError() signal.
+
+    \value ContextNotAvailable OpenGL context creation failed. This typically means that
+    no suitable OpenGL implementation was found, for example because no graphics drivers
+    are installed and so no OpenGL 2 support is present. On mobile and embedded boards
+    that use OpenGL ES such an error is likely to indicate issues in the windowing system
+    integration and possibly an incorrect configuration of Qt.
+
+    \since 5.3
  */
 
 /*!

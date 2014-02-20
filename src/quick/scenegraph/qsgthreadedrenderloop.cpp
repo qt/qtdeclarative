@@ -914,7 +914,17 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
             if (!w->thread->gl->create()) {
                 delete w->thread->gl;
                 w->thread->gl = 0;
-                qWarning("QtQuick: failed to create OpenGL context");
+                QString formatStr;
+                QDebug(&formatStr) << w->window->requestedFormat();
+                QString contextType = QLatin1String(QOpenGLFunctions::isES() ? "EGL" : "OpenGL");
+                const char *msg = QT_TRANSLATE_NOOP("QSGThreadedRenderLoop",
+                                                    "Failed to create %1 context for format %2");
+                QString translatedMsg = tr(msg).arg(contextType).arg(formatStr);
+                QString nonTranslatedMsg = QString(QLatin1String(msg)).arg(contextType).arg(formatStr);
+                bool signalEmitted = QQuickWindowPrivate::get(w->window)->emitError(QQuickWindow::ContextNotAvailable,
+                                                                                    translatedMsg);
+                if (!signalEmitted)
+                    qFatal("%s", qPrintable(nonTranslatedMsg));
                 return;
             }
 
