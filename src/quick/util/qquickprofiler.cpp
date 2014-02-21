@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickprofiler_p.h"
+#include <QCoreApplication>
 #include <private/qqmldebugservice_p.h>
 #include <private/qqmlprofilerservice_p.h>
 
@@ -139,6 +140,18 @@ void animationTimerCallback(qint64 delta)
     Q_QUICK_PROFILE(animationFrame(delta));
 }
 
+class CallbackRegistrationHelper : public QObject {
+    Q_OBJECT
+public slots:
+    void registerAnimationTimerCallback()
+    {
+        QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
+        delete this;
+    }
+};
+
+#include "qquickprofiler.moc"
+
 QQuickProfiler::QQuickProfiler(QQmlProfilerService *service) :
     QQmlAbstractProfilerAdapter(service), next(0)
 {
@@ -159,7 +172,9 @@ QQuickProfiler::QQuickProfiler(QQmlProfilerService *service) :
     connect(this, SIGNAL(dataRequested()), this, SLOT(reportDataImpl()),
             Qt::DirectConnection);
 
-    QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
+    CallbackRegistrationHelper *helper = new CallbackRegistrationHelper; // will delete itself
+    helper->moveToThread(QCoreApplication::instance()->thread());
+    QMetaObject::invokeMethod(helper, "registerAnimationTimerCallback", Qt::QueuedConnection);
 }
 
 QQuickProfiler::~QQuickProfiler()
