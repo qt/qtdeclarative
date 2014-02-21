@@ -148,6 +148,7 @@ private slots:
     void arrayPop_QTBUG_35979();
 
     void regexpLastMatch();
+    void indexedAccesses();
 
 signals:
     void testSignal();
@@ -2867,6 +2868,19 @@ void tst_QJSEngine::regexpLastMatch()
         QCOMPARE(match.toString(), QString());
     }
 
+}
+
+void tst_QJSEngine::indexedAccesses()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate("function foo() { return 1[1] } foo()");
+    QVERIFY(v.isUndefined());
+    v = engine.evaluate("function foo() { return /x/[1] } foo()");
+    QVERIFY(v.isUndefined());
+    v = engine.evaluate("function foo() { return \"xy\"[1] } foo()");
+    QVERIFY(v.isString());
+    v = engine.evaluate("function foo() { return \"xy\"[2] } foo()");
+    QVERIFY(v.isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)

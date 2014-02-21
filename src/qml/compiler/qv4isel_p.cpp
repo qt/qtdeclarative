@@ -169,7 +169,7 @@ void IRDecoder::visitMove(IR::Move *s)
                 return;
             }
         } else if (IR::Subscript *ss = s->source->asSubscript()) {
-            getElement(ss->base->asTemp(), ss->index, t);
+            getElement(ss->base, ss->index, t);
             return;
         } else if (IR::Unop *u = s->source->asUnop()) {
             if (IR::Temp *e = u->expr->asTemp()) {
