@@ -449,8 +449,7 @@ void QQuickLoader::loadFromSource()
     }
     \endqml
 
-    To unload the currently loaded object, set this property to an empty string
-    or \c undefined.
+    To unload the currently loaded object, set this property to \c undefined.
 
     Since \c {QtQuick 2.0}, Loader is able to load any type of object; it
     is not restricted to Item types.
