@@ -157,8 +157,10 @@ void QQmlProfilerService::engineRemoved(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(configMutex());
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine))
+    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+        removeProfilerFromStartTimes(profiler);
         delete profiler;
+    }
     m_engineProfilers.remove(engine);
 }
 
@@ -188,14 +190,22 @@ void QQmlProfilerService::addGlobalProfiler(QQmlAbstractProfilerAdapter *profile
 void QQmlProfilerService::removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler)
 {
     QMutexLocker lock(configMutex());
-    for (QMultiMap<qint64, QQmlAbstractProfilerAdapter *>::iterator i(m_startTimes.begin()); i != m_startTimes.end();) {
-        if (i.value() == profiler)
-            m_startTimes.erase(i++);
-        else
-            ++i;
-    }
+    removeProfilerFromStartTimes(profiler);
     m_globalProfilers.removeOne(profiler);
     delete profiler;
+}
+
+void QQmlProfilerService::removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler)
+{
+    for (QMultiMap<qint64, QQmlAbstractProfilerAdapter *>::iterator i(m_startTimes.begin());
+            i != m_startTimes.end();) {
+        if (i.value() == profiler) {
+            m_startTimes.erase(i++);
+            break;
+        } else {
+            ++i;
+        }
+    }
 }
 
 void QQmlProfilerService::startProfiling(QQmlEngine *engine)
@@ -223,7 +233,6 @@ void QQmlProfilerService::stopProfiling(QQmlEngine *engine)
     QMutexLocker lock(configMutex());
 
     bool stillRunning = false;
-    m_startTimes.clear();
     for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {

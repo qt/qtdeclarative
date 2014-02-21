@@ -102,6 +102,7 @@ private:
 
     void sendMessages();
     void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine);
+    void removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler);
 
     QElapsedTimer m_timer;
 
