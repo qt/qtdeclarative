@@ -105,7 +105,6 @@ public:
     virtual ~QQuickWindowPrivate();
 
     void init(QQuickWindow *, QQuickRenderControl *control = 0);
-    void initContentItem();//Currently only used if items added in QML
 
     QQuickRootItem *contentItem;
     QSet<QQuickItem *> parentlessItems;

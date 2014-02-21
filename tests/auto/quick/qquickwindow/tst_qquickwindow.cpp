@@ -355,6 +355,8 @@ private slots:
 
     void animatingSignal();
 
+    void contentItemSize();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -1705,6 +1707,38 @@ void tst_qquickwindow::animatingSignal()
     QTRY_VERIFY(window.isExposed());
 
     QTRY_VERIFY(spy.count() > 1);
+}
+
+// QTBUG-36938
+void tst_qquickwindow::contentItemSize()
+{
+    QQuickWindow window;
+    QQuickItem *contentItem = window.contentItem();
+    QVERIFY(contentItem);
+    QCOMPARE(QSize(contentItem->width(), contentItem->height()), window.size());
+
+    QSizeF size(300, 200);
+    window.resize(size.toSize());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QCOMPARE(window.size(), size.toSize());
+    QCOMPARE(QSizeF(contentItem->width(), contentItem->height()), size);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQuick 2.1\n Rectangle { anchors.fill: parent }"), QUrl());
+    QQuickItem *rect = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(rect);
+    rect->setParentItem(window.contentItem());
+    QCOMPARE(QSizeF(rect->width(), rect->height()), size);
+
+    size.transpose();
+    window.resize(size.toSize());
+    QCOMPARE(window.size(), size.toSize());
+    // wait for resize event
+    QTRY_COMPARE(QSizeF(contentItem->width(), contentItem->height()), size);
+    QCOMPARE(QSizeF(rect->width(), rect->height()), size);
 }
 
 QTEST_MAIN(tst_qquickwindow)

@@ -216,9 +216,11 @@ void QQuickWindow::exposeEvent(QExposeEvent *)
 }
 
 /*! \reimp */
-void QQuickWindow::resizeEvent(QResizeEvent *)
+void QQuickWindow::resizeEvent(QResizeEvent *ev)
 {
     Q_D(QQuickWindow);
+    if (d->contentItem)
+        d->contentItem->setSize(ev->size());
     if (d->windowManager)
         d->windowManager->resize(this);
 }
@@ -433,6 +435,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     contentItemPrivate->window = q;
     contentItemPrivate->windowRefCount = 1;
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
+    contentItem->setSize(q->size());
 
     customRenderMode = qgetenv("QSG_VISUALIZE");
     renderControl = control;
@@ -474,22 +477,10 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
-    initContentItem();
     return QQmlListProperty<QObject>(q_func(), 0, QQuickWindowPrivate::data_append,
                                              QQuickWindowPrivate::data_count,
                                              QQuickWindowPrivate::data_at,
                                              QQuickWindowPrivate::data_clear);
-}
-
-void QQuickWindowPrivate::initContentItem()
-{
-    Q_Q(QQuickWindow);
-    q->connect(q, SIGNAL(widthChanged(int)),
-            contentItem, SLOT(setWidth(int)));
-    q->connect(q, SIGNAL(heightChanged(int)),
-            contentItem, SLOT(setHeight(int)));
-    contentItem->setWidth(q->width());
-    contentItem->setHeight(q->height());
 }
 
 static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
