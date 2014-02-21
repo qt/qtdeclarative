@@ -55,6 +55,63 @@ inline bool isPregOrConst(IR::Expr *e)
 }
 } // anonymous namespace
 
+
+#define OP(op) \
+    { isel_stringIfy(op), op, 0, 0, 0 }
+#define OPCONTEXT(op) \
+    { isel_stringIfy(op), 0, op, 0, 0 }
+
+#define INLINE_OP(op, memOp, immOp) \
+    { isel_stringIfy(op), op, 0, memOp, immOp }
+#define INLINE_OPCONTEXT(op, memOp, immOp) \
+    { isel_stringIfy(op), 0, op, memOp, immOp }
+
+#define NULL_OP \
+    { 0, 0, 0, 0, 0 }
+
+const Binop::OpInfo Binop::operations[IR::LastAluOp + 1] = {
+    NULL_OP, // OpInvalid
+    NULL_OP, // OpIfTrue
+    NULL_OP, // OpNot
+    NULL_OP, // OpUMinus
+    NULL_OP, // OpUPlus
+    NULL_OP, // OpCompl
+    NULL_OP, // OpIncrement
+    NULL_OP, // OpDecrement
+
+    INLINE_OP(__qmljs_bit_and, &Binop::inline_and32, &Binop::inline_and32), // OpBitAnd
+    INLINE_OP(__qmljs_bit_or, &Binop::inline_or32, &Binop::inline_or32), // OpBitOr
+    INLINE_OP(__qmljs_bit_xor, &Binop::inline_xor32, &Binop::inline_xor32), // OpBitXor
+
+    INLINE_OPCONTEXT(__qmljs_add, &Binop::inline_add32, &Binop::inline_add32), // OpAdd
+    INLINE_OP(__qmljs_sub, &Binop::inline_sub32, &Binop::inline_sub32), // OpSub
+    INLINE_OP(__qmljs_mul, &Binop::inline_mul32, &Binop::inline_mul32), // OpMul
+
+    OP(__qmljs_div), // OpDiv
+    OP(__qmljs_mod), // OpMod
+
+    INLINE_OP(__qmljs_shl, &Binop::inline_shl32, &Binop::inline_shl32), // OpLShift
+    INLINE_OP(__qmljs_shr, &Binop::inline_shr32, &Binop::inline_shr32), // OpRShift
+    INLINE_OP(__qmljs_ushr, &Binop::inline_ushr32, &Binop::inline_ushr32), // OpURShift
+
+    OP(__qmljs_gt), // OpGt
+    OP(__qmljs_lt), // OpLt
+    OP(__qmljs_ge), // OpGe
+    OP(__qmljs_le), // OpLe
+    OP(__qmljs_eq), // OpEqual
+    OP(__qmljs_ne), // OpNotEqual
+    OP(__qmljs_se), // OpStrictEqual
+    OP(__qmljs_sne), // OpStrictNotEqual
+
+    OPCONTEXT(__qmljs_instanceof), // OpInstanceof
+    OPCONTEXT(__qmljs_in), // OpIn
+
+    NULL_OP, // OpAnd
+    NULL_OP // OpOr
+};
+
+
+
 void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
 {
     if (op != IR::OpMod
@@ -73,11 +130,11 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
         done = genInlineBinop(lhs, rhs, target);
 
     // TODO: inline var===null and var!==null
-    Assembler::BinaryOperationInfo info = Assembler::binaryOperation(op);
+    Binop::OpInfo info = Binop::operation(op);
 
     if (op == IR::OpAdd &&
             (lhs->type == IR::StringType || rhs->type == IR::StringType)) {
-        const Assembler::BinaryOperationInfo stringAdd = OPCONTEXT(__qmljs_add_string);
+        const Binop::OpInfo stringAdd = OPCONTEXT(__qmljs_add_string);
         info = stringAdd;
     }
 
