@@ -499,8 +499,18 @@ void QQuickWidgetPrivate::createContext()
     if (context)
         return;
 
-    context = new QOpenGLContext();
-    context->setFormat(q->window()->windowHandle()->requestedFormat());
+    context = new QOpenGLContext;
+
+    QSurfaceFormat format = q->window()->windowHandle()->requestedFormat();
+    QSGRenderContext *renderContext = QQuickWindowPrivate::get(offscreenWindow)->context;
+    // Depth, stencil, etc. must be set like a QQuickWindow would do.
+    QSurfaceFormat sgFormat = renderContext->sceneGraphContext()->defaultSurfaceFormat();
+    format.setDepthBufferSize(qMax(format.depthBufferSize(), sgFormat.depthBufferSize()));
+    format.setStencilBufferSize(qMax(format.stencilBufferSize(), sgFormat.stencilBufferSize()));
+    format.setAlphaBufferSize(qMax(format.alphaBufferSize(), sgFormat.alphaBufferSize()));
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    context->setFormat(format);
+
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
     if (!context->create()) {
