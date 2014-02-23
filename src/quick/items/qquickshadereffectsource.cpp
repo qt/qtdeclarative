@@ -353,9 +353,9 @@ void QQuickShaderEffectTexture::grab()
             if (m_context->openglContext()->format().samples() <= 1) {
                 m_multisampling = false;
             } else {
-                QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
-                m_multisampling = extensions.contains("GL_EXT_framebuffer_multisample")
-                                && extensions.contains("GL_EXT_framebuffer_blit");
+                const QSet<QByteArray> extensions = m_context->openglContext()->extensions();
+                m_multisampling = extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_multisample"))
+                    && extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_blit"));
             }
             m_multisamplingChecked = true;
         }

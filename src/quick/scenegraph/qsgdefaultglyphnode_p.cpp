@@ -206,7 +206,7 @@ void QSG24BitTextMaskShader::initialize()
     QSGTextMaskShader::initialize();
     // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
     // but using sRGB looks okay.
-    if (strstr((const char *) glGetString(GL_EXTENSIONS), "GL_ARB_framebuffer_sRGB")
+    if (QOpenGLContext::currentContext()->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_sRGB"))
             && m_glyphFormat == QFontEngine::Format_A32
             && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
         m_useSRGB = true;
