@@ -60,6 +60,10 @@
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
 
+#if defined(QT_STATIC) && ! defined(QT_QML_NO_DEBUGGER)
+#include "../../plugins/qmltooling/qmldbg_tcp/qtcpserverconnection.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // We can't friend the Q_GLOBAL_STATIC to have the constructor available so we need a little
@@ -291,8 +295,14 @@ void QQmlDebugServerThread::run()
     QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
     Q_ASSERT_X(wrapper != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServer *server = &wrapper->m_instance;
+#if defined(QT_STATIC) && ! defined(QT_QML_NO_DEBUGGER)
+    QQmlDebugServerConnection *connection
+            = new QTcpServerConnection;
+    server->d_func()->connection = connection;
+#else
     QQmlDebugServerConnection *connection
             = server->d_func()->loadConnectionPlugin(m_pluginName);
+#endif
     if (connection) {
         connection->setServer(server);
         connection->setPortRange(m_portFrom, m_portTo, m_block, m_hostAddress);

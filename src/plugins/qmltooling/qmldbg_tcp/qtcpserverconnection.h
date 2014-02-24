@@ -42,7 +42,7 @@
 #ifndef QTCPSERVERCONNECTION_H
 #define QTCPSERVERCONNECTION_H
 
-#include <QtQml/private/qqmldebugserverconnection_p.h>
+#include <private/qqmldebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
 
