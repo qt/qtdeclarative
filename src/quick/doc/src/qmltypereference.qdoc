@@ -322,7 +322,8 @@ set of Particle System types for Qt Quick 2
 
 /*!
 \qmlmodule QtQuick 2.2
-\brief The Provides graphical primitives for use in QML.
+\title Qt Quick QML Types
+\brief This module provides graphical primitives for use in QML.
 
 The \l{Qt Quick} module provides graphical primitive types. They can be used with the following import
 \code

@@ -5740,10 +5740,6 @@ qreal QQuickItem::y() const
 }
 
 /*!
-    \property QQuickItem::pos
-    \internal
-  */
-/*!
     \internal
   */
 QPointF QQuickItem::position() const

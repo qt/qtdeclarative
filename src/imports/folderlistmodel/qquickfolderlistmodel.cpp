@@ -453,7 +453,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
 
 
 /*!
-   \qmlproperty url QQuickFolderListModel::rootFolder
+   \qmlproperty url FolderListModel::rootFolder
 
    When the rootFolder is set, then this folder will
    be threated as the root in the file system, so that
