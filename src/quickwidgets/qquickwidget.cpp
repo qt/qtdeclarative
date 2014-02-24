@@ -754,6 +754,21 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     d->offscreenWindow->mouseMoveEvent(&mappedEvent);
 }
 
+void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    Q_D(QQuickWidget);
+    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+
+    // As the second mouse press is suppressed in widget windows we emulate it here for QML.
+    // See QTBUG-25831
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->screenPos(), e->button(),
+                           e->buttons(), e->modifiers());
+    d->offscreenWindow->mousePressEvent(&pressEvent);
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(),
+                            e->modifiers());
+    d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
+}
+
 void QQuickWidget::showEvent(QShowEvent *e)
 {
     Q_D(QQuickWidget);

@@ -111,6 +111,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent *);
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent *);
+    virtual void mouseDoubleClickEvent(QMouseEvent *);
 
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
