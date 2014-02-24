@@ -776,6 +776,12 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
                 if (old) { old->destroy(); }
             } else {
                 qmlBinding->addToObject();
+
+                if (!_valueTypeProperty) {
+                    QQmlData *targetDeclarativeData = QQmlData::get(_bindingTarget);
+                    Q_ASSERT(targetDeclarativeData);
+                    targetDeclarativeData->setPendingBindingBit(_bindingTarget, property->coreIndex);
+                }
             }
 
             sharedState->allCreatedBindings.push(qmlBinding);
