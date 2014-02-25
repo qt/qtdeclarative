@@ -1856,6 +1856,11 @@ void tst_QQuickPathView::snapToItem()
     QScopedPointer<QQuickView> window(createView());
     QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("panels.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
     QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView*>("view");
     QVERIFY(pathview != 0);
 
