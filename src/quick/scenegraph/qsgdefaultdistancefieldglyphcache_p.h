@@ -46,6 +46,7 @@
 #include <QtGui/qopenglfunctions.h>
 #include <qopenglshaderprogram.h>
 #include <qopenglbuffer.h>
+#include <qopenglvertexarrayobject.h>
 #include <QtGui/private/qopenglengineshadersource_p.h>
 #include <private/qsgareaallocator_p.h>
 
@@ -135,6 +136,7 @@ private:
 
     QOpenGLShaderProgram *m_blitProgram;
     QOpenGLBuffer m_blitBuffer;
+    QOpenGLVertexArrayObject m_vao;
 
     QOpenGLSharedResourceGuard *m_fboGuard;
 #if !defined(QT_OPENGL_ES_2)

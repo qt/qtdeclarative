@@ -69,7 +69,7 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistance
 {
     m_blitBuffer.create();
     m_blitBuffer.bind();
-    static GLfloat buffer[16] = {1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+    static GLfloat buffer[16] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
                                  0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     m_blitBuffer.allocate(buffer, sizeof(buffer));
     m_blitBuffer.release();
@@ -405,13 +405,21 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     glViewport(0, 0, oldWidth, oldHeight);
 
-    m_blitBuffer.bind();
-
+    const bool vaoInit = m_vao.isCreated();
+    if (isCoreProfile()) {
+        if ( !vaoInit )
+            m_vao.create();
+        m_vao.bind();
+    }
     m_blitProgram->bind();
-    m_blitProgram->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
-    m_blitProgram->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
-    m_blitProgram->setAttributeBuffer(int(QT_VERTEX_COORDS_ATTR), GL_FLOAT, 0, 2);
-    m_blitProgram->setAttributeBuffer(int(QT_TEXTURE_COORDS_ATTR), GL_FLOAT, 8, 2);
+    if (!vaoInit || !isCoreProfile()) {
+        m_blitBuffer.bind();
+
+        m_blitProgram->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
+        m_blitProgram->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
+        m_blitProgram->setAttributeBuffer(int(QT_VERTEX_COORDS_ATTR), GL_FLOAT, 0, 2);
+        m_blitProgram->setAttributeBuffer(int(QT_TEXTURE_COORDS_ATTR), GL_FLOAT, 32, 2);
+    }
     m_blitProgram->disableAttributeArray(int(QT_OPACITY_ATTR));
     m_blitProgram->setUniformValue("imageTexture", GLuint(0));
 
@@ -447,7 +455,8 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     m_blitProgram->disableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
     m_blitProgram->disableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
-    m_blitBuffer.release();
+    if (isCoreProfile())
+        m_vao.release();
 }
 
 bool QSGDefaultDistanceFieldGlyphCache::useTextureResizeWorkaround() const
