@@ -102,8 +102,11 @@ QString QmlObject::sanityCheckFunctionNames(const QList<CompiledFunctionOrExpres
         if (functionNames.contains(f->nameIndex))
             return tr("Duplicate method name");
         functionNames.insert(f->nameIndex);
-        if (signalNames.contains(f->nameIndex))
-            return tr("Duplicate method name");
+
+        for (QtQml::Signal *s = qmlSignals->first; s; s = s->next) {
+            if (s->nameIndex == f->nameIndex)
+                return tr("Duplicate method name");
+        }
 
         if (name.at(0).isUpper())
             return tr("Method names cannot begin with an upper case letter");
@@ -118,9 +121,12 @@ QString QmlObject::appendSignal(Signal *signal)
     QmlObject *target = declarationsOverride;
     if (!target)
         target = this;
-    if (target->signalNames.contains(signal->nameIndex))
-        return tr("Duplicate signal name");
-    target->signalNames.insert(signal->nameIndex);
+
+    for (Signal *s = qmlSignals->first; s; s = s->next) {
+        if (s->nameIndex == signal->nameIndex)
+            return tr("Duplicate signal name");
+    }
+
     target->qmlSignals->append(signal);
     return QString(); // no error
 }
@@ -131,13 +137,12 @@ QString QmlObject::appendProperty(QmlProperty *prop, const QString &propertyName
     if (!target)
         target = this;
 
-    if (target->propertyNames.contains(prop->nameIndex))
-        return tr("Duplicate property name");
+    for (QmlProperty *p = target->properties->first; p; p = p->next)
+        if (p->nameIndex == prop->nameIndex)
+            return tr("Duplicate property name");
 
     if (propertyName.constData()->isUpper())
         return tr("Property names cannot begin with an upper case letter");
-
-    target->propertyNames.insert(prop->nameIndex);
 
     const int index = target->properties->append(prop);
     if (isDefaultProperty) {

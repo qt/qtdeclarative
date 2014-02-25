@@ -233,9 +233,6 @@ private:
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
-
-    QSet<int> propertyNames;
-    QSet<int> signalNames;
 };
 
 struct Pragma
