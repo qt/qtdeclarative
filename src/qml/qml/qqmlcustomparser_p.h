@@ -119,7 +119,7 @@ struct QQmlCustomParserCompilerBackend
     virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&, QQmlCustomParser *) { return QQmlBinding::Invalid; }
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *, QQmlCustomParser *) { return QQmlBinding::Invalid; }
 
-    virtual QQmlJS::AST::Node *astForBinding(int) const { return 0; }
+    virtual QQmlJS::AST::Node *astForBinding(int, int) const { return 0; }
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlCustomParser
@@ -162,7 +162,7 @@ protected:
     QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&);
     QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding);
 
-    QQmlJS::AST::Node *astForBinding(int scriptIndex) const;
+    QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
 
 private:
     QList<QQmlError> exceptions;

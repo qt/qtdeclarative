@@ -192,13 +192,11 @@ bool QQmlTypeCompiler::compile()
     }
 
     // Compile JS binding expressions and signal handlers
-
-    JSCodeGen jsCodeGen(typeData->finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, compiledData->importCache);
-    const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions);
-    QList<QQmlError> jsErrors = jsCodeGen.errors();
-    if (!jsErrors.isEmpty()) {
-        errors << jsErrors;
-        return false;
+    {
+        QtQml::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, compiledData->importCache, parsedQML->jsGenerator.strings);
+        QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
+        if (!jsCodeGen.generateCodeForComponents())
+            return false;
     }
 
     QV4::ExecutionEngine *v4 = engine->v4engine();
@@ -210,7 +208,7 @@ bool QQmlTypeCompiler::compile()
     // Generate QML compiled type data structures
 
     QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML, runtimeFunctionIndices);
+    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML);
 
     if (jsUnit) {
         Q_ASSERT(!jsUnit->data);
@@ -240,7 +238,7 @@ bool QQmlTypeCompiler::compile()
     }
 
     // Sanity check property bindings
-    QQmlPropertyValidator validator(this, runtimeFunctionIndices);
+    QQmlPropertyValidator validator(this);
     if (!validator.validate())
         return false;
 
@@ -353,11 +351,6 @@ QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
 QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
 {
     return parsedQML->jsParserEngine.pool();
-}
-
-const QList<CompiledFunctionOrExpression> &QQmlTypeCompiler::functions() const
-{
-    return parsedQML->functions;
 }
 
 void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
@@ -1384,7 +1377,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 }
 
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QVector<int> &runtimeFunctionIndices)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
     , qmlUnit(typeCompiler->qmlUnit())
@@ -1392,7 +1385,6 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, con
     , propertyCaches(typeCompiler->propertyCaches())
     , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
     , customParserData(typeCompiler->customParserData())
-    , runtimeFunctionIndices(runtimeFunctionIndices)
 {
 }
 
@@ -1409,18 +1401,20 @@ const QQmlImports &QQmlPropertyValidator::imports() const
     return *compiler->imports();
 }
 
-QQmlJS::AST::Node *QQmlPropertyValidator::astForBinding(int scriptIndex) const
+QQmlJS::AST::Node *QQmlPropertyValidator::astForBinding(int objectIndex, int scriptIndex) const
 {
+    const QtQml::QmlObject *obj = compiler->qmlObjects()->at(objectIndex);
     // ####
-    int reverseIndex = runtimeFunctionIndices.indexOf(scriptIndex);
+    int reverseIndex = obj->runtimeFunctionIndices->indexOf(scriptIndex);
     if (reverseIndex == -1)
         return 0;
-    return compiler->functions().value(reverseIndex).node;
+    QtQml::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(reverseIndex);
+    return foe ? foe->node : 0;
 }
 
 QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *)
 {
-    int id = customParserBindings.count();
+    const int id = customParserBindings.count();
     customParserBindings.append(binding->value.compiledScriptIndex);
     return id;
 }
@@ -2023,6 +2017,110 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
             return false;
         }
     }
+    return true;
+}
+
+QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QtQml::JSCodeGen *v4CodeGen)
+    : QQmlCompilePass(typeCompiler)
+    , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
+    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , propertyCaches(typeCompiler->propertyCaches())
+    , v4CodeGen(v4CodeGen)
+{
+}
+
+bool QQmlJSCodeGenerator::generateCodeForComponents()
+{
+    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent = *compiler->objectIndexToIdPerComponent();
+    for (QHash<int, QHash<int, int> >::ConstIterator component = objectIndexToIdPerComponent.constBegin(), end = objectIndexToIdPerComponent.constEnd();
+         component != end; ++component) {
+        if (!compileComponent(component.key(), component.value()))
+            return false;
+    }
+
+    return compileComponent(compiler->rootObjectIndex(), *compiler->objectIndexToIdForRoot());
+}
+
+bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, int> &objectIndexToId)
+{
+    if (isComponent(contextObject)) {
+        const QtQml::QmlObject *component = qmlObjects.at(contextObject);
+        Q_ASSERT(component->bindingCount() == 1);
+        const QV4::CompiledData::Binding *componentBinding = component->firstBinding();
+        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        contextObject = componentBinding->value.objectIndex;
+    }
+
+    JSCodeGen::ObjectIdMapping idMapping;
+    if (!objectIndexToId.isEmpty()) {
+        idMapping.reserve(objectIndexToId.count());
+
+        for (QHash<int, int>::ConstIterator idIt = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
+             idIt != end; ++idIt) {
+
+            const int objectIndex = idIt.key();
+            JSCodeGen::IdMapping m;
+            m.name = stringAt(qmlObjects.at(objectIndex)->idIndex);
+            m.idIndex = idIt.value();
+            m.type = propertyCaches.at(objectIndex);
+            idMapping << m;
+        }
+
+        v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject));
+    }
+
+    if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
+        return false;
+
+    return true;
+}
+
+bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
+{
+    if (isComponent(objectIndex))
+        return true;
+
+    QtQml::QmlObject *object = qmlObjects.at(objectIndex);
+    if (object->functionsAndExpressions->count > 0) {
+        bool haveCustomParser = false;
+        QQmlCompiledData::TypeReference *objectType = resolvedTypes.value(object->inheritedTypeNameIndex);
+        if (objectType && objectType->type)
+            haveCustomParser = objectType->type->customParser() != 0;
+
+        QQmlPropertyCache *scopeObject = propertyCaches.at(scopeObjectIndex);
+        v4CodeGen->beginObjectScope(scopeObject);
+
+        QList<QtQml::CompiledFunctionOrExpression> functionsToCompile;
+        for (QtQml::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next) {
+            if (haveCustomParser)
+                foe->disableAcceleratedLookups = true;
+            functionsToCompile << *foe;
+        }
+        const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
+        QList<QQmlError> jsErrors = v4CodeGen->errors();
+        if (!jsErrors.isEmpty()) {
+            foreach (const QQmlError &e, jsErrors)
+                compiler->recordError(e);
+            return false;
+        }
+
+        QQmlJS::MemoryPool *pool = compiler->memoryPool();
+        object->runtimeFunctionIndices = pool->New<QtQml::FixedPoolArray<int> >();
+        object->runtimeFunctionIndices->init(pool, runtimeFunctionIndices);
+    }
+
+    for (const QtQml::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
+        if (binding->type < QV4::CompiledData::Binding::Type_Object)
+            continue;
+
+        int target = binding->value.objectIndex;
+        int scope = binding->type == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
+
+        if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
+            return false;
+    }
+
     return true;
 }
 

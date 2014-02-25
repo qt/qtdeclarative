@@ -3642,6 +3642,8 @@ bool QQmlCompiler::completeComponentBuild()
     const QQmlScript::Parser &parser = unit->parser();
     QQmlJS::Engine *jsEngine = parser.jsEngine();
     QQmlJS::MemoryPool *pool = jsEngine->pool();
+    QStringList stringPool;
+    stringPool.append(QString());
 
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
@@ -3659,7 +3661,9 @@ bool QQmlCompiler::completeComponentBuild()
         ComponentCompileState::PerObjectCompileData *cd = &compileState->jsCompileData[b->bindingContext.object];
         QtQml::CompiledFunctionOrExpression f;
         f.node = node;
-        f.name = binding.property->name().toString().prepend(QStringLiteral("expression for "));
+        QString name = binding.property->name().toString().prepend(QStringLiteral("expression for "));
+        stringPool.append(name);
+        f.nameIndex = stringPool.count() - 1;
         f.disableAcceleratedLookups = binding.disableLookupAcceleration;
         cd->functionsToCompile.append(f);
         binding.compiledIndex = cd->functionsToCompile.count() - 1;
@@ -3672,7 +3676,7 @@ bool QQmlCompiler::completeComponentBuild()
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
 
-        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
+        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache, stringPool);
 
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {

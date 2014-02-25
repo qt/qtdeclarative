@@ -79,6 +79,8 @@ void QmlObject::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const 
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
+    functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
+    runtimeFunctionIndices = 0;
     declarationsOverride = 0;
 }
 
@@ -91,14 +93,13 @@ void QmlObject::dump(DebugStream &out)
     out << "}" << endl;
 }
 
-QString QmlObject::sanityCheckFunctionNames(const QList<CompiledFunctionOrExpression> &allFunctions, const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
+QString QmlObject::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
 {
     QSet<int> functionNames;
     for (Function *f = functions->first; f; f = f->next) {
-        QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(allFunctions.at(f->index).node);
+        QQmlJS::AST::FunctionDeclaration *function = f->functionDeclaration;
         Q_ASSERT(function);
         *errorLocation = function->identifierToken;
-        QString name = function->name.toString();
         if (functionNames.contains(f->nameIndex))
             return tr("Duplicate method name");
         functionNames.insert(f->nameIndex);
@@ -108,6 +109,7 @@ QString QmlObject::sanityCheckFunctionNames(const QList<CompiledFunctionOrExpres
                 return tr("Duplicate method name");
         }
 
+        const QString name = function->name.toString();
         if (name.at(0).isUpper())
             return tr("Method names cannot begin with an upper case letter");
         if (illegalNames.contains(name))
@@ -249,7 +251,6 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
-    qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
     this->pool = output->jsParserEngine.pool();
     this->jsGenerator = &output->jsGenerator;
@@ -278,7 +279,6 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
-    qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
     return errors.isEmpty();
 }
@@ -448,7 +448,7 @@ bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifi
         return false;
 
     QQmlJS::AST::SourceLocation loc;
-    QString error = obj->sanityCheckFunctionNames(_functions, illegalNames, &loc);
+    QString error = obj->sanityCheckFunctionNames(illegalNames, &loc);
     if (!error.isEmpty()) {
         recordError(loc, error);
         return false;
@@ -869,13 +869,18 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
 bool QQmlCodeGenerator::visit(QQmlJS::AST::UiSourceElement *node)
 {
     if (QQmlJS::AST::FunctionDeclaration *funDecl = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration *>(node->sourceElement)) {
-        _functions << funDecl;
+        CompiledFunctionOrExpression *foe = New<CompiledFunctionOrExpression>();
+        foe->node = funDecl;
+        foe->nameIndex = registerString(funDecl->name.toString());
+        foe->disableAcceleratedLookups = false;
+        const int index = _object->functionsAndExpressions->append(foe);
+
         Function *f = New<Function>();
         f->functionDeclaration = funDecl;
         QQmlJS::AST::SourceLocation loc = funDecl->identifierToken;
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
-        f->index = _functions.size() - 1;
+        f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
         _object->appendFunction(f);
     } else {
@@ -970,8 +975,13 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
     // Do binding instead
     if (binding->type == QV4::CompiledData::Binding::Type_Invalid) {
         binding->type = QV4::CompiledData::Binding::Type_Script;
-        _functions << statement;
-        binding->value.compiledScriptIndex = _functions.size() - 1;
+
+        CompiledFunctionOrExpression *expr = New<CompiledFunctionOrExpression>();
+        expr->node = statement;
+        expr->nameIndex = 0;
+        expr->disableAcceleratedLookups = false;
+        const int index = bindingsTarget()->functionsAndExpressions->append(expr);
+        binding->value.compiledScriptIndex = index;
         binding->stringIndex = registerString(asStringRef(statement).toString());
     }
 }
@@ -1259,7 +1269,7 @@ bool QQmlCodeGenerator::isStatementNodeScript(QQmlJS::AST::Statement *statement)
     return true;
 }
 
-QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const QVector<int> &runtimeFunctionIndices)
+QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
 {
     jsUnitGenerator = &output.jsGenerator;
     int unitSize = 0;
@@ -1337,7 +1347,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
 
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
-            *functionsTable++ = runtimeFunctionIndices[f->index];
+            *functionsTable++ = o->runtimeFunctionIndices->at(f->index);
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
         for (const QmlProperty *p = o->firstProperty(); p; p = p->next) {
@@ -1347,11 +1357,11 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBindingNoAlias);
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isSignalHandler);
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isAttachedProperty);
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isGroupProperty);
-        bindingPtr = writeBindings(bindingPtr, o, runtimeFunctionIndices, &QV4::CompiledData::Binding::isValueBindingToAlias);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingNoAlias);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isSignalHandler);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isAttachedProperty);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isGroupProperty);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
         quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
@@ -1389,7 +1399,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
     return qmlUnit;
 }
 
-char *QmlUnitGenerator::writeBindings(char *bindingPtr, QmlObject *o, const QVector<int> &runtimeFunctionIndices, BindingFilter filter) const
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, QmlObject *o, BindingFilter filter) const
 {
     for (const Binding *b = o->firstBinding(); b; b = b->next) {
         if (!(b->*(filter))())
@@ -1397,7 +1407,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, QmlObject *o, const QVec
         QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
         *bindingToWrite = *b;
         if (b->type == QV4::CompiledData::Binding::Type_Script)
-            bindingToWrite->value.compiledScriptIndex = runtimeFunctionIndices[b->value.compiledScriptIndex];
+            bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices->at(b->value.compiledScriptIndex);
         bindingPtr += sizeof(QV4::CompiledData::Binding);
     }
     return bindingPtr;
@@ -1409,12 +1419,13 @@ int QmlUnitGenerator::getStringId(const QString &str) const
 }
 
 JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, IR::Module *jsModule, QQmlJS::Engine *jsEngine,
-                     QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports)
+                     QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QStringList &stringPool)
     : QQmlJS::Codegen(/*strict mode*/false)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
     , imports(imports)
+    , stringPool(stringPool)
     , _disableAcceleratedLookups(false)
     , _contextObject(0)
     , _scopeObject(0)
@@ -1475,8 +1486,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         QString name;
         if (function)
             name = function->name.toString();
-        else if (!qmlFunction.name.isEmpty())
-            name = qmlFunction.name;
+        else if (qmlFunction.nameIndex != 0)
+            name = stringPool.value(qmlFunction.nameIndex);
         else
             name = QStringLiteral("%qml-expression-entry");
 
@@ -1988,7 +1999,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (paramList)
             paramList = paramList->finish();
 
-        QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex].node);
+        CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
+        QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
         QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
         QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
         elements = elements->finish();
@@ -1997,7 +2009,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(jsEngine.newStringRef(propertyName), paramList, body);
 
-        parsedQML->functions[binding->value.compiledScriptIndex] = functionDeclaration;
+        foe->node = functionDeclaration;
         binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
     }
     return true;

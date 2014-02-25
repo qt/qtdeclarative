@@ -2387,8 +2387,9 @@ bool QQmlListModelParser::compileProperty(const QQmlCustomParserProperty &prop, 
 
 bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
 {
+    const quint32 targetObjectIndex = binding->value.objectIndex;
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-        const QV4::CompiledData::Object *target = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
         QString objName = qmlUnit->header.stringAt(target->inheritedTypeNameIndex);
         if (objName != listElementTypeName) {
             const QMetaObject *mo = resolveType(objName);
@@ -2465,7 +2466,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
                 int v = evaluateEnum(script, &ok);
                 if (!ok) {
                     using namespace QQmlJS;
-                    AST::Node *node = astForBinding(binding->value.compiledScriptIndex);
+                    AST::Node *node = astForBinding(targetObjectIndex, binding->value.compiledScriptIndex);
                     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node))
                         node = stmt->expression;
                     AST::StringLiteral *literal = 0;

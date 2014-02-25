@@ -94,7 +94,6 @@ public:
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
     QHash<int, QByteArray> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
-    const QList<CompiledFunctionOrExpression> &functions() const;
     void setCustomParserBindings(const QVector<int> &bindings);
 
 private:
@@ -216,13 +215,13 @@ class QQmlPropertyValidator : public QQmlCompilePass, public QQmlCustomParserCom
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QVector<int> &runtimeFunctionIndices);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
 
     bool validate();
 
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
-    virtual QQmlJS::AST::Node *astForBinding(int scriptIndex) const;
+    virtual QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
 
 private:
@@ -241,7 +240,27 @@ private:
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QByteArray> *customParserData;
     QVector<int> customParserBindings;
-    const QVector<int> &runtimeFunctionIndices;
+};
+
+// ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
+class QQmlJSCodeGenerator : public QQmlCompilePass
+{
+public:
+    QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QtQml::JSCodeGen *v4CodeGen);
+
+    bool generateCodeForComponents();
+
+private:
+    bool compileComponent(int componentRoot, const QHash<int, int> &objectIndexToId);
+    bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+
+    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QVector<QQmlPropertyCache *> &propertyCaches;
+    QtQml::JSCodeGen * const v4CodeGen;
 };
 
 QT_END_NAMESPACE
