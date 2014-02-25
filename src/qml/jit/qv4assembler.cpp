@@ -427,7 +427,7 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     return isNoDbl;
 }
 
-#ifndef QT_NO_DEBUG
+#if !defined(QT_NO_DEBUG) || defined(QT_FORCE_ASSERTS)
 namespace {
 inline bool isPregOrConst(IR::Expr *e)
 {
