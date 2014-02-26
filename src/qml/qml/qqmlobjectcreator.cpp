@@ -675,7 +675,6 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
     QObject *createdSubObject = 0;
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        Q_ASSERT(!_valueTypeProperty);
         createdSubObject = createInstance(binding->value.objectIndex, _bindingTarget);
         if (!createdSubObject)
             return false;
