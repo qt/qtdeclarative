@@ -47,6 +47,7 @@
 #include <private/qqmlcompiler_p.h>
 #include <private/qqmltypecompiler_p.h>
 #include <private/qfinitestack_p.h>
+#include <private/qrecursionwatcher_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,7 @@ struct QQmlObjectCreatorSharedState
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+    QRecursionNode recursionNode;
 };
 
 class QQmlObjectCreator

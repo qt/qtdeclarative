@@ -131,6 +131,9 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
 QQmlObjectCreator::~QQmlObjectCreator()
 {
     if (sharedState.flag()) {
+        {
+            QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
+        }
         for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
             QQmlAbstractBinding *b = sharedState->allCreatedBindings.at(i);
             if (b)
@@ -1077,6 +1080,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
 QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
+    QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     {
@@ -1084,7 +1088,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     trace.event("begin binding eval");
 
     while (!sharedState->allCreatedBindings.isEmpty()) {
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
 
         QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
@@ -1109,7 +1113,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
                 status->componentComplete();
             }
 
-            if (interrupt.shouldInterrupt())
+            if (watcher.hasRecursed() || interrupt.shouldInterrupt())
                 return 0;
         }
     }
@@ -1123,6 +1127,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             void *args[] = { 0 };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
+        if (watcher.hasRecursed())
+            return 0;
     }
     sharedState->finalizeCallbacks.clear();
     }
@@ -1139,7 +1145,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         // ### designer if (componentCompleteEnabled())
             emit a->completed();
 
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
     }
     }
