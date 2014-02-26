@@ -219,16 +219,22 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
 
-    // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
-    if (property->isEnum() && !(binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)) {
-        QVariant value = binding->valueAsString(&qmlUnit->header);
-        bool ok = QQmlPropertyPrivate::write(_qobject, *property, value, context);
-        Q_ASSERT(ok);
-        Q_UNUSED(ok);
-        return;
+    int propertyType = property->propType;
+
+    if (property->isEnum()) {
+        if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum) {
+            propertyType = QMetaType::Int;
+        } else {
+            // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
+            QVariant value = binding->valueAsString(&qmlUnit->header);
+            bool ok = QQmlPropertyPrivate::write(_qobject, *property, value, context);
+            Q_ASSERT(ok);
+            Q_UNUSED(ok);
+            return;
+        }
     }
 
-    switch (property->propType) {
+    switch (propertyType) {
     case QMetaType::QVariant: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             double n = binding->valueAsNumber();
