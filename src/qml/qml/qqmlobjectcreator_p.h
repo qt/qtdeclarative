@@ -67,7 +67,7 @@ public:
 
     QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
 
-    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() { return &sharedState->finalizeCallbacks; }
 
     QList<QQmlError> errors;
 
@@ -96,6 +96,7 @@ private:
         QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
         QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
         QQmlComponentAttached *componentAttached;
+        QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
     };
 
     QQmlEngine *engine;

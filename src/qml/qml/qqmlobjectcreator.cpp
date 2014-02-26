@@ -1089,15 +1089,15 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
 
     {
     QQmlTrace trace("VME Finalize Callbacks");
-    for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
-        QQmlEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
+    for (int ii = 0; ii < sharedState->finalizeCallbacks.count(); ++ii) {
+        QQmlEnginePrivate::FinalizeCallback callback = sharedState->finalizeCallbacks.at(ii);
         QObject *obj = callback.first;
         if (obj) {
             void *args[] = { 0 };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
     }
-    finalizeCallbacks.clear();
+    sharedState->finalizeCallbacks.clear();
     }
 
     {
