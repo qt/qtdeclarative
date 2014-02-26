@@ -1040,12 +1040,8 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
 {
 }
 
-void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex)
+void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, QQmlPropertyCache *propertyCache)
 {
-    QQmlPropertyCache *propertyCache = propertyCaches.value(objectIndex);
-    if (!propertyCache)
-        return;
-
     PropertyResolver propertyResolver(propertyCache);
 
     QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
@@ -1124,13 +1120,20 @@ bool QQmlComponentAndAliasResolver::resolve()
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         const QtQml::QmlObject *obj = qmlObjects->at(i);
-        if (obj->inheritedTypeNameIndex == 0)
+        QQmlPropertyCache *cache = propertyCaches.value(i);
+        if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
 
-        QQmlCompiledData::TypeReference *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
-        Q_ASSERT(tref);
-        if (!tref->type || tref->type->metaObject() != &QQmlComponent::staticMetaObject) {
-            findAndRegisterImplicitComponents(obj, i);
+        bool isExplicitComponent = false;
+
+        if (obj->inheritedTypeNameIndex) {
+            QQmlCompiledData::TypeReference *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
+            Q_ASSERT(tref);
+            if (tref->type && tref->type->metaObject() == &QQmlComponent::staticMetaObject)
+                isExplicitComponent = true;
+        }
+        if (!isExplicitComponent) {
+            findAndRegisterImplicitComponents(obj, cache);
             continue;
         }
 

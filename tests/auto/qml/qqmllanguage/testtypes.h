@@ -256,6 +256,8 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyGroupedObject *grouped READ grouped CONSTANT)
     Q_PROPERTY(MyGroupedObject *nullGrouped READ nullGrouped CONSTANT)
 
+    Q_PROPERTY(MyTypeObject *selfGroupProperty READ selfGroupProperty)
+
 public:
     MyTypeObject()
         : objectPropertyValue(0), componentPropertyValue(0) {}
@@ -549,6 +551,8 @@ public:
     MyGroupedObject *grouped() { return &groupedValue; }
 
     MyGroupedObject *nullGrouped() { return 0; }
+
+    MyTypeObject *selfGroupProperty() { return this; }
 
     void doAction() { emit action(); }
 signals:

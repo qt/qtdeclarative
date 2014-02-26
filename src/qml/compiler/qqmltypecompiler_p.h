@@ -183,7 +183,7 @@ public:
     bool resolve();
 
 protected:
-    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex);
+    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 

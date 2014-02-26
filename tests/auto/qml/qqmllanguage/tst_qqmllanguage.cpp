@@ -117,6 +117,7 @@ private slots:
     void dynamicSignalsAndSlots();
     void simpleBindings();
     void autoComponentCreation();
+    void autoComponentCreationInGroupProperty();
     void propertyValueSource();
     void attachedProperties();
     void dynamicObjects();
@@ -1342,6 +1343,18 @@ void tst_qqmllanguage::simpleBindings()
 void tst_qqmllanguage::autoComponentCreation()
 {
     QQmlComponent component(&engine, testFileUrl("autoComponentCreation.qml"));
+    VERIFY_ERRORS(0);
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->componentProperty() != 0);
+    MyTypeObject *child = qobject_cast<MyTypeObject *>(object->componentProperty()->create());
+    QVERIFY(child != 0);
+    QCOMPARE(child->realProperty(), qreal(9));
+}
+
+void tst_qqmllanguage::autoComponentCreationInGroupProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("autoComponentCreationInGroupProperties.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
