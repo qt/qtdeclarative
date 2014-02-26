@@ -1343,6 +1343,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
 
             Instruction::AssignSignalObject assign;
             assign.line = v->location.start.line;
+            assign.column = v->location.start.column;
             assign.signal = output->indexForString(prop->name().toString());
             output->addInstruction(assign);
 

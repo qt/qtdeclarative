@@ -620,7 +620,7 @@ void tst_qqmlqt::createQmlObject()
     QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("main.qml").toString() + ":4:14: Duplicate property name";
     QString warning4 = component.url().toString()+ ":9: Error: Qt.createQmlObject(): Missing parent object";
     QString warning5 = component.url().toString()+ ":8: Error: Qt.createQmlObject(): Invalid arguments";
-    QString warning6 = "RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":3: Cannot assign object type QObject with no default method";
+    QString warning6 = "RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":3:16: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
