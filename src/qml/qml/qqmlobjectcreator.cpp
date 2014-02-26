@@ -891,6 +891,11 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
             if (_currentList.append)
                 _currentList.append(&_currentList, itemToAdd);
+            else {
+                recordError(binding->location, tr("Cannot assign object to read only list"));
+                return false;
+            }
+
         } else {
             // pointer compatibility was tested in QQmlPropertyValidator at type compile time
             argv[0] = &createdSubObject;
