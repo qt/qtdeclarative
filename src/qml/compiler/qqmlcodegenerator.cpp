@@ -947,8 +947,9 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
     if (_propertyDeclaration && (_propertyDeclaration->flags & QV4::CompiledData::Property::IsReadOnly))
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
-    if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement)) {
-        QQmlJS::AST::ExpressionNode *expr = stmt->expression;
+    QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
+    if (exprStmt) {
+        QQmlJS::AST::ExpressionNode * const expr = exprStmt->expression;
         if (QQmlJS::AST::StringLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expr)) {
             binding->type = QV4::CompiledData::Binding::Type_String;
             binding->stringIndex = registerString(lit->value.toString());
@@ -982,7 +983,11 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
         expr->disableAcceleratedLookups = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
-        binding->stringIndex = registerString(asStringRef(statement).toString());
+
+        QQmlJS::AST::Node *nodeForString = statement;
+        if (exprStmt)
+            nodeForString = exprStmt->expression;
+        binding->stringIndex = registerString(asStringRef(nodeForString).toString());
     }
 }
 

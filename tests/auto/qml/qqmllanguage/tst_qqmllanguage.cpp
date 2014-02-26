@@ -215,6 +215,7 @@ private slots:
     void compositeSingletonRegistered();
 
     void customParserBindingScopes();
+    void customParserEvaluateEnum();
 
 private:
     QQmlEngine engine;
@@ -3545,6 +3546,14 @@ void tst_qqmllanguage::customParserBindingScopes()
     QPointer<QObject> child = qvariant_cast<QObject*>(o->property("child"));
     QVERIFY(!child.isNull());
     QCOMPARE(child->property("testProperty").toInt(), 42);
+}
+
+void tst_qqmllanguage::customParserEvaluateEnum()
+{
+    QQmlComponent component(&engine, testFile("customParserEvaluateEnum.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

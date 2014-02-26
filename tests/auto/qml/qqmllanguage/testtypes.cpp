@@ -68,6 +68,7 @@ void registerTypes()
     qmlRegisterType<MySubclass>("Test",1,0,"MySubclass");
 
     qmlRegisterCustomType<MyCustomParserType>("Test", 1, 0, "MyCustomParserType", new MyCustomParserTypeParser);
+    qmlRegisterCustomType<MyCustomParserType>("Test", 1, 0, "MyCustomParserWithEnumType", new EnumSupportingCustomParser);
 
     qmlRegisterTypeNotAvailable("Test",1,0,"UnavailableType", "UnavailableType is unavailable for testing");
 
@@ -176,4 +177,81 @@ void CustomBinding::componentComplete()
         binding->setTarget(property);
         QQmlPropertyPrivate::setBinding(property, binding);
     }
+}
+
+
+QByteArray EnumSupportingCustomParser::compile(const QList<QQmlCustomParserProperty> &props)
+{
+    if (props.count() != 1) {
+        error(QStringLiteral("Custom parser invoked incorrectly for unit test"));
+        return QByteArray();
+    }
+    QQmlCustomParserProperty prop = props.first();
+    if (prop.name() != QStringLiteral("foo")) {
+        error(QStringLiteral("Custom parser invoked with the wrong property name"));
+        return QByteArray();
+    }
+
+    if (prop.assignedValues().count() != 1) {
+        error(QStringLiteral("Custom parser invoked with the wrong property values. Expected only one."));
+        return QByteArray();
+    }
+
+    QVariant firstValue = prop.assignedValues().first();
+    if (firstValue.userType() != qMetaTypeId<QQmlScript::Variant>()) {
+        error(QStringLiteral("Custom parser invoked with the wrong property value. Expected value instead of object or so"));
+        return QByteArray();
+    }
+    QQmlScript::Variant value = qvariant_cast<QQmlScript::Variant>(firstValue);
+    if (!value.isScript()) {
+        error(QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
+        return QByteArray();
+    }
+    QByteArray script = value.asScript().toUtf8();
+    bool ok;
+    int v = evaluateEnum(script, &ok);
+    if (!ok) {
+        error(QStringLiteral("Custom parser invoked with the wrong property value. Script did not evaluate to enum"));
+        return QByteArray();
+    }
+    if (v != MyEnum1Class::A_13) {
+        error(QStringLiteral("Custom parser invoked with the wrong property value. Enum value is not the expected value."));
+        return QByteArray();
+    }
+
+    return QByteArray();
+}
+
+QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    Q_UNUSED(qmlUnit)
+
+    if (bindings.count() != 1) {
+        error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
+        return QByteArray();
+    }
+
+    const QV4::CompiledData::Binding *binding = bindings.first();
+    if (qmlUnit->header.stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
+        error(binding, QStringLiteral("Custom parser invoked with the wrong property name"));
+        return QByteArray();
+    }
+
+    if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+        error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
+        return QByteArray();
+    }
+    QByteArray script = qmlUnit->header.stringAt(binding->stringIndex).toUtf8();
+    bool ok;
+    int v = evaluateEnum(script, &ok);
+    if (!ok) {
+        error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Script did not evaluate to enum"));
+        return QByteArray();
+    }
+    if (v != MyEnum1Class::A_13) {
+        error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Enum value is not the expected value."));
+        return QByteArray();
+    }
+
+    return QByteArray();
 }

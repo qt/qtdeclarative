@@ -723,6 +723,14 @@ public:
     void setCustomData(QObject *, const QByteArray &) {}
 };
 
+class EnumSupportingCustomParser : public QQmlCustomParser
+{
+public:
+    QByteArray compile(const QList<QQmlCustomParserProperty> &props);
+    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    void setCustomData(QObject *, const QByteArray &) {}
+};
+
 class MyParserStatus : public QObject, public QQmlParserStatus
 {
     Q_INTERFACES(QQmlParserStatus)
