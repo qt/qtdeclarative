@@ -366,19 +366,27 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
     // sequence. See also QSGRenderContext::invalidate
 
     QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
-    if (fontD->fontEngine != 0) {
+    if (QFontEngine *fontEngine = fontD->fontEngine) {
         if (glyphFormat == QFontEngine::Format_None) {
-            glyphFormat = fontD->fontEngine->glyphFormat != QFontEngine::Format_None
-                        ? fontD->fontEngine->glyphFormat
+            glyphFormat = fontEngine->glyphFormat != QFontEngine::Format_None
+                        ? fontEngine->glyphFormat
                         : QFontEngine::Format_A32;
         }
-        m_glyphCache = fontD->fontEngine->glyphCache(ctx, glyphFormat, QTransform());
+
+        qreal devicePixelRatio = ctx->surface()->surfaceClass() == QSurface::Window ?
+            static_cast<QWindow *>(ctx->surface())->devicePixelRatio() : ctx->screen()->devicePixelRatio();
+
+        QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
+        if (!fontEngine->supportsTransformation(glyphCacheTransform))
+            glyphCacheTransform = QTransform();
+
+        m_glyphCache = fontEngine->glyphCache(ctx, glyphFormat, glyphCacheTransform);
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
-            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, QTransform());
-            fontD->fontEngine->setGlyphCache(ctx, m_glyphCache.data());
+            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
+            fontEngine->setGlyphCache(ctx, m_glyphCache.data());
             QSGRenderContext *sg = QSGRenderContext::from(ctx);
             Q_ASSERT(sg);
-            sg->registerFontengineForCleanup(fontD->fontEngine);
+            sg->registerFontengineForCleanup(fontEngine);
         }
     }
 }
@@ -405,6 +413,11 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 
     int margin = fontD->fontEngine->glyphMargin(cache->glyphFormat());
 
+    qreal glyphCacheScaleX = cache->transform().m11();
+    qreal glyphCacheScaleY = cache->transform().m22();
+    qreal glyphCacheInverseScaleX = 1.0 / glyphCacheScaleX;
+    qreal glyphCacheInverseScaleY = 1.0 / glyphCacheScaleY;
+
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
     QVector4D *vp = (QVector4D *)geometry->vertexDataAsTexturedPoint2D();
@@ -420,17 +433,31 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 
          QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i), subPixelPosition);
          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
+         if (c.isNull())
+            continue;
 
          QPointF glyphPosition = glyphPositions.at(i) + position;
-         int x = qFloor(glyphPosition.x()) + c.baseLineX - margin;
-         int y = qFloor(glyphPosition.y()) - c.baseLineY - margin;
 
-         *boundingRect |= QRectF(x + margin, y + margin, c.w, c.h);
+         // On a retina screen the glyph positions are not pre-scaled (as opposed to
+         // eg. the raster paint engine). To ensure that we get the same behavior as
+         // the raster engine (and CoreText itself) when it comes to rounding of the
+         // coordinates, we need to apply the scale factor before rounding, and then
+         // apply the inverse scale to get back to the coordinate system of the node.
+
+         qreal x = (qFloor(glyphPosition.x() * glyphCacheScaleX) * glyphCacheInverseScaleX) +
+                        (c.baseLineX * glyphCacheInverseScaleX) - margin;
+         qreal y = (qRound(glyphPosition.y() * glyphCacheScaleY) * glyphCacheInverseScaleY) -
+                        (c.baseLineY * glyphCacheInverseScaleY) - margin;
+
+         qreal w = c.w * glyphCacheInverseScaleX;
+         qreal h = c.h * glyphCacheInverseScaleY;
+
+         *boundingRect |= QRectF(x + margin, y + margin, w, h);
 
          float cx1 = x - margins.left();
-         float cx2 = x + c.w + margins.right();
+         float cx2 = x + w + margins.right();
          float cy1 = y - margins.top();
-         float cy2 = y + c.h + margins.bottom();
+         float cy2 = y + h + margins.bottom();
 
          float tx1 = c.x - margins.left();
          float tx2 = c.x + c.w + margins.right();
