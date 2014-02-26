@@ -1052,6 +1052,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
 QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
+    ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
+
     {
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
