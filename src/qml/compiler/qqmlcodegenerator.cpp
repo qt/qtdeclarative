@@ -232,12 +232,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
                     continue;
                 }
 
-                QQmlError error;
-                error.setUrl(url);
-                error.setDescription(m.message);
-                error.setLine(m.loc.startLine);
-                error.setColumn(m.loc.startColumn);
-                errors << error;
+                recordError(m.loc, m.message);
             }
             return false;
         }
@@ -263,11 +258,8 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
 
     if (program->members->next) {
         QQmlError error;
-        error.setDescription(QCoreApplication::translate("QQmlParser", "Unexpected object definition"));
         QQmlJS::AST::SourceLocation loc = program->members->next->firstSourceLocation();
-        error.setLine(loc.startLine);
-        error.setColumn(loc.startColumn);
-        errors << error;
+        recordError(loc, QCoreApplication::translate("QQmlParser", "Unexpected object definition"));
         return false;
     }
 
@@ -481,19 +473,11 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiImport *node)
     if (!node->importId.isNull()) {
         QString qualifier = node->importId.toString();
         if (!qualifier.at(0).isUpper()) {
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier ID"));
-            error.setLine(node->importIdToken.startLine);
-            error.setColumn(node->importIdToken.startColumn);
-            errors << error;
+            recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Invalid import qualifier ID"));
             return false;
         }
         if (qualifier == QLatin1String("Qt")) {
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Reserved name \"Qt\" cannot be used as an qualifier"));
-            error.setLine(node->importIdToken.startLine);
-            error.setColumn(node->importIdToken.startColumn);
-            errors << error;
+            recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Reserved name \"Qt\" cannot be used as an qualifier"));
             return false;
         }
         import->qualifierIndex = registerString(qualifier);
@@ -505,32 +489,20 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiImport *node)
             bool otherIsScript = other->type == QV4::CompiledData::Import::ImportScript;
 
             if ((isScript || otherIsScript) && qualifier == jsGenerator->strings.at(other->qualifierIndex)) {
-                QQmlError error;
-                error.setDescription(QCoreApplication::translate("QQmlParser","Script import qualifiers must be unique."));
-                error.setLine(node->importIdToken.startLine);
-                error.setColumn(node->importIdToken.startColumn);
-                errors << error;
+                recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Script import qualifiers must be unique."));
                 return false;
             }
         }
 
     } else if (import->type == QV4::CompiledData::Import::ImportScript) {
-        QQmlError error;
-        error.setDescription(QCoreApplication::translate("QQmlParser","Script import requires a qualifier"));
-        error.setLine(node->fileNameToken.startLine);
-        error.setColumn(node->fileNameToken.startColumn);
-        errors << error;
+        recordError(node->fileNameToken, QCoreApplication::translate("QQmlParser","Script import requires a qualifier"));
         return false;
     }
 
     if (node->versionToken.isValid()) {
         extractVersion(textRefAt(node->versionToken), &import->majorVersion, &import->minorVersion);
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
-        QQmlError error;
-        error.setDescription(QCoreApplication::translate("QQmlParser","Library import requires a version"));
-        error.setLine(node->importIdToken.startLine);
-        error.setColumn(node->importIdToken.startColumn);
-        errors << error;
+        recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Library import requires a version"));
         return false;
     } else {
         // For backward compatibility in how the imports are loaded we
@@ -560,19 +532,11 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPragma *node)
         {
             pragma->type = Pragma::PragmaSingleton;
         } else {
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
-            error.setLine(node->pragmaToken.startLine);
-            error.setColumn(node->pragmaToken.startColumn);
-            errors << error;
+            recordError(node->pragmaToken, QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
             return false;
         }
     } else {
-        QQmlError error;
-        error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
-        error.setLine(node->pragmaToken.startLine);
-        error.setColumn(node->pragmaToken.startColumn);
-        errors << error;
+        recordError(node->pragmaToken, QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
         return false;
     }
 
@@ -653,11 +617,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
             const QStringRef &memberType = p->type;
 
             if (memberType.isEmpty()) {
-                QQmlError error;
-                error.setDescription(QCoreApplication::translate("QQmlParser","Expected parameter type"));
-                error.setLine(node->typeToken.startLine);
-                error.setColumn(node->typeToken.startColumn);
-                errors << error;
+                recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected parameter type"));
                 return false;
             }
 
@@ -680,13 +640,9 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
                     param->type = QV4::CompiledData::Property::Custom;
                     param->customTypeNameIndex = registerString(p->type.toString());
                 } else {
-                    QQmlError error;
                     QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
                     errStr.append(memberType.toString());
-                    error.setDescription(errStr);
-                    error.setLine(node->typeToken.startLine);
-                    error.setColumn(node->typeToken.startColumn);
-                    errors << error;
+                    recordError(node->typeToken, errStr);
                     return false;
                 }
             } else {
@@ -744,29 +700,17 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
                       QHashedString::compare(typeModifier.constData(), "list", static_cast<int>(strlen("list")))) {
                 type = QV4::CompiledData::Property::CustomList;
             } else {
-                QQmlError error;
-                error.setDescription(QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
-                error.setLine(node->typeModifierToken.startLine);
-                error.setColumn(node->typeModifierToken.startColumn);
-                errors << error;
+                recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
                 return false;
             }
             typeFound = true;
         } else if (!node->typeModifier.isNull()) {
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Unexpected property type modifier"));
-            error.setLine(node->typeModifierToken.startLine);
-            error.setColumn(node->typeModifierToken.startColumn);
-            errors << error;
+            recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Unexpected property type modifier"));
             return false;
         }
 
         if (!typeFound) {
-            QQmlError error;
-            error.setDescription(QCoreApplication::translate("QQmlParser","Expected property type"));
-            error.setLine(node->typeToken.startLine);
-            error.setColumn(node->typeToken.startColumn);
-            errors << error;
+            recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected property type"));
             return false;
         }
 
@@ -842,11 +786,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
             if (errorLocation.startLine == 0)
                 errorLocation = node->identifierToken;
 
-            QQmlError qmlError;
-            qmlError.setDescription(error);
-            qmlError.setLine(errorLocation.startLine);
-            qmlError.setColumn(errorLocation.startColumn);
-            errors << qmlError;
+            recordError(errorLocation, error);
             return false;
         }
 
@@ -881,11 +821,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiSourceElement *node)
         f->nameIndex = registerString(funDecl->name.toString());
         _object->appendFunction(f);
     } else {
-        QQmlError error;
-        error.setDescription(QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
-        error.setLine(node->firstSourceLocation().startLine);
-        error.setColumn(node->firstSourceLocation().startColumn);
-        errors << error;
+        recordError(node->firstSourceLocation(), QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
     }
     return false;
 }
