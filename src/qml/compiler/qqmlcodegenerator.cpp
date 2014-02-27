@@ -1905,8 +1905,6 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             parameters = entry.value();
         }
 
-        binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
-
         // Binding object to signal means connect the signal to the object's default method.
         if (binding->type == QV4::CompiledData::Binding::Type_Object) {
             binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerObject;
@@ -1945,9 +1943,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
 
-        QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(jsEngine.newStringRef(propertyName), paramList, body);
+        QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(jsEngine.newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
 
         foe->node = functionDeclaration;
+        binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
         binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
     }
     return true;
