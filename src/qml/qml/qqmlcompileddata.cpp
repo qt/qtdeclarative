@@ -193,7 +193,7 @@ void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
         mo = typePropertyCache->firstCppMetaObject();
     else if (type)
         mo = type->metaObject();
-    else
+    else if (component)
         mo = component->rootPropertyCache->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }

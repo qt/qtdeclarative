@@ -952,6 +952,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
     QObject *instance = 0;
     QQmlCustomParser *customParser = 0;
     QQmlParserStatus *parserStatus = 0;
+    bool installPropertyCache = true;
 
     if (compiledData->isComponent(index)) {
         isComponent = true;
@@ -963,6 +964,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
         QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
+        installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;
         if (type) {
             instance = type->create();
@@ -1054,7 +1056,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
     qSwap(_qmlContext, qmlContext);
 
-    bool result = populateInstance(index, instance, cache, /*binding target*/instance, /*value type property*/0);
+    bool result = populateInstance(index, instance, cache, /*binding target*/instance, /*value type property*/0, installPropertyCache);
 
     qSwap(_qmlContext, qmlContext);
     qSwap(_scopeObject, scopeObject);
@@ -1134,7 +1136,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     return sharedState->rootContext;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
@@ -1162,8 +1164,10 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
-    _ddata->propertyCache = _propertyCache;
-    _ddata->propertyCache->addref();
+    if (installPropertyCache) {
+        _ddata->propertyCache = _propertyCache;
+        _ddata->propertyCache->addref();
+    }
 
     _ddata->lineNumber = _compiledObject->location.line;
     _ddata->columnNumber = _compiledObject->location.column;

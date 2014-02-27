@@ -80,7 +80,7 @@ private:
 
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache = true);
 
     void setupBindings();
     bool setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);

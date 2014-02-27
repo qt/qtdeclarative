@@ -127,6 +127,7 @@ bool QQmlTypeCompiler::compile()
         }
         ref->majorVersion = resolvedType->majorVersion;
         ref->minorVersion = resolvedType->minorVersion;
+        ref->doDynamicTypeCheck();
         compiledData->resolvedTypes.insert(resolvedType.key(), ref.take());
     }
 
@@ -456,6 +457,22 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     if (obj->inheritedTypeNameIndex != 0) {
         QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
+
+        if (typeRef->isFullyDynamicType) {
+            if (obj->propertyCount() > 0) {
+                recordError(obj->location, tr("Fully dynamic types cannot declare new properties."));
+                return false;
+            }
+            if (obj->signalCount() > 0) {
+                recordError(obj->location, tr("Fully dynamic types cannot declare new signals."));
+                return false;
+            }
+            if (obj->functionCount() > 0) {
+                recordError(obj->location, tr("Fully Dynamic types cannot declare new functions."));
+                return false;
+            }
+        }
+
         baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
         Q_ASSERT(baseTypeCache);
     } else if (instantiatingBinding && instantiatingBinding->isAttachedProperty()) {
@@ -2064,9 +2081,15 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
 
             const int objectIndex = idIt.key();
             JSCodeGen::IdMapping m;
-            m.name = stringAt(qmlObjects.at(objectIndex)->idIndex);
+            const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
+            m.name = stringAt(obj->idIndex);
             m.idIndex = idIt.value();
             m.type = propertyCaches.at(objectIndex);
+
+            QQmlCompiledData::TypeReference *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+            if (tref && tref->isFullyDynamicType)
+                m.type = 0;
+
             idMapping << m;
         }
 
