@@ -3823,6 +3823,8 @@ void tst_qquicktext::hover()
 
     QQuickWindow *window = qobject_cast<QQuickWindow *>(object.data());
     QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickMouseArea *mouseArea = window->property("mouseArea").value<QQuickMouseArea *>();
     QVERIFY(mouseArea);
