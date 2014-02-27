@@ -133,9 +133,8 @@ bool QQmlTypeCompiler::compile()
 
     // Build property caches and VME meta object data
 
-    const int objectCount = parsedQML->objects.count();
-    compiledData->datas.reserve(objectCount);
-    compiledData->propertyCaches.reserve(objectCount);
+    compiledData->datas.reserve(parsedQML->objects.count());
+    compiledData->propertyCaches.reserve(parsedQML->objects.count());
 
     {
         QQmlPropertyCacheCreator propertyCacheBuilder(this);
@@ -244,6 +243,7 @@ bool QQmlTypeCompiler::compile()
     // Collect some data for instantiation later.
     int bindingCount = 0;
     int parserStatusCount = 0;
+    int objectCount = 0;
     for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
         bindingCount += obj->nBindings;
@@ -255,12 +255,15 @@ bool QQmlTypeCompiler::compile()
             if (typeRef->component) {
                 bindingCount += typeRef->component->totalBindingsCount;
                 parserStatusCount += typeRef->component->totalParserStatusCount;
-            }
+                objectCount += typeRef->component->totalObjectCount;
+            } else
+                ++objectCount;
         }
     }
 
     compiledData->totalBindingsCount = bindingCount;
     compiledData->totalParserStatusCount = parserStatusCount;
+    compiledData->totalObjectCount = objectCount;
 
     return errors.isEmpty();
 }

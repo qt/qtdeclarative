@@ -80,11 +80,13 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext)
-    : compiledData(compiledData)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, void *activeVMEDataForRootContext)
+    : phase(Startup)
+    , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
+    , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
     init(parentContext);
 
@@ -93,15 +95,18 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     sharedState->componentAttached = 0;
     sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
+    sharedState->allCreatedObjects.allocate(compiledData->totalObjectCount);
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
 }
 
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState)
-    : compiledData(compiledData)
+    : phase(Startup)
+    , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
+    , activeVMEDataForRootContext(0)
 {
     init(parentContext);
 
@@ -148,8 +153,15 @@ QQmlObjectCreator::~QQmlObjectCreator()
     }
 }
 
-QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
+QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlInstantiationInterrupt *interrupt)
 {
+    if (phase == CreatingObjectsPhase2) {
+        phase = ObjectsCreated;
+        return context->contextObject;
+    }
+    Q_ASSERT(phase == Startup);
+    phase = CreatingObjects;
+
     int objectToCreate;
 
     if (subComponentIndex == -1) {
@@ -171,6 +183,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
 
     if (!sharedState->rootContext) {
         sharedState->rootContext = context;
+        sharedState->rootContext->activeVMEData = activeVMEDataForRootContext;
         sharedState->rootContext->isRootObjectInCreation = true;
     }
 
@@ -210,6 +223,13 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
 
         context->contextObject = instance;
     }
+
+    phase = CreatingObjectsPhase2;
+
+    if (interrupt && interrupt->shouldInterrupt())
+        return 0;
+
+    phase = ObjectsCreated;
 
     return instance;
 }
@@ -990,6 +1010,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
                 ddata->rootObjectInCreation = true;
                 sharedState->rootContext->isRootObjectInCreation = false;
             }
+
+            sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->component);
             if (typeRef->component->qmlUnit->isSingleton())
@@ -1078,6 +1100,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
 QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
+    Q_ASSERT(phase == ObjectsCreated || phase == Finalizing);
+    phase = Finalizing;
+
     QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
@@ -1148,7 +1173,21 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     }
     }
 
+    phase = Done;
+
     return sharedState->rootContext;
+}
+
+void QQmlObjectCreator::clear()
+{
+    if (phase == Done || phase == Finalizing || phase == Startup)
+        return;
+    Q_ASSERT(phase != Startup);
+
+    while (!sharedState->allCreatedObjects.isEmpty())
+        delete sharedState->allCreatedObjects.pop();
+
+    phase = Done;
 }
 
 bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache, const QBitArray &bindingsToSkip)

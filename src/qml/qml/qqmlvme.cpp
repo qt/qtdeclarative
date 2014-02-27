@@ -1329,6 +1329,13 @@ void QQmlVMEGuard::guard(QQmlVME *vme)
 void QQmlVMEGuard::guard(QQmlObjectCreator *creator)
 {
     clear();
+
+    QFiniteStack<QObject*> &objects = creator->allCreatedObjects();
+    m_objectCount = objects.count();
+    m_objects = new QPointer<QObject>[m_objectCount];
+    for (int ii = 0; ii < m_objectCount; ++ii)
+        m_objects[ii] = objects[ii];
+
     m_contextCount = 1;
     m_contexts = new QQmlGuardedContextData[m_contextCount];
     m_contexts[0] = creator->parentContextData();

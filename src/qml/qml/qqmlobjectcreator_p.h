@@ -61,6 +61,7 @@ struct QQmlObjectCreatorSharedState
     QQmlContextData *creationContext;
     QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
+    QFiniteStack<QObject*> allCreatedObjects;
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
     QRecursionNode recursionNode;
@@ -70,11 +71,12 @@ class QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
-    QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext);
+    QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, void *activeVMEDataForRootContext = 0);
     ~QQmlObjectCreator();
 
-    QObject *create(int subComponentIndex = -1, QObject *parent = 0);
+    QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
+    void clear();
 
     QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
 
@@ -83,6 +85,7 @@ public:
     QList<QQmlError> errors;
 
     QQmlContextData *parentContextData() const { return parentContext; }
+    QFiniteStack<QObject*> &allCreatedObjects() const { return sharedState->allCreatedObjects; }
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState);
@@ -103,6 +106,15 @@ private:
     QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
+    enum Phase {
+        Startup,
+        CreatingObjects,
+        CreatingObjectsPhase2,
+        ObjectsCreated,
+        Finalizing,
+        Done
+    } phase;
+
     QQmlEngine *engine;
     QQmlCompiledData *compiledData;
     const QV4::CompiledData::QmlUnit *qmlUnit;
@@ -113,6 +125,7 @@ private:
     const QVector<QByteArray> &vmeMetaObjectData;
     QHash<int, int> objectIndexToId;
     QFlagPointer<QQmlObjectCreatorSharedState> sharedState;
+    void *activeVMEDataForRootContext;
 
     QObject *_qobject;
     QObject *_scopeObject;

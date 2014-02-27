@@ -168,6 +168,7 @@ public:
     QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
+    int totalObjectCount; // Number of objects explicitly instantiated
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
     bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }

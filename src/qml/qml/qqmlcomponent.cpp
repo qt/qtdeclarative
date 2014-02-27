@@ -1078,7 +1078,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     p->compiledData = d->cc;
     p->compiledData->addref();
     if (enginePriv->useNewCompiler) {
-        p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext));
+        p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext, p.data()));
         p->subComponentToCreate = d->start;
     } else
         p->vme.init(contextData, d->cc, d->start, d->creationContext);

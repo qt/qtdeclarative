@@ -298,7 +298,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
         enginePriv->referenceScarceResources();
         QObject *tresult = 0;
         if (enginePriv->useNewCompiler) {
-            tresult = creator->create(subComponentToCreate);
+            tresult = creator->create(subComponentToCreate, /*parent*/0, &i);
             if (!tresult)
                 errors = creator->errors;
         } else {
@@ -582,8 +582,12 @@ void QQmlIncubator::clear()
             i->clear();
     }
 
+    bool guardOk = d->vmeGuard.isOK();
+
     d->vme.reset();
     d->vmeGuard.clear();
+    if (d->creator && guardOk)
+        d->creator->clear();
     d->creator.reset(0);
 
     Q_ASSERT(d->compiledData == 0);
