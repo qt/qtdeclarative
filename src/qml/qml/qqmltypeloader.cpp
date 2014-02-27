@@ -1975,6 +1975,12 @@ QQmlTypeData::~QQmlTypeData()
         m_scripts.at(ii).script->release();
     for (int ii = 0; ii < m_types.count(); ++ii)
         if (m_types.at(ii).typeData) m_types.at(ii).typeData->release();
+    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+         it != end; ++it) {
+        if (QQmlTypeData *tdata = it->typeData)
+            tdata->release();
+    }
+
     if (m_compiledData)
         m_compiledData->release();
     delete m_implicitImport;

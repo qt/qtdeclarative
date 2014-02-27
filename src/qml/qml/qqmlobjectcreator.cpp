@@ -200,6 +200,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
         Q_ASSERT(ddata);
+        if (ddata->compiledData)
+            ddata->compiledData->release();
         ddata->compiledData = compiledData;
         ddata->compiledData->addref();
 
