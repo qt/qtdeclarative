@@ -800,7 +800,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.runtimeFunctionIndex];
 
-            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false);
 
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
@@ -862,7 +862,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.functionIndex];
 
-            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false);
 
             QQmlBinding *bind = new QQmlBinding(tmpValue, context, CTXT, COMP->name, instr.line, instr.column);
             bindValues.push(bind);

@@ -246,6 +246,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_index = newIdentifier(QStringLiteral("index"));
     id_input = newIdentifier(QStringLiteral("input"));
     id_toString = newIdentifier(QStringLiteral("toString"));
+    id_destroy = newIdentifier(QStringLiteral("destroy"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
     ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(InternalClass::create(this, ObjectPrototype::staticVTable(), 0));
@@ -863,6 +864,7 @@ void ExecutionEngine::markObjects()
     id_index->mark(this);
     id_input->mark(this);
     id_toString->mark(this);
+    id_destroy->mark(this);
     id_valueOf->mark(this);
 
     objectCtor.mark(this);

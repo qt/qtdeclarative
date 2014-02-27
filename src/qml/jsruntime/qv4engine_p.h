@@ -263,6 +263,7 @@ public:
     StringValue id_index;
     StringValue id_input;
     StringValue id_toString;
+    StringValue id_destroy;
     StringValue id_valueOf;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;

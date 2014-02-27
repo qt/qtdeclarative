@@ -1297,7 +1297,7 @@ ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx)
 
 QV4::ReturnedValue __qmljs_get_qml_singleton(QV4::NoThrowContext *ctx, const QV4::StringRef name)
 {
-    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(name);
+    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(ctx->engine->v8Engine, name);
 }
 
 void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx)

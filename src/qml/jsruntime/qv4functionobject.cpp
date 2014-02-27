@@ -183,14 +183,14 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function)
+FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
 {
     if (function->needsActivation() ||
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
         return new (scope->engine->memoryManager) ScriptFunction(scope, function);
-    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function);
+    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
 }
 
 ReturnedValue FunctionObject::protoProperty()
@@ -482,8 +482,8 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
-SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name, true)
+SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+    : FunctionObject(scope, function->name, createProto)
 {
     setVTable(staticVTable());
 
