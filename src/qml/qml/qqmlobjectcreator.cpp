@@ -770,6 +770,9 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
             if (_valueTypeProperty)
                 targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
 
+            sharedState->allCreatedBindings.push(qmlBinding);
+            qmlBinding->m_mePtr = &sharedState->allCreatedBindings.top();
+
             qmlBinding->setTarget(_bindingTarget, targetCorePropertyData, context);
 
             if (targetCorePropertyData.isAlias()) {
@@ -788,9 +791,6 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
                     targetDeclarativeData->setPendingBindingBit(_bindingTarget, property->coreIndex);
                 }
             }
-
-            sharedState->allCreatedBindings.push(qmlBinding);
-            qmlBinding->m_mePtr = &sharedState->allCreatedBindings.top();
         }
         return true;
     }
