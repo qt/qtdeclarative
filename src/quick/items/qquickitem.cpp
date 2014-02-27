@@ -3857,7 +3857,7 @@ void QQuickItem::polish()
     Q_D(QQuickItem);
     if (!d->polishScheduled) {
         d->polishScheduled = true;
-        if (d->window && (isVisible() || (d->extra.isAllocated() && d->extra->effectRefCount>0))) {
+        if (d->window) {
             QQuickWindowPrivate *p = QQuickWindowPrivate::get(d->window);
             bool maybeupdate = p->itemsToPolish.isEmpty();
             p->itemsToPolish.insert(this);
@@ -5241,8 +5241,6 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
         if (windowPriv->mouseGrabberItem == q)
             q->ungrabMouse();
-        if (polishScheduled)
-            windowPriv->itemsToPolish.insert(q);
     }
 
     bool childVisibilityChanged = false;
