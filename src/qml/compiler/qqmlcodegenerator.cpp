@@ -829,12 +829,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
                  propertyValue += alias.at(2);
              }
              property->aliasPropertyValueIndex = registerString(propertyValue);
-        } else if (node->statement) {
-            qSwap(_propertyDeclaration, property);
-            appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
-            qSwap(_propertyDeclaration, property);
         }
-
         QQmlJS::AST::SourceLocation errorLocation;
         QString error;
 
@@ -855,12 +850,14 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
             return false;
         }
 
+        qSwap(_propertyDeclaration, property);
         if (node->binding) {
-            qSwap(_propertyDeclaration, property);
             // process QML-like initializers (e.g. property Object o: Object {})
             QQmlJS::AST::Node::accept(node->binding, this);
-            qSwap(_propertyDeclaration, property);
+        } else if (node->statement && type != QV4::CompiledData::Property::Alias) {
+            appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
         }
+        qSwap(_propertyDeclaration, property);
     }
 
     return false;
