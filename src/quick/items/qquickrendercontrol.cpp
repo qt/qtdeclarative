@@ -162,6 +162,26 @@ bool QQuickRenderControl::sync()
 }
 
 /*!
+  Stop rendering and release resources. This function is typically
+  called when the window is hidden. Requires a current context.
+ */
+void QQuickRenderControl::stop()
+{
+    Q_D(QQuickRenderControl);
+    if (!d->window)
+        return;
+
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+    cd->fireAboutToStop();
+    cd->cleanupNodesOnShutdown();
+
+    if (!cd->persistentSceneGraph) {
+        d->rc->invalidate();
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    }
+}
+
+/*!
   Render the scenegraph using the current context.
  */
 void QQuickRenderControl::render()

@@ -769,18 +769,27 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
     d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
 }
 
-void QQuickWidget::showEvent(QShowEvent *e)
+void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
-    d->offscreenWindow->showEvent(e);
+
+    d->updatePending = false;
+    triggerUpdate();
 }
 
-void QQuickWidget::hideEvent(QHideEvent *e)
+void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
-    d->offscreenWindow->hideEvent(e);
+
+    QOpenGLContext *context = d->offscreenWindow->openglContext();
+    if (!context) {
+        qWarning("QQuickWidget::hideEvent with no context");
+        return;
+    }
+    context->makeCurrent(d->offscreenWindow);
+    d->renderControl->stop();
 }
 
 /*! \reimp */
