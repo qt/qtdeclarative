@@ -144,7 +144,7 @@ bool QQmlTypeCompiler::compile()
     }
 
     {
-        SignalHandlerConverter converter(engine, parsedQML, compiledData);
+        SignalHandlerConverter converter(engine, parsedQML, compiledData, propertyCaches());
         if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations()) {
             errors << converter.errors;
             return false;

@@ -458,7 +458,7 @@ struct SignalHandlerConverter
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
     SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,
-                           QQmlCompiledData *unit);
+                           QQmlCompiledData *unit, const QVector<QQmlPropertyCache *> &propertyCaches);
 
     bool convertSignalHandlerExpressionsToFunctionDeclarations();
 
@@ -474,6 +474,7 @@ private:
     ParsedQML *parsedQML;
     QQmlCompiledData *unit;
     const QSet<QString> &illegalNames;
+    const QVector<QQmlPropertyCache*> &propertyCaches;
 };
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen

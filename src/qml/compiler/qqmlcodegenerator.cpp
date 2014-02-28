@@ -1770,11 +1770,12 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 }
 
 SignalHandlerConverter::SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,
-                                               QQmlCompiledData *unit)
+                                               QQmlCompiledData *unit, const QVector<QQmlPropertyCache*> &propertyCaches)
     : enginePrivate(enginePrivate)
     , parsedQML(parsedQML)
     , unit(unit)
     , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(enginePrivate))->illegalNames())
+    , propertyCaches(propertyCaches)
 {
 }
 
@@ -1782,16 +1783,16 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 {
     for (int objectIndex = 0; objectIndex < parsedQML->objects.count(); ++objectIndex) {
         QmlObject * const obj = parsedQML->objects.at(objectIndex);
-        QString elementName = stringAt(obj->inheritedTypeNameIndex);
-        if (elementName.isEmpty())
-            continue;
-        QQmlCompiledData::TypeReference *tr = unit->resolvedTypes.value(obj->inheritedTypeNameIndex);
-        QQmlCustomParser *customParser = (tr && tr->type) ? tr->type->customParser() : 0;
-        if (customParser && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
-            continue;
-        QQmlPropertyCache *cache = unit->propertyCaches.value(objectIndex);
+        QQmlPropertyCache *cache = propertyCaches.at(objectIndex);
         if (!cache)
             continue;
+        QString elementName = stringAt(obj->inheritedTypeNameIndex);
+        if (!elementName.isEmpty()) {
+            QQmlCompiledData::TypeReference *tr = unit->resolvedTypes.value(obj->inheritedTypeNameIndex);
+            QQmlCustomParser *customParser = (tr && tr->type) ? tr->type->customParser() : 0;
+            if (customParser && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
+                continue;
+        }
         if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
             return false;
     }
