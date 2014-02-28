@@ -1810,10 +1810,24 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 
     if (method.coreIndex == -1) {
-        method.load(object->metaObject()->method(m_index));
+        const QMetaObject *mo = object->metaObject();
+        const QMetaMethod moMethod = mo->method(m_index);
+        method.load(moMethod);
 
         if (method.coreIndex == -1)
             return QV4::Encode::undefined();
+
+        // Look for overloaded methods
+        QByteArray methodName = moMethod.name();
+        const int methodOffset = mo->methodOffset();
+        for (int ii = m_index - 1; ii >= methodOffset; --ii) {
+            if (methodName == mo->method(ii).name()) {
+                method.setFlags(method.getFlags() | QQmlPropertyData::IsOverload);
+                method.overrideIndexIsProperty = 0;
+                method.overrideIndex = ii;
+                break;
+            }
+        }
     }
 
     if (method.isV4Function()) {

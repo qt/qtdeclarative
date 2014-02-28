@@ -69,6 +69,7 @@ public:
     virtual ~tst_QJSEngine();
 
 private slots:
+    void callQObjectSlot();
     void constructWithParent();
     void newObject();
     void newArray();
@@ -158,6 +159,73 @@ tst_QJSEngine::tst_QJSEngine()
 
 tst_QJSEngine::~tst_QJSEngine()
 {
+}
+
+class OverloadedSlots : public QObject
+{
+    Q_OBJECT
+public:
+    OverloadedSlots()
+    {
+    }
+
+signals:
+    void slotWithoutArgCalled();
+    void slotWithSingleArgCalled(const QString &arg);
+    void slotWithArgumentsCalled(const QString &arg1, const QString &arg2, const QString &arg3);
+
+public slots:
+    void slotToCall() { emit slotWithoutArgCalled(); }
+    void slotToCall(const QString &arg) { emit slotWithSingleArgCalled(arg); }
+    void slotToCall(const QString &arg, const QString &arg2, const QString &arg3 = QString())
+    {
+        slotWithArgumentsCalled(arg, arg2, arg3);
+    }
+};
+
+void tst_QJSEngine::callQObjectSlot()
+{
+    OverloadedSlots dummy;
+    QJSEngine eng;
+    eng.globalObject().setProperty("dummy", eng.newQObject(&dummy));
+    QQmlEngine::setObjectOwnership(&dummy, QQmlEngine::CppOwnership);
+
+    {
+        QSignalSpy spy(&dummy, SIGNAL(slotWithoutArgCalled()));
+        eng.evaluate("dummy.slotToCall();");
+        QCOMPARE(spy.count(), 1);
+    }
+
+    {
+        QSignalSpy spy(&dummy, SIGNAL(slotWithSingleArgCalled(QString)));
+        eng.evaluate("dummy.slotToCall('arg');");
+
+        QCOMPARE(spy.count(), 1);
+        const QList<QVariant> arguments = spy.takeFirst();
+        QCOMPARE(arguments.at(0).toString(), QString("arg"));
+    }
+
+    {
+        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
+        eng.evaluate("dummy.slotToCall('arg', 'arg2');");
+        QCOMPARE(spy.count(), 1);
+
+        const QList<QVariant> arguments = spy.takeFirst();
+        QCOMPARE(arguments.at(0).toString(), QString("arg"));
+        QCOMPARE(arguments.at(1).toString(), QString("arg2"));
+        QCOMPARE(arguments.at(2).toString(), QString());
+    }
+
+    {
+        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
+        eng.evaluate("dummy.slotToCall('arg', 'arg2', 'arg3');");
+        QCOMPARE(spy.count(), 1);
+
+        const QList<QVariant> arguments = spy.takeFirst();
+        QCOMPARE(arguments.at(0).toString(), QString("arg"));
+        QCOMPARE(arguments.at(1).toString(), QString("arg2"));
+        QCOMPARE(arguments.at(2).toString(), QString("arg3"));
+    }
 }
 
 void tst_QJSEngine::constructWithParent()
