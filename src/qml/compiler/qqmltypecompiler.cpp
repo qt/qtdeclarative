@@ -344,7 +344,7 @@ QHash<int, QHash<int, int> > *QQmlTypeCompiler::objectIndexToIdPerComponent()
     return &compiledData->objectIndexToIdPerComponent;
 }
 
-QHash<int, QByteArray> *QQmlTypeCompiler::customParserData()
+QHash<int, QQmlCompiledData::CustomParserData> *QQmlTypeCompiler::customParserData()
 {
     return &compiledData->customParserData;
 }
@@ -1485,6 +1485,8 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         groupProperties.insert(pos, binding);
     }
 
+    QBitArray customParserBindings(obj->nBindings);
+
     PropertyResolver propertyResolver(propertyCache);
 
     QString defaultPropertyName;
@@ -1500,20 +1502,24 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+        QString name = stringAt(binding->propertyNameIndex);
 
         if (customParser) {
             if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
                 if (customParser->flags() & QQmlCustomParser::AcceptsAttachedProperties) {
                     customBindings << binding;
+                    customParserBindings.setBit(i);
                     continue;
                 }
-            } else if ((binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            } else if (QQmlCodeGenerator::isSignalPropertyName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 customBindings << binding;
+                customParserBindings.setBit(i);
                 continue;
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object
                        || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
                 customBindings << binding;
+                customParserBindings.setBit(i);
                 continue;
             }
         }
@@ -1522,8 +1528,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
             || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
             continue;
-
-        QString name = stringAt(binding->propertyNameIndex);
 
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType *type = 0;
@@ -1639,6 +1643,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         } else {
             if (customParser) {
                 customBindings << binding;
+                customParserBindings.setBit(i);
                 continue;
             }
             if (bindingToDefaultProperty) {
@@ -1652,7 +1657,9 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     if (customParser && !customBindings.isEmpty()) {
         customParser->clearErrors();
         customParser->compiler = this;
-        QByteArray data = customParser->compile(qmlUnit, customBindings);
+        QQmlCompiledData::CustomParserData data;
+        data.bindings = customParserBindings;
+        data.compilationArtifact = customParser->compile(qmlUnit, customBindings);
         customParser->compiler = 0;
         customParserData->insert(objectIndex, data);
         const QList<QQmlError> parserErrors = customParser->errors();

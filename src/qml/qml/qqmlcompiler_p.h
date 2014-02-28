@@ -160,7 +160,11 @@ public:
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
     // hash key is object index
-    QHash<int, QByteArray> customParserData;
+    struct CustomParserData {
+        QByteArray compilationArtifact; // produced by custom parser
+        QBitArray bindings; // bindings covered by the custom parser
+    };
+    QHash<int, CustomParserData> customParserData;
     QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses

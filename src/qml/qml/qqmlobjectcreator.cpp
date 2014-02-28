@@ -561,7 +561,7 @@ static QQmlType *qmlTypeForObject(QObject *object)
     return type;
 }
 
-void QQmlObjectCreator::setupBindings()
+void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -640,6 +640,9 @@ void QQmlObjectCreator::setupBindings()
                 _currentList = QQmlListProperty<void>();
 
         }
+
+        if (static_cast<int>(i) < bindingsToSkip.size() && bindingsToSkip.testBit(i))
+            continue;
 
         if (!setPropertyBinding(property, binding))
             return;
@@ -1031,10 +1034,13 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
     if (idEntry != objectIndexToId.constEnd())
         context->setIdProperty(idEntry.value(), instance);
 
+    QBitArray bindingsToSkip;
     if (customParser) {
-        QHash<int, QByteArray>::ConstIterator entry = compiledData->customParserData.find(index);
-        if (entry != compiledData->customParserData.constEnd())
-            customParser->setCustomData(instance, *entry);
+        QHash<int, QQmlCompiledData::CustomParserData>::ConstIterator entry = compiledData->customParserData.find(index);
+        if (entry != compiledData->customParserData.constEnd()) {
+            customParser->setCustomData(instance, entry->compilationArtifact);
+            bindingsToSkip = entry->bindings;
+        }
     }
 
     if (isComponent)
@@ -1056,7 +1062,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
     qSwap(_qmlContext, qmlContext);
 
-    bool result = populateInstance(index, instance, cache, /*binding target*/instance, /*value type property*/0, installPropertyCache);
+    bool result = populateInstance(index, instance, cache, /*binding target*/instance, /*value type property*/0, installPropertyCache, bindingsToSkip);
 
     qSwap(_qmlContext, qmlContext);
     qSwap(_scopeObject, scopeObject);
@@ -1136,7 +1142,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     return sharedState->rootContext;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache, const QBitArray &bindingsToSkip)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
@@ -1177,7 +1183,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
     QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
 
     setupFunctions();
-    setupBindings();
+    setupBindings(bindingsToSkip);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

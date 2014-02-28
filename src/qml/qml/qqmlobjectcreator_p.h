@@ -80,9 +80,11 @@ private:
 
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache = true);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
+                          QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache = true,
+                          const QBitArray &bindingsToSkip = QBitArray());
 
-    void setupBindings();
+    void setupBindings(const QBitArray &bindingsToSkip);
     bool setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();

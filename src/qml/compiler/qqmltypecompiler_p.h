@@ -92,7 +92,7 @@ public:
     QVector<QByteArray> *vmeMetaObjects() const;
     QHash<int, int> *objectIndexToIdForRoot();
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
-    QHash<int, QByteArray> *customParserData();
+    QHash<int, QQmlCompiledData::CustomParserData> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
     void setCustomParserBindings(const QVector<int> &bindings);
 
@@ -238,7 +238,7 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
-    QHash<int, QByteArray> *customParserData;
+    QHash<int, QQmlCompiledData::CustomParserData> *customParserData;
     QVector<int> customParserBindings;
 };
 
