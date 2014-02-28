@@ -228,8 +228,8 @@ public:
     static Flags flagsForProperty(const QMetaProperty &, QQmlEngine *engine = 0);
     void load(const QMetaProperty &, QQmlEngine *engine = 0);
     void load(const QMetaMethod &);
-    QString name(QObject *);
-    QString name(const QMetaObject *);
+    QString name(QObject *) const;
+    QString name(const QMetaObject *) const;
 
     void markAsOverrideOf(QQmlPropertyData *predecessor);
 
