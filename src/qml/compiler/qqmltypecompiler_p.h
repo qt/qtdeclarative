@@ -94,6 +94,8 @@ public:
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
     QHash<int, QQmlCompiledData::CustomParserData> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
+    QStringRef newStringRef(const QString &string);
+    const QStringList &stringPool() const;
     void setCustomParserBindings(const QVector<int> &bindings);
 
 private:
@@ -136,6 +138,27 @@ protected:
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QVector<QByteArray> vmeMetaObjects;
     QVector<QQmlPropertyCache*> propertyCaches;
+};
+
+// "Converts" signal expressions to full-fleged function declarations with
+// parameters taken from the signal declarations
+// It also updates the QV4::CompiledData::Binding objects to set the property name
+// to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
+struct SignalHandlerConverter : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
+public:
+    SignalHandlerConverter(QQmlTypeCompiler *typeCompiler);
+
+    bool convertSignalHandlerExpressionsToFunctionDeclarations();
+
+private:
+    bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
+
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QSet<QString> &illegalNames;
+    const QVector<QQmlPropertyCache*> &propertyCaches;
 };
 
 // ### This will go away when the codegen resolves all enums to constant expressions

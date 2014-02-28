@@ -449,34 +449,6 @@ struct PropertyResolver
     QQmlPropertyCache *cache;
 };
 
-// "Converts" signal expressions to full-fleged function declarations with
-// parameters taken from the signal declarations
-// It also updates the QV4::CompiledData::Binding objects to set the property name
-// to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
-struct SignalHandlerConverter
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
-public:
-    SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,
-                           QQmlCompiledData *unit, const QVector<QQmlPropertyCache *> &propertyCaches);
-
-    bool convertSignalHandlerExpressionsToFunctionDeclarations();
-
-    QList<QQmlError> errors;
-
-private:
-    bool convertSignalHandlerExpressionsToFunctionDeclarations(QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
-
-    const QString &stringAt(int index) const { return parsedQML->jsGenerator.strings.at(index); }
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
-
-    QQmlEnginePrivate *enginePrivate;
-    ParsedQML *parsedQML;
-    QQmlCompiledData *unit;
-    const QSet<QString> &illegalNames;
-    const QVector<QQmlPropertyCache*> &propertyCaches;
-};
-
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
     JSCodeGen(const QString &fileName, const QString &sourceCode, IR::Module *jsModule,

@@ -144,11 +144,9 @@ bool QQmlTypeCompiler::compile()
     }
 
     {
-        SignalHandlerConverter converter(engine, parsedQML, compiledData, propertyCaches());
-        if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations()) {
-            errors << converter.errors;
+        SignalHandlerConverter converter(this);
+        if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations())
             return false;
-        }
     }
 
     {
@@ -352,6 +350,16 @@ QHash<int, QQmlCompiledData::CustomParserData> *QQmlTypeCompiler::customParserDa
 QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
 {
     return parsedQML->jsParserEngine.pool();
+}
+
+QStringRef QQmlTypeCompiler::newStringRef(const QString &string)
+{
+    return parsedQML->jsParserEngine.newStringRef(string);
+}
+
+const QStringList &QQmlTypeCompiler::stringPool() const
+{
+    return parsedQML->jsGenerator.strings;
 }
 
 void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
@@ -857,6 +865,188 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
         md = methodData;
     }
 
+    return true;
+}
+
+SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(typeCompiler->enginePrivate()))->illegalNames())
+    , propertyCaches(typeCompiler->propertyCaches())
+{
+}
+
+bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations()
+{
+    for (int objectIndex = 0; objectIndex < qmlObjects.count(); ++objectIndex) {
+        const QmlObject * const obj = qmlObjects.at(objectIndex);
+        QQmlPropertyCache *cache = propertyCaches.at(objectIndex);
+        if (!cache)
+            continue;
+        QString elementName = stringAt(obj->inheritedTypeNameIndex);
+        if (!elementName.isEmpty()) {
+            QQmlCompiledData::TypeReference *tr = resolvedTypes.value(obj->inheritedTypeNameIndex);
+            QQmlCustomParser *customParser = (tr && tr->type) ? tr->type->customParser() : 0;
+            if (customParser && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
+                continue;
+        }
+        if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
+            return false;
+    }
+    return true;
+}
+
+bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations(const QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache)
+{
+    // map from signal name defined in qml itself to list of parameters
+    QHash<QString, QStringList> customSignals;
+
+    for (Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
+        QString propertyName = stringAt(binding->propertyNameIndex);
+        // Attached property?
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+            const QmlObject *attachedObj = qmlObjects.at(binding->value.objectIndex);
+            QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(binding->propertyNameIndex);
+            QQmlType *type = typeRef ? typeRef->type : 0;
+            const QMetaObject *attachedType = type ? type->attachedPropertiesType() : 0;
+            if (!attachedType)
+                COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
+            QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);
+            if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, propertyName, cache))
+                return false;
+            continue;
+        }
+
+        if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
+            continue;
+
+        PropertyResolver resolver(propertyCache);
+
+        Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
+        propertyName.remove(0, 2);
+
+        // Note that the property name could start with any alpha or '_' or '$' character,
+        // so we need to do the lower-casing of the first alpha character.
+        for (int firstAlphaIndex = 0; firstAlphaIndex < propertyName.size(); ++firstAlphaIndex) {
+            if (propertyName.at(firstAlphaIndex).isUpper()) {
+                propertyName[firstAlphaIndex] = propertyName.at(firstAlphaIndex).toLower();
+                break;
+            }
+        }
+
+        QList<QString> parameters;
+
+        bool notInRevision = false;
+        QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
+        if (signal) {
+            int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
+            sigIndex = propertyCache->originalClone(sigIndex);
+
+            bool unnamedParameter = false;
+
+            QList<QByteArray> parameterNames = propertyCache->signalParameterNames(sigIndex);
+            for (int i = 0; i < parameterNames.count(); ++i) {
+                const QString param = QString::fromUtf8(parameterNames.at(i));
+                if (param.isEmpty())
+                    unnamedParameter = true;
+                else if (unnamedParameter) {
+                    COMPILE_EXCEPTION(binding, tr("Signal uses unnamed parameter followed by named parameter."));
+                } else if (illegalNames.contains(param)) {
+                    COMPILE_EXCEPTION(binding, tr("Signal parameter \"%1\" hides global variable.").arg(param));
+                }
+                parameters += param;
+            }
+        } else {
+            if (notInRevision) {
+                // Try assinging it as a property later
+                if (resolver.property(propertyName, /*notInRevision ptr*/0))
+                    continue;
+
+                const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
+
+                QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+                const QQmlType *type = typeRef ? typeRef->type : 0;
+                if (type) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
+                } else {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(originalPropertyName));
+                }
+            }
+
+            // Try to look up the signal parameter names in the object itself
+
+            // build cache if necessary
+            if (customSignals.isEmpty()) {
+                for (const Signal *signal = obj->firstSignal(); signal; signal = signal->next) {
+                    const QString &signalName = stringAt(signal->nameIndex);
+                    customSignals.insert(signalName, signal->parameterStringList(compiler->stringPool()));
+                }
+
+                for (const QmlProperty *property = obj->firstProperty(); property; property = property->next) {
+                    const QString propName = stringAt(property->nameIndex);
+                    customSignals.insert(propName, QStringList());
+                }
+            }
+
+            QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
+            if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
+                QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
+                entry = customSignals.find(alternateName);
+            }
+
+            if (entry == customSignals.constEnd()) {
+                // Can't find even a custom signal, then just don't do anything and try
+                // keeping the binding as a regular property assignment.
+                continue;
+            }
+
+            parameters = entry.value();
+        }
+
+        // Binding object to signal means connect the signal to the object's default method.
+        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+            binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerObject;
+            continue;
+        }
+
+        if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+            if (binding->type < QV4::CompiledData::Binding::Type_Script) {
+                COMPILE_EXCEPTION(binding, tr("Cannot assign a value to a signal (expecting a script to be run)"));
+            } else {
+                COMPILE_EXCEPTION(binding, tr("Incorrectly specified signal assignment"));
+            }
+        }
+
+        QQmlJS::MemoryPool *pool = compiler->memoryPool();
+
+        QQmlJS::AST::FormalParameterList *paramList = 0;
+        foreach (const QString &param, parameters) {
+            QStringRef paramNameRef = compiler->newStringRef(param);
+
+            if (paramList)
+                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, paramNameRef);
+            else
+                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramNameRef);
+        }
+
+        if (paramList)
+            paramList = paramList->finish();
+
+        CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
+        QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
+        QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
+        QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
+        elements = elements->finish();
+
+        QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
+
+        QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
+
+        foe->node = functionDeclaration;
+        binding->propertyNameIndex = compiler->registerString(propertyName);
+        binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
+    }
     return true;
 }
 
