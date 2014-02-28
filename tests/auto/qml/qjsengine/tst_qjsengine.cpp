@@ -565,6 +565,19 @@ void tst_QJSEngine::newQObject_ownership()
         QVERIFY(child != 0);
         delete parent;
     }
+    {
+        QPointer<QObject> ptr = new QObject();
+        QVERIFY(ptr != 0);
+        {
+            QQmlEngine::setObjectOwnership(ptr.data(), QQmlEngine::CppOwnership);
+            QJSValue v = eng.newQObject(ptr);
+        }
+        eng.collectGarbage();
+        if (ptr)
+            QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
+        QVERIFY(!ptr.isNull());
+        delete ptr.data();
+    }
 }
 
 void tst_QJSEngine::newQObject_deletedEngine()
