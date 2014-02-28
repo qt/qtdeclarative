@@ -433,8 +433,6 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 
          QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i), subPixelPosition);
          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
-         if (c.isNull())
-            continue;
 
          QPointF glyphPosition = glyphPositions.at(i) + position;
 
