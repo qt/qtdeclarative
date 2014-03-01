@@ -323,11 +323,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
     QStringList list = dir.entryList();
     for (int i = 0; i < list.size(); ++i) {
         QString qml = list.at(i);
-        QFile f(dir.filePath(qml));
-        f.open(QIODevice::ReadOnly);
-        QByteArray data = f.readAll();
-        QQmlComponent comp(&engine);
-        comp.setData(data, QUrl());
+        QQmlComponent comp(&engine, dir.filePath(qml));
         QObject *dummyData = comp.create();
 
         if(comp.isError()) {
