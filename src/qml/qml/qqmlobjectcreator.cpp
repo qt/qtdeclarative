@@ -953,6 +953,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
     bool isComponent = false;
     QObject *instance = 0;
+    QQmlData *ddata = 0;
     QQmlCustomParser *customParser = 0;
     QQmlParserStatus *parserStatus = 0;
     bool installPropertyCache = true;
@@ -962,6 +963,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
+        ddata = QQmlData::get(instance, /*create*/true);
     } else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
@@ -1004,9 +1006,12 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
         // ### use no-event variant
         if (parent)
             instance->setParent(parent);
+
+        ddata = QQmlData::get(instance, /*create*/true);
+        ddata->lineNumber = obj->location.line;
+        ddata->columnNumber = obj->location.column;
     }
 
-    QQmlData *ddata = QQmlData::get(instance, /*create*/true);
     ddata->setImplicitDestructible();
     if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject || ddata->rootObjectInCreation) {
         if (ddata->context) {
@@ -1174,9 +1179,6 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
         _ddata->propertyCache = _propertyCache;
         _ddata->propertyCache->addref();
     }
-
-    _ddata->lineNumber = _compiledObject->location.line;
-    _ddata->columnNumber = _compiledObject->location.column;
 
     qSwap(_vmeMetaObject, vmeMetaObject);
 
