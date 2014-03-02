@@ -605,7 +605,7 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
         m_textures.insert(factory, texture);
         m_mutex.unlock();
 
-        connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)), Qt::DirectConnection);
+        connect(factory, SIGNAL(destroyed(QObject*)), this, SLOT(textureFactoryDestroyed(QObject*)), Qt::DirectConnection);
     }
     return texture;
 }

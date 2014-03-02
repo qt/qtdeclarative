@@ -169,8 +169,8 @@ void tst_qquickfolderlistmodel::resetFiltering()
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
 
-    connect(flm, SIGNAL(rowsRemoved(const QModelIndex&,int,int)),
-            this, SLOT(removed(const QModelIndex&,int,int)));
+    connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+            this, SLOT(removed(QModelIndex,int,int)));
 
     flm->setProperty("folder", testFileUrl("resetfiltering"));
     QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test.txt" visible
@@ -204,8 +204,8 @@ void tst_qquickfolderlistmodel::refresh()
 
     int count = flm->rowCount();
 
-    connect(flm, SIGNAL(rowsRemoved(const QModelIndex&,int,int)),
-            this, SLOT(removed(const QModelIndex&,int,int)));
+    connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+            this, SLOT(removed(QModelIndex,int,int)));
 
     flm->setProperty("sortReversed", true);
 

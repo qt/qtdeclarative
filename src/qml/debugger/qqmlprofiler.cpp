@@ -97,10 +97,10 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
     connect(this, SIGNAL(profilingDisabledWhileWaiting()),
             engine->profiler, SLOT(stopProfiling()), Qt::DirectConnection);
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
-    connect(this, SIGNAL(referenceTimeKnown(const QElapsedTimer &)),
-            engine->profiler, SLOT(setTimer(const QElapsedTimer &)));
-    connect(engine->profiler, SIGNAL(dataReady(const QList<QQmlProfilerData> &)),
-            this, SLOT(receiveData(const QList<QQmlProfilerData> &)));
+    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
+            engine->profiler, SLOT(setTimer(QElapsedTimer)));
+    connect(engine->profiler, SIGNAL(dataReady(QList<QQmlProfilerData>)),
+            this, SLOT(receiveData(QList<QQmlProfilerData>)));
 }
 
 qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)

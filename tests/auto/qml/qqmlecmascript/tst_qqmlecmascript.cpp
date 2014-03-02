@@ -7101,7 +7101,7 @@ void tst_qqmlecmascript::threadSignal()
     QQmlComponent c(&engine, testFileUrl("threadSignal.2.qml"));
     QObject *object = c.create();
     QVERIFY(object != 0);
-    QSignalSpy doneSpy(object, SIGNAL(done(const QString &)));
+    QSignalSpy doneSpy(object, SIGNAL(done(QString)));
     QMetaObject::invokeMethod(object, "doIt");
     QTRY_VERIFY(object->property("passed").toBool());
     QCOMPARE(doneSpy.count(), 1);

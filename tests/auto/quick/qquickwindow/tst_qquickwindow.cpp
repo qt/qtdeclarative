@@ -369,7 +369,7 @@ void tst_qquickwindow::openglContextCreatedSignal()
     qRegisterMetaType<QOpenGLContext *>();
 
     QQuickWindow window;
-    QSignalSpy spy(&window, SIGNAL(openglContextCreated(QOpenGLContext *)));
+    QSignalSpy spy(&window, SIGNAL(openglContextCreated(QOpenGLContext*)));
 
     window.show();
     QTest::qWaitForWindowExposed(&window);
