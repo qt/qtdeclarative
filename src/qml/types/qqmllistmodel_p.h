@@ -160,7 +160,7 @@ class QQmlListModelParser : public QQmlCustomParser
 public:
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
     QByteArray compile(const QList<QQmlCustomParserProperty> &);
-    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings);
     void setCustomData(QObject *, const QByteArray &);
 
 private:
@@ -176,7 +176,7 @@ private:
         ListInstruction *instructions() const;
     };
     bool compileProperty(const QQmlCustomParserProperty &prop, QList<ListInstruction> &instr, QByteArray &data);
-    bool compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<ListInstruction> &instr, QByteArray &data);
+    bool compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QV4::CompiledData::Binding *binding, QList<ListInstruction> &instr, QByteArray &data);
 
     bool definesEmptyList(const QString &);
 

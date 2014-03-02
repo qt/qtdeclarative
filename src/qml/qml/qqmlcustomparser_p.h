@@ -140,7 +140,7 @@ public:
     Flags flags() const { return m_flags; }
 
     virtual QByteArray compile(const QList<QQmlCustomParserProperty> &)=0;
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
     virtual void setCustomData(QObject *, const QByteArray &)=0;
 
     QList<QQmlError> errors() const { return exceptions; }
