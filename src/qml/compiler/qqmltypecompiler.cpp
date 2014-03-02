@@ -562,9 +562,8 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
 
     QByteArray newClassName;
 
-    if (false /* ### compileState->root == obj && !compileState->nested*/) {
-#if 0 // ###
-        QString path = output->url.path();
+    if (objectIndex == compiler->rootObjectIndex()) {
+        QString path = compiler->url().path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             QString nameBase = path.mid(lastSlash + 1, path.length()-lastSlash-5);
@@ -572,7 +571,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::Qm
                 newClassName = nameBase.toUtf8() + "_QMLTYPE_" +
                                QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
         }
-#endif
     }
     if (newClassName.isEmpty()) {
         newClassName = QQmlMetaObject(baseTypeCache).className();
