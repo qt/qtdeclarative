@@ -48,9 +48,20 @@
 #include <wtf/FastAllocBase.h>
 #include <wtf/RefPtr.h>
 #include <cmath>
-#else
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif // _MSC_VER
+#else // !__cplusplus
+
 #include <math.h>
-#endif
+
+#ifdef _MSC_VER
+#define inline
+#include <stdio.h>
+#endif // _MSC_VER
+
+#endif // __cplusplus
 #include <limits.h>
 
 #endif // MASM_CONFIG_H

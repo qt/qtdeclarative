@@ -52,6 +52,8 @@
 #include "qv4unop_p.h"
 #include "qv4binop_p.h"
 
+#include <QtCore/QBuffer>
+
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
 
@@ -75,12 +77,41 @@ inline bool isPregOrConst(IR::Expr *e)
         return t->kind == IR::Temp::PhysicalRegister;
     return e->asConst() != 0;
 }
+
+class QIODevicePrintStream: public PrintStream
+{
+    Q_DISABLE_COPY(QIODevicePrintStream)
+
+public:
+    explicit QIODevicePrintStream(QIODevice *dest)
+        : dest(dest)
+        , buf(4096, '0')
+    {
+        Q_ASSERT(dest);
+    }
+
+    ~QIODevicePrintStream()
+    {}
+
+    void vprintf(const char* format, va_list argList) WTF_ATTRIBUTE_PRINTF(2, 0)
+    {
+        const int written = vsnprintf(buf.data(), buf.size(), format, argList);
+        if (written > 0)
+            dest->write(buf.constData(), written);
+        memset(buf.data(), 0, qMin(written, buf.size()));
+    }
+
+    void flush()
+    {}
+
+private:
+    QIODevice *dest;
+    QByteArray buf;
+};
 } // anonymous namespace
 
-#if OS(LINUX) || OS(MAC_OS_X)
-static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
+static void printDisassembledOutputWithCalls(QByteArray processedOutput, const QHash<void*, const char*>& functions)
 {
-    QByteArray processedOutput(output);
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
          it != end; ++it) {
         QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
@@ -89,7 +120,6 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
 }
-#endif
 
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
@@ -142,25 +172,9 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
     if (showCode) {
-#if OS(LINUX) && !defined(Q_OS_ANDROID)
-        char* disasmOutput = 0;
-        size_t disasmLength = 0;
-        FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
-        WTF::setDataFile(disasmStream);
-#elif OS(MAC_OS_X)
-        struct MemStream {
-            QByteArray buf;
-            static int write(void *cookie, const char *buf, int len) {
-                MemStream *stream = reinterpret_cast<MemStream *>(cookie);
-                stream->buf.append(buf, len);
-                return len;
-            }
-        };
-        MemStream memStream;
-
-        FILE* disasmStream = fwopen(&memStream, MemStream::write);
-        WTF::setDataFile(disasmStream);
-#endif
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        WTF::setDataFile(new QIODevicePrintStream(&buf));
 
         QByteArray name = _function->name->toUtf8();
         if (name.isEmpty()) {
@@ -171,19 +185,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
-#if (OS(LINUX) && !defined(Q_OS_ANDROID)) || OS(MAC_OS_X)
-        fclose(disasmStream);
-#  if OS(MAC_OS_X)
-        char *disasmOutput = memStream.buf.data();
-#  endif
-#  if CPU(X86) || CPU(X86_64) || CPU(ARM)
-        QHash<void*, String*> idents;
-        printDisassembledOutputWithCalls(disasmOutput, functions);
-#  endif
-#  if OS(LINUX)
-        free(disasmOutput);
-#  endif
-#endif
+        printDisassembledOutputWithCalls(buf.data(), functions);
     } else {
         codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }

@@ -34,8 +34,10 @@
 #include "udis86_decode.h"
 #include <wtf/Assertions.h>
 
+#ifndef _MSC_VER
 #define dbg(x, n...)
 /* #define dbg printf */
+#endif // _MSC_VER
 
 #ifndef __UD_STANDALONE__
 # include <string.h>
