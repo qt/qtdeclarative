@@ -1774,7 +1774,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
             if (!pd->isWritable()
                 && !pd->isQList()
-                && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
+                && !binding->isGroupProperty()
                 && !(binding->flags & QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration)
                 ) {
 
@@ -1815,9 +1815,14 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object) {
                 if (!validateObjectBinding(pd, name, binding))
                     return false;
-            } else if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+            } else if (binding->isGroupProperty()) {
                 if (QQmlValueTypeFactory::isValueType(pd->propType)) {
-                    if (!QQmlValueTypeFactory::valueType(pd->propType)) {
+                    if (QQmlValueTypeFactory::valueType(pd->propType)) {
+                        if (!pd->isWritable()) {
+                            recordError(binding->location, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
+                            return false;
+                        }
+                    } else {
                         recordError(binding->location, tr("Invalid grouped property access"));
                         return false;
                     }
