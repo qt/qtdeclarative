@@ -48,12 +48,14 @@
 #include <private/qqmltypecompiler_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qrecursionwatcher_p.h>
+#include <private/qqmlprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
+struct QQmlVmeProfiler;
 
 struct QQmlObjectCreatorSharedState
 {
@@ -64,6 +66,7 @@ struct QQmlObjectCreatorSharedState
     QFiniteStack<QObject*> allCreatedObjects;
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+    QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
 };
 

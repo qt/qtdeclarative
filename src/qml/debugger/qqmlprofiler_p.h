@@ -258,7 +258,7 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
     }
 };
 
-#define Q_QML_VME_PROFILE(profiler, Method) Q_QML_PROFILE_IF_ENABLED(profiler.profiler, profiler.Method)
+#define Q_QML_VME_PROFILE(profilerMember, Method) Q_QML_PROFILE_IF_ENABLED(profilerMember.profiler, profilerMember.Method)
 
 struct QQmlVmeProfiler : public QQmlProfilerDefinitions {
 public:

@@ -98,6 +98,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     sharedState->allCreatedObjects.allocate(compiledData->totalObjectCount);
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
+    sharedState->profiler.profiler = QQmlEnginePrivate::get(engine)->profiler;
 }
 
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState)
@@ -223,6 +224,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
         context->contextObject = instance;
     }
+
+    Q_QML_VME_PROFILE(sharedState->profiler, stop());
 
     phase = CreatingObjectsPhase2;
 
@@ -993,6 +996,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;
         if (type) {
+            Q_QML_VME_PROFILE(sharedState->profiler, start(type->qmlTypeName(), context->url, obj->location.line, obj->location.column));
             instance = type->create();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1019,8 +1023,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
+            Q_QML_VME_PROFILE(sharedState->profiler, startBackground(typeRef->component->name));
             QQmlObjectCreator subCreator(context, typeRef->component, sharedState.data());
             instance = subCreator.create();
+            Q_QML_VME_PROFILE(sharedState->profiler, foreground(context->url, obj->location.line, obj->location.column));
             if (!instance) {
                 errors += subCreator.errors;
                 return 0;
@@ -1129,6 +1135,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!sharedState->allParserStatusCallbacks.isEmpty()) {
+            Q_QML_VME_PROFILE(sharedState->profiler, pop());
             QQmlParserStatus *status = sharedState->allParserStatusCallbacks.pop();
 
             if (status && status->d) {
@@ -1139,6 +1146,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             if (watcher.hasRecursed() || interrupt.shouldInterrupt())
                 return 0;
         }
+        Q_QML_VME_PROFILE(sharedState->profiler, clear());
     }
 
     {
@@ -1187,12 +1195,20 @@ void QQmlObjectCreator::clear()
     while (!sharedState->allCreatedObjects.isEmpty())
         delete sharedState->allCreatedObjects.pop();
 
+    // If profiling is switched off during a VME run and then switched back on
+    // before or during the next run background ranges from the first run will
+    // be reported in the second run because we don't clear() here. We accept
+    // that as the collected data will be incomplete anyway and because not
+    // calling clear() here is benefitial for the non-profiling case.
+    Q_QML_VME_PROFILE(sharedState->profiler, clear(true));
+
     phase = Done;
 }
 
 bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache, const QBitArray &bindingsToSkip)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+    Q_QML_VME_PROFILE(sharedState->profiler, push());
 
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
