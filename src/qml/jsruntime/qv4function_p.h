@@ -106,8 +106,6 @@ struct Function {
     inline bool needsActivation() const
     { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
 
-    int lineNumberForProgramCounter(qptrdiff offset) const;
-    QList<qptrdiff> programCountersForAllLines() const;
 };
 
 }

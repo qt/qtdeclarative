@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
+    F(Line, line) \
     F(Debug, debug) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
@@ -233,6 +234,10 @@ union Instr
     struct instr_ret {
         MOTH_INSTR_HEADER
         Param result;
+    };
+    struct instr_line {
+        MOTH_INSTR_HEADER
+        qint32 lineNumber;
     };
     struct instr_debug {
         MOTH_INSTR_HEADER
@@ -711,6 +716,7 @@ union Instr
 
     instr_common common;
     instr_ret ret;
+    instr_line line;
     instr_debug debug;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;

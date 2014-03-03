@@ -95,7 +95,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         lookups = 0;
         compilationUnit = 0;
         currentEvalCode = 0;
-        interpreterInstructionPointer = 0;
         lineNumber = -1;
         engine->current = this;
     }
@@ -118,7 +117,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     };
     EvalCode *currentEvalCode;
 
-    const uchar **interpreterInstructionPointer;
     int lineNumber;
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);

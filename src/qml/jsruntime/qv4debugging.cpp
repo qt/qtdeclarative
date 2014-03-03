@@ -205,13 +205,13 @@ void Debugger::setBreakOnThrow(bool onoff)
     m_breakOnThrow = onoff;
 }
 
-Debugger::ExecutionState Debugger::currentExecutionState(int lineNumber) const
+Debugger::ExecutionState Debugger::currentExecutionState() const
 {
     // ### Locking
     ExecutionState state;
     state.function = getFunction();
     state.fileName = state.function->sourceFile();
-    state.lineNumber = lineNumber;
+    state.lineNumber = engine()->currentContext()->lineNumber;
 
     return state;
 }
@@ -445,7 +445,7 @@ QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
     return types;
 }
 
-void Debugger::maybeBreakAtInstruction(int lineNumber)
+void Debugger::maybeBreakAtInstruction()
 {
     if (m_runningJob) // do not re-enter when we're doing a job for the debugger.
         return;
@@ -454,7 +454,7 @@ void Debugger::maybeBreakAtInstruction(int lineNumber)
     if (m_breakPoints.isEmpty())
         return;
 
-    ExecutionState state = currentExecutionState(lineNumber);
+    ExecutionState state = currentExecutionState();
 
     if (m_gatherSources) {
         m_gatherSources->run();

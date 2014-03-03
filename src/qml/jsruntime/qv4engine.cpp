@@ -668,32 +668,8 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
     return static_cast<CallContext *>(ctx)->activation->asReturned<Object>();
 }
 
-namespace {
-    struct LineNumberResolver {
-        const ExecutionEngine* engine;
-
-        LineNumberResolver(const ExecutionEngine *engine)
-            : engine(engine)
-        {
-        }
-
-        void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
-        {
-            qptrdiff offset;
-            if (context->interpreterInstructionPointer) {
-                offset = *context->interpreterInstructionPointer - 1 - function->codeData;
-                frame->line = function->lineNumberForProgramCounter(offset);
-            } else {
-                frame->line = context->lineNumber;
-            }
-        }
-    };
-}
-
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
-    LineNumberResolver lineNumbers(this);
-
     QVector<StackFrame> stack;
 
     QV4::ExecutionContext *c = currentContext();
@@ -708,7 +684,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
             frame.column = -1;
 
             if (callCtx->function->function)
-                lineNumbers.resolve(&frame, callCtx, callCtx->function->function);
+                frame.line = callCtx->lineNumber;
 
             stack.append(frame);
             --frameLimit;
@@ -720,10 +696,9 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
         StackFrame frame;
         frame.source = globalCode->sourceFile();
         frame.function = globalCode->name()->toQString();
-        frame.line = -1;
+        frame.line = rootContext->lineNumber;
         frame.column = -1;
 
-        lineNumbers.resolve(&frame, rootContext, globalCode);
 
         stack.append(frame);
     }

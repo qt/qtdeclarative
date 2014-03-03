@@ -169,7 +169,7 @@ public:
         Function *function;
     };
 
-    ExecutionState currentExecutionState(int lineNumber) const;
+    ExecutionState currentExecutionState() const;
 
     bool pauseAtNextOpportunity() const {
         return m_pauseRequested || m_haveBreakPoints || m_gatherSources || m_stepping >= StepOver;
@@ -184,7 +184,7 @@ public:
     QVector<ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
 public: // compile-time interface
-    void maybeBreakAtInstruction(int line);
+    void maybeBreakAtInstruction();
 
 public: // execution hooks
     void enteringFunction();

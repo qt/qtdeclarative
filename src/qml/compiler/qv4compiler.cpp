@@ -146,11 +146,6 @@ int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
     return constants.size() - 1;
 }
 
-void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QV4::IR::Function *function, const QVector<uint> &mappings)
-{
-    lineNumberMappingsPerFunction.insert(function, mappings);
-}
-
 int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *args)
 {
     // ### re-use existing class definitions.
@@ -200,9 +195,6 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         functionOffsets.insert(f, functionDataSize + unitSize + stringDataSize);
 
         int lineNumberMappingCount = 0;
-        QHash<QV4::IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(f);
-        if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd())
-            lineNumberMappingCount = lineNumberMapping->count() / 2;
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
@@ -327,14 +319,6 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
     function->localsOffset = currentOffset;
     currentOffset += function->nLocals * sizeof(quint32);
 
-    function->nLineNumberMappingEntries = 0;
-    QHash<QV4::IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
-    if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd()) {
-        function->nLineNumberMappingEntries = lineNumberMapping->count() / 2;
-    }
-    function->lineNumberMappingOffset = currentOffset;
-    currentOffset += function->nLineNumberMappingEntries * 2 * sizeof(quint32);
-
     function->nInnerFunctions = irFunction->nestedFunctions.size();
     function->innerFunctionsOffset = currentOffset;
     currentOffset += function->nInnerFunctions * sizeof(quint32);
@@ -373,12 +357,6 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
     quint32 *locals = (quint32 *)(f + function->localsOffset);
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(*irFunction->locals.at(i));
-
-    // write line number mappings
-    if (function->nLineNumberMappingEntries) {
-        quint32 *mappingsToWrite = (quint32*)(f + function->lineNumberMappingOffset);
-        memcpy(mappingsToWrite, lineNumberMapping->constData(), 2 * function->nLineNumberMappingEntries * sizeof(quint32));
-    }
 
     // write inner functions
     quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);

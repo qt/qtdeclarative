@@ -385,9 +385,6 @@ void InstructionSelection::run(int functionIndex)
     push.value = quint32(locals);
     addInstruction(push);
 
-    QVector<uint> lineNumberMappings;
-    lineNumberMappings.reserve(_function->basicBlocks.size() * 2);
-
     uint currentLine = -1;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         _block = _function->basicBlocks[i];
@@ -410,12 +407,17 @@ void InstructionSelection::run(int functionIndex)
             _currentStatement = s;
 
             if (s->location.isValid()) {
-                lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
-                if (irModule->debugMode && s->location.startLine != currentLine) {
+                if (s->location.startLine != currentLine) {
                     currentLine = s->location.startLine;
-                    Instruction::Debug debug;
-                    debug.lineNumber = currentLine;
-                    addInstruction(debug);
+                    if (irModule->debugMode) {
+                        Instruction::Debug debug;
+                        debug.lineNumber = currentLine;
+                        addInstruction(debug);
+                    } else {
+                        Instruction::Line line;
+                        line.lineNumber = currentLine;
+                        addInstruction(line);
+                    }
                 }
             }
 
@@ -427,8 +429,6 @@ void InstructionSelection::run(int functionIndex)
             addInstruction(debug);
         }
     }
-
-    jsGenerator->registerLineNumberMapping(_function, lineNumberMappings);
 
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();

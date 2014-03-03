@@ -185,6 +185,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     const uchar *exceptionHandler = 0;
 
+    context->lineNumber = -1;
     QV4::ExecutionEngine *engine = context->engine;
 
 #ifdef DO_TRACE_INSTR
@@ -192,7 +193,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 #endif // DO_TRACE_INSTR
 
     QV4::StringValue * const runtimeStrings = context->compilationUnit->runtimeStrings;
-    context->interpreterInstructionPointer = &code;
 
     // setup lookup scopes
     int scopeDepth = 0;
@@ -661,9 +661,14 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
+        context->lineNumber = instr.lineNumber;
         QV4::Debugging::Debugger *debugger = context->engine->debugger;
         if (debugger && debugger->pauseAtNextOpportunity())
-            debugger->maybeBreakAtInstruction(instr.lineNumber);
+            debugger->maybeBreakAtInstruction();
+    MOTH_END_INSTR(Debug)
+
+    MOTH_BEGIN_INSTR(Line)
+        context->lineNumber = instr.lineNumber;
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
