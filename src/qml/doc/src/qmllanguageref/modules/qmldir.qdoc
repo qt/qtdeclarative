@@ -155,7 +155,7 @@ plugin <Name> [<Path>]
                 same as the file name of the plugin binary, which is platform
                 dependent; e.g. the library \c MyAppTypes would produce
                 \c libMyAppTypes.so on Linux and \c MyAppTypes.dll on Windows.
-            \li \c <Path> (optional) specifes either:
+            \li \c <Path> (optional) specifies either:
                 \list
                 \li an absolute path to the directory containing the plugin
                     file, or

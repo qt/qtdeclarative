@@ -57,7 +57,7 @@ and dynamic user interface. It enables user interfaces to be built around the
 behavior of user interface components and how they connect with one another,
 and it provides a visual canvas with its own coordinate system and rendering
 engine. Animation and transition effects are a first class concept in Qt Quick,
-and visual effects can be supplemented through specialised components for
+and visual effects can be supplemented through specialized components for
 particle and shader effects.
 
 \list

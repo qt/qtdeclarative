@@ -1736,7 +1736,7 @@ void Renderer::uploadBatch(Batch *b)
                 if (iCount == 0)
                     iCount = eg->vertexCount();
                 // merged Triangle strips need to contain degenerate triangles at the beginning and end.
-                // One could save 2 ushorts here by ditching the the padding for the front of the
+                // One could save 2 ushorts here by ditching the padding for the front of the
                 // first and the end of the last, but for simplicity, we simply don't care.
                 if (g->drawingMode() == GL_TRIANGLE_STRIP)
                     iCount += sizeof(quint16);

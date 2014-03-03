@@ -56,7 +56,7 @@ The objects that compose the switch are:
 \snippet customitems/slideswitch/content/Switch.qml 1
 
 This property is the interface of the switch. By default, the switch is off and this property is \c false.
-It can be used to activate/disactivate the switch or to query its current state.
+It can be used to activate/deactivate the switch or to query its current state.
 
 In this example:
 

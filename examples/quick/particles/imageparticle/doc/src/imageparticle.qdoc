@@ -56,7 +56,7 @@
     \snippet particles/imageparticle/content/sharing.qml 1
     Note that because it sets the color and alpha in this ImageParticle, it renders the particles in a different color.
     Since it doesn't specify anything about the rotation, it shares the rotation with the other ImageParticle so that the flowers are rotated the same way in both.
-    Note that you can undo rotation in another ImageParticle, you just need to explicity set rotationVariation to 0.
+    Note that you can undo rotation in another ImageParticle, you just need to explicitly set rotationVariation to 0.
 
     Sprites demonstrates using an image particle to render animated sprites instead of static images for each particle.
 */
