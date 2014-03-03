@@ -102,7 +102,7 @@ private:
     void startOrStopAnimationTimer();
     void maybePostPolishRequest(Window *w);
     void waitForReleaseComplete();
-    void polishAndSync(Window *w);
+    bool polishAndSync(Window *w);
     void maybeUpdate(Window *window);
 
     void handleExposure(Window *w);

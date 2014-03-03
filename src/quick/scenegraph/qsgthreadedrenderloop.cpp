@@ -176,14 +176,12 @@ const QEvent::Type WM_RequestRepaint    = QEvent::Type(QEvent::User + 5);
 // if no windows are rendering.
 const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 7);
 
-// Passed by the RL to the RL when maybeUpdate is called on the RT to
-// just replay the maybeUpdate later. This typically happens when
-// updatePaintNode() results in a call to QQuickItem::update().
-//const QEvent::Type WM_UpdateLater       = QEvent::Type(QEvent::User + 8); // not used for now
-
 // Passed by the RL to the RT when a QQuickWindow::grabWindow() is
 // called.
 const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 9);
+
+// Passed by RL to RT when polish fails and we need to reset the expose sycle.
+const QEvent::Type WM_ResetExposeCycle = QEvent::Type(QEvent::User + 10);
 
 template <typename T> T *windowFor(const QList<T> list, QQuickWindow *window)
 {
@@ -379,6 +377,11 @@ bool QSGRenderThread::event(QEvent *e)
         Q_ASSERT(exposeCycle == NoExpose);
         exposeCycle = ExposePendingSync;
         return true; }
+
+    case WM_ResetExposeCycle:
+        QSG_RT_DEBUG("WM_ResetExposeCycle");
+        exposeCycle = NoExpose;
+        return true;
 
     case WM_Obscure: {
         QSG_RT_DEBUG("WM_Obscure");
@@ -977,15 +980,19 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
     }
 
     w->thread->postEvent(new WMExposeEvent(w->window));
-    polishAndSync(w);
+    bool synced = polishAndSync(w);
 
-    w->thread->mutex.lock();
-    if (w->thread->exposeCycle != QSGRenderThread::NoExpose) {
-        QSG_GUI_DEBUG(w->window, " - waiting for swap to complete...");
-        w->thread->waitCondition.wait(&w->thread->mutex);
+    if (synced) {
+        w->thread->mutex.lock();
+        if (w->thread->exposeCycle != QSGRenderThread::NoExpose) {
+            QSG_GUI_DEBUG(w->window, " - waiting for swap to complete...");
+            w->thread->waitCondition.wait(&w->thread->mutex);
+        }
+        Q_ASSERT(w->thread->exposeCycle == QSGRenderThread::NoExpose);
+        w->thread->mutex.unlock();
+    } else {
+        w->thread->postEvent(new QEvent(WM_ResetExposeCycle));
     }
-    Q_ASSERT(w->thread->exposeCycle == QSGRenderThread::NoExpose);
-    w->thread->mutex.unlock();
     QSG_GUI_DEBUG(w->window, " - handleExposure completed...");
 
     startOrStopAnimationTimer();
@@ -1111,8 +1118,10 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
 }
 
 
-
-void QSGThreadedRenderLoop::polishAndSync(Window *w)
+/* Calls polish on all items, then requests synchronization with the render thread
+ * and blocks until that is complete. Returns false if it aborted; otherwise true.
+ */
+bool QSGThreadedRenderLoop::polishAndSync(Window *w)
 {
     QSG_GUI_DEBUG(w->window, "polishAndSync()");
 
@@ -1120,7 +1129,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w)
         QSG_GUI_DEBUG(w->window, " - not exposed, aborting...");
         killTimer(w->timerId);
         w->timerId = 0;
-        return;
+        return false;
     }
 
 
@@ -1196,6 +1205,8 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w)
             syncTime - waitTime,
             timer.nsecsElapsed() - syncTime));
 #endif
+
+    return true;
 }
 
 bool QSGThreadedRenderLoop::event(QEvent *e)
