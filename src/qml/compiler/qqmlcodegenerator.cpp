@@ -939,7 +939,7 @@ void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int obje
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     QmlObject *object = 0;
-    if (!resolveQualifiedId(&name, &object))
+    if (!resolveQualifiedId(&name, &object, isOnAssignment))
         return;
     qSwap(_object, object);
     appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), objectIndex, /*isListItem*/false, isOnAssignment);
@@ -1058,7 +1058,7 @@ bool QQmlCodeGenerator::setId(const QQmlJS::AST::SourceLocation &idLocation, QQm
     return true;
 }
 
-bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object)
+bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment)
 {
     QQmlJS::AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
@@ -1104,6 +1104,9 @@ bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToRe
             binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;
             binding->valueLocation.column = qualifiedIdElement->next->identifierToken.startColumn;
             binding->flags = 0;
+
+            if (onAssignment)
+                binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
             if (isAttachedProperty)
                 binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;

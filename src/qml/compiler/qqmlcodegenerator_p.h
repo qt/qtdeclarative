@@ -378,7 +378,7 @@ public:
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
-    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object);
+    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
 

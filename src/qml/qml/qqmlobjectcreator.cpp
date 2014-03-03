@@ -603,8 +603,6 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-                    if (binding->type != QV4::CompiledData::Binding::Type_Script)
-                        continue;
                     property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
                     if (property)
                         bindingSkipList |= (1 << property->coreIndex);

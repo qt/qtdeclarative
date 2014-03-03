@@ -1664,6 +1664,9 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         if (!binding->isGroupProperty())
                 continue;
 
+        if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
+            continue;
+
         if (populatingValueTypeGroupProperty) {
             recordError(binding->location, tr("Property assignment expected"));
             return false;
@@ -1797,6 +1800,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
             if (!bindingToDefaultProperty
                 && !binding->isGroupProperty()
+                && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
                 && assigningToGroupProperty) {
                 QV4::CompiledData::Location loc = binding->valueLocation;
                 if (loc < (*assignedGroupProperty)->valueLocation)
