@@ -86,8 +86,8 @@ public:
     void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
     void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
 
-    void startProfiling(QQmlEngine *engine);
-    void stopProfiling(QQmlEngine *engine);
+    void startProfiling(QQmlEngine *engine = 0);
+    void stopProfiling(QQmlEngine *engine = 0);
 
     QQmlProfilerService();
     ~QQmlProfilerService();
@@ -102,6 +102,7 @@ private:
 
     void sendMessages();
     void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine);
+    void removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler);
 
     QElapsedTimer m_timer;
 

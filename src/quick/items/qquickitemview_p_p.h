@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 class FxViewItem
 {
 public:
-    FxViewItem(QQuickItem *, QQuickItemView *, bool own);
+    FxViewItem(QQuickItem *, QQuickItemView *, bool own, QQuickItemViewAttached *attached);
     virtual ~FxViewItem();
 
     qreal itemX() const;

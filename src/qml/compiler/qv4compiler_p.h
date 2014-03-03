@@ -60,9 +60,9 @@ struct JSClassMember;
 namespace Compiler {
 
 struct Q_QML_EXPORT JSUnitGenerator {
-    JSUnitGenerator(QQmlJS::V4IR::Module *module, int headerSize = -1);
+    JSUnitGenerator(IR::Module *module, int headerSize = -1);
 
-    QQmlJS::V4IR::Module *irModule;
+    IR::Module *irModule;
 
     int registerString(const QString &str);
     int getStringId(const QString &string) const;
@@ -73,26 +73,26 @@ struct Q_QML_EXPORT JSUnitGenerator {
     uint registerIndexedGetterLookup();
     uint registerIndexedSetterLookup();
 
-    int registerRegExp(QQmlJS::V4IR::RegExp *regexp);
+    int registerRegExp(IR::RegExp *regexp);
 
     int registerConstant(ReturnedValue v);
 
-    void registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings);
+    void registerLineNumberMapping(IR::Function *function, const QVector<uint> &mappings);
 
-    int registerJSClass(QQmlJS::V4IR::ExprList *args);
+    int registerJSClass(int count, IR::ExprList *args);
 
     QV4::CompiledData::Unit *generateUnit(int *totalUnitSize = 0);
     // Returns bytes written
-    int writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
+    int writeFunction(char *f, int index, IR::Function *irFunction);
 
     QHash<QString, int> stringToId;
     QStringList strings;
     uint stringDataSize;
-    QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
+    QHash<IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
-    QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
+    QHash<IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
     uint headerSize;

@@ -95,7 +95,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     renderControl = new QQuickRenderControl;
     offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
-    offscreenWindow->create();
+    // Do not call create() on offscreenWindow.
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
@@ -155,7 +155,9 @@ void QQuickWidgetPrivate::renderSceneGraph()
         qWarning("QQuickWidget: render scenegraph with no context");
         return;
     }
-    context->makeCurrent(offscreenWindow);
+
+    Q_ASSERT(q->window()->windowHandle()->handle());
+    context->makeCurrent(q->window()->windowHandle());
     renderControl->polishItems();
     renderControl->sync();
     renderControl->render();
@@ -166,14 +168,14 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
 /*!
     \class QQuickWidget
-    \since 5.0
-    \brief The QQuickWidget class provides a window for displaying a Qt Quick user interface.
+    \since 5.3
+    \brief The QQuickWidget class provides a widget for displaying a Qt Quick user interface.
 
     \inmodule QtQuick
 
-    This is a convenience subclass of QQuickWindow which
-    will automatically load and display a QML scene when given the URL of the main source file. Alternatively,
-    you can instantiate your own objects using QQmlComponent and place them in a manually setup QQuickWindow.
+    This is a convenience wrapper for QQuickWindow which will automatically load and display a QML
+    scene when given the URL of the main source file. Alternatively, you can instantiate your own
+    objects using QQmlComponent and place them in a manually setup QQuickWidget.
 
     Typical usage:
 
@@ -191,6 +193,16 @@ void QQuickWidgetPrivate::renderSceneGraph()
     is SizeViewToRootObject, which will load the component and resize it to the
     size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
+
+    \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
+    The restrictions on stacking order do not apply, making QQuickWidget the more flexible
+    alternative behaving more like an ordinary widget. This comes at the expense of
+    performance. Unlike QQuickWindow and QQuickView, QQuickWidget involves rendering into OpenGL
+    framebuffer objects. This will naturally carry a minor performance hit.
+
+    \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
+    some of the benefits of threaded rendering, for example Animator classes and vsync driven
+    animations, will not be available.
 
     \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
 */
@@ -483,20 +495,35 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
 
 void QQuickWidgetPrivate::createContext()
 {
+    Q_Q(QQuickWidget);
     if (context)
         return;
 
-    context = new QOpenGLContext();
-    context->setFormat(offscreenWindow->requestedFormat());
+    context = new QOpenGLContext;
+
+    QSurfaceFormat format = q->window()->windowHandle()->requestedFormat();
+    QSGRenderContext *renderContext = QQuickWindowPrivate::get(offscreenWindow)->context;
+    // Depth, stencil, etc. must be set like a QQuickWindow would do.
+    QSurfaceFormat sgFormat = renderContext->sceneGraphContext()->defaultSurfaceFormat();
+    format.setDepthBufferSize(qMax(format.depthBufferSize(), sgFormat.depthBufferSize()));
+    format.setStencilBufferSize(qMax(format.stencilBufferSize(), sgFormat.stencilBufferSize()));
+    format.setAlphaBufferSize(qMax(format.alphaBufferSize(), sgFormat.alphaBufferSize()));
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    context->setFormat(format);
+
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
     if (!context->create()) {
-        qWarning("QtQuick: failed to create OpenGL context");
+        qWarning("QQuickWidget: failed to create OpenGL context");
         delete context;
         context = 0;
     }
 
-    renderControl->initialize(context);
+    Q_ASSERT(q->window()->windowHandle()->handle());
+    if (context->makeCurrent(q->window()->windowHandle()))
+        renderControl->initialize(context);
+    else
+        qWarning("QQuickWidget: failed to make window surface current");
 }
 
 void QQuickWidget::createFramebufferObject()
@@ -508,7 +535,7 @@ void QQuickWidget::createFramebufferObject()
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
-        qWarning("createFBO with no context");
+        qWarning("QQuickWidget: Attempted to create FBO with no context");
         return;
     }
 
@@ -516,10 +543,17 @@ void QQuickWidget::createFramebufferObject()
         context->setShareContext(QWidgetPrivate::get(window())->shareContext());
         context->create();
     }
-    context->makeCurrent(d->offscreenWindow);
+
+    Q_ASSERT(window()->windowHandle()->handle());
+    context->makeCurrent(window()->windowHandle());
     d->fbo = new QOpenGLFramebufferObject(size());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
+
+    // Sanity check: The window must not have an underlying platform window.
+    // Having one would mean create() was called and platforms that only support
+    // a single native window were in trouble.
+    Q_ASSERT(!d->offscreenWindow->handle());
 }
 
 void QQuickWidget::destroyFramebufferObject()
@@ -680,7 +714,9 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         qWarning("QQuickWidget::resizeEvent() no OpenGL context");
         return;
     }
-    context->makeCurrent(d->offscreenWindow);
+
+    Q_ASSERT(window()->windowHandle()->handle());
+    context->makeCurrent(window()->windowHandle());
     d->renderControl->render();
     glFlush();
     context->doneCurrent();
@@ -710,22 +746,50 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     Q_D(QQuickWidget);
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
+    // Use the constructor taking localPos and screenPos. That puts localPos into the
+    // event's localPos and windowPos, and screenPos into the event's screenPos. This way
+    // the windowPos in e is ignored and is replaced by localPos. This is necessary
+    // because QQuickWindow thinks of itself as a top-level window always.
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     d->offscreenWindow->mouseMoveEvent(&mappedEvent);
 }
 
-void QQuickWidget::showEvent(QShowEvent *e)
+void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    Q_D(QQuickWidget);
+    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+
+    // As the second mouse press is suppressed in widget windows we emulate it here for QML.
+    // See QTBUG-25831
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->screenPos(), e->button(),
+                           e->buttons(), e->modifiers());
+    d->offscreenWindow->mousePressEvent(&pressEvent);
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(),
+                            e->modifiers());
+    d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
+}
+
+void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
-    d->offscreenWindow->showEvent(e);
+
+    d->updatePending = false;
+    triggerUpdate();
 }
 
-void QQuickWidget::hideEvent(QHideEvent *e)
+void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
-    d->offscreenWindow->hideEvent(e);
+
+    QOpenGLContext *context = d->offscreenWindow->openglContext();
+    if (!context) {
+        qWarning("QQuickWidget::hideEvent with no context");
+        return;
+    }
+    context->makeCurrent(d->offscreenWindow);
+    d->renderControl->stop();
 }
 
 /*! \reimp */
@@ -748,18 +812,43 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
     d->offscreenWindow->mouseReleaseEvent(&mappedEvent);
 }
 
+#ifndef QT_NO_WHEELEVENT
+/*! \reimp */
+void QQuickWidget::wheelEvent(QWheelEvent *e)
+{
+    Q_D(QQuickWidget);
+    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+
+    // Wheel events only have local and global positions, no need to map.
+    d->offscreenWindow->wheelEvent(e);
+}
+#endif
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
     Q_D(QQuickWidget);
-    if (e->type() == QEvent::Timer) {
+
+    switch (e->type()) {
+    case QEvent::Timer:
         d->eventPending = false;
         killTimer(d->updateTimer);
         d->updateTimer = 0;
         if (d->updatePending)
             d->renderSceneGraph();
         return true;
+
+    case QEvent::TouchBegin:
+    case QEvent::TouchEnd:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchCancel:
+        // Touch events only have local and global positions, no need to map.
+        return d->offscreenWindow->event(e);
+
+    default:
+        break;
     }
+
     return QWidget::event(e);
 }
 

@@ -428,20 +428,6 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 }
 
 /*!
-    compile/initialize are protected member functions of QSGMaterialShader.
-    We expose them here for custom renderers.
- */
-void QSGRenderContext::compileShader(QSGMaterialShader *shader)
-{
-    shader->compile();
-}
-
-void QSGRenderContext::initializeShader(QSGMaterialShader *shader)
-{
-    shader->initialize();
-}
-
-/*!
     Initializes the scene graph render context with the GL context \a context. This also
     emits the ready() signal so that the QML graph can start building scene graph nodes.
  */
@@ -619,7 +605,7 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
         m_textures.insert(factory, texture);
         m_mutex.unlock();
 
-        connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)), Qt::DirectConnection);
+        connect(factory, SIGNAL(destroyed(QObject*)), this, SLOT(textureFactoryDestroyed(QObject*)), Qt::DirectConnection);
     }
     return texture;
 }

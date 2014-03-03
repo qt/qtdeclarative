@@ -831,7 +831,7 @@ void tst_QQuickLoader::nonItem()
 void tst_QQuickLoader::vmeErrors()
 {
     QQmlComponent component(&engine, testFileUrl("vmeErrors.qml"));
-    QString err = testFileUrl("VmeError.qml").toString() + ":6: Cannot assign object type QObject with no default method";
+    QString err = testFileUrl("VmeError.qml").toString() + ":6:26: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader);

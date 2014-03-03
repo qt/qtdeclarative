@@ -245,8 +245,6 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
-
-    m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -282,8 +280,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     QV4::Scope scope(ctx);
     QV4::ScopedString name(scope, n);
 
-    if (name->equals(m_destroy) || name->equals(scope.engine->id_toString)) {
-        int index = name->equals(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+    if (name->equals(scope.engine->id_destroy) || name->equals(scope.engine->id_toString)) {
+        int index = name->equals(scope.engine->id_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
         QV4::ScopedValue method(scope, QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index));
         if (hasProperty)
             *hasProperty = true;
@@ -695,7 +693,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
     QQmlPropertyData local;
     if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
-        || name->equals(const_cast<StringValue &>(that->m_destroy)) || name->equals(engine->id_toString))
+        || name->equals(engine->id_destroy) || name->equals(engine->id_toString))
         return QV4::Attr_Data;
     else
         return QV4::Object::query(m, name);
@@ -1812,10 +1810,24 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 
     if (method.coreIndex == -1) {
-        method.load(object->metaObject()->method(m_index));
+        const QMetaObject *mo = object->metaObject();
+        const QMetaMethod moMethod = mo->method(m_index);
+        method.load(moMethod);
 
         if (method.coreIndex == -1)
             return QV4::Encode::undefined();
+
+        // Look for overloaded methods
+        QByteArray methodName = moMethod.name();
+        const int methodOffset = mo->methodOffset();
+        for (int ii = m_index - 1; ii >= methodOffset; --ii) {
+            if (methodName == mo->method(ii).name()) {
+                method.setFlags(method.getFlags() | QQmlPropertyData::IsOverload);
+                method.overrideIndexIsProperty = 0;
+                method.overrideIndex = ii;
+                break;
+            }
+        }
     }
 
     if (method.isV4Function()) {

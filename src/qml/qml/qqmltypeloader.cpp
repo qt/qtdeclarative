@@ -1975,6 +1975,12 @@ QQmlTypeData::~QQmlTypeData()
         m_scripts.at(ii).script->release();
     for (int ii = 0; ii < m_types.count(); ++ii)
         if (m_types.at(ii).typeData) m_types.at(ii).typeData->release();
+    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+         it != end; ++it) {
+        if (QQmlTypeData *tdata = it->typeData)
+            tdata->release();
+    }
+
     if (m_compiledData)
         m_compiledData->release();
     delete m_implicitImport;
@@ -2414,6 +2420,8 @@ void QQmlTypeData::resolveTypes()
 
         TypeReference ref; // resolved reference
 
+        const bool reportErrors = unresolvedRef->errorWhenNotFound;
+
         int majorVersion = -1;
         int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
@@ -2434,7 +2442,7 @@ void QQmlTypeData::resolveTypes()
             }
         }
 
-        if (!typeFound || typeNamespace) {
+        if ((!typeFound || typeNamespace) && reportErrors) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})
             //  - type with unknown namespace (UnknownNamespace.SomeType {})
@@ -2461,7 +2469,7 @@ void QQmlTypeData::resolveTypes()
             return;
         }
 
-        if (ref.type->isComposite()) {
+        if (ref.type && ref.type->isComposite()) {
             ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
             addDependency(ref.typeData);
         }

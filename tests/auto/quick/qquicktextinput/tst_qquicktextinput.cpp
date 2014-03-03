@@ -6391,36 +6391,42 @@ void tst_qquicktextinput::baselineOffset_data()
 {
     QTest::addColumn<QString>("text");
     QTest::addColumn<QByteArray>("bindings");
+    QTest::addColumn<qreal>("setHeight");
     QTest::addColumn<ExpectedBaseline>("expectedBaseline");
     QTest::addColumn<ExpectedBaseline>("expectedBaselineEmpty");
 
     QTest::newRow("normal")
             << "Typography"
             << QByteArray()
+            << -1.
             << &expectedBaselineTop
             << &expectedBaselineTop;
 
     QTest::newRow("top align")
             << "Typography"
             << QByteArray("height: 200; verticalAlignment: Text.AlignTop")
+            << -1.
             << &expectedBaselineTop
             << &expectedBaselineTop;
 
     QTest::newRow("bottom align")
             << "Typography"
             << QByteArray("height: 200; verticalAlignment: Text.AlignBottom")
+            << 100.
             << &expectedBaselineBottom
             << &expectedBaselineBottom;
 
     QTest::newRow("center align")
             << "Typography"
             << QByteArray("height: 200; verticalAlignment: Text.AlignVCenter")
+            << 100.
             << &expectedBaselineCenter
             << &expectedBaselineCenter;
 
     QTest::newRow("multiline bottom aligned")
             << "The quick brown fox jumps over the lazy dog"
             << QByteArray("height: 200; width: 30; verticalAlignment: Text.AlignBottom; wrapMode: TextInput.WordWrap")
+            << -1.
             << &expectedBaselineMultilineBottom
             << &expectedBaselineBottom;
 }
@@ -6429,6 +6435,7 @@ void tst_qquicktextinput::baselineOffset()
 {
     QFETCH(QString, text);
     QFETCH(QByteArray, bindings);
+    QFETCH(qreal, setHeight);
     QFETCH(ExpectedBaseline, expectedBaseline);
     QFETCH(ExpectedBaseline, expectedBaselineEmpty);
 
@@ -6441,12 +6448,18 @@ void tst_qquicktextinput::baselineOffset()
 
     QScopedPointer<QObject> object(component.create());
     QQuickTextInput *item = qobject_cast<QQuickTextInput *>(object.data());
-    QVERIFY(item);
-    QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
-    item->setText(text);
-    QCOMPARE(item->baselineOffset(), expectedBaseline(item));
-    item->setText(QString());
-    QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
+
+    int passes = setHeight >= 0 ? 2 : 1;
+    while (passes--) {
+        QVERIFY(item);
+        QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
+        item->setText(text);
+        QCOMPARE(item->baselineOffset(), expectedBaseline(item));
+        item->setText(QString());
+        QCOMPARE(item->baselineOffset(), expectedBaselineEmpty(item));
+        if (setHeight >= 0)
+            item->setHeight(setHeight);
+    }
 }
 
 QTEST_MAIN(tst_qquicktextinput)

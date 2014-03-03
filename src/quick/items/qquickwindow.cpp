@@ -216,9 +216,11 @@ void QQuickWindow::exposeEvent(QExposeEvent *)
 }
 
 /*! \reimp */
-void QQuickWindow::resizeEvent(QResizeEvent *)
+void QQuickWindow::resizeEvent(QResizeEvent *ev)
 {
     Q_D(QQuickWindow);
+    if (d->contentItem)
+        d->contentItem->setSize(ev->size());
     if (d->windowManager)
         d->windowManager->resize(this);
 }
@@ -258,23 +260,16 @@ void QQuickWindowPrivate::polishItems()
 {
     int maxPolishCycles = 100000;
 
-    int removedItems;
-    do {
-        removedItems = 0;
+    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
         QSet<QQuickItem *> itms = itemsToPolish;
+        itemsToPolish.clear();
 
         for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
             QQuickItem *item = *it;
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-            if (item->isVisible() || (itemPrivate->extra.isAllocated() && itemPrivate->extra->effectRefCount>0)) {
-                itemPrivate->polishScheduled = false;
-                itemsToPolish.remove(item);
-                item->updatePolish();
-                ++removedItems;
-            }
+            QQuickItemPrivate::get(item)->polishScheduled = false;
+            item->updatePolish();
         }
-    } while (removedItems > 0 && --maxPolishCycles > 0);
+    }
 
     if (maxPolishCycles == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
@@ -360,6 +355,8 @@ void QQuickWindowPrivate::syncSceneGraph()
     renderer->setClearMode(mode);
 
     renderer->setCustomRenderMode(customRenderMode);
+
+    emit q->afterSynchronizing();
     context->endSync();
 }
 
@@ -368,6 +365,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {
     QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
+    if (!renderer)
+        return;
+
     animationController->advance();
     emit q->beforeRendering();
     int fboId = 0;
@@ -435,6 +435,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     contentItemPrivate->window = q;
     contentItemPrivate->windowRefCount = 1;
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
+    contentItem->setSize(q->size());
 
     customRenderMode = qgetenv("QSG_VISUALIZE");
     renderControl = control;
@@ -476,22 +477,10 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
-    initContentItem();
     return QQmlListProperty<QObject>(q_func(), 0, QQuickWindowPrivate::data_append,
                                              QQuickWindowPrivate::data_count,
                                              QQuickWindowPrivate::data_at,
                                              QQuickWindowPrivate::data_clear);
-}
-
-void QQuickWindowPrivate::initContentItem()
-{
-    Q_Q(QQuickWindow);
-    q->connect(q, SIGNAL(widthChanged(int)),
-            contentItem, SLOT(setWidth(int)));
-    q->connect(q, SIGNAL(heightChanged(int)),
-            contentItem, SLOT(setHeight(int)));
-    contentItem->setWidth(q->width());
-    contentItem->setHeight(q->height());
 }
 
 static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
@@ -2679,6 +2668,17 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
 }
 
+bool QQuickWindowPrivate::emitError(QQuickWindow::SceneGraphError error, const QString &msg)
+{
+    Q_Q(QQuickWindow);
+    static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWindow::sceneGraphError);
+    if (q->isSignalConnected(errorSignal)) {
+        emit q->sceneGraphError(error, msg);
+        return true;
+    }
+    return false;
+}
+
 void QQuickWindow::maybeUpdate()
 {
     Q_D(QQuickWindow);
@@ -2751,6 +2751,21 @@ QOpenGLContext *QQuickWindow::openglContext() const
     should be released.
 
     This signal will be emitted from the scene graph rendering thread.
+ */
+
+/*!
+    \fn void QQuickWindow::sceneGraphError(SceneGraphError error, const QString &message)
+
+    This signal is emitted when an error occurred during scene graph initialization.
+
+    Applications should connect to this signal if they wish to handle errors,
+    like OpenGL context creation failures, in a custom way. When no slot is
+    connected to the signal, the behavior will be different: Quick will print
+    the message, or show a message box, and terminate the application.
+
+    This signal will be emitted from the gui thread.
+
+    \since 5.3
  */
 
 /*!
@@ -2987,6 +3002,20 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
+    \enum QQuickWindow::SceneGraphError
+
+    This enum describes the error in a sceneGraphError() signal.
+
+    \value ContextNotAvailable OpenGL context creation failed. This typically means that
+    no suitable OpenGL implementation was found, for example because no graphics drivers
+    are installed and so no OpenGL 2 support is present. On mobile and embedded boards
+    that use OpenGL ES such an error is likely to indicate issues in the windowing system
+    integration and possibly an incorrect configuration of Qt.
+
+    \since 5.3
+ */
+
+/*!
     \fn void QQuickWindow::beforeSynchronizing()
 
     This signal is emitted before the scene graph is synchronized with the QML state.
@@ -3004,6 +3033,27 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 */
+
+/*!
+    \fn void QQuickWindow::afterSynchronizing()
+
+    This signal is emitted after the scene graph is synchronized with the QML state.
+
+    This signal can be used to do preparation required after calls to
+    QQuickItem::updatePaintNode(), while the GUI thread is still locked.
+
+    The GL context used for rendering the scene graph will be bound at this point.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \warning Make very sure that a signal handler for afterSynchronizing leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
+
+    \since 5.3
+ */
 
 /*!
     \fn void QQuickWindow::beforeRendering()
@@ -3044,6 +3094,60 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     do so can result in the scene not rendering properly.
  */
 
+/*!
+    \fn void QQuickWindow::afterAnimating()
+
+    This signal is emitted on the gui thread before requesting the render thread to
+    perform the synchronization of the scene graph.
+
+    Unlike the other similar signals, this one is emitted on the gui thread instead
+    of the render thread. It can be used to synchronize external animation systems
+    with the QML content.
+
+    \since 5.3
+ */
+
+/*!
+    \fn void QQuickWindow::openglContextCreated(QOpenGLContext *context)
+
+    This signal is emitted on the gui thread when the OpenGL \a context
+    for this window is created, before it is made current.
+
+    Some implementations will share the same OpenGL context between
+    multiple QQuickWindow instances. The openglContextCreated() signal
+    will in this case only be emitted for the first window, when the
+    OpenGL context is actually created.
+
+    QQuickWindow::openglContext() will still return 0 for this window
+    until after the QQuickWindow::sceneGraphInitialize() has been
+    emitted.
+
+    \since 5.3
+ */
+
+/*!
+    \fn void QQuickWindow::sceneGraphAboutToStop()
+
+    This signal is emitted on the render thread when the scene graph is
+    about to stop rendering. This happens usually because the window
+    has been hidden.
+
+    Applications may use this signal to release resources, but should be
+    prepared to reinstantiated them again fast. The scene graph and the
+    OpenGL context are not released at this time.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \warning Make very sure that a signal handler for afterRendering() leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
+
+    \sa scenegraphInvalidated()
+
+    \since 5.3
+ */
 
 
 /*!

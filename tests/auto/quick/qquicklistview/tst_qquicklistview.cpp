@@ -172,6 +172,7 @@ private slots:
     void onAdd_data();
     void onRemove();
     void onRemove_data();
+    void attachedProperties_QTBUG_32836();
     void rightToLeft();
     void test_mirroring();
     void margins();
@@ -5438,6 +5439,40 @@ void tst_QQuickListView::snapOneItem()
     }
 
     releaseView(window);
+}
+
+void tst_QQuickListView::attachedProperties_QTBUG_32836()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("attachedProperties.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != 0);
+
+    QQuickItem *header = listview->headerItem();
+    QVERIFY(header);
+    QCOMPARE(header->width(), listview->width());
+
+    QQuickItem *footer = listview->footerItem();
+    QVERIFY(footer);
+    QCOMPARE(footer->width(), listview->width());
+
+    QQuickItem *highlight = listview->highlightItem();
+    QVERIFY(highlight);
+    QCOMPARE(highlight->width(), listview->width());
+
+    QQuickItem *currentItem = listview->currentItem();
+    QVERIFY(currentItem);
+    QCOMPARE(currentItem->width(), listview->width());
+
+    QQuickItem *sectionItem = findItem<QQuickItem>(window->rootObject(), "sectionItem");
+    QVERIFY(sectionItem);
+    QCOMPARE(sectionItem->width(), listview->width());
+
+    delete window;
 }
 
 void tst_QQuickListView::unrequestedVisibility()

@@ -109,9 +109,6 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 
     The \l drag.source property is communicated to the source of a drag event as
     the recipient of a drop on the drag target.
-
-    The \l delegate property provides a means to specify a component to be
-    instantiated for each active drag over a drag target.
 */
 
 QQuickDropArea::QQuickDropArea(QQuickItem *parent)
@@ -308,7 +305,7 @@ void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
 /*!
     \qmlsignal QtQuick::DropArea::onDropped(DragEvent drop)
 
-    This handler is called when a drop event occurs within the bounds of a
+    This handler is called when a drop event occurs within the bounds of
     a DropArea.
 */
 
@@ -383,8 +380,8 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     The drop action may be one of:
 
     \list
-    \li Qt.CopyAction Copy the data to the target
-    \li Qt.MoveAction Move the data from the source to the target
+    \li Qt.CopyAction Copy the data to the target.
+    \li Qt.MoveAction Move the data from the source to the target.
     \li Qt.LinkAction Create a link from the source to the target.
     \li Qt.IgnoreAction Ignore the action (do nothing with the data).
     \endlist

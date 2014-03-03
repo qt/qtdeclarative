@@ -295,6 +295,8 @@ private slots:
         QWindowSystemInterface::registerTouchDevice(touchDeviceWithVelocity);
     }
 
+    void openglContextCreatedSignal();
+    void aboutToStopSignal();
 
     void constantUpdates();
     void constantUpdatesOnWindow_data();
@@ -351,12 +353,47 @@ private slots:
     void cursor();
 #endif
 
+    void animatingSignal();
+
+    void contentItemSize();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
 };
 
-//If the item calls update inside updatePaintNode, it should schedule another update
+Q_DECLARE_METATYPE(QOpenGLContext *);
+
+void tst_qquickwindow::openglContextCreatedSignal()
+{
+    qRegisterMetaType<QOpenGLContext *>();
+
+    QQuickWindow window;
+    QSignalSpy spy(&window, SIGNAL(openglContextCreated(QOpenGLContext*)));
+
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    QVERIFY(spy.size() > 0);
+
+    QVariant ctx = spy.at(0).at(0);
+    QCOMPARE(qVariantValue<QOpenGLContext *>(ctx), window.openglContext());
+}
+
+void tst_qquickwindow::aboutToStopSignal()
+{
+    QQuickWindow window;
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    QSignalSpy spy(&window, SIGNAL(sceneGraphAboutToStop()));
+
+    window.hide();
+
+    QVERIFY(spy.count() > 0);
+}
+
+//If the item calls update inside updatePaintNode, it should schedule another sync pass
 void tst_qquickwindow::constantUpdates()
 {
     QQuickWindow window;
@@ -364,10 +401,12 @@ void tst_qquickwindow::constantUpdates()
     ConstantUpdateItem item(window.contentItem());
     window.show();
 
-    QSignalSpy spy(&window, SIGNAL(beforeSynchronizing()));
+    QSignalSpy beforeSpy(&window, SIGNAL(beforeSynchronizing()));
+    QSignalSpy afterSpy(&window, SIGNAL(afterSynchronizing()));
 
     QTRY_VERIFY(item.iterations > 10);
-    QTRY_VERIFY(spy.count() > 10);
+    QTRY_VERIFY(beforeSpy.count() > 10);
+    QTRY_VERIFY(afterSpy.count() > 10);
 }
 
 void tst_qquickwindow::constantUpdatesOnWindow_data()
@@ -1655,6 +1694,51 @@ void tst_qquickwindow::qobjectEventFilter_mouse()
 
     // clean up mouse press state for the next tests
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, point);
+}
+
+void tst_qquickwindow::animatingSignal()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    QSignalSpy spy(&window, SIGNAL(afterAnimating()));
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QTRY_VERIFY(spy.count() > 1);
+}
+
+// QTBUG-36938
+void tst_qquickwindow::contentItemSize()
+{
+    QQuickWindow window;
+    QQuickItem *contentItem = window.contentItem();
+    QVERIFY(contentItem);
+    QCOMPARE(QSize(contentItem->width(), contentItem->height()), window.size());
+
+    QSizeF size(300, 200);
+    window.resize(size.toSize());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QCOMPARE(window.size(), size.toSize());
+    QCOMPARE(QSizeF(contentItem->width(), contentItem->height()), size);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQuick 2.1\n Rectangle { anchors.fill: parent }"), QUrl());
+    QQuickItem *rect = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(rect);
+    rect->setParentItem(window.contentItem());
+    QCOMPARE(QSizeF(rect->width(), rect->height()), size);
+
+    size.transpose();
+    window.resize(size.toSize());
+    QCOMPARE(window.size(), size.toSize());
+    // wait for resize event
+    QTRY_COMPARE(QSizeF(contentItem->width(), contentItem->height()), size);
+    QCOMPARE(QSizeF(rect->width(), rect->height()), size);
 }
 
 QTEST_MAIN(tst_qquickwindow)

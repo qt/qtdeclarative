@@ -729,10 +729,10 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
 QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() > r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() > r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() > r->asDouble();
     if (l->isString() && r->isString())
         return r->stringValue()->compare(l->stringValue());
 
@@ -752,10 +752,10 @@ QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() < r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() < r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() < r->asDouble();
     if (l->isString() && r->isString())
         return l->stringValue()->compare(r->stringValue());
 
@@ -775,10 +775,10 @@ QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() >= r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() >= r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() >= r->asDouble();
     if (l->isString() && r->isString())
         return !l->stringValue()->compare(r->stringValue());
 
@@ -798,10 +798,10 @@ QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
 QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
 {
     TRACE2(l, r);
-    if (QV4::Value::integerCompatible(*l, *r))
+    if (l->isInteger() && r->isInteger())
         return l->integerValue() <= r->integerValue();
-    if (QV4::Value::bothDouble(*l, *r))
-        return l->doubleValue() <= r->doubleValue();
+    if (l->isNumber() && r->isNumber())
+        return l->asDouble() <= r->asDouble();
     if (l->isString() && r->isString())
         return !r->stringValue()->compare(l->stringValue());
 
@@ -1087,23 +1087,6 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, const St
     ctx->createMutableBinding(name, deletable);
 }
 
-void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, ValueRef val)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, object->asObject());
-    assert(o);
-
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX) {
-        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
-            o->initSparseArray();
-        o->arraySet(idx, val);
-    } else {
-        ScopedValue v(scope, val ? *val : Primitive::undefinedValue());
-        o->insertMember(name, v);
-    }
-}
-
 ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
     Scope scope(ctx);
@@ -1117,28 +1100,17 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
     return a.asReturnedValue();
 }
 
-void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef getter, const ValueRef setter)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, object->asObject());
-    Q_ASSERT(!!o);
-
-    uint idx = name->asArrayIndex();
-    Property pd;
-    pd.value = getter;
-    pd.set = setter;
-    if (idx != UINT_MAX) {
-        o->arraySet(idx, pd, Attr_Accessor);
-    } else {
-        o->insertMember(name, pd, Attr_Accessor);
-    }
-}
-
-ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)
+ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(ctx);
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Scoped<Object> o(scope, ctx->engine->newObject(klass));
+
+    {
+        bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;
+        if (needSparseArray)
+            o->initSparseArray();
+    }
 
     for (uint i = 0; i < klass->size; ++i) {
         if (klass->propertyData[i].isData())
@@ -1149,6 +1121,26 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
             o->memberData[i].set = *args;
             args++;
         }
+    }
+
+    ScopedValue entry(scope);
+    for (int i = 0; i < arrayValueCount; ++i) {
+        uint idx = args->toUInt32();
+        ++args;
+        entry = *args++;
+        o->arraySet(idx, entry);
+    }
+
+    ScopedProperty pd(scope);
+    uint arrayGetterSetterCount = arrayGetterSetterCountAndFlags & ((1 << 30) - 1);
+    for (uint i = 0; i < arrayGetterSetterCount; ++i) {
+        uint idx = args->toUInt32();
+        ++args;
+        pd->value = *args;
+        ++args;
+        pd->set = *args;
+        ++args;
+        o->arraySet(idx, pd, Attr_Accessor);
     }
 
     return o.asReturnedValue();
@@ -1305,7 +1297,7 @@ ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx)
 
 QV4::ReturnedValue __qmljs_get_qml_singleton(QV4::NoThrowContext *ctx, const QV4::StringRef name)
 {
-    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(name);
+    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(ctx->engine->v8Engine, name);
 }
 
 void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx)

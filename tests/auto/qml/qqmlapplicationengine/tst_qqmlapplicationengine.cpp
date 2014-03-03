@@ -78,7 +78,7 @@ void tst_qqmlapplicationengine::basicLoading()
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
-    QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,const QUrl&)));
+    QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,QUrl)));
     test->load(testFileUrl("basicTest.qml"));
     QCOMPARE(objectCreated.count(), size);//one less than rootObjects().size() because we missed the first one
     QCOMPARE(test->rootObjects().size(), ++size);

@@ -117,6 +117,7 @@ private slots:
     void dynamicSignalsAndSlots();
     void simpleBindings();
     void autoComponentCreation();
+    void autoComponentCreationInGroupProperty();
     void propertyValueSource();
     void attachedProperties();
     void dynamicObjects();
@@ -215,6 +216,7 @@ private slots:
     void compositeSingletonRegistered();
 
     void customParserBindingScopes();
+    void customParserEvaluateEnum();
 
 private:
     QQmlEngine engine;
@@ -265,7 +267,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        DETERMINE_ERRORS(errorfile,actual,expected);\
+        DETERMINE_ERRORS(errorfile,expected,actual);\
         if (qgetenv("DEBUG") != "" && expected != actual) \
             qWarning() << "Expected:" << expected << "Actual:" << actual;  \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
@@ -1341,6 +1343,18 @@ void tst_qqmllanguage::simpleBindings()
 void tst_qqmllanguage::autoComponentCreation()
 {
     QQmlComponent component(&engine, testFileUrl("autoComponentCreation.qml"));
+    VERIFY_ERRORS(0);
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->componentProperty() != 0);
+    MyTypeObject *child = qobject_cast<MyTypeObject *>(object->componentProperty()->create());
+    QVERIFY(child != 0);
+    QCOMPARE(child->realProperty(), qreal(9));
+}
+
+void tst_qqmllanguage::autoComponentCreationInGroupProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("autoComponentCreationInGroupProperties.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -3545,6 +3559,14 @@ void tst_qqmllanguage::customParserBindingScopes()
     QPointer<QObject> child = qvariant_cast<QObject*>(o->property("child"));
     QVERIFY(!child.isNull());
     QCOMPARE(child->property("testProperty").toInt(), 42);
+}
+
+void tst_qqmllanguage::customParserEvaluateEnum()
+{
+    QQmlComponent component(&engine, testFile("customParserEvaluateEnum.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -43,6 +43,7 @@
 #define QQUICKITEMVIEW_P_H
 
 #include "qquickflickable_p.h"
+#include <qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -282,6 +283,7 @@ class Q_AUTOTEST_EXPORT QQuickItemViewAttached : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(QQuickItemView *view READ view NOTIFY viewChanged)
     Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY currentItemChanged)
     Q_PROPERTY(bool delayRemove READ delayRemove WRITE setDelayRemove NOTIFY delayRemoveChanged)
 
@@ -293,6 +295,14 @@ public:
     QQuickItemViewAttached(QObject *parent)
         : QObject(parent), m_isCurrent(false), m_delayRemove(false) {}
     ~QQuickItemViewAttached() {}
+
+    QQuickItemView *view() { return m_view; }
+    void setView(QQuickItemView *view) {
+        if (view != m_view) {
+            m_view = view;
+            Q_EMIT viewChanged();
+        }
+    }
 
     bool isCurrentItem() const { return m_isCurrent; }
     void setIsCurrentItem(bool c) {
@@ -353,6 +363,7 @@ public:
     void emitRemove() { Q_EMIT remove(); }
 
 Q_SIGNALS:
+    void viewChanged();
     void currentItemChanged();
     void delayRemoveChanged();
 
@@ -364,6 +375,7 @@ Q_SIGNALS:
     void nextSectionChanged();
 
 public:
+    QPointer<QQuickItemView> m_view;
     bool m_isCurrent : 1;
     bool m_delayRemove : 1;
 

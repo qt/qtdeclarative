@@ -105,7 +105,6 @@ public:
     virtual ~QQuickWindowPrivate();
 
     void init(QQuickWindow *, QQuickRenderControl *control = 0);
-    void initContentItem();//Currently only used if items added in QML
 
     QQuickRootItem *contentItem;
     QSet<QQuickItem *> parentlessItems;
@@ -184,6 +183,8 @@ public:
 
     bool isRenderable() const;
 
+    bool emitError(QQuickWindow::SceneGraphError error, const QString &msg);
+
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
     QQuickItem *dirtyItemList;
@@ -199,6 +200,8 @@ public:
     void updateDirtyNode(QQuickItem *);
 
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
+    void fireOpenGLContextCreated(QOpenGLContext *context) { Q_EMIT q_func()->openglContextCreated(context); }
+    void fireAboutToStop() { Q_EMIT q_func()->sceneGraphAboutToStop(); }
 
     QSGRenderContext *context;
     QSGRenderer *renderer;

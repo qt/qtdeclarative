@@ -479,9 +479,9 @@ bool QQuickContext2DFBOTexture::doMultisampling() const
     static bool multisamplingSupported = false;
 
     if (!extensionsChecked) {
-        QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
-        multisamplingSupported = extensions.contains("GL_EXT_framebuffer_multisample")
-                && extensions.contains("GL_EXT_framebuffer_blit");
+        const QSet<QByteArray> extensions = m_context->glContext()->extensions();
+        multisamplingSupported = extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_multisample"))
+            && extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_blit"));
         extensionsChecked = true;
     }
 

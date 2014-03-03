@@ -1050,7 +1050,7 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
     if (activeVME) {
         activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
     } else if (activeObjectCreator) {
-        activeObjectCreator->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
+        activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };
         QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);

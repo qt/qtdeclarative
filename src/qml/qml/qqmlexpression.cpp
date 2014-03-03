@@ -160,8 +160,7 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     QQmlContextData *evalCtxtData = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
     QObject *scopeObject = scope ? scope : scriptPrivate->scope;
 
-    int id = scriptPrivate->bindingId;
-    if (id >= 0) {
+    if (scriptPrivate->context) {
         QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
         if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
@@ -169,9 +168,16 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                defaultConstruction = false;
-                d->init(evalCtxtData, cdata->primitives.at(id), scopeObject,
-                        cdata->name, scriptPrivate->lineNumber, scriptPrivate->columnNumber);
+                int id = scriptPrivate->bindingId;
+                if (id >= 0) {
+                    defaultConstruction = false;
+                    d->init(evalCtxtData, cdata->primitives.at(id), scopeObject,
+                            cdata->name, scriptPrivate->lineNumber, scriptPrivate->columnNumber);
+                } else {
+                    d->url = cdata->name;
+                    d->line = scriptPrivate->lineNumber;
+                    d->column = scriptPrivate->columnNumber;
+                }
             }
 
             typeData->release();

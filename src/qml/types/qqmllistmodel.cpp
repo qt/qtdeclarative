@@ -219,6 +219,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
         case QVariant::Bool:        type = Role::Bool;        break;
         case QVariant::String:      type = Role::String;      break;
         case QVariant::Map:         type = Role::VariantMap;  break;
+        case QVariant::DateTime:    type = Role::DateTime;    break;
         default:                    type = Role::Invalid;     break;
     }
 
@@ -2384,10 +2385,11 @@ bool QQmlListModelParser::compileProperty(const QQmlCustomParserProperty &prop, 
     return true;
 }
 
-bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
+bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-        const QV4::CompiledData::Object *target = qmlUnit->objectAt(binding->value.objectIndex);
+        const quint32 targetObjectIndex = binding->value.objectIndex;
+        const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
         QString objName = qmlUnit->header.stringAt(target->inheritedTypeNameIndex);
         if (objName != listElementTypeName) {
             const QMetaObject *mo = resolveType(objName);
@@ -2406,7 +2408,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
         }
 
         if (!qmlUnit->header.stringAt(target->idIndex).isEmpty()) {
-            error(binding, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
+            error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
         }
 
@@ -2425,7 +2427,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
             li.dataIdx = ref;
             instr << li;
 
-            if (!compileProperty(qmlUnit, binding, instr, data))
+            if (!compileProperty(qmlUnit, targetObjectIndex, binding, instr, data))
                 return false;
 
             li.type = ListInstruction::Pop;
@@ -2464,7 +2466,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
                 int v = evaluateEnum(script, &ok);
                 if (!ok) {
                     using namespace QQmlJS;
-                    AST::Node *node = astForBinding(binding->value.compiledScriptIndex);
+                    AST::Node *node = astForBinding(objectIndex, binding->value.compiledScriptIndex);
                     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node))
                         node = stmt->expression;
                     AST::StringLiteral *literal = 0;
@@ -2550,7 +2552,7 @@ QByteArray QQmlListModelParser::compile(const QList<QQmlCustomParserProperty> &c
     return rv;
 }
 
-QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QList<ListInstruction> instr;
     QByteArray data;
@@ -2562,7 +2564,7 @@ QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUni
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
             return QByteArray();
         }
-        if (!compileProperty(qmlUnit, binding, instr, data))
+        if (!compileProperty(qmlUnit, objectIndex, binding, instr, data))
             return QByteArray();
     }
 

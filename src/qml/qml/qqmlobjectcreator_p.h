@@ -67,7 +67,7 @@ public:
 
     QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
 
-    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() { return &sharedState->finalizeCallbacks; }
 
     QList<QQmlError> errors;
 
@@ -80,9 +80,11 @@ private:
 
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
+                          QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache = true,
+                          const QBitArray &bindingsToSkip = QBitArray());
 
-    void setupBindings();
+    void setupBindings(const QBitArray &bindingsToSkip);
     bool setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
@@ -96,6 +98,7 @@ private:
         QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
         QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
         QQmlComponentAttached *componentAttached;
+        QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
     };
 
     QQmlEngine *engine;

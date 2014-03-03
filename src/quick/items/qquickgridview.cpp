@@ -65,8 +65,8 @@ QT_BEGIN_NAMESPACE
 class FxGridItemSG : public FxViewItem
 {
 public:
-    FxGridItemSG(QQuickItem *i, QQuickGridView *v, bool own) : FxViewItem(i, v, own), view(v) {
-        attached = static_cast<QQuickGridViewAttached*>(qmlAttachedPropertiesObject<QQuickGridView>(item));
+    FxGridItemSG(QQuickItem *i, QQuickGridView *v, bool own) : FxViewItem(i, v, own, static_cast<QQuickItemViewAttached*>(qmlAttachedPropertiesObject<QQuickGridView>(i))), view(v)
+    {
     }
 
     qreal position() const {
@@ -1283,7 +1283,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     \qmlattachedproperty GridView QtQuick::GridView::view
     This attached property holds the view that manages this delegate instance.
 
-    It is attached to each instance of the delegate.
+    It is attached to each instance of the delegate and also to the header, the footer
+    and the highlight delegates.
 
     \snippet qml/gridview/gridview.qml isCurrentItem
 */
@@ -2127,6 +2128,9 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 void QQuickGridView::initItem(int index, QObject *obj)
 {
     QQuickItemView::initItem(index, obj);
+
+    // setting the view from the FxViewItem wrapper is too late if the delegate
+    // needs access to the view in Component.onCompleted
     QQuickItem *item = qmlobject_cast<QQuickItem*>(obj);
     if (item) {
         QQuickGridViewAttached *attached = static_cast<QQuickGridViewAttached *>(

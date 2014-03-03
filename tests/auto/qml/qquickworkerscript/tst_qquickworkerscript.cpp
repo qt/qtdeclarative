@@ -68,6 +68,9 @@ private slots:
     void script_included();
     void scriptError_onLoad();
     void scriptError_onCall();
+    void script_function();
+    void script_var();
+    void script_global();
     void stressDispose();
 
 private:
@@ -235,7 +238,6 @@ void tst_QQuickWorkerScript::script_included()
     waitForEchoMessage(worker);
 
     const QMetaObject *mo = worker->metaObject();
-    QEXPECT_FAIL("", "It is not possible to write to the global object right now", Continue);
     QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).toString(), value + " World");
 
     qApp->processEvents();
@@ -281,6 +283,85 @@ void tst_QQuickWorkerScript::scriptError_onCall()
     qInstallMessageHandler(previousMsgHandler);
     qApp->processEvents();
     delete worker;
+}
+
+void tst_QQuickWorkerScript::script_function()
+{
+    QQmlComponent component(&m_engine, testFileUrl("worker_function.qml"));
+    QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+    QVERIFY(worker != 0);
+
+    QString value("Hello");
+
+    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker);
+
+    const QMetaObject *mo = worker->metaObject();
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).toString(), value + " World");
+
+    qApp->processEvents();
+    delete worker;
+}
+
+void tst_QQuickWorkerScript::script_var()
+{
+    QQmlComponent component(&m_engine, testFileUrl("worker_var.qml"));
+    QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+    QVERIFY(worker != 0);
+
+    QString value("Hello");
+
+    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker);
+
+    const QMetaObject *mo = worker->metaObject();
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).toString(), value + " World");
+
+    qApp->processEvents();
+    delete worker;
+}
+
+void tst_QQuickWorkerScript::script_global()
+{
+    {
+        QQmlComponent component(&m_engine, testFileUrl("worker_global.qml"));
+        QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+        QVERIFY(worker != 0);
+
+        QString value("Hello");
+
+        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
+
+        QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
+
+        QTRY_COMPARE(qquickworkerscript_lastWarning,
+                testFileUrl("script_global.js").toString() + QLatin1String(":2: Invalid write to global property \"world\""));
+
+        qInstallMessageHandler(previousMsgHandler);
+
+        qApp->processEvents();
+        delete worker;
+    }
+
+    {
+        QQmlComponent component(&m_engine, testFileUrl("worker_global2.qml"));
+        QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+        QVERIFY(worker != 0);
+
+        QString value("Hello");
+
+        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
+
+        QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
+
+        QTRY_COMPARE(qquickworkerscript_lastWarning,
+                testFileUrl("script_global.js").toString() + QLatin1String(":2: Invalid write to global property \"world\""));
+
+        qInstallMessageHandler(previousMsgHandler);
+
+        qApp->processEvents();
+        delete worker;
+    }
 }
 
 // Rapidly create and destroy worker scripts to test resources are being disposed

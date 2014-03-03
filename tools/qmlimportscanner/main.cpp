@@ -200,15 +200,15 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
 }
 
 // Scan a single qml file for import statements
-QVariantList findQmlImportsInFile(const QString &qmlFilePath)
+QVariantList findQmlImportsInQmlFile(const QString &filePath)
 {
-    QFile qmlFile(qmlFilePath);
-    if (!qmlFile.open(QIODevice::ReadOnly)) {
-           std::cerr << "Cannot open input file " << QDir::toNativeSeparators(qmlFile.fileName()).toStdString()
-                     << ':' << qmlFile.errorString().toStdString() << std::endl;
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+           std::cerr << "Cannot open input file " << QDir::toNativeSeparators(file.fileName()).toStdString()
+                     << ':' << file.errorString().toStdString() << std::endl;
            return QVariantList();
     }
-    QString code = QString::fromUtf8(qmlFile.readAll());
+    QString code = QString::fromUtf8(file.readAll());
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
@@ -218,14 +218,72 @@ QVariantList findQmlImportsInFile(const QString &qmlFilePath)
     if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
         // Extract errors from the parser
         foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
-            std::cerr << QDir::toNativeSeparators(qmlFile.fileName()).toStdString() << ':'
+            std::cerr << QDir::toNativeSeparators(file.fileName()).toStdString() << ':'
                       << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }
+    return findImportsInAst(parser.ast()->headers, code, file.fileName());
+}
 
-    return findPathsForModuleImports(
-                findImportsInAst(parser.ast()->headers, code, QFileInfo(qmlFilePath).absolutePath()));
+// Scan a single javascrupt file for import statements
+QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+           std::cerr << "Cannot open input file " << QDir::toNativeSeparators(file.fileName()).toStdString()
+                     << ':' << file.errorString().toStdString() << std::endl;
+           return QVariantList();
+    }
+
+    QVariantList imports;
+
+    // look for ".import Foo.Bar 2.0 as FooBar" lines
+    do {
+        QByteArray rawLine = file.readLine();
+        QByteArray line = rawLine.simplified();
+        if (line.simplified().startsWith(".import")) {
+            QList<QByteArray> parts = line.split(' ');
+
+            if (parts.count() < 2)
+                continue;
+
+            QVariantMap import;
+            QByteArray name = parts.at(1);
+            QByteArray version = parts.at(2);
+
+            // handle import cases: .js file, diriectory (check for precense of "/"),
+            // and module (the most common case)
+            if (name.contains(".js")) {
+                import[QStringLiteral("type")] = QStringLiteral("javascript");
+                import[QStringLiteral("path")] = name;
+            } else if (name.contains("/")) {
+                import[QStringLiteral("type")] = QStringLiteral("directory");
+                import[QStringLiteral("path")] = name;
+            } else {
+                import[QStringLiteral("type")] = QStringLiteral("module");
+                import[QStringLiteral("name")] = name;
+                import[QStringLiteral("version")] = version;
+            }
+
+            imports.append(import);
+        }
+    }
+    while (file.canReadLine());
+
+    return imports;
+}
+
+// Scan a single qml or js file for import statements
+QVariantList findQmlImportsInFile(const QString &filePath)
+{
+    QVariantList imports;
+    if (filePath.endsWith(QStringLiteral(".qml")))
+         imports = findQmlImportsInQmlFile(filePath);
+    else if (filePath.endsWith(QStringLiteral(".js")))
+        imports = findQmlImportsInJavascriptFile(filePath);
+
+    return findPathsForModuleImports(imports);
 }
 
 // Merge two lists of imports, discard duplicates.
@@ -250,8 +308,6 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
     while (iterator.hasNext()) {
         iterator.next();
         QString path = iterator.filePath();
-        if (!path.endsWith(QStringLiteral(".qml")))
-            continue;
 
         // skip obvious build output directories
         if (path.contains(QStringLiteral("Debug-iphoneos")) || path.contains(QStringLiteral("Release-iphoneos")) ||
@@ -284,7 +340,7 @@ QSet<QString> importModulePaths(QVariantList imports) {
 // Find Qml Imports Recursively from a root set of qml files.
 // The directories in qmlDirs are searched recursively.
 // The files in qmlFiles parsed directly.
-QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QStringList &qmlFiles)
+QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QStringList &scanFiles)
 {
     QVariantList ret;
 
@@ -295,8 +351,8 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QString
     }
 
     // scan app qml files for imports
-    foreach (const QString &qmlFile, qmlFiles) {
-        QVariantList imports = findQmlImportsInFile(qmlFile);
+    foreach (const QString &file, scanFiles) {
+        QVariantList imports = findQmlImportsInFile(file);
         ret = mergeImports(ret, imports);
     }
 
@@ -332,7 +388,7 @@ int main(int argc, char *argv[])
     }
 
     QStringList qmlRootPaths;
-    QStringList qmlFiles;
+    QStringList scanFiles;
     QStringList qmlImportPaths;
 
     int i = 1;
@@ -349,7 +405,11 @@ int main(int argc, char *argv[])
         } else if (arg == QLatin1String("-qmlFiles")) {
             if (i >= args.count())
                 std::cerr << "-qmlFiles requires an argument\n";
-            argReceiver = &qmlFiles;
+            argReceiver = &scanFiles;
+        } else if (arg == QLatin1String("-jsFiles")) {
+            if (i >= args.count())
+                std::cerr << "-jsFiles requires an argument\n";
+            argReceiver = &scanFiles;
         } else if (arg == QLatin1String("-importPath")) {
             if (i >= args.count())
                 std::cerr << "-importPath requires an argument\n";
@@ -371,7 +431,7 @@ int main(int argc, char *argv[])
     g_qmlImportPaths = qmlImportPaths;
 
     // Find the imports!
-    QVariantList imports = findQmlImportsRecursively(qmlRootPaths, qmlFiles);
+    QVariantList imports = findQmlImportsRecursively(qmlRootPaths, scanFiles);
 
     // Convert to JSON
     QByteArray json = QJsonDocument(QJsonArray::fromVariantList(imports)).toJson();

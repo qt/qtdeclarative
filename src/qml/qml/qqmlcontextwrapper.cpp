@@ -63,7 +63,7 @@ DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
 QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
     : Object(QV8Engine::getV4(engine)),
-      v8(engine), readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
+      readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
       context(context), scopeObject(scopeObject), idObjectsWrapper(0)
 {
     setVTable(staticVTable());
@@ -181,7 +181,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
     //     context = context->parent
     // }
 
-    QV8Engine *engine = resource->v8;
+    QV8Engine *engine = v4->v8Engine;
 
     QObject *scopeObject = resource->getScopeObject();
 
@@ -288,6 +288,13 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         return;
     }
 
+    PropertyAttributes attrs;
+    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
+    if (pd) {
+        wrapper->putValue(pd, attrs, value);
+        return;
+    }
+
     if (wrapper->isNullWrapper) {
         if (wrapper && wrapper->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
@@ -298,13 +305,6 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         }
 
         Object::put(m, name, value);
-        return;
-    }
-
-    PropertyAttributes attrs;
-    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
-    if (pd) {
-        wrapper->putValue(pd, attrs, value);
         return;
     }
 
@@ -413,7 +413,7 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
     return idObjectsWrapper->asReturnedValue();
 }
 
-ReturnedValue QmlContextWrapper::qmlSingletonWrapper(const StringRef &name)
+ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, const StringRef &name)
 {
     if (!context->imports)
         return Encode::undefined();
@@ -423,6 +423,7 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(const StringRef &name)
     Q_ASSERT(r.isValid());
     Q_ASSERT(r.type);
     Q_ASSERT(r.type->isSingleton());
+    Q_ASSERT(v8);
 
     QQmlEngine *e = v8->engine();
     QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();

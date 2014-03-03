@@ -343,8 +343,8 @@ void tst_QQuickPinchArea::retouch()
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root != 0);
 
-    QSignalSpy startedSpy(pinchArea, SIGNAL(pinchStarted(QQuickPinchEvent *)));
-    QSignalSpy finishedSpy(pinchArea, SIGNAL(pinchFinished(QQuickPinchEvent *)));
+    QSignalSpy startedSpy(pinchArea, SIGNAL(pinchStarted(QQuickPinchEvent*)));
+    QSignalSpy finishedSpy(pinchArea, SIGNAL(pinchFinished(QQuickPinchEvent*)));
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");

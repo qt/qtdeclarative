@@ -640,6 +640,8 @@ void QQuickCanvasItem::updatePolish()
     QQuickItem::updatePolish();
 
     Q_D(QQuickCanvasItem);
+    if (!isVisible() && !(d->extra.isAllocated() && d->extra->effectRefCount>0))
+        return;
 
     if (d->context && d->renderStrategy != QQuickCanvasItem::Cooperative)
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, antialiasing());

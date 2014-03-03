@@ -85,7 +85,7 @@ public:
     void invalidate();
 
     int textureId() const;
-    bool bind(QSGTexture::Filtering filteing);
+    void bind(QSGTexture::Filtering filtering);
 
     void upload(Texture *texture);
     void uploadBgra(Texture *texture);
@@ -103,8 +103,6 @@ private:
 
     GLuint m_internalFormat;
     GLuint m_externalFormat;
-
-    QSGTexture::Filtering m_filtering;
 
     uint m_allocated : 1;
     uint m_use_bgra_fallback: 1;

@@ -203,7 +203,7 @@ void tst_QQmlPropertyMap::clear()
 void tst_QQmlPropertyMap::changed()
 {
     QQmlPropertyMap map;
-    QSignalSpy spy(&map, SIGNAL(valueChanged(const QString&, const QVariant&)));
+    QSignalSpy spy(&map, SIGNAL(valueChanged(QString,QVariant)));
     map.insert(QLatin1String("key1"),100);
     map.insert(QLatin1String("key2"),200);
     QCOMPARE(spy.count(), 0);

@@ -142,7 +142,7 @@ inline Primitive Primitive::fromUInt32(uint i)
 
 inline double Value::toNumber() const
 {
-    if (integerCompatible())
+    if (isInteger())
         return int_32;
     if (isDouble())
         return doubleValue();
@@ -151,13 +151,9 @@ inline double Value::toNumber() const
 
 inline int Value::toInt32() const
 {
-    if (integerCompatible())
+    if (isInteger())
         return int_32;
-    double d;
-    if (isDouble())
-        d = doubleValue();
-    else
-        d = toNumberImpl();
+    double d = isNumber() ? doubleValue() : toNumberImpl();
 
     const double D32 = 4294967296.0;
     const double D31 = D32 / 2.0;
@@ -215,9 +211,15 @@ inline uint Value::asArrayIndex() const
 inline uint Value::asArrayLength(bool *ok) const
 {
     *ok = true;
-    if (integerCompatible() && int_32 >= 0)
-        return (uint)int_32;
-    if (isDouble()) {
+    if (isInteger()) {
+        if (int_32 >= 0) {
+            return (uint)int_32;
+        } else {
+            *ok = false;
+            return UINT_MAX;
+        }
+    }
+    if (isNumber()) {
         double d = doubleValue();
         uint idx = (uint)d;
         if (idx != d) {

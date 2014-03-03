@@ -183,14 +183,14 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function)
+FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
 {
     if (function->needsActivation() ||
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
         return new (scope->engine->memoryManager) ScriptFunction(scope, function);
-    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function);
+    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
 }
 
 ReturnedValue FunctionObject::protoProperty()
@@ -274,13 +274,13 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     if (!fe)
         return v4->currentContext()->throwSyntaxError(QLatin1String("Parse error"));
 
-    QQmlJS::V4IR::Module module(v4->debugger != 0);
+    IR::Module module(v4->debugger != 0);
 
     QQmlJS::RuntimeCodegen cg(v4->currentContext(), f->strictMode);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
@@ -482,8 +482,8 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
-SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name, true)
+SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+    : FunctionObject(scope, function->name, createProto)
 {
     setVTable(staticVTable());
 

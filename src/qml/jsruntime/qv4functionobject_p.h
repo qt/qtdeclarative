@@ -137,7 +137,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return v.asFunctionObject();
     }
 
-    static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
+    static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
     ReturnedValue protoProperty();
     InternalClass *internalClassForConstructor();
@@ -221,7 +221,7 @@ struct ScriptFunction: FunctionObject {
 
 struct SimpleScriptFunction: FunctionObject {
     V4_OBJECT
-    SimpleScriptFunction(ExecutionContext *scope, Function *function);
+    SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

@@ -101,7 +101,7 @@ QQmlCustomParserNodePrivate::fromObject(QQmlScript::Object *root)
         rootNode.d->name = root->typeReference->name;
     rootNode.d->location = root->location.start;
 
-    for (Property *p = root->properties.first(); p; p = root->properties.next(p)) {
+    for (QQmlScript::Property *p = root->properties.first(); p; p = root->properties.next(p)) {
         rootNode.d->properties << fromProperty(p);
     }
 
@@ -277,29 +277,15 @@ void QQmlCustomParser::error(const QQmlCustomParserNode& node, const QString& de
 }
 
 /*!
-    Reports an error in parsing \a binding, with the given \a description.
+    Reports an error with the given \a description.
 
-    An error is generated referring to the position of \a node in the source file.
+    An error is generated referring to the \a location in the source file.
 */
-void QQmlCustomParser::error(const QV4::CompiledData::Binding *binding, const QString &description)
+void QQmlCustomParser::error(const CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setLine(binding->location.line);
-    error.setColumn(binding->location.column);
-    error.setDescription(description);
-    exceptions << error;
-}
-
-/*!
-    Reports an error in parsing \a object, with the given \a description.
-
-    An error is generated referring to the position of \a object in the source file.
-*/
-void QQmlCustomParser::error(const QV4::CompiledData::Object *object, const QString &description)
-{
-    QQmlError error;
-    error.setLine(object->location.line);
-    error.setColumn(object->location.column);
+    error.setLine(location.line);
+    error.setColumn(location.column);
     error.setDescription(description);
     exceptions << error;
 }
@@ -347,9 +333,9 @@ QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledD
     return compiler->bindingIdentifier(binding, this);
 }
 
-AST::Node *QQmlCustomParser::astForBinding(int scriptIndex) const
+QQmlJS::AST::Node *QQmlCustomParser::astForBinding(int objectIndex, int scriptIndex) const
 {
-    return compiler->astForBinding(scriptIndex);
+    return compiler->astForBinding(objectIndex, scriptIndex);
 }
 
 struct StaticQtMetaObject : public QObject

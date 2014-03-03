@@ -204,7 +204,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
 void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 {
-    Q_ASSERT(!s_renderLoopInstance);
+    Q_ASSERT(s_renderLoopInstance->isNull());
     s_renderLoopInstance->reset(instance);
 }
 
@@ -241,6 +241,7 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     if (gl)
         gl->makeCurrent(window);
+    cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
 
     if (m_windows.size() == 0) {
@@ -268,7 +269,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    if (!QQuickWindowPrivate::get(window)->isRenderable() || !m_windows.contains(window))
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable() || !m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
@@ -281,14 +283,24 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (QSGContext::sharedOpenGLContext())
             gl->setShareContext(QSGContext::sharedOpenGLContext());
         if (!gl->create()) {
-            qWarning("QtQuick: failed to create OpenGL context");
             delete gl;
             gl = 0;
+            QString formatStr;
+            QDebug(&formatStr) << window->requestedFormat();
+            QString contextType = QLatin1String(QOpenGLFunctions::isES() ? "EGL" : "OpenGL");
+            const char *msg = QT_TRANSLATE_NOOP("QSGGuiThreadRenderLoop", "Failed to create %1 context for format %2");
+            QString translatedMsg = tr(msg).arg(contextType).arg(formatStr);
+            QString nonTranslatedMsg = QString(QLatin1String(msg)).arg(contextType).arg(formatStr);
+            bool signalEmitted = QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
+                                                                             translatedMsg);
+            if (!signalEmitted)
+                qFatal("%s", qPrintable(nonTranslatedMsg));
         } else {
+            cd->fireOpenGLContextCreated(gl);
             current = gl->makeCurrent(window);
         }
         if (current)
-            QQuickWindowPrivate::get(window)->context->initialize(gl);
+            cd->context->initialize(gl);
     } else {
         current = gl->makeCurrent(window);
     }
@@ -299,8 +311,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!current)
         return;
 
-    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
+
+    emit window->afterAnimating();
 
     qint64 renderTime = 0, syncTime = 0;
     QElapsedTimer renderTimer;

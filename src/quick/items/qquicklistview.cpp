@@ -247,16 +247,14 @@ void QQuickViewSection::setLabelPositioning(int l)
 class FxListItemSG : public FxViewItem
 {
 public:
-    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, v, own), view(v) {
-        attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
+    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, v, own, static_cast<QQuickItemViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(i))), view(v)
+    {
     }
 
     inline QQuickItem *section() const {
         return attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
     }
     void setSection(QQuickItem *s) {
-        if (!attached)
-            attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
         static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
     }
 
@@ -972,6 +970,9 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
                 QQml_setParent_noEvent(sectionItem, contentItem);
                 sectionItem->setParentItem(contentItem);
             }
+            // sections are not controlled by FxListItemSG, so apply attached properties here
+            QQuickItemViewAttached *attached = static_cast<QQuickItemViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(sectionItem));
+            attached->setView(q);
         } else {
             delete context;
         }
@@ -1787,7 +1788,8 @@ QQuickListView::~QQuickListView()
     \qmlattachedproperty ListView QtQuick::ListView::view
     This attached property holds the view that manages this delegate instance.
 
-    It is attached to each instance of the delegate.
+    It is attached to each instance of the delegate and also to the header, the footer,
+    the section and the highlight delegates.
 */
 
 /*!
@@ -2855,6 +2857,9 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 void QQuickListView::initItem(int index, QObject *object)
 {
     QQuickItemView::initItem(index, object);
+
+    // setting the view from the FxViewItem wrapper is too late if the delegate
+    // needs access to the view in Component.onCompleted
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (item) {
         QQuickListViewAttached *attached = static_cast<QQuickListViewAttached *>(

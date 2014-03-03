@@ -119,7 +119,7 @@ struct QQmlCustomParserCompilerBackend
     virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&, QQmlCustomParser *) { return QQmlBinding::Invalid; }
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *, QQmlCustomParser *) { return QQmlBinding::Invalid; }
 
-    virtual QQmlJS::AST::Node *astForBinding(int) const { return 0; }
+    virtual QQmlJS::AST::Node *astForBinding(int, int) const { return 0; }
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlCustomParser
@@ -140,7 +140,7 @@ public:
     Flags flags() const { return m_flags; }
 
     virtual QByteArray compile(const QList<QQmlCustomParserProperty> &)=0;
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
     virtual void setCustomData(QObject *, const QByteArray &)=0;
 
     QList<QQmlError> errors() const { return exceptions; }
@@ -149,8 +149,11 @@ protected:
     void error(const QString& description);
     void error(const QQmlCustomParserProperty&, const QString& description);
     void error(const QQmlCustomParserNode&, const QString& description);
-    void error(const QV4::CompiledData::Binding *binding, const QString& description);
-    void error(const QV4::CompiledData::Object *object, const QString& description);
+    void error(const QV4::CompiledData::Binding *binding, const QString& description)
+    { error(binding->location, description); }
+    void error(const QV4::CompiledData::Object *object, const QString& description)
+    { error(object->location, description); }
+    void error(const QV4::CompiledData::Location &location, const QString& description);
 
     int evaluateEnum(const QByteArray&, bool *ok) const;
 
@@ -159,7 +162,7 @@ protected:
     QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&);
     QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding);
 
-    QQmlJS::AST::Node *astForBinding(int scriptIndex) const;
+    QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
 
 private:
     QList<QQmlError> exceptions;

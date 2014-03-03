@@ -775,7 +775,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
                 QMetaMethod method = QQmlMetaType::defaultMethod(assign);
                 if (!method.isValid())
-                    VME_EXCEPTION(tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())), instr.line);
+                    VME_EXCEPTION_WITH_COLUMN(tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())), instr.line, instr.column);
 
                 if (!QMetaObject::checkConnectArgs(prop.method(), method)) {
                     VME_EXCEPTION(tr("Cannot connect mismatched signal/slot %1 %vs. %2")
@@ -800,7 +800,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.runtimeFunctionIndex];
 
-            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false);
 
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
@@ -862,7 +862,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.functionIndex];
 
-            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false);
 
             QQmlBinding *bind = new QQmlBinding(tmpValue, context, CTXT, COMP->name, instr.line, instr.column);
             bindValues.push(bind);

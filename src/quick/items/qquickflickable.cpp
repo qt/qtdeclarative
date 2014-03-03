@@ -1262,6 +1262,8 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         return;
     }
 
+    event->setAccepted(false);
+
     int yDelta = event->angleDelta().y();
     int xDelta = event->angleDelta().x();
     if (yflick() && yDelta != 0) {

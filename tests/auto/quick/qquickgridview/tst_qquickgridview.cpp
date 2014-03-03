@@ -136,6 +136,7 @@ private slots:
     void onAdd_data();
     void onRemove();
     void onRemove_data();
+    void attachedProperties_QTBUG_32836();
     void columnCount();
     void margins();
     void creationContext();
@@ -4039,6 +4040,36 @@ void tst_QQuickGridView::onRemove_data()
     QTest::newRow("ten items, remove 1-8") << 10 << 0 << 8;
     QTest::newRow("ten items, remove 2-7") << 10 << 2 << 5;
     QTest::newRow("ten items, remove 4-10") << 10 << 4 << 6;
+}
+
+void tst_QQuickGridView::attachedProperties_QTBUG_32836()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("attachedProperties.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(window->rootObject());
+    QVERIFY(gridview != 0);
+
+    QQuickItem *header = gridview->headerItem();
+    QVERIFY(header);
+    QCOMPARE(header->width(), gridview->width());
+
+    QQuickItem *footer = gridview->footerItem();
+    QVERIFY(footer);
+    QCOMPARE(footer->width(), gridview->width());
+
+    QQuickItem *highlight = gridview->highlightItem();
+    QVERIFY(highlight);
+    QCOMPARE(highlight->width(), gridview->width());
+
+    QQuickItem *currentItem = gridview->currentItem();
+    QVERIFY(currentItem);
+    QCOMPARE(currentItem->width(), gridview->width());
+
+    delete window;
 }
 
 void tst_QQuickGridView::columnCount()

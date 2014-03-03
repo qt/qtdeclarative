@@ -58,8 +58,8 @@
 #  define TRACE(n, str, ...)
 #endif // DO_TRACE_INSTR
 
-using namespace QQmlJS;
-using namespace QQmlJS::Moth;
+using namespace QV4;
+using namespace QV4::Moth;
 
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
@@ -473,14 +473,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         __qmljs_builtin_declare_var(context, instr.isDeletable, runtimeStrings[instr.varName]);
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
-    MOTH_BEGIN_INSTR(CallBuiltinDefineGetterSetter)
-        __qmljs_builtin_define_getter_setter(context, VALUEPTR(instr.object), runtimeStrings[instr.name], VALUEPTR(instr.getter), VALUEPTR(instr.setter));
-    MOTH_END_INSTR(CallBuiltinDefineGetterSetter)
-
-    MOTH_BEGIN_INSTR(CallBuiltinDefineProperty)
-        __qmljs_builtin_define_property(context, VALUEPTR(instr.object), runtimeStrings[instr.name], VALUEPTR(instr.value));
-    MOTH_END_INSTR(CallBuiltinDefineProperty)
-
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
         QV4::Value *args = stack + instr.args;
@@ -489,7 +481,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
         QV4::Value *args = stack + instr.args;
-    STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId));
+    STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)

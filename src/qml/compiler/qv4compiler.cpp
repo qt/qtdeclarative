@@ -45,7 +45,7 @@
 #include <qv4engine_p.h>
 #include <private/qqmlpropertycache_p.h>
 
-QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module, int headerSize)
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::IR::Module *module, int headerSize)
     : irModule(module)
     , stringDataSize(0)
     , jsClassDataSize(0)
@@ -120,17 +120,17 @@ uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(const QString &n
     return lookups.size() - 1;
 }
 
-int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::V4IR::RegExp *regexp)
+int QV4::Compiler::JSUnitGenerator::registerRegExp(QV4::IR::RegExp *regexp)
 {
     CompiledData::RegExp re;
     re.stringIndex = registerString(*regexp->value);
 
     re.flags = 0;
-    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_Global)
+    if (regexp->flags & QV4::IR::RegExp::RegExp_Global)
         re.flags |= CompiledData::RegExp::RegExp_Global;
-    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_IgnoreCase)
+    if (regexp->flags & QV4::IR::RegExp::RegExp_IgnoreCase)
         re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
-    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
+    if (regexp->flags & QV4::IR::RegExp::RegExp_Multiline)
         re.flags |= CompiledData::RegExp::RegExp_Multiline;
 
     regexps.append(re);
@@ -146,22 +146,22 @@ int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
     return constants.size() - 1;
 }
 
-void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings)
+void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QV4::IR::Function *function, const QVector<uint> &mappings)
 {
     lineNumberMappingsPerFunction.insert(function, mappings);
 }
 
-int QV4::Compiler::JSUnitGenerator::registerJSClass(QQmlJS::V4IR::ExprList *args)
+int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *args)
 {
     // ### re-use existing class definitions.
 
     QList<CompiledData::JSClassMember> members;
 
-    QQmlJS::V4IR::ExprList *it = args;
-    while (it) {
+    IR::ExprList *it = args;
+    for (int i = 0; i < count; ++i, it = it->next) {
         CompiledData::JSClassMember member;
 
-        QQmlJS::V4IR::Name *name = it->expr->asName();
+        QV4::IR::Name *name = it->expr->asName();
         it = it->next;
 
         const bool isData = it->expr->asConst()->value;
@@ -173,8 +173,6 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(QQmlJS::V4IR::ExprList *args
 
         if (!isData)
             it = it->next;
-
-        it = it->next;
     }
 
     jsClasses << members;
@@ -185,7 +183,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(QQmlJS::V4IR::ExprList *args
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *totalUnitSize)
 {
     registerString(irModule->fileName);
-    foreach (QQmlJS::V4IR::Function *f, irModule->functions) {
+    foreach (QV4::IR::Function *f, irModule->functions) {
         registerString(*f->name);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
@@ -198,11 +196,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
-        QQmlJS::V4IR::Function *f = irModule->functions.at(i);
+        QV4::IR::Function *f = irModule->functions.at(i);
         functionOffsets.insert(f, functionDataSize + unitSize + stringDataSize);
 
         int lineNumberMappingCount = 0;
-        QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(f);
+        QHash<QV4::IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(f);
         if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd())
             lineNumberMappingCount = lineNumberMapping->count() / 2;
 
@@ -263,7 +261,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
 
     char *f = data + unitSize + stringDataSize;
     for (int i = 0; i < irModule->functions.size(); ++i) {
-        QQmlJS::V4IR::Function *function = irModule->functions.at(i);
+        QV4::IR::Function *function = irModule->functions.at(i);
         if (function == irModule->rootFunction)
             unit->indexOfRootFunction = i;
 
@@ -302,7 +300,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
     return unit;
 }
 
-int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction)
+int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::Function *irFunction)
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
@@ -330,7 +328,7 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
     currentOffset += function->nLocals * sizeof(quint32);
 
     function->nLineNumberMappingEntries = 0;
-    QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
+    QHash<QV4::IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
     if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd()) {
         function->nLineNumberMappingEntries = lineNumberMapping->count() / 2;
     }
@@ -393,14 +391,14 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
         *writtenDeps++ = id;
 
     writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
-    for (QQmlJS::V4IR::PropertyDependencyMap::ConstIterator property = irFunction->contextObjectPropertyDependencies.constBegin(), end = irFunction->contextObjectPropertyDependencies.constEnd();
+    for (QV4::IR::PropertyDependencyMap::ConstIterator property = irFunction->contextObjectPropertyDependencies.constBegin(), end = irFunction->contextObjectPropertyDependencies.constEnd();
          property != end; ++property) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 
     writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
-    for (QQmlJS::V4IR::PropertyDependencyMap::ConstIterator property = irFunction->scopeObjectPropertyDependencies.constBegin(), end = irFunction->scopeObjectPropertyDependencies.constEnd();
+    for (QV4::IR::PropertyDependencyMap::ConstIterator property = irFunction->scopeObjectPropertyDependencies.constBegin(), end = irFunction->scopeObjectPropertyDependencies.constEnd();
          property != end; ++property) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index

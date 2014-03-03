@@ -58,8 +58,6 @@
 
 #include "qquickanimation_p_p.h"
 
-#include "private/qparallelanimationgroupjob_p.h"
-
 #include <private/qobject_p.h>
 #include <QBasicTimer>
 
@@ -129,7 +127,7 @@ private:
     qreal s;  // Total s
 
     int lastTime;
-    bool useDelta;
+    bool skipUpdate;
 
     bool recalc();
     void delayedStop();

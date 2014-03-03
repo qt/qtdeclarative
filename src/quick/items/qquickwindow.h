@@ -79,6 +79,11 @@ public:
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 
+    enum SceneGraphError {
+        ContextNotAvailable = 1
+    };
+    Q_ENUMS(SceneGraphError)
+
     QQuickWindow(QWindow *parent = 0);
 
     virtual ~QQuickWindow();
@@ -133,14 +138,21 @@ public:
 
 Q_SIGNALS:
     void frameSwapped();
+    Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
     void beforeSynchronizing();
+    Q_REVISION(2) void afterSynchronizing();
     void beforeRendering();
     void afterRendering();
+    Q_REVISION(2) void afterAnimating();
+    Q_REVISION(2) void sceneGraphAboutToStop();
+
     Q_REVISION(1) void closing(QQuickCloseEvent *close);
     void colorChanged(const QColor &);
     Q_REVISION(1) void activeFocusItemChanged();
+    Q_REVISION(2) void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+
 
 public Q_SLOTS:
     void update();

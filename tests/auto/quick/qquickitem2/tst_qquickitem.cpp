@@ -2059,7 +2059,7 @@ void tst_QQuickItem::propertyChanges()
     QVERIFY(item);
     QVERIFY(parentItem);
 
-    QSignalSpy parentSpy(item, SIGNAL(parentChanged(QQuickItem *)));
+    QSignalSpy parentSpy(item, SIGNAL(parentChanged(QQuickItem*)));
     QSignalSpy widthSpy(item, SIGNAL(widthChanged()));
     QSignalSpy heightSpy(item, SIGNAL(heightChanged()));
     QSignalSpy baselineOffsetSpy(item, SIGNAL(baselineOffsetChanged(qreal)));

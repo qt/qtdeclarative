@@ -209,8 +209,6 @@ public:
     void restartAnimationTimer();
     void updateAnimationsTime(qint64 timeStep);
 
-    int currentDelta() { return lastDelta; }
-
     //useful for profiling/debugging
     int runningAnimationCount() { return animations.count(); }
 
@@ -220,7 +218,6 @@ private Q_SLOTS:
 
 private:
     qint64 lastTick;
-    int lastDelta;
     int currentAnimationIdx;
     bool insideTick;
     bool startAnimationPending;

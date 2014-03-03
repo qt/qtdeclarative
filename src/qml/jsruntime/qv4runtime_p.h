@@ -141,10 +141,8 @@ QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(QV4::ExecutionContext *c
 QV4::ExecutionContext *__qmljs_builtin_pop_scope(QV4::ExecutionContext *ctx);
 ReturnedValue __qmljs_builtin_unwind_exception(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, const QV4::StringRef name);
-void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, QV4::ValueRef val);
 QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, Value *values, uint length);
-void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, const QV4::ValueRef getter, const QV4::ValueRef setter);
-QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId);
+QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags);
 QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx);
 void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx);
 
@@ -350,11 +348,10 @@ inline QV4::ReturnedValue __qmljs_add(QV4::ExecutionContext *ctx, const QV4::Val
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
+    if (left->isInteger() && right->isInteger())
         return add_int32(left->integerValue(), right->integerValue()).asReturnedValue();
-
-    if (QV4::Value::bothDouble(*left, *right))
-        return QV4::Primitive::fromDouble(left->doubleValue() + right->doubleValue()).asReturnedValue();
+    if (left->isNumber() && right->isNumber())
+        return QV4::Primitive::fromDouble(left->asDouble() + right->asDouble()).asReturnedValue();
 
     return __qmljs_add_helper(ctx, left, right);
 }
@@ -363,11 +360,12 @@ inline QV4::ReturnedValue __qmljs_sub(const QV4::ValueRef left, const QV4::Value
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
+    if (left->isInteger() && right->isInteger())
         return sub_int32(left->integerValue(), right->integerValue()).asReturnedValue();
 
-    double lval = __qmljs_to_number(left);
-    double rval = __qmljs_to_number(right);
+    double lval = left->isNumber() ? left->asDouble() : left->toNumberImpl();
+    double rval = right->isNumber() ? right->asDouble() : right->toNumberImpl();
+
     return QV4::Primitive::fromDouble(lval - rval).asReturnedValue();
 }
 
@@ -375,11 +373,12 @@ inline QV4::ReturnedValue __qmljs_mul(const QV4::ValueRef left, const QV4::Value
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
+    if (left->isInteger() && right->isInteger())
         return mul_int32(left->integerValue(), right->integerValue()).asReturnedValue();
 
-    double lval = __qmljs_to_number(left);
-    double rval = __qmljs_to_number(right);
+    double lval = left->isNumber() ? left->asDouble() : left->toNumberImpl();
+    double rval = right->isNumber() ? right->asDouble() : right->toNumberImpl();
+
     return QV4::Primitive::fromDouble(lval * rval).asReturnedValue();
 }
 
@@ -387,8 +386,8 @@ inline QV4::ReturnedValue __qmljs_div(const QV4::ValueRef left, const QV4::Value
 {
     TRACE2(left, right);
 
-    double lval = __qmljs_to_number(left);
-    double rval = __qmljs_to_number(right);
+    double lval = left->toNumber();
+    double rval = right->toNumber();
     return QV4::Primitive::fromDouble(lval / rval).asReturnedValue();
 }
 
@@ -411,20 +410,14 @@ inline QV4::ReturnedValue __qmljs_shl(const QV4::ValueRef left, const QV4::Value
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right))
-        return Encode((int)(left->integerValue() << ((uint(right->integerValue()) & 0x1f))));
-
     int lval = left->toInt32();
-    unsigned rval = right->toUInt32() & 0x1f;
+    int rval = right->toInt32() & 0x1f;
     return Encode((int)(lval << rval));
 }
 
 inline QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
-
-    if (QV4::Value::integerCompatible(*left, *right))
-        return Encode((int)(left->integerValue() >> ((uint(right->integerValue()) & 0x1f))));
 
     int lval = left->toInt32();
     unsigned rval = right->toUInt32() & 0x1f;
@@ -435,14 +428,9 @@ inline QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::Valu
 {
     TRACE2(left, right);
 
-    uint res;
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        res = uint(left->integerValue()) >> (uint(right->integerValue()) & 0x1f);
-    } else {
-        unsigned lval = left->toUInt32();
-        unsigned rval = right->toUInt32() & 0x1f;
-        res = lval >> rval;
-    }
+    unsigned lval = left->toUInt32();
+    unsigned rval = right->toUInt32() & 0x1f;
+    uint res = lval >> rval;
 
     return Encode(res);
 }

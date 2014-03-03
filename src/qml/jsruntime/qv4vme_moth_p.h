@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
+namespace QV4 {
 namespace Moth {
 
 class VME
@@ -68,7 +68,7 @@ private:
 };
 
 } // namespace Moth
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

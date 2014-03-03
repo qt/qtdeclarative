@@ -49,14 +49,14 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace MASM {
+namespace QV4 {
+namespace JIT {
 
 class RegAllocInfo;
 
 class RegisterAllocator
 {
-    typedef V4IR::LifeTimeInterval LifeTimeInterval;
+    typedef IR::LifeTimeInterval LifeTimeInterval;
 
     QVector<int> _normalRegisters;
     QVector<int> _fpRegisters;
@@ -66,8 +66,8 @@ class RegisterAllocator
 
     QVector<LifeTimeInterval> _unhandled, _active, _inactive, _handled;
 
-    QHash<V4IR::Temp, int> _lastAssignedRegister;
-    QHash<V4IR::Temp, int> _assignedSpillSlots;
+    QHash<IR::Temp, int> _lastAssignedRegister;
+    QHash<IR::Temp, int> _assignedSpillSlots;
     QVector<int> _activeSpillSlots;
 
     Q_DISABLE_COPY(RegisterAllocator)
@@ -76,7 +76,7 @@ public:
     RegisterAllocator(const QVector<int> &normalRegisters, const QVector<int> &fpRegisters);
     ~RegisterAllocator();
 
-    void run(V4IR::Function *function, const V4IR::Optimizer &opt);
+    void run(IR::Function *function, const IR::Optimizer &opt);
 
 private:
     void prepareRanges();
@@ -87,17 +87,17 @@ private:
                              int lastUse) const;
     int nextIntersection(const LifeTimeInterval &current, const LifeTimeInterval &another,
                          const int position) const;
-    int nextUse(const V4IR::Temp &t, int startPosition) const;
+    int nextUse(const IR::Temp &t, int startPosition) const;
     void split(LifeTimeInterval &current, int beforePosition, bool skipOptionalRegisterUses =false);
     void splitInactiveAtEndOfLifetimeHole(int reg, bool isFPReg, int position);
-    void assignSpillSlot(const V4IR::Temp &t, int startPos, int endPos);
-    void resolve(V4IR::Function *function, const V4IR::Optimizer &opt);
+    void assignSpillSlot(const IR::Temp &t, int startPos, int endPos);
+    void resolve(IR::Function *function, const IR::Optimizer &opt);
 
     void dump() const;
 };
 
-} // end of namespace MASM
-} // end of namespace QQmlJS
+} // end of namespace JIT
+} // end of namespace QV4
 
 QT_END_NAMESPACE
 

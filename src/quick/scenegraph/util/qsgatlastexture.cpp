@@ -140,7 +140,6 @@ Atlas::Atlas(const QSize &size)
     : m_allocator(size)
     , m_texture_id(0)
     , m_size(size)
-    , m_filtering(QSGTexture::Linear)
     , m_allocated(false)
 {
 
@@ -315,9 +314,8 @@ void Atlas::uploadBgra(Texture *texture)
 
 }
 
-bool Atlas::bind(QSGTexture::Filtering filtering)
+void Atlas::bind(QSGTexture::Filtering filtering)
 {
-    bool forceUpdate = false;
     if (!m_allocated) {
         m_allocated = true;
 
@@ -362,13 +360,12 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
             glDeleteTextures(1, &m_texture_id);
             m_texture_id = 0;
         }
-        forceUpdate = true;
     } else {
         glBindTexture(GL_TEXTURE_2D, m_texture_id);
     }
 
     if (m_texture_id == 0)
-        return false;
+        return;
 
     // Upload all pending images..
     for (int i=0; i<m_pending_uploads.size(); ++i) {
@@ -403,16 +400,11 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
 #endif
     }
 
-    if (filtering != m_filtering) {
-        GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, f);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, f);
-        m_filtering = filtering;
-    }
+    GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, f);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, f);
 
     m_pending_uploads.clear();
-
-    return forceUpdate;
 }
 
 void Atlas::remove(Texture *t)

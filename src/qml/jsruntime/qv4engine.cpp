@@ -159,7 +159,7 @@ quintptr getStackLimit()
 }
 
 
-ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
+ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
     , memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
@@ -186,11 +186,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 #ifdef V4_ENABLE_JIT
         static const bool forceMoth = !qgetenv("QV4_FORCE_INTERPRETER").isEmpty();
         if (forceMoth)
-            factory = new QQmlJS::Moth::ISelFactory;
+            factory = new Moth::ISelFactory;
         else
-            factory = new QQmlJS::MASM::ISelFactory;
+            factory = new JIT::ISelFactory;
 #else // !V4_ENABLE_JIT
-        factory = new QQmlJS::Moth::ISelFactory;
+        factory = new Moth::ISelFactory;
 #endif // V4_ENABLE_JIT
     }
     iselFactory.reset(factory);
@@ -246,6 +246,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_index = newIdentifier(QStringLiteral("index"));
     id_input = newIdentifier(QStringLiteral("input"));
     id_toString = newIdentifier(QStringLiteral("toString"));
+    id_destroy = newIdentifier(QStringLiteral("destroy"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
     ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(InternalClass::create(this, ObjectPrototype::staticVTable(), 0));
@@ -428,7 +429,7 @@ void ExecutionEngine::enableDebugger()
 {
     Q_ASSERT(!debugger);
     debugger = new Debugging::Debugger(this);
-    iselFactory.reset(new QQmlJS::Moth::ISelFactory);
+    iselFactory.reset(new Moth::ISelFactory);
 }
 
 void ExecutionEngine::enableProfiler()
@@ -558,12 +559,12 @@ Returned<DateObject> *ExecutionEngine::newDateObject(const QDateTime &dt)
 
 Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    bool global = (flags & QQmlJS::V4IR::RegExp::RegExp_Global);
+    bool global = (flags & IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
     bool multiline = false;
-    if (flags & QQmlJS::V4IR::RegExp::RegExp_IgnoreCase)
+    if (flags & IR::RegExp::RegExp_IgnoreCase)
         ignoreCase = true;
-    if (flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
+    if (flags & IR::RegExp::RegExp_Multiline)
         multiline = true;
 
     Scope scope(this);
@@ -863,6 +864,7 @@ void ExecutionEngine::markObjects()
     id_index->mark(this);
     id_input->mark(this);
     id_toString->mark(this);
+    id_destroy->mark(this);
     id_valueOf->mark(this);
 
     objectCtor.mark(this);

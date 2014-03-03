@@ -57,8 +57,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 #define qout *qout()
 } // anonymous namespace
 
-using namespace QQmlJS;
-using namespace QQmlJS::V4IR;
+using namespace QV4;
+using namespace QV4::IR;
 
 EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : useFastLookups(true)
@@ -93,71 +93,71 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool gener
     return unit;
 }
 
-void IRDecoder::visitMove(V4IR::Move *s)
+void IRDecoder::visitMove(IR::Move *s)
 {
-    if (V4IR::Name *n = s->target->asName()) {
+    if (IR::Name *n = s->target->asName()) {
         if (s->source->asTemp() || s->source->asConst()) {
             setActivationProperty(s->source, *n->id);
             return;
         }
-    } else if (V4IR::Temp *t = s->target->asTemp()) {
-        if (V4IR::Name *n = s->source->asName()) {
+    } else if (IR::Temp *t = s->target->asTemp()) {
+        if (IR::Name *n = s->source->asName()) {
             if (n->id && *n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
                 loadThisObject(t);
-            else if (n->builtin == V4IR::Name::builtin_qml_id_array)
+            else if (n->builtin == IR::Name::builtin_qml_id_array)
                 loadQmlIdArray(t);
-            else if (n->builtin == V4IR::Name::builtin_qml_context_object)
+            else if (n->builtin == IR::Name::builtin_qml_context_object)
                 loadQmlContextObject(t);
-            else if (n->builtin == V4IR::Name::builtin_qml_scope_object)
+            else if (n->builtin == IR::Name::builtin_qml_scope_object)
                 loadQmlScopeObject(t);
-            else if (n->builtin == V4IR::Name::builtin_qml_imported_scripts_object)
+            else if (n->builtin == IR::Name::builtin_qml_imported_scripts_object)
                 loadQmlImportedScripts(t);
             else if (n->qmlSingleton)
                 loadQmlSingleton(*n->id, t);
             else
                 getActivationProperty(n, t);
             return;
-        } else if (V4IR::Const *c = s->source->asConst()) {
+        } else if (IR::Const *c = s->source->asConst()) {
             loadConst(c, t);
             return;
-        } else if (V4IR::Temp *t2 = s->source->asTemp()) {
+        } else if (IR::Temp *t2 = s->source->asTemp()) {
             if (s->swap)
                 swapValues(t2, t);
             else
                 copyValue(t2, t);
             return;
-        } else if (V4IR::String *str = s->source->asString()) {
+        } else if (IR::String *str = s->source->asString()) {
             loadString(*str->value, t);
             return;
-        } else if (V4IR::RegExp *re = s->source->asRegExp()) {
+        } else if (IR::RegExp *re = s->source->asRegExp()) {
             loadRegexp(re, t);
             return;
-        } else if (V4IR::Closure *clos = s->source->asClosure()) {
+        } else if (IR::Closure *clos = s->source->asClosure()) {
             initClosure(clos, t);
             return;
-        } else if (V4IR::New *ctor = s->source->asNew()) {
+        } else if (IR::New *ctor = s->source->asNew()) {
             if (Name *func = ctor->base->asName()) {
                 constructActivationProperty(func, ctor->args, t);
                 return;
-            } else if (V4IR::Member *member = ctor->base->asMember()) {
+            } else if (IR::Member *member = ctor->base->asMember()) {
                 constructProperty(member->base->asTemp(), *member->name, ctor->args, t);
                 return;
-            } else if (V4IR::Temp *value = ctor->base->asTemp()) {
+            } else if (IR::Temp *value = ctor->base->asTemp()) {
                 constructValue(value, ctor->args, t);
                 return;
             }
-        } else if (V4IR::Member *m = s->source->asMember()) {
+        } else if (IR::Member *m = s->source->asMember()) {
             if (m->property) {
                 bool captureRequired = true;
 
-                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
                 const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
 
                 if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
-                    if (m->kind == V4IR::Member::MemberOfQmlContextObject) {
+                    if (m->kind == IR::Member::MemberOfQmlContextObject) {
                         _function->contextObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
                         captureRequired = false;
-                    } else if (m->kind == V4IR::Member::MemberOfQmlScopeObject) {
+                    } else if (m->kind == IR::Member::MemberOfQmlScopeObject) {
                         _function->scopeObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
                         captureRequired = false;
                     }
@@ -168,18 +168,18 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 getProperty(m->base, *m->name, t);
                 return;
             }
-        } else if (V4IR::Subscript *ss = s->source->asSubscript()) {
-            getElement(ss->base->asTemp(), ss->index, t);
+        } else if (IR::Subscript *ss = s->source->asSubscript()) {
+            getElement(ss->base, ss->index, t);
             return;
-        } else if (V4IR::Unop *u = s->source->asUnop()) {
-            if (V4IR::Temp *e = u->expr->asTemp()) {
+        } else if (IR::Unop *u = s->source->asUnop()) {
+            if (IR::Temp *e = u->expr->asTemp()) {
                 unop(u->op, e, t);
                 return;
             }
-        } else if (V4IR::Binop *b = s->source->asBinop()) {
+        } else if (IR::Binop *b = s->source->asBinop()) {
             binop(b->op, b->left, b->right, t);
             return;
-        } else if (V4IR::Call *c = s->source->asCall()) {
+        } else if (IR::Call *c = s->source->asCall()) {
             if (c->base->asName()) {
                 callBuiltin(c, t);
                 return;
@@ -189,19 +189,19 @@ void IRDecoder::visitMove(V4IR::Move *s)
             } else if (Subscript *ss = c->base->asSubscript()) {
                 callSubscript(ss->base, ss->index, c->args, t);
                 return;
-            } else if (V4IR::Temp *value = c->base->asTemp()) {
+            } else if (IR::Temp *value = c->base->asTemp()) {
                 callValue(value, c->args, t);
                 return;
             }
-        } else if (V4IR::Convert *c = s->source->asConvert()) {
+        } else if (IR::Convert *c = s->source->asConvert()) {
             Q_ASSERT(c->expr->asTemp());
             convertType(c->expr->asTemp(), t);
             return;
         }
-    } else if (V4IR::Member *m = s->target->asMember()) {
+    } else if (IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                Q_ASSERT(m->kind != V4IR::Member::MemberOfEnum);
+                Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
                 const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
                 if (m->property && attachedPropertiesId == 0) {
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
@@ -212,7 +212,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 }
             }
         }
-    } else if (V4IR::Subscript *ss = s->target->asSubscript()) {
+    } else if (IR::Subscript *ss = s->target->asSubscript()) {
         if (s->source->asTemp() || s->source->asConst()) {
             setElement(s->source, ss->base, ss->index);
             return;
@@ -221,7 +221,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
 
     // For anything else...:
     Q_UNIMPLEMENTED();
-    s->dump(qout, V4IR::Stmt::MIR);
+    s->dump(qout, IR::Stmt::MIR);
     qout << endl;
     assert(!"TODO");
 }
@@ -230,9 +230,9 @@ IRDecoder::~IRDecoder()
 {
 }
 
-void IRDecoder::visitExp(V4IR::Exp *s)
+void IRDecoder::visitExp(IR::Exp *s)
 {
-    if (V4IR::Call *c = s->expr->asCall()) {
+    if (IR::Call *c = s->expr->asCall()) {
         // These are calls where the result is ignored.
         if (c->base->asName()) {
             callBuiltin(c, 0);
@@ -251,24 +251,24 @@ void IRDecoder::visitExp(V4IR::Exp *s)
     }
 }
 
-void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
+void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 {
-    V4IR::Name *baseName = call->base->asName();
+    IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
     switch (baseName->builtin) {
-    case V4IR::Name::builtin_invalid:
+    case IR::Name::builtin_invalid:
         callBuiltinInvalid(baseName, call->args, result);
         return;
 
-    case V4IR::Name::builtin_typeof: {
-        if (V4IR::Member *m = call->args->expr->asMember()) {
+    case IR::Name::builtin_typeof: {
+        if (IR::Member *m = call->args->expr->asMember()) {
             callBuiltinTypeofMember(m->base, *m->name, result);
             return;
-        } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
             callBuiltinTypeofSubscript(ss->base, ss->index, result);
             return;
-        } else if (V4IR::Name *n = call->args->expr->asName()) {
+        } else if (IR::Name *n = call->args->expr->asName()) {
             callBuiltinTypeofName(*n->id, result);
             return;
         } else if (call->args->expr->asTemp() || call->args->expr->asConst()){
@@ -277,14 +277,14 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         }
     } break;
 
-    case V4IR::Name::builtin_delete: {
-        if (V4IR::Member *m = call->args->expr->asMember()) {
+    case IR::Name::builtin_delete: {
+        if (IR::Member *m = call->args->expr->asMember()) {
             callBuiltinDeleteMember(m->base->asTemp(), *m->name, result);
             return;
-        } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
             callBuiltinDeleteSubscript(ss->base->asTemp(), ss->index, result);
             return;
-        } else if (V4IR::Name *n = call->args->expr->asName()) {
+        } else if (IR::Name *n = call->args->expr->asName()) {
             callBuiltinDeleteName(*n->id, result);
             return;
         } else if (call->args->expr->asTemp()){
@@ -294,107 +294,101 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         }
     } break;
 
-    case V4IR::Name::builtin_throw: {
-        V4IR::Expr *arg = call->args->expr;
+    case IR::Name::builtin_throw: {
+        IR::Expr *arg = call->args->expr;
         assert(arg->asTemp() || arg->asConst());
         callBuiltinThrow(arg);
     } return;
 
-    case V4IR::Name::builtin_rethrow: {
+    case IR::Name::builtin_rethrow: {
         callBuiltinReThrow();
     } return;
 
-    case V4IR::Name::builtin_unwind_exception: {
+    case IR::Name::builtin_unwind_exception: {
         callBuiltinUnwindException(result);
     } return;
 
-    case V4IR::Name::builtin_push_catch_scope: {
-        V4IR::String *s = call->args->expr->asString();
+    case IR::Name::builtin_push_catch_scope: {
+        IR::String *s = call->args->expr->asString();
         Q_ASSERT(s);
         callBuiltinPushCatchScope(*s->value);
     } return;
 
-    case V4IR::Name::builtin_foreach_iterator_object: {
-        V4IR::Temp *arg = call->args->expr->asTemp();
+    case IR::Name::builtin_foreach_iterator_object: {
+        IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
         callBuiltinForeachIteratorObject(arg, result);
     } return;
 
-    case V4IR::Name::builtin_foreach_next_property_name: {
-        V4IR::Temp *arg = call->args->expr->asTemp();
+    case IR::Name::builtin_foreach_next_property_name: {
+        IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
         callBuiltinForeachNextPropertyname(arg, result);
     } return;
-    case V4IR::Name::builtin_push_with_scope: {
-        V4IR::Temp *arg = call->args->expr->asTemp();
+    case IR::Name::builtin_push_with_scope: {
+        IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
         callBuiltinPushWithScope(arg);
     } return;
 
-    case V4IR::Name::builtin_pop_scope:
+    case IR::Name::builtin_pop_scope:
         callBuiltinPopScope();
         return;
 
-    case V4IR::Name::builtin_declare_vars: {
+    case IR::Name::builtin_declare_vars: {
         if (!call->args)
             return;
-        V4IR::Const *deletable = call->args->expr->asConst();
-        assert(deletable->type == V4IR::BoolType);
-        for (V4IR::ExprList *it = call->args->next; it; it = it->next) {
-            V4IR::Name *arg = it->expr->asName();
+        IR::Const *deletable = call->args->expr->asConst();
+        assert(deletable->type == IR::BoolType);
+        for (IR::ExprList *it = call->args->next; it; it = it->next) {
+            IR::Name *arg = it->expr->asName();
             assert(arg != 0);
             callBuiltinDeclareVar(deletable->value != 0, *arg->id);
         }
     } return;
 
-    case V4IR::Name::builtin_define_getter_setter: {
-        if (!call->args)
-            return;
-        V4IR::ExprList *args = call->args;
-        V4IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        V4IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        V4IR::Temp *getter = args->expr->asTemp();
-        args = args->next;
-        assert(args);
-        V4IR::Temp *setter = args->expr->asTemp();
-
-        callBuiltinDefineGetterSetter(object, *name->id, getter, setter);
-    } return;
-
-    case V4IR::Name::builtin_define_property: {
-        if (!call->args)
-            return;
-        V4IR::ExprList *args = call->args;
-        V4IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        V4IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        V4IR::Expr *value = args->expr;
-
-        callBuiltinDefineProperty(object, *name->id, value);
-    } return;
-
-    case V4IR::Name::builtin_define_array:
+    case IR::Name::builtin_define_array:
         callBuiltinDefineArray(result, call->args);
         return;
 
-    case V4IR::Name::builtin_define_object_literal:
-        callBuiltinDefineObjectLiteral(result, call->args);
-        return;
+    case IR::Name::builtin_define_object_literal: {
+        IR::ExprList *args = call->args;
+        const int keyValuePairsCount = args->expr->asConst()->value;
+        args = args->next;
 
-    case V4IR::Name::builtin_setup_argument_object:
+        IR::ExprList *keyValuePairs = args;
+        for (int i = 0; i < keyValuePairsCount; ++i) {
+            args = args->next; // name
+            bool isData = args->expr->asConst()->value;
+            args = args->next; // isData flag
+            args = args->next; // value or getter
+            if (!isData)
+                args = args->next; // setter
+        }
+
+        IR::ExprList *arrayEntries = args;
+        bool needSparseArray = false;
+        for (IR::ExprList *it = arrayEntries; it; it = it->next) {
+            uint index = it->expr->asConst()->value;
+            if (index > 16)  {
+                needSparseArray = true;
+                break;
+            }
+            it = it->next;
+            bool isData = it->expr->asConst()->value;
+            it = it->next;
+            if (!isData)
+                it = it->next;
+        }
+
+        callBuiltinDefineObjectLiteral(result, keyValuePairsCount, keyValuePairs, arrayEntries, needSparseArray);
+    } return;
+
+    case IR::Name::builtin_setup_argument_object:
         callBuiltinSetupArgumentObject(result);
         return;
 
-    case V4IR::Name::builtin_convert_this_to_object:
+    case IR::Name::builtin_convert_this_to_object:
         callBuiltinConvertThisToObject();
         return;
 

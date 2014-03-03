@@ -43,7 +43,6 @@
 #define QQUICKLISTVIEW_P_H
 
 #include "qquickitemview_p.h"
-#include <qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -175,23 +174,10 @@ class QQuickListViewAttached : public QQuickItemViewAttached
 
 public:
     QQuickListViewAttached(QObject *parent)
-        : QQuickItemViewAttached(parent), m_view(0), m_sectionItem(0) {}
+        : QQuickItemViewAttached(parent), m_sectionItem(0) {}
     ~QQuickListViewAttached() {}
 
-    Q_PROPERTY(QQuickListView *view READ view NOTIFY viewChanged)
-    QQuickListView *view() { return m_view; }
-    void setView(QQuickListView *view) {
-        if (view != m_view) {
-            m_view = view;
-            Q_EMIT viewChanged();
-        }
-    }
-
-Q_SIGNALS:
-    void viewChanged();
-
 public:
-    QPointer<QQuickListView> m_view;
     QQuickItem *m_sectionItem;
 };
 

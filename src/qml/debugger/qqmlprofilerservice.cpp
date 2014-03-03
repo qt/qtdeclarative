@@ -157,8 +157,10 @@ void QQmlProfilerService::engineRemoved(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(configMutex());
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine))
+    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+        removeProfilerFromStartTimes(profiler);
         delete profiler;
+    }
     m_engineProfilers.remove(engine);
 }
 
@@ -188,27 +190,63 @@ void QQmlProfilerService::addGlobalProfiler(QQmlAbstractProfilerAdapter *profile
 void QQmlProfilerService::removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler)
 {
     QMutexLocker lock(configMutex());
-    for (QMultiMap<qint64, QQmlAbstractProfilerAdapter *>::iterator i(m_startTimes.begin()); i != m_startTimes.end();) {
-        if (i.value() == profiler)
-            m_startTimes.erase(i++);
-        else
-            ++i;
-    }
+    removeProfilerFromStartTimes(profiler);
     m_globalProfilers.removeOne(profiler);
     delete profiler;
 }
 
+void QQmlProfilerService::removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler)
+{
+    for (QMultiMap<qint64, QQmlAbstractProfilerAdapter *>::iterator i(m_startTimes.begin());
+            i != m_startTimes.end();) {
+        if (i.value() == profiler) {
+            m_startTimes.erase(i++);
+            break;
+        } else {
+            ++i;
+        }
+    }
+}
+
+/*!
+ * Start profiling the given \a engine. If \a engine is 0, start all engine profilers that aren't
+ * currently running.
+ *
+ * If any engine profiler is started like that also start all global profilers.
+ */
 void QQmlProfilerService::startProfiling(QQmlEngine *engine)
 {
     QMutexLocker lock(configMutex());
 
     QByteArray message;
     QQmlDebugStream d(&message, QIODevice::WriteOnly);
-    d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace << idForObject(engine);
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
-        profiler->startProfiling();
+
+    d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;
+    bool startedAny = false;
+    if (engine != 0) {
+        foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+            if (!profiler->isRunning()) {
+                profiler->startProfiling();
+                startedAny = true;
+            }
+        }
+        if (startedAny)
+            d << idForObject(engine);
+    } else {
+        QSet<QQmlEngine *> engines;
+        for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
+                i != m_engineProfilers.end(); ++i) {
+            if (!i.value()->isRunning()) {
+                engines << i.key();
+                i.value()->startProfiling();
+                startedAny = true;
+            }
+        }
+        foreach (QQmlEngine *profiledEngine, engines)
+            d << idForObject(profiledEngine);
     }
-    if (!m_engineProfilers.values(engine).empty()) {
+
+    if (startedAny) {
         foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
             if (!profiler->isRunning())
                 profiler->startProfiling();
@@ -218,33 +256,48 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine)
     QQmlDebugService::sendMessage(message);
 }
 
+/*!
+ * Stop profiling the given \a engine. If \a engine is 0, stop all currently running engine
+ * profilers.
+ *
+ * If afterwards no more engine profilers are running, also stop all global profilers. Otherwise
+ * only make them report their data.
+ */
 void QQmlProfilerService::stopProfiling(QQmlEngine *engine)
 {
     QMutexLocker lock(configMutex());
+    QList<QQmlAbstractProfilerAdapter *> stopping;
+    QList<QQmlAbstractProfilerAdapter *> reporting;
 
     bool stillRunning = false;
-    m_startTimes.clear();
     for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {
-            if (i.key() == engine) {
+            if (engine == 0 || i.key() == engine) {
                 m_startTimes.insert(-1, i.value());
-                i.value()->stopProfiling();
+                stopping << i.value();
             } else {
                 stillRunning = true;
             }
         }
     }
+
     foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
         if (!profiler->isRunning())
             continue;
         m_startTimes.insert(-1, profiler);
         if (stillRunning) {
-            profiler->reportData();
+            reporting << profiler;
         } else {
-            profiler->stopProfiling();
+            stopping << profiler;
         }
     }
+
+    foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
+        profiler->reportData();
+
+    foreach (QQmlAbstractProfilerAdapter *profiler, stopping)
+        profiler->stopProfiling();
 }
 
 /*
@@ -319,22 +372,11 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     if (!stream.atEnd())
         stream >> engineId;
 
-    // The second time around there will be specific engineIds.
-    // We only have to wait after the first, empty start message.
-    if (engineId == -1) {
-        // Wait until no engine registers within RegisterTimeout anymore.
-        foreach (QQmlEngine *engine, m_engineProfilers.keys().toSet()) {
-            if (enabled)
-                startProfiling(engine);
-            else
-                stopProfiling(engine);
-        }
-    } else {
-        if (enabled)
-            startProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
-        else
-            stopProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
-    }
+    // If engineId == -1 objectForId() and then the cast will return 0.
+    if (enabled)
+        startProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
+    else
+        stopProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
 
     stopWaiting();
 }

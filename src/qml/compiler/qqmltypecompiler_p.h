@@ -81,6 +81,7 @@ public:
 
     const QV4::CompiledData::QmlUnit *qmlUnit() const;
 
+    QUrl url() const { return compiledData->url; }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
@@ -92,9 +93,10 @@ public:
     QVector<QByteArray> *vmeMetaObjects() const;
     QHash<int, int> *objectIndexToIdForRoot();
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
-    QHash<int, QByteArray> *customParserData();
+    QHash<int, QQmlCompiledData::CustomParserData> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
-    const QList<CompiledFunctionOrExpression> &functions() const;
+    QStringRef newStringRef(const QString &string);
+    const QStringList &stringPool() const;
     void setCustomParserBindings(const QVector<int> &bindings);
 
 private:
@@ -137,6 +139,27 @@ protected:
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QVector<QByteArray> vmeMetaObjects;
     QVector<QQmlPropertyCache*> propertyCaches;
+};
+
+// "Converts" signal expressions to full-fleged function declarations with
+// parameters taken from the signal declarations
+// It also updates the QV4::CompiledData::Binding objects to set the property name
+// to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
+struct SignalHandlerConverter : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
+public:
+    SignalHandlerConverter(QQmlTypeCompiler *typeCompiler);
+
+    bool convertSignalHandlerExpressionsToFunctionDeclarations();
+
+private:
+    bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
+
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QSet<QString> &illegalNames;
+    const QVector<QQmlPropertyCache*> &propertyCaches;
 };
 
 // ### This will go away when the codegen resolves all enums to constant expressions
@@ -184,7 +207,7 @@ public:
     bool resolve();
 
 protected:
-    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, int objectIndex);
+    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
@@ -216,17 +239,17 @@ class QQmlPropertyValidator : public QQmlCompilePass, public QQmlCustomParserCom
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QVector<int> &runtimeFunctionIndices);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
 
     bool validate();
 
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
-    virtual QQmlJS::AST::Node *astForBinding(int scriptIndex) const;
+    virtual QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
 
 private:
-    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
+    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false);
     bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding);
 
@@ -239,9 +262,29 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
-    QHash<int, QByteArray> *customParserData;
+    QHash<int, QQmlCompiledData::CustomParserData> *customParserData;
     QVector<int> customParserBindings;
-    const QVector<int> &runtimeFunctionIndices;
+};
+
+// ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
+class QQmlJSCodeGenerator : public QQmlCompilePass
+{
+public:
+    QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QtQml::JSCodeGen *v4CodeGen);
+
+    bool generateCodeForComponents();
+
+private:
+    bool compileComponent(int componentRoot, const QHash<int, int> &objectIndexToId);
+    bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+
+    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent;
+    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QVector<QQmlPropertyCache *> &propertyCaches;
+    QtQml::JSCodeGen * const v4CodeGen;
 };
 
 QT_END_NAMESPACE

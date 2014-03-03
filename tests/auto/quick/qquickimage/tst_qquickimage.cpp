@@ -538,7 +538,7 @@ void tst_qquickimage::noLoading()
     QVERIFY(obj != 0);
     QVERIFY(obj->status() == QQuickImage::Ready);
 
-    QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(const QUrl &)));
+    QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
     QSignalSpy progressSpy(obj, SIGNAL(progressChanged(qreal)));
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
 
@@ -838,7 +838,7 @@ void tst_qquickimage::progressAndStatusChanges()
     QTRY_VERIFY(obj->progress() == 1.0);
 
     qRegisterMetaType<QQuickImageBase::Status>();
-    QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(const QUrl &)));
+    QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
     QSignalSpy progressSpy(obj, SIGNAL(progressChanged(qreal)));
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
 

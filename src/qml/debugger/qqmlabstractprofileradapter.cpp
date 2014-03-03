@@ -52,13 +52,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \fn void QQmlAbstractProfilerAdapter::dataReady(QQmlAbstractProfilerAdapter *)
- * Signals that data has been extracted from the profiler and is readily available in the adapter.
- * The primary data representation is in satellite's format. It should be transformed and deleted
- * on the fly with sendMessages.
- */
-
-/*!
  * \fn void QQmlAbstractProfilerAdapter::dataRequested()
  * Signals that data has been requested by the \c QQmlProfilerService. This signal should be
  * connected to a slot in the profiler and the profiler should then transfer its currently available
@@ -78,7 +71,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \fn qint64 QQmlAbstractProfilerAdapter::startProfiling()
+ * \fn void QQmlAbstractProfilerAdapter::startProfiling()
  * Emits either \c profilingEnabled() or \c profilingEnabledWhileWaiting(), depending on \c waiting.
  * If the profiler's thread is waiting for an initial start signal we can emit the signal over a
  * \c Qt::DirectConnection to avoid the delay of the event loop.
@@ -93,10 +86,11 @@ void QQmlAbstractProfilerAdapter::startProfiling()
 }
 
 /*!
- * \fn qint64 QQmlAbstractProfilerAdapter::stopProfiling()
+ * \fn void QQmlAbstractProfilerAdapter::stopProfiling()
  * Emits either \c profilingDisabled() or \c profilingDisabledWhileWaiting(), depending on
  * \c waiting. If the profiler's thread is waiting for an initial start signal we can emit the
- * signal over a \c Qt::DirectConnection to avoid the delay of the event loop.
+ * signal over a \c Qt::DirectConnection to avoid the delay of the event loop. This should trigger
+ * the profiler to report its collected data and subsequently delete it.
  */
 void QQmlAbstractProfilerAdapter::stopProfiling() {
     if (waiting)
@@ -105,5 +99,68 @@ void QQmlAbstractProfilerAdapter::stopProfiling() {
         emit profilingDisabled();
     running = false;
 }
+
+/*!
+ * \fn bool QQmlAbstractProfilerAdapter::isRunning()
+ * Returns if the profiler is currently running. The profiler is considered to be running after
+ * \c startProfiling() has been called until \c stopProfiling() is called. That is independent of
+ * \c waiting. The profiler may be running and waiting at the same time.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::profilingDisabled()
+ * This signal is emitted if \c stopProfiling() is called while the profiler is not considered to
+ * be waiting. The profiler is expected to handle the signal asynchronously.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting()
+ * This signal is emitted if \c stopProfiling() is called while the profiler is considered to be
+ * waiting. In many cases this signal can be connected with a \c Qt::DirectConnection.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::profilingEnabled()
+ * This signal is emitted if \c startProfiling() is called while the profiler is not considered to
+ * be waiting. The profiler is expected to handle the signal asynchronously.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting()
+ * This signal is emitted if \c startProfiling() is called while the profiler is considered to be
+ * waiting. In many cases this signal can be connected with a \c Qt::DirectConnection. By starting
+ * the profiler synchronously when the QML engine starts instead of waiting for the first iteration
+ * of the event loop the engine startup can be profiled.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::referenceTimeKnown(const QElapsedTimer &timer)
+ * This signal is used to synchronize the profiler's timer to the QQmlProfilerservice's. The
+ * profiler is expected to save \a timer and use it for timestamps on its data.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::synchronize(const QElapsedTimer &timer)
+ * Synchronize the profiler to \a timer. This emits \c referenceTimeKnown().
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::reportData()
+ * Make the profiler report its current data without stopping the collection. The same (and
+ * additional) data can later be requested again with \c stopProfiling() or \c reportData().
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::startWaiting()
+ * Consider the profiler to be waiting from now on. While the profiler is waiting it can be directly
+ * accessed even if it is in a different thread. This method should only be called if it is actually
+ * safe to do so.
+ */
+
+/*!
+ * \fn void QQmlAbstractProfilerAdapter::stopWaiting()
+ * Consider the profiler not to be waiting anymore. If it lives in a different threads any requests
+ * for it have to be done via a queued connection then.
+ */
 
 QT_END_NAMESPACE

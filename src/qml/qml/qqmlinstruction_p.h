@@ -403,6 +403,7 @@ union QQmlInstruction
         QML_INSTR_HEADER
         int signal;
         ushort line;
+        ushort column;
     };
     struct instr_createComponent {
         QML_INSTR_HEADER

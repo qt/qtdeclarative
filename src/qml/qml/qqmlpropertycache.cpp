@@ -1007,7 +1007,7 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
     return 0;
 }
 
-QString QQmlPropertyData::name(QObject *object)
+QString QQmlPropertyData::name(QObject *object) const
 {
     if (!object)
         return QString();
@@ -1015,7 +1015,7 @@ QString QQmlPropertyData::name(QObject *object)
     return name(object->metaObject());
 }
 
-QString QQmlPropertyData::name(const QMetaObject *metaObject)
+QString QQmlPropertyData::name(const QMetaObject *metaObject) const
 {
     if (!metaObject || coreIndex == -1)
         return QString();

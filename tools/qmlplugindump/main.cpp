@@ -428,12 +428,13 @@ public:
         const QString exportString = getExportString(qmlTyName, compositeType->majorVersion(), compositeType->minorVersion());
         qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
+        qml->writeBooleanBinding(QLatin1String("isComposite"), true);
 
-        if (compositeType->isCreatable())
-            qml->writeIsCreatable(false);
+        if (!compositeType->isCreatable())
+            qml->writeBooleanBinding(QLatin1String("isCreatable"), false);
 
         if (compositeType->isSingleton())
-            qml->writeIsSingleton(true);
+            qml->writeBooleanBinding(QLatin1String("isSingleton"), true);
 
         for (int index = mainMeta->classInfoCount() - 1 ; index >= 0 ; --index) {
             QMetaClassInfo classInfo = mainMeta->classInfo(index);
@@ -499,10 +500,10 @@ public:
             qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
 
             if (isUncreatable)
-                qml->writeIsCreatable(false);
+                qml->writeBooleanBinding(QLatin1String("isCreatable"), false);
 
             if (isSingleton)
-                qml->writeIsSingleton(true);
+                qml->writeBooleanBinding(QLatin1String("isSingleton"), true);
 
             // write meta object revisions
             QStringList metaObjectRevisions;

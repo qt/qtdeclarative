@@ -95,8 +95,6 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
-    F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
-    F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
     F(CallBuiltinSetupArgumentsObject, callBuiltinSetupArgumentsObject) \
@@ -143,7 +141,7 @@ QT_BEGIN_NAMESPACE
 #  define MOTH_THREADED_INTERPRETER
 #endif
 
-#define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QQmlJS::Moth::Instr) - 1)
+#define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
 #ifdef MOTH_THREADED_INTERPRETER
 #  define MOTH_INSTR_HEADER void *code;
@@ -152,10 +150,10 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,
-#define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QQmlJS::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
+#define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QV4::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
 
 
-namespace QQmlJS {
+namespace QV4 {
 namespace Moth {
 
 struct Param {
@@ -481,19 +479,6 @@ union Instr
         int varName;
         bool isDeletable;
     };
-    struct instr_callBuiltinDefineGetterSetter {
-        MOTH_INSTR_HEADER
-        int name;
-        Param object;
-        Param getter;
-        Param setter;
-    };
-    struct instr_callBuiltinDefineProperty {
-        MOTH_INSTR_HEADER
-        int name;
-        Param object;
-        Param value;
-    };
     struct instr_callBuiltinDefineArray {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -503,6 +488,8 @@ union Instr
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
+        uint arrayValueCount;
+        uint arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
         quint32 args;
         Param result;
     };
@@ -768,8 +755,6 @@ union Instr
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
-    instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
-    instr_callBuiltinDefineProperty callBuiltinDefineProperty;
     instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
     instr_callBuiltinSetupArgumentsObject callBuiltinSetupArgumentsObject;
@@ -839,7 +824,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 };
 
 } // namespace Moth
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

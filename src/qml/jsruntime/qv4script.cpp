@@ -191,7 +191,7 @@ void Script::parse()
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
-    V4IR::Module module(v4->debugger != 0);
+    IR::Module module(v4->debugger != 0);
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -308,7 +308,7 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
     using namespace QQmlJS;
     using namespace QQmlJS::AST;
 
-    QQmlJS::V4IR::Module module(engine->debugger != 0);
+    IR::Module module(engine->debugger != 0);
 
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
@@ -356,7 +356,7 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
     }
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, &module, &jsGenerator));
     isel->setUseFastLookups(false);
     return isel->compile();
 }

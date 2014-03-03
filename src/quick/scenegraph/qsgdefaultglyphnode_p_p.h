@@ -59,7 +59,7 @@ class Geometry;
 class QSGTextMaskMaterial: public QSGMaterial
 {
 public:
-    QSGTextMaskMaterial(const QRawFont &font, int cacheType = -1);
+    QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
     virtual ~QSGTextMaskMaterial();
 
     virtual QSGMaterialType *type() const;
@@ -84,7 +84,7 @@ public:
                   const QMargins &margins = QMargins(0, 0, 0, 0));
 
 private:
-    void init(int cacheType);
+    void init(QFontEngine::GlyphFormat glyphFormat);
 
     QSGPlainTexture *m_texture;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
