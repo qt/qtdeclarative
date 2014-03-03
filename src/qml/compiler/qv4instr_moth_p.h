@@ -236,7 +236,7 @@ union Instr
     };
     struct instr_debug {
         MOTH_INSTR_HEADER
-        quint32 breakPoint;
+        qint32 lineNumber;
     };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER

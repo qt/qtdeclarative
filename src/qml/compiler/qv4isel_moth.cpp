@@ -390,11 +390,6 @@ void InstructionSelection::run(int functionIndex)
 
     uint currentLine = -1;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
-        if (irModule->debugMode) {
-            Instruction::Debug debug;
-            debug.breakPoint = 0;
-            addInstruction(debug);
-        }
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
@@ -417,14 +412,19 @@ void InstructionSelection::run(int functionIndex)
             if (s->location.isValid()) {
                 lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
                 if (irModule->debugMode && s->location.startLine != currentLine) {
-                    Instruction::Debug debug;
-                    debug.breakPoint = 0;
-                    addInstruction(debug);
                     currentLine = s->location.startLine;
+                    Instruction::Debug debug;
+                    debug.lineNumber = currentLine;
+                    addInstruction(debug);
                 }
             }
 
             s->accept(this);
+        }
+        if (irModule->debugMode) {
+            Instruction::Debug debug;
+            debug.lineNumber = currentLine;
+            addInstruction(debug);
         }
     }
 
@@ -1489,8 +1489,5 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction, &VME::exec);
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
         runtimeFunctions[i] = runtimeFunction;
-
-        if (QV4::Debugging::Debugger *debugger = engine->debugger)
-            debugger->setPendingBreakpoints(runtimeFunction);
     }
 }

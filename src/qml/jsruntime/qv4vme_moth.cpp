@@ -662,8 +662,8 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     MOTH_BEGIN_INSTR(Debug)
         QV4::Debugging::Debugger *debugger = context->engine->debugger;
-        if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity()))
-            debugger->maybeBreakAtInstruction(code, instr.breakPoint);
+        if (debugger && debugger->pauseAtNextOpportunity())
+            debugger->maybeBreakAtInstruction(instr.lineNumber);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
