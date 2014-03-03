@@ -353,8 +353,6 @@ public:
 
     InternalClass *newClass(const InternalClass &other);
 
-    Function *functionForProgramCounter(quintptr pc) const;
-
     QmlExtensions *qmlExtensions();
 
     bool recheckCStackLimits();

@@ -86,13 +86,12 @@ struct Function {
 
     ReturnedValue (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
-    quint32 codeSize;
 
     // first nArguments names in internalClass are the actual arguments
     InternalClass *internalClass;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
+             ReturnedValue (*codePtr)(ExecutionContext *, const uchar *));
     ~Function();
 
     inline StringRef name() {

@@ -82,8 +82,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
     QList<QVector<QV4::Primitive> > constantValues;
-    QVector<int> codeSizes; // corresponding to the endOfCode labels. MacroAssemblerCodeRef's size may
-                            // be larger, as for example on ARM we append the exception handling table.
 };
 
 struct RelativeCall {

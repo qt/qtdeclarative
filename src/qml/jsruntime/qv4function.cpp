@@ -51,12 +51,11 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-                   ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
+                   ReturnedValue (*codePtr)(ExecutionContext *, const uchar *))
         : compiledFunction(function)
         , compilationUnit(unit)
         , code(codePtr)
         , codeData(0)
-        , codeSize(_codeSize)
 {
     Q_UNUSED(engine);
 

@@ -79,8 +79,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
-                                                           codeSizes[i]);
+                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress());
         runtimeFunctions[i] = runtimeFunction;
     }
 

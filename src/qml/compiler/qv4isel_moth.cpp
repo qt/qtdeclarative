@@ -1488,8 +1488,7 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           &VME::exec, /*size - doesn't matter for moth*/0);
+        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction, &VME::exec);
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
         runtimeFunctions[i] = runtimeFunction;
 

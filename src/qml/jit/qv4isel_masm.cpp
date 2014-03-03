@@ -201,7 +201,6 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
 {
     compilationUnit = new CompilationUnit;
     compilationUnit->codeRefs.resize(module->functions.size());
-    compilationUnit->codeSizes.resize(module->functions.size());
 }
 
 InstructionSelection::~InstructionSelection()
@@ -335,7 +334,8 @@ void InstructionSelection::run(int functionIndex)
     if (!_as->exceptionReturnLabel.isSet())
         visitRet(0);
 
-    JSC::MacroAssemblerCodeRef codeRef =_as->link(&compilationUnit->codeSizes[functionIndex]);
+    int dummySize;
+    JSC::MacroAssemblerCodeRef codeRef =_as->link(&dummySize);
     compilationUnit->codeRefs[functionIndex] = codeRef;
 
     qSwap(_function, function);
