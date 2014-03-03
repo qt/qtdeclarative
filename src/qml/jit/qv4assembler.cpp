@@ -67,8 +67,6 @@ using namespace QV4::JIT;
 
 CompilationUnit::~CompilationUnit()
 {
-    foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->code));
 }
 
 void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
@@ -82,9 +80,6 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
                                                            (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress());
         runtimeFunctions[i] = runtimeFunction;
     }
-
-    foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
 }
 
 QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)

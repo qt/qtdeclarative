@@ -267,7 +267,6 @@ public:
     StringValue id_valueOf;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
-    QMap<quintptr, QV4::Function*> allFunctions;
 
     quint32 m_engineId;
 
