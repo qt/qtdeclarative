@@ -111,8 +111,13 @@ class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
+    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION 2)
+    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION 2)
+
     Q_ENUMS(Orientation)
     Q_ENUMS(SnapMode)
+    Q_ENUMS(HeaderPositioning)
+    Q_ENUMS(FooterPositioning)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -146,6 +151,14 @@ public:
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
+    enum HeaderPositioning { InlineHeader, OverlayHeader, PullBackHeader };
+    HeaderPositioning headerPositioning() const;
+    void setHeaderPositioning(HeaderPositioning positioning);
+
+    enum FooterPositioning { InlineFooter, OverlayFooter, PullBackFooter };
+    FooterPositioning footerPositioning() const;
+    void setFooterPositioning(FooterPositioning positioning);
+
     static QQuickListViewAttached *qmlAttachedProperties(QObject *);
 
 public Q_SLOTS:
@@ -160,6 +173,8 @@ Q_SIGNALS:
     void highlightResizeVelocityChanged();
     void highlightResizeDurationChanged();
     void snapModeChanged();
+    Q_REVISION(2) void headerPositioningChanged();
+    Q_REVISION(2) void footerPositioningChanged();
 
 protected:
     virtual void viewportMoved(Qt::Orientations orient);

@@ -125,6 +125,8 @@ public:
     virtual bool showFooterForIndex(int index) const;
     virtual void updateHeader();
     virtual void updateFooter();
+    bool hasStickyHeader() const;
+    bool hasStickyFooter() const;
 
     virtual void changedVisibleIndex(int newIndex);
     virtual void initializeCurrentItem();
@@ -142,6 +144,9 @@ public:
     qreal averageSize;
     qreal spacing;
     QQuickListView::SnapMode snapMode;
+
+    QQuickListView::HeaderPositioning headerPositioning;
+    QQuickListView::FooterPositioning footerPositioning;
 
     QSmoothedAnimation *highlightPosAnimator;
     QSmoothedAnimation *highlightWidthAnimator;
@@ -170,6 +175,8 @@ public:
         , visiblePos(0)
         , averageSize(100.0), spacing(0.0)
         , snapMode(QQuickListView::NoSnap)
+        , headerPositioning(QQuickListView::InlineHeader)
+        , footerPositioning(QQuickListView::InlineFooter)
         , highlightPosAnimator(0), highlightWidthAnimator(0), highlightHeightAnimator(0)
         , highlightMoveVelocity(400), highlightResizeVelocity(400), highlightResizeDuration(-1)
         , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
@@ -1048,6 +1055,9 @@ void QQuickListViewPrivate::updateStickySections()
 
     bool isFlowReversed = isContentFlowReversed();
     qreal viewPos = isFlowReversed ? -position()-size() : position();
+    qreal startPos = hasStickyHeader() ? header->endPosition() : viewPos;
+    qreal endPos = hasStickyFooter() ? footer->position() : viewPos + size();
+
     QQuickItem *sectionItem = 0;
     QQuickItem *lastSectionItem = 0;
     int index = 0;
@@ -1059,18 +1069,18 @@ void QQuickListViewPrivate::updateStickySections()
             qreal sectionSize = orient == QQuickListView::Vertical ? section->height() : section->width();
             bool visTop = true;
             if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart)
-                visTop = isFlowReversed ? -sectionPos-sectionSize >= viewPos : sectionPos >= viewPos;
+                visTop = isFlowReversed ? -sectionPos-sectionSize >= startPos : sectionPos >= startPos;
             bool visBot = true;
             if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd)
-                visBot = isFlowReversed ? -sectionPos <= viewPos + size() : sectionPos + sectionSize < viewPos + size();
+                visBot = isFlowReversed ? -sectionPos <= endPos : sectionPos + sectionSize < endPos;
             section->setVisible(visBot && visTop);
             if (visTop && !sectionItem)
                 sectionItem = section;
             if (isFlowReversed) {
-               if (-sectionPos <= viewPos + size())
+               if (-sectionPos <= endPos)
                     lastSectionItem = section;
             } else {
-                if (sectionPos + sectionSize < viewPos + size())
+                if (sectionPos + sectionSize < endPos)
                     lastSectionItem = section;
             }
         }
@@ -1092,14 +1102,14 @@ void QQuickListViewPrivate::updateStickySections()
         qreal sectionSize = orient == QQuickListView::Vertical ? currentSectionItem->height() : currentSectionItem->width();
         bool atBeginning = orient == QQuickListView::Vertical ? (isBottomToTop() ? vData.atEnd : vData.atBeginning) : (isRightToLeft() ? hData.atEnd : hData.atBeginning);
 
-        currentSectionItem->setVisible(!atBeginning && (!header || header->endPosition() < viewPos));
-        qreal pos = isFlowReversed ? position() + size() - sectionSize : viewPos;
+        currentSectionItem->setVisible(!atBeginning && (!header || hasStickyHeader() || header->endPosition() < viewPos));
+        qreal pos = isFlowReversed ? position() + size() - sectionSize : startPos;
+        if (header)
+            pos = isFlowReversed ? qMin(-header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
         if (sectionItem) {
             qreal sectionPos = orient == QQuickListView::Vertical ? sectionItem->y() : sectionItem->x();
             pos = isFlowReversed ? qMax(pos, sectionPos + sectionSize) : qMin(pos, sectionPos - sectionSize);
         }
-        if (header)
-            pos = isFlowReversed ? qMin(header->endPosition(), pos) : qMax(header->endPosition(), pos);
         if (footer)
             pos = isFlowReversed ? qMax(-footer->position(), pos) : qMin(footer->position() - sectionSize, pos);
         if (orient == QQuickListView::Vertical)
@@ -1125,13 +1135,15 @@ void QQuickListViewPrivate::updateStickySections()
 
         qreal sectionSize = orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
         nextSectionItem->setVisible(!nextSection.isEmpty());
-        qreal pos = isFlowReversed ? position() : viewPos + size() - sectionSize;
+        qreal pos = isFlowReversed ? position() : endPos - sectionSize;
+        if (footer)
+            pos = isFlowReversed ? qMax(-footer->position(), pos) : qMin(footer->position() - sectionSize, pos);
         if (lastSectionItem) {
             qreal sectionPos = orient == QQuickListView::Vertical ? lastSectionItem->y() : lastSectionItem->x();
             pos = isFlowReversed ? qMin(pos, sectionPos - sectionSize) : qMax(pos, sectionPos + sectionSize);
         }
         if (header)
-            pos = isFlowReversed ? qMin(header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
+            pos = isFlowReversed ? qMin(-header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
         if (orient == QQuickListView::Vertical)
             nextSectionItem->setY(pos);
         else
@@ -1192,12 +1204,11 @@ void QQuickListViewPrivate::updateCurrentSection()
         return;
     }
     bool inlineSections = sectionCriteria->labelPositioning() & QQuickViewSection::InlineLabels;
-    qreal sectionThreshold = position();
-    if (currentSectionItem && !inlineSections)
-        sectionThreshold += orient == QQuickListView::Vertical ? currentSectionItem->height() : currentSectionItem->width();
+    qreal viewPos = isContentFlowReversed() ? -position()-size() : position();
+    qreal startPos = hasStickyHeader() ? header->endPosition() : viewPos;
     int index = 0;
     int modelIndex = visibleIndex;
-    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= sectionThreshold) {
+    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= startPos) {
         if (visibleItems.at(index)->index != -1)
             modelIndex = visibleItems.at(index)->index;
         ++index;
@@ -1220,7 +1231,7 @@ void QQuickListViewPrivate::updateCurrentSection()
         // section when that changes.  Clearing lastVisibleSection will also
         // force searching.
         QString lastSection = currentSection;
-        qreal endPos = isContentFlowReversed() ? -position() : position() + size();
+        qreal endPos = hasStickyFooter() ? footer->position() : viewPos + size();
         if (nextSectionItem && !inlineSections)
             endPos -= orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
         while (index < visibleItems.count() && static_cast<FxListItemSG*>(visibleItems.at(index))->itemPosition() < endPos) {
@@ -1315,13 +1326,21 @@ void QQuickListViewPrivate::updateFooter()
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(footer);
     if (visibleItems.count()) {
-        qreal endPos = lastPosition();
-        if (findLastVisibleIndex() == model->count()-1) {
-            listItem->setPosition(endPos);
+        if (footerPositioning == QQuickListView::OverlayFooter) {
+            listItem->setPosition(isContentFlowReversed() ? -position() - footerSize() : position() + size() - footerSize());
+        } else if (footerPositioning == QQuickListView::PullBackFooter) {
+            qreal viewPos = isContentFlowReversed() ? -position() : position() + size();
+            qreal clampedPos = qBound(originPosition() - footerSize() + size(), listItem->position(), lastPosition());
+            listItem->setPosition(qBound(viewPos - footerSize(), clampedPos, viewPos));
         } else {
-            qreal visiblePos = position() + q->height();
-            if (endPos <= visiblePos || listItem->position() < endPos)
+            qreal endPos = lastPosition();
+            if (findLastVisibleIndex() == model->count()-1) {
                 listItem->setPosition(endPos);
+            } else {
+                qreal visiblePos = position() + q->height();
+                if (endPos <= visiblePos || listItem->position() < endPos)
+                    listItem->setPosition(endPos);
+            }
         }
     } else {
         listItem->setPosition(visiblePos);
@@ -1347,12 +1366,20 @@ void QQuickListViewPrivate::updateHeader()
     FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
     if (listItem) {
         if (visibleItems.count()) {
-            qreal startPos = originPosition();
-            if (visibleIndex == 0) {
-                listItem->setPosition(startPos - headerSize());
+            if (headerPositioning == QQuickListView::OverlayHeader) {
+                listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
+            } else if (headerPositioning == QQuickListView::PullBackHeader) {
+                qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
+                qreal clampedPos = qBound(originPosition() - headerSize(), listItem->position(), lastPosition() - headerSize() - size());
+                listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
             } else {
-                if (position() <= startPos || listItem->position() > startPos - headerSize())
+                qreal startPos = originPosition();
+                if (visibleIndex == 0) {
                     listItem->setPosition(startPos - headerSize());
+                } else {
+                    if (position() <= startPos || listItem->position() > startPos - headerSize())
+                        listItem->setPosition(startPos - headerSize());
+                }
             }
         } else {
             listItem->setPosition(-headerSize());
@@ -1361,6 +1388,16 @@ void QQuickListViewPrivate::updateHeader()
 
     if (created)
         emit q->headerItemChanged();
+}
+
+bool QQuickListViewPrivate::hasStickyHeader() const
+{
+    return header && headerPositioning != QQuickListView::InlineHeader;
+}
+
+bool QQuickListViewPrivate::hasStickyFooter() const
+{
+    return footer && footerPositioning != QQuickListView::InlineFooter;
 }
 
 void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -2443,6 +2480,80 @@ void QQuickListView::setSnapMode(SnapMode mode)
 */
 
 /*!
+    \qmlproperty enumeration QtQuick::ListView::headerPositioning
+    \since Qt 5.4
+
+    This property determines the positioning of the \l{headerItem}{header item}.
+
+    The possible values are:
+    \list
+    \li ListView.InlineHeader (default) - the header is positioned in the beginning
+    of the content and moves together with the content like an ordinary item.
+    \li ListView.OverlayHeader - the header is positioned in the beginning of the view.
+    \li ListView.PullBackHeader - the header is positioned in the beginning of the view.
+    The header can be pushed away by moving the content forwards, and pulled back by
+    moving the content backwards.
+    \endlist
+*/
+QQuickListView::HeaderPositioning QQuickListView::headerPositioning() const
+{
+    Q_D(const QQuickListView);
+    return d->headerPositioning;
+}
+
+void QQuickListView::setHeaderPositioning(QQuickListView::HeaderPositioning positioning)
+{
+    Q_D(QQuickListView);
+    if (d->headerPositioning != positioning) {
+        d->applyPendingChanges();
+        d->headerPositioning = positioning;
+        if (isComponentComplete()) {
+            d->updateHeader();
+            d->updateViewport();
+            d->fixupPosition();
+        }
+        emit headerPositioningChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::ListView::footerPositioning
+    \since Qt 5.4
+
+    This property determines the positioning of the \l{footerItem}{footer item}.
+
+    The possible values are:
+    \list
+    \li ListView.InlineFooter (default) - the footer is positioned in the end
+    of the content and moves together with the content like an ordinary item.
+    \li ListView.OverlayFooter - the footer is positioned in the end of the view.
+    \li ListView.PullBackFooter - the footer is positioned in the end of the view.
+    The footer can be pushed away by moving the content backwards, and pulled back by
+    moving the content forwards.
+    \endlist
+*/
+QQuickListView::FooterPositioning QQuickListView::footerPositioning() const
+{
+    Q_D(const QQuickListView);
+    return d->footerPositioning;
+}
+
+void QQuickListView::setFooterPositioning(QQuickListView::FooterPositioning positioning)
+{
+    Q_D(QQuickListView);
+    if (d->footerPositioning != positioning) {
+        d->applyPendingChanges();
+        d->footerPositioning = positioning;
+        if (isComponentComplete()) {
+            d->updateFooter();
+            d->updateViewport();
+            d->fixupPosition();
+        }
+        emit footerPositioningChanged();
+    }
+}
+
+/*!
     \qmlproperty Transition QtQuick::ListView::populate
 
     This property holds the transition to apply to the items that are initially created
@@ -2816,6 +2927,10 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
         }
         d->inFlickCorrection = false;
     }
+    if (d->hasStickyHeader())
+        d->updateHeader();
+    if (d->hasStickyFooter())
+        d->updateFooter();
     if (d->sectionCriteria) {
         d->updateCurrentSection();
         d->updateStickySections();
