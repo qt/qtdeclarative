@@ -419,7 +419,9 @@ class QQmlEngine;
 class QJSValue;
 class QJSEngine;
 
+#ifndef Q_QDOC
 namespace QtQml {
+#endif
     // declared in namespace to avoid symbol conflicts with QtDeclarative
     Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
     Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
@@ -427,7 +429,9 @@ namespace QtQml {
     Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
     Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *, const QObject *,
                                                       const QMetaObject *, bool create);
+#ifndef Q_QDOC
 }
+#endif
 
 #ifdef Q_CC_CLANG
 #pragma clang diagnostic push

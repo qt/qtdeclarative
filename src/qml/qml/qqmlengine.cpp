@@ -1209,6 +1209,8 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 
   When the QQmlEngine instantiates a QObject, the context is
   set automatically.
+
+  \sa qmlContext(), qmlEngine()
   */
 QQmlContext *QQmlEngine::contextForObject(const QObject *object)
 {
@@ -2370,6 +2372,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     Returns the QQmlEngine associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object)->engine(), but more efficient.
+
+    \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlContext()
 */
 
 /*!
@@ -2378,6 +2382,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     Returns the QQmlContext associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object).
+
+    \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlEngine()
 */
 
 QT_END_NAMESPACE

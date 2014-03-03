@@ -138,6 +138,26 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     int width = item->width();  // width = 200
     \endcode
 
+    To create instances of a component in code where a QQmlEngine instance is
+    not available, you can use \l qmlContext() or \l qmlEngine(). For example,
+    in the scenario below, child items are being created within a QQuickItem
+    subclass:
+
+    \code
+    void MyCppItem::init()
+    {
+        QQmlEngine *engine = qmlEngine(this);
+        // Or:
+        // QQmlEngine *engine = qmlContext(this)->engine();
+        QQmlComponent component(engine, QUrl::fromLocalFile("MyItem.qml"));
+        QQuickItem *childItem = qobject_cast<QQuickItem*>(component.create());
+        childItem->setParent(this);
+    }
+    \endcode
+
+    Note that these functions will return \c null when called inside the
+    constructor of a QObject subclass, as the instance will not yet have
+    a context nor engine.
 
     \section2 Network Components
 
