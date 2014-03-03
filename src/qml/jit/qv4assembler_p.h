@@ -391,7 +391,7 @@ public:
         }
 
         Pointer callDataAddress(int offset = 0) const {
-            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)) + offset);
+            return Pointer(Assembler::LocalsRegister, offset - (sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)));
         }
 
         Address savedRegPointer(int offset) const
