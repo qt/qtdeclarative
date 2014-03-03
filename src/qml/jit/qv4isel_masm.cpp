@@ -269,6 +269,27 @@ static QVector<int> getFpRegisters()
             << JSC::ARMRegisters::d6;
     return fpRegisters;
 }
+#elif CPU(X86) && OS(WINDOWS)
+#  define REGALLOC_IS_SUPPORTED
+static QVector<int> getIntRegisters()
+{
+    static const QVector<int> intRegisters = QVector<int>()
+            << JSC::X86Registers::edx
+            << JSC::X86Registers::ebx;
+    return intRegisters;
+}
+
+static QVector<int> getFpRegisters()
+{
+    static const QVector<int> fpRegisters = QVector<int>()
+            << JSC::X86Registers::xmm2
+            << JSC::X86Registers::xmm3
+            << JSC::X86Registers::xmm4
+            << JSC::X86Registers::xmm5
+            << JSC::X86Registers::xmm6
+            << JSC::X86Registers::xmm7;
+    return fpRegisters;
+}
 #endif
 
 void InstructionSelection::run(int functionIndex)

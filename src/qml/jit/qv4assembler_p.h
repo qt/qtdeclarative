@@ -984,8 +984,10 @@ public:
         prepareRelativeCall(function, this);
         loadArgumentOnStackOrRegister<0>(arg1);
 
-#if OS(LINUX) && CPU(X86) && (defined(__PIC__) || defined(__PIE__))
-        load32(Address(StackFrameRegister, -sizeof(void*)), JSC::X86Registers::ebx); // restore the GOT ptr
+#if (OS(LINUX) && CPU(X86) && (defined(__PIC__) || defined(__PIE__))) || \
+    (OS(WINDOWS) && CPU(X86))
+        load32(Address(StackFrameRegister, -int(sizeof(void*))),
+               JSC::X86Registers::ebx); // restore the GOT ptr
 #endif
 
         callAbsolute(functionName, function);
