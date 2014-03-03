@@ -256,7 +256,7 @@ inline Scope::Scope(ExecutionContext *ctx)
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext) + 7) & ~7) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
+    ((sizeof(CallContext) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
 
 } // namespace QV4
 

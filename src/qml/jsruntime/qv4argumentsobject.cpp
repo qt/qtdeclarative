@@ -89,7 +89,7 @@ void ArgumentsObject::fullyCreate()
     if (fullyCreated)
         return;
 
-    uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
+    uint numAccessors = qMin((int)context->function->formalParameterCount(), context->realArgumentCount);
     uint argCount = qMin(context->realArgumentCount, context->callData->argc);
     ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
     context->engine->requireArgumentsAccessors(numAccessors);
@@ -189,7 +189,7 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated)
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context->function->formalParameterCount, args->context->realArgumentCount);
+    uint numAccessors = qMin((int)args->context->function->formalParameterCount(), args->context->realArgumentCount);
     uint argCount = qMin(args->context->realArgumentCount, args->context->callData->argc);
     if (index >= argCount)
         return PropertyAttributes();

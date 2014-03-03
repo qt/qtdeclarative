@@ -77,8 +77,6 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
     , scope(scope)
-    , formalParameterCount(0)
-    , varCount(0)
     , function(0)
     , protoCacheClass(0)
     , protoCacheIndex(UINT_MAX)
@@ -89,8 +87,6 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bo
 FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
     : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
     , scope(scope)
-    , formalParameterCount(0)
-    , varCount(0)
     , function(0)
     , protoCacheClass(0)
     , protoCacheIndex(UINT_MAX)
@@ -107,8 +103,6 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
 FunctionObject::FunctionObject(InternalClass *ic)
     : Object(ic)
     , scope(ic->engine->rootContext)
-    , formalParameterCount(0)
-    , varCount(0)
     , function(0)
 {
     name = ic->engine->id_undefined;
@@ -171,11 +165,6 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
     FunctionObject *o = static_cast<FunctionObject *>(that);
     if (o->name.managed())
         o->name->mark(e);
-    // these are marked in VM::Function:
-//    for (uint i = 0; i < formalParameterCount; ++i)
-//        formalParameterList[i]->mark();
-//    for (uint i = 0; i < varCount; ++i)
-//        varList[i]->mark();
     o->scope->mark(e);
 
     Object::markObjects(that, e);
@@ -416,10 +405,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     needsActivation = function->needsActivation();
     strictMode = function->isStrict();
-    formalParameterCount = function->compiledFunction->nFormals;
-    varCount = function->internalClass->size - function->compiledFunction->nFormals;
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
     if (scope->strictMode) {
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
@@ -501,10 +488,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
     needsActivation = function->needsActivation();
     strictMode = function->isStrict();
-    formalParameterCount = function->compiledFunction->nFormals;
-    varCount = function->internalClass->size - function->compiledFunction->nFormals;
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
     if (scope->strictMode) {
         Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
@@ -536,8 +521,8 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ctx.compilationUnit = f->function->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope;
-    ctx.locals = v4->stackPush(f->varCount);
-    while (callData->argc < (int)f->formalParameterCount) {
+    ctx.locals = v4->stackPush(f->varCount());
+    while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }
@@ -573,8 +558,8 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ctx.compilationUnit = f->function->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope;
-    ctx.locals = v4->stackPush(f->varCount);
-    while (callData->argc < (int)f->formalParameterCount) {
+    ctx.locals = v4->stackPush(f->varCount());
+    while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }

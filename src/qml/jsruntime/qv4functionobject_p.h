@@ -49,6 +49,7 @@
 #include "qv4string_p.h"
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
+#include "qv4function_p.h"
 #include "qv4objectiterator_p.h"
 
 #include <QtCore/QString>
@@ -112,8 +113,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ExecutionContext *scope;
     StringValue name;
-    unsigned int formalParameterCount;
-    unsigned int varCount;
+    unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
+    unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     Function *function;
     InternalClass *protoCacheClass;
     uint protoCacheIndex;

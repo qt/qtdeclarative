@@ -55,6 +55,8 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
+    Q_ASSERT(function->function);
+
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
     new (c) CallContext(engine, Type_CallContext);
 
@@ -66,21 +68,20 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
     c->activation = 0;
 
-    if (function->function) {
-        c->compilationUnit = function->function->compilationUnit;
-        c->lookups = c->compilationUnit->runtimeLookups;
-    }
-
+    c->compilationUnit = function->function->compilationUnit;
+    c->lookups = c->compilationUnit->runtimeLookups;
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
-    if (function->varCount)
-        std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
+    const CompiledData::Function *compiledFunction = function->function->compiledFunction;
+    int nLocals = compiledFunction->nLocals;
+    if (nLocals)
+        std::fill(c->locals, c->locals + nLocals, Primitive::undefinedValue());
 
-    c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
+    c->callData = reinterpret_cast<CallData *>(c->locals + nLocals);
     ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(Value));
-    if (callData->argc < static_cast<int>(function->formalParameterCount))
-        std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
-    c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
+    if (callData->argc < static_cast<int>(compiledFunction->nFormals))
+        std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
+    c->callData->argc = qMax((uint)callData->argc, compiledFunction->nFormals);
 
     return c;
 }
@@ -145,7 +146,7 @@ unsigned int ExecutionContext::formalCount() const
     if (type < Type_SimpleCallContext)
         return 0;
     QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->formalParameterCount : 0;
+    return f ? f->formalParameterCount() : 0;
 }
 
 String * const *ExecutionContext::variables() const
@@ -161,7 +162,7 @@ unsigned int ExecutionContext::variableCount() const
     if (type < Type_SimpleCallContext)
         return 0;
     QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->varCount : 0;
+    return f ? f->varCount() : 0;
 }
 
 
@@ -215,8 +216,8 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
     }
 
     locals = (Value *)(this + 1);
-    if (function->varCount)
-        std::fill(locals, locals + function->varCount, Primitive::undefinedValue());
+    if (function->varCount())
+        std::fill(locals, locals + function->varCount(), Primitive::undefinedValue());
 }
 
 
@@ -259,7 +260,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount);
+    return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount());
 }
 
 void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
@@ -314,10 +315,10 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
                 if (c->function->function) {
                     uint index = c->function->function->internalClass->find(name);
                     if (index < UINT_MAX) {
-                        if (index < c->function->formalParameterCount) {
-                            c->callData->args[c->function->formalParameterCount - index - 1] = *value;
+                        if (index < c->function->formalParameterCount()) {
+                            c->callData->args[c->function->formalParameterCount() - index - 1] = *value;
                         } else {
-                            index -= c->function->formalParameterCount;
+                            index -= c->function->formalParameterCount();
                             c->locals[index] = *value;
                         }
                         return;
@@ -380,9 +381,9 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
             if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
                 uint index = f->function->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->function->formalParameterCount)
-                        return c->callData->args[c->function->formalParameterCount - index - 1].asReturnedValue();
-                    return c->locals[index - c->function->formalParameterCount].asReturnedValue();
+                    if (index < c->function->formalParameterCount())
+                        return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
+                    return c->locals[index - c->function->formalParameterCount()].asReturnedValue();
                 }
             }
             if (c->activation) {
@@ -446,9 +447,9 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
             if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
                 uint index = f->function->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->function->formalParameterCount)
-                        return c->callData->args[c->function->formalParameterCount - index - 1].asReturnedValue();
-                    return c->locals[index - c->function->formalParameterCount].asReturnedValue();
+                    if (index < c->function->formalParameterCount())
+                        return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
+                    return c->locals[index - c->function->formalParameterCount()].asReturnedValue();
                 }
             }
             if (c->activation) {

@@ -111,7 +111,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     Q_ASSERT(This->function);
 
     CallContext *ctx = This->qmlContext;
-    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Primitive::undefinedValue());
+    std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
     ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
     engine->popContext();
