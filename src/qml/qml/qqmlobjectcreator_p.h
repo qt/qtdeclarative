@@ -54,10 +54,19 @@ class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
 
+struct QQmlObjectCreatorSharedState
+{
+    QQmlContextData *rootContext;
+    QQmlContextData *creationContext;
+    QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
+    QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
+    QQmlComponentAttached *componentAttached;
+    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+};
+
 class QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
-    struct SharedState;
 public:
     QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext);
     ~QQmlObjectCreator();
@@ -74,7 +83,7 @@ public:
     QQmlContextData *parentContextData() const { return parentContext; }
 
 private:
-    QQmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, SharedState *inheritedSharedState);
+    QQmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState);
 
     void init(QQmlContextData *parentContext);
 
@@ -92,15 +101,6 @@ private:
     QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    struct SharedState {
-        QQmlContextData *rootContext;
-        QQmlContextData *creationContext;
-        QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
-        QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
-        QQmlComponentAttached *componentAttached;
-        QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
-    };
-
     QQmlEngine *engine;
     QQmlCompiledData *compiledData;
     const QV4::CompiledData::QmlUnit *qmlUnit;
@@ -110,7 +110,7 @@ private:
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QVector<QByteArray> &vmeMetaObjectData;
     QHash<int, int> objectIndexToId;
-    QFlagPointer<SharedState> sharedState;
+    QFlagPointer<QQmlObjectCreatorSharedState> sharedState;
 
     QObject *_qobject;
     QObject *_scopeObject;
