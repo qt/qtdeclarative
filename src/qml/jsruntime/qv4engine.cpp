@@ -719,7 +719,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     if (frameLimit && globalCode) {
         StackFrame frame;
         frame.source = globalCode->sourceFile();
-        frame.function = globalCode->name->toQString();
+        frame.function = globalCode->name()->toQString();
         frame.line = -1;
         frame.column = -1;
 
@@ -827,9 +827,6 @@ void ExecutionEngine::markObjects()
     identifierTable->mark(this);
 
     globalObject->mark(this);
-
-    if (globalCode)
-        globalCode->mark(this);
 
     for (int i = 0; i < argumentsAccessors.size(); ++i) {
         const Property &pd = argumentsAccessors.at(i);

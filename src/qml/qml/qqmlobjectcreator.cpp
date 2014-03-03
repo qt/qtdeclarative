@@ -929,7 +929,7 @@ void QQmlObjectCreator::setupFunctions()
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
         QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[*functionIdx];
-        const QString name = runtimeFunction->name->toQString();
+        const QString name = runtimeFunction->name()->toQString();
 
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
         if (!property->isVMEFunction())

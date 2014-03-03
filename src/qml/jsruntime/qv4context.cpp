@@ -153,7 +153,7 @@ String * const *ExecutionContext::variables() const
     if (type < Type_SimpleCallContext)
         return 0;
     QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return (f && f->function) ? f->function->internalClass->nameMap.constData() + f->function->nArguments : 0;
+    return (f && f->function) ? f->function->internalClass->nameMap.constData() + f->function->compiledFunction->nFormals : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
@@ -392,7 +392,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
                     return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name))
+                && name->equals(f->function->name()))
                 return f.asReturnedValue();
         }
 
@@ -461,7 +461,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
                 }
             }
             if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name))
+                && name->equals(f->function->name()))
                 return c->function->asReturnedValue();
         }
 

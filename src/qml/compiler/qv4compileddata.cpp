@@ -173,9 +173,6 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(e);
     }
-    for (int i = 0; i < runtimeFunctions.count(); ++i)
-        if (runtimeFunctions[i])
-            runtimeFunctions[i]->mark(e);
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)
             runtimeLookups[i].name->mark(e);

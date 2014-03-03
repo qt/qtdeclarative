@@ -51,7 +51,7 @@ FunctionCallProperties FunctionCall::resolve() const
     FunctionCallProperties props = {
         m_start,
         m_end,
-        m_function->name.toQString(),
+        m_function->name()->toQString(),
         m_function->compilationUnit->fileName(),
         m_function->compiledFunction->location.line,
         m_function->compiledFunction->location.column

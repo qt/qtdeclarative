@@ -60,10 +60,6 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 {
     Q_UNUSED(engine);
 
-    name = compilationUnit->runtimeStrings[compiledFunction->nameIndex].asString();
-
-    nArguments = compiledFunction->nFormals;
-
     internalClass = engine->emptyClass;
     const quint32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
@@ -91,11 +87,6 @@ Function::~Function()
 {
 }
 
-
-void Function::mark(ExecutionEngine *e)
-{
-    name.mark(e);
-}
 
 namespace QV4 {
 template <int field, typename SearchType>

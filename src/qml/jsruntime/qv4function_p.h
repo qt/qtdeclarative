@@ -81,8 +81,6 @@ struct InternalClass;
 struct Lookup;
 
 struct Function {
-    StringValue name;
-
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
@@ -91,13 +89,15 @@ struct Function {
     quint32 codeSize;
 
     // first nArguments names in internalClass are the actual arguments
-    int nArguments;
     InternalClass *internalClass;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
              ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
     ~Function();
 
+    inline StringRef name() {
+        return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
+    }
     inline QString sourceFile() const { return compilationUnit->fileName(); }
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
@@ -106,8 +106,6 @@ struct Function {
 
     inline bool needsActivation() const
     { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
-
-    void mark(ExecutionEngine *e);
 
     int lineNumberForProgramCounter(qptrdiff offset) const;
     QList<qptrdiff> programCountersForAllLines() const;

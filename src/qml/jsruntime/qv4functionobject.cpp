@@ -177,8 +177,6 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 //    for (uint i = 0; i < varCount; ++i)
 //        varList[i]->mark();
     o->scope->mark(e);
-    if (o->function)
-        o->function->mark(e);
 
     Object::markObjects(that, e);
 }
@@ -398,7 +396,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name, true)
+    : FunctionObject(scope, function->name(), true)
 {
     setVTable(staticVTable());
 
@@ -418,8 +416,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     needsActivation = function->needsActivation();
     strictMode = function->isStrict();
-    formalParameterCount = function->nArguments;
-    varCount = function->internalClass->size - function->nArguments;
+    formalParameterCount = function->compiledFunction->nFormals;
+    varCount = function->internalClass->size - function->compiledFunction->nFormals;
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
@@ -483,7 +481,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
-    : FunctionObject(scope, function->name, createProto)
+    : FunctionObject(scope, function->name(), createProto)
 {
     setVTable(staticVTable());
 
@@ -503,8 +501,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
     needsActivation = function->needsActivation();
     strictMode = function->isStrict();
-    formalParameterCount = function->nArguments;
-    varCount = function->internalClass->size - function->nArguments;
+    formalParameterCount = function->compiledFunction->nFormals;
+    varCount = function->internalClass->size - function->compiledFunction->nFormals;
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
