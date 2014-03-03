@@ -247,8 +247,6 @@ struct Function
     quint32 formalsOffset;
     quint32 nLocals;
     quint32 localsOffset;
-    quint32 nLineNumberMappingEntries;
-    quint32 lineNumberMappingOffset; // Array of uint pairs (offset and line number)
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
     Location location;
@@ -269,15 +267,14 @@ struct Function
 
     const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
-    const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
     const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
     const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
     const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies, int nPropertyDependencies) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
     }
 };
 

@@ -194,11 +194,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         QV4::IR::Function *f = irModule->functions.at(i);
         functionOffsets.insert(f, functionDataSize + unitSize + stringDataSize);
 
-        int lineNumberMappingCount = 0;
-
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
-        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount, qmlIdDepsCount, qmlPropertyDepsCount);
+        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
     const int totalSize = unitSize + functionDataSize + stringDataSize + jsClassDataSize;
@@ -382,7 +380,7 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
         *writtenDeps++ = property.value(); // notify index
     }
 
-    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions, function->nLineNumberMappingEntries,
+    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions,
                                                  function->nDependingIdObjects, function->nDependingContextProperties + function->nDependingScopeProperties);
 }
 
