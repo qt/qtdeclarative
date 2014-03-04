@@ -2392,16 +2392,19 @@ void Renderer::render()
 
     deleteRemovedElements();
 
-    // Then sort opaque batches so that we're drawing the batches with the highest
-    // order first, maximizing the benefit of front-to-back z-ordering.
-    if (m_opaqueBatches.size())
-        std::sort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
+    if (m_rebuild != 0) {
+        // Then sort opaque batches so that we're drawing the batches with the highest
+        // order first, maximizing the benefit of front-to-back z-ordering.
+        if (m_opaqueBatches.size())
+            std::sort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
 
-    // Sort alpha batches back to front so that they render correctly.
-    if (m_alphaBatches.size())
-        std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
+        // Sort alpha batches back to front so that they render correctly.
+        if (m_alphaBatches.size())
+            std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
 
-    m_zRange = 1.0 / (m_nextRenderOrder);
+        m_zRange = 1.0 / (m_nextRenderOrder);
+    }
+
 
     if (Q_UNLIKELY(debug_upload)) qDebug() << "Uploading Opaque Batches:";
     for (int i=0; i<m_opaqueBatches.size(); ++i)
