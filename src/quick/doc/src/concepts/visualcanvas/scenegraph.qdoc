@@ -739,4 +739,121 @@ with multiple windows.
   {QSG_RENDER_TIMING=1} will output a number of useful timing
   parameters which can be useful in pinpointing where a problem lies.
 
+  \section1 Visualizing
+
+  To visualize the various aspects of the scene graph's default renderer, the
+  \c QSG_VISUALIZE environment variable can be set to one of the values
+  detailed in each section below. We provide examples of the output of
+  some of the variables using the following QML code:
+
+  \code
+  import QtQuick 2.2
+
+  Rectangle {
+      width: 200
+      height: 140
+
+      ListView {
+          id: clippedList
+          x: 20
+          y: 20
+          width: 70
+          height: 100
+          clip: true
+          model: ["Item A", "Item B", "Item C", "Item D"]
+
+          delegate: Rectangle {
+              color: "lightblue"
+              width: parent.width
+              height: 25
+
+              Text {
+                  text: modelData
+                  anchors.fill: parent
+                  horizontalAlignment: Text.AlignHCenter
+                  verticalAlignment: Text.AlignVCenter
+              }
+          }
+      }
+
+      ListView {
+          id: clippedDelegateList
+          x: clippedList.x + clippedList.width + 20
+          y: 20
+          width: 70
+          height: 100
+          clip: true
+          model: ["Item A", "Item B", "Item C", "Item D"]
+
+          delegate: Rectangle {
+              color: "lightblue"
+              width: parent.width
+              height: 25
+              clip: true
+
+              Text {
+                  text: modelData
+                  anchors.fill: parent
+                  horizontalAlignment: Text.AlignHCenter
+                  verticalAlignment: Text.AlignVCenter
+              }
+          }
+      }
+  }
+  \endcode
+
+  For the ListView on the left, we set its \l {Item::clip}{clip} property to
+  \c true. For the ListView on right, we also set each delegate's
+  \l {Item::clip}{clip} property to \c true to illustrate the effects of
+  clipping on batching.
+
+  \image visualize-original.png "Original"
+  Original
+
+  \note The visualized elements do not respect clipping, and rendering order is
+  arbitrary.
+
+  \section2 Visualizing Batches
+
+  Setting \c QSG_VISUALIZE to \c batches visualizes batches in the renderer.
+  Merged batches are drawn with a solid color and unmerged batches are drawn
+  with a diagonal line pattern. Few unique colors means good batching.
+  Unmerged batches are bad if they contain many individual nodes.
+
+  \image visualize-batches.png "batches"
+  \c QSG_VISUALIZE=batches
+
+  \section2 Visualizing Clipping
+
+  Setting \c QSG_VISUALIZE to \c clip draws red areas on top of the scene
+  to indicate clipping. As Qt Quick Items do not clip by default, no clipping
+  is usually visualized.
+
+  \image visualize-clip.png
+  \c QSG_VISUALIZE=clip
+
+  \section2 Visualizing Changes
+
+  Setting \c QSG_VISUALIZE to \c changes visualizes changes in the renderer.
+  Changes in the scenegraph are visualized with a flashing overlay of a random
+  color. Changes on a primitive are visualized with a solid color, while
+  changes in an ancestor, such as matrix or opacity changes, are visualized
+  with a pattern.
+
+  \section2 Visualizing Overdraw
+
+  Setting \c QSG_VISUALIZE to \c overdraw visualizes overdraw in the renderer.
+  Visualize all items in 3D to highlight overdraws. This mode can also be used
+  to detect geometry outside the viewport to some extent. Opaque items are
+  rendered with a green tint, while translucent items are rendered with a red
+  tint. The bounding box for the viewport is rendered in blue. Opaque content
+  is easier for the scenegraph to process and is usually faster to render.
+
+  Note that the root rectangle in the code above is superfluous as the window
+  is also white, so drawing the rectangle is a waste of resources in this case.
+  Changing it to an Item can give a slight performance boost.
+
+  \image visualize-overdraw-1.png "overdraw-1"
+  \image visualize-overdraw-2.png "overdraw-2"
+  \c QSG_VISUALIZE=overdraw
  */
