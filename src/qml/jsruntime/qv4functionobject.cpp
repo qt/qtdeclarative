@@ -91,13 +91,23 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
     , protoCacheClass(0)
     , protoCacheIndex(UINT_MAX)
 {
-    // set the name to something here, so that a gc run a few lines below doesn't crash on it
-    this->name = scope->engine->id_undefined;
-
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, s.engine->newString(name));
     init(n, createProto);
+}
+
+FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
+    : Object(scope->engine->functionClass)
+    , scope(scope)
+    , function(0)
+    , protoCacheClass(0)
+    , protoCacheIndex(UINT_MAX)
+{
+    Scope s(scope);
+    ScopedValue protectThis(s, this);
+    ScopedString n(s, name);
+    init(n, false);
 }
 
 FunctionObject::FunctionObject(InternalClass *ic)
@@ -105,8 +115,6 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , scope(ic->engine->rootContext)
     , function(0)
 {
-    name = ic->engine->id_undefined;
-
     needsActivation = false;
     strictMode = false;
 }
@@ -119,8 +127,6 @@ FunctionObject::~FunctionObject()
 
 void FunctionObject::init(const StringRef n, bool createProto)
 {
-    name = n;
-
     Scope s(internalClass->engine);
     ScopedValue protectThis(s, this);
 
@@ -136,6 +142,12 @@ void FunctionObject::init(const StringRef n, bool createProto)
     ScopedValue v(s, n.asReturnedValue());
     defineReadonlyProperty(scope->engine->id_name, v);
 }
+
+ReturnedValue FunctionObject::name()
+{
+    return get(scope->engine->id_name);
+}
+
 
 ReturnedValue FunctionObject::newInstance()
 {
@@ -163,8 +175,6 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
 void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
-    if (o->name.managed())
-        o->name->mark(e);
     o->scope->mark(e);
 
     Object::markObjects(that, e);

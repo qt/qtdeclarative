@@ -670,6 +670,8 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
+    Scope scope(this->currentContext());
+    ScopedString name(scope);
     QVector<StackFrame> stack;
 
     QV4::ExecutionContext *c = currentContext();
@@ -679,7 +681,8 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
             StackFrame frame;
             if (callCtx->function->function)
                 frame.source = callCtx->function->function->sourceFile();
-            frame.function = callCtx->function->name->toQString();
+            name = callCtx->function->name();
+            frame.function = name->toQString();
             frame.line = -1;
             frame.column = -1;
 

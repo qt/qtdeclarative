@@ -1181,7 +1181,7 @@ struct BindingFunction : public QV4::FunctionObject
 {
     V4_OBJECT
     BindingFunction(FunctionObject *originalFunction)
-        : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
+        : QV4::FunctionObject(originalFunction->scope, originalFunction->name())
         , originalFunction(originalFunction)
     {
         setVTable(staticVTable());

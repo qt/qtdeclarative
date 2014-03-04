@@ -776,8 +776,10 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             if (scope.hasException() && v4->v8Engine) {
                 if (QQmlEngine *qmlEngine = v4->v8Engine->engine()) {
                     QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
-                    if (error.description().isEmpty())
-                        error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
+                    if (error.description().isEmpty()) {
+                        QV4::ScopedString name(scope, f->name());
+                        error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(name->toQString()));
+                    }
                     QQmlEnginePrivate::get(qmlEngine)->warning(error);
                 }
             }

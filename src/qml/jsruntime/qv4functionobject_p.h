@@ -112,7 +112,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
 
     ExecutionContext *scope;
-    StringValue name;
+    ReturnedValue name();
     unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     Function *function;
@@ -123,6 +123,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
+    FunctionObject(ExecutionContext *scope, const ReturnedValue name);
     ~FunctionObject();
 
     void init(const StringRef name, bool createProto);
