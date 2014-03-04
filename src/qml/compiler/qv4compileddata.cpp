@@ -150,8 +150,7 @@ void CompilationUnit::unlink()
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
     engine = 0;
-    if (ownsData)
-        free(data);
+    free(data);
     data = 0;
     free(runtimeStrings);
     runtimeStrings = 0;

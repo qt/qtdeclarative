@@ -215,7 +215,8 @@ bool QQmlTypeCompiler::compile()
 
     if (jsUnit) {
         Q_ASSERT(!jsUnit->data);
-        jsUnit->ownsData = false;
+        Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
+        // The js unit owns the data and will free the qml unit.
         jsUnit->data = &qmlUnit->header;
     }
 

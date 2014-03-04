@@ -549,7 +549,6 @@ struct Q_QML_EXPORT CompilationUnit
         : refCount(0)
         , engine(0)
         , data(0)
-        , ownsData(false)
         , runtimeStrings(0)
         , runtimeLookups(0)
         , runtimeRegularExpressions(0)
@@ -563,7 +562,6 @@ struct Q_QML_EXPORT CompilationUnit
     int refCount;
     ExecutionEngine *engine;
     Unit *data;
-    bool ownsData;
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 

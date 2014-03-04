@@ -140,9 +140,10 @@ QQmlCompiledData::~QQmlCompiledData()
     if (rootPropertyCache)
         rootPropertyCache->release();
 
+    qmlUnit = 0;
+
     if (compilationUnit)
         compilationUnit->deref();
-    free(qmlUnit);
 }
 
 void QQmlCompiledData::clear()
