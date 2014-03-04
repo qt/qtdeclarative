@@ -1617,11 +1617,11 @@ void QQmlData::destroyed(QObject *object)
             QString locationString;
             QQmlBoundSignalExpression *expr = signalHandler->expression();
             if (expr) {
-                QString fileName = expr->sourceFile();
-                if (fileName.isEmpty())
-                    fileName = QStringLiteral("<Unknown File>");
-                locationString.append(fileName);
-                locationString.append(QString::fromLatin1(":%0: ").arg(expr->lineNumber()));
+                QQmlSourceLocation location = expr->sourceLocation();
+                if (location.sourceFile.isEmpty())
+                    location.sourceFile = QStringLiteral("<Unknown File>");
+                locationString.append(location.sourceFile);
+                locationString.append(QString::fromLatin1(":%0: ").arg(location.line));
                 QString source = expr->expression();
                 if (source.size() > 100) {
                     source.truncate(96);

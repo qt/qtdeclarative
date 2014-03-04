@@ -86,9 +86,7 @@ public:
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);
 
-    QString sourceFile() const;
-    quint16 lineNumber() const;
-    quint16 columnNumber() const;
+    QQmlSourceLocation sourceLocation() const;
     QString expression() const;
     QV4::Function *function() const;
     QObject *target() const { return m_target; }
@@ -120,9 +118,7 @@ private:
         QString m_handlerName;
         QString m_parameterString;
         QString m_expression;
-        QString m_fileName;
-        quint16 m_line;
-        quint16 m_column;
+        QQmlSourceLocation m_sourceLocation;
     };
 
     // We store some flag bits in the following flag pointers.

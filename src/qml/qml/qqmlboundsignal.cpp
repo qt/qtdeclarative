@@ -72,9 +72,7 @@ QQmlBoundSignalExpression::ExtraData::ExtraData(const QString &handlerName, cons
     : m_handlerName(handlerName),
       m_parameterString(parameterString),
       m_expression(expression),
-      m_fileName(fileName),
-      m_line(line),
-      m_column(column)
+      m_sourceLocation(fileName, line, column)
 {
 }
 
@@ -124,7 +122,8 @@ QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
-    return This->sourceFile() + QLatin1Char(':') + QString::number(This->lineNumber());
+    QQmlSourceLocation loc = This->sourceLocation();
+    return loc.sourceFile + QLatin1Char(':') + QString::number(loc.line);
 }
 
 void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
@@ -132,37 +131,19 @@ void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
     // bound signals do not notify on change.
 }
 
-QString QQmlBoundSignalExpression::sourceFile() const
+QQmlSourceLocation QQmlBoundSignalExpression::sourceLocation() const
 {
     if (expressionFunctionValid()) {
         QV4::Function *f = function();
         Q_ASSERT(f);
-        return f->sourceFile();
+        QQmlSourceLocation loc;
+        loc.sourceFile = f->sourceFile();
+        loc.line = f->compiledFunction->location.line;
+        loc.column = f->compiledFunction->location.column;
+        return loc;
     }
     Q_ASSERT(!m_extra.isNull());
-    return m_extra->m_fileName;
-}
-
-quint16 QQmlBoundSignalExpression::lineNumber() const
-{
-    if (expressionFunctionValid()) {
-        QV4::Function *f = function();
-        Q_ASSERT(f);
-        return f->compiledFunction->location.line;
-    }
-    Q_ASSERT(!m_extra.isNull());
-    return m_extra->m_line;
-}
-
-quint16 QQmlBoundSignalExpression::columnNumber() const
-{
-    if (expressionFunctionValid()) {
-        QV4::Function *f = function();
-        Q_ASSERT(f);
-        return f->compiledFunction->location.column;
-    }
-    Q_ASSERT(!m_extra.isNull());
-    return m_extra->m_column;
+    return m_extra->m_sourceLocation;
 }
 
 QString QQmlBoundSignalExpression::expression() const
@@ -236,7 +217,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_extra->m_parameterString.clear();
 
             m_v8function = evalFunction(context(), scopeObject(), expression,
-                                        m_extra->m_fileName, m_extra->m_line, &m_v8qmlscope);
+                                        m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_v8qmlscope);
 
             if (m_v8function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();
