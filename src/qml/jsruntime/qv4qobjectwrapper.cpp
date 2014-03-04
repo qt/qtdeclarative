@@ -53,6 +53,7 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qv8engine_p.h>
 
 #include <private/qv4functionobject_p.h>
@@ -473,10 +474,10 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
             // binding assignment.
             QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
 
-            QV4::StackFrame frame = ctx->engine->currentStackFrame();
+            QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, f);
+            bindingFunction->initBindingLocation();
 
-            newBinding = new QQmlBinding(value, object, callingQmlContext, frame.source,
-                                         qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
+            newBinding = new QQmlBinding(value, object, callingQmlContext);
             newBinding->setTarget(object, *property, callingQmlContext);
         }
     }

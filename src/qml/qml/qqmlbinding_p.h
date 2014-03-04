@@ -81,8 +81,7 @@ public:
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
-    QQmlBinding(const QV4::ValueRef, QObject *, QQmlContextData *,
-                const QString &url, quint16 lineNumber, quint16 columnNumber);
+    QQmlBinding(const QV4::ValueRef, QObject *, QQmlContextData *);
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
@@ -113,7 +112,7 @@ public:
     typedef int Identifier;
     static Identifier Invalid;
 
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, quint16);
+    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *);
 
     QVariant evaluate();
 
@@ -143,12 +142,6 @@ private:
     //    m_ctxt:flag1 - updatingFlag
     //    m_ctxt:flag2 - enabledFlag
     QFlagPointer<QQmlContextData> m_ctxt;
-
-    // XXX It would be good if we could get rid of these in most circumstances
-    QString m_url;
-    quint16 m_lineNumber;
-    quint16 m_columnNumber;
-    QByteArray m_expression;
 };
 
 bool QQmlBinding::updatingFlag() const

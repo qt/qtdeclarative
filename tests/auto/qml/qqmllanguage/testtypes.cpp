@@ -147,7 +147,7 @@ void CustomBinding::componentComplete()
         int line;
         ds >> line;
 
-        QQmlBinding *binding = QQmlBinding::createBinding(QQmlBinding::Identifier(bindingId), m_target, qmlContext(this), QString(), line);
+        QQmlBinding *binding = QQmlBinding::createBinding(QQmlBinding::Identifier(bindingId), m_target, qmlContext(this));
 
         QQmlProperty property(m_target, name, qmlContext(this));
         binding->setTarget(property);

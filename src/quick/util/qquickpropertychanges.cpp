@@ -477,7 +477,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             a.specifiedObject = d->object;
             a.specifiedProperty = property;
 
-            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this), e.url.toString(), e.column) : 0;
+            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this)) : 0;
             if (!newBinding)
                 newBinding = new QQmlBinding(e.expression, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
 

@@ -53,8 +53,8 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
-#include <private/qv4object_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -145,6 +145,21 @@ struct GlobalExtensions {
 
 };
 
+struct QQmlBindingFunction : public QV4::FunctionObject
+{
+    V4_OBJECT
+    QQmlBindingFunction(FunctionObject *originalFunction);
+
+    void initBindingLocation(); // from caller stack trace
+
+    static ReturnedValue call(Managed *that, CallData *callData);
+
+    static void markObjects(Managed *that, ExecutionEngine *e);
+
+    QV4::FunctionObject *originalFunction;
+    // Set when the binding is created later
+    QQmlSourceLocation bindingLocation;
+};
 
 }
 

@@ -845,8 +845,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
             bs->takeExpression(expr);
         } else {
-            QQmlBinding *qmlBinding = new QQmlBinding(function, _scopeObject, context,
-                                                      context->urlString, binding->valueLocation.line, binding->valueLocation.column);
+            QQmlBinding *qmlBinding = new QQmlBinding(function, _scopeObject, context);
 
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
