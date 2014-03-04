@@ -221,7 +221,7 @@ protected:
     QVector<int> componentRoots;
     // indices of objects that are the beginning of a new component
     // scope. This is sorted and used for binary search.
-    QVector<int> componentBoundaries;
+    QVector<quint32> componentBoundaries;
 
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;

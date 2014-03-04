@@ -2683,7 +2683,7 @@ void Renderer::visualizeOverdraw_helper(Node *node)
         shader->setUniformValue(shader->matrix, matrix);
 
         QColor color = node->element()->batch->isOpaque ? QColor::fromRgbF(0.3, 1.0, 0.3) : QColor::fromRgbF(1.0, 0.3, 0.3);
-        float ca = 0.33;
+        float ca = 0.33f;
         shader->setUniformValue(shader->color, color.redF() * ca, color.greenF() * ca, color.blueF() * ca, ca);
 
         visualizeDrawGeometry(gn->geometry());
@@ -2705,7 +2705,7 @@ void Renderer::visualizeOverdraw()
     glBlendFunc(GL_ONE, GL_ONE);
 
     static float step = 0;
-    step += M_PI * 2 / 1000.;
+    step += static_cast<float>(M_PI * 2 / 1000.);
     if (step > M_PI * 2)
         step = 0;
     float angle = 80.0 * sin(step);
@@ -2796,7 +2796,7 @@ void Renderer::visualize()
     glEnableVertexAttribArray(0);
 
     // Blacken out the actual rendered content...
-    float bgOpacity = 0.8;
+    float bgOpacity = 0.8f;
     if (m_visualizeMode == VisualizeBatches)
         bgOpacity = 1.0;
     float v[] = { -1, 1,   1, 1,   -1, -1,   1, -1 };
@@ -2814,7 +2814,7 @@ void Renderer::visualize()
     } else if (m_visualizeMode == VisualizeClipping) {
         QRect viewport = viewportRect();
         shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), 0.5, 0);
-        shader->setUniformValue(shader->color, 0.2, 0, 0, 0.2);
+        shader->setUniformValue(shader->color, GLfloat(0.2), 0, 0, GLfloat(0.2));
         visualizeClipping(rootNode());
     } else if (m_visualizeMode == VisualizeChanges) {
         visualizeChanges(m_nodes.value(rootNode()));

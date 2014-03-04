@@ -275,6 +275,8 @@ struct ExprList {
     Expr *expr;
     ExprList *next;
 
+    ExprList(): expr(0), next(0) {}
+
     void init(Expr *expr, ExprList *next = 0)
     {
         this->expr = expr;

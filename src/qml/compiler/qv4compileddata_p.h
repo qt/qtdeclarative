@@ -69,6 +69,9 @@ struct Location
 {
     qint32 line;
     qint32 column;
+
+    Location(): line(-1), column(-1) {}
+
     inline bool operator<(const Location &other) const {
         return line < other.line ||
                (line == other.line && column < other.column);
@@ -506,6 +509,8 @@ struct Import
     qint32 minorVersion;
 
     Location location;
+
+    Import(): type(0), uriIndex(0), qualifierIndex(0), majorVersion(0), minorVersion(0) {}
 };
 
 struct QmlUnit
