@@ -169,6 +169,8 @@ private:
 
     QQmlEnginePrivate *qmlEngine;
 
+    bool blockNeedsDebugInstruction;
+    uint currentLine;
     IR::BasicBlock *_block;
     IR::BasicBlock *_nextBlock;
 

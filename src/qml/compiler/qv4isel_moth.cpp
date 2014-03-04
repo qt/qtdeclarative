@@ -385,8 +385,9 @@ void InstructionSelection::run(int functionIndex)
     push.value = quint32(locals);
     addInstruction(push);
 
-    uint currentLine = -1;
+    currentLine = -1;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+        blockNeedsDebugInstruction = irModule->debugMode;
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
@@ -408,6 +409,7 @@ void InstructionSelection::run(int functionIndex)
 
             if (s->location.isValid()) {
                 if (s->location.startLine != currentLine) {
+                    blockNeedsDebugInstruction = false;
                     currentLine = s->location.startLine;
                     if (irModule->debugMode) {
                         Instruction::Debug debug;
@@ -422,11 +424,6 @@ void InstructionSelection::run(int functionIndex)
             }
 
             s->accept(this);
-        }
-        if (irModule->debugMode) {
-            Instruction::Debug debug;
-            debug.lineNumber = currentLine;
-            addInstruction(debug);
         }
     }
 
@@ -1039,6 +1036,12 @@ void InstructionSelection::visitJump(IR::Jump *s)
     if (_removableJumps.contains(s))
         return;
 
+    if (blockNeedsDebugInstruction) {
+        Instruction::Debug debug;
+        debug.lineNumber = currentLine;
+        addInstruction(debug);
+    }
+
     Instruction::Jump jump;
     jump.offset = 0;
     ptrdiff_t loc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
@@ -1048,6 +1051,12 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
+    if (blockNeedsDebugInstruction) {
+        Instruction::Debug debug;
+        debug.lineNumber = currentLine;
+        addInstruction(debug);
+    }
+
     Param condition;
     if (IR::Temp *t = s->cond->asTemp()) {
         condition = getResultParam(t);

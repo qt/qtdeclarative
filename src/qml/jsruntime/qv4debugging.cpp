@@ -113,12 +113,12 @@ public:
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
+    , m_currentContext(0)
     , m_agent(0)
     , m_state(Running)
     , m_stepping(NotStepping)
     , m_pauseRequested(false)
     , m_haveBreakPoints(false)
-    , m_stopForStepping(false)
     , m_breakOnThrow(false)
     , m_returnedValue(Primitive::undefinedValue())
     , m_gatherSources(0)
@@ -180,6 +180,7 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue = Encode::undefined();
 
+    m_currentContext = m_engine->currentContext();
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -187,14 +188,14 @@ void Debugger::resume(Speed speed)
 void Debugger::addBreakPoint(const QString &fileName, int lineNumber, const QString &condition)
 {
     QMutexLocker locker(&m_lock);
-    m_breakPoints.insert(DebuggerBreakPoint(fileName, lineNumber), condition);
+    m_breakPoints.insert(DebuggerBreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1), lineNumber), condition);
     m_haveBreakPoints = true;
 }
 
 void Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
 {
     QMutexLocker locker(&m_lock);
-    m_breakPoints.remove(DebuggerBreakPoint(fileName, lineNumber));
+    m_breakPoints.remove(DebuggerBreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1), lineNumber));
     m_haveBreakPoints = !m_breakPoints.isEmpty();
 }
 
@@ -207,10 +208,8 @@ void Debugger::setBreakOnThrow(bool onoff)
 
 Debugger::ExecutionState Debugger::currentExecutionState() const
 {
-    // ### Locking
     ExecutionState state;
-    state.function = getFunction();
-    state.fileName = state.function->sourceFile();
+    state.fileName = getFunction()->sourceFile();
     state.lineNumber = engine()->currentContext()->lineNumber;
 
     return state;
@@ -451,10 +450,7 @@ void Debugger::maybeBreakAtInstruction()
         return;
 
     QMutexLocker locker(&m_lock);
-    if (m_breakPoints.isEmpty())
-        return;
-
-    ExecutionState state = currentExecutionState();
+    int lineNumber = engine()->currentContext()->lineNumber;
 
     if (m_gatherSources) {
         m_gatherSources->run();
@@ -464,20 +460,22 @@ void Debugger::maybeBreakAtInstruction()
 
     switch (m_stepping) {
     case StepOver:
+        if (m_currentContext != m_engine->currentContext())
+            break;
+        // fall through
     case StepIn:
         pauseAndWait(Step);
-        break;
+        return;
     case StepOut:
     case NotStepping:
-        if (m_stopForStepping) { // Serve debugging requests from the agent
-            m_stopForStepping = false;
-            pauseAndWait(Step);
-        } else if (m_pauseRequested) { // Serve debugging requests from the agent
-            m_pauseRequested = false;
-            pauseAndWait(PauseRequest);
-        } else if (reallyHitTheBreakPoint(state.fileName, state.lineNumber)) {
-            pauseAndWait(BreakPoint);
-        }
+        break;
+    }
+
+    if (m_pauseRequested) { // Serve debugging requests from the agent
+        m_pauseRequested = false;
+        pauseAndWait(PauseRequest);
+    } else if (m_haveBreakPoints && reallyHitTheBreakPoint(getFunction()->sourceFile(), lineNumber)) {
+        pauseAndWait(BreakPoint);
     }
 }
 
@@ -486,8 +484,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_stepping = NotStepping;
-        m_stopForStepping = true;
+        m_currentContext = m_engine->currentContext();
     }
 }
 
@@ -497,9 +494,9 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping == StepOut || m_stepping == StepOver) {
-        m_stepping = NotStepping;
-        m_stopForStepping = true;
+    if (m_stepping != NotStepping && m_currentContext == m_engine->currentContext()) {
+        m_currentContext = m_engine->currentContext()->parent;
+        m_stepping = StepOver;
         m_returnedValue = retVal;
     }
 }
@@ -552,7 +549,7 @@ void Debugger::pauseAndWait(PauseReason reason)
 
 bool Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
 {
-    BreakPoints::iterator it = m_breakPoints.find(DebuggerBreakPoint(filename, linenr));
+    BreakPoints::iterator it = m_breakPoints.find(DebuggerBreakPoint(filename.mid(filename.lastIndexOf('/') + 1), linenr));
     if (it == m_breakPoints.end())
         return false;
     QString condition = it.value();

@@ -161,14 +161,12 @@ public:
 
     void setBreakOnThrow(bool onoff);
 
+    // used for testing
     struct ExecutionState
     {
-        ExecutionState() : lineNumber(-1), function(0) {}
         QString fileName;
         int lineNumber;
-        Function *function;
     };
-
     ExecutionState currentExecutionState() const;
 
     bool pauseAtNextOpportunity() const {
@@ -203,8 +201,8 @@ private:
     void runInEngine_havingLock(Debugger::Job *job);
 
 private:
-
     QV4::ExecutionEngine *m_engine;
+    QV4::ExecutionContext *m_currentContext;
     DebuggerAgent *m_agent;
     QMutex m_lock;
     QWaitCondition m_runningCondition;
@@ -212,7 +210,6 @@ private:
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_haveBreakPoints;
-    bool m_stopForStepping;
     bool m_breakOnThrow;
 
     BreakPoints m_breakPoints;
