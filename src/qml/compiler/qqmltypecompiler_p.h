@@ -287,6 +287,20 @@ private:
     QtQml::JSCodeGen * const v4CodeGen;
 };
 
+class QQmlDefaultPropertyMerger : public QQmlCompilePass
+{
+public:
+    QQmlDefaultPropertyMerger(QQmlTypeCompiler *typeCompiler);
+
+    void mergeDefaultProperties();
+
+private:
+    void mergeDefaultProperties(int objectIndex);
+
+    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QVector<QQmlPropertyCache*> &propertyCaches;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLTYPECOMPILER_P_H

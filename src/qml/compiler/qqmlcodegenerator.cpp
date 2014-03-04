@@ -176,14 +176,10 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
         if (existing && existing->isValueBinding() == b->isValueBinding() && !(existing->flags & QV4::CompiledData::Binding::IsOnAssignment))
             return tr("Property value set multiple times");
     }
-    if (isListBinding) {
-        bindings->append(b);
-    } else if (bindingToDefaultProperty) {
-        Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::location>(b);
-        bindings->insertAfter(insertionPoint, b);
-    } else {
+    if (bindingToDefaultProperty)
+        insertSorted(b);
+    else
         bindings->prepend(b);
-    }
     return QString(); // no error
 }
 
@@ -193,6 +189,12 @@ Binding *QmlObject::findBinding(quint32 nameIndex) const
         if (b->propertyNameIndex == nameIndex)
             return b;
     return 0;
+}
+
+void QmlObject::insertSorted(Binding *b)
+{
+    Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::valueLocation>(b);
+    bindings->insertAfter(insertionPoint, b);
 }
 
 QStringList Signal::parameterStringList(const QStringList &stringPool) const
@@ -361,16 +363,20 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
         return false;
     }
 
+    QVarLengthArray<QQmlJS::AST::UiArrayMemberList *, 16> memberList;
     QQmlJS::AST::UiArrayMemberList *member = node->members;
     while (member) {
+        memberList.append(member);
+        member = member->next;
+    }
+    for (int i = memberList.count() - 1; i >= 0; --i) {
+        member = memberList.at(i);
         QQmlJS::AST::UiObjectDefinition *def = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(member->member);
 
         int idx = 0;
         if (!defineQMLObject(&idx, def))
             return false;
         appendBinding(qualifiedNameLocation, name->identifierToken, propertyNameIndex, idx, /*isListItem*/ true);
-
-        member = member->next;
     }
 
     qSwap(_object, object);

@@ -143,6 +143,11 @@ bool QQmlTypeCompiler::compile()
     }
 
     {
+        QQmlDefaultPropertyMerger merger(this);
+        merger.mergeDefaultProperties();
+    }
+
+    {
         SignalHandlerConverter converter(this);
         if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations())
             return false;
@@ -2356,6 +2361,62 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
     }
 
     return true;
+}
+
+QQmlDefaultPropertyMerger::QQmlDefaultPropertyMerger(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , propertyCaches(typeCompiler->propertyCaches())
+{
+
+}
+
+void QQmlDefaultPropertyMerger::mergeDefaultProperties()
+{
+    for (int i = 0; i < qmlObjects.count(); ++i)
+        mergeDefaultProperties(i);
+}
+
+void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
+{
+    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+    if (!propertyCache)
+        return;
+
+    QmlObject *object = qmlObjects.at(objectIndex);
+
+    QString defaultProperty = object->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultPropertyName() : propertyCache->defaultPropertyName();
+    Binding *bindingsToReinsert = 0;
+    Binding *tail = 0;
+
+    Binding *previousBinding = 0;
+    Binding *binding = object->firstBinding();
+    while (binding) {
+        if (binding->propertyNameIndex == 0 || stringAt(binding->propertyNameIndex) != defaultProperty) {
+            previousBinding = binding;
+            binding = binding->next;
+            continue;
+        }
+
+        Binding *toReinsert = binding;
+        binding = object->unlinkBinding(previousBinding, binding);
+
+        if (!tail) {
+            bindingsToReinsert = toReinsert;
+            tail = toReinsert;
+        } else {
+            tail->next = toReinsert;
+            tail = tail->next;
+        }
+        tail->next = 0;
+    }
+
+    binding = bindingsToReinsert;
+    while (binding) {
+        Binding *toReinsert = binding;
+        binding = binding->next;
+        object->insertSorted(toReinsert);
+    }
 }
 
 QT_END_NAMESPACE
