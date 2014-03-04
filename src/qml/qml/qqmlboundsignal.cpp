@@ -188,7 +188,10 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             Q_ASSERT(!m_extra.isNull());
             QString expression;
 
-            expression = QStringLiteral("(function ");
+            // Add some leading whitespace to account for the binding's column offset.
+            // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
+            expression.fill(QChar(QChar::Space), qMax(m_extra->m_sourceLocation.column, (quint16)2) - 2);
+            expression += QStringLiteral("(function ");
             expression += m_extra->m_handlerName;
             expression += QLatin1Char('(');
 
