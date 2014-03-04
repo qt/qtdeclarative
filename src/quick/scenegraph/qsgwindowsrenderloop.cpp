@@ -186,7 +186,7 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
             const bool isDebug = QLibraryInfo::isDebugBuild();
             QString eglLibName = QLatin1String(isDebug ? "libEGLd.dll" : "libEGL.dll");
             QString glesLibName = QLatin1String(isDebug ? "libGLESv2d.dll" : "libGLESv2.dll");
-            QString contextType = QLatin1String(QOpenGLFunctions::isES() ? "EGL" : "OpenGL");
+            QString contextType = QLatin1String("OpenGL");
             const char *msg = QT_TRANSLATE_NOOP(
                 "QSGWindowsRenderLoop",
                 "Failed to create %1 context. "

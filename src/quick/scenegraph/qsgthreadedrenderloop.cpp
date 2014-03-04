@@ -943,7 +943,7 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
                 w->thread->gl = 0;
                 QString formatStr;
                 QDebug(&formatStr) << w->window->requestedFormat();
-                QString contextType = QLatin1String(QOpenGLFunctions::isES() ? "EGL" : "OpenGL");
+                QString contextType = QLatin1String("OpenGL");
                 const char *msg = QT_TRANSLATE_NOOP("QSGThreadedRenderLoop",
                                                     "Failed to create %1 context for format %2");
                 QString translatedMsg = tr(msg).arg(contextType).arg(formatStr);
