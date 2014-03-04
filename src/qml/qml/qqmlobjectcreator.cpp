@@ -237,6 +237,59 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     return instance;
 }
 
+bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
+{
+    QQmlData *declarativeData = QQmlData::get(instance);
+    context = declarativeData->deferredData->context;
+    const int objectIndex = declarativeData->deferredData->deferredIdx;
+
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    QObject *bindingTarget = instance;
+
+    QQmlRefPointer<QQmlPropertyCache> cache = declarativeData->propertyCache;
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
+
+    QObject *scopeObject = instance;
+    qSwap(_scopeObject, scopeObject);
+
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue scopeObjectProtector(valueScope, declarativeData->jsWrapper.value());
+    Q_UNUSED(scopeObjectProtector);
+    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
+    QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
+
+    qSwap(_qmlContext, qmlContext);
+
+    qSwap(_propertyCache, cache);
+    qSwap(_qobject, instance);
+    qSwap(_compiledObject, obj);
+    qSwap(_ddata, declarativeData);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_vmeMetaObject, vmeMetaObject);
+
+    QBitArray bindingSkipList = compiledData->deferredBindingsPerObject.value(objectIndex);
+    for (int i = 0; i < bindingSkipList.count(); ++i)
+        bindingSkipList.setBit(i, !bindingSkipList.testBit(i));
+
+    setupBindings(bindingSkipList);
+
+    qSwap(_vmeMetaObject, vmeMetaObject);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_ddata, declarativeData);
+    qSwap(_compiledObject, obj);
+    qSwap(_qobject, instance);
+    qSwap(_propertyCache, cache);
+
+    qSwap(_qmlContext, qmlContext);
+    qSwap(_scopeObject, scopeObject);
+
+    phase = ObjectsCreated;
+
+    return errors.isEmpty();
+}
+
 void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
@@ -1009,7 +1062,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
             customParser = type->customParser();
 
-            if (sharedState->rootContext->isRootObjectInCreation) {
+            if (sharedState->rootContext && sharedState->rootContext->isRootObjectInCreation) {
                 QQmlData *ddata = QQmlData::get(instance, /*create*/true);
                 ddata->rootObjectInCreation = true;
                 sharedState->rootContext->isRootObjectInCreation = false;
@@ -1243,8 +1296,27 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
 
     QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
 
+    QBitArray bindingSkipList = bindingsToSkip;
+    {
+        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.find(index);
+        if (deferredBindings != compiledData->deferredBindingsPerObject.constEnd()) {
+            if (bindingSkipList.isEmpty())
+                bindingSkipList.resize(deferredBindings->count());
+
+            for (int i = 0; i < deferredBindings->count(); ++i)
+                if (deferredBindings->testBit(i))
+                    bindingSkipList.setBit(i);
+            QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
+            deferData->deferredIdx = index;
+            deferData->compiledData = compiledData;
+            deferData->compiledData->addref();
+            deferData->context = context;
+            _ddata->deferredData = deferData;
+        }
+    }
+
     setupFunctions();
-    setupBindings(bindingsToSkip);
+    setupBindings(bindingSkipList);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

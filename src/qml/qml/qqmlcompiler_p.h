@@ -166,6 +166,7 @@ public:
     };
     QHash<int, CustomParserData> customParserData;
     QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
+    QHash<int, QBitArray> deferredBindingsPerObject; // index is object index
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
     int totalObjectCount; // Number of objects explicitly instantiated

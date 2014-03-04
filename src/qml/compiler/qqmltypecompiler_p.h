@@ -98,6 +98,7 @@ public:
     QStringRef newStringRef(const QString &string);
     const QStringList &stringPool() const;
     void setCustomParserBindings(const QVector<int> &bindings);
+    void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
 
 private:
     QList<QQmlError> errors;
@@ -264,6 +265,9 @@ private:
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QQmlCompiledData::CustomParserData> *customParserData;
     QVector<int> customParserBindings;
+    QHash<int, QBitArray> deferredBindingsPerObject;
+
+    bool _seenObjectWithId;
 };
 
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.

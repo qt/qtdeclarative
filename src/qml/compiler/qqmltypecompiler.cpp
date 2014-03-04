@@ -376,6 +376,11 @@ void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
     compiledData->customParserBindings = bindings;
 }
 
+void QQmlTypeCompiler::setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject)
+{
+    compiledData->deferredBindingsPerObject = deferredBindingsPerObject;
+}
+
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
     : compiler(typeCompiler)
 {
@@ -1603,6 +1608,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
     , propertyCaches(typeCompiler->propertyCaches())
     , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
     , customParserData(typeCompiler->customParserData())
+    , _seenObjectWithId(false)
 {
 }
 
@@ -1611,6 +1617,7 @@ bool QQmlPropertyValidator::validate()
     if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
         return false;
     compiler->setCustomParserBindings(customParserBindings);
+    compiler->setDeferredBindingsPerObject(deferredBindingsPerObject);
     return true;
 }
 
@@ -1642,6 +1649,8 @@ typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVect
 bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    if (obj->idIndex != 0)
+        _seenObjectWithId = true;
 
     if (isComponent(objectIndex)) {
         Q_ASSERT(obj->nBindings == 1);
@@ -1653,6 +1662,16 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return true;
+
+    QStringList deferredPropertyNames;
+    {
+        const QMetaObject *mo = propertyCache->firstCppMetaObject();
+        const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
+        if (namesIndex != -1) {
+            QMetaClassInfo classInfo = mo->classInfo(namesIndex);
+            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+        }
+    }
 
     QQmlCustomParser *customParser = 0;
     QQmlCompiledData::TypeReference *objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
@@ -1687,6 +1706,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     }
 
     QBitArray customParserBindings(obj->nBindings);
+    QBitArray deferredBindings;
 
     PropertyResolver propertyResolver(propertyCache);
 
@@ -1769,16 +1789,32 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
            bindingToDefaultProperty = true;
         }
 
+        bool seenSubObjectWithId = false;
+
         if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-            if (!validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::valueType(pd->propType)))
+            qSwap(_seenObjectWithId, seenSubObjectWithId);
+            const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::valueType(pd->propType));
+            qSwap(_seenObjectWithId, seenSubObjectWithId);
+            if (!subObjectValid)
                 return false;
-            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-                if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
-                    recordError(binding->location, tr("Attached properties cannot be used here"));
-                    return false;
-                }
-                continue;
+            _seenObjectWithId |= seenSubObjectWithId;
+        }
+
+        if (!seenSubObjectWithId
+            && !deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
+
+            if (deferredBindings.isEmpty())
+                deferredBindings.resize(obj->nBindings);
+
+            deferredBindings.setBit(i);
+        }
+
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+            if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
+                recordError(binding->location, tr("Attached properties cannot be used here"));
+                return false;
             }
+            continue;
         }
 
         if (pd) {
@@ -1876,6 +1912,9 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             return false;
         }
     }
+
+    if (!deferredBindings.isEmpty())
+        deferredBindingsPerObject.insert(objectIndex, deferredBindings);
 
     return true;
 }

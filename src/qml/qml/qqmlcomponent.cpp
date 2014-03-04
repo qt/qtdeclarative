@@ -923,7 +923,13 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     state->completePending = true;
 
     if (enginePriv->useNewCompiler) {
-        // ###
+        QQmlData *ddata = QQmlData::get(object);
+        Q_ASSERT(ddata->deferredData);
+        QQmlData::DeferredData *deferredData = ddata->deferredData;
+        QQmlContextData *creationContext = 0;
+        state->creator = new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext);
+        if (!state->creator->populateDeferredProperties(object))
+            state->errors << state->creator->errors;
     } else {
         state->vme.initDeferred(object);
         state->vme.execute(&state->errors);

@@ -78,6 +78,7 @@ public:
     ~QQmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
+    bool populateDeferredProperties(QObject *instance);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
     void clear();
 
