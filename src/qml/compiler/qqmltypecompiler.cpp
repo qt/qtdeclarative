@@ -1275,9 +1275,13 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QtQm
         const QtQml::QmlObject *targetObject = qmlObjects->at(binding->value.objectIndex);
         QQmlCompiledData::TypeReference *tr = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
         Q_ASSERT(tr);
-        QQmlType *targetType = tr->type;
-        if (targetType && targetType->metaObject() == &QQmlComponent::staticMetaObject)
-            continue;
+        if (QQmlType *targetType = tr->type) {
+            if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
+                continue;
+        } else if (tr->component) {
+            if (tr->component->rootPropertyCache->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
+                continue;
+        }
 
         QQmlPropertyData *pd = 0;
         if (binding->propertyNameIndex != 0) {
