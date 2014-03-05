@@ -79,6 +79,8 @@ public:
 
     bool interleaveIncubation() const;
 
+    QList<QQuickWindow *> windows() const;
+
 public Q_SLOTS:
     void animationStarted();
     void animationStopped();

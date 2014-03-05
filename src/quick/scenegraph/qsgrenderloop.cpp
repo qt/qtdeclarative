@@ -45,7 +45,6 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
-#include <QtCore/QScopedPointer>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/private/qabstractanimation_p.h>
 
@@ -82,10 +81,23 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 
-Q_GLOBAL_STATIC(QScopedPointer<QSGRenderLoop>, s_renderLoopInstance);
+QSGRenderLoop *QSGRenderLoop::s_instance = 0;
 
 QSGRenderLoop::~QSGRenderLoop()
 {
+}
+
+void QSGRenderLoop::cleanup()
+{
+    foreach (QQuickWindow *w, windows()) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(w);
+        if (wd->windowManager == this) {
+           windowDestroyed(w);
+           wd->windowManager = 0;
+        }
+    }
+    s_instance = 0;
+    delete this;
 }
 
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
@@ -113,6 +125,8 @@ public:
 
     QSGContext *sceneGraphContext() const;
     QSGRenderContext *createRenderContext(QSGContext *) const { return rc; }
+
+    QList<QQuickWindow *> windows() const { return m_windows.keys(); }
 
     bool event(QEvent *);
 
@@ -148,8 +162,8 @@ bool QSGRenderLoop::useConsistentTiming()
 
 QSGRenderLoop *QSGRenderLoop::instance()
 {
-    if (s_renderLoopInstance->isNull()) {
-        s_renderLoopInstance->reset(QSGContext::createWindowManager());
+    if (!s_instance) {
+        s_instance = QSGContext::createWindowManager();
 
         bool info = qEnvironmentVariableIsSet("QSG_INFO");
 
@@ -159,7 +173,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 qDebug() << "QSG: using fixed animation steps";
         }
 
-        if (s_renderLoopInstance->isNull()) {
+        if (!s_instance) {
 
             enum RenderLoopType {
                 BasicRenderLoop,
@@ -191,26 +205,28 @@ QSGRenderLoop *QSGRenderLoop::instance()
             switch (loopType) {
             case ThreadedRenderLoop:
                 if (info) qDebug() << "QSG: threaded render loop";
-                s_renderLoopInstance->reset(new QSGThreadedRenderLoop());
+                s_instance = new QSGThreadedRenderLoop();
                 break;
             case WindowsRenderLoop:
                 if (info) qDebug() << "QSG: windows render loop";
-                s_renderLoopInstance->reset(new QSGWindowsRenderLoop());
+                s_instance = new QSGWindowsRenderLoop();
                 break;
             default:
                 if (info) qDebug() << "QSG: basic render loop";
-                s_renderLoopInstance->reset(new QSGGuiThreadRenderLoop());
+                s_instance = new QSGGuiThreadRenderLoop();
                 break;
             }
         }
+
+        QObject::connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()), s_instance, SLOT(cleanup()));
     }
-    return s_renderLoopInstance->data();
+    return s_instance;
 }
 
 void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 {
-    Q_ASSERT(s_renderLoopInstance->isNull());
-    s_renderLoopInstance->reset(instance);
+    Q_ASSERT(!s_instance);
+    s_instance = instance;
 }
 
 void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,

@@ -78,6 +78,8 @@ public:
 
     virtual void releaseResources(QQuickWindow *window) = 0;
 
+    virtual QList<QQuickWindow *> windows() const = 0;
+
     // ### make this less of a singleton
     static QSGRenderLoop *instance();
     static void setInstance(QSGRenderLoop *instance);
@@ -91,6 +93,12 @@ Q_SIGNALS:
 
 protected:
     void handleContextCreationFailure(QQuickWindow *window, bool isEs);
+
+public Q_SLOTS:
+    void cleanup();
+
+private:
+    static QSGRenderLoop *s_instance;
 };
 
 QT_END_NAMESPACE

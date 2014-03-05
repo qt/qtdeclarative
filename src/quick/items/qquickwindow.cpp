@@ -290,7 +290,7 @@ void QQuickWindow::update()
     Q_D(QQuickWindow);
     if (d->windowManager)
         d->windowManager->update(this);
-    else
+    else if (d->renderControl)
         d->renderControl->update();
 }
 
@@ -1079,7 +1079,7 @@ QQuickWindow::~QQuickWindow()
     d->animationController->deleteLater();
     if (d->renderControl)
         d->renderControl->windowDestroyed();
-    else
+    else if (d->windowManager)
         d->windowManager->windowDestroyed(this);
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
@@ -1089,8 +1089,6 @@ QQuickWindow::~QQuickWindow()
 #endif
     delete d->contentItem; d->contentItem = 0;
 }
-
-
 
 /*!
     This function tries to release redundant resources currently held by the QML scene.
@@ -2715,7 +2713,7 @@ void QQuickWindow::maybeUpdate()
     Q_D(QQuickWindow);
     if (d->renderControl)
         d->renderControl->maybeUpdate();
-    else
+    else if (d->windowManager)
         d->windowManager->maybeUpdate(this);
 }
 
@@ -2990,7 +2988,11 @@ QImage QQuickWindow::grabWindow()
         return image;
     }
 
-    return d->renderControl ? d->renderControl->grab() : d->windowManager->grab(this);
+    if (d->renderControl)
+        return d->renderControl->grab();
+    else if (d->windowManager)
+        return d->windowManager->grab(this);
+    return QImage();
 }
 
 /*!
