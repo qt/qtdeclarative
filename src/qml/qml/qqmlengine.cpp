@@ -552,8 +552,6 @@ the same object as is returned from the Qt.include() call.
 */
 // Qt.include() is implemented in qv4include.cpp
 
-DEFINE_BOOL_CONFIG_OPTION(qmlUseNewCompiler, QML_NEW_COMPILER)
-
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
   profiler(0), outputWarningsToStdErr(true),
@@ -564,7 +562,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   scarceResourcesRefCount(0), importDatabase(e), typeLoader(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
-    useNewCompiler = qmlUseNewCompiler();
+    useNewCompiler = true;
 }
 
 QQmlEnginePrivate::~QQmlEnginePrivate()

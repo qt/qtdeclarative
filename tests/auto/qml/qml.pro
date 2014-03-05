@@ -36,7 +36,6 @@ PRIVATETESTS += \
     qqmlexpression \
     qqmldirparser \
     qqmlglobal \
-    qqmlinstruction \
     qqmllanguage \
     qqmlproperty \
     qqmlpropertycache \
