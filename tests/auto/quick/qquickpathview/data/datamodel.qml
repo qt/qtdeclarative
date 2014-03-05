@@ -6,6 +6,7 @@ PathView {
     objectName: "pathview"
     width: 240; height: 320
     pathItemCount: testObject.pathItemCount
+    highlightMoveDuration: 0
 
     function checkProperties() {
         testObject.error = false;

@@ -819,18 +819,16 @@ void tst_QQuickPathView::dataModel()
     QVERIFY(testItem == 0);
 
     pathview->setCurrentIndex(1);
-    QTRY_COMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
-    QTest::qWait(100);
+    QCOMPARE(pathview->currentIndex(), 1);
+    QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
     model.insertItem(2, "pink", "2");
-    QTest::qWait(100);
 
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
     QCOMPARE(pathview->currentIndex(), 1);
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
-    text = findItem<QQuickText>(pathview, "myText", 2);
-    QVERIFY(text);
+    QTRY_VERIFY(text = findItem<QQuickText>(pathview, "myText", 2));
     QCOMPARE(text->text(), model.name(2));
 
     model.removeItem(3);
