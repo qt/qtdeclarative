@@ -39,33 +39,74 @@
 ****************************************************************************/
 
 #include <QQuickWidget>
+#include <QQmlError>
 #include <QtWidgets>
+
+class MainWindow : public QMainWindow {
+    Q_OBJECT
+public:
+    MainWindow();
+
+private slots:
+    void quickWidgetStatusChanged(QQuickWidget::Status);
+    void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+
+private:
+    QQuickWidget *m_quickWidget;
+};
+
+MainWindow::MainWindow()
+   : m_quickWidget(new QQuickWidget)
+{
+    QMdiArea *centralWidget = new QMdiArea;
+
+    QLCDNumber *lcd = new QLCDNumber;
+    lcd->display(1337);
+    lcd->setMinimumSize(250,100);
+    centralWidget ->addSubWindow(lcd);
+
+    QUrl source("qrc:quickwidget/rotatingsquare.qml");
+
+    connect(m_quickWidget, SIGNAL(statusChanged(QQuickWidget::Status)),
+            this, SLOT(quickWidgetStatusChanged(QQuickWidget::Status)));
+    connect(m_quickWidget, SIGNAL(sceneGraphError(QQuickWindow::SceneGraphError,QString)),
+            this, SLOT(sceneGraphError(QQuickWindow::SceneGraphError,QString)));
+    m_quickWidget->resize(300,300);
+    m_quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView );
+    m_quickWidget->setSource(source);
+
+    centralWidget ->addSubWindow(m_quickWidget);
+
+    setCentralWidget(centralWidget);
+
+    QMenu *fileMenu = menuBar()->addMenu(tr("File"));
+    QAction *quitAction = fileMenu->addAction(tr("Quit"));
+    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+}
+
+void MainWindow::quickWidgetStatusChanged(QQuickWidget::Status status)
+{
+    if (status == QQuickWidget::Error) {
+        QStringList errors;
+        foreach (const QQmlError &error, m_quickWidget->errors())
+            errors.append(error.toString());
+        statusBar()->showMessage(errors.join(QStringLiteral(", ")));
+    }
+}
+
+void MainWindow::sceneGraphError(QQuickWindow::SceneGraphError, const QString &message)
+{
+     statusBar()->showMessage(message);
+}
 
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    QMdiArea *toplevel = new QMdiArea;
-
-    QLCDNumber *lcd = new QLCDNumber;
-    lcd->display(1337);
-    lcd->setMinimumSize(250,100);
-    toplevel->addSubWindow(lcd);
-
-    QUrl source("qrc:quickwidget/rotatingsquare.qml");
-
-    QQuickWidget *w = new QQuickWidget;
-    w->resize(300,300);
-    w->setResizeMode(QQuickWidget::SizeRootObjectToView );
-    w->setSource(source);
-
-    toplevel->addSubWindow(w);
-
-    toplevel->show();
+    MainWindow mainWindow;
+    mainWindow.show();
 
     return app.exec();
 }
 
-
-
-
+#include "main.moc"
