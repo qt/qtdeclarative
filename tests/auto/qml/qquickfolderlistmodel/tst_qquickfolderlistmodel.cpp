@@ -75,8 +75,8 @@ private slots:
     void resetFiltering();
     void refresh();
     void cdUp();
-#if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
-    // WinCE does not have drive concept, so lets execute this test only on desktop Windows.
+#ifdef Q_OS_WIN32
+    // WinCE/WinRT do not have drive APIs, so let's execute this test only on desktop Windows.
     void changeDrive();
 #endif
     void showDotAndDotDot();
@@ -240,7 +240,7 @@ void tst_qquickfolderlistmodel::cdUp()
     }
 }
 
-#if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
+#ifdef Q_OS_WIN32
 void tst_qquickfolderlistmodel::changeDrive()
 {
     QSKIP("QTBUG-26728");
