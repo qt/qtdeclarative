@@ -210,7 +210,6 @@ public:
     InternalClass *dateClass;
 
     InternalClass *functionClass;
-    InternalClass *functionWithProtoClass;
     InternalClass *protoClass;
 
     InternalClass *regExpClass;

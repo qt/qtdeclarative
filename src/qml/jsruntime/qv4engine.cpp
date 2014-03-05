@@ -283,7 +283,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(InternalClass::create(this, FunctionPrototype::staticVTable(), objectPrototype));
     functionClass = InternalClass::create(this, FunctionObject::staticVTable(), functionPrototype);
     uint index;
-    functionWithProtoClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    functionClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);

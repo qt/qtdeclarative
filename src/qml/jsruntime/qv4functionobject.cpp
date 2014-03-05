@@ -75,21 +75,17 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
-    : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
+    : Object(scope->engine->functionClass)
     , scope(scope)
     , function(0)
-    , protoCacheClass(0)
-    , protoCacheIndex(UINT_MAX)
 {
      init(name, createProto);
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
+    : Object(scope->engine->functionClass)
     , scope(scope)
     , function(0)
-    , protoCacheClass(0)
-    , protoCacheIndex(UINT_MAX)
 {
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -101,8 +97,6 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name
     : Object(scope->engine->functionClass)
     , scope(scope)
     , function(0)
-    , protoCacheClass(0)
-    , protoCacheIndex(UINT_MAX)
 {
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -117,6 +111,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
 {
     needsActivation = false;
     strictMode = false;
+    memberData[Index_Prototype].value = Encode::undefined();
 }
 
 FunctionObject::~FunctionObject()
@@ -137,6 +132,9 @@ void FunctionObject::init(const StringRef n, bool createProto)
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
         proto->memberData[Index_ProtoConstructor].value = this->asReturnedValue();
         memberData[Index_Prototype].value = proto.asReturnedValue();
+    } else {
+        // ### Empty or undefined?
+        memberData[Index_Prototype].value = Encode::undefined();
     }
 
     ScopedValue v(s, n.asReturnedValue());
@@ -158,13 +156,8 @@ ReturnedValue FunctionObject::newInstance()
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    ExecutionEngine *v4 = that->internalClass->engine;
-    Scope scope(v4);
-    Scoped<FunctionObject> f(scope, that, Scoped<FunctionObject>::Cast);
-
-    InternalClass *ic = f->internalClassForConstructor();
-    Scoped<Object> obj(scope, v4->newObject(ic));
-    return obj.asReturnedValue();
+    that->internalClass->engine->currentContext()->throwTypeError();
+    return Encode::undefined();
 }
 
 ReturnedValue FunctionObject::call(Managed *, CallData *)
@@ -188,43 +181,6 @@ FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Fun
         function->isNamedExpression())
         return new (scope->engine->memoryManager) ScriptFunction(scope, function);
     return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
-}
-
-ReturnedValue FunctionObject::protoProperty()
-{
-    if (protoCacheClass != internalClass) {
-        protoCacheClass = internalClass;
-        protoCacheIndex = internalClass->find(internalClass->engine->id_prototype);
-    }
-    if (protoCacheIndex < UINT_MAX) {
-        if (internalClass->propertyData.at(protoCacheIndex).isData()) {
-            ReturnedValue v = memberData[protoCacheIndex].value.asReturnedValue();
-            if (v != protoValue) {
-                classForConstructor = 0;
-                protoValue = v;
-            }
-            return v;
-        }
-    }
-    classForConstructor = 0;
-    return get(internalClass->engine->id_prototype);
-}
-
-InternalClass *FunctionObject::internalClassForConstructor()
-{
-    // need to call this first to ensure we don't use a wrong class
-    ReturnedValue proto = protoProperty();
-    if (classForConstructor)
-        return classForConstructor;
-
-    Scope scope(internalClass->engine);
-    ScopedObject p(scope, proto);
-    if (p)
-        classForConstructor = InternalClass::create(scope.engine, Object::staticVTable(), p.getPointer());
-    else
-        classForConstructor = scope.engine->objectClass;
-
-    return classForConstructor;
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
@@ -395,7 +351,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name(), true)
+    : SimpleScriptFunction(scope, function, true)
 {
     setVTable(staticVTable());
 
@@ -583,6 +539,19 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     return result.asReturnedValue();
 }
 
+InternalClass *SimpleScriptFunction::internalClassForConstructor()
+{
+    ReturnedValue proto = protoProperty();
+    InternalClass *classForConstructor;
+    Scope scope(internalClass->engine);
+    ScopedObject p(scope, proto);
+    if (p)
+        classForConstructor = InternalClass::create(scope.engine, Object::staticVTable(), p.getPointer());
+    else
+        classForConstructor = scope.engine->objectClass;
+
+    return classForConstructor;
+}
 
 
 

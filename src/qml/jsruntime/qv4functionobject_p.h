@@ -116,10 +116,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     Function *function;
-    InternalClass *protoCacheClass;
-    uint protoCacheIndex;
-    ReturnedValue protoValue;
-    InternalClass *classForConstructor;
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
@@ -141,8 +137,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
-    ReturnedValue protoProperty();
-    InternalClass *internalClassForConstructor();
+    ReturnedValue protoProperty() { return memberData[Index_Prototype].value.asReturnedValue(); }
 
 protected:
     FunctionObject(InternalClass *ic);
@@ -213,7 +208,17 @@ struct IndexedBuiltinFunction: FunctionObject
 };
 
 
-struct ScriptFunction: FunctionObject {
+struct SimpleScriptFunction: FunctionObject {
+    V4_OBJECT
+    SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
+
+    static ReturnedValue construct(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
+
+    InternalClass *internalClassForConstructor();
+};
+
+struct ScriptFunction: SimpleScriptFunction {
     V4_OBJECT
     ScriptFunction(ExecutionContext *scope, Function *function);
 
@@ -221,13 +226,6 @@ struct ScriptFunction: FunctionObject {
     static ReturnedValue call(Managed *that, CallData *callData);
 };
 
-struct SimpleScriptFunction: FunctionObject {
-    V4_OBJECT
-    SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
-
-    static ReturnedValue construct(Managed *, CallData *callData);
-    static ReturnedValue call(Managed *that, CallData *callData);
-};
 
 struct BoundFunction: FunctionObject {
     V4_OBJECT
