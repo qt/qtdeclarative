@@ -333,6 +333,14 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 void QQuickPinchArea::updatePinch()
 {
     Q_D(QQuickPinchArea);
+
+    if (d->touchPoints.count() < 2) {
+        setKeepMouseGrab(false);
+        QQuickWindow *c = window();
+        if (c && c->mouseGrabberItem() == this)
+            ungrabMouse();
+    }
+
     if (d->touchPoints.count() == 0) {
         if (d->inPinch) {
             d->inPinch = false;
@@ -355,12 +363,7 @@ void QQuickPinchArea::updatePinch()
         d->initPinch = false;
         d->pinchRejected = false;
         d->stealMouse = false;
-        setKeepMouseGrab(false);
         return;
-    }
-
-    if (d->touchPoints.count() == 1) {
-        setKeepMouseGrab(false);
     }
 
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
