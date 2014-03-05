@@ -1185,7 +1185,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     }
     }
 
-    if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
+    if (QQmlVME::componentCompleteEnabled()) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!sharedState->allParserStatusCallbacks.isEmpty()) {
             Q_QML_VME_PROFILE(sharedState->profiler, pop());
@@ -1226,7 +1226,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         Q_ASSERT(d);
         Q_ASSERT(d->context);
         a->add(&d->context->componentAttached);
-        // ### designer if (componentCompleteEnabled())
+        if (QQmlVME::componentCompleteEnabled())
             emit a->completed();
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
