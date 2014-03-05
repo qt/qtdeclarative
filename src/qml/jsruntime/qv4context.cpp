@@ -133,38 +133,6 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
     activation->__defineOwnProperty__(this, name, desc, attrs);
 }
 
-String * const *ExecutionContext::formals() const
-{
-    if (type < Type_SimpleCallContext)
-        return 0;
-    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return (f && f->function) ? f->function->internalClass->nameMap.constData() : 0;
-}
-
-unsigned int ExecutionContext::formalCount() const
-{
-    if (type < Type_SimpleCallContext)
-        return 0;
-    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->formalParameterCount() : 0;
-}
-
-String * const *ExecutionContext::variables() const
-{
-    if (type < Type_SimpleCallContext)
-        return 0;
-    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return (f && f->function) ? f->function->internalClass->nameMap.constData() + f->function->compiledFunction->nFormals : 0;
-}
-
-unsigned int ExecutionContext::variableCount() const
-{
-    if (type < Type_SimpleCallContext)
-        return 0;
-    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
-    return f ? f->varCount() : 0;
-}
-
 
 GlobalContext::GlobalContext(ExecutionEngine *eng)
     : ExecutionContext(eng, Type_GlobalContext)
@@ -219,6 +187,27 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
     if (function->varCount())
         std::fill(locals, locals + function->varCount(), Primitive::undefinedValue());
 }
+
+String * const *CallContext::formals() const
+{
+    return (function && function->function) ? function->function->internalClass->nameMap.constData() : 0;
+}
+
+unsigned int CallContext::formalCount() const
+{
+    return function ? function->formalParameterCount() : 0;
+}
+
+String * const *CallContext::variables() const
+{
+    return (function && function->function) ? function->function->internalClass->nameMap.constData() + function->function->compiledFunction->nFormals : 0;
+}
+
+unsigned int CallContext::variableCount() const
+{
+    return function ? function->varCount() : 0;
+}
+
 
 
 bool ExecutionContext::deleteProperty(const StringRef name)
@@ -277,7 +266,7 @@ void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
 
     if (ctx->type >= Type_CallContext) {
         QV4::CallContext *c = static_cast<CallContext *>(ctx);
-        for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
+        for (unsigned local = 0, lastLocal = c->function->varCount(); local < lastLocal; ++local)
             c->locals[local].mark(engine);
         if (c->activation)
             c->activation->mark(engine);

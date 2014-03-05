@@ -220,9 +220,13 @@ void Script::parse()
         }
 
         QStringList inheritedLocals;
-        if (inheritContext)
-            for (String * const *i = scope->variables(), * const *ei = i + scope->variableCount(); i < ei; ++i)
-                inheritedLocals.append(*i ? (*i)->toQString() : QString());
+        if (inheritContext) {
+            CallContext *ctx = scope->asCallContext();
+            if (ctx) {
+                for (String * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
+                    inheritedLocals.append(*i ? (*i)->toQString() : QString());
+            }
+        }
 
         RuntimeCodegen cg(scope, strictMode);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);

@@ -124,12 +124,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
 
-    // formals are in reverse order
-    String * const *formals() const;
-    unsigned int formalCount() const;
-    String * const *variables() const;
-    unsigned int variableCount() const;
-
     void createMutableBinding(const StringRef name, bool deletable);
 
     ReturnedValue throwError(const QV4::ValueRef value);
@@ -174,6 +168,12 @@ struct CallContext : public ExecutionContext
     int realArgumentCount;
     Value *locals;
     Object *activation;
+
+    // formals are in reverse order
+    String * const *formals() const;
+    unsigned int formalCount() const;
+    String * const *variables() const;
+    unsigned int variableCount() const;
 
     inline ReturnedValue argument(int i);
     bool needsOwnArguments() const;
