@@ -191,7 +191,8 @@ private:
     void addSorted(Vector<UChar>& matches, UChar ch)
     {
         unsigned pos = 0;
-        unsigned range = matches.size();
+        ASSERT(matches.size() <= UINT_MAX);
+        unsigned range = static_cast<unsigned>(matches.size());
 
         // binary chop, find position to insert char.
         while (range) {
@@ -216,7 +217,8 @@ private:
 
     void addSortedRange(Vector<CharacterRange>& ranges, UChar lo, UChar hi)
     {
-        unsigned end = ranges.size();
+        ASSERT(ranges.size() <= UINT_MAX);
+        unsigned end = static_cast<unsigned>(ranges.size());
         
         // Simple linear scan - I doubt there are that many ranges anyway...
         // feel free to fix this with something faster (eg binary chop).
@@ -427,7 +429,8 @@ public:
 
         PatternTerm& lastTerm = m_alternative->lastTerm();
 
-        unsigned numParenAlternatives = parenthesesDisjunction->m_alternatives.size();
+        ASSERT(parenthesesDisjunction->m_alternatives.size() <= UINT_MAX);
+        unsigned numParenAlternatives = static_cast<unsigned>(parenthesesDisjunction->m_alternatives.size());
         unsigned numBOLAnchoredAlts = 0;
 
         for (unsigned i = 0; i < numParenAlternatives; i++) {

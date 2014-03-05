@@ -315,10 +315,12 @@ public:
     public:
         BasicBlock *operator*() const
         {
-            if (set.blockNumbers)
+            if (set.blockNumbers) {
                 return set.allBlocks.at(*numberIt);
-            else
-                return set.allBlocks.at(flagIt);
+            } else {
+                Q_ASSERT(flagIt <= INT_MAX);
+                return set.allBlocks.at(static_cast<int>(flagIt));
+            }
         }
 
         bool operator==(const const_iterator &other) const
@@ -490,7 +492,8 @@ class DominatorTree {
 
         BasicBlockIndex b = InvalidBasicBlockIndex;
         BasicBlockIndex last = worklist.back();
-        for (int it = worklist.size() - 2; it >= 0; --it) {
+        Q_ASSERT(worklist.size() <= INT_MAX);
+        for (int it = static_cast<int>(worklist.size()) - 2; it >= 0; --it) {
             BasicBlockIndex bbIt = worklist[it];
             ancestor[bbIt] = last;
             BasicBlockIndex &best_it = best[bbIt];
