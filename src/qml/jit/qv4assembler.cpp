@@ -97,14 +97,15 @@ QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int fu
 /* Platform/Calling convention/Architecture specific section */
 
 #if CPU(X86_64)
+#  if OS(LINUX) || OS(MAC_OS_X)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
-    // Not used: JSC::X86Registers::rbx,
-    // Not used: JSC::X86Registers::r10,
+    JSC::X86Registers::ebx,
     JSC::X86Registers::r12, // LocalsRegister
-    // Not used: JSC::X86Registers::r13,
-    JSC::X86Registers::r14 // ContextRegister
-    // Not used: JSC::X86Registers::r15,
+    JSC::X86Registers::r13,
+    JSC::X86Registers::r14, // ContextRegister
+    JSC::X86Registers::r15
 };
+#  endif
 #endif
 
 #if CPU(X86)

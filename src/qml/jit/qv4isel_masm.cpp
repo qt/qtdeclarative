@@ -218,6 +218,7 @@ static QVector<int> getIntRegisters()
             << JSC::X86Registers::ebx;
 #  else // x86_64 with linux or with macos
     static const QVector<int> intRegisters = QVector<int>()
+            << JSC::X86Registers::ebx
             << JSC::X86Registers::edi
             << JSC::X86Registers::esi
             << JSC::X86Registers::edx
