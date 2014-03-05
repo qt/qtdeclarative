@@ -793,13 +793,11 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(incubator.isLoading());
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
-
-    {
-    bool b = true;
-    controller.incubateWhile(&b);
+    if (incubator.isLoading()) {
+        bool b = true;
+        controller.incubateWhile(&b);
     }
 
     QVERIFY(incubator.isReady());
