@@ -354,7 +354,8 @@ public:
             int frameSize = RegisterSize * calleeSavedRegisterCount;
             frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
 
-            frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
+            Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
+            frameSize = static_cast<int>(WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise));
             frameSize -= stackSpaceAllocatedOtherwise;
 
             return frameSize;
@@ -962,7 +963,8 @@ public:
                                + StackShadowSpace;
 
         if (stackSpaceNeeded) {
-            stackSpaceNeeded = WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded);
+            Q_ASSERT(stackSpaceNeeded < (INT_MAX - StackAlignment));
+            stackSpaceNeeded = static_cast<int>(WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded));
             sub32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
         }
 

@@ -154,7 +154,8 @@ void LinkBuffer::performFinalization()
 #if ENABLE(BRANCH_COMPACTION)
     ExecutableAllocator::makeExecutable(code(), m_initialSize);
 #else
-    ExecutableAllocator::makeExecutable(code(), m_size);
+    ASSERT(m_size <= INT_MAX);
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
 #endif
     MacroAssembler::cacheFlush(code(), m_size);
 }
