@@ -1170,9 +1170,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     trace.event("begin binding eval");
 
     while (!sharedState->allCreatedBindings.isEmpty()) {
-        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return 0;
-
         QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
         if (!b)
             continue;
@@ -1182,6 +1179,9 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         data->clearPendingBindingBit(b->propertyIndex());
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                       QQmlPropertyPrivate::DontRemoveBinding);
+
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+            return 0;
     }
     }
 
