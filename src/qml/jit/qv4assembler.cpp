@@ -105,6 +105,16 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
     JSC::X86Registers::r14, // ContextRegister
     JSC::X86Registers::r15
 };
+#  elif OS(WINDOWS)
+static const Assembler::RegisterID calleeSavedRegisters[] = {
+    JSC::X86Registers::ebx,
+    JSC::X86Registers::esi,
+    JSC::X86Registers::edi,
+    JSC::X86Registers::r12, // LocalsRegister
+    JSC::X86Registers::r13,
+    JSC::X86Registers::r14, // ContextRegister
+    JSC::X86Registers::r15
+};
 #  endif
 #endif
 
