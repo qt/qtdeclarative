@@ -264,7 +264,7 @@ public:
     QString fileName;
 };
 
-class QQmlTypeLoader : public QQmlDataLoader
+class Q_AUTOTEST_EXPORT QQmlTypeLoader : public QQmlDataLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:

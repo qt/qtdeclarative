@@ -280,6 +280,11 @@ struct Function
 
 // Qml data structures
 
+struct Q_QML_EXPORT TranslationData {
+    quint32 commentIndex;
+    int number;
+};
+
 struct Q_QML_EXPORT Binding
 {
     quint32 propertyNameIndex;
@@ -289,6 +294,8 @@ struct Q_QML_EXPORT Binding
         Type_Boolean,
         Type_Number,
         Type_String,
+        Type_Translation,
+        Type_TranslationById,
         Type_Script,
         Type_Object,
         Type_AttachedProperty,
@@ -312,8 +319,9 @@ struct Q_QML_EXPORT Binding
         double d;
         quint32 compiledScriptIndex; // used when Type_Script
         quint32 objectIndex;
+        TranslationData translationData; // used when Type_Translation
     } value;
-    quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
+    quint32 stringIndex; // Set for Type_String, Type_Translation and Type_Script (the latter because of script strings)
 
     Location location;
     Location valueLocation;
@@ -364,6 +372,8 @@ struct Q_QML_EXPORT Binding
         }
         return false;
     }
+
+    bool evaluatesToString() const { return type == Type_String || type == Type_Translation || type == Type_TranslationById; }
 
     QString valueAsString(const Unit *unit) const;
     QString valueAsScriptString(const Unit *unit) const;

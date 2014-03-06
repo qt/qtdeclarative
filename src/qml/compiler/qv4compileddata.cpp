@@ -46,6 +46,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <QCoreApplication>
 
 #include <algorithm>
 
@@ -190,6 +191,22 @@ QString Binding::valueAsString(const Unit *unit) const
         return QString::number(value.d);
     case Type_Invalid:
         return QString();
+    case Type_TranslationById: {
+        QByteArray id = unit->stringAt(stringIndex).toUtf8();
+        return qtTrId(id.constData(), value.translationData.number);
+    }
+    case Type_Translation: {
+        // This code must match that in the qsTr() implementation
+        const QString &path = unit->stringAt(unit->sourceFileIndex);
+        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+        QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) :
+                                             QString();
+        QByteArray contextUtf8 = context.toUtf8();
+        QByteArray comment = unit->stringAt(value.translationData.commentIndex).toUtf8();
+        QByteArray text = unit->stringAt(stringIndex).toUtf8();
+        return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
+                                           comment.constData(), value.translationData.number);
+    }
     default:
         break;
     }

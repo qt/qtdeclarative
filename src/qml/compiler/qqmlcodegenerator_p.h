@@ -171,8 +171,8 @@ template <typename T>
 class FixedPoolArray
 {
     T *data;
-    int count;
 public:
+    int count;
 
     void init(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
@@ -191,6 +191,12 @@ public:
         Q_ASSERT(index >= 0 && index < count);
         return data[index];
     }
+
+    T &operator[](int index) {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
 
     int indexOf(const T &value) const {
         for (int i = 0; i < count; ++i)

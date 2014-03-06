@@ -287,6 +287,9 @@ QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit
         case QV4::CompiledData::Binding::Type_Boolean:
             var = binding->valueAsBoolean();
             break;
+        case QV4::CompiledData::Binding::Type_Translation:
+        case QV4::CompiledData::Binding::Type_TranslationById:
+            Q_UNREACHABLE();
         default:
             break;
         }

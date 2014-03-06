@@ -2369,6 +2369,8 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
                     d += QByteArray::number(v);
                 }
             }
+        } else {
+            Q_UNREACHABLE();
         }
 
         d.append('\0');

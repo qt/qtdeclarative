@@ -422,6 +422,9 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
 inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
 { return t1.index == t2.index && t1.scope == t2.scope && t1.kind == t2.kind && t1.type == t2.type; }
 
+inline bool operator!=(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
+{ return !(t1 == t2); }
+
 inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
 { return t.index ^ (t.kind | (t.scope << 3)) ^ seed; }
 

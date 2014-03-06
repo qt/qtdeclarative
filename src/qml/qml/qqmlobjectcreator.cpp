@@ -359,14 +359,14 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
     }
     break;
     case QVariant::String: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        Q_ASSERT(binding->evaluatesToString());
         QString value = binding->valueAsString(&qmlUnit->header);
         argv[0] = &value;
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
     }
     break;
     case QVariant::StringList: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        Q_ASSERT(binding->evaluatesToString());
         QStringList value(binding->valueAsString(&qmlUnit->header));
         argv[0] = &value;
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
@@ -586,7 +586,7 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             break;
         } else if (property->propType == qMetaTypeId<QList<QString> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+            Q_ASSERT(binding->evaluatesToString());
             QList<QString> value;
             value.append(binding->valueAsString(&qmlUnit->header));
             argv[0] = reinterpret_cast<void *>(&value);
