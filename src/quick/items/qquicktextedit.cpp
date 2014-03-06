@@ -2029,7 +2029,6 @@ void QQuickTextEdit::q_textChanged()
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
-    updateTotalLines();
     emit textChanged();
 }
 
@@ -2225,6 +2224,7 @@ void QQuickTextEdit::updateSize()
     if (d->contentSize != size) {
         d->contentSize = size;
         emit contentSizeChanged();
+        updateTotalLines();
     }
 }
 
