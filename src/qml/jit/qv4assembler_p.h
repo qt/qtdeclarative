@@ -965,7 +965,7 @@ public:
         if (stackSpaceNeeded) {
             Q_ASSERT(stackSpaceNeeded < (INT_MAX - StackAlignment));
             stackSpaceNeeded = static_cast<int>(WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded));
-            sub32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
+            subPtr(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
         }
 
         // First save any arguments that reside in registers, because they could be overwritten
@@ -995,7 +995,7 @@ public:
         callAbsolute(functionName, function);
 
         if (stackSpaceNeeded)
-            add32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
+            addPtr(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
 
         if (ExceptionCheck<Callable>::NeedsCheck) {
             checkException();
