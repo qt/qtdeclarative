@@ -2349,9 +2349,8 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
 
             idMapping << m;
         }
-
-        v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject));
     }
+    v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject));
 
     if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
         return false;
