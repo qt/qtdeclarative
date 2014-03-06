@@ -85,10 +85,12 @@ public:
     void setRootObject(QObject *);
     void renderSceneGraph();
     void createContext();
+    void destroyContext();
 
-    GLuint textureId() const;
+    GLuint textureId() const Q_DECL_OVERRIDE;
 
     void init(QQmlEngine* e = 0);
+    void handleWindowChange();
 
     QSize rootObjectSize() const;
 

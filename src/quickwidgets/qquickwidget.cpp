@@ -82,6 +82,12 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
+void QQuickWidgetPrivate::handleWindowChange()
+{
+    renderControl->stop();
+    destroyContext();
+}
+
 QQuickWidgetPrivate::QQuickWidgetPrivate()
     : root(0)
     , component(0)
@@ -521,6 +527,15 @@ void QQuickWidgetPrivate::createContext()
         qWarning("QQuickWidget: failed to make window surface current");
 }
 
+void QQuickWidgetPrivate::destroyContext()
+{
+    if (!context)
+        return;
+    renderControl->invalidate();
+    delete context;
+    context = 0;
+}
+
 void QQuickWidget::createFramebufferObject()
 {
     Q_D(QQuickWidget);
@@ -768,6 +783,7 @@ void QQuickWidget::showEvent(QShowEvent *)
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
 
     d->updatePending = false;
+    d->createContext();
     triggerUpdate();
 }
 
@@ -776,12 +792,15 @@ void QQuickWidget::hideEvent(QHideEvent *)
     Q_D(QQuickWidget);
     QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
 
-    QOpenGLContext *context = d->offscreenWindow->openglContext();
-    if (!context) {
+    if (!d->context) {
         qWarning("QQuickWidget::hideEvent with no context");
         return;
     }
-    context->makeCurrent(d->offscreenWindow);
+    bool success = d->context->makeCurrent(d->offscreenSurface);
+    if (!success) {
+        qWarning("QQuickWidget::hideEvent could not make context current");
+        return;
+    }
     d->renderControl->stop();
 }
 
@@ -837,7 +856,9 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::TouchCancel:
         // Touch events only have local and global positions, no need to map.
         return d->offscreenWindow->event(e);
-
+    case QEvent::WindowChangeInternal:
+        d->handleWindowChange();
+        break;
     default:
         break;
     }
