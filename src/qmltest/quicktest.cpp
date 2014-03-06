@@ -208,8 +208,10 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 #ifdef QT_QMLTEST_WITH_WIDGETS
     bool withWidgets = false;
 #endif
-    int outargc = 1;
     int index = 1;
+    QScopedArrayPointer<char *> testArgV(new char *[argc + 1]);
+    testArgV[0] = argv[0];
+    int testArgC = 1;
     while (index < argc) {
         if (strcmp(argv[index], "-import") == 0 && (index + 1) < argc) {
             imports += stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
@@ -227,15 +229,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
             translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
-        } else if (outargc != index) {
-            argv[outargc++] = argv[index++];
         } else {
-            ++outargc;
-            ++index;
+            testArgV[testArgC++] = argv[index++];
         }
     }
-    argv[outargc] = 0;
-    argc = outargc;
+    testArgV[testArgC] = 0;
 
     QCoreApplication* app = 0;
     if (!QCoreApplication::instance()) {
@@ -256,7 +254,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     QuickTestResult::setCurrentAppname(argv[0]);
     QuickTestResult::setProgramName(name);
 
-    QuickTestResult::parseArgs(argc, argv);
+    QuickTestResult::parseArgs(testArgC, testArgV.data());
 
 #ifndef QT_NO_TRANSLATION
     QTranslator translator;
