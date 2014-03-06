@@ -2040,6 +2040,8 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
     QSGMaterial *material = gn->activeMaterial();
     ShaderManager::Shader *sms = m_useDepthBuffer ? m_shaderManager->prepareMaterial(material) : m_shaderManager->prepareMaterialNoRewrite(material);
+    if (!sms)
+        return;
     QSGMaterialShader *program = sms->program;
 
     if (m_currentShader != sms)
@@ -2124,6 +2126,8 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
     QSGMaterial *material = gn->activeMaterial();
     ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material);
+    if (!sms)
+        return;
     QSGMaterialShader *program = sms->program;
 
     if (sms != m_currentShader)
