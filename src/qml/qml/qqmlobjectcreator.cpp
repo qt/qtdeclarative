@@ -737,7 +737,8 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
         QQmlType *attachedType = tr->type;
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
-        QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
+        QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(attachedType->attachedPropertiesType());
+        Q_ASSERT(!cache.isNull());
         if (!populateInstance(binding->value.objectIndex, qmlObject, cache, qmlObject, /*value type property*/0))
             return false;
         return true;
@@ -1288,6 +1289,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
     if (installPropertyCache) {
+        Q_ASSERT(_propertyCache);
         _ddata->propertyCache = _propertyCache;
         _ddata->propertyCache->addref();
     }
