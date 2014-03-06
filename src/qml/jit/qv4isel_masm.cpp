@@ -119,6 +119,7 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
         processedOutput = processedOutput.replace(ptrString, it.value());
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
+    fflush(stderr);
 }
 
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)

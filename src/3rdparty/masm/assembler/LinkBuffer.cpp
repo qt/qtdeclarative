@@ -52,7 +52,13 @@ LinkBuffer::CodeRef LinkBuffer::finalizeCodeWithDisassembly(const char* format, 
     va_end(argList);
     dataLogF(":\n");
     
-    dataLogF("    Code at [%p, %p):\n", result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
+    dataLogF(
+#if OS(WINDOWS)
+                "    Code at [0x%p, 0x%p):\n",
+#else
+                "    Code at [%p, %p):\n",
+#endif
+                result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
     disassemble(result.code(), m_size, "    ", WTF::dataFile());
     
     return result;

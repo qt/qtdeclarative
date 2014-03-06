@@ -49,7 +49,13 @@ bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const c
     uint64_t currentPC = disassembler.pc;
     while (ud_disassemble(&disassembler)) {
         char pcString[20];
-        snprintf(pcString, sizeof(pcString), "0x%lx", static_cast<unsigned long>(currentPC));
+        snprintf(pcString, sizeof(pcString),
+#if OS(WINDOWS)
+                 "0x%p",
+#else
+                 "%p",
+#endif
+                 currentPC);
         out.printf("%s%16s: %s\n", prefix, pcString, ud_insn_asm(&disassembler));
         currentPC = disassembler.pc;
     }
