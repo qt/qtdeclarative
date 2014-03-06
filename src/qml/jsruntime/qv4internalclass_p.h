@@ -233,10 +233,13 @@ struct InternalClass {
     static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto);
     InternalClass *changePrototype(Object *proto);
     InternalClass *changeVTable(const ManagedVTable *vt);
+    static void addMember(Object *object, StringRef string, PropertyAttributes data, uint *index);
+    static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(StringRef string, PropertyAttributes data, uint *index = 0);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
-    void removeMember(Object *object, Identifier *id);
+    static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
+    static void removeMember(Object *object, Identifier *id);
     uint find(const StringRef string);
     uint find(const String *s);
 
@@ -247,6 +250,7 @@ struct InternalClass {
     void markObjects();
 
 private:
+    InternalClass *addMemberImpl(String *string, PropertyAttributes data, uint *index);
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);

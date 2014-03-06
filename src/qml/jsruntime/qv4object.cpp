@@ -240,10 +240,11 @@ void Object::markObjects(Managed *that, ExecutionEngine *e)
 void Object::ensureMemberIndex(uint idx)
 {
     if (idx >= memberDataAlloc) {
-        memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
-        Property *newMemberData = new Property[memberDataAlloc];
-        memcpy(newMemberData, memberData, sizeof(Property)*idx);
-        memset(newMemberData + idx, 0, sizeof(Property)*(memberDataAlloc - idx));
+        int newAlloc = qMax((uint)8, 2*memberDataAlloc);
+        Property *newMemberData = new Property[newAlloc];
+        memcpy(newMemberData, memberData, sizeof(Property)*memberDataAlloc);
+        memset(newMemberData + memberDataAlloc, 0, sizeof(Property)*(newAlloc - memberDataAlloc));
+        memberDataAlloc = newAlloc;
         if (memberData != inlineProperties)
             delete [] memberData;
         memberData = newMemberData;
@@ -253,12 +254,12 @@ void Object::ensureMemberIndex(uint idx)
 void Object::insertMember(const StringRef s, const Property &p, PropertyAttributes attributes)
 {
     uint idx;
-    internalClass = internalClass->addMember(s.getPointer(), attributes, &idx);
+    InternalClass::addMember(this, s.getPointer(), attributes, &idx);
 
     if (attributes.isAccessor())
         hasAccessorProperty = 1;
 
-    ensureMemberIndex(idx);
+    ensureMemberIndex(internalClass->size);
 
     memberData[idx] = p;
 }
@@ -597,7 +598,11 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
 
     while (it->memberIndex < o->internalClass->size) {
         String *n = o->internalClass->nameMap.at(it->memberIndex);
-        assert(n);
+        if (!n) {
+            // accessor properties have a dummy entry with n == 0
+            ++it->memberIndex;
+            continue;
+        }
 
         Property *p = o->memberData + it->memberIndex;
         PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
@@ -841,8 +846,7 @@ bool Object::internalDeleteProperty(const StringRef name)
     uint memberIdx = internalClass->find(name);
     if (memberIdx != UINT_MAX) {
         if (internalClass->propertyData[memberIdx].isConfigurable()) {
-            internalClass->removeMember(this, name->identifier);
-            memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(Property));
+            InternalClass::removeMember(this, name->identifier);
             return true;
         }
         if (engine()->currentContext()->strictMode)
@@ -1061,7 +1065,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
 
     current->merge(cattrs, p, attrs);
     if (!member.isNull()) {
-        internalClass = internalClass->changeMember(member.getPointer(), cattrs);
+        InternalClass::changeMember(this, member.getPointer(), cattrs);
     } else {
         setArrayAttributes(index, cattrs);
     }
