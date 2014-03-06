@@ -1112,16 +1112,8 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
             o->initSparseArray();
     }
 
-    for (uint i = 0; i < klass->size; ++i) {
-        if (klass->propertyData[i].isData())
-            o->memberData[i].value = *args++;
-        else {
-            o->memberData[i].value = *args;
-            args++;
-            o->memberData[i].set = *args;
-            args++;
-        }
-    }
+    for (uint i = 0; i < klass->size; ++i)
+        o->memberData[i] = *args++;
 
     ScopedValue entry(scope);
     for (int i = 0; i < arrayValueCount; ++i) {

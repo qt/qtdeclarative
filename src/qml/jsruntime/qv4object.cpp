@@ -83,7 +83,7 @@ Object::Object(InternalClass *ic)
 
     if (internalClass->size >= memberDataAlloc) {
         memberDataAlloc = internalClass->size;
-        memberData = new Property[memberDataAlloc];
+        memberData = new Value[memberDataAlloc];
     }
 }
 
@@ -222,17 +222,8 @@ void Object::markObjects(Managed *that, ExecutionEngine *e)
 {
     Object *o = static_cast<Object *>(that);
 
-    if (!o->hasAccessorProperty) {
-        for (uint i = 0; i < o->internalClass->size; ++i)
-            o->memberData[i].value.mark(e);
-    } else {
-        for (uint i = 0; i < o->internalClass->size; ++i) {
-            const Property &pd = o->memberData[i];
-            pd.value.mark(e);
-            if (o->internalClass->propertyData[i].isAccessor())
-                pd.set.mark(e);
-        }
-    }
+    for (uint i = 0; i < o->internalClass->size; ++i)
+        o->memberData[i].mark(e);
     if (o->arrayData)
         o->arrayData->mark(e);
 }
@@ -241,9 +232,9 @@ void Object::ensureMemberIndex(uint idx)
 {
     if (idx >= memberDataAlloc) {
         int newAlloc = qMax((uint)8, 2*memberDataAlloc);
-        Property *newMemberData = new Property[newAlloc];
-        memcpy(newMemberData, memberData, sizeof(Property)*memberDataAlloc);
-        memset(newMemberData + memberDataAlloc, 0, sizeof(Property)*(newAlloc - memberDataAlloc));
+        Value *newMemberData = new Value[newAlloc];
+        memcpy(newMemberData, memberData, sizeof(Value)*memberDataAlloc);
+        memset(newMemberData + memberDataAlloc, 0, sizeof(Value)*(newAlloc - memberDataAlloc));
         memberDataAlloc = newAlloc;
         if (memberData != inlineProperties)
             delete [] memberData;
@@ -256,12 +247,15 @@ void Object::insertMember(const StringRef s, const Property &p, PropertyAttribut
     uint idx;
     InternalClass::addMember(this, s.getPointer(), attributes, &idx);
 
-    if (attributes.isAccessor())
-        hasAccessorProperty = 1;
 
     ensureMemberIndex(internalClass->size);
 
-    memberData[idx] = p;
+    if (attributes.isAccessor()) {
+        hasAccessorProperty = 1;
+        *propertyAt(idx) = p;
+    } else {
+        memberData[idx] = p.value;
+    }
 }
 
 // Section 8.12.1
@@ -275,7 +269,7 @@ Property *Object::__getOwnProperty__(const StringRef name, PropertyAttributes *a
     if (member < UINT_MAX) {
         if (attrs)
             *attrs = internalClass->propertyData[member];
-        return memberData + member;
+        return propertyAt(member);
     }
 
     if (attrs)
@@ -316,7 +310,7 @@ Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttrib
         if (idx < UINT_MAX) {
             if (attrs)
                 *attrs = o->internalClass->propertyData[idx];
-            return o->memberData + idx;
+            return o->propertyAt(idx);
         }
 
         o = o->prototype();
@@ -515,12 +509,12 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
             l->classList[0] = o->internalClass;
             l->index = idx;
             l->setter = Lookup::setter0;
-            o->memberData[idx].value = *value;
+            o->memberData[idx] = *value;
             return;
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], value);
+            o->putValue(o->propertyAt(idx), o->internalClass->propertyData[idx], value);
             return;
         }
     }
@@ -604,7 +598,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
             continue;
         }
 
-        Property *p = o->memberData + it->memberIndex;
+        Property *p = o->propertyAt(it->memberIndex);
         PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -633,7 +627,7 @@ ReturnedValue Object::internalGet(const StringRef name, bool *hasProperty)
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(o->memberData + idx, o->internalClass->propertyData.at(idx));
+            return getValue(o->propertyAt(idx), o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype();
@@ -694,7 +688,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
     Property *pd = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
-        pd = memberData + member;
+        pd = propertyAt(member);
         attrs = internalClass->propertyData[member];
     }
 
@@ -886,7 +880,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
 
     if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
-        Property *lp = memberData + ArrayObject::LengthPropertyIndex;
+        Property *lp = propertyAt(ArrayObject::LengthPropertyIndex);
         cattrs = internalClass->propertyData.constData() + ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
@@ -914,7 +908,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
 
     // Clause 1
     memberIndex = internalClass->find(name.getPointer());
-    current = (memberIndex < UINT_MAX) ? memberData + memberIndex : 0;
+    current = (memberIndex < UINT_MAX) ? propertyAt(memberIndex) : 0;
     cattrs = internalClass->propertyData.constData() + memberIndex;
 
     if (!current) {
@@ -995,7 +989,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
     Property *current;
     PropertyAttributes cattrs;
     if (!member.isNull()) {
-        current = memberData + index;
+        current = propertyAt(index);
         cattrs = internalClass->propertyData[index];
     } else {
         current = arrayData->getProperty(index);
@@ -1138,8 +1132,7 @@ uint Object::getLength(const Managed *m)
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());
-    const Property *lengthProperty = memberData + ArrayObject::LengthPropertyIndex;
-    if (lengthProperty && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (!internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         return false;
     uint oldLen = getLength();
     bool ok = true;
@@ -1194,7 +1187,7 @@ void ArrayObject::init(ExecutionEngine *engine)
 {
     Q_UNUSED(engine);
 
-    memberData[LengthPropertyIndex].value = Primitive::fromInt32(0);
+    memberData[LengthPropertyIndex] = Primitive::fromInt32(0);
 }
 
 ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
@@ -1203,7 +1196,7 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);
-        return a->memberData[ArrayObject::LengthPropertyIndex].value.asReturnedValue();
+        return a->memberData[ArrayObject::LengthPropertyIndex].asReturnedValue();
     }
     return Object::getLookup(m, l);
 }
@@ -1211,9 +1204,9 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 uint ArrayObject::getLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
-    if (a->memberData[ArrayObject::LengthPropertyIndex].value.isInteger())
-        return a->memberData[ArrayObject::LengthPropertyIndex].value.integerValue();
-    return Primitive::toUInt32(a->memberData[ArrayObject::LengthPropertyIndex].value.doubleValue());
+    if (a->memberData[ArrayObject::LengthPropertyIndex].isInteger())
+        return a->memberData[ArrayObject::LengthPropertyIndex].integerValue();
+    return Primitive::toUInt32(a->memberData[ArrayObject::LengthPropertyIndex].doubleValue());
 }
 
 QStringList ArrayObject::toQStringList() const

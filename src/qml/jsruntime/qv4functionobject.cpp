@@ -111,7 +111,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
 {
     needsActivation = false;
     strictMode = false;
-    memberData[Index_Prototype].value = Encode::undefined();
+    memberData[Index_Prototype] = Encode::undefined();
 }
 
 FunctionObject::~FunctionObject()
@@ -130,11 +130,10 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
-        proto->memberData[Index_ProtoConstructor].value = this->asReturnedValue();
-        memberData[Index_Prototype].value = proto.asReturnedValue();
+        proto->memberData[Index_ProtoConstructor] = this->asReturnedValue();
+        memberData[Index_Prototype] = proto.asReturnedValue();
     } else {
-        // ### Empty or undefined?
-        memberData[Index_Prototype].value = Encode::undefined();
+        memberData[Index_Prototype] = Encode::undefined();
     }
 
     ScopedValue v(s, n.asReturnedValue());

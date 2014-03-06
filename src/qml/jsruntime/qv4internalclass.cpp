@@ -160,10 +160,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
 
     if (newClass->size > object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size + 1);
-        memmove(object->memberData + idx + 2, object->memberData + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Property));
+        memmove(object->memberData + idx + 2, object->memberData + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
     } else if (newClass->size < object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size - 1);
-        memmove(object->memberData + idx + 1, object->memberData + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Property));
+        memmove(object->memberData + idx + 1, object->memberData + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
     }
     object->internalClass = newClass;
 }
@@ -368,7 +368,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     // remove the entry in memberdata
-    memmove(object->memberData + propIdx, object->memberData + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Property));
+    memmove(object->memberData + propIdx, object->memberData + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
 
     oldClass->transitions.insert(t, object->internalClass);
 }
@@ -400,6 +400,8 @@ InternalClass *InternalClass::sealed()
     m_sealed = m_sealed->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
+        if (attrs.isEmpty())
+            continue;
         attrs.setConfigurable(false);
         m_sealed = m_sealed->addMember(nameMap.at(i), attrs);
     }
@@ -418,6 +420,8 @@ InternalClass *InternalClass::frozen()
     m_frozen = m_frozen->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
+        if (attrs.isEmpty())
+            continue;
         attrs.setWritable(false);
         attrs.setConfigurable(false);
         m_frozen = m_frozen->addMember(nameMap.at(i), attrs);

@@ -108,14 +108,16 @@ struct Q_QML_EXPORT Object: Managed {
         IsObject = true
     };
     uint memberDataAlloc;
-    Property *memberData;
+    Value *memberData;
 
     ArrayData *arrayData;
 
     enum {
         InlinePropertySize = 4
     };
-    Property inlineProperties[InlinePropertySize];
+    Value inlineProperties[InlinePropertySize];
+
+    Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData + index); }
 
     Object(ExecutionEngine *engine);
     Object(InternalClass *internalClass);
@@ -355,11 +357,8 @@ struct ArrayObject: Object {
 
 inline void Object::setArrayLengthUnchecked(uint l)
 {
-    if (isArrayObject()) {
-        // length is always the first property of an array
-        Property &lengthProperty = memberData[ArrayObject::LengthPropertyIndex];
-        lengthProperty.value = Primitive::fromUInt32(l);
-    }
+    if (isArrayObject())
+        memberData[ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const ValueRef v)

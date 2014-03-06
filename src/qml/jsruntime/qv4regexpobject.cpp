@@ -186,7 +186,7 @@ Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
     Q_ASSERT(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
-    return &memberData[0];
+    return propertyAt(0);
 }
 
 // Converts a JS RegExp to a QRegExp.
@@ -394,8 +394,8 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);
-    array->memberData[Index_ArrayIndex].value = Primitive::fromInt32(result);
-    array->memberData[Index_ArrayInput].value = arg.asReturnedValue();
+    array->memberData[Index_ArrayIndex] = Primitive::fromInt32(result);
+    array->memberData[Index_ArrayInput] = arg.asReturnedValue();
 
     regExpCtor->lastMatch = array;
     regExpCtor->lastInput = arg->stringValue();
