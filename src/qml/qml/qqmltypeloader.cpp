@@ -1966,15 +1966,12 @@ QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
-    m_useNewCompiler = QQmlEnginePrivate::get(manager->engine())->useNewCompiler;
 }
 
 QQmlTypeData::~QQmlTypeData()
 {
     for (int ii = 0; ii < m_scripts.count(); ++ii)
         m_scripts.at(ii).script->release();
-    for (int ii = 0; ii < m_types.count(); ++ii)
-        if (m_types.at(ii).typeData) m_types.at(ii).typeData->release();
     for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
          it != end; ++it) {
         if (QQmlTypeData *tdata = it->typeData)
@@ -1984,16 +1981,6 @@ QQmlTypeData::~QQmlTypeData()
     if (m_compiledData)
         m_compiledData->release();
     delete m_implicitImport;
-}
-
-const QQmlScript::Parser &QQmlTypeData::parser() const
-{
-    return scriptParser;
-}
-
-const QList<QQmlTypeData::TypeReference> &QQmlTypeData::resolvedTypes() const
-{
-    return m_types;
 }
 
 const QList<QQmlTypeData::ScriptReference> &QQmlTypeData::resolvedScripts() const
@@ -2048,24 +2035,6 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
-    // --- old compiler:
-    for (int ii = 0; !isError() && ii < m_types.count(); ++ii) {
-        const TypeReference &type = m_types.at(ii);
-        Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
-        if (type.typeData && type.typeData->isError()) {
-            QString typeName = scriptParser.referencedTypes().at(ii)->name;
-
-            QList<QQmlError> errors = type.typeData->errors();
-            QQmlError error;
-            error.setUrl(finalUrl());
-            error.setLine(type.location.line);
-            error.setColumn(type.location.column);
-            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
-            errors.prepend(error);
-            setError(errors);
-        }
-    }
-    // --- new compiler:
     for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
          !isError() && it != end; ++it) {
         const TypeReference &type = *it;
@@ -2083,7 +2052,6 @@ void QQmlTypeData::done()
             setError(errors);
         }
     }
-    // ---
 
     // Check all composite singleton type dependencies for errors
     for (int ii = 0; !isError() && ii < m_compositeSingletons.count(); ++ii) {
@@ -2119,7 +2087,6 @@ void QQmlTypeData::done()
     if (!isError())
         compile();
 
-    scriptParser.clear();
     parsedQML.reset();
 }
 
@@ -2160,19 +2127,12 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
-    if (m_useNewCompiler) {
-        QQmlEngine *qmlEngine = typeLoader()->engine();
-        parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(qmlEngine)->debugger != 0));
-        QQmlCodeGenerator compiler(QV8Engine::get(qmlEngine)->illegalNames());
-        if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
-            setError(compiler.errors);
-            return;
-        }
-    } else {
-        if (!scriptParser.parse(code, preparseData, finalUrl(), finalUrlString())) {
-            setError(scriptParser.errors());
-            return;
-        }
+    QQmlEngine *qmlEngine = typeLoader()->engine();
+    parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    QQmlCodeGenerator compiler(QV8Engine::get(qmlEngine)->illegalNames());
+    if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
+        setError(compiler.errors);
+        return;
     }
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
@@ -2203,7 +2163,7 @@ void QQmlTypeData::dataReceived(const Data &data)
     QList<QQmlError> errors;
 
     // ### convert to use new data structure once old compiler is gone.
-    if (m_useNewCompiler && m_newImports.isEmpty()) {
+    if (m_newImports.isEmpty()) {
         m_newImports.reserve(parsedQML->imports.size());
         foreach (QV4::CompiledData::Import *i, parsedQML->imports) {
             QQmlScript::Import import;
@@ -2226,7 +2186,7 @@ void QQmlTypeData::dataReceived(const Data &data)
         }
     }
 
-    foreach (const QQmlScript::Import &import, m_useNewCompiler ? m_newImports : scriptParser.imports()) {
+    foreach (const QQmlScript::Import &import, m_newImports) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
@@ -2240,7 +2200,7 @@ void QQmlTypeData::dataReceived(const Data &data)
     }
 
     // ### convert to use new data structure once old compiler is gone.
-    if (m_useNewCompiler && m_newPragmas.isEmpty()) {
+    if (m_newPragmas.isEmpty()) {
         m_newPragmas.reserve(parsedQML->pragmas.size());
         foreach (QtQml::Pragma *p, parsedQML->pragmas) {
             QQmlScript::Pragma pragma;
@@ -2256,7 +2216,7 @@ void QQmlTypeData::dataReceived(const Data &data)
         }
     }
 
-    foreach (const QQmlScript::Pragma &pragma, m_useNewCompiler ? m_newPragmas : scriptParser.pragmas()) {
+    foreach (const QQmlScript::Pragma &pragma, m_newPragmas) {
         if (!addPragma(pragma, &errors)) {
             Q_ASSERT(errors.size());
             setError(errors);
@@ -2312,20 +2272,11 @@ void QQmlTypeData::compile()
 
     QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler, m_compiledData->name);
 
-    if (m_useNewCompiler) {
-        QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, parsedQML.data());
-        if (!compiler.compile()) {
-            setError(compiler.compilationErrors());
-            m_compiledData->release();
-            m_compiledData = 0;
-        }
-    } else {
-        QQmlCompiler compiler(&scriptParser._pool);
-        if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
-            setError(compiler.errors());
-            m_compiledData->release();
-            m_compiledData = 0;
-        }
+    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, parsedQML.data());
+    if (!compiler.compile()) {
+        setError(compiler.compilationErrors());
+        m_compiledData->release();
+        m_compiledData = 0;
     }
 }
 
@@ -2357,9 +2308,6 @@ void QQmlTypeData::resolveTypes()
         TypeReference ref;
         QQmlScript::TypeReference parserRef;
         parserRef.name = csRef.typeName;
-        // we are basing our type on the information from qmldir and therefore
-        // do not have a proper location.
-        parserRef.firstUse = NULL;
 
         if (!csRef.prefix.isEmpty()) {
             parserRef.name.prepend(csRef.prefix + QLatin1Char('.'));
@@ -2382,31 +2330,6 @@ void QQmlTypeData::resolveTypes()
         }
     }
 
-    // --- old compiler:
-    foreach (QQmlScript::TypeReference *parserRef, scriptParser.referencedTypes()) {
-        TypeReference ref;
-
-        int majorVersion = -1;
-        int minorVersion = -1;
-
-        if (!resolveType(parserRef, majorVersion, minorVersion, ref))
-            return;
-
-        if (ref.type->isComposite()) {
-            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
-            addDependency(ref.typeData);
-        }
-
-        ref.majorVersion = majorVersion;
-        ref.minorVersion = minorVersion;
-
-        Q_ASSERT(parserRef->firstUse);
-        ref.location = parserRef->firstUse->location.start;
-
-        m_types << ref;
-    }
-
-    // --- new compiler:
     QV4::CompiledData::TypeReferenceMap typeReferences;
     QStringList names;
     if (parsedQML) {
@@ -2521,12 +2444,6 @@ bool QQmlTypeData::resolveType(const QQmlScript::TypeReference *parserRef, int &
             }
             error.setUrl(m_imports.baseUrl());
             error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(parserRef->name).arg(error.description()));
-        }
-
-        if (parserRef->firstUse)
-        {
-            error.setLine(parserRef->firstUse->location.start.line);
-            error.setColumn(parserRef->firstUse->location.start.column);
         }
 
         errors.prepend(error);

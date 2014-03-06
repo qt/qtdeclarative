@@ -41,7 +41,6 @@
 
 #include "qqmlstringconverters_p.h"
 #include <private/qqmlglobal_p.h>
-#include <private/qqmlinstruction_p.h>
 
 #include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>

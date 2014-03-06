@@ -881,15 +881,10 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
-    if (enginePriv->useNewCompiler) {
-        state.creator = new QQmlObjectCreator(context, cc, creationContext);
-        rv = state.creator->create(start);
-        if (!rv)
-            state.errors = state.creator->errors;
-    } else {
-        state.vme.init(context, cc, start, creationContext);
-        rv = state.vme.execute(&state.errors);
-    }
+    state.creator = new QQmlObjectCreator(context, cc, creationContext);
+    rv = state.creator->create(start);
+    if (!rv)
+        state.errors = state.creator->errors;
     enginePriv->dereferenceScarceResources();
 
     if (rv) {
@@ -922,29 +917,20 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     state->errors.clear();
     state->completePending = true;
 
-    if (enginePriv->useNewCompiler) {
-        QQmlData *ddata = QQmlData::get(object);
-        Q_ASSERT(ddata->deferredData);
-        QQmlData::DeferredData *deferredData = ddata->deferredData;
-        QQmlContextData *creationContext = 0;
-        state->creator = new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext);
-        if (!state->creator->populateDeferredProperties(object))
-            state->errors << state->creator->errors;
-    } else {
-        state->vme.initDeferred(object);
-        state->vme.execute(&state->errors);
-    }
+    QQmlData *ddata = QQmlData::get(object);
+    Q_ASSERT(ddata->deferredData);
+    QQmlData::DeferredData *deferredData = ddata->deferredData;
+    QQmlContextData *creationContext = 0;
+    state->creator = new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext);
+    if (!state->creator->populateDeferredProperties(object))
+        state->errors << state->creator->errors;
 }
 
 void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionState *state)
 {
     if (state->completePending) {
-        if (enginePriv->useNewCompiler) {
-            QQmlInstantiationInterrupt interrupt;
-            state->creator->finalize(interrupt);
-        } else {
-            state->vme.complete();
-        }
+        QQmlInstantiationInterrupt interrupt;
+        state->creator->finalize(interrupt);
 
         state->completePending = false;
 
@@ -1015,9 +1001,7 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
         return a;
 
     QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
-    if (p->activeVME) { // XXX should only be allowed during begin
-        a->add(&p->activeVME->componentAttached);
-    } else if (p->activeObjectCreator) {
+    if (p->activeObjectCreator) { // XXX should only be allowed during begin
         a->add(p->activeObjectCreator->componentAttachment());
     } else {
         QQmlData *d = QQmlData::get(obj);
@@ -1083,11 +1067,8 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 
     p->compiledData = d->cc;
     p->compiledData->addref();
-    if (enginePriv->useNewCompiler) {
-        p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext, p.data()));
-        p->subComponentToCreate = d->start;
-    } else
-        p->vme.init(contextData, d->cc, d->start, d->creationContext);
+    p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext, p.data()));
+    p->subComponentToCreate = d->start;
 
     enginePriv->incubate(incubator, forContextData);
 }

@@ -56,36 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-int QQmlCompiledData::indexForString(const QString &data)
-{
-    int idx = primitives.indexOf(data);
-    if (idx == -1) {
-        idx = primitives.count();
-        primitives << data;
-    }
-    return idx;
-}
-
-int QQmlCompiledData::indexForByteArray(const QByteArray &data)
-{
-    int idx = datas.indexOf(data);
-    if (idx == -1) {
-        idx = datas.count();
-        datas << data;
-    }
-    return idx;
-}
-
-int QQmlCompiledData::indexForUrl(const QUrl &data)
-{
-    int idx = urls.indexOf(data);
-    if (idx == -1) {
-        idx = urls.count();
-        urls << data;
-    }
-    return idx;
-}
-
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
 : engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
   rootPropertyCache(0), compilationUnit(0), qmlUnit(0), totalBindingsCount(0), totalParserStatusCount(0)
@@ -109,13 +79,6 @@ QQmlCompiledData::~QQmlCompiledData()
         QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
 
     clear();
-
-    for (int ii = 0; ii < types.count(); ++ii) {
-        if (types.at(ii).component)
-            types.at(ii).component->release();
-        if (types.at(ii).typePropertyCache)
-            types.at(ii).typePropertyCache->release();
-    }
 
     for (QHash<int, TypeReference*>::Iterator resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
          resolvedType != end; ++resolvedType) {
@@ -197,71 +160,6 @@ void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
     else if (component)
         mo = component->rootPropertyCache->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
-}
-
-void QQmlCompiledData::dumpInstructions()
-{
-    if (!name.isEmpty())
-        qWarning() << name;
-    qWarning().nospace() << "Index\tOperation\t\tData1\tData2\tData3\tComments";
-    qWarning().nospace() << "-------------------------------------------------------------------------------";
-
-    const char *instructionStream = bytecode.constData();
-    const char *endInstructionStream = bytecode.constData() + bytecode.size();
-
-    int instructionCount = 0;
-    while (instructionStream < endInstructionStream) {
-        QQmlInstruction *instr = (QQmlInstruction *)instructionStream;
-        dump(instr, instructionCount);
-        instructionStream += QQmlInstruction::size(instructionType(instr));
-        instructionCount++;
-    }
-
-    qWarning().nospace() << "-------------------------------------------------------------------------------";
-}
-
-int QQmlCompiledData::addInstructionHelper(QQmlInstruction::Type type, QQmlInstruction &instr)
-{
-#ifdef QML_THREADED_VME_INTERPRETER
-    instr.common.code = QQmlVME::instructionJumpTable()[static_cast<int>(type)];
-#else
-    instr.common.instructionType = type;
-#endif
-    int ptrOffset = bytecode.size();
-    int size = QQmlInstruction::size(type);
-    if (bytecode.capacity() <= bytecode.size() + size)
-        bytecode.reserve(bytecode.size() + size + 512);
-    bytecode.append(reinterpret_cast<const char *>(&instr), size);
-    return ptrOffset;
-}
-
-int QQmlCompiledData::nextInstructionIndex()
-{
-    return bytecode.size();
-}
-
-QQmlInstruction *QQmlCompiledData::instruction(int index)
-{
-    return (QQmlInstruction *)(bytecode.constData() + index);
-}
-
-QQmlInstruction::Type QQmlCompiledData::instructionType(const QQmlInstruction *instr)
-{
-#ifdef QML_THREADED_VME_INTERPRETER
-    void *const *jumpTable = QQmlVME::instructionJumpTable();
-    void *code = instr->common.code;
-
-#  define QML_CHECK_INSTR_CODE(I, FMT) \
-    if (jumpTable[static_cast<int>(QQmlInstruction::I)] == code) \
-        return QQmlInstruction::I;
-
-    FOR_EACH_QML_INSTR(QML_CHECK_INSTR_CODE)
-    Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid instruction address");
-    return static_cast<QQmlInstruction::Type>(0);
-#  undef QML_CHECK_INSTR_CODE
-#else
-    return static_cast<QQmlInstruction::Type>(instr->common.instructionType);
-#endif
 }
 
 void QQmlCompiledData::initialize(QQmlEngine *engine)

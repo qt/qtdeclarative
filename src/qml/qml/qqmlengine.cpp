@@ -556,7 +556,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
   profiler(0), outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
-  workerScriptEngine(0), activeVME(0),
+  workerScriptEngine(0),
   activeObjectCreator(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), importDatabase(e), typeLoader(e), uniqueId(1),
@@ -1045,9 +1045,7 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
 
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
-    if (activeVME) {
-        activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
-    } else if (activeObjectCreator) {
+    if (activeObjectCreator) {
         activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };

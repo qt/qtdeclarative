@@ -88,12 +88,8 @@ public:
     QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
     QQmlCompiledData *compiledData;
-    // --- old compiler
-    QQmlVME vme;
-    // --- new compiler
     QScopedPointer<QQmlObjectCreator> creator;
     int subComponentToCreate;
-    // ---
     QQmlVMEGuard vmeGuard;
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> waitingOnMe;

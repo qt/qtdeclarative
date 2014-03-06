@@ -98,10 +98,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         incubatorList.insert(p.data());
         incubatorCount++;
 
-        if (useNewCompiler)
-            p->vmeGuard.guard(p->creator.data());
-        else
-            p->vmeGuard.guard(&p->vme);
+        p->vmeGuard.guard(p->creator.data());
         p->changeStatus(QQmlIncubator::Loading);
 
         if (incubationController)
@@ -137,7 +134,7 @@ QQmlIncubationController *QQmlEngine::incubationController() const
 
 QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m)
     : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-      result(0), compiledData(0), vme(this), waitingOnMe(0)
+      result(0), compiledData(0), waitingOnMe(0)
 {
 }
 
@@ -297,13 +294,9 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     if (progress == QQmlIncubatorPrivate::Execute) {
         enginePriv->referenceScarceResources();
         QObject *tresult = 0;
-        if (enginePriv->useNewCompiler) {
-            tresult = creator->create(subComponentToCreate, /*parent*/0, &i);
-            if (!tresult)
-                errors = creator->errors;
-        } else {
-            tresult = vme.execute(&errors, i);
-        }
+        tresult = creator->create(subComponentToCreate, /*parent*/0, &i);
+        if (!tresult)
+            errors = creator->errors;
         enginePriv->dereferenceScarceResources();
 
         if (watcher.hasRecursed())
@@ -347,10 +340,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
                 return;
 
             QQmlContextData *ctxt = 0;
-            if (enginePriv->useNewCompiler)
-                ctxt = creator->finalize(i);
-            else
-                ctxt = vme.complete(i);
+            ctxt = creator->finalize(i);
             if (ctxt) {
                 rootContext = ctxt;
                 progress = QQmlIncubatorPrivate::Completed;
@@ -382,10 +372,7 @@ finishIncubate:
             }
         }
     } else {
-        if (enginePriv->useNewCompiler)
-            vmeGuard.guard(creator.data());
-        else
-            vmeGuard.guard(&vme);
+        vmeGuard.guard(creator.data());
     }
 }
 
@@ -584,7 +571,6 @@ void QQmlIncubator::clear()
 
     bool guardOk = d->vmeGuard.isOK();
 
-    d->vme.reset();
     d->vmeGuard.clear();
     if (d->creator && guardOk)
         d->creator->clear();

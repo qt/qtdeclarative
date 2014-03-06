@@ -236,34 +236,6 @@ public:
     QQmlProperty property(const QString &);
 };
 
-void
-QQuickPropertyChangesParser::compileList(QList<QPair<QString, QVariant> > &list,
-                                     const QString &pre,
-                                     const QQmlCustomParserProperty &prop)
-{
-    QString propName = pre + prop.name();
-
-    QList<QVariant> values = prop.assignedValues();
-    for (int ii = 0; ii < values.count(); ++ii) {
-        const QVariant &value = values.at(ii);
-
-        if (value.userType() == qMetaTypeId<QQmlCustomParserNode>()) {
-            error(qvariant_cast<QQmlCustomParserNode>(value),
-                  QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
-            continue;
-        } else if(value.userType() == qMetaTypeId<QQmlCustomParserProperty>()) {
-
-            QQmlCustomParserProperty prop =
-                qvariant_cast<QQmlCustomParserProperty>(value);
-            QString pre = propName + QLatin1Char('.');
-            compileList(list, pre, prop);
-
-        } else {
-            list << qMakePair(propName, value);
-        }
-    }
-}
-
 void QQuickPropertyChangesParser::compileList(QList<QPair<QString, const QV4::CompiledData::Binding*> > &list, const QString &pre, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding)
 {
     QString propName = pre + qmlUnit->header.stringAt(binding->propertyNameIndex);
@@ -285,50 +257,6 @@ void QQuickPropertyChangesParser::compileList(QList<QPair<QString, const QV4::Co
     }
 
     list << qMakePair(propName, binding);
-}
-
-QByteArray
-QQuickPropertyChangesParser::compile(const QList<QQmlCustomParserProperty> &props)
-{
-    QList<QPair<QString, QVariant> > data;
-    for(int ii = 0; ii < props.count(); ++ii)
-        compileList(data, QString(), props.at(ii));
-
-    QByteArray rv;
-    QDataStream ds(&rv, QIODevice::WriteOnly);
-
-    ds << data.count();
-    for(int ii = 0; ii < data.count(); ++ii) {
-        QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(data.at(ii).second);
-        QVariant var;
-        bool isScript = v.isScript();
-        QQmlBinding::Identifier id = 0;
-        switch(v.type()) {
-        case QQmlScript::Variant::Boolean:
-            var = QVariant(v.asBoolean());
-            break;
-        case QQmlScript::Variant::Number:
-            var = QVariant(v.asNumber());
-            break;
-        case QQmlScript::Variant::String:
-            var = QVariant(v.asString());
-            break;
-        case QQmlScript::Variant::Invalid:
-        case QQmlScript::Variant::Script:
-            var = QVariant(v.asScript());
-            {
-                // Pre-rewrite the expression
-                id = bindingIdentifier(v, data.at(ii).first);
-            }
-            break;
-        }
-
-        ds << data.at(ii).first << isScript << var;
-        if (isScript)
-            ds << id;
-    }
-
-    return rv;
 }
 
 QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &props)

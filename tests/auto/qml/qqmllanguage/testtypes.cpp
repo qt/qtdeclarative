@@ -102,31 +102,6 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-QByteArray CustomBindingParser::compile(const QList<QQmlCustomParserProperty> &properties)
-{
-    QByteArray result;
-    QDataStream ds(&result, QIODevice::WriteOnly);
-
-    ds << properties.count();
-    for (int i = 0; i < properties.count(); ++i) {
-        const QQmlCustomParserProperty &prop = properties.at(i);
-        ds << prop.name();
-
-        Q_ASSERT(prop.assignedValues().count() == 1);
-        QVariant value = prop.assignedValues().first();
-
-        Q_ASSERT(value.userType() == qMetaTypeId<QQmlScript::Variant>());
-        QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
-        Q_ASSERT(v.type() == QQmlScript::Variant::Script);
-        int bindingId = bindingIdentifier(v, prop.name());
-        ds << bindingId;
-
-        ds << prop.location().line;
-    }
-
-    return result;
-}
-
 QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     Q_UNUSED(objectIndex)
@@ -178,49 +153,6 @@ void CustomBinding::componentComplete()
         binding->setTarget(property);
         QQmlPropertyPrivate::setBinding(property, binding);
     }
-}
-
-
-QByteArray EnumSupportingCustomParser::compile(const QList<QQmlCustomParserProperty> &props)
-{
-    if (props.count() != 1) {
-        error(QStringLiteral("Custom parser invoked incorrectly for unit test"));
-        return QByteArray();
-    }
-    QQmlCustomParserProperty prop = props.first();
-    if (prop.name() != QStringLiteral("foo")) {
-        error(QStringLiteral("Custom parser invoked with the wrong property name"));
-        return QByteArray();
-    }
-
-    if (prop.assignedValues().count() != 1) {
-        error(QStringLiteral("Custom parser invoked with the wrong property values. Expected only one."));
-        return QByteArray();
-    }
-
-    QVariant firstValue = prop.assignedValues().first();
-    if (firstValue.userType() != qMetaTypeId<QQmlScript::Variant>()) {
-        error(QStringLiteral("Custom parser invoked with the wrong property value. Expected value instead of object or so"));
-        return QByteArray();
-    }
-    QQmlScript::Variant value = qvariant_cast<QQmlScript::Variant>(firstValue);
-    if (!value.isScript()) {
-        error(QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
-        return QByteArray();
-    }
-    QByteArray script = value.asScript().toUtf8();
-    bool ok;
-    int v = evaluateEnum(script, &ok);
-    if (!ok) {
-        error(QStringLiteral("Custom parser invoked with the wrong property value. Script did not evaluate to enum"));
-        return QByteArray();
-    }
-    if (v != MyEnum1Class::A_13) {
-        error(QStringLiteral("Custom parser invoked with the wrong property value. Enum value is not the expected value."));
-        return QByteArray();
-    }
-
-    return QByteArray();
 }
 
 QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)

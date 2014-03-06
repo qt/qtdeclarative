@@ -424,13 +424,7 @@ private:
 public:
     ~QQmlTypeData();
 
-    const QQmlScript::Parser &parser() const;
-
-    // old compiler:
-    const QList<TypeReference> &resolvedTypes() const;
-    // new compiler:
     const QHash<int, TypeReference> &resolvedTypeRefs() const { return m_resolvedTypes; }
-    // ---
 
     const QList<ScriptReference> &resolvedScripts() const;
     const QSet<QString> &namespaces() const;
@@ -461,27 +455,18 @@ private:
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    // --- old compiler
-    QQmlScript::Parser scriptParser;
-    // --- new compiler
     QScopedPointer<QtQml::ParsedQML> parsedQML;
     QList<QQmlScript::Import> m_newImports;
     QList<QQmlScript::Pragma> m_newPragmas;
-    // ---
 
     QList<ScriptReference> m_scripts;
 
     QSet<QString> m_namespaces;
     QList<TypeReference> m_compositeSingletons;
 
-    // --- old compiler
-    QList<TypeReference> m_types;
-    // --- new compiler
     // map from name index to resolved type
     QHash<int, TypeReference> m_resolvedTypes;
-    // ---
     bool m_typesResolved:1;
-    bool m_useNewCompiler:1;
 
     QQmlCompiledData *m_compiledData;
 
