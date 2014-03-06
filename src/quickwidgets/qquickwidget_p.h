@@ -63,6 +63,7 @@ class QQuickItem;
 class QQmlComponent;
 class QQuickRenderControl;
 class QOpenGLContext;
+class QOffscreenSurface;
 
 class QQuickWidgetPrivate
         : public QWidgetPrivate,
@@ -99,6 +100,7 @@ public:
     QQmlComponent *component;
     QBasicTimer resizetimer;
     QQuickWindow *offscreenWindow;
+    QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
     QOpenGLFramebufferObject *fbo;
     QOpenGLContext *context;

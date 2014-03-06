@@ -54,6 +54,7 @@
 #include <QtQml/qqmlengine.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
+#include <QtGui/QOffscreenSurface>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,12 +97,16 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
+    offscreenSurface = new QOffscreenSurface;
+    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
+    offscreenSurface->create();
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
+    delete offscreenSurface;
     delete offscreenWindow;
     delete renderControl;
     delete fbo;
@@ -156,8 +161,8 @@ void QQuickWidgetPrivate::renderSceneGraph()
         return;
     }
 
-    Q_ASSERT(q->window()->windowHandle()->handle());
-    context->makeCurrent(q->window()->windowHandle());
+    Q_ASSERT(offscreenSurface);
+    context->makeCurrent(offscreenSurface);
     renderControl->polishItems();
     renderControl->sync();
     renderControl->render();
@@ -495,21 +500,11 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
 
 void QQuickWidgetPrivate::createContext()
 {
-    Q_Q(QQuickWidget);
     if (context)
         return;
 
     context = new QOpenGLContext;
-
-    QSurfaceFormat format = q->window()->windowHandle()->requestedFormat();
-    QSGRenderContext *renderContext = QQuickWindowPrivate::get(offscreenWindow)->context;
-    // Depth, stencil, etc. must be set like a QQuickWindow would do.
-    QSurfaceFormat sgFormat = renderContext->sceneGraphContext()->defaultSurfaceFormat();
-    format.setDepthBufferSize(qMax(format.depthBufferSize(), sgFormat.depthBufferSize()));
-    format.setStencilBufferSize(qMax(format.stencilBufferSize(), sgFormat.stencilBufferSize()));
-    format.setAlphaBufferSize(qMax(format.alphaBufferSize(), sgFormat.alphaBufferSize()));
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    context->setFormat(format);
+    context->setFormat(offscreenWindow->requestedFormat());
 
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
@@ -517,10 +512,10 @@ void QQuickWidgetPrivate::createContext()
         qWarning("QQuickWidget: failed to create OpenGL context");
         delete context;
         context = 0;
+        return;
     }
 
-    Q_ASSERT(q->window()->windowHandle()->handle());
-    if (context->makeCurrent(q->window()->windowHandle()))
+    if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
         qWarning("QQuickWidget: failed to make window surface current");
@@ -544,8 +539,7 @@ void QQuickWidget::createFramebufferObject()
         context->create();
     }
 
-    Q_ASSERT(window()->windowHandle()->handle());
-    context->makeCurrent(window()->windowHandle());
+    context->makeCurrent(d->offscreenSurface);
     d->fbo = new QOpenGLFramebufferObject(size());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
@@ -715,8 +709,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         return;
     }
 
-    Q_ASSERT(window()->windowHandle()->handle());
-    context->makeCurrent(window()->windowHandle());
+    context->makeCurrent(d->offscreenSurface);
     d->renderControl->render();
     glFlush();
     context->doneCurrent();
