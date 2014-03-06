@@ -684,7 +684,8 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
             frame.column = -1;
 
             if (callCtx->function->function)
-                frame.line = callCtx->lineNumber;
+                // line numbers can be negative for places where you can't set a real breakpoint
+                frame.line = qAbs(callCtx->lineNumber);
 
             stack.append(frame);
             --frameLimit;

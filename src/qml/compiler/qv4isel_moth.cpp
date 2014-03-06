@@ -385,7 +385,7 @@ void InstructionSelection::run(int functionIndex)
     push.value = quint32(locals);
     addInstruction(push);
 
-    currentLine = -1;
+    currentLine = 0;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         blockNeedsDebugInstruction = irModule->debugMode;
         _block = _function->basicBlocks[i];
@@ -1038,7 +1038,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = currentLine;
+        debug.lineNumber = -currentLine;
         addInstruction(debug);
     }
 
@@ -1053,7 +1053,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = currentLine;
+        debug.lineNumber = -currentLine;
         addInstruction(debug);
     }
 
@@ -1090,6 +1090,13 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
+    if (blockNeedsDebugInstruction) {
+        // this is required so stepOut will always be guaranteed to stop in every stack frame
+        Instruction::Debug debug;
+        debug.lineNumber = -currentLine;
+        addInstruction(debug);
+    }
+
     Instruction::Ret ret;
     ret.result = getParam(s->expr);
     addInstruction(ret);

@@ -336,7 +336,7 @@ void InstructionSelection::run(int functionIndex)
     _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
-    int lastLine = -1;
+    int lastLine = 0;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _block = _function->basicBlocks[i];
