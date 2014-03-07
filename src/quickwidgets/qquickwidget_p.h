@@ -114,6 +114,7 @@ public:
     int updateTimer;
     bool eventPending;
     bool updatePending;
+    bool fakeHidden;
 };
 
 QT_END_NAMESPACE

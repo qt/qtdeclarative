@@ -98,6 +98,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , updateTimer(0)
     , eventPending(false)
     , updatePending(false)
+    , fakeHidden(false)
 {
     renderControl = new QQuickRenderControl;
     offscreenWindow = new QQuickWindow(renderControl);
@@ -712,6 +713,19 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     Q_D(QQuickWidget);
     if (d->resizeMode == SizeRootObjectToView)
         d->updateSize();
+
+    if (e->size().isEmpty()) {
+        //stop rendering
+        QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
+        d->fakeHidden = true;
+        return;
+    }
+    if (d->fakeHidden) {
+        //restart rendering
+        QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
+        d->fakeHidden = false;
+        d->renderControl->sync();
+    }
 
     d->createContext();
     createFramebufferObject();
