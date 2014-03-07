@@ -108,6 +108,7 @@ void tst_qqmlapplicationengine::application()
        Note that checking the output means that on builds with extra debugging, this might fail with a false positive.
        Also the testapp is automatically built and installed in shadow builds, so it does NOT use testData
    */
+#ifndef QT_NO_PROCESS
     QDir::setCurrent(buildDir);
     QProcess *testProcess = new QProcess(this);
     QStringList args;
@@ -125,6 +126,9 @@ void tst_qqmlapplicationengine::application()
     QCOMPARE(test_stderr, test_stderr_target);
     delete testProcess;
     QDir::setCurrent(srcDir);
+#else // !QT_NO_PROCESS
+    QSKIP("No process support");
+#endif // QT_NO_PROCESS
 }
 
 void tst_qqmlapplicationengine::applicationProperties()
