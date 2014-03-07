@@ -59,6 +59,7 @@
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qquickprofiler_p.h>
+#include <private/qqmldebugservice_p.h>
 
 /*
    Overall design:
@@ -688,6 +689,8 @@ void QSGRenderThread::run()
     animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
     animatorDriver->install();
     QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
+    if (QQmlDebugService::isDebuggingEnabled())
+        QQuickProfiler::registerAnimationCallback();
 
     while (active) {
 

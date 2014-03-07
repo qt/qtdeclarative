@@ -208,7 +208,9 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
 
         switch (data.detailType) {
         case QQmlProfilerClient::AnimationFrame: {
-            stream >> data.framerate >> data.animationcount;
+            int threadId;
+            stream >> data.framerate >> data.animationcount >> threadId;
+            QVERIFY(threadId >= 0);
             QVERIFY(data.framerate != -1);
             QVERIFY(data.animationcount != -1);
             break;

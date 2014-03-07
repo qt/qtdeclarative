@@ -95,9 +95,9 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
         framerate(framerate), count(count) {}
 
     QQuickProfilerData(qint64 time, int messageType, int detailType, int framerate = 0,
-                       int count = 0) :
+                       int count = 0, int threadId = 0) :
         time(time), messageType(messageType), detailType(detailType), framerate(framerate),
-        count(count) {}
+        count(count), threadId(threadId) {}
 
     // Special ctor for scenegraph frames. Note that it's missing the QString/QUrl params.
     // This is slightly ugly, but makes it easier to disambiguate between int and qint64 params.
@@ -133,7 +133,10 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
         int count;          //used by animation events and for pixmaps
     };
 
-    qint64 subtime_5;
+    union {
+        qint64 subtime_5;
+        int threadId;
+    };
 
     void toByteArrays(QList<QByteArray> &messages) const;
 };
@@ -144,6 +147,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QQmlAbstractProfilerAdapter
     Q_OBJECT
 public:
 
+    enum AnimationThread {
+        GuiThread,
+        RenderThread
+    };
+
     template<EventType DetailType>
     static void addEvent()
     {
@@ -151,13 +159,14 @@ public:
                 1 << DetailType));
     }
 
-    static void animationFrame(qint64 delta)
+    static void animationFrame(qint64 delta, AnimationThread threadId)
     {
         int animCount = QUnifiedTimer::instance()->runningAnimationCount();
 
         if (animCount > 0 && delta > 0) {
             s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(), 1 << Event,
-                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */, animCount));
+                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */, animCount,
+                    threadId));
         }
     }
 
@@ -190,6 +199,8 @@ public:
         s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(),
                 1 << PixmapCacheEvent, 1 << CountType, url, 0, 0, 0, count));
     }
+
+    static void registerAnimationCallback();
 
     qint64 timestamp() { return m_timer.nsecsElapsed(); }
 
