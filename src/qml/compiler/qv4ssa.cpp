@@ -62,11 +62,6 @@
 #include <cassert>
 #include <algorithm>
 
-#ifdef CONST
-#undef CONST
-#endif
-
-#define QV4_NO_LIVENESS
 #undef SHOW_SSA
 #undef DEBUG_MOVEMAPPING
 
@@ -145,9 +140,6 @@ void showMeTheCode(IR::Function *function)
                 qout << endl;
             }
             Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
-//            if (n && s->asJump() && s->asJump()->target == leader.value(n)) {
-//                continue;
-//            }
 
             QByteArray str;
             QBuffer buf(&str);
@@ -165,50 +157,10 @@ void showMeTheCode(IR::Function *function)
 
             out.flush();
 
-#ifndef QV4_NO_LIVENESS
-            for (int i = 60 - str.size(); i >= 0; --i)
-                str.append(' ');
-
             qout << "    " << str;
-
-            //        if (! s->uses.isEmpty()) {
-            //            qout << " // uses:";
-            //            foreach (unsigned use, s->uses) {
-            //                qout << " %" << use;
-            //            }
-            //        }
-
-            //        if (! s->defs.isEmpty()) {
-            //            qout << " // defs:";
-            //            foreach (unsigned def, s->defs) {
-            //                qout << " %" << def;
-            //            }
-            //        }
-
-#  if 0
-            if (! s->d->liveIn.isEmpty()) {
-                qout << " // lives in:";
-                for (int i = 0; i < s->d->liveIn.size(); ++i) {
-                    if (s->d->liveIn.testBit(i))
-                        qout << " %" << i;
-                }
-            }
-#  else
-            if (! s->d->liveOut.isEmpty()) {
-                qout << " // lives out:";
-                for (int i = 0; i < s->d->liveOut.size(); ++i) {
-                    if (s->d->liveOut.testBit(i))
-                        qout << " %" << i;
-                }
-            }
-#  endif
-#else
-            qout << "    " << str;
-#endif
-
             qout << endl;
 
-            if (n && s->asCJump() /*&& s->asCJump()->iffalse != leader.value(n)*/) {
+            if (n && s->asCJump()) {
                 qout << "    else goto L" << s->asCJump()->iffalse->index << ";" << endl;
             }
         }
