@@ -75,6 +75,7 @@ private slots:
     void flickDeceleration();
     void pressDelay();
     void nestedPressDelay();
+    void nestedClickThenFlick();
     void flickableDirection();
     void resizeContent();
     void returnToBounds();
@@ -511,6 +512,51 @@ void tst_qquickflickable::nestedPressDelay()
     QVERIFY(inner->property("moving").toBool() == true);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(90, 150));
+}
+
+// QTBUG-37316
+void tst_qquickflickable::nestedClickThenFlick()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("nestedClickThenFlick.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlickable *outer = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(outer != 0);
+
+    QQuickFlickable *inner = window->rootObject()->findChild<QQuickFlickable*>("innerFlickable");
+    QVERIFY(inner != 0);
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+
+    // the MouseArea is not pressed immediately
+    QVERIFY(outer->property("pressed").toBool() == false);
+    QTRY_VERIFY(outer->property("pressed").toBool() == true);
+
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+
+    QVERIFY(outer->property("pressed").toBool() == false);
+
+    // Dragging inner Flickable should work
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(80, 150));
+    // the MouseArea is not pressed immediately
+
+    QVERIFY(outer->property("pressed").toBool() == false);
+
+    QTest::mouseMove(window.data(), QPoint(80, 148));
+    QTest::mouseMove(window.data(), QPoint(80, 140));
+    QTest::mouseMove(window.data(), QPoint(80, 120));
+    QTest::mouseMove(window.data(), QPoint(80, 100));
+
+    QVERIFY(outer->property("moving").toBool() == false);
+    QVERIFY(inner->property("moving").toBool() == true);
+
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(80, 100));
 }
 
 void tst_qquickflickable::flickableDirection()
