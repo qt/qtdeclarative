@@ -1015,11 +1015,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             const qreal minY = vData.dragMinBound + vData.startMargin;
             const qreal maxY = vData.dragMaxBound - vData.endMargin;
             if (boundsBehavior == QQuickFlickable::StopAtBounds) {
-                if (newY <= maxY) {
+                if (fuzzyLessThanOrEqualTo(newY, maxY)) {
                     newY = maxY;
                     rejectY = vData.pressPos == maxY && vData.move.value() == maxY && dy < 0;
                 }
-                if (newY >= minY) {
+                if (fuzzyLessThanOrEqualTo(minY, newY)) {
                     newY = minY;
                     rejectY = vData.pressPos == minY && vData.move.value() == minY && dy > 0;
                 }
@@ -1049,11 +1049,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
             if (boundsBehavior == QQuickFlickable::StopAtBounds) {
-                if (newX <= maxX) {
+                if (fuzzyLessThanOrEqualTo(newX, maxX)) {
                     newX = maxX;
                     rejectX = hData.pressPos == maxX && hData.move.value() == maxX && dx < 0;
                 }
-                if (newX >= minX) {
+                if (fuzzyLessThanOrEqualTo(minX, newX)) {
                     newX = minX;
                     rejectX = hData.pressPos == minX && hData.move.value() == minX && dx > 0;
                 }
