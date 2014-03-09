@@ -2915,15 +2915,17 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
 }
 
 /*!
-    \qmlsignal QtQml.Models::DelegateModelGroup::onChanged(array removed, array inserted)
+    \qmlsignal QtQml.Models::DelegateModelGroup::changed(array removed, array inserted)
 
-    This handler is called when items have been removed from or inserted into the group.
+    This signal is emitted when items have been removed from or inserted into the group.
 
     Each object in the \a removed and \a inserted arrays has two values; the \e index of the first
     item inserted or removed and a \e count of the number of consecutive items inserted or removed.
 
     Each index is adjusted for previous changes with all removed items preceding any inserted
     items.
+
+    The corresponding handler is \c onChanged.
 */
 
 //============================================================================
