@@ -41,7 +41,8 @@
 #ifndef CONF_H
 #define CONF_H
 
-#include <QtQml>
+#include <QtQml/QQmlContext>
+#include <QtQml/QQmlListProperty>
 #include <QObject>
 #include <QUrl>
 
