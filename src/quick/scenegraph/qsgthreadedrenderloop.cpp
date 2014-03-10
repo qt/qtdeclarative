@@ -289,6 +289,10 @@ public:
         , window(0)
         , stopEventProcessing(false)
     {
+#if defined(Q_OS_QNX) && !defined(Q_OS_BLACKBERRY) && defined(Q_PROCESSOR_X86)
+        // The SDP 6.6.0 x86 MESA driver requires a larger stack than the default.
+        setStackSize(1024 * 1024);
+#endif
         vsyncDelta = qsgrl_animation_interval();
     }
 
