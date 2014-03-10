@@ -1345,6 +1345,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     The item size of the GridView is determined by cellHeight and cellWidth. It will not resize the items
     based on the size of the root item in the delegate.
 
+    The default \l {QQuickItem::z}{stacking order} of delegate instances is \c 1.
+
     \note Delegates are instantiated as needed and may be destroyed at any time.
     State should \e never be stored in a delegate.
 */
@@ -1373,6 +1375,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
   The highlightItem is managed by the view unless
   \l highlightFollowsCurrentItem is set to false.
+  The default \l {QQuickItem::z}{stacking order}
+  of the highlight item is \c 0.
 
   \sa highlight, highlightFollowsCurrentItem
 */
@@ -1391,6 +1395,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
   An instance of the highlight component is created for each view.
   The geometry of the resulting component instance will be managed by the view
   so as to stay with the current item, unless the highlightFollowsCurrentItem property is false.
+  The default \l {QQuickItem::z}{stacking order} of the highlight item is \c 0.
 
   \sa highlightItem, highlightFollowsCurrentItem
 */
@@ -1691,7 +1696,8 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     This property holds the component to use as the footer.
 
     An instance of the footer component is created for each view.  The
-    footer is positioned at the end of the view, after any items.
+    footer is positioned at the end of the view, after any items. The
+    default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
     \sa header, footerItem
 */
@@ -1701,6 +1707,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
+    The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
     \sa footer, headerItem
 */
@@ -1711,6 +1718,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
+    The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
     \sa header, footerItem
 */
@@ -1720,7 +1728,8 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     This holds the footer item created from the \l footer component.
 
     An instance of the footer component is created for each view.  The
-    footer is positioned at the end of the view, after any items.
+    footer is positioned at the end of the view, after any items. The
+    default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
     \sa footer, headerItem
 */

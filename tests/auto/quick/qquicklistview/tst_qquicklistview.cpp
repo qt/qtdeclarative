@@ -147,6 +147,7 @@ private slots:
     void modelChanges();
     void manualHighlight();
     void initialZValues();
+    void initialZValues_data();
     void header();
     void header_data();
     void header_delayItemCreation();
@@ -3465,8 +3466,9 @@ void tst_QQuickListView::QTBUG_11105()
 
 void tst_QQuickListView::initialZValues()
 {
+    QFETCH(QString, fileName);
     QQuickView *window = createView();
-    window->setSource(testFileUrl("initialZValues.qml"));
+    window->setSource(testFileUrl(fileName));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
@@ -3474,13 +3476,31 @@ void tst_QQuickListView::initialZValues()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    QVERIFY(listview->currentItem());
+    QTRY_COMPARE(listview->currentItem()->z(), listview->property("itemZ").toReal());
+
     QVERIFY(listview->headerItem());
-    QTRY_COMPARE(listview->headerItem()->z(), listview->property("initialZ").toReal());
+    QTRY_COMPARE(listview->headerItem()->z(), listview->property("headerZ").toReal());
 
     QVERIFY(listview->footerItem());
-    QTRY_COMPARE(listview->footerItem()->z(), listview->property("initialZ").toReal());
+    QTRY_COMPARE(listview->footerItem()->z(), listview->property("footerZ").toReal());
+
+    QVERIFY(listview->highlightItem());
+    QTRY_COMPARE(listview->highlightItem()->z(), listview->property("highlightZ").toReal());
+
+    QQuickText *sectionItem = 0;
+    QTRY_VERIFY(sectionItem = findItem<QQuickText>(contentItem, "section"));
+    QTRY_COMPARE(sectionItem->z(), listview->property("sectionZ").toReal());
 
     delete window;
+}
+
+void tst_QQuickListView::initialZValues_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("defaults") << "defaultZValues.qml";
+    QTest::newRow("constants") << "constantZValues.qml";
+    QTest::newRow("bindings") << "boundZValues.qml";
 }
 
 void tst_QQuickListView::header()

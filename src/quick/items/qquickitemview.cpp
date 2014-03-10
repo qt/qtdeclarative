@@ -2318,7 +2318,8 @@ void QQuickItemView::initItem(int, QObject *object)
 {
     QQuickItem* item = qmlobject_cast<QQuickItem*>(object);
     if (item) {
-        item->setZ(1);
+        if (qFuzzyIsNull(item->z()))
+            item->setZ(1);
         item->setParentItem(contentItem());
         QQuickItemPrivate::get(item)->setCulled(true);
     }
@@ -2382,7 +2383,8 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
         item = new QQuickItem;
     }
     if (item) {
-        item->setZ(zValue);
+        if (qFuzzyIsNull(item->z()))
+            item->setZ(zValue);
         QQml_setParent_noEvent(item, q->contentItem());
         item->setParentItem(q->contentItem());
     }

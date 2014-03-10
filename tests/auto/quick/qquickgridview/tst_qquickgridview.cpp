@@ -121,6 +121,7 @@ private slots:
     void footer();
     void footer_data();
     void initialZValues();
+    void initialZValues_data();
     void header();
     void header_data();
     void extents();
@@ -3200,8 +3201,9 @@ void tst_QQuickGridView::footer_data()
 
 void tst_QQuickGridView::initialZValues()
 {
+    QFETCH(QString, fileName);
     QQuickView *window = createView();
-    window->setSource(testFileUrl("initialZValues.qml"));
+    window->setSource(testFileUrl(fileName));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
@@ -3209,13 +3211,27 @@ void tst_QQuickGridView::initialZValues()
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    QVERIFY(gridview->currentItem());
+    QTRY_COMPARE(gridview->currentItem()->z(), gridview->property("itemZ").toReal());
+
     QVERIFY(gridview->headerItem());
-    QTRY_COMPARE(gridview->headerItem()->z(), gridview->property("initialZ").toReal());
+    QTRY_COMPARE(gridview->headerItem()->z(), gridview->property("headerZ").toReal());
 
     QVERIFY(gridview->footerItem());
-    QTRY_COMPARE(gridview->footerItem()->z(), gridview->property("initialZ").toReal());
+    QTRY_COMPARE(gridview->footerItem()->z(), gridview->property("footerZ").toReal());
+
+    QVERIFY(gridview->highlightItem());
+    QTRY_COMPARE(gridview->highlightItem()->z(), gridview->property("highlightZ").toReal());
 
     delete window;
+}
+
+void tst_QQuickGridView::initialZValues_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("defaults") << "defaultZValues.qml";
+    QTest::newRow("constants") << "constantZValues.qml";
+    QTest::newRow("bindings") << "boundZValues.qml";
 }
 
 void tst_QQuickGridView::header()
