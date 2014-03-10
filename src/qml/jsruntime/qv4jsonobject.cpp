@@ -929,7 +929,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
             for (uint i = 0; i < arrayLen; ++i) {
                 v = o->getIndexed(i);
                 if (v->asNumberObject() || v->asStringObject() || v->isNumber())
-                    v = __qmljs_to_string(ctx, v);
+                    v = RuntimeHelpers::toString(ctx, v);
                 if (v->isString()) {
                     String *s = v->stringValue();
                     if (!stringify.propertyList.contains(s))

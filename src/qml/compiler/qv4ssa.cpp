@@ -3096,22 +3096,22 @@ bool tryOptimizingComparison(Expr *&expr)
 
     switch (b->op) {
     case OpGt:
-        leftConst->value = __qmljs_cmp_gt(&l, &r);
+        leftConst->value = Runtime::compareGreaterThan(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLt:
-        leftConst->value = __qmljs_cmp_lt(&l, &r);
+        leftConst->value = Runtime::compareLessThan(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpGe:
-        leftConst->value = __qmljs_cmp_ge(&l, &r);
+        leftConst->value = Runtime::compareGreaterEqual(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLe:
-        leftConst->value = __qmljs_cmp_le(&l, &r);
+        leftConst->value = Runtime::compareLessEqual(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -3120,7 +3120,7 @@ bool tryOptimizingComparison(Expr *&expr)
             return false;
         // intentional fall-through
     case OpEqual:
-        leftConst->value = __qmljs_cmp_eq(&l, &r);
+        leftConst->value = Runtime::compareEqual(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -3129,7 +3129,7 @@ bool tryOptimizingComparison(Expr *&expr)
             return false;
         // intentional fall-through
     case OpNotEqual:
-        leftConst->value = __qmljs_cmp_ne(&l, &r);
+        leftConst->value = Runtime::compareNotEqual(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -3366,8 +3366,8 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
 
                     QV4::Primitive lc = convertToValue(leftConst);
                     QV4::Primitive rc = convertToValue(rightConst);
-                    double l = __qmljs_to_number(&lc);
-                    double r = __qmljs_to_number(&rc);
+                    double l = RuntimeHelpers::toNumber(&lc);
+                    double r = RuntimeHelpers::toNumber(&rc);
 
                     switch (binop->op) {
                     case OpMul:

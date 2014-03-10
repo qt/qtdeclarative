@@ -381,7 +381,7 @@ QString QJSValue::toString() const
 double QJSValue::toNumber() const
 {
     if (d->value.isEmpty())
-        return __qmljs_string_to_number(d->string);
+        return RuntimeHelpers::stringToNumber(d->string);
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
@@ -433,7 +433,7 @@ bool QJSValue::toBool() const
 qint32 QJSValue::toInt() const
 {
     if (d->value.isEmpty())
-        return QV4::Primitive::toInt32(__qmljs_string_to_number(d->string));
+        return QV4::Primitive::toInt32(RuntimeHelpers::stringToNumber(d->string));
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
@@ -459,7 +459,7 @@ qint32 QJSValue::toInt() const
 quint32 QJSValue::toUInt() const
 {
     if (d->value.isEmpty())
-        return QV4::Primitive::toUInt32(__qmljs_string_to_number(d->string));
+        return QV4::Primitive::toUInt32(RuntimeHelpers::stringToNumber(d->string));
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
@@ -744,12 +744,12 @@ static bool js_equal(const QString &string, QV4::ValueRef value)
     if (value->isString())
         return string == value->stringValue()->toQString();
     if (value->isNumber())
-        return __qmljs_string_to_number(string) == value->asDouble();
+        return RuntimeHelpers::stringToNumber(string) == value->asDouble();
     if (value->isBoolean())
-        return __qmljs_string_to_number(string) == double(value->booleanValue());
+        return RuntimeHelpers::stringToNumber(string) == double(value->booleanValue());
     if (value->isObject()) {
         Scope scope(value->objectValue()->engine());
-        ScopedValue p(scope, __qmljs_to_primitive(value, PREFERREDTYPE_HINT));
+        ScopedValue p(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
         return js_equal(string, p);
     }
     return false;
@@ -789,7 +789,7 @@ bool QJSValue::equals(const QJSValue& other) const
     if (other.d->value.isEmpty())
         return other.equals(*this);
 
-    return __qmljs_cmp_eq(QV4::ValueRef(d), QV4::ValueRef(other.d));
+    return Runtime::compareEqual(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
 /*!
@@ -826,7 +826,7 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
     if (other.d->value.isEmpty())
         return other.strictlyEquals(*this);
 
-    return __qmljs_strict_equal(QV4::ValueRef(d), QV4::ValueRef(other.d));
+    return RuntimeHelpers::strictEqual(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
 /*!

@@ -605,7 +605,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
             v = instance->getIndexed(k, &exists);
-            if (exists && __qmljs_strict_equal(v, searchValue))
+            if (exists && RuntimeHelpers::strictEqual(v, searchValue))
                 return Encode(k);
         }
         return Encode(-1);
@@ -620,7 +620,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
             value = instance->getIndexed(i, &exists);
             if (scope.hasException())
                 return Encode::undefined();
-            if (exists && __qmljs_strict_equal(value, searchValue))
+            if (exists && RuntimeHelpers::strictEqual(value, searchValue))
                 return Encode(i);
         }
     } else if (!instance->arrayData) {
@@ -637,7 +637,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
                 value = *val;
                 if (scope.hasException())
                     return Encode::undefined();
-                if (__qmljs_strict_equal(value, searchValue))
+                if (RuntimeHelpers::strictEqual(value, searchValue))
                     return Encode((uint)(val - instance->arrayData->data));
             }
             ++val;
@@ -686,7 +686,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(CallContext *ctx)
         v = instance->getIndexed(k, &exists);
         if (scope.hasException())
             return Encode::undefined();
-        if (exists && __qmljs_strict_equal(v, searchValue))
+        if (exists && RuntimeHelpers::strictEqual(v, searchValue))
             return Encode(k);
     }
     return Encode(-1);

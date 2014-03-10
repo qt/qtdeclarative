@@ -810,7 +810,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             if (slotIndexToDisconnect != -1) {
                 // This is a QObject function wrapper
                 if (connection->thisObject.isUndefined() == thisObject->isUndefined() &&
-                        (connection->thisObject.isUndefined() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                        (connection->thisObject.isUndefined() || RuntimeHelpers::strictEqual(connection->thisObject, thisObject))) {
 
                     QV4::ScopedFunctionObject f(scope, connection->function.value());
                     QPair<QObject *, int> connectedFunctionData = extractQtMethod(f);
@@ -822,9 +822,9 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 }
             } else {
                 // This is a normal JS function
-                if (__qmljs_strict_equal(connection->function, function) &&
+                if (RuntimeHelpers::strictEqual(connection->function, function) &&
                         connection->thisObject.isUndefined() == thisObject->isUndefined() &&
-                        (connection->thisObject.isUndefined() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                        (connection->thisObject.isUndefined() || RuntimeHelpers::strictEqual(connection->thisObject, thisObject))) {
                     *ret = true;
                     return;
                 }

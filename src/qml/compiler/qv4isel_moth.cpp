@@ -56,7 +56,7 @@ using namespace QV4::Moth;
 
 namespace {
 
-inline QV4::BinOp aluOpFunction(IR::AluOp op)
+inline QV4::Runtime::BinaryOperation aluOpFunction(IR::AluOp op)
 {
     switch (op) {
     case IR::OpInvalid:
@@ -72,43 +72,43 @@ inline QV4::BinOp aluOpFunction(IR::AluOp op)
     case IR::OpCompl:
         return 0;
     case IR::OpBitAnd:
-        return QV4::__qmljs_bit_and;
+        return QV4::Runtime::bitAnd;
     case IR::OpBitOr:
-        return QV4::__qmljs_bit_or;
+        return QV4::Runtime::bitOr;
     case IR::OpBitXor:
-        return QV4::__qmljs_bit_xor;
+        return QV4::Runtime::bitXor;
     case IR::OpAdd:
         return 0;
     case IR::OpSub:
-        return QV4::__qmljs_sub;
+        return QV4::Runtime::sub;
     case IR::OpMul:
-        return QV4::__qmljs_mul;
+        return QV4::Runtime::mul;
     case IR::OpDiv:
-        return QV4::__qmljs_div;
+        return QV4::Runtime::div;
     case IR::OpMod:
-        return QV4::__qmljs_mod;
+        return QV4::Runtime::mod;
     case IR::OpLShift:
-        return QV4::__qmljs_shl;
+        return QV4::Runtime::shl;
     case IR::OpRShift:
-        return QV4::__qmljs_shr;
+        return QV4::Runtime::shr;
     case IR::OpURShift:
-        return QV4::__qmljs_ushr;
+        return QV4::Runtime::ushr;
     case IR::OpGt:
-        return QV4::__qmljs_gt;
+        return QV4::Runtime::greaterThan;
     case IR::OpLt:
-        return QV4::__qmljs_lt;
+        return QV4::Runtime::lessThan;
     case IR::OpGe:
-        return QV4::__qmljs_ge;
+        return QV4::Runtime::greaterEqual;
     case IR::OpLe:
-        return QV4::__qmljs_le;
+        return QV4::Runtime::lessEqual;
     case IR::OpEqual:
-        return QV4::__qmljs_eq;
+        return QV4::Runtime::equal;
     case IR::OpNotEqual:
-        return QV4::__qmljs_ne;
+        return QV4::Runtime::notEqual;
     case IR::OpStrictEqual:
-        return QV4::__qmljs_se;
+        return QV4::Runtime::strictEqual;
     case IR::OpStrictNotEqual:
-        return QV4::__qmljs_sne;
+        return QV4::Runtime::strictNotEqual;
     case IR::OpInstanceof:
         return 0;
     case IR::OpIn:
@@ -978,11 +978,11 @@ Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR
     if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
         Instruction::BinopContext binop;
         if (oper == IR::OpInstanceof)
-            binop.alu = QV4::__qmljs_instanceof;
+            binop.alu = QV4::Runtime::instanceof;
         else if (oper == IR::OpIn)
-            binop.alu = QV4::__qmljs_in;
+            binop.alu = QV4::Runtime::in;
         else
-            binop.alu = QV4::__qmljs_add;
+            binop.alu = QV4::Runtime::add;
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);

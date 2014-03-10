@@ -598,7 +598,7 @@ union Instr
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        QV4::BinOp alu;
+        QV4::Runtime::BinaryOperation alu;
         Param lhs;
         Param rhs;
         Param result;
@@ -683,7 +683,7 @@ union Instr
     };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
-        QV4::BinOpContext alu;
+        QV4::Runtime::BinaryOperationContext alu;
         Param lhs;
         Param rhs;
         Param result;

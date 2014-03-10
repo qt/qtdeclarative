@@ -274,7 +274,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
-        f = __qmljs_to_string(ctx, f);
+        f = RuntimeHelpers::toString(ctx, f);
         if (scope.hasException())
             return Encode::undefined();
         QString str = f->stringValue()->toQString();
@@ -360,7 +360,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         return ctx->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
-    arg = __qmljs_to_string(ctx, arg);
+    arg = RuntimeHelpers::toString(ctx, arg);
     if (scope.hasException())
         return Encode::undefined();
     QString s = arg->stringValue()->toQString();

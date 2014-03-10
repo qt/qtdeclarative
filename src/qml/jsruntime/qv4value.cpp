@@ -88,11 +88,11 @@ double Value::toNumberImpl() const
         return std::numeric_limits<double>::quiet_NaN();
     case QV4::Value::Managed_Type:
         if (isString())
-            return __qmljs_string_to_number(stringValue()->toQString());
+            return RuntimeHelpers::stringToNumber(stringValue()->toQString());
         {
             ExecutionContext *ctx = objectValue()->internalClass->engine->currentContext();
             Scope scope(ctx);
-            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), NUMBER_HINT));
             return prim->toNumber();
         }
     case QV4::Value::Null_Type:
@@ -126,7 +126,7 @@ QString Value::toQStringNoThrow() const
             Scope scope(ctx);
             ScopedValue ex(scope);
             bool caughtException = false;
-            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
             if (scope.hasException()) {
                 ex = ctx->catchException();
                 caughtException = true;
@@ -135,7 +135,7 @@ QString Value::toQStringNoThrow() const
             }
             // Can't nest try/catch due to CXX ABI limitations for foreign exception nesting.
             if (caughtException) {
-                ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ex, STRING_HINT));
                 if (scope.hasException()) {
                     ex = ctx->catchException();
                 } else if (prim->isPrimitive()) {
@@ -146,12 +146,12 @@ QString Value::toQStringNoThrow() const
         }
     case Value::Integer_Type: {
         QString str;
-        __qmljs_numberToString(&str, (double)int_32, 10);
+        RuntimeHelpers::numberToString(&str, (double)int_32, 10);
         return str;
     }
     default: { // double
         QString str;
-        __qmljs_numberToString(&str, doubleValue(), 10);
+        RuntimeHelpers::numberToString(&str, doubleValue(), 10);
         return str;
     }
     } // switch
@@ -177,17 +177,17 @@ QString Value::toQString() const
         {
             ExecutionContext *ctx = objectValue()->internalClass->engine->currentContext();
             Scope scope(ctx);
-            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
             return prim->toQString();
         }
     case Value::Integer_Type: {
         QString str;
-        __qmljs_numberToString(&str, (double)int_32, 10);
+        RuntimeHelpers::numberToString(&str, (double)int_32, 10);
         return str;
     }
     default: { // double
         QString str;
-        __qmljs_numberToString(&str, doubleValue(), 10);
+        RuntimeHelpers::numberToString(&str, doubleValue(), 10);
         return str;
     }
     } // switch
@@ -272,13 +272,13 @@ String *Value::toString(ExecutionContext *ctx) const
 {
     if (isString())
         return stringValue();
-    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this))->getPointer();
+    return RuntimeHelpers::convertToString(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
 Object *Value::toObject(ExecutionContext *ctx) const
 {
     if (isObject())
         return objectValue();
-    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this))->getPointer();
+    return RuntimeHelpers::convertToObject(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 

@@ -53,7 +53,7 @@ using namespace JIT;
 
 void Unop::generate(IR::Temp *source, IR::Temp *target)
 {
-    UnaryOpName call = 0;
+    Runtime::UnaryOperation call = 0;
     const char *name = 0;
     switch (op) {
     case IR::OpNot:
@@ -62,12 +62,12 @@ void Unop::generate(IR::Temp *source, IR::Temp *target)
     case IR::OpUMinus:
         generateUMinus(source, target);
         return;
-    case IR::OpUPlus: setOp(__qmljs_uplus); break;
+    case IR::OpUPlus: setOp(Runtime::uPlus); break;
     case IR::OpCompl:
         generateCompl(source, target);
         return;
-    case IR::OpIncrement: setOp(__qmljs_increment); break;
-    case IR::OpDecrement: setOp(__qmljs_decrement); break;
+    case IR::OpIncrement: setOp(Runtime::increment); break;
+    case IR::OpDecrement: setOp(Runtime::decrement); break;
     default:
         Q_UNREACHABLE();
     } // switch
@@ -91,7 +91,7 @@ void Unop::generateUMinus(IR::Temp *source, IR::Temp *target)
         return;
     }
 
-    as->generateFunctionCallImp(target, "__qmljs_uminus", __qmljs_uminus, Assembler::PointerToValue(source));
+    as->generateFunctionCallImp(target, "Runtime::uMinus", Runtime::uMinus, Assembler::PointerToValue(source));
 }
 
 void Unop::generateNot(IR::Temp *source, IR::Temp *target)
@@ -119,7 +119,7 @@ void Unop::generateNot(IR::Temp *source, IR::Temp *target)
     }
     // ## generic implementation testing for int/bool
 
-    as->generateFunctionCallImp(target, "__qmljs_not", __qmljs_not, Assembler::PointerToValue(source));
+    as->generateFunctionCallImp(target, "Runtime::uNot", Runtime::uNot, Assembler::PointerToValue(source));
 }
 
 void Unop::generateCompl(IR::Temp *source, IR::Temp *target)
@@ -133,7 +133,7 @@ void Unop::generateCompl(IR::Temp *source, IR::Temp *target)
             as->storeInt32(tReg, target);
         return;
     }
-    as->generateFunctionCallImp(target, "__qmljs_compl", __qmljs_compl, Assembler::PointerToValue(source));
+    as->generateFunctionCallImp(target, "Runtime::complement", Runtime::complement, Assembler::PointerToValue(source));
 }
 
 #endif
