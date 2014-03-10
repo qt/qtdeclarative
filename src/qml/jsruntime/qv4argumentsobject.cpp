@@ -58,11 +58,12 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     setArrayType(ArrayData::Complex);
 
     if (context->strictMode) {
-        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         Q_ASSERT(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
-        *propertyAt(CalleePropertyIndex) = pd;
-        *propertyAt(CallerPropertyIndex) = pd;
+        propertyAt(CalleePropertyIndex)->value = v4->thrower;
+        propertyAt(CalleePropertyIndex)->set = v4->thrower;
+        propertyAt(CallerPropertyIndex)->value = v4->thrower;
+        propertyAt(CallerPropertyIndex)->set = v4->thrower;
 
         arrayReserve(context->callData->argc);
         arrayPut(0, context->callData->args, context->callData->argc);
@@ -94,7 +95,7 @@ void ArgumentsObject::fullyCreate()
     context->engine->requireArgumentsAccessors(numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments.append(context->callData->args[i]);
-        arraySet(i, context->engine->argumentsAccessors.at(i), Attr_Accessor);
+        arraySet(i, context->engine->argumentsAccessors[i], Attr_Accessor);
     }
     arrayPut(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
@@ -113,11 +114,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     PropertyAttributes mapAttrs;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())
-        isMapped = arrayData->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
+        isMapped = arrayData->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors[index].getter();
 
     if (isMapped) {
-        map = *pd;
         mapAttrs = arrayData->attributes(index);
+        map.copy(*pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData->getProperty(index);
         pd->value = mappedArguments.at(index);
@@ -137,7 +138,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);
             pd = arrayData->getProperty(index);
-            *pd = map;
+            pd->copy(map, mapAttrs);
         }
     }
 

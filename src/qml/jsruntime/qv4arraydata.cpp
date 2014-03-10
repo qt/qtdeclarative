@@ -595,7 +595,7 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
         } else {
             for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse->begin();
                  it != static_cast<const SparseArrayData *>(other)->sparse->end(); it = it->nextNode())
-                obj->arraySet(oldSize + it->key(), other->data[it->value]);
+                obj->arraySet(oldSize + it->key(), ValueRef(other->data[it->value]));
         }
     } else {
         obj->arrayPut(oldSize, other->data, n);

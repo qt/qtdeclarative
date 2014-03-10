@@ -134,8 +134,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     Scoped<String> id_proto(scope, v4->id___proto__);
-    Property p = Property::fromAccessor(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer(),
-                                        v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
+    Property p(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer(),
+               v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
     insertMember(StringRef(v4->id___proto__), p, Attr_Accessor|Attr_NotEnumerable);
 }
 

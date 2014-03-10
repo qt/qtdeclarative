@@ -179,7 +179,7 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
                 result->putIndexed(startIndex + i, entry);
             }
         } else {
-            result->arraySet(result->getLength(), ctx->callData->args[i]);
+            result->arraySet(result->getLength(), ValueRef(ctx->callData->args[i]));
         }
     }
 

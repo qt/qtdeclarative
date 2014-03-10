@@ -231,7 +231,8 @@ public:
     EvalFunction *evalFunction;
     FunctionObject *thrower;
 
-    QVector<Property> argumentsAccessors;
+    Property *argumentsAccessors;
+    int nArgumentsAccessors;
 
     StringValue id_undefined;
     StringValue id_null;

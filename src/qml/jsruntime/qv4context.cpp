@@ -127,7 +127,7 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
 
     if (activation->hasProperty(name))
         return;
-    Property desc = Property::fromValue(Primitive::undefinedValue());
+    Property desc(Primitive::undefinedValue());
     PropertyAttributes attrs(Attr_Data);
     attrs.setConfigurable(deletable);
     activation->__defineOwnProperty__(this, name, desc, attrs);

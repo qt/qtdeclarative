@@ -374,7 +374,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
     if (scope->strictMode) {
-        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
+        Property pd(v4->thrower, v4->thrower);
         insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
@@ -457,7 +457,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
     if (scope->strictMode) {
-        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
+        Property pd(v4->thrower, v4->thrower);
         insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
@@ -631,7 +631,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
 
     ExecutionEngine *v4 = scope->engine;
 
-    Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
+    Property pd(v4->thrower, v4->thrower);
     insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }

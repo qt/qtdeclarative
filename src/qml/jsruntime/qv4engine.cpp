@@ -171,6 +171,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , globalObject(0)
     , globalCode(0)
     , v8Engine(0)
+    , argumentsAccessors(0)
+    , nArgumentsAccessors(0)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
@@ -423,6 +425,7 @@ ExecutionEngine::~ExecutionEngine()
     delete executableAllocator;
     jsStack->deallocate();
     delete jsStack;
+    delete [] argumentsAccessors;
 }
 
 void ExecutionEngine::enableDebugger()
@@ -784,20 +787,26 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
 
 void ExecutionEngine::requireArgumentsAccessors(int n)
 {
-    if (n <= argumentsAccessors.size())
+    if (n <= nArgumentsAccessors)
         return;
 
     Scope scope(this);
     ScopedFunctionObject get(scope);
     ScopedFunctionObject set(scope);
 
-    uint oldSize = argumentsAccessors.size();
-    argumentsAccessors.resize(n);
-    for (int i = oldSize; i < n; ++i) {
-        get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
-        set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
-        Property pd = Property::fromAccessor(get.getPointer(), set.getPointer());
-        argumentsAccessors[i] = pd;
+    if (n >= nArgumentsAccessors) {
+        Property *oldAccessors = argumentsAccessors;
+        int oldSize = nArgumentsAccessors;
+        nArgumentsAccessors = qMax(8, n);
+        argumentsAccessors = new Property[nArgumentsAccessors];
+        if (oldAccessors) {
+            memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
+            delete [] oldAccessors;
+        }
+        for (int i = oldSize; i < nArgumentsAccessors; ++i) {
+            argumentsAccessors[i].value = Value::fromManaged(new (memoryManager) ArgumentsGetterFunction(rootContext, i));
+            argumentsAccessors[i].set = Value::fromManaged(new (memoryManager) ArgumentsSetterFunction(rootContext, i));
+        }
     }
 }
 
@@ -807,8 +816,8 @@ void ExecutionEngine::markObjects()
 
     globalObject->mark(this);
 
-    for (int i = 0; i < argumentsAccessors.size(); ++i) {
-        const Property &pd = argumentsAccessors.at(i);
+    for (int i = 0; i < nArgumentsAccessors; ++i) {
+        const Property &pd = argumentsAccessors[i];
         if (FunctionObject *getter = pd.getter())
             getter->mark(this);
         if (FunctionObject *setter = pd.setter())

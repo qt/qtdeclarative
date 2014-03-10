@@ -252,7 +252,9 @@ void Object::insertMember(const StringRef s, const Property &p, PropertyAttribut
 
     if (attributes.isAccessor()) {
         hasAccessorProperty = 1;
-        *propertyAt(idx) = p;
+        Property *pp = propertyAt(idx);
+        pp->value = p.value;
+        pp->set = p.set;
     } else {
         memberData[idx] = p.value;
     }
@@ -568,7 +570,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
                     it->arrayIndex = k + 1;
                     *index = k;
                     *attrs = a;
-                    *pd = *p;
+                    pd->copy(*p, a);
                     return;
                 }
             }
@@ -604,7 +606,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
             name = n;
             *attrs = a;
-            *pd = *p;
+            pd->copy(*p, a);
             return;
         }
     }
@@ -916,7 +918,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         if (!extensible)
             goto reject;
         // clause 4
-        Property pd = p;
+        Property pd;
+        pd.copy(p, attrs);
         pd.fullyPopulated(&attrs);
         insertMember(name, pd, attrs);
         return true;
@@ -961,7 +964,8 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
         if (!extensible)
             goto reject;
         // clause 4
-        Property pp(p);
+        Property pp;
+        pp.copy(p, attrs);
         pp.fullyPopulated(&attrs);
         if (attrs == Attr_Data) {
             Scope scope(ctx);
