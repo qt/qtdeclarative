@@ -95,6 +95,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void statusChanged(QQuickWidget::Status);
+    void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
 
 private Q_SLOTS:
     void continueExecute();

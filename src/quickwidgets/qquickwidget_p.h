@@ -86,6 +86,7 @@ public:
     void renderSceneGraph();
     void createContext();
     void destroyContext();
+    void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
     GLuint textureId() const Q_DECL_OVERRIDE;
 

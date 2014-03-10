@@ -46,6 +46,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
 #include <QtCore/QScopedPointer>
+#include <QtCore/QLibraryInfo>
 #include <QtCore/private/qabstractanimation_p.h>
 
 #include <QtGui/QOpenGLContext>
@@ -58,6 +59,10 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickprofiler_p.h>
+
+#ifdef Q_OS_WIN
+#  include <QtCore/qt_windows.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -208,6 +213,32 @@ void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
     s_renderLoopInstance->reset(instance);
 }
 
+void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
+                                                 bool isEs)
+{
+    QString translatedMessage;
+    QString untranslatedMessage;
+    QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
+                                                       &translatedMessage,
+                                                       &untranslatedMessage,
+                                                       isEs);
+    // If there is a slot connected to the error signal, emit it and leave it to
+    // the application to do something with the message. If nothing is connected,
+    // show a message on our own and terminate.
+    const bool signalEmitted =
+        QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
+                                                    translatedMessage);
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+    if (!signalEmitted && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow()) {
+        MessageBox(0, (LPCTSTR) translatedMessage.utf16(),
+                   (LPCTSTR)(QCoreApplication::applicationName().utf16()),
+                   MB_OK | MB_ICONERROR);
+    }
+#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+    if (!signalEmitted)
+        qFatal("%s", qPrintable(untranslatedMessage));
+}
+
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
     , eventPending(false)
@@ -283,18 +314,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (QSGContext::sharedOpenGLContext())
             gl->setShareContext(QSGContext::sharedOpenGLContext());
         if (!gl->create()) {
+            const bool isEs = gl->isES();
             delete gl;
             gl = 0;
-            QString formatStr;
-            QDebug(&formatStr) << window->requestedFormat();
-            QString contextType = QLatin1String("OpenGL");
-            const char *msg = QT_TRANSLATE_NOOP("QSGGuiThreadRenderLoop", "Failed to create %1 context for format %2");
-            QString translatedMsg = tr(msg).arg(contextType).arg(formatStr);
-            QString nonTranslatedMsg = QString(QLatin1String(msg)).arg(contextType).arg(formatStr);
-            bool signalEmitted = QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
-                                                                             translatedMsg);
-            if (!signalEmitted)
-                qFatal("%s", qPrintable(nonTranslatedMsg));
+            handleContextCreationFailure(window, isEs);
         } else {
             cd->fireOpenGLContextCreated(gl);
             current = gl->makeCurrent(window);

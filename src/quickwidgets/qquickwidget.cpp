@@ -56,6 +56,12 @@
 #include <QtCore/qbasictimer.h>
 #include <QtGui/QOffscreenSurface>
 
+#ifdef Q_OS_WIN
+#  include <QtWidgets/QMessageBox>
+#  include <QtCore/QLibraryInfo>
+#  include <QtCore/qt_windows.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -387,6 +393,21 @@ QQmlContext* QQuickWidget::rootContext() const
 */
 
 /*!
+    \fn void QQuickWidget::sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message)
+
+    This signal is emitted when an error occurred during scene graph initialization.
+
+    Applications should connect to this signal if they wish to handle errors,
+    like OpenGL context creation failures, in a custom way. When no slot is
+    connected to the signal, the behavior will be different: Quick will print
+    the message, or show a message box, and terminate the application.
+
+    This signal will be emitted from the gui thread.
+
+    \sa QQuickWindow::sceneGraphError()
+ */
+
+/*!
     \property QQuickWidget::status
     The component's current \l{QQuickWidget::Status} {status}.
 */
@@ -510,6 +531,27 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
     return rootObjectSize;
 }
 
+void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &format, bool isEs)
+{
+    Q_Q(QQuickWidget);
+
+    QString translatedMessage;
+    QString untranslatedMessage;
+    QQuickWindowPrivate::contextCreationFailureMessage(format, &translatedMessage, &untranslatedMessage, isEs);
+
+    static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWidget::sceneGraphError);
+    const bool signalConnected = q->isSignalConnected(errorSignal);
+    if (signalConnected)
+        emit q->sceneGraphError(QQuickWindow::ContextNotAvailable, translatedMessage);
+
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+    if (!signalConnected && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow())
+        QMessageBox::critical(q, QCoreApplication::applicationName(), translatedMessage);
+#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+    if (!signalConnected)
+        qFatal("%s", qPrintable(untranslatedMessage));
+}
+
 void QQuickWidgetPrivate::createContext()
 {
     if (context)
@@ -521,9 +563,10 @@ void QQuickWidgetPrivate::createContext()
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
     if (!context->create()) {
-        qWarning("QQuickWidget: failed to create OpenGL context");
+        const bool isEs = context->isES();
         delete context;
         context = 0;
+        handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
         return;
     }
 

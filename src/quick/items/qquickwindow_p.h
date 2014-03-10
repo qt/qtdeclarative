@@ -242,6 +242,11 @@ public:
     static QObject *data_at(QQmlListProperty<QObject> *, int);
     static void data_clear(QQmlListProperty<QObject> *);
 
+    static void contextCreationFailureMessage(const QSurfaceFormat &format,
+                                              QString *translatedMessage,
+                                              QString *untranslatedMessage,
+                                              bool isEs);
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };

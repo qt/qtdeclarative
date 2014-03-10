@@ -183,35 +183,10 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
             m_gl->setShareContext(QSGContext::sharedOpenGLContext());
         bool created = m_gl->create();
         if (!created) {
-            const bool isDebug = QLibraryInfo::isDebugBuild();
-            QString eglLibName = QLatin1String(isDebug ? "libEGLd.dll" : "libEGL.dll");
-            QString glesLibName = QLatin1String(isDebug ? "libGLESv2d.dll" : "libGLESv2.dll");
-            QString contextType = QLatin1String("OpenGL");
-            const char *msg = QT_TRANSLATE_NOOP(
-                "QSGWindowsRenderLoop",
-                "Failed to create %1 context. "
-                "This is most likely caused by not having the necessary graphics drivers installed.\n\n"
-                "Install a driver providing OpenGL 2.0 or higher, or, if this is not possible, "
-                "make sure the Angle Open GL ES 2.0 emulation libraries (%2, %3 and d3dcompiler_*.dll) "
-                "are available in the application executable's directory or in a location listed in PATH.");
-            QString translatedMsg = tr(msg).arg(contextType).arg(eglLibName).arg(glesLibName);
-            QString nonTranslatedMsg = QString(QLatin1String(msg)).arg(contextType).arg(eglLibName).arg(glesLibName);
-            // If there is a slot connected to the error signal, emit it and leave it to
-            // the application to do something with the message. If nothing is connected,
-            // show a message on our own and terminate.
-            bool signalEmitted = QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
-                                                                             translatedMsg);
-#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
-            if (!signalEmitted && !isDebug && !GetConsoleWindow()) {
-                MessageBox(0, (LPCTSTR) translatedMsg.utf16(),
-                           (LPCTSTR)(QCoreApplication::applicationName().utf16()),
-                           MB_OK | MB_ICONERROR);
-            }
-#endif // !Q_OS_WINCE && !Q_OS_WINRT
+            const bool isEs = m_gl->isES();
             delete m_gl;
             m_gl = 0;
-            if (!signalEmitted)
-                qFatal("%s", qPrintable(nonTranslatedMsg));
+            handleContextCreationFailure(window, isEs);
             return;
         }
 
