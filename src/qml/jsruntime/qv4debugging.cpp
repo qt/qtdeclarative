@@ -686,6 +686,9 @@ void DebuggerAgent::setBreakOnThrow(bool onoff)
 
 DebuggerAgent::~DebuggerAgent()
 {
+    foreach (Debugger *debugger, m_debuggers)
+        debugger->detachFromAgent();
+
     Q_ASSERT(m_debuggers.isEmpty());
 }
 
