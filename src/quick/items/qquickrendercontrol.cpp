@@ -136,7 +136,7 @@ void QQuickRenderControl::invalidate()
 void QQuickRenderControl::polishItems()
 {
     Q_D(QQuickRenderControl);
-    if (!d->window || !QQuickWindowPrivate::get(d->window)->isRenderable())
+    if (!d->window)
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
@@ -151,7 +151,7 @@ void QQuickRenderControl::polishItems()
 bool QQuickRenderControl::sync()
 {
     Q_D(QQuickRenderControl);
-    if (!d->window || !QQuickWindowPrivate::get(d->window)->isRenderable())
+    if (!d->window)
         return false;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
@@ -187,7 +187,7 @@ void QQuickRenderControl::stop()
 void QQuickRenderControl::render()
 {
     Q_D(QQuickRenderControl);
-    if (!d->window || !QQuickWindowPrivate::get(d->window)->isRenderable())
+    if (!d->window)
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);

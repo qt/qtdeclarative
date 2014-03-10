@@ -222,7 +222,6 @@ public:
 
     uint lastWheelEventAccepted : 1;
     bool componentCompleted : 1;
-    bool forceRendering : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;

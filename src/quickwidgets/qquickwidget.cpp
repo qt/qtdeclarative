@@ -162,6 +162,9 @@ void QQuickWidgetPrivate::renderSceneGraph()
     Q_Q(QQuickWidget);
     updatePending = false;
 
+    if (!q->isVisible() || fakeHidden)
+        return;
+
     QOpenGLContext *context = offscreenWindow->openglContext();
     if (!context) {
         qWarning("QQuickWidget: render scenegraph with no context");
@@ -718,13 +721,11 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 
     if (e->size().isEmpty()) {
         //stop rendering
-        QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
         d->fakeHidden = true;
         return;
     }
     if (d->fakeHidden) {
         //restart rendering
-        QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
         d->fakeHidden = false;
         d->renderControl->sync();
     }
@@ -798,8 +799,6 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
-    QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
-
     d->updatePending = false;
     d->createContext();
     triggerUpdate();
@@ -809,7 +808,6 @@ void QQuickWidget::showEvent(QShowEvent *)
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-    QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
 
     if (!d->context) {
         qWarning("QQuickWidget::hideEvent with no context");

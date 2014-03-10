@@ -409,7 +409,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
     , componentCompleted(true)
-    , forceRendering(false)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -2300,7 +2299,7 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
 bool QQuickWindowPrivate::isRenderable() const
 {
     Q_Q(const QQuickWindow);
-    return (forceRendering || (q->isExposed() && q->isVisible())) && q->geometry().isValid();
+    return ((q->isExposed() && q->isVisible())) && q->geometry().isValid();
 }
 
 /*!
