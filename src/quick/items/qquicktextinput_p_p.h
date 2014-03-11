@@ -111,6 +111,7 @@ public:
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
         , m_passwordCharacter(qApp->styleHints()->passwordMaskCharacter())
+        , m_passwordMaskDelay(qApp->styleHints()->passwordMaskDelay())
         , focusOnPress(true)
         , cursorVisible(false)
         , cursorPending(false)
@@ -250,6 +251,7 @@ public:
 
     QChar m_blank;
     QChar m_passwordCharacter;
+    int m_passwordMaskDelay;
 
     bool focusOnPress:1;
     bool cursorVisible:1;

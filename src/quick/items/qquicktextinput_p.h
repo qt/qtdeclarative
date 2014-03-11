@@ -94,6 +94,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(EchoMode echoMode READ echoMode WRITE setEchoMode NOTIFY echoModeChanged)
     Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
     Q_PROPERTY(QString passwordCharacter READ passwordCharacter WRITE setPasswordCharacter NOTIFY passwordCharacterChanged)
+    Q_PROPERTY(int passwordMaskDelay READ passwordMaskDelay WRITE setPasswordMaskDelay RESET resetPasswordMaskDelay NOTIFY passwordMaskDelayChanged REVISION 3)
     Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged)
     Q_PROPERTY(bool autoScroll READ autoScroll WRITE setAutoScroll NOTIFY autoScrollChanged)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
@@ -227,6 +228,10 @@ public:
     QString passwordCharacter() const;
     void setPasswordCharacter(const QString &str);
 
+    int passwordMaskDelay() const;
+    void setPasswordMaskDelay(int delay);
+    void resetPasswordMaskDelay();
+
     QString displayText() const;
 
     QQmlComponent* cursorDelegate() const;
@@ -300,6 +305,7 @@ Q_SIGNALS:
     void inputMaskChanged(const QString &inputMask);
     void echoModeChanged(EchoMode echoMode);
     void passwordCharacterChanged();
+    Q_REVISION(3) void passwordMaskDelayChanged(int delay);
     void displayTextChanged();
     void activeFocusOnPressChanged(bool activeFocusOnPress);
     void autoScrollChanged(bool autoScroll);

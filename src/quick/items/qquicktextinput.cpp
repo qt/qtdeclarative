@@ -2059,9 +2059,8 @@ void QQuickTextInput::insert(int position, const QString &text)
 {
     Q_D(QQuickTextInput);
     if (d->m_echoMode == QQuickTextInput::Password) {
-        int delay = qGuiApp->styleHints()->passwordMaskDelay();
-        if (delay > 0)
-            d->m_passwordEchoTimer.start(delay, this);
+        if (d->m_passwordMaskDelay > 0)
+            d->m_passwordEchoTimer.start(d->m_passwordMaskDelay, this);
     }
     if (position < 0 || position > d->m_text.length())
         return;
@@ -2238,6 +2237,34 @@ void QQuickTextInput::setPasswordCharacter(const QString &str)
     if (d->m_echoMode == Password || d->m_echoMode == PasswordEchoOnEdit)
         d->updateDisplayText();
     emit passwordCharacterChanged();
+}
+
+/*!
+   \qmlproperty int QtQuick::TextInput::passwordMaskDelay
+   \since 5.4
+
+   Sets the delay before visible character is masked with password character, in milliseconds.
+
+   The reset method will be called by assigning undefined.
+*/
+int QQuickTextInput::passwordMaskDelay() const
+{
+    Q_D(const QQuickTextInput);
+    return d->m_passwordMaskDelay;
+}
+
+void QQuickTextInput::setPasswordMaskDelay(int delay)
+{
+    Q_D(QQuickTextInput);
+    if (d->m_passwordMaskDelay != delay) {
+        d->m_passwordMaskDelay = delay;
+        emit passwordMaskDelayChanged(delay);
+    }
+}
+
+void QQuickTextInput::resetPasswordMaskDelay()
+{
+    setPasswordMaskDelay(qGuiApp->styleHints()->passwordMaskDelay());
 }
 
 /*!
@@ -3478,9 +3505,8 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
 {
     Q_Q(QQuickTextInput);
     if (m_echoMode == QQuickTextInput::Password) {
-        int delay = qGuiApp->styleHints()->passwordMaskDelay();
-        if (delay > 0)
-            m_passwordEchoTimer.start(delay, q);
+        if (m_passwordMaskDelay > 0)
+            m_passwordEchoTimer.start(m_passwordMaskDelay, q);
     }
     Q_ASSERT(!hasSelectedText());   // insert(), processInputMethodEvent() call removeSelectedText() first.
     if (m_maskData) {
