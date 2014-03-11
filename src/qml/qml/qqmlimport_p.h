@@ -151,7 +151,7 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-    bool importPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, QList<QQmlError> *errors);
+    bool importDynamicPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, QList<QQmlError> *errors);
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
     void setImportPathList(const QStringList &paths);
@@ -170,8 +170,10 @@ private:
     QString resolvePlugin(QQmlTypeLoader *typeLoader,
                           const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName);
-    bool importPlugin(QObject *instance, const QString &basePath, const QString &uri,
-                          const QString &typeNamespace, bool initEngine, QList<QQmlError> *errors);
+    bool importStaticPlugin(QObject *instance, const QString &basePath, const QString &uri,
+                          const QString &typeNamespace, QList<QQmlError> *errors);
+    bool registerPluginTypes(QObject *instance, const QString &basePath,
+                          const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors);
 
     struct QmldirCache {
         int versionMajor;
