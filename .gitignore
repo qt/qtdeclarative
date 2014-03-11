@@ -100,6 +100,7 @@ tests/auto/qlibrary/libmylib.so*
 tests/auto/qresourceengine/runtime_resource.rcc
 tools/qtestlib/chart/chart*
 tools/qtestlib/updater/updater*
+tools/qmleasing/qmleasing
 tools/qmltestrunner/qmltestrunner
 tools/activeqt/testcon/testcon.tlb
 translations/*.qm

@@ -1,5 +1,4 @@
 QT += qml quick widgets
-CONFIG -= app_bundle
 
 SOURCES += main.cpp \
     splineeditor.cpp \
@@ -17,3 +16,5 @@ FORMS += \
     properties.ui \
     pane.ui \
     import.ui
+
+load(qt_app)
