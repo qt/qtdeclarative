@@ -80,7 +80,7 @@ struct URIErrorPrototype;
 struct InternalClass;
 struct Lookup;
 
-struct Function {
+struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
