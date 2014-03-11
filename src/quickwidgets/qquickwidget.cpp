@@ -187,7 +187,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
     This is a convenience wrapper for QQuickWindow which will automatically load and display a QML
     scene when given the URL of the main source file. Alternatively, you can instantiate your own
-    objects using QQmlComponent and place them in a manually setup QQuickWidget.
+    objects using QQmlComponent and place them in a manually set up QQuickWidget.
 
     Typical usage:
 
@@ -201,22 +201,22 @@ void QQuickWidgetPrivate::renderSceneGraph()
     you can connect to the statusChanged() signal and monitor for QQuickWidget::Error.
     The errors are available via QQuickWidget::errors().
 
-    QQuickWidget also manages sizing of the view and root object.  By default, the \l resizeMode
+    QQuickWidget also manages sizing of the view and root object. By default, the \l resizeMode
     is SizeViewToRootObject, which will load the component and resize it to the
-    size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
+    size of the view. Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
 
     \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
     The restrictions on stacking order do not apply, making QQuickWidget the more flexible
-    alternative behaving more like an ordinary widget. This comes at the expense of
+    alternative, behaving more like an ordinary widget. This comes at the expense of
     performance. Unlike QQuickWindow and QQuickView, QQuickWidget involves rendering into OpenGL
     framebuffer objects. This will naturally carry a minor performance hit.
 
     \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
-    some of the benefits of threaded rendering, for example Animator classes and vsync driven
+    some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
 
-    \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
+    \sa {Exposing Attributes of C++ Types to QML}, QQuickView
 */
 
 
@@ -285,7 +285,7 @@ QQuickWidget::~QQuickWidget()
   Ensure that the URL provided is full and correct, in particular, use
   \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-  Note that setting a source URL will result in the QML component being
+  \note Setting a source URL will result in the QML component being
   instantiated, even if the URL is unchanged from the current value.
 */
 
@@ -295,7 +295,7 @@ QQuickWidget::~QQuickWidget()
     Ensure that the URL provided is full and correct, in particular, use
     \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-    Calling this method multiple times with the same url will result
+    Calling this method multiple times with the same URL will result
     in the QML component being reinstantiated.
  */
 void QQuickWidget::setSource(const QUrl& url)
@@ -308,7 +308,7 @@ void QQuickWidget::setSource(const QUrl& url)
 /*!
     \internal
 
-    Set the source \a url, \a component and content \a item (root of the QML object hierarchy) directly.
+    Sets the source \a url, \a component and content \a item (root of the QML object hierarchy) directly.
  */
 void QQuickWidget::setContent(const QUrl& url, QQmlComponent *component, QObject* item)
 {
@@ -371,7 +371,7 @@ QQmlContext* QQuickWidget::rootContext() const
     \value Null This QQuickWidget has no source set.
     \value Ready This QQuickWidget has loaded and created the QML component.
     \value Loading This QQuickWidget is loading network data.
-    \value Error One or more errors has occurred. Call errors() to retrieve a list
+    \value Error One or more errors occurred. Call errors() to retrieve a list
            of errors.
 */
 
@@ -402,7 +402,9 @@ QQuickWidget::Status QQuickWidget::status() const
 
 /*!
     Return the list of errors that occurred during the last compile or create
-    operation.  When the status is not Error, an empty list is returned.
+    operation. When the status is not \l Error, an empty list is returned.
+
+    \sa status
 */
 QList<QQmlError> QQuickWidget::errors() const
 {
@@ -423,7 +425,7 @@ QList<QQmlError> QQuickWidget::errors() const
 
 /*!
     \property QQuickWidget::resizeMode
-    \brief whether the view should resize the window contents
+    \brief Determines whether the view should resize the window contents.
 
     If this property is set to SizeViewToRootObject (the default), the view
     resizes to the size of the root item in the QML.
@@ -684,8 +686,8 @@ QSize QQuickWidget::sizeHint() const
 /*!
   Returns the initial size of the root object.
 
-  If \l resizeMode is QQuickItem::SizeRootObjectToView the root object will be
-  resized to the size of the view.  initialSize contains the size of the
+  If \l resizeMode is SizeRootObjectToView, the root object will be
+  resized to the size of the view. This function returns the size of the
   root object before it was resized.
 */
 QSize QQuickWidget::initialSize() const
@@ -776,6 +778,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     d->offscreenWindow->mouseMoveEvent(&mappedEvent);
 }
 
+/*! \reimp */
 void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
@@ -791,6 +794,7 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
     d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
 }
 
+/*! \reimp */
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
@@ -801,6 +805,7 @@ void QQuickWidget::showEvent(QShowEvent *)
     triggerUpdate();
 }
 
+/*! \reimp */
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
