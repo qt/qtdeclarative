@@ -796,18 +796,22 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
                 groupObject = valueType;
                 valueTypeProperty = property;
             } else {
-                groupObjectPropertyCache = enginePrivate->propertyCacheForType(property->propType);
-                if (!groupObjectPropertyCache) {
-                    recordError(binding->location, tr("Invalid grouped property access"));
-                    return false;
-                }
-
                 void *argv[1] = { &groupObject };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
                 if (!groupObject) {
                     recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
                     return false;
                 }
+
+                if (QQmlData *groupDeclarativeData = QQmlData::get(groupObject))
+                    groupObjectPropertyCache = groupDeclarativeData->propertyCache;
+                if (!groupObjectPropertyCache)
+                    groupObjectPropertyCache = enginePrivate->propertyCacheForType(property->propType);
+                if (!groupObjectPropertyCache) {
+                    recordError(binding->location, tr("Invalid grouped property access"));
+                    return false;
+                }
+
 
                 bindingTarget = groupObject;
             }
@@ -1284,6 +1288,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
         vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
+        Q_ASSERT(installPropertyCache);
         scopeObjectProtector = _ddata->jsWrapper.value();
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);

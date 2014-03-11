@@ -218,6 +218,8 @@ private slots:
     void customParserBindingScopes();
     void customParserEvaluateEnum();
 
+    void preservePropertyCacheOnGroupObjects();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3579,6 +3581,25 @@ void tst_qqmllanguage::customParserEvaluateEnum()
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
+{
+    QQmlComponent component(&engine, testFile("preservePropertyCacheOnGroupObjects.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QObject *subObject = qvariant_cast<QObject*>(o->property("subObject"));
+    QVERIFY(subObject);
+    QCOMPARE(subObject->property("value").toInt(), 42);
+
+    QQmlData *ddata = QQmlData::get(subObject);
+    QVERIFY(ddata);
+    QQmlPropertyCache *subCache = ddata->propertyCache;
+    QVERIFY(subCache);
+    QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/0, /*context*/0);
+    QVERIFY(pd);
+    QCOMPARE(pd->propType, qMetaTypeId<int>());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
