@@ -151,7 +151,8 @@ void CompilationUnit::unlink()
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
     engine = 0;
-    free(data);
+    if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
+        free(data);
     data = 0;
     free(runtimeStrings);
     runtimeStrings = 0;
