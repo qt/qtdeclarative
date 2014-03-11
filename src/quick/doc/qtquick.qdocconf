@@ -36,12 +36,15 @@ tagfile                 = ../../../doc/qtquick/qtquick.tags
 
 depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtquicklayouts qtdoc qtquickdialogs qtsensors qtwidgets
 
-headerdirs  += ..
+headerdirs  += ..\
+               ../../quickwidgets
 
 sourcedirs  += .. \
-               ../../imports/testlib
+               ../../imports/testlib \
+               ../../quickwidgets
 
 exampledirs +=  ../../../examples/quick \
+                ../../../examples/quickwidgets \
                 snippets
 
 
