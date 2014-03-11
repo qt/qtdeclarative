@@ -1027,6 +1027,19 @@ void tst_qquicktextedit::vAlign()
     QVERIFY(textEditObject->cursorRectangle().bottom() > 50);
     QVERIFY(textEditObject->positionToRectangle(0).top() < 50);
     QVERIFY(textEditObject->positionToRectangle(0).bottom() > 50);
+
+    // Test vertical alignment after resizing the height.
+    textEditObject->setHeight(textEditObject->height() - 20);
+    QVERIFY(textEditObject->cursorRectangle().top() < 40);
+    QVERIFY(textEditObject->cursorRectangle().bottom() > 40);
+    QVERIFY(textEditObject->positionToRectangle(0).top() < 40);
+    QVERIFY(textEditObject->positionToRectangle(0).bottom() > 40);
+
+    textEditObject->setHeight(textEditObject->height() + 40);
+    QVERIFY(textEditObject->cursorRectangle().top() < 60);
+    QVERIFY(textEditObject->cursorRectangle().bottom() > 60);
+    QVERIFY(textEditObject->positionToRectangle(0).top() < 60);
+    QVERIFY(textEditObject->positionToRectangle(0).bottom() > 60);
 }
 
 void tst_qquicktextedit::font()
