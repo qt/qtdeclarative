@@ -880,7 +880,8 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickWindowPrivate::clearFocusObject()
 {
-    contentItem->setFocus(false, Qt::OtherFocusReason);
+    if (activeFocusItem)
+        activeFocusItem->setFocus(false, Qt::OtherFocusReason);
 }
 
 void QQuickWindowPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
