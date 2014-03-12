@@ -257,6 +257,7 @@ private slots:
     void include();
     void includeRemoteSuccess();
     void signalHandlers();
+    void qtbug_37351();
     void doubleEvaluate();
     void forInLoop();
     void nonNotifyable();
@@ -6085,6 +6086,27 @@ void tst_qqmlecmascript::signalHandlers()
     QCOMPARE(result.toBool(), true);
 
     delete o;
+}
+
+void tst_qqmlecmascript::qtbug_37351()
+{
+    MyTypeObject signalEmitter;
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData("import Qt.test 1.0; import QtQml 2.0;\nQtObject {\n"
+            "    Component.onCompleted: {\n"
+            "        testObject.action.connect(function() { print('dont crash'); });"
+            "    }\n"
+            "}", QUrl());
+
+        engine.rootContext()->setContextProperty("testObject", &signalEmitter);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+    }
+    signalEmitter.doAction();
+    // Don't crash
 }
 
 void tst_qqmlecmascript::qtbug_10696()
