@@ -604,12 +604,12 @@ void Element::computeBounds()
     boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
 
-bool Batch::isMaterialCompatible(Element *e) const
+BatchCompatibility Batch::isMaterialCompatible(Element *e) const
 {
     // If material has changed between opaque and translucent, it is not compatible
     QSGMaterial *m = e->node->activeMaterial();
     if (isOpaque != ((m->flags() & QSGMaterial::Blending) == 0))
-        return false;
+        return BatchBreaksOnBlending;
 
     Element *n = first;
     // Skip to the first node other than e which has not been removed
@@ -619,10 +619,12 @@ bool Batch::isMaterialCompatible(Element *e) const
     // Only 'e' in this batch, so a material change doesn't change anything as long as
     // its blending is still in sync with this batch...
     if (!n)
-        return true;
+        return BatchIsCompatible;
 
     QSGMaterial *nm = n->node->activeMaterial();
-    return nm->type() == m->type() && nm->compare(m) == 0;
+    return (nm->type() == m->type() && nm->compare(m) == 0)
+            ? BatchIsCompatible
+            : BatchBreaksOnCompare;
 }
 
 /*
@@ -1182,7 +1184,10 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         Element *e = shadowNode->element();
         if (e) {
             if (e->batch) {
-                if (!e->batch->isMaterialCompatible(e))
+                BatchCompatibility compat = e->batch->isMaterialCompatible(e);
+                if (compat == BatchBreaksOnBlending)
+                    m_rebuild |= Renderer::FullRebuild;
+                else if (compat == BatchBreaksOnCompare)
                     invalidateBatchAndOverlappingRenderOrders(e->batch);
             } else {
                 m_rebuild |= Renderer::BuildBatches;
