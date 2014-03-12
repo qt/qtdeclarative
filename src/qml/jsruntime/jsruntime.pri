@@ -1,11 +1,10 @@
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
+!qmldevtools_build {
 SOURCES += \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
-    $$PWD/qv4runtime.cpp \
-    $$PWD/qv4value.cpp \
     $$PWD/qv4persistent.cpp \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
@@ -33,7 +32,6 @@ SOURCES += \
     $$PWD/qv4regexpobject.cpp \
     $$PWD/qv4stringobject.cpp \
     $$PWD/qv4variantobject.cpp \
-    $$PWD/qv4string.cpp \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
     $$PWD/qv4serialize.cpp \
@@ -50,10 +48,7 @@ HEADERS += \
     $$PWD/qv4global_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \
-    $$PWD/qv4runtime_p.h \
     $$PWD/qv4math_p.h \
-    $$PWD/qv4value_inl_p.h \
-    $$PWD/qv4value_p.h \
     $$PWD/qv4persistent_p.h \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
@@ -81,7 +76,6 @@ HEADERS += \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4stringobject_p.h \
     $$PWD/qv4variantobject_p.h \
-    $$PWD/qv4string_p.h \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
@@ -96,6 +90,20 @@ HEADERS += \
     $$PWD/qv4qmlextensions_p.h \
     $$PWD/qv4vme_moth_p.h \
     $$PWD/qv4profiling_p.h
+
+}
+
+
+HEADERS += \
+    $$PWD/qv4runtime_p.h \
+    $$PWD/qv4value_inl_p.h \
+    $$PWD/qv4string_p.h \
+    $$PWD/qv4value_p.h
+
+SOURCES += \
+    $$PWD/qv4runtime.cpp \
+    $$PWD/qv4string.cpp \
+    $$PWD/qv4value.cpp
 
 # Use SSE2 floating point math on 32 bit instead of the default
 # 387 to make test results pass on 32 and on 64 bit builds.

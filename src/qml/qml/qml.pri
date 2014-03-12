@@ -1,4 +1,12 @@
 SOURCES += \
+    $$PWD/qqmldirparser.cpp \
+
+HEADERS += \
+    $$PWD/qqmldirparser_p.h \
+
+!qmldevtools_build {
+
+SOURCES += \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -31,7 +39,6 @@ SOURCES += \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
     $$PWD/qqmlnetworkaccessmanagerfactory.cpp \
-    $$PWD/qqmldirparser.cpp \
     $$PWD/qqmlextensionplugin.cpp \
     $$PWD/qqmlimport.cpp \
     $$PWD/qqmllist.cpp \
@@ -102,7 +109,6 @@ HEADERS += \
     $$PWD/qqmlscriptstring.h \
     $$PWD/qqmlguard_p.h \
     $$PWD/qqmlnetworkaccessmanagerfactory.h \
-    $$PWD/qqmldirparser_p.h \
     $$PWD/qqmlextensioninterface.h \
     $$PWD/qqmlimport_p.h \
     $$PWD/qqmlextensionplugin.h \
@@ -133,3 +139,5 @@ HEADERS += \
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)
+
+}

@@ -41,12 +41,18 @@
 
 #include "qqmlirbuilder_p.h"
 
+#include <private/qv4value_inl_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
-#include <private/qqmlcompiler_p.h>
-#include <private/qqmlglobal_p.h>
 #include <QCoreApplication>
+
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlglobal_p.h>
+#include <private/qqmltypeloader_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlcompiler_p.h>
+#endif
 
 #ifdef CONST
 #undef CONST
@@ -56,7 +62,9 @@ QT_USE_NAMESPACE
 
 static const quint32 emptyStringIndex = 0;
 
+#ifndef V4_BOOTSTRAP
 DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
+#endif // V4_BOOTSTRAP
 
 using namespace QmlIR;
 
@@ -296,7 +304,7 @@ void Document::collectTypeReferences()
     }
 }
 
-void Document::extractScriptMetaData(QString &script, QQmlError *error)
+void Document::extractScriptMetaData(QString &script, QQmlJS::DiagnosticMessage *error)
 {
     Q_ASSERT(error);
 
@@ -318,8 +326,7 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
         int startLine = l.tokenStartLine();
         int startColumn = l.tokenStartColumn();
 
-        QQmlError importError;
-        importError.setLine(startLine + 1); // 0-based, adjust to be 1-based
+        error->loc.startLine = startLine + 1; // 0-based, adjust to be 1-based
 
         token = l.lex();
 
@@ -340,9 +347,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
                 QString file = l.tokenText();
 
                 if (!file.endsWith(js)) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","Imported file must be a script"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","Imported file must be a script");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -361,9 +367,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
 
 
                 if (invalidImport) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","File import requires a qualifier"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","File import requires a qualifier");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -374,9 +379,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
                 token = l.lex();
 
                 if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","Invalid import qualifier");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -394,9 +398,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
 
                 while (true) {
                     if (!isUriToken(token)) {
-                        importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid module URI"));
-                        importError.setColumn(l.tokenStartColumn());
-                        *error = importError;
+                        error->message = QCoreApplication::translate("QQmlParser","Invalid module URI");
+                        error->loc.startColumn = l.tokenStartColumn();
                         return;
                     }
 
@@ -414,9 +417,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
                 }
 
                 if (token != QQmlJSGrammar::T_NUMERIC_LITERAL) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a version"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","Module import requires a version");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -439,9 +441,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
 
 
                 if (invalidImport) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a qualifier"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","Module import requires a qualifier");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -452,9 +453,8 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
                 token = l.lex();
 
                 if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
-                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
-                    importError.setColumn(l.tokenStartColumn());
-                    *error = importError;
+                    error->message = QCoreApplication::translate("QQmlParser","Invalid import qualifier");
+                    error->loc.startColumn = l.tokenStartColumn();
                     return;
                 }
 
@@ -558,7 +558,7 @@ IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
 {
 }
 
-bool IRBuilder::generateFromQml(const QString &code, const QUrl &url, const QString &urlString, Document *output)
+bool IRBuilder::generateFromQml(const QString &code, const QString &url, const QString &urlString, Document *output)
 {
     this->url = url;
     QQmlJS::AST::UiProgram *program = 0;
@@ -602,7 +602,6 @@ bool IRBuilder::generateFromQml(const QString &code, const QUrl &url, const QStr
     accept(program->headers);
 
     if (program->members->next) {
-        QQmlError error;
         QQmlJS::AST::SourceLocation loc = program->members->next->firstSourceLocation();
         recordError(loc, QCoreApplication::translate("QQmlParser", "Unexpected object definition"));
         return false;
@@ -971,8 +970,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             const TypeNameToType *type = 0;
             for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
                 const TypeNameToType *t = propTypeNameToTypes + typeIndex;
-                if (t->nameLength == size_t(memberType.length()) &&
-                    QHashedString::compare(memberType.constData(), t->name, static_cast<int>(t->nameLength))) {
+                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
                     type = t;
                     break;
                 }
@@ -1023,16 +1021,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         bool typeFound = false;
         QV4::CompiledData::Property::Type type;
 
-        if ((unsigned)memberType.length() == strlen("alias") &&
-            QHashedString::compare(memberType.constData(), "alias", static_cast<int>(strlen("alias")))) {
+        if (memberType == QLatin1String("alias")) {
             type = QV4::CompiledData::Property::Alias;
             typeFound = true;
         }
 
         for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
             const TypeNameToType *t = propTypeNameToTypes + ii;
-            if (t->nameLength == size_t(memberType.length()) &&
-                QHashedString::compare(memberType.constData(), t->name, static_cast<int>(t->nameLength))) {
+            if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
                 type = t->type;
                 typeFound = true;
             }
@@ -1043,8 +1039,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
             if (typeModifier.isEmpty()) {
                 type = QV4::CompiledData::Property::Custom;
-            } else if ((unsigned)typeModifier.length() == strlen("list") &&
-                      QHashedString::compare(typeModifier.constData(), "list", static_cast<int>(strlen("list")))) {
+            } else if (typeModifier == QLatin1String("list")) {
                 type = QV4::CompiledData::Property::CustomList;
             } else {
                 recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
@@ -1483,11 +1478,9 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
 
 void IRBuilder::recordError(const QQmlJS::AST::SourceLocation &location, const QString &description)
 {
-    QQmlError error;
-    error.setUrl(url);
-    error.setLine(location.startLine);
-    error.setColumn(location.startColumn);
-    error.setDescription(description);
+    QQmlJS::DiagnosticMessage error;
+    error.loc = location;
+    error.message = description;
     errors << error;
 }
 
@@ -1766,6 +1759,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     return runtimeFunctionIndices;
 }
 
+#ifndef V4_BOOTSTRAP
 QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup)
 {
     if (propertyExistsButForceNameLookup)
@@ -1967,6 +1961,8 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     resolver->isQObjectResolver = true;
 }
 
+#endif // V4_BOOTSTRAP
+
 void JSCodeGen::beginFunctionBodyHook()
 {
     _contextObjectTemp = _block->newTemp();
@@ -1974,6 +1970,7 @@ void JSCodeGen::beginFunctionBodyHook()
     _importedScriptsTemp = _block->newTemp();
     _idArrayTemp = _block->newTemp();
 
+#ifndef V4_BOOTSTRAP
     QV4::IR::Temp *temp = _block->TEMP(_contextObjectTemp);
     initMetaObjectResolver(&temp->memberResolver, _contextObject);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context_object, 0, 0));
@@ -1984,15 +1981,16 @@ void JSCodeGen::beginFunctionBodyHook()
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
     move(_block->TEMP(_idArrayTemp), _block->NAME(QV4::IR::Name::builtin_qml_id_array, 0, 0));
+#endif
 }
 
 QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 {
-    if (_disableAcceleratedLookups)
-        return 0;
-
     Q_UNUSED(line)
     Q_UNUSED(col)
+#ifndef V4_BOOTSTRAP
+    if (_disableAcceleratedLookups)
+        return 0;
     // Implement QML lookup semantics in the current file context.
     //
     // Note: We do not check if properties of the qml scope object or context object
@@ -2073,9 +2071,14 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         }
     }
 
+#else
+    Q_UNUSED(name)
+#endif // V4_BOOTSTRAP
     // fall back to name lookup at run-time.
     return 0;
 }
+
+#ifndef V4_BOOTSTRAP
 
 QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, QObject *object, QQmlContextData *context)
 {
@@ -2123,3 +2126,5 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
 
     return 0;
 }
+
+#endif // V4_BOOTSTRAP

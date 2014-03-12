@@ -42,7 +42,9 @@
 #include "qv4jsir_p.h"
 #include <private/qqmljsast_p.h>
 
+#ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
+#endif
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qset.h>
@@ -276,12 +278,14 @@ static QString dumpStart(const Expr *e) {
         return QString();
 
     QString result = typeName(e->type);
+#ifndef V4_BOOTSTRAP
     const Temp *temp = const_cast<Expr*>(e)->asTemp();
     if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
         result += QLatin1Char('<');
         result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
         result += QLatin1Char('>');
     }
+#endif
     result += QLatin1Char('{');
     return result;
 }
@@ -554,8 +558,10 @@ void Member::dump(QTextStream &out) const
     else
         base->dump(out);
     out << '.' << *name;
+#ifndef V4_BOOTSTRAP
     if (property)
         out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
+#endif
 }
 
 void Exp::dump(QTextStream &out, Mode)

@@ -2207,8 +2207,17 @@ void QQmlTypeData::dataReceived(const Data &data)
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
-    if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), m_document.data())) {
-        setError(compiler.errors);
+    if (!compiler.generateFromQml(code, finalUrlString(), finalUrlString(), m_document.data())) {
+        QList<QQmlError> errors;
+        foreach (const QQmlJS::DiagnosticMessage &msg, compiler.errors) {
+            QQmlError e;
+            e.setUrl(finalUrl());
+            e.setLine(msg.loc.startLine);
+            e.setColumn(msg.loc.startColumn);
+            e.setDescription(msg.message);
+            errors << e;
+        }
+        setError(errors);
         return;
     }
 
@@ -2673,11 +2682,15 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
     QmlIR::Document irUnit(v4->debugger != 0);
-    QQmlError metaDataError;
+    QQmlJS::DiagnosticMessage metaDataError;
     irUnit.extractScriptMetaData(source, &metaDataError);
-    if (metaDataError.isValid()) {
-        metaDataError.setUrl(finalUrl());
-        setError(metaDataError);
+    if (!metaDataError.message.isEmpty()) {
+        QQmlError e;
+        e.setUrl(finalUrl());
+        e.setLine(metaDataError.loc.startLine);
+        e.setColumn(metaDataError.loc.startColumn);
+        e.setDescription(metaDataError.message);
+        setError(e);
         return;
     }
 

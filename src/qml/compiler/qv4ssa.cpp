@@ -54,9 +54,6 @@
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <qv4runtime_p.h>
-#include <qv4context_p.h>
-#include <private/qqmlpropertycache_p.h>
-#include <private/qqmlengine_p.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -3373,8 +3370,8 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
 
                     QV4::Primitive lc = convertToValue(leftConst);
                     QV4::Primitive rc = convertToValue(rightConst);
-                    double l = RuntimeHelpers::toNumber(&lc);
-                    double r = RuntimeHelpers::toNumber(&rc);
+                    double l = lc.toNumber();
+                    double r = rc.toNumber();
 
                     switch (binop->op) {
                     case OpMul:

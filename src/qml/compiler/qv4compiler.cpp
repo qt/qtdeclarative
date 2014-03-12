@@ -42,8 +42,8 @@
 #include <qv4compiler_p.h>
 #include <qv4compileddata_p.h>
 #include <qv4isel_p.h>
-#include <qv4engine_p.h>
-#include <private/qqmlpropertycache_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4value_inl_p.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -81,7 +81,6 @@ void QV4::Compiler::StringTableGenerator::serialize(uint *stringTable, char *dat
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
-        s->hash = QV4::String::createHashValue(qstr.constData(), qstr.length());
         s->flags = 0; // ###
         s->str.ref.atomic.store(-1);
         s->str.size = qstr.length();

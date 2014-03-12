@@ -55,6 +55,10 @@
 
 #include "qtqmlglobal.h"
 
-#define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+#    define Q_QML_PRIVATE_EXPORT
+#else
+#    define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
+#endif
 
 #endif // QTQMLGLOBAL_P_H

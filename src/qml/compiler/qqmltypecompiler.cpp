@@ -2477,7 +2477,7 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
             functionsToCompile << *foe;
         }
         const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
-        QList<QQmlError> jsErrors = v4CodeGen->errors();
+        QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
         if (!jsErrors.isEmpty()) {
             foreach (const QQmlError &e, jsErrors)
                 compiler->recordError(e);

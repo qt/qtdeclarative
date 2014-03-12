@@ -64,7 +64,7 @@ struct Returned : private T
     using T::asReturnedValue;
 };
 
-struct Q_QML_EXPORT Value
+struct Q_QML_PRIVATE_EXPORT Value
 {
     /*
         We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
@@ -372,7 +372,7 @@ inline String *Value::asString() const
     return 0;
 }
 
-struct Q_QML_EXPORT Primitive : public Value
+struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();
     static inline Primitive fromBoolean(bool b);

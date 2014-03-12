@@ -41,9 +41,7 @@
 
 #include "qqmldirparser_p.h"
 #include "qqmlerror.h"
-#include "qqmlglobal_p.h"
 
-#include <QtQml/qqmlfile.h>
 #include <QtCore/QtDebug>
 
 QT_BEGIN_NAMESPACE
@@ -281,10 +279,10 @@ bool QQmlDirParser::parse(const QString &source)
 
 void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &description)
 {
-    QQmlError error;
-    error.setLine(line);
-    error.setColumn(column);
-    error.setDescription(description);
+    QQmlJS::DiagnosticMessage error;
+    error.loc.startLine = line;
+    error.loc.startColumn = column;
+    error.message = description;
     _errors.append(error);
 }
 
@@ -296,25 +294,41 @@ bool QQmlDirParser::hasError() const
     return false;
 }
 
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
+{
+    QList<QQmlJS::DiagnosticMessage> errors = _errors;
+    for (int i = 0; i < errors.size(); ++i) {
+        QQmlJS::DiagnosticMessage &msg = errors[i];
+        msg.message.replace(QLatin1String("$$URI$$"), uri);
+    }
+    return errors;
+}
+#else
 void QQmlDirParser::setError(const QQmlError &e)
 {
     _errors.clear();
-    _errors.append(e);
+    reportError(e.line(), e.column(), e.description());
 }
 
 QList<QQmlError> QQmlDirParser::errors(const QString &uri) const
 {
     QUrl url(uri);
-    QList<QQmlError> errors = _errors;
-    for (int i = 0; i < errors.size(); ++i) {
-        QQmlError &e = errors[i];
-        QString description = e.description();
+    QList<QQmlError> errors;
+    for (int i = 0; i < _errors.size(); ++i) {
+        const QQmlJS::DiagnosticMessage &msg = _errors.at(i);
+        QQmlError e;
+        QString description = msg.message;
         description.replace(QLatin1String("$$URI$$"), uri);
         e.setDescription(description);
         e.setUrl(url);
+        e.setLine(msg.loc.startLine);
+        e.setColumn(msg.loc.startColumn);
+        errors << e;
     }
     return errors;
 }
+#endif
 
 QString QQmlDirParser::typeNamespace() const
 {
@@ -331,7 +345,7 @@ QList<QQmlDirParser::Plugin> QQmlDirParser::plugins() const
     return _plugins;
 }
 
-QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirParser::components() const
+QHash<QString, QQmlDirParser::Component> QQmlDirParser::components() const
 {
     return _components;
 }

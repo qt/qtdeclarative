@@ -742,7 +742,7 @@ struct Phi: Stmt {
     virtual void dump(QTextStream &out, Mode mode);
 };
 
-struct Q_QML_EXPORT Module {
+struct Q_QML_PRIVATE_EXPORT Module {
     QQmlJS::MemoryPool pool;
     QVector<Function *> functions;
     Function *rootFunction;

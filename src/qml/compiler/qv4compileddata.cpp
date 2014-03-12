@@ -41,11 +41,14 @@
 
 #include "qv4compileddata_p.h"
 #include "qv4jsir_p.h"
+#include <private/qv4value_inl_p.h>
+#ifndef V4_BOOTSTRAP
 #include <private/qv4engine_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
 
@@ -57,6 +60,7 @@ namespace QV4 {
 
 namespace CompiledData {
 
+#ifndef V4_BOOTSTRAP
 CompilationUnit::~CompilationUnit()
 {
     unlink();
@@ -181,6 +185,8 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
     }
 }
 
+#endif // V4_BOOTSTRAP
+
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 {
     return irDocument->jsGenerator.generateUnit();
@@ -198,6 +204,11 @@ QString Binding::valueAsString(const Unit *unit) const
         return QString::number(value.d);
     case Type_Invalid:
         return QString();
+#ifdef QT_NO_TRANSLATION
+    case Type_TranslationById:
+    case Type_Translation:
+        return unit->stringAt(stringIndex);
+#else
     case Type_TranslationById: {
         QByteArray id = unit->stringAt(stringIndex).toUtf8();
         return qtTrId(id.constData(), value.translationData.number);
@@ -214,6 +225,7 @@ QString Binding::valueAsString(const Unit *unit) const
         return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
                                            comment.constData(), value.translationData.number);
     }
+#endif
     default:
         break;
     }

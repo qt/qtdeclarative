@@ -624,12 +624,13 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
     }
 
-    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type), end = qmlDirComponents.end();
+    const QString typeStr = type.toString();
+    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(typeStr), end = qmlDirComponents.end();
     if (it != end) {
         QString componentUrl;
         bool isCompositeSingleton = false;
         QQmlDirComponents::ConstIterator candidate = end;
-        for ( ; it != end && it.key() == type; ++it) {
+        for ( ; it != end && it.key() == typeStr; ++it) {
             const QQmlDirParser::Component &c = *it;
 
             // importing version -1 means import ALL versions
