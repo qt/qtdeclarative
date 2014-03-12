@@ -174,6 +174,9 @@ public:
 
     virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
 
+    // Used by auto-tests for inspection
+    QQmlPropertyCache *propertyCache() const { return cache; }
+
     static inline QQmlVMEMetaObject *get(QObject *o);
     static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
     static QQmlVMEMetaObject *getForMethod(QObject *o, int coreIndex);

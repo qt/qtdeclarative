@@ -98,8 +98,8 @@ private:
 
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
-                          QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache = true,
+    bool populateInstance(int index, QObject *instance,
+                          QObject *bindingTarget, QQmlPropertyData *valueTypeProperty,
                           const QBitArray &bindingsToSkip = QBitArray());
 
     void setupBindings(const QBitArray &bindingsToSkip);

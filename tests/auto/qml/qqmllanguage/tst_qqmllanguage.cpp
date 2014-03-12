@@ -56,6 +56,7 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlscriptstring_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 
 #include "testtypes.h"
 #include "testhttpserver.h"
@@ -219,6 +220,7 @@ private slots:
     void customParserEvaluateEnum();
 
     void preservePropertyCacheOnGroupObjects();
+    void propertyCacheInSync();
 
 private:
     QQmlEngine engine;
@@ -3600,6 +3602,26 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
     QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/0, /*context*/0);
     QVERIFY(pd);
     QCOMPARE(pd->propType, qMetaTypeId<int>());
+}
+
+void tst_qqmllanguage::propertyCacheInSync()
+{
+    QQmlComponent component(&engine, testFile("propertyCacheInSync.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QObject *anchors = qvariant_cast<QObject*>(o->property("anchors"));
+    QVERIFY(anchors);
+    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(anchors);
+    QVERIFY(vmemo);
+    QQmlPropertyCache *vmemoCache = vmemo->propertyCache();
+    QVERIFY(vmemoCache);
+    QQmlData *ddata = QQmlData::get(anchors);
+    QVERIFY(ddata);
+    QVERIFY(ddata->propertyCache);
+    // Those always have to be in sync and correct.
+    QVERIFY(ddata->propertyCache == vmemoCache);
+    QCOMPARE(anchors->property("margins").toInt(), 50);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
