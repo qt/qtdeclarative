@@ -142,20 +142,21 @@ void QSequentialAnimationGroupJob::advanceForwards(const AnimationIndex &newAnim
     if (m_previousLoop < m_currentLoop) {
         // we need to fast forward to the end
         for (QAbstractAnimationJob *anim = m_currentAnimation; anim; anim = anim->nextSibling()) {
-            setCurrentAnimation(anim, true);
+            RETURN_IF_DELETED(setCurrentAnimation(anim, true));
             RETURN_IF_DELETED(anim->setCurrentTime(animationActualTotalDuration(anim)));
         }
         // this will make sure the current animation is reset to the beginning
-        if (firstChild() && !firstChild()->nextSibling())   //count == 1
+        if (firstChild() && !firstChild()->nextSibling()) {   //count == 1
             // we need to force activation because setCurrentAnimation will have no effect
-            activateCurrentAnimation();
-        else
-            setCurrentAnimation(firstChild(), true);
+            RETURN_IF_DELETED(activateCurrentAnimation());
+        } else {
+            RETURN_IF_DELETED(setCurrentAnimation(firstChild(), true));
+        }
     }
 
     // and now we need to fast forward from the current position to
     for (QAbstractAnimationJob *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->nextSibling()) {     //### WRONG,
-        setCurrentAnimation(anim, true);
+        RETURN_IF_DELETED(setCurrentAnimation(anim, true));
         RETURN_IF_DELETED(anim->setCurrentTime(animationActualTotalDuration(anim)));
     }
     // setting the new current animation will happen later
@@ -166,21 +167,21 @@ void QSequentialAnimationGroupJob::rewindForwards(const AnimationIndex &newAnima
     if (m_previousLoop > m_currentLoop) {
         // we need to fast rewind to the beginning
         for (QAbstractAnimationJob *anim = m_currentAnimation; anim; anim = anim->previousSibling()) {
-            setCurrentAnimation(anim, true);
+            RETURN_IF_DELETED(setCurrentAnimation(anim, true));
             RETURN_IF_DELETED(anim->setCurrentTime(0));
         }
         // this will make sure the current animation is reset to the end
-        if (lastChild() && !lastChild()->previousSibling())   //count == 1
+        if (lastChild() && !lastChild()->previousSibling()) {   //count == 1
             // we need to force activation because setCurrentAnimation will have no effect
-            activateCurrentAnimation();
-        else {
-            setCurrentAnimation(lastChild(), true);
+            RETURN_IF_DELETED(activateCurrentAnimation());
+        } else {
+            RETURN_IF_DELETED(setCurrentAnimation(lastChild(), true));
         }
     }
 
     // and now we need to fast rewind from the current position to
     for (QAbstractAnimationJob *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->previousSibling()) {
-        setCurrentAnimation(anim, true);
+        RETURN_IF_DELETED(setCurrentAnimation(anim, true));
         RETURN_IF_DELETED(anim->setCurrentTime(0));
     }
     // setting the new current animation will happen later
@@ -220,7 +221,7 @@ void QSequentialAnimationGroupJob::updateCurrentTime(int currentTime)
             RETURN_IF_DELETED(rewindForwards(newAnimationIndex));
     }
 
-    setCurrentAnimation(newAnimationIndex.animation);
+    RETURN_IF_DELETED(setCurrentAnimation(newAnimationIndex.animation));
 
     const int newCurrentTime = currentTime - newAnimationIndex.timeOffset;
 
@@ -310,7 +311,7 @@ void QSequentialAnimationGroupJob::activateCurrentAnimation(bool intermediate)
     if (m_currentAnimation->totalDuration() == -1)
         resetUncontrolledAnimationFinishTime(m_currentAnimation);
 
-    m_currentAnimation->start();
+    RETURN_IF_DELETED(m_currentAnimation->start());
     if (!intermediate && isPaused())
         m_currentAnimation->pause();
 }
