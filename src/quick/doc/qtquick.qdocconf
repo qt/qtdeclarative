@@ -44,7 +44,6 @@ sourcedirs  += .. \
                ../../quickwidgets
 
 exampledirs +=  ../../../examples/quick \
-                ../../../examples/quickwidgets \
                 snippets
 
 

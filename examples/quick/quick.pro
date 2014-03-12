@@ -26,7 +26,8 @@ SUBDIRS =   quick-accessibility \
 
 # Widget dependent examples
 qtHaveModule(widgets) {
-    SUBDIRS += embeddedinwidgets
+    SUBDIRS += embeddedinwidgets \
+               quickwidgets
 }
 
 EXAMPLE_FILES = \

@@ -225,7 +225,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
     some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
 
-    \sa {Exposing Attributes of C++ Types to QML}, QQuickView
+    \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
 
 
