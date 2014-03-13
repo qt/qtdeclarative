@@ -52,6 +52,8 @@
 #include <QQmlComponent>
 #include <QQmlIncubator>
 #include "../../shared/util.h"
+#include <private/qqmlincubator_p.h>
+#include <private/qqmlobjectcreator_p.h>
 
 class tst_qqmlincubator : public QQmlDataTest
 {
@@ -141,35 +143,50 @@ void tst_qqmlincubator::incubationMode()
 
 void tst_qqmlincubator::objectDeleted()
 {
-    SelfRegisteringType::clearMe();
-
-    QQmlComponent component(&engine, testFileUrl("objectDeleted.qml"));
-    QVERIFY(component.isReady());
-
-    QQmlIncubator incubator;
-    component.create(incubator);
-
-    QCOMPARE(incubator.status(), QQmlIncubator::Loading);
-    QVERIFY(SelfRegisteringType::me() == 0);
-
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
-        bool b = false;
-        controller.incubateWhile(&b);
-    }
-
-    QVERIFY(SelfRegisteringType::me() != 0);
-    QVERIFY(incubator.isLoading());
-
-    delete SelfRegisteringType::me();
-
     {
-    bool b = true;
-    controller.incubateWhile(&b);
-    }
+        QQmlEngine engine;
+        QQmlIncubationController controller;
+        engine.setIncubationController(&controller);
+        SelfRegisteringType::clearMe();
 
-    QVERIFY(incubator.isError());
-    VERIFY_ERRORS(incubator, "objectDeleted.errors.txt");
-    QVERIFY(incubator.object() == 0);
+        QQmlComponent component(&engine, testFileUrl("objectDeleted.qml"));
+        QVERIFY(component.isReady());
+
+        QQmlIncubator incubator;
+        component.create(incubator);
+
+        QCOMPARE(incubator.status(), QQmlIncubator::Loading);
+        QVERIFY(SelfRegisteringType::me() == 0);
+
+        while (SelfRegisteringOuterType::me() == 0 && incubator.isLoading()) {
+            bool b = false;
+            controller.incubateWhile(&b);
+        }
+
+        QVERIFY(SelfRegisteringOuterType::me() != 0);
+        QVERIFY(incubator.isLoading());
+
+        while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+            bool b = false;
+            controller.incubateWhile(&b);
+        }
+
+        // We have to cheat and manually remove it from the creator->allCreatedObjects
+        // otherwise we will do a double delete
+        QQmlIncubatorPrivate *incubatorPriv = QQmlIncubatorPrivate::get(&incubator);
+        incubatorPriv->creator->allCreatedObjects().pop();
+        delete SelfRegisteringType::me();
+
+        {
+            bool b = true;
+            controller.incubateWhile(&b);
+        }
+
+        QVERIFY(incubator.isError());
+        VERIFY_ERRORS(incubator, "objectDeleted.errors.txt");
+        QVERIFY(incubator.object() == 0);
+    }
+    QVERIFY(SelfRegisteringOuterType::beenDeleted);
 }
 
 void tst_qqmlincubator::clear()
@@ -1111,6 +1128,10 @@ void tst_qqmlincubator::selfDelete()
     QVERIFY(SelfRegisteringType::me() != 0);
     QVERIFY(incubator->isLoading());
 
+    // We have to cheat and manually remove it from the creator->allCreatedObjects
+    // otherwise we will do a double delete
+    QQmlIncubatorPrivate *incubatorPriv = QQmlIncubatorPrivate::get(incubator);
+    incubatorPriv->creator->allCreatedObjects().pop();
     delete SelfRegisteringType::me();
 
     {
