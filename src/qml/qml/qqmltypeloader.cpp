@@ -1966,12 +1966,17 @@ QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
+
 }
 
 QQmlTypeData::~QQmlTypeData()
 {
     for (int ii = 0; ii < m_scripts.count(); ++ii)
         m_scripts.at(ii).script->release();
+    for (int ii = 0; ii < m_compositeSingletons.count(); ++ii) {
+        if (QQmlTypeData *tdata = m_compositeSingletons.at(ii).typeData)
+            tdata->release();
+    }
     for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
          it != end; ++it) {
         if (QQmlTypeData *tdata = it->typeData)

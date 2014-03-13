@@ -1526,6 +1526,7 @@ static IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, IR::MemberExpressio
         Q_ASSERT(tdata);
         Q_ASSERT(tdata->isComplete());
         initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+        tdata->release();
         resolver->flags |= AllPropertiesAreFinal;
         return resolver->resolveMember(qmlEngine, resolver, member);
     } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
