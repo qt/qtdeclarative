@@ -357,11 +357,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    this->function = function;
-    this->function->compilationUnit->ref();
-    Q_ASSERT(function);
-    Q_ASSERT(function->code);
-
     // global function
     if (!scope)
         return;
