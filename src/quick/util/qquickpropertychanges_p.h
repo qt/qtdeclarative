@@ -92,10 +92,8 @@ public:
     QQuickPropertyChangesParser()
     : QQmlCustomParser(AcceptsAttachedProperties) {}
 
-    void compileList(QList<QPair<QString, QVariant> > &list, const QString &pre, const QQmlCustomParserProperty &prop);
     void compileList(QList<QPair<QString, const QV4::CompiledData::Binding *> > &list, const QString &pre, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding);
 
-    virtual QByteArray compile(const QList<QQmlCustomParserProperty> &);
     virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &props);
     virtual void setCustomData(QObject *, const QByteArray &);
 };

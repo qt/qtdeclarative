@@ -69,6 +69,9 @@ struct Location
 {
     qint32 line;
     qint32 column;
+
+    Location(): line(-1), column(-1) {}
+
     inline bool operator<(const Location &other) const {
         return line < other.line ||
                (line == other.line && column < other.column);
@@ -244,8 +247,6 @@ struct Function
     quint32 formalsOffset;
     quint32 nLocals;
     quint32 localsOffset;
-    quint32 nLineNumberMappingEntries;
-    quint32 lineNumberMappingOffset; // Array of uint pairs (offset and line number)
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
     Location location;
@@ -266,19 +267,23 @@ struct Function
 
     const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
-    const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
     const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
     const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
     const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies, int nPropertyDependencies) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
     }
 };
 
 // Qml data structures
+
+struct Q_QML_EXPORT TranslationData {
+    quint32 commentIndex;
+    int number;
+};
 
 struct Q_QML_EXPORT Binding
 {
@@ -289,6 +294,8 @@ struct Q_QML_EXPORT Binding
         Type_Boolean,
         Type_Number,
         Type_String,
+        Type_Translation,
+        Type_TranslationById,
         Type_Script,
         Type_Object,
         Type_AttachedProperty,
@@ -312,8 +319,9 @@ struct Q_QML_EXPORT Binding
         double d;
         quint32 compiledScriptIndex; // used when Type_Script
         quint32 objectIndex;
+        TranslationData translationData; // used when Type_Translation
     } value;
-    quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
+    quint32 stringIndex; // Set for Type_String, Type_Translation and Type_Script (the latter because of script strings)
 
     Location location;
     Location valueLocation;
@@ -364,6 +372,8 @@ struct Q_QML_EXPORT Binding
         }
         return false;
     }
+
+    bool evaluatesToString() const { return type == Type_String || type == Type_Translation || type == Type_TranslationById; }
 
     QString valueAsString(const Unit *unit) const;
     QString valueAsScriptString(const Unit *unit) const;
@@ -506,6 +516,8 @@ struct Import
     qint32 minorVersion;
 
     Location location;
+
+    Import(): type(0), uriIndex(0), qualifierIndex(0), majorVersion(0), minorVersion(0) {}
 };
 
 struct QmlUnit
@@ -544,7 +556,6 @@ struct Q_QML_EXPORT CompilationUnit
         : refCount(0)
         , engine(0)
         , data(0)
-        , ownsData(false)
         , runtimeStrings(0)
         , runtimeLookups(0)
         , runtimeRegularExpressions(0)
@@ -558,7 +569,6 @@ struct Q_QML_EXPORT CompilationUnit
     int refCount;
     ExecutionEngine *engine;
     Unit *data;
-    bool ownsData;
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 

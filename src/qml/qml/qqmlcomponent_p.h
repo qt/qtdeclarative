@@ -114,11 +114,7 @@ public:
             delete creator;
         }
 
-        // --- new compiler
         QQmlObjectCreator *creator;
-        // --- old compiler
-        QQmlVME vme;
-        // ---
         QList<QQmlError> errors;
         bool completePending;
     };

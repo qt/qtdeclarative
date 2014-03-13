@@ -123,7 +123,7 @@ static QString convertElementToString(const QUrl &element)
 static QString convertElementToString(qreal element)
 {
     QString qstr;
-    __qmljs_numberToString(&qstr, element, 10);
+    RuntimeHelpers::numberToString(&qstr, element, 10);
     return qstr;
 }
 

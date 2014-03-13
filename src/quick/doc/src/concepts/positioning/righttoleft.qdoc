@@ -139,16 +139,16 @@ The painting of these icons can be mirrored with a dedicated \c mirror property 
 \section1 Default layout direction
 
 The \l {QtQml::Qt::application}{Qt.application.layoutDirection} property can be used to query the active layout direction of the
-application. It is based on QApplication::layoutDirection(), which most commonly determines the layout
+application. It is based on QGuiApplication::layoutDirection(), which most commonly determines the layout
 direction from the active language translation file.
 
 To define the layout direction for a particular locale, declare the dedicated string literal
-\c QT_LAYOUT_DIRECTION in context \c QApplication as either "LTR" or "RTL".
+\c QT_LAYOUT_DIRECTION in context \c QGuiApplication as either "LTR" or "RTL".
 
 You can do this by first introducing this line
 
 \code
-QT_TRANSLATE_NOOP("QApplication", "QT_LAYOUT_DIRECTION");
+QT_TRANSLATE_NOOP("QGuiApplication", "QT_LAYOUT_DIRECTION");
 \endcode
 
 somewhere in your QML source code and calling \c lupdate to generate the translation source file.
@@ -162,7 +162,7 @@ This will append the following declaration to the translation file, where you ca
 
 \code
 <context>
-    <name>QApplication</name>
+    <name>QGuiApplication</name>
     <message>
         <location filename="myapp.qml" line="33"/>
         <source>QT_LAYOUT_DIRECTION</source>
@@ -175,20 +175,20 @@ You can test that the layout direction works as expected by running your Qt Quic
 the compiled translation file:
 
 \code
-qmlviewer myapp.qml -translation myapp.qm
+qmlscene myapp.qml -translation myapp.qm
 \endcode
 
-You can test your application in right-to-left layout direction simply by executing qmlviewer with a
+You can test your application in right-to-left layout direction simply by executing qmlscene with a
 command-line parameter "-reverse":
 
 \code
-qmlviewer myapp.qml -reverse
+qmlscene myapp.qml -reverse
 \endcode
 
 The layout direction can also be set from C++ by calling the static function \l QGuiApplication::setLayoutDirection():
 
 \code
-QApplication app(argc, argv);
+QGuiApplication app(argc, argv);
 app.setLayoutDirection(Qt::RightToLeft);
 \endcode
 

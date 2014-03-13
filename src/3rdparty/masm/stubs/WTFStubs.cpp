@@ -68,7 +68,13 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
-static FilePrintStream* s_dataFile;
+static PrintStream* s_dataFile;
+
+void setDataFile(PrintStream *ps)
+{
+    delete s_dataFile;
+    s_dataFile = ps;
+}
 
 void setDataFile(FILE* f)
 {
@@ -76,7 +82,7 @@ void setDataFile(FILE* f)
     s_dataFile = new FilePrintStream(f, FilePrintStream::Borrow);
 }
 
-FilePrintStream& dataFile()
+PrintStream& dataFile()
 {
     if (!s_dataFile)
         s_dataFile = new FilePrintStream(stderr, FilePrintStream::Borrow);

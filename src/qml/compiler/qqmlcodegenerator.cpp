@@ -176,14 +176,10 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
         if (existing && existing->isValueBinding() == b->isValueBinding() && !(existing->flags & QV4::CompiledData::Binding::IsOnAssignment))
             return tr("Property value set multiple times");
     }
-    if (isListBinding) {
-        bindings->append(b);
-    } else if (bindingToDefaultProperty) {
-        Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::location>(b);
-        bindings->insertAfter(insertionPoint, b);
-    } else {
+    if (bindingToDefaultProperty)
+        insertSorted(b);
+    else
         bindings->prepend(b);
-    }
     return QString(); // no error
 }
 
@@ -193,6 +189,12 @@ Binding *QmlObject::findBinding(quint32 nameIndex) const
         if (b->propertyNameIndex == nameIndex)
             return b;
     return 0;
+}
+
+void QmlObject::insertSorted(Binding *b)
+{
+    Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::valueLocation>(b);
+    bindings->insertAfter(insertionPoint, b);
 }
 
 QStringList Signal::parameterStringList(const QStringList &stringPool) const
@@ -361,16 +363,20 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
         return false;
     }
 
+    QVarLengthArray<QQmlJS::AST::UiArrayMemberList *, 16> memberList;
     QQmlJS::AST::UiArrayMemberList *member = node->members;
     while (member) {
+        memberList.append(member);
+        member = member->next;
+    }
+    for (int i = memberList.count() - 1; i >= 0; --i) {
+        member = memberList.at(i);
         QQmlJS::AST::UiObjectDefinition *def = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(member->member);
 
         int idx = 0;
         if (!defineQMLObject(&idx, def))
             return false;
         appendBinding(qualifiedNameLocation, name->identifierToken, propertyNameIndex, idx, /*isListItem*/ true);
-
-        member = member->next;
     }
 
     qSwap(_object, object);
@@ -912,7 +918,7 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
 
         CompiledFunctionOrExpression *expr = New<CompiledFunctionOrExpression>();
         expr->node = statement;
-        expr->nameIndex = 0;
+        expr->nameIndex = registerString(QStringLiteral("expression for ") + stringAt(binding->propertyNameIndex));
         expr->disableAcceleratedLookups = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
@@ -939,7 +945,7 @@ void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int obje
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     QmlObject *object = 0;
-    if (!resolveQualifiedId(&name, &object))
+    if (!resolveQualifiedId(&name, &object, isOnAssignment))
         return;
     qSwap(_object, object);
     appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), objectIndex, /*isListItem*/false, isOnAssignment);
@@ -1058,7 +1064,7 @@ bool QQmlCodeGenerator::setId(const QQmlJS::AST::SourceLocation &idLocation, QQm
     return true;
 }
 
-bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object)
+bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment)
 {
     QQmlJS::AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
@@ -1104,6 +1110,9 @@ bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToRe
             binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;
             binding->valueLocation.column = qualifiedIdElement->next->identifierToken.startColumn;
             binding->flags = 0;
+
+            if (onAssignment)
+                binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
             if (isAttachedProperty)
                 binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
@@ -1517,6 +1526,7 @@ static IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, IR::MemberExpressio
         Q_ASSERT(tdata);
         Q_ASSERT(tdata->isComplete());
         initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+        tdata->release();
         resolver->flags |= AllPropertiesAreFinal;
         return resolver->resolveMember(qmlEngine, resolver, member);
     } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {

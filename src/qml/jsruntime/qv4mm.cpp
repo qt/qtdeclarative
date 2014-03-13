@@ -152,6 +152,7 @@ struct MemoryManager::Data
     uint allocCount[MaxItemSize/16];
     int totalItems;
     int totalAlloc;
+    uint maxShift;
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -184,6 +185,7 @@ struct MemoryManager::Data
         , stackTop(0)
         , totalItems(0)
         , totalAlloc(0)
+        , maxShift(10)
         , largeItems(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
@@ -193,6 +195,12 @@ struct MemoryManager::Data
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
         exactGC = qgetenv("QV4_MM_CONSERVATIVE_GC").isEmpty();
+
+        QByteArray overrideMaxShift = qgetenv("QV4_MM_MAXBLOCK_SHIFT");
+        bool ok;
+        uint override = overrideMaxShift.toUInt(&ok);
+        if (ok && override <= 11 && override > 0)
+            maxShift = override;
     }
 
     ~Data()
@@ -308,10 +316,10 @@ Managed *MemoryManager::alloc(std::size_t size)
 
     // no free item available, allocate a new chunk
     {
-        // allocate larger chunks at a time to avoid excessive GC, but cap at 64M chunks
+        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (32MB by default)
         uint shift = ++m_d->nChunks[pos];
-        if (shift > 10)
-            shift = 10;
+        if (shift > m_d->maxShift)
+            shift = m_d->maxShift;
         std::size_t allocSize = CHUNK_SIZE*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;

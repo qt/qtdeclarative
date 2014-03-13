@@ -21,7 +21,6 @@ PUBLICTESTS += \
     qqmlmoduleplugin \
     qqmlnotifier \
     qqmlqt \
-    qqmltranslation \
     qqmlxmlhttprequest \
     qtqmlmodules \
     qquickfolderlistmodel \
@@ -36,7 +35,6 @@ PRIVATETESTS += \
     qqmlexpression \
     qqmldirparser \
     qqmlglobal \
-    qqmlinstruction \
     qqmllanguage \
     qqmlproperty \
     qqmlpropertycache \
@@ -59,7 +57,8 @@ PRIVATETESTS += \
     qqmlinstantiator \
     qv4debugger \
     qqmlenginecleanup \
-    v4misc
+    v4misc \
+    qqmltranslation
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

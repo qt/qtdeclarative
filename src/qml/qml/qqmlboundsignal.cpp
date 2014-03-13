@@ -66,36 +66,42 @@ static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
     QQmlBoundSignalExpression::expressionChanged
 };
 
+QQmlBoundSignalExpression::ExtraData::ExtraData(const QString &handlerName, const QString &parameterString,
+                                                const QString &expression, const QString &fileName,
+                                                quint16 line, quint16 column)
+    : m_handlerName(handlerName),
+      m_parameterString(parameterString),
+      m_expression(expression),
+      m_sourceLocation(fileName, line, column)
+{
+}
+
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
                                                      QQmlContextData *ctxt, QObject *scope, const QString &expression,
                                                      const QString &fileName, quint16 line, quint16 column,
                                                      const QString &handlerName,
                                                      const QString &parameterString)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
-      m_fileName(fileName),
-      m_line(line),
-      m_column(column),
       m_target(target),
       m_index(index),
-      m_expressionFunctionValid(false),
-      m_invalidParameterName(false)
+      m_extra(new ExtraData(handlerName, parameterString, expression, fileName, line, column))
 {
+    setExpressionFunctionValid(false);
+    setInvalidParameterName(false);
+
     init(ctxt, scope);
-    m_handlerName = handlerName;
-    m_parameterString = parameterString;
-    m_expression = expression;
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_v8function(function),
-      m_line(USHRT_MAX),
-      m_column(USHRT_MAX),
       m_target(target),
       m_index(index),
-      m_expressionFunctionValid(true),
-      m_invalidParameterName(false)
+      m_extra(0)
 {
+    setExpressionFunctionValid(true);
+    setInvalidParameterName(false);
+
     init(ctxt, scope);
 }
 
@@ -111,12 +117,14 @@ void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
 
 QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 {
+    delete m_extra.data();
 }
 
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
-    return This->sourceFile() + QLatin1Char(':') + QString::number(This->lineNumber());
+    QQmlSourceLocation loc = This->sourceLocation();
+    return loc.sourceFile + QLatin1Char(':') + QString::number(loc.line);
 }
 
 void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
@@ -124,21 +132,37 @@ void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
     // bound signals do not notify on change.
 }
 
+QQmlSourceLocation QQmlBoundSignalExpression::sourceLocation() const
+{
+    if (expressionFunctionValid()) {
+        QV4::Function *f = function();
+        Q_ASSERT(f);
+        QQmlSourceLocation loc;
+        loc.sourceFile = f->sourceFile();
+        loc.line = f->compiledFunction->location.line;
+        loc.column = f->compiledFunction->location.column;
+        return loc;
+    }
+    Q_ASSERT(!m_extra.isNull());
+    return m_extra->m_sourceLocation;
+}
+
 QString QQmlBoundSignalExpression::expression() const
 {
-    if (m_expressionFunctionValid) {
+    if (expressionFunctionValid()) {
         Q_ASSERT (context() && engine());
         QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
         QV4::ScopedValue v(scope, m_v8function.value());
         return v->toQStringNoThrow();
     } else {
-        return m_expression;
+        Q_ASSERT(!m_extra.isNull());
+        return m_extra->m_expression;
     }
 }
 
 QV4::Function *QQmlBoundSignalExpression::function() const
 {
-    if (m_expressionFunctionValid) {
+    if (expressionFunctionValid()) {
         Q_ASSERT (context() && engine());
         QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
         QV4::Scoped<QV4::FunctionObject> v(scope, m_v8function.value());
@@ -153,7 +177,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 {
     Q_ASSERT (context() && engine());
 
-    if (m_invalidParameterName)
+    if (invalidParameterName())
         return;
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
@@ -161,14 +185,18 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
-        if (!m_expressionFunctionValid) {
+        if (!expressionFunctionValid()) {
+            Q_ASSERT(!m_extra.isNull());
             QString expression;
 
-            expression = QStringLiteral("(function ");
-            expression += m_handlerName;
+            // Add some leading whitespace to account for the binding's column offset.
+            // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
+            expression.fill(QChar(QChar::Space), qMax(m_extra->m_sourceLocation.column, (quint16)2) - 2);
+            expression += QStringLiteral("(function ");
+            expression += m_extra->m_handlerName;
             expression += QLatin1Char('(');
 
-            if (m_parameterString.isEmpty()) {
+            if (m_extra->m_parameterString.isEmpty()) {
                 QString error;
                 //TODO: look at using the property cache here (as in the compiler)
                 //      for further optimization
@@ -177,30 +205,30 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
                 if (!error.isEmpty()) {
                     qmlInfo(scopeObject()) << error;
-                    m_invalidParameterName = true;
+                    setInvalidParameterName(true);
                     ep->dereferenceScarceResources();
                     return;
                 }
             } else
-                expression += m_parameterString;
+                expression += m_extra->m_parameterString;
 
             expression += QStringLiteral(") { ");
-            expression += m_expression;
+            expression += m_extra->m_expression;
             expression += QStringLiteral(" })");
 
-            m_expression.clear();
-            m_handlerName.clear();
-            m_parameterString.clear();
+            m_extra->m_expression.clear();
+            m_extra->m_handlerName.clear();
+            m_extra->m_parameterString.clear();
 
             m_v8function = evalFunction(context(), scopeObject(), expression,
-                                        m_fileName, m_line, &m_v8qmlscope);
+                                        m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_v8qmlscope);
 
             if (m_v8function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
 
-            m_expressionFunctionValid = true;
+            setExpressionFunctionValid(true);
         }
 
         QV8Engine *engine = ep->v8engine();

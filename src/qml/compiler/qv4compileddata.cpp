@@ -46,6 +46,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <QCoreApplication>
 
 #include <algorithm>
 
@@ -150,7 +151,7 @@ void CompilationUnit::unlink()
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
     engine = 0;
-    if (ownsData)
+    if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
         free(data);
     data = 0;
     free(runtimeStrings);
@@ -173,9 +174,6 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(e);
     }
-    for (int i = 0; i < runtimeFunctions.count(); ++i)
-        if (runtimeFunctions[i])
-            runtimeFunctions[i]->mark(e);
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)
             runtimeLookups[i].name->mark(e);
@@ -194,6 +192,22 @@ QString Binding::valueAsString(const Unit *unit) const
         return QString::number(value.d);
     case Type_Invalid:
         return QString();
+    case Type_TranslationById: {
+        QByteArray id = unit->stringAt(stringIndex).toUtf8();
+        return qtTrId(id.constData(), value.translationData.number);
+    }
+    case Type_Translation: {
+        // This code must match that in the qsTr() implementation
+        const QString &path = unit->stringAt(unit->sourceFileIndex);
+        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+        QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) :
+                                             QString();
+        QByteArray contextUtf8 = context.toUtf8();
+        QByteArray comment = unit->stringAt(value.translationData.commentIndex).toUtf8();
+        QByteArray text = unit->stringAt(stringIndex).toUtf8();
+        return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
+                                           comment.constData(), value.translationData.number);
+    }
     default:
         break;
     }

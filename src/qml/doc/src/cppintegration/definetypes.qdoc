@@ -167,7 +167,7 @@ shared across all contexts in an engine.  QObject singleton type instances
 are constructed and owned by the QQmlEngine, and will be destroyed when
 the engine is destroyed.
 
-A QObject singleton type can be interacted with in a manner simlar to any
+A QObject singleton type can be interacted with in a manner similar to any
 other QObject or instantiated type, except that only one (engine constructed
 and owned) instance will exist, and it must be referenced by type name rather
 than id.  Q_PROPERTYs of QObject singleton types may be bound to, and Q_INVOKABLE

@@ -595,7 +595,7 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
         } else {
             for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse->begin();
                  it != static_cast<const SparseArrayData *>(other)->sparse->end(); it = it->nextNode())
-                obj->arraySet(oldSize + it->key(), other->data[it->value]);
+                obj->arraySet(oldSize + it->key(), ValueRef(other->data[it->value]));
         }
     } else {
         obj->arrayPut(oldSize, other->data, n);
@@ -662,7 +662,7 @@ bool ArrayElementLessThan::operator()(const Value &v1, const Value &v2) const
         callData->thisObject = Primitive::undefinedValue();
         callData->args[0] = v1;
         callData->args[1] = v2;
-        result = __qmljs_call_value(m_context, m_comparefn, callData);
+        result = Runtime::callValue(m_context, m_comparefn, callData);
 
         return result->toNumber() < 0;
     }

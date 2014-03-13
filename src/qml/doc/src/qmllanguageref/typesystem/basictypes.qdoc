@@ -598,7 +598,7 @@ property is only invoked when the property is reassigned to a different object v
 
     Since it is not possible to individually add or remove items from a list or
     object stored in a \c variant, the only way to modify its contents is to
-    reassign a new value. However, this is not efficent, as it causes the value
+    reassign a new value. However, this is not efficient, as it causes the value
     to be serialized and deserialized.
 
     Additionally, since \c items and \c attributes are not QML objects, changing

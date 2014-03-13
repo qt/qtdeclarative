@@ -80,28 +80,34 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext)
-    : compiledData(compiledData)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, void *activeVMEDataForRootContext)
+    : phase(Startup)
+    , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
+    , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
     init(parentContext);
 
-    sharedState = new SharedState;
+    sharedState = new QQmlObjectCreatorSharedState;
     sharedState.setFlag(); // We own it, so we must delete it
     sharedState->componentAttached = 0;
     sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
+    sharedState->allCreatedObjects.allocate(compiledData->totalObjectCount);
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
+    sharedState->profiler.profiler = QQmlEnginePrivate::get(engine)->profiler;
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, SharedState *inheritedSharedState)
-    : compiledData(compiledData)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState)
+    : phase(Startup)
+    , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
+    , activeVMEDataForRootContext(0)
 {
     init(parentContext);
 
@@ -131,6 +137,9 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
 QQmlObjectCreator::~QQmlObjectCreator()
 {
     if (sharedState.flag()) {
+        {
+            QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
+        }
         for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
             QQmlAbstractBinding *b = sharedState->allCreatedBindings.at(i);
             if (b)
@@ -145,8 +154,15 @@ QQmlObjectCreator::~QQmlObjectCreator()
     }
 }
 
-QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
+QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlInstantiationInterrupt *interrupt)
 {
+    if (phase == CreatingObjectsPhase2) {
+        phase = ObjectsCreated;
+        return context->contextObject;
+    }
+    Q_ASSERT(phase == Startup);
+    phase = CreatingObjects;
+
     int objectToCreate;
 
     if (subComponentIndex == -1) {
@@ -168,6 +184,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
 
     if (!sharedState->rootContext) {
         sharedState->rootContext = context;
+        sharedState->rootContext->activeVMEData = activeVMEDataForRootContext;
         sharedState->rootContext->isRootObjectInCreation = true;
     }
 
@@ -208,7 +225,69 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent)
         context->contextObject = instance;
     }
 
+    Q_QML_VME_PROFILE(sharedState->profiler, stop());
+
+    phase = CreatingObjectsPhase2;
+
+    if (interrupt && interrupt->shouldInterrupt())
+        return 0;
+
+    phase = ObjectsCreated;
+
     return instance;
+}
+
+bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
+{
+    QQmlData *declarativeData = QQmlData::get(instance);
+    context = declarativeData->deferredData->context;
+    const int objectIndex = declarativeData->deferredData->deferredIdx;
+
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    QObject *bindingTarget = instance;
+
+    QQmlRefPointer<QQmlPropertyCache> cache = declarativeData->propertyCache;
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
+
+    QObject *scopeObject = instance;
+    qSwap(_scopeObject, scopeObject);
+
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue scopeObjectProtector(valueScope, declarativeData->jsWrapper.value());
+    Q_UNUSED(scopeObjectProtector);
+    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
+    QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
+
+    qSwap(_qmlContext, qmlContext);
+
+    qSwap(_propertyCache, cache);
+    qSwap(_qobject, instance);
+    qSwap(_compiledObject, obj);
+    qSwap(_ddata, declarativeData);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_vmeMetaObject, vmeMetaObject);
+
+    QBitArray bindingSkipList = compiledData->deferredBindingsPerObject.value(objectIndex);
+    for (int i = 0; i < bindingSkipList.count(); ++i)
+        bindingSkipList.setBit(i, !bindingSkipList.testBit(i));
+
+    setupBindings(bindingSkipList);
+
+    qSwap(_vmeMetaObject, vmeMetaObject);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_ddata, declarativeData);
+    qSwap(_compiledObject, obj);
+    qSwap(_qobject, instance);
+    qSwap(_propertyCache, cache);
+
+    qSwap(_qmlContext, qmlContext);
+    qSwap(_scopeObject, scopeObject);
+
+    phase = ObjectsCreated;
+
+    return errors.isEmpty();
 }
 
 void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
@@ -280,14 +359,14 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
     }
     break;
     case QVariant::String: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        Q_ASSERT(binding->evaluatesToString());
         QString value = binding->valueAsString(&qmlUnit->header);
         argv[0] = &value;
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
     }
     break;
     case QVariant::StringList: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        Q_ASSERT(binding->evaluatesToString());
         QStringList value(binding->valueAsString(&qmlUnit->header));
         argv[0] = &value;
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
@@ -507,7 +586,7 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
             QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
             break;
         } else if (property->propType == qMetaTypeId<QList<QString> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+            Q_ASSERT(binding->evaluatesToString());
             QList<QString> value;
             value.append(binding->valueAsString(&qmlUnit->header));
             argv[0] = reinterpret_cast<void *>(&value);
@@ -600,8 +679,6 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-                    if (binding->type != QV4::CompiledData::Binding::Type_Script)
-                        continue;
                     property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
                     if (property)
                         bindingSkipList |= (1 << property->coreIndex);
@@ -660,8 +737,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
         QQmlType *attachedType = tr->type;
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
-        QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
-        if (!populateInstance(binding->value.objectIndex, qmlObject, cache, qmlObject, /*value type property*/0))
+        if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/0))
             return false;
         return true;
     }
@@ -698,8 +774,6 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
 
-            QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-            QQmlRefPointer<QQmlPropertyCache> groupObjectPropertyCache;
             QObject *groupObject = 0;
             QQmlValueType *valueType = 0;
             QQmlPropertyData *valueTypeProperty = 0;
@@ -714,16 +788,9 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
                 valueType->read(_qobject, property->coreIndex);
 
-                groupObjectPropertyCache = enginePrivate->cache(valueType);
                 groupObject = valueType;
                 valueTypeProperty = property;
             } else {
-                groupObjectPropertyCache = enginePrivate->propertyCacheForType(property->propType);
-                if (!groupObjectPropertyCache) {
-                    recordError(binding->location, tr("Invalid grouped property access"));
-                    return false;
-                }
-
                 void *argv[1] = { &groupObject };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
                 if (!groupObject) {
@@ -734,7 +801,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
                 bindingTarget = groupObject;
             }
 
-            if (!populateInstance(binding->value.objectIndex, groupObject, groupObjectPropertyCache, bindingTarget, valueTypeProperty))
+            if (!populateInstance(binding->value.objectIndex, groupObject, bindingTarget, valueTypeProperty))
                 return false;
 
             if (valueType)
@@ -763,8 +830,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
             bs->takeExpression(expr);
         } else {
-            QQmlBinding *qmlBinding = new QQmlBinding(function, _scopeObject, context,
-                                                      context->urlString, binding->valueLocation.line, binding->valueLocation.column);
+            QQmlBinding *qmlBinding = new QQmlBinding(function, _scopeObject, context);
 
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
@@ -926,7 +992,7 @@ void QQmlObjectCreator::setupFunctions()
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
         QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[*functionIdx];
-        const QString name = runtimeFunction->name->toQString();
+        const QString name = runtimeFunction->name()->toQString();
 
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
         if (!property->isVMEFunction())
@@ -972,6 +1038,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;
         if (type) {
+            Q_QML_VME_PROFILE(sharedState->profiler, start(type->qmlTypeName(), context->url, obj->location.line, obj->location.column));
             instance = type->create();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -984,11 +1051,13 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
             customParser = type->customParser();
 
-            if (sharedState->rootContext->isRootObjectInCreation) {
+            if (sharedState->rootContext && sharedState->rootContext->isRootObjectInCreation) {
                 QQmlData *ddata = QQmlData::get(instance, /*create*/true);
                 ddata->rootObjectInCreation = true;
                 sharedState->rootContext->isRootObjectInCreation = false;
             }
+
+            sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->component);
             if (typeRef->component->qmlUnit->isSingleton())
@@ -996,8 +1065,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
+            Q_QML_VME_PROFILE(sharedState->profiler, startBackground(typeRef->component->name));
             QQmlObjectCreator subCreator(context, typeRef->component, sharedState.data());
             instance = subCreator.create();
+            Q_QML_VME_PROFILE(sharedState->profiler, foreground(context->url, obj->location.line, obj->location.column));
             if (!instance) {
                 errors += subCreator.errors;
                 return 0;
@@ -1053,6 +1124,12 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
     QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
     Q_ASSERT(!cache.isNull());
+    if (installPropertyCache) {
+        if (ddata->propertyCache)
+            ddata->propertyCache->release();;
+        ddata->propertyCache = cache;
+        ddata->propertyCache->addref();
+    }
 
     QObject *scopeObject = instance;
     qSwap(_scopeObject, scopeObject);
@@ -1067,7 +1144,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
     qSwap(_qmlContext, qmlContext);
 
-    bool result = populateInstance(index, instance, cache, /*binding target*/instance, /*value type property*/0, installPropertyCache, bindingsToSkip);
+    bool result = populateInstance(index, instance, /*binding target*/instance, /*value type property*/0, bindingsToSkip);
 
     qSwap(_qmlContext, qmlContext);
     qSwap(_scopeObject, scopeObject);
@@ -1077,6 +1154,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
 
 QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
+    Q_ASSERT(phase == ObjectsCreated || phase == Finalizing);
+    phase = Finalizing;
+
+    QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     {
@@ -1084,9 +1165,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     trace.event("begin binding eval");
 
     while (!sharedState->allCreatedBindings.isEmpty()) {
-        if (interrupt.shouldInterrupt())
-            return 0;
-
         QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
         if (!b)
             continue;
@@ -1096,12 +1174,16 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         data->clearPendingBindingBit(b->propertyIndex());
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                       QQmlPropertyPrivate::DontRemoveBinding);
+
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+            return 0;
     }
     }
 
-    if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
+    if (QQmlVME::componentCompleteEnabled()) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!sharedState->allParserStatusCallbacks.isEmpty()) {
+            Q_QML_VME_PROFILE(sharedState->profiler, pop());
             QQmlParserStatus *status = sharedState->allParserStatusCallbacks.pop();
 
             if (status && status->d) {
@@ -1109,9 +1191,10 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
                 status->componentComplete();
             }
 
-            if (interrupt.shouldInterrupt())
+            if (watcher.hasRecursed() || interrupt.shouldInterrupt())
                 return 0;
         }
+        Q_QML_VME_PROFILE(sharedState->profiler, clear());
     }
 
     {
@@ -1123,6 +1206,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             void *args[] = { 0 };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
+        if (watcher.hasRecursed())
+            return 0;
     }
     sharedState->finalizeCallbacks.clear();
     }
@@ -1136,24 +1221,45 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         Q_ASSERT(d);
         Q_ASSERT(d->context);
         a->add(&d->context->componentAttached);
-        // ### designer if (componentCompleteEnabled())
+        if (QQmlVME::componentCompleteEnabled())
             emit a->completed();
 
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
     }
     }
 
+    phase = Done;
+
     return sharedState->rootContext;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, bool installPropertyCache, const QBitArray &bindingsToSkip)
+void QQmlObjectCreator::clear()
+{
+    if (phase == Done || phase == Finalizing || phase == Startup)
+        return;
+    Q_ASSERT(phase != Startup);
+
+    while (!sharedState->allCreatedObjects.isEmpty())
+        delete sharedState->allCreatedObjects.pop();
+
+    // If profiling is switched off during a VME run and then switched back on
+    // before or during the next run background ranges from the first run will
+    // be reported in the second run because we don't clear() here. We accept
+    // that as the collected data will be incomplete anyway and because not
+    // calling clear() here is benefitial for the non-profiling case.
+    Q_QML_VME_PROFILE(sharedState->profiler, clear(true));
+
+    phase = Done;
+}
+
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, const QBitArray &bindingsToSkip)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+    Q_QML_VME_PROFILE(sharedState->profiler, push());
 
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
-    qSwap(_propertyCache, cache);
     qSwap(_qobject, instance);
     qSwap(_valueTypeProperty, valueTypeProperty);
     qSwap(_compiledObject, obj);
@@ -1164,28 +1270,46 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPo
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObjectProtector(valueScope);
 
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
+
     QQmlVMEMetaObject *vmeMetaObject = 0;
     const QByteArray data = vmeMetaObjectData.value(index);
     if (!data.isEmpty()) {
+        Q_ASSERT(!cache.isNull());
         // install on _object
-        vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
+        vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
+        _ddata->propertyCache = cache;
+        _ddata->propertyCache->addref();
         scopeObjectProtector = _ddata->jsWrapper.value();
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
-    if (installPropertyCache) {
-        _ddata->propertyCache = _propertyCache;
-        _ddata->propertyCache->addref();
-    }
-
+    qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
+    QBitArray bindingSkipList = bindingsToSkip;
+    {
+        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.find(index);
+        if (deferredBindings != compiledData->deferredBindingsPerObject.constEnd()) {
+            if (bindingSkipList.isEmpty())
+                bindingSkipList.resize(deferredBindings->count());
+
+            for (int i = 0; i < deferredBindings->count(); ++i)
+                if (deferredBindings->testBit(i))
+                    bindingSkipList.setBit(i);
+            QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
+            deferData->deferredIdx = index;
+            deferData->compiledData = compiledData;
+            deferData->compiledData->addref();
+            deferData->context = context;
+            _ddata->deferredData = deferData;
+        }
+    }
 
     setupFunctions();
-    setupBindings(bindingsToSkip);
+    setupBindings(bindingSkipList);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

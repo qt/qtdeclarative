@@ -72,6 +72,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1174,38 +1175,35 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
     return QQmlLocale::locale(v8engine, code);
 }
 
-namespace {
-
-struct BindingFunction : public QV4::FunctionObject
+QQmlBindingFunction::QQmlBindingFunction(FunctionObject *originalFunction)
+    : QV4::FunctionObject(originalFunction->scope, originalFunction->name())
+    , originalFunction(originalFunction)
 {
-    V4_OBJECT
-    BindingFunction(FunctionObject *originalFunction)
-        : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
-        , originalFunction(originalFunction)
-    {
-        setVTable(staticVTable());
-        bindingKeyFlag = true;
-    }
-
-    static ReturnedValue call(Managed *that, CallData *callData)
-    {
-        BindingFunction *This = static_cast<BindingFunction*>(that);
-        return This->originalFunction->call(callData);
-    }
-
-    static void markObjects(Managed *that, ExecutionEngine *e)
-    {
-        BindingFunction *This = static_cast<BindingFunction*>(that);
-        This->originalFunction->mark(e);
-        QV4::FunctionObject::markObjects(that, e);
-    }
-
-    QV4::FunctionObject *originalFunction;
-};
-
-DEFINE_OBJECT_VTABLE(BindingFunction);
-
+    setVTable(staticVTable());
+    bindingKeyFlag = true;
 }
+
+void QQmlBindingFunction::initBindingLocation()
+{
+    QV4::StackFrame frame = engine()->currentStackFrame();
+    bindingLocation.sourceFile = frame.source;
+    bindingLocation.line = frame.line;
+}
+
+ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
+{
+    QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
+    return This->originalFunction->call(callData);
+}
+
+void QQmlBindingFunction::markObjects(Managed *that, ExecutionEngine *e)
+{
+    QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
+    This->originalFunction->mark(e);
+    QV4::FunctionObject::markObjects(that, e);
+}
+
+DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 
 /*!
     \qmlmethod Qt::binding(function)
@@ -1261,7 +1259,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    return (new (ctx->engine->memoryManager) BindingFunction(f))->asReturnedValue();
+    return (new (ctx->engine->memoryManager) QQmlBindingFunction(f))->asReturnedValue();
 }
 
 
@@ -1385,19 +1383,24 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
         result.append(jsStack(v4));
     }
 
+    static QLoggingCategory loggingCategory("qml");
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
-    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData(), loggingCategory.categoryName());
+
     switch (logType) {
     case Log:
-        logger.debug("%s", qPrintable(result));
+        if (loggingCategory.isDebugEnabled())
+            logger.debug("%s", result.toUtf8().constData());
         break;
     case Warn:
-        logger.warning("%s", qPrintable(result));
+        if (loggingCategory.isWarningEnabled())
+            logger.warning("%s", result.toUtf8().constData());
         break;
     case Error:
-        logger.critical("%s", qPrintable(result));
+        if (loggingCategory.isCriticalEnabled())
+            logger.critical("%s", result.toUtf8().constData());
         break;
     default:
         break;

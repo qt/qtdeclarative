@@ -70,7 +70,7 @@ QQmlProfilerService::~QQmlProfilerService()
 {
     // No need to lock here. If any engine or global profiler is still trying to register at this
     // point we have a nasty bug anyway.
-    qDeleteAll(m_engineProfilers.keys());
+    qDeleteAll(m_engineProfilers.values());
     qDeleteAll(m_globalProfilers);
 }
 

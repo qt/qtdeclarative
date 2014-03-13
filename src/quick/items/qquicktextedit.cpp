@@ -1260,7 +1260,8 @@ void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
     Q_D(QQuickTextEdit);
-    if (newGeometry.width() != oldGeometry.width() && widthValid() && !d->inLayout) {
+    if (!d->inLayout && ((newGeometry.width() != oldGeometry.width() && widthValid())
+        || (newGeometry.height() != oldGeometry.height() && heightValid()))) {
         updateSize();
         updateWholeDocument();
         moveCursorDelegate();
@@ -2029,7 +2030,6 @@ void QQuickTextEdit::q_textChanged()
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
-    updateTotalLines();
     emit textChanged();
 }
 
@@ -2225,6 +2225,7 @@ void QQuickTextEdit::updateSize()
     if (d->contentSize != size) {
         d->contentSize = size;
         emit contentSizeChanged();
+        updateTotalLines();
     }
 }
 

@@ -46,7 +46,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QSet>
-#include <QtGui>
+#include <QtGui/qopengl.h>
 
 QT_BEGIN_NAMESPACE
 

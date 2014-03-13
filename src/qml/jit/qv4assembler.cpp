@@ -67,8 +67,6 @@ using namespace QV4::JIT;
 
 CompilationUnit::~CompilationUnit()
 {
-    foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->code));
 }
 
 void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
@@ -79,13 +77,9 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
-                                                           codeSizes[i]);
+                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress());
         runtimeFunctions[i] = runtimeFunction;
     }
-
-    foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
 }
 
 QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)
@@ -103,14 +97,25 @@ QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int fu
 /* Platform/Calling convention/Architecture specific section */
 
 #if CPU(X86_64)
+#  if OS(LINUX) || OS(MAC_OS_X)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
-    // Not used: JSC::X86Registers::rbx,
-    // Not used: JSC::X86Registers::r10,
+    JSC::X86Registers::ebx,
     JSC::X86Registers::r12, // LocalsRegister
-    // Not used: JSC::X86Registers::r13,
-    JSC::X86Registers::r14 // ContextRegister
-    // Not used: JSC::X86Registers::r15,
+    JSC::X86Registers::r13,
+    JSC::X86Registers::r14, // ContextRegister
+    JSC::X86Registers::r15
 };
+#  elif OS(WINDOWS)
+static const Assembler::RegisterID calleeSavedRegisters[] = {
+    JSC::X86Registers::ebx,
+    JSC::X86Registers::esi,
+    JSC::X86Registers::edi,
+    JSC::X86Registers::r12, // LocalsRegister
+    JSC::X86Registers::r13,
+    JSC::X86Registers::r14, // ContextRegister
+    JSC::X86Registers::r15
+};
+#  endif
 #endif
 
 #if CPU(X86)
@@ -314,60 +319,6 @@ void Assembler::leaveStandardStackFrame()
 }
 
 
-
-#define OP(op) \
-    { isel_stringIfy(op), op, 0, 0, 0 }
-#define OPCONTEXT(op) \
-    { isel_stringIfy(op), 0, op, 0, 0 }
-
-#define INLINE_OP(op, memOp, immOp) \
-    { isel_stringIfy(op), op, 0, memOp, immOp }
-#define INLINE_OPCONTEXT(op, memOp, immOp) \
-    { isel_stringIfy(op), 0, op, memOp, immOp }
-
-#define NULL_OP \
-    { 0, 0, 0, 0, 0 }
-
-const Assembler::BinaryOperationInfo Assembler::binaryOperations[IR::LastAluOp + 1] = {
-    NULL_OP, // OpInvalid
-    NULL_OP, // OpIfTrue
-    NULL_OP, // OpNot
-    NULL_OP, // OpUMinus
-    NULL_OP, // OpUPlus
-    NULL_OP, // OpCompl
-    NULL_OP, // OpIncrement
-    NULL_OP, // OpDecrement
-
-    INLINE_OP(__qmljs_bit_and, &Assembler::inline_and32, &Assembler::inline_and32), // OpBitAnd
-    INLINE_OP(__qmljs_bit_or, &Assembler::inline_or32, &Assembler::inline_or32), // OpBitOr
-    INLINE_OP(__qmljs_bit_xor, &Assembler::inline_xor32, &Assembler::inline_xor32), // OpBitXor
-
-    INLINE_OPCONTEXT(__qmljs_add, &Assembler::inline_add32, &Assembler::inline_add32), // OpAdd
-    INLINE_OP(__qmljs_sub, &Assembler::inline_sub32, &Assembler::inline_sub32), // OpSub
-    INLINE_OP(__qmljs_mul, &Assembler::inline_mul32, &Assembler::inline_mul32), // OpMul
-
-    OP(__qmljs_div), // OpDiv
-    OP(__qmljs_mod), // OpMod
-
-    INLINE_OP(__qmljs_shl, &Assembler::inline_shl32, &Assembler::inline_shl32), // OpLShift
-    INLINE_OP(__qmljs_shr, &Assembler::inline_shr32, &Assembler::inline_shr32), // OpRShift
-    INLINE_OP(__qmljs_ushr, &Assembler::inline_ushr32, &Assembler::inline_ushr32), // OpURShift
-
-    OP(__qmljs_gt), // OpGt
-    OP(__qmljs_lt), // OpLt
-    OP(__qmljs_ge), // OpGe
-    OP(__qmljs_le), // OpLe
-    OP(__qmljs_eq), // OpEqual
-    OP(__qmljs_ne), // OpNotEqual
-    OP(__qmljs_se), // OpStrictEqual
-    OP(__qmljs_sne), // OpStrictNotEqual
-
-    OPCONTEXT(__qmljs_instanceof), // OpInstanceof
-    OPCONTEXT(__qmljs_in), // OpIn
-
-    NULL_OP, // OpAnd
-    NULL_OP // OpOr
-};
 
 
 // Try to load the source expression into the destination FP register. This assumes that two

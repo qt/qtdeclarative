@@ -998,7 +998,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
     Q_ASSERT(id >= firstVarPropertyIndex);
 
     if (ensureVarPropertiesAllocated()) {
-        QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
+        QV4::Scope scope(varProperties.engine());
         QV4::ScopedObject o(scope, varProperties.value());
         return o->getIndexed(id - firstVarPropertyIndex);
     }
@@ -1009,10 +1009,11 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
         if (ensureVarPropertiesAllocated()) {
-            QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
+            QV4::ExecutionEngine *v4 = varProperties.engine();
+            QV4::Scope scope(v4);
             QV4::ScopedObject o(scope, varProperties.value());
             QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
-            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(val, -1);
+            return v4->v8Engine->toVariant(val, -1);
         }
         return QVariant();
     } else {

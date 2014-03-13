@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Jolla Ltd.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,51 +39,34 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLCUSTOMPARSER_P_H
-#define QQMLCUSTOMPARSER_P_H
+import QtQuick 2.0
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Item {
+    width: 400; height: 400
 
-#include "qqmlcustomparser_p.h"
+    Component.onCompleted: rect.state = "wide"
 
-#include "qqmlscript_p.h"
+    Rectangle {
+        id: rect
 
-#include <QtCore/qglobal.h>
+        color: "green"
+        width: 50
+        height: 50
+        anchors.centerIn: parent
 
-QT_BEGIN_NAMESPACE
-
-class QQmlCustomParserNodePrivate
-{
-public:
-    QString name;
-    QList<QQmlCustomParserProperty> properties;
-    QQmlScript::Location location;
-
-    static QQmlCustomParserNode fromObject(QQmlScript::Object *);
-    static QQmlCustomParserProperty fromProperty(QQmlScript::Property *);
-};
-
-class QQmlCustomParserPropertyPrivate
-{
-public:
-    QQmlCustomParserPropertyPrivate()
-        : isList(false) {}
-
-    QString name;
-    bool isList;
-    QQmlScript::Location location;
-    QList<QVariant> values;
-};
-
-QT_END_NAMESPACE
-
-#endif // QQMLCUSTOMPARSER_P_H
+        states: State {
+            name: "wide"
+            PropertyChanges {
+                target: rect
+                width: 100
+            }
+        }
+        transitions: Transition {
+            to: "wide"
+            SequentialAnimation {
+                NumberAnimation { duration: 200; property: "width" }
+                ScriptAction { script: { rect.state = ""; rect.state = "wide" } }
+            }
+        }
+    }
+}

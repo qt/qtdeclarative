@@ -185,6 +185,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     const uchar *exceptionHandler = 0;
 
+    context->lineNumber = -1;
     QV4::ExecutionEngine *engine = context->engine;
 
 #ifdef DO_TRACE_INSTR
@@ -192,7 +193,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 #endif // DO_TRACE_INSTR
 
     QV4::StringValue * const runtimeStrings = context->compilationUnit->runtimeStrings;
-    context->interpreterInstructionPointer = &code;
 
     // setup lookup scopes
     int scopeDepth = 0;
@@ -257,12 +257,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        STOREVALUE(instr.result, __qmljs_init_closure(context, instr.value));
+        STOREVALUE(instr.result, Runtime::closure(context, instr.value));
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
         TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
-        STOREVALUE(instr.result, __qmljs_get_activation_property(context, runtimeStrings[instr.name]));
+        STOREVALUE(instr.result, Runtime::getActivationProperty(context, runtimeStrings[instr.name]));
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(GetGlobalLookup)
@@ -273,12 +273,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
-        __qmljs_set_activation_property(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
+        Runtime::setActivationProperty(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
-        STOREVALUE(instr.result, __qmljs_get_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
+        STOREVALUE(instr.result, Runtime::getElement(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(LoadElementLookup)
@@ -287,7 +287,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(LoadElementLookup)
 
     MOTH_BEGIN_INSTR(StoreElement)
-        __qmljs_set_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index), VALUEPTR(instr.source));
+        Runtime::setElement(context, VALUEPTR(instr.base), VALUEPTR(instr.index), VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
 
@@ -298,7 +298,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(StoreElementLookup)
 
     MOTH_BEGIN_INSTR(LoadProperty)
-        STOREVALUE(instr.result, __qmljs_get_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name]));
+        STOREVALUE(instr.result, Runtime::getProperty(context, VALUEPTR(instr.base), runtimeStrings[instr.name]));
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(GetLookup)
@@ -307,7 +307,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(StoreProperty)
-        __qmljs_set_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name], VALUEPTR(instr.source));
+        Runtime::setProperty(context, VALUEPTR(instr.base), runtimeStrings[instr.name], VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 
@@ -318,16 +318,16 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(SetLookup)
 
     MOTH_BEGIN_INSTR(StoreQObjectProperty)
-        __qmljs_set_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex, VALUEPTR(instr.source));
+        Runtime::setQmlQObjectProperty(context, VALUEPTR(instr.base), instr.propertyIndex, VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreQObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadQObjectProperty)
-        STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex, instr.captureRequired));
+        STOREVALUE(instr.result, Runtime::getQmlQObjectProperty(context, VALUEPTR(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadQObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
-        STOREVALUE(instr.result, __qmljs_get_attached_property(context, instr.attachedPropertiesId, instr.propertyIndex));
+        STOREVALUE(instr.result, Runtime::getQmlAttachedProperty(context, instr.attachedPropertiesId, instr.propertyIndex));
     MOTH_END_INSTR(LoadAttachedQObjectProperty)
 
     MOTH_BEGIN_INSTR(Push)
@@ -356,7 +356,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_call_value(context, VALUEPTR(instr.dest), callData));
+        STOREVALUE(instr.result, Runtime::callValue(context, VALUEPTR(instr.dest), callData));
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
@@ -366,7 +366,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        STOREVALUE(instr.result, __qmljs_call_property(context, runtimeStrings[instr.name], callData));
+        STOREVALUE(instr.result, Runtime::callProperty(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
@@ -376,7 +376,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        STOREVALUE(instr.result, __qmljs_call_property_lookup(context, instr.lookupIndex, callData));
+        STOREVALUE(instr.result, Runtime::callPropertyLookup(context, instr.lookupIndex, callData));
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
@@ -385,7 +385,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        STOREVALUE(instr.result, __qmljs_call_element(context, VALUEPTR(instr.index), callData));
+        STOREVALUE(instr.result, Runtime::callElement(context, VALUEPTR(instr.index), callData));
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
@@ -395,7 +395,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_call_activation_property(context, runtimeStrings[instr.name], callData));
+        STOREVALUE(instr.result, Runtime::callActivationProperty(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
@@ -405,7 +405,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_call_global_lookup(context, instr.index, callData));
+        STOREVALUE(instr.result, Runtime::callGlobalLookup(context, instr.index, callData));
     MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
@@ -413,83 +413,83 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(SetExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
-        __qmljs_throw(context, VALUEPTR(instr.arg));
+        Runtime::throwException(context, VALUEPTR(instr.arg));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
-        STOREVALUE(instr.result, __qmljs_builtin_unwind_exception(context));
+        STOREVALUE(instr.result, Runtime::unwindException(context));
     MOTH_END_INSTR(CallBuiltinUnwindException)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
-        context = __qmljs_builtin_push_catch_scope(context, runtimeStrings[instr.name]);
+        context = Runtime::pushCatchScope(context, runtimeStrings[instr.name]);
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        context = __qmljs_builtin_push_with_scope(VALUEPTR(instr.arg), context);
+        context = Runtime::pushWithScope(VALUEPTR(instr.arg), context);
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
-        context = __qmljs_builtin_pop_scope(context);
+        context = Runtime::popScope(context);
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
-        STOREVALUE(instr.result, __qmljs_foreach_iterator_object(context, VALUEPTR(instr.arg)));
+        STOREVALUE(instr.result, Runtime::foreachIterator(context, VALUEPTR(instr.arg)));
     MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-        STOREVALUE(instr.result, __qmljs_foreach_next_property_name(VALUEPTR(instr.arg)));
+        STOREVALUE(instr.result, Runtime::foreachNextPropertyName(VALUEPTR(instr.arg)));
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-        STOREVALUE(instr.result, __qmljs_delete_member(context, VALUEPTR(instr.base), runtimeStrings[instr.member]));
+        STOREVALUE(instr.result, Runtime::deleteMember(context, VALUEPTR(instr.base), runtimeStrings[instr.member]));
     MOTH_END_INSTR(CallBuiltinDeleteMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-        STOREVALUE(instr.result, __qmljs_delete_subscript(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
+        STOREVALUE(instr.result, Runtime::deleteElement(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        STOREVALUE(instr.result, __qmljs_delete_name(context, runtimeStrings[instr.name]));
+        STOREVALUE(instr.result, Runtime::deleteName(context, runtimeStrings[instr.name]));
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
-        STOREVALUE(instr.result, __qmljs_builtin_typeof_member(context, VALUEPTR(instr.base), runtimeStrings[instr.member]));
+        STOREVALUE(instr.result, Runtime::typeofMember(context, VALUEPTR(instr.base), runtimeStrings[instr.member]));
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
-        STOREVALUE(instr.result, __qmljs_builtin_typeof_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
+        STOREVALUE(instr.result, Runtime::typeofElement(context, VALUEPTR(instr.base), VALUEPTR(instr.index)));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
-        STOREVALUE(instr.result, __qmljs_builtin_typeof_name(context, runtimeStrings[instr.name]));
+        STOREVALUE(instr.result, Runtime::typeofName(context, runtimeStrings[instr.name]));
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
-        STOREVALUE(instr.result, __qmljs_builtin_typeof(context, VALUEPTR(instr.value)));
+        STOREVALUE(instr.result, Runtime::typeofValue(context, VALUEPTR(instr.value)));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
-        __qmljs_builtin_declare_var(context, instr.isDeletable, runtimeStrings[instr.varName]);
+        Runtime::declareVar(context, instr.isDeletable, runtimeStrings[instr.varName]);
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
         QV4::Value *args = stack + instr.args;
-        STOREVALUE(instr.result, __qmljs_builtin_define_array(context, args, instr.argc));
+        STOREVALUE(instr.result, Runtime::arrayLiteral(context, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
         QV4::Value *args = stack + instr.args;
-    STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
+    STOREVALUE(instr.result, Runtime::objectLiteral(context, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
-        STOREVALUE(instr.result, __qmljs_builtin_setup_arguments_object(context));
+        STOREVALUE(instr.result, Runtime::setupArgumentsObject(context));
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
-        __qmljs_builtin_convert_this_to_object(context);
+        Runtime::convertThisToObject(context);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
@@ -499,7 +499,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_construct_value(context, VALUEPTR(instr.func), callData));
+        STOREVALUE(instr.result, Runtime::constructValue(context, VALUEPTR(instr.func), callData));
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
@@ -508,7 +508,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        STOREVALUE(instr.result, __qmljs_construct_property(context, runtimeStrings[instr.name], callData));
+        STOREVALUE(instr.result, Runtime::constructProperty(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(ConstructPropertyLookup)
@@ -517,7 +517,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        STOREVALUE(instr.result, __qmljs_construct_property_lookup(context, instr.index, callData));
+        STOREVALUE(instr.result, Runtime::constructPropertyLookup(context, instr.index, callData));
     MOTH_END_INSTR(ConstructPropertyLookup)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
@@ -527,7 +527,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_construct_activation_property(context, runtimeStrings[instr.name], callData));
+        STOREVALUE(instr.result, Runtime::constructActivationProperty(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(ConstructGlobalLookup)
@@ -537,7 +537,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Primitive::undefinedValue();
-        STOREVALUE(instr.result, __qmljs_construct_global_lookup(context, instr.index, callData));
+        STOREVALUE(instr.result, Runtime::constructGlobalLookup(context, instr.index, callData));
     MOTH_END_INSTR(ConstructGlobalLookup)
 
     MOTH_BEGIN_INSTR(Jump)
@@ -559,7 +559,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(JumpNe)
 
     MOTH_BEGIN_INSTR(UNot)
-        STOREVALUE(instr.result, __qmljs_not(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::uNot(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UNotBool)
@@ -568,15 +568,15 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(UNotBool)
 
     MOTH_BEGIN_INSTR(UPlus)
-        STOREVALUE(instr.result, __qmljs_uplus(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::uPlus(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        STOREVALUE(instr.result, __qmljs_uminus(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::uMinus(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        STOREVALUE(instr.result, __qmljs_compl(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::complement(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UCompl)
 
     MOTH_BEGIN_INSTR(UComplInt)
@@ -584,11 +584,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(UComplInt)
 
     MOTH_BEGIN_INSTR(Increment)
-        STOREVALUE(instr.result, __qmljs_increment(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::increment(VALUEPTR(instr.source)));
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
-        STOREVALUE(instr.result, __qmljs_decrement(VALUEPTR(instr.source)));
+        STOREVALUE(instr.result, Runtime::decrement(VALUEPTR(instr.source)));
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)
@@ -596,19 +596,19 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Add)
-        STOREVALUE(instr.result, __qmljs_add(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::add(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(Add)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        STOREVALUE(instr.result, __qmljs_bit_and(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::bitAnd(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        STOREVALUE(instr.result, __qmljs_bit_or(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::bitOr(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        STOREVALUE(instr.result, __qmljs_bit_xor(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::bitXor(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
@@ -643,11 +643,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(Mul)
-        STOREVALUE(instr.result, __qmljs_mul(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::mul(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(Sub)
-        STOREVALUE(instr.result, __qmljs_sub(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+        STOREVALUE(instr.result, Runtime::sub(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(Sub)
 
     MOTH_BEGIN_INSTR(BinopContext)
@@ -661,9 +661,14 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
+        context->lineNumber = instr.lineNumber;
         QV4::Debugging::Debugger *debugger = context->engine->debugger;
-        if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity()))
-            debugger->maybeBreakAtInstruction(code, instr.breakPoint);
+        if (debugger && debugger->pauseAtNextOpportunity())
+            debugger->maybeBreakAtInstruction();
+    MOTH_END_INSTR(Debug)
+
+    MOTH_BEGIN_INSTR(Line)
+        context->lineNumber = instr.lineNumber;
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
@@ -671,23 +676,23 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(LoadQmlIdArray)
-        VALUE(instr.result) = __qmljs_get_id_array(static_cast<QV4::NoThrowContext*>(context));
+        VALUE(instr.result) = Runtime::getQmlIdArray(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadQmlIdArray)
 
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-        VALUE(instr.result) = __qmljs_get_imported_scripts(static_cast<QV4::NoThrowContext*>(context));
+        VALUE(instr.result) = Runtime::getQmlImportedScripts(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
     MOTH_BEGIN_INSTR(LoadQmlContextObject)
-        VALUE(instr.result) = __qmljs_get_context_object(static_cast<QV4::NoThrowContext*>(context));
+        VALUE(instr.result) = Runtime::getQmlContextObject(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadContextObject)
 
     MOTH_BEGIN_INSTR(LoadQmlScopeObject)
-        VALUE(instr.result) = __qmljs_get_scope_object(static_cast<QV4::NoThrowContext*>(context));
+        VALUE(instr.result) = Runtime::getQmlScopeObject(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadScopeObject)
 
     MOTH_BEGIN_INSTR(LoadQmlSingleton)
-        VALUE(instr.result) = __qmljs_get_qml_singleton(static_cast<QV4::NoThrowContext*>(context), runtimeStrings[instr.name]);
+        VALUE(instr.result) = Runtime::getQmlSingleton(static_cast<QV4::NoThrowContext*>(context), runtimeStrings[instr.name]);
     MOTH_END_INSTR(LoadQmlSingleton)
 
 #ifdef MOTH_THREADED_INTERPRETER

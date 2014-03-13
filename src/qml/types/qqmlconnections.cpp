@@ -203,54 +203,6 @@ void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
     d->ignoreUnknownSignals = ignore;
 }
 
-
-
-QByteArray
-QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
-{
-    QByteArray rv;
-    QDataStream ds(&rv, QIODevice::WriteOnly);
-
-    for(int ii = 0; ii < props.count(); ++ii)
-    {
-        QString propName = props.at(ii).name();
-        int propLine = props.at(ii).location().line;
-        int propColumn = props.at(ii).location().column;
-
-        if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
-            error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
-            return QByteArray();
-        }
-
-        QList<QVariant> values = props.at(ii).assignedValues();
-
-        for (int i = 0; i < values.count(); ++i) {
-            const QVariant &value = values.at(i);
-
-            if (value.userType() == qMetaTypeId<QQmlCustomParserNode>()) {
-                error(props.at(ii), QQmlConnections::tr("Connections: nested objects not allowed"));
-                return QByteArray();
-            } else if (value.userType() == qMetaTypeId<QQmlCustomParserProperty>()) {
-                error(props.at(ii), QQmlConnections::tr("Connections: syntax error"));
-                return QByteArray();
-            } else {
-                QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
-                if (v.isScript()) {
-                    ds << propName;
-                    ds << v.asScript();
-                    ds << propLine;
-                    ds << propColumn;
-                } else {
-                    error(props.at(ii), QQmlConnections::tr("Connections: script expected"));
-                    return QByteArray();
-                }
-            }
-        }
-    }
-
-    return rv;
-}
-
 QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &props)
 {
     Q_UNUSED(objectIndex)

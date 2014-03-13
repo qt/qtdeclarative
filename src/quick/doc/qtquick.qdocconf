@@ -29,19 +29,22 @@ qhp.QtQuick.subprojects.classes.indexTitle = Qt Quick C++ Classes
 qhp.QtQuick.subprojects.classes.selectors = class fake:headerfile
 qhp.QtQuick.subprojects.classes.sortPages = true
 qhp.QtQuick.subprojects.examples.title = Examples
-qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Code Samples
+qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples and Tutorials
 qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
 depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtquicklayouts qtdoc qtquickdialogs qtsensors qtwidgets
 
-headerdirs  += ..
+headerdirs  += ..\
+               ../../quickwidgets
 
 sourcedirs  += .. \
-               ../../imports/testlib
+               ../../imports/testlib \
+               ../../quickwidgets
 
 exampledirs +=  ../../../examples/quick \
+                ../../../examples/quickwidgets \
                 snippets
 
 

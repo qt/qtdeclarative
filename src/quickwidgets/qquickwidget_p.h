@@ -63,6 +63,7 @@ class QQuickItem;
 class QQmlComponent;
 class QQuickRenderControl;
 class QOpenGLContext;
+class QOffscreenSurface;
 
 class QQuickWidgetPrivate
         : public QWidgetPrivate,
@@ -84,10 +85,13 @@ public:
     void setRootObject(QObject *);
     void renderSceneGraph();
     void createContext();
+    void destroyContext();
+    void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
-    GLuint textureId() const;
+    GLuint textureId() const Q_DECL_OVERRIDE;
 
     void init(QQmlEngine* e = 0);
+    void handleWindowChange();
 
     QSize rootObjectSize() const;
 
@@ -99,6 +103,7 @@ public:
     QQmlComponent *component;
     QBasicTimer resizetimer;
     QQuickWindow *offscreenWindow;
+    QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
     QOpenGLFramebufferObject *fbo;
     QOpenGLContext *context;
@@ -110,6 +115,7 @@ public:
     int updateTimer;
     bool eventPending;
     bool updatePending;
+    bool fakeHidden;
 };
 
 QT_END_NAMESPACE

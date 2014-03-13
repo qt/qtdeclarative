@@ -44,6 +44,7 @@
 namespace WTF {
 
 void setDataFile(FILE* f);
+void setDataFile(class PrintStream *);
 
 }
 

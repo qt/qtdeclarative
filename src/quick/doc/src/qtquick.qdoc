@@ -57,7 +57,7 @@ and dynamic user interface. It enables user interfaces to be built around the
 behavior of user interface components and how they connect with one another,
 and it provides a visual canvas with its own coordinate system and rendering
 engine. Animation and transition effects are a first class concept in Qt Quick,
-and visual effects can be supplemented through specialised components for
+and visual effects can be supplemented through specialized components for
 particle and shader effects.
 
 \list
@@ -128,7 +128,7 @@ Additional Qt Quick information:
     \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
-\li \l{Qt Quick Code Samples} - list of all Qt Quick examples
+\li \l{Qt Quick Examples and Tutorials}
 \endlist
 
 Further information for writing QML applications:

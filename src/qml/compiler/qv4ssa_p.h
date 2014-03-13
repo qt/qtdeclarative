@@ -137,7 +137,7 @@ public:
     }
 };
 
-class Optimizer
+class Q_QML_EXPORT Optimizer
 {
 public:
     Optimizer(Function *function)

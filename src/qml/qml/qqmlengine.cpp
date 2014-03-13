@@ -552,19 +552,17 @@ the same object as is returned from the Qt.include() call.
 */
 // Qt.include() is implemented in qv4include.cpp
 
-DEFINE_BOOL_CONFIG_OPTION(qmlUseNewCompiler, QML_NEW_COMPILER)
-
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
   profiler(0), outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
-  workerScriptEngine(0), activeVME(0),
+  workerScriptEngine(0),
   activeObjectCreator(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), importDatabase(e), typeLoader(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
-    useNewCompiler = qmlUseNewCompiler();
+    useNewCompiler = true;
 }
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
@@ -1047,9 +1045,7 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
 
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
-    if (activeVME) {
-        activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
-    } else if (activeObjectCreator) {
+    if (activeObjectCreator) {
         activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };
@@ -1209,6 +1205,8 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 
   When the QQmlEngine instantiates a QObject, the context is
   set automatically.
+
+  \sa qmlContext(), qmlEngine()
   */
 QQmlContext *QQmlEngine::contextForObject(const QObject *object)
 {
@@ -1615,11 +1613,11 @@ void QQmlData::destroyed(QObject *object)
             QString locationString;
             QQmlBoundSignalExpression *expr = signalHandler->expression();
             if (expr) {
-                QString fileName = expr->sourceFile();
-                if (fileName.isEmpty())
-                    fileName = QStringLiteral("<Unknown File>");
-                locationString.append(fileName);
-                locationString.append(QString::fromLatin1(":%0: ").arg(expr->lineNumber()));
+                QQmlSourceLocation location = expr->sourceLocation();
+                if (location.sourceFile.isEmpty())
+                    location.sourceFile = QStringLiteral("<Unknown File>");
+                locationString.append(location.sourceFile);
+                locationString.append(QString::fromLatin1(":%0: ").arg(location.line));
                 QString source = expr->expression();
                 if (source.size() > 100) {
                     source.truncate(96);
@@ -1985,7 +1983,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
     Q_D(QQmlEngine);
-    return d->importDatabase.importPlugin(filePath, uri, QString(), errors);
+    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), errors);
 }
 
 /*!
@@ -2370,6 +2368,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     Returns the QQmlEngine associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object)->engine(), but more efficient.
+
+    \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlContext()
 */
 
 /*!
@@ -2378,6 +2378,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     Returns the QQmlContext associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object).
+
+    \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlEngine()
 */
 
 QT_END_NAMESPACE

@@ -92,7 +92,7 @@ struct ArgumentsObject: Object {
     enum {
         LengthPropertyIndex = 0,
         CalleePropertyIndex = 1,
-        CallerPropertyIndex = 2
+        CallerPropertyIndex = 3
     };
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);

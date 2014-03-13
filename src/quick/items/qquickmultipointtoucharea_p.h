@@ -191,6 +191,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints)
     Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
+    Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
 
 public:
     QQuickMultiPointTouchArea(QQuickItem *parent=0);
@@ -200,6 +201,8 @@ public:
     void setMinimumTouchPoints(int num);
     int maximumTouchPoints() const;
     void setMaximumTouchPoints(int num);
+    bool mouseEnabled() const { return _mouseEnabled; }
+    void setMouseEnabled(bool arg);
 
     QQmlListProperty<QQuickTouchPoint> touchPoints() {
         return QQmlListProperty<QQuickTouchPoint>(this, 0, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, 0);
@@ -229,6 +232,7 @@ Q_SIGNALS:
     void touchUpdated(const QList<QObject*> &touchPoints);
     void minimumTouchPointsChanged();
     void maximumTouchPointsChanged();
+    void mouseEnabledChanged();
 
 protected:
     void touchEvent(QTouchEvent *);
@@ -241,9 +245,11 @@ protected:
 
     void addTouchPrototype(QQuickTouchPoint* prototype);
     void addTouchPoint(const QTouchEvent::TouchPoint *p);
+    void addTouchPoint(const QMouseEvent *e);
     void clearTouchLists();
 
     void updateTouchPoint(QQuickTouchPoint*, const QTouchEvent::TouchPoint*);
+    void updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e);
     void updateTouchData(QEvent*);
 
     bool sendMouseEvent(QMouseEvent *event);
@@ -265,7 +271,11 @@ private:
     QList<QObject*> _movedTouchPoints;
     int _minimumTouchPoints;
     int _maximumTouchPoints;
+    QQuickTouchPoint *_mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
+    QTouchEvent::TouchPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
+    QPointF _mousePos;
     bool _stealMouse;
+    bool _mouseEnabled;
 };
 
 QT_END_NAMESPACE

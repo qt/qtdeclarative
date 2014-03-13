@@ -1544,7 +1544,8 @@ public:
 
     void atomParenthesesOnceBegin(unsigned subpatternId, bool capture, unsigned inputPosition, unsigned frameLocation, unsigned alternativeFrameLocation)
     {
-        int beginTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int beginTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         m_bodyDisjunction->terms.append(ByteTerm(ByteTerm::TypeParenthesesSubpatternOnceBegin, subpatternId, capture, false, inputPosition));
         m_bodyDisjunction->terms[m_bodyDisjunction->terms.size() - 1].frameLocation = frameLocation;
@@ -1557,7 +1558,8 @@ public:
 
     void atomParenthesesTerminalBegin(unsigned subpatternId, bool capture, unsigned inputPosition, unsigned frameLocation, unsigned alternativeFrameLocation)
     {
-        int beginTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int beginTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         m_bodyDisjunction->terms.append(ByteTerm(ByteTerm::TypeParenthesesSubpatternTerminalBegin, subpatternId, capture, false, inputPosition));
         m_bodyDisjunction->terms[m_bodyDisjunction->terms.size() - 1].frameLocation = frameLocation;
@@ -1574,7 +1576,8 @@ public:
         // then fix this up at the end! - simplifying this should make it much clearer.
         // https://bugs.webkit.org/show_bug.cgi?id=50136
 
-        int beginTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int beginTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         m_bodyDisjunction->terms.append(ByteTerm(ByteTerm::TypeParenthesesSubpatternOnceBegin, subpatternId, capture, false, inputPosition));
         m_bodyDisjunction->terms[m_bodyDisjunction->terms.size() - 1].frameLocation = frameLocation;
@@ -1587,7 +1590,8 @@ public:
 
     void atomParentheticalAssertionBegin(unsigned subpatternId, bool invert, unsigned frameLocation, unsigned alternativeFrameLocation)
     {
-        int beginTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int beginTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         m_bodyDisjunction->terms.append(ByteTerm(ByteTerm::TypeParentheticalAssertionBegin, subpatternId, false, invert, 0));
         m_bodyDisjunction->terms[m_bodyDisjunction->terms.size() - 1].frameLocation = frameLocation;
@@ -1602,7 +1606,8 @@ public:
     {
         unsigned beginTerm = popParenthesesStack();
         closeAlternative(beginTerm + 1);
-        unsigned endTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        unsigned endTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeParentheticalAssertionBegin);
 
@@ -1628,7 +1633,8 @@ public:
     unsigned popParenthesesStack()
     {
         ASSERT(m_parenthesesStack.size());
-        int stackEnd = m_parenthesesStack.size() - 1;
+        ASSERT(m_parenthesesStack.size() <= INT_MAX);
+        int stackEnd = static_cast<int>(m_parenthesesStack.size()) - 1;
         unsigned beginTerm = m_parenthesesStack[stackEnd].beginTerm;
         m_currentAlternativeIndex = m_parenthesesStack[stackEnd].savedAlternativeIndex;
         m_parenthesesStack.shrink(stackEnd);
@@ -1653,7 +1659,8 @@ public:
     {
         int origBeginTerm = beginTerm;
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeAlternativeBegin);
-        int endIndex = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int endIndex = static_cast<int>(m_bodyDisjunction->terms.size());
 
         unsigned frameLocation = m_bodyDisjunction->terms[beginTerm].frameLocation;
 
@@ -1679,7 +1686,8 @@ public:
         int beginTerm = 0;
         int origBeginTerm = 0;
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeBodyAlternativeBegin);
-        int endIndex = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int endIndex = static_cast<int>(m_bodyDisjunction->terms.size());
 
         unsigned frameLocation = m_bodyDisjunction->terms[beginTerm].frameLocation;
 
@@ -1700,7 +1708,8 @@ public:
     {
         unsigned beginTerm = popParenthesesStack();
         closeAlternative(beginTerm + 1);
-        unsigned endTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        unsigned endTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeParenthesesSubpatternOnceBegin);
 
@@ -1734,7 +1743,8 @@ public:
     {
         unsigned beginTerm = popParenthesesStack();
         closeAlternative(beginTerm + 1);
-        unsigned endTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        unsigned endTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeParenthesesSubpatternOnceBegin);
 
@@ -1756,7 +1766,8 @@ public:
     {
         unsigned beginTerm = popParenthesesStack();
         closeAlternative(beginTerm + 1);
-        unsigned endTerm = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        unsigned endTerm = static_cast<int>(m_bodyDisjunction->terms.size());
 
         ASSERT(m_bodyDisjunction->terms[beginTerm].type == ByteTerm::TypeParenthesesSubpatternTerminalBegin);
 
@@ -1789,7 +1800,8 @@ public:
 
     void alternativeBodyDisjunction(bool onceThrough)
     {
-        int newAlternativeIndex = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int newAlternativeIndex = static_cast<int>(m_bodyDisjunction->terms.size());
         m_bodyDisjunction->terms[m_currentAlternativeIndex].alternative.next = newAlternativeIndex - m_currentAlternativeIndex;
         m_bodyDisjunction->terms.append(ByteTerm::BodyAlternativeDisjunction(onceThrough));
 
@@ -1798,7 +1810,8 @@ public:
 
     void alternativeDisjunction()
     {
-        int newAlternativeIndex = m_bodyDisjunction->terms.size();
+        ASSERT(m_bodyDisjunction->terms.size() <= INT_MAX);
+        int newAlternativeIndex = static_cast<int>(m_bodyDisjunction->terms.size());
         m_bodyDisjunction->terms[m_currentAlternativeIndex].alternative.next = newAlternativeIndex - m_currentAlternativeIndex;
         m_bodyDisjunction->terms.append(ByteTerm::AlternativeDisjunction());
 

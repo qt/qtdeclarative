@@ -53,12 +53,15 @@
 #endif // QT_GUI_LIB
 
 #include <QQmlApplicationEngine>
+#include <QQmlComponent>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QStringList>
 #include <QDebug>
 #include <QStandardPaths>
+#include <QTranslator>
 #include <QtGlobal>
 #include <qqml.h>
 #include <qqmldebug.h>

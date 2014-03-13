@@ -88,6 +88,9 @@ public:
 
 Q_SIGNALS:
     void timeToIncubate();
+
+protected:
+    void handleContextCreationFailure(QQuickWindow *window, bool isEs);
 };
 
 QT_END_NAMESPACE

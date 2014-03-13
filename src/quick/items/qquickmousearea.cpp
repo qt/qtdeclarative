@@ -1013,7 +1013,8 @@ void QQuickMouseArea::setHoverEnabled(bool h)
     This property holds whether the mouse is currently inside the mouse area.
 
     \warning This property is not updated if the area moves under the mouse: \e containsMouse will not change.
-    In addition, if hoverEnabled is false, containsMouse will only be valid when the mouse is pressed.
+    In addition, if hoverEnabled is false, containsMouse will only be valid
+    when the mouse is pressed while the mouse cursor is inside the MouseArea.
 */
 bool QQuickMouseArea::hovered() const
 {

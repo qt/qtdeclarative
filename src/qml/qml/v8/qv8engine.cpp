@@ -444,8 +444,10 @@ void QV8Engine::initializeGlobal()
     qt_add_sqlexceptions(m_v4Engine);
 
     {
-        for (uint i = 0; i < m_v4Engine->globalObject->internalClass->size; ++i)
-            m_illegalNames.insert(m_v4Engine->globalObject->internalClass->nameMap.at(i)->toQString());
+        for (uint i = 0; i < m_v4Engine->globalObject->internalClass->size; ++i) {
+            if (m_v4Engine->globalObject->internalClass->nameMap.at(i))
+                m_illegalNames.insert(m_v4Engine->globalObject->internalClass->nameMap.at(i)->toQString());
+        }
     }
 
     {

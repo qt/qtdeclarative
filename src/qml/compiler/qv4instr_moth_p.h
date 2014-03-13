@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
+    F(Line, line) \
     F(Debug, debug) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
@@ -234,9 +235,13 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_line {
+        MOTH_INSTR_HEADER
+        qint32 lineNumber;
+    };
     struct instr_debug {
         MOTH_INSTR_HEADER
-        quint32 breakPoint;
+        qint32 lineNumber;
     };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
@@ -593,7 +598,7 @@ union Instr
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        QV4::BinOp alu;
+        QV4::Runtime::BinaryOperation alu;
         Param lhs;
         Param rhs;
         Param result;
@@ -678,7 +683,7 @@ union Instr
     };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
-        QV4::BinOpContext alu;
+        QV4::Runtime::BinaryOperationContext alu;
         Param lhs;
         Param rhs;
         Param result;
@@ -711,6 +716,7 @@ union Instr
 
     instr_common common;
     instr_ret ret;
+    instr_line line;
     instr_debug debug;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;

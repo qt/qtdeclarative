@@ -382,8 +382,10 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
 
     const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
-    for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency)
+    for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
+        Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
         capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
+    }
 
     const quint32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
     const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;

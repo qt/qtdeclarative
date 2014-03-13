@@ -84,7 +84,7 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 
 // Black list some platforms
 #if defined(V4_ENABLE_JIT)
-#if defined(Q_OS_IOS) || defined(Q_OS_WIN64) || defined(Q_OS_WINRT)
+#if defined(Q_OS_IOS) || defined(Q_OS_WINRT)
 #    undef V4_ENABLE_JIT
 #endif
 #endif

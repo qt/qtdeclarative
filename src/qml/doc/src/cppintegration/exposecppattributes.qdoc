@@ -65,7 +65,7 @@ demonstrated in the \l{Writing QML Extensions with C++} tutorial.
 \section1 Data Type Handling and Ownership
 
 Any data that is transferred from C++ to QML, whether as a property value, a
-method paramter or return value, or a signal parameter value, must be of a
+method parameter or return value, or a signal parameter value, must be of a
 type that is supported by the QML engine.
 
 By default, the engine supports a number of Qt C++ types and can automatically

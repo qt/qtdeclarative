@@ -41,7 +41,7 @@
 
 #include <private/qqmlbundle_p.h>
 #include <private/qqmlscript_p.h>
-#include <QtCore/QtCore>
+#include <QtCore/QCoreApplication>
 #include <iostream>
 
 static bool createBundle(const QString &fileName, const QStringList &fileNames)
@@ -186,30 +186,6 @@ int main(int argc, char *argv[])
             foreach (const QQmlBundle::FileEntry *fileEntry, bundle.files()) {
                 if (filesToShow.contains(fileEntry->fileName()))
                     std::cout.write(fileEntry->contents(), fileEntry->fileSize());
-            }
-        }
-    } else if (action == QLatin1String("optimize")) {
-        if (args.isEmpty()) {
-            usage(action, "You must specify a bundle");
-            return EXIT_FAILURE;
-        }
-        const QString bundleFileName = args.takeFirst();
-        QQmlBundle bundle(bundleFileName);
-        if (bundle.open(QFile::ReadWrite)) {
-            QList<const QQmlBundle::FileEntry *> files = bundle.files();
-            for (int ii = 0; ii < files.count(); ++ii) {
-                const QQmlBundle::FileEntry *file = files.at(ii);
-
-                if (!file->fileName().endsWith(".qml"))
-                    continue;
-
-                QQmlScript::Parser parser;
-                QString data = QString::fromUtf8(file->contents(), file->fileSize());
-                parser.parse(data, QByteArray());
-                QByteArray preparse = parser.preparseData();
-
-                if (!preparse.isEmpty())
-                    bundle.addMetaLink(file->fileName(), QLatin1String("qml:preparse"), preparse);
             }
         }
     } else {

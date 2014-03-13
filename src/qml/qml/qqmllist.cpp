@@ -92,8 +92,8 @@ void QQmlListReferencePrivate::release()
 \brief The QQmlListReference class allows the manipulation of QQmlListProperty properties.
 
 QQmlListReference allows C++ programs to read from, and assign values to a QML list property in a
-simple and type safe way.  A QQmlListReference can be created by passing an object and property
-name or through a QQmlProperty instance.  These two are equivalant:
+simple and type-safe way.  A QQmlListReference can be created by passing an object and property
+name or through a QQmlProperty instance.  These two are equivalent:
 
 \code
 QQmlListReference ref1(object, "children");
@@ -105,7 +105,7 @@ QQmlListReference ref2 = qvariant_cast<QQmlListReference>(ref2.read());
 Not all QML list properties support all operations.  A set of methods, canAppend(), canAt(), canClear() and
 canCount() allow programs to query whether an operation is supported on a given property.
 
-QML list properties are typesafe.  Only QObject's that derive from the correct base class can be assigned to
+QML list properties are type-safe.  Only QObject's that derive from the correct base class can be assigned to
 the list.  The listElementType() method can be used to query the QMetaObject of the QObject type supported.
 Attempting to add objects of the incorrect type to a list property will fail.
 
@@ -352,7 +352,7 @@ FruitBasket {
 }
 \endcode
 
-The QQmlListProperty encapsulates a group of function pointers that represet the
+The QQmlListProperty encapsulates a group of function pointers that represent the
 set of actions QML can perform on the list - adding items, retrieving items and
 clearing the list.  In the future, additional operations may be supported.  All
 list properties must implement the append operation, but the rest are optional.
@@ -366,7 +366,7 @@ declarative will look like this:
 Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit);
 \endcode
 
-QML list properties are typesafe - in this case \c {Fruit} is a QObject type that
+QML list properties are type-safe - in this case \c {Fruit} is a QObject type that
 \c {Apple}, \c {Orange} and \c {Banana} all derive from.
 
 The \l {Qt Quick 1} version of this class is named QDeclarativeListProperty.
@@ -388,7 +388,7 @@ exists.  \a object must be provided.
 
 Generally this constructor should not be used in production code, as a
 writable QList violates QML's memory management rules.  However, this constructor
-can very useful while prototyping.
+can be very useful while prototyping.
 */
 
 /*!

@@ -95,7 +95,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         lookups = 0;
         compilationUnit = 0;
         currentEvalCode = 0;
-        interpreterInstructionPointer = 0;
         lineNumber = -1;
         engine->current = this;
     }
@@ -118,19 +117,12 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     };
     EvalCode *currentEvalCode;
 
-    const uchar **interpreterInstructionPointer;
     int lineNumber;
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
     CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
-
-    // formals are in reverse order
-    String * const *formals() const;
-    unsigned int formalCount() const;
-    String * const *variables() const;
-    unsigned int variableCount() const;
 
     void createMutableBinding(const StringRef name, bool deletable);
 
@@ -176,6 +168,12 @@ struct CallContext : public ExecutionContext
     int realArgumentCount;
     Value *locals;
     Object *activation;
+
+    // formals are in reverse order
+    String * const *formals() const;
+    unsigned int formalCount() const;
+    String * const *variables() const;
+    unsigned int variableCount() const;
 
     inline ReturnedValue argument(int i);
     bool needsOwnArguments() const;
@@ -258,7 +256,7 @@ inline Scope::Scope(ExecutionContext *ctx)
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext) + 7) & ~7) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
+    ((sizeof(CallContext) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
 
 } // namespace QV4
 

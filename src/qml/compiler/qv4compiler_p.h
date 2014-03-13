@@ -77,8 +77,6 @@ struct Q_QML_EXPORT JSUnitGenerator {
 
     int registerConstant(ReturnedValue v);
 
-    void registerLineNumberMapping(IR::Function *function, const QVector<uint> &mappings);
-
     int registerJSClass(int count, IR::ExprList *args);
 
     QV4::CompiledData::Unit *generateUnit(int *totalUnitSize = 0);
@@ -92,7 +90,6 @@ struct Q_QML_EXPORT JSUnitGenerator {
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
-    QHash<IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
     uint headerSize;

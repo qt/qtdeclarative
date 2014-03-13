@@ -135,11 +135,11 @@ public:
                                        1 << Compiling, name, 1, 1));
     }
 
-    void startHandlingSignal(const QString &fileName, int line, int column)
+    void startHandlingSignal(const QQmlSourceLocation &location)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), 1 << HandlingSignal,
-                                       fileName, line, column));
+                                       location.sourceFile, location.line, location.column));
     }
 
     void startCreating(const QString &typeName, const QUrl &fileName, int line, int column)
@@ -224,19 +224,7 @@ struct QQmlHandlingSignalProfiler : public QQmlProfilerHelper {
     QQmlHandlingSignalProfiler(QQmlProfiler *profiler, QQmlBoundSignalExpression *expression) :
         QQmlProfilerHelper(profiler)
     {
-        Q_QML_PROFILE_IF_ENABLED(profiler, {
-            QV4::Function *function;
-            if (expression->sourceFile().isEmpty() && (function = expression->function())) {
-                profiler->startHandlingSignal(
-                        function->sourceFile(), function->compiledFunction->location.line,
-                        function->compiledFunction->location.column);
-
-            } else {
-                profiler->startHandlingSignal(
-                        expression->sourceFile(), expression->lineNumber(),
-                        expression->columnNumber());
-            }
-        });
+        Q_QML_PROFILE(profiler, startHandlingSignal(expression->sourceLocation()));
     }
 
     ~QQmlHandlingSignalProfiler()
@@ -258,7 +246,7 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
     }
 };
 
-#define Q_QML_VME_PROFILE(profiler, Method) Q_QML_PROFILE_IF_ENABLED(profiler.profiler, profiler.Method)
+#define Q_QML_VME_PROFILE(profilerMember, Method) Q_QML_PROFILE_IF_ENABLED(profilerMember.profiler, profilerMember.Method)
 
 struct QQmlVmeProfiler : public QQmlProfilerDefinitions {
 public:

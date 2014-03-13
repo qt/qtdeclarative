@@ -70,18 +70,6 @@ struct Property {
         attrs->resolve();
     }
 
-    static inline Property fromValue(Value v) {
-        Property pd;
-        pd.value = v;
-        return pd;
-    }
-    static inline Property fromAccessor(FunctionObject *getter, FunctionObject *setter) {
-        Property pd;
-        pd.value = Primitive::fromManaged(reinterpret_cast<Managed *>(getter));
-        pd.set = Primitive::fromManaged(reinterpret_cast<Managed *>(setter));
-        return pd;
-    }
-
     static Property genericDescriptor() {
         Property pd;
         pd.value = Primitive::emptyValue();
@@ -95,6 +83,23 @@ struct Property {
     inline FunctionObject *setter() const { return reinterpret_cast<FunctionObject *>(set.asManaged()); }
     inline void setGetter(FunctionObject *g) { value = Primitive::fromManaged(reinterpret_cast<Managed *>(g)); }
     inline void setSetter(FunctionObject *s) { set = Primitive::fromManaged(reinterpret_cast<Managed *>(s)); }
+
+    void copy(const Property &other, PropertyAttributes attrs) {
+        value = other.value;
+        if (attrs.isAccessor())
+            set = other.set;
+    }
+
+    explicit Property()  { value = Encode::undefined(); set = Encode::undefined(); }
+    explicit Property(Value v) : value(v) { set = Encode::undefined(); }
+    Property(FunctionObject *getter, FunctionObject *setter) {
+        value = Primitive::fromManaged(reinterpret_cast<Managed *>(getter));
+        set = Primitive::fromManaged(reinterpret_cast<Managed *>(setter));
+    }
+    Property &operator=(Value v) { value = v; return *this; }
+private:
+    Property(const Property &);
+    Property &operator=(const Property &);
 };
 
 inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const
@@ -139,6 +144,8 @@ inline void Property::merge(PropertyAttributes &attrs, const Property &other, Pr
 }
 
 }
+
+Q_DECLARE_TYPEINFO(QV4::Property, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 

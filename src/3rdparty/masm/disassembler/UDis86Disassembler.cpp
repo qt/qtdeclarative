@@ -33,6 +33,20 @@
 
 namespace JSC {
 
+namespace {
+template <int> struct helper;
+template <> struct helper<4> {
+    static void hex(char *str, size_t len, uint64_t pc)
+    { snprintf(str, len, "0x%x", static_cast<uint32_t>(pc)); }
+};
+template <> struct helper<8> {
+    static void hex(char *str, size_t len, uint64_t pc)
+    { snprintf(str, len, "0x%lx", pc); }
+};
+inline void print(char *str, size_t len, uint64_t pc)
+{ helper<sizeof(void*)>::hex(str, len, pc); }
+}
+
 bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out)
 {
     ud_t disassembler;
@@ -49,7 +63,7 @@ bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const c
     uint64_t currentPC = disassembler.pc;
     while (ud_disassemble(&disassembler)) {
         char pcString[20];
-        snprintf(pcString, sizeof(pcString), "0x%lx", static_cast<unsigned long>(currentPC));
+        print(pcString, sizeof(pcString), currentPC);
         out.printf("%s%16s: %s\n", prefix, pcString, ud_insn_asm(&disassembler));
         currentPC = disassembler.pc;
     }

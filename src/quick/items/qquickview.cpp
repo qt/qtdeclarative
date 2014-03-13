@@ -176,7 +176,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
     size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
 
-    \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
+    \sa {Exposing Attributes of C++ Types to QML}, QQuickWidget
 */
 
 

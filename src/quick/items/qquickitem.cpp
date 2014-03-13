@@ -3342,7 +3342,7 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     \warning This function is called on the render thread. This means any
     QObjects or thread local storage that is created will have affinity to the
     render thread, so apply caution when doing anything other than rendering
-    in this function. Similarily for signals, these will be emitted on the render
+    in this function. Similarly for signals, these will be emitted on the render
     thread and will thus often be delivered via queued connections.
 
     \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,

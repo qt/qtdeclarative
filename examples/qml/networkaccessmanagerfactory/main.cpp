@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include <QCommandLineParser>
 #include <QGuiApplication>
 #include <QNetworkAccessManager>
 #include <QNetworkProxy>
@@ -55,8 +56,10 @@
      networkaccessmanagerfactory [-host <proxy> -port <port>] [file]
 */
 
+#ifndef QT_NO_NETWORKPROXY
 static QString proxyHost;
 static int proxyPort = 0;
+#endif // !QT_NO_NETWORKPROXY
 
 class MyNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
@@ -67,11 +70,13 @@ public:
 QNetworkAccessManager *MyNetworkAccessManagerFactory::create(QObject *parent)
 {
     QNetworkAccessManager *nam = new QNetworkAccessManager(parent);
+#ifndef QT_NO_NETWORKPROXY
     if (!proxyHost.isEmpty()) {
         qDebug() << "Created QNetworkAccessManager using proxy" << (proxyHost + ":" + QString::number(proxyPort));
         QNetworkProxy proxy(QNetworkProxy::HttpCachingProxy, proxyHost, proxyPort);
         nam->setProxy(proxy);
     }
+#endif // !QT_NO_NETWORKPROXY
 
     return nam;
 }
@@ -82,20 +87,40 @@ int main(int argc, char ** argv)
 
     QGuiApplication app(argc, argv);
 
-    for (int i = 1; i < argc; ++i) {
-        QString arg(argv[i]);
-        if (arg == "-host" && i < argc-1) {
-            proxyHost = argv[++i];
-        } else if (arg == "-port" && i < argc-1) {
-            arg = argv[++i];
-            proxyPort = arg.toInt();
-        } else if (arg[0] != '-') {
-            source = QUrl::fromLocalFile(arg);
-        } else {
-            qWarning() << "Usage: networkaccessmanagerfactory [-host <proxy> -port <port>] [file]";
+    QCommandLineParser parser;
+#ifndef QT_NO_NETWORKPROXY
+    QCommandLineOption proxyHostOption("host", "The proxy host to use.", "host");
+    parser.addOption(proxyHostOption);
+    QCommandLineOption proxyPortOption("port", "The proxy port to use.", "port", "0");
+    parser.addOption(proxyPortOption);
+#endif // !QT_NO_NETWORKPROXY
+    parser.addPositionalArgument("file", "The file to use.");
+    QCommandLineOption helpOption = parser.addHelpOption();
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    QStringList arguments = QCoreApplication::arguments();
+    if (!parser.parse(arguments)) {
+        qWarning() << parser.helpText() << '\n' << parser.errorText();
+        exit(1);
+    }
+    if (parser.isSet(helpOption)) {
+        qWarning() << parser.helpText();
+        exit(0);
+    }
+#ifndef QT_NO_NETWORKPROXY
+    if (parser.isSet(proxyHostOption))
+        proxyHost = parser.value(proxyHostOption);
+    if (parser.isSet(proxyPortOption)) {
+        bool ok = true;
+        proxyPort = parser.value(proxyPortOption).toInt(&ok);
+        if (!ok || proxyPort < 1 || proxyPort > 65535) {
+            qWarning() << parser.helpText() << "\nNo valid port given. It should\
+                          be a number between 1 and 65535";
             exit(1);
         }
     }
+#endif // !QT_NO_NETWORKPROXY
+    if (parser.positionalArguments().count() == 1)
+        source = QUrl::fromLocalFile(parser.positionalArguments().first());
 
     QQuickView view;
     view.engine()->setNetworkAccessManagerFactory(new MyNetworkAccessManagerFactory);

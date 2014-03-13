@@ -65,6 +65,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
+#include <QtCore/QLibraryInfo>
 #include <QtQml/qqmlincubator.h>
 
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -409,7 +410,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
     , componentCompleted(true)
-    , forceRendering(false)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -881,7 +881,8 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickWindowPrivate::clearFocusObject()
 {
-    contentItem->setFocus(false, Qt::OtherFocusReason);
+    if (activeFocusItem)
+        activeFocusItem->setFocus(false, Qt::OtherFocusReason);
 }
 
 void QQuickWindowPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
@@ -2300,7 +2301,37 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
 bool QQuickWindowPrivate::isRenderable() const
 {
     Q_Q(const QQuickWindow);
-    return (forceRendering || (q->isExposed() && q->isVisible())) && q->geometry().isValid();
+    return ((q->isExposed() && q->isVisible())) && q->geometry().isValid();
+}
+
+void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &format,
+                                                        QString *translatedMessage,
+                                                        QString *untranslatedMessage,
+                                                        bool isEs)
+{
+    const QString contextType = QLatin1String(isEs ? "EGL" : "OpenGL");
+    QString formatStr;
+    QDebug(&formatStr) << format;
+#if defined(Q_OS_WIN32)
+    const bool isDebug = QLibraryInfo::isDebugBuild();
+    const QString eglLibName = QLatin1String(isDebug ? "libEGLd.dll" : "libEGL.dll");
+    const QString glesLibName = QLatin1String(isDebug ? "libGLESv2d.dll" : "libGLESv2.dll");
+     //: %1 Context type (Open GL, EGL), ANGLE %2, %3 library names
+    const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
+        "Failed to create %1 context for format %2."
+        "This is most likely caused by not having the necessary graphics drivers installed.\n\n"
+        "Install a driver providing OpenGL 2.0 or higher, or, if this is not possible, "
+        "make sure the ANGLE Open GL ES 2.0 emulation libraries (%3, %4 and d3dcompiler_*.dll) "
+        "are available in the application executable's directory or in a location listed in PATH.");
+    *translatedMessage = QQuickWindow::tr(msg).arg(contextType, formatStr, eglLibName, glesLibName);
+    *untranslatedMessage = QString::fromLatin1(msg).arg(contextType, formatStr, eglLibName, glesLibName);
+#else // Q_OS_WIN32
+    //: %1 Context type (Open GL, EGL), %2 format specification
+    const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
+                                         "Failed to create %1 context for format %2");
+    *translatedMessage = QQuickWindow::tr(msg).arg(contextType, formatStr);
+    *untranslatedMessage = QString::fromLatin1(msg).arg(contextType, formatStr);
+#endif // !Q_OS_WIN32
 }
 
 /*!

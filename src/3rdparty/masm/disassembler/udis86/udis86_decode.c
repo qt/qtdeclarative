@@ -34,8 +34,10 @@
 #include "udis86_decode.h"
 #include <wtf/Assertions.h>
 
+#ifndef _MSC_VER
 #define dbg(x, n...)
 /* #define dbg printf */
+#endif // _MSC_VER
 
 #ifndef __UD_STANDALONE__
 # include <string.h>
@@ -721,7 +723,7 @@ decode_operand(struct ud           *u,
     case OP_rSI: 
     case OP_rDI:
       operand->type = UD_OP_REG;
-      operand->base = resolve_gpr64(u, type, &operand->size);
+      operand->base = resolve_gpr64(u, type, (enum ud_operand_size*)(&operand->size));
       break;
     case OP_ALr8b:
     case OP_CLr9b: 

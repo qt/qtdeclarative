@@ -56,7 +56,7 @@ using namespace QV4::Moth;
 
 namespace {
 
-inline QV4::BinOp aluOpFunction(IR::AluOp op)
+inline QV4::Runtime::BinaryOperation aluOpFunction(IR::AluOp op)
 {
     switch (op) {
     case IR::OpInvalid:
@@ -72,43 +72,43 @@ inline QV4::BinOp aluOpFunction(IR::AluOp op)
     case IR::OpCompl:
         return 0;
     case IR::OpBitAnd:
-        return QV4::__qmljs_bit_and;
+        return QV4::Runtime::bitAnd;
     case IR::OpBitOr:
-        return QV4::__qmljs_bit_or;
+        return QV4::Runtime::bitOr;
     case IR::OpBitXor:
-        return QV4::__qmljs_bit_xor;
+        return QV4::Runtime::bitXor;
     case IR::OpAdd:
         return 0;
     case IR::OpSub:
-        return QV4::__qmljs_sub;
+        return QV4::Runtime::sub;
     case IR::OpMul:
-        return QV4::__qmljs_mul;
+        return QV4::Runtime::mul;
     case IR::OpDiv:
-        return QV4::__qmljs_div;
+        return QV4::Runtime::div;
     case IR::OpMod:
-        return QV4::__qmljs_mod;
+        return QV4::Runtime::mod;
     case IR::OpLShift:
-        return QV4::__qmljs_shl;
+        return QV4::Runtime::shl;
     case IR::OpRShift:
-        return QV4::__qmljs_shr;
+        return QV4::Runtime::shr;
     case IR::OpURShift:
-        return QV4::__qmljs_ushr;
+        return QV4::Runtime::ushr;
     case IR::OpGt:
-        return QV4::__qmljs_gt;
+        return QV4::Runtime::greaterThan;
     case IR::OpLt:
-        return QV4::__qmljs_lt;
+        return QV4::Runtime::lessThan;
     case IR::OpGe:
-        return QV4::__qmljs_ge;
+        return QV4::Runtime::greaterEqual;
     case IR::OpLe:
-        return QV4::__qmljs_le;
+        return QV4::Runtime::lessEqual;
     case IR::OpEqual:
-        return QV4::__qmljs_eq;
+        return QV4::Runtime::equal;
     case IR::OpNotEqual:
-        return QV4::__qmljs_ne;
+        return QV4::Runtime::notEqual;
     case IR::OpStrictEqual:
-        return QV4::__qmljs_se;
+        return QV4::Runtime::strictEqual;
     case IR::OpStrictNotEqual:
-        return QV4::__qmljs_sne;
+        return QV4::Runtime::strictNotEqual;
     case IR::OpInstanceof:
         return 0;
     case IR::OpIn:
@@ -385,16 +385,9 @@ void InstructionSelection::run(int functionIndex)
     push.value = quint32(locals);
     addInstruction(push);
 
-    QVector<uint> lineNumberMappings;
-    lineNumberMappings.reserve(_function->basicBlocks.size() * 2);
-
-    uint currentLine = -1;
+    currentLine = 0;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
-        if (irModule->debugMode) {
-            Instruction::Debug debug;
-            debug.breakPoint = 0;
-            addInstruction(debug);
-        }
+        blockNeedsDebugInstruction = irModule->debugMode;
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
@@ -415,20 +408,24 @@ void InstructionSelection::run(int functionIndex)
             _currentStatement = s;
 
             if (s->location.isValid()) {
-                lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
-                if (irModule->debugMode && s->location.startLine != currentLine) {
-                    Instruction::Debug debug;
-                    debug.breakPoint = 0;
-                    addInstruction(debug);
+                if (s->location.startLine != currentLine) {
+                    blockNeedsDebugInstruction = false;
                     currentLine = s->location.startLine;
+                    if (irModule->debugMode) {
+                        Instruction::Debug debug;
+                        debug.lineNumber = currentLine;
+                        addInstruction(debug);
+                    } else {
+                        Instruction::Line line;
+                        line.lineNumber = currentLine;
+                        addInstruction(line);
+                    }
                 }
             }
 
             s->accept(this);
         }
     }
-
-    jsGenerator->registerLineNumberMapping(_function, lineNumberMappings);
 
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
@@ -981,11 +978,11 @@ Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR
     if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
         Instruction::BinopContext binop;
         if (oper == IR::OpInstanceof)
-            binop.alu = QV4::__qmljs_instanceof;
+            binop.alu = QV4::Runtime::instanceof;
         else if (oper == IR::OpIn)
-            binop.alu = QV4::__qmljs_in;
+            binop.alu = QV4::Runtime::in;
         else
-            binop.alu = QV4::__qmljs_add;
+            binop.alu = QV4::Runtime::add;
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
@@ -1039,6 +1036,12 @@ void InstructionSelection::visitJump(IR::Jump *s)
     if (_removableJumps.contains(s))
         return;
 
+    if (blockNeedsDebugInstruction) {
+        Instruction::Debug debug;
+        debug.lineNumber = -currentLine;
+        addInstruction(debug);
+    }
+
     Instruction::Jump jump;
     jump.offset = 0;
     ptrdiff_t loc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
@@ -1048,6 +1051,12 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
+    if (blockNeedsDebugInstruction) {
+        Instruction::Debug debug;
+        debug.lineNumber = -currentLine;
+        addInstruction(debug);
+    }
+
     Param condition;
     if (IR::Temp *t = s->cond->asTemp()) {
         condition = getResultParam(t);
@@ -1081,6 +1090,13 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
+    if (blockNeedsDebugInstruction) {
+        // this is required so stepOut will always be guaranteed to stop in every stack frame
+        Instruction::Debug debug;
+        debug.lineNumber = -currentLine;
+        addInstruction(debug);
+    }
+
     Instruction::Ret ret;
     ret.result = getParam(s->expr);
     addInstruction(ret);
@@ -1477,8 +1493,6 @@ Param InstructionSelection::getParam(IR::Expr *e) {
 
 CompilationUnit::~CompilationUnit()
 {
-    foreach (QV4::Function *f, runtimeFunctions)
-        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->codeData));
 }
 
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
@@ -1488,15 +1502,8 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           &VME::exec, /*size - doesn't matter for moth*/0);
+        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction, &VME::exec);
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
         runtimeFunctions[i] = runtimeFunction;
-
-        if (QV4::Debugging::Debugger *debugger = engine->debugger)
-            debugger->setPendingBreakpoints(runtimeFunction);
     }
-
-    foreach (QV4::Function *f, runtimeFunctions)
-        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->codeData), f);
 }

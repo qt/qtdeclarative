@@ -63,51 +63,6 @@
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlCompiler;
-
-class QQmlCustomParserPropertyPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlCustomParserProperty
-{
-public:
-    QQmlCustomParserProperty();
-    QQmlCustomParserProperty(const QQmlCustomParserProperty &);
-    QQmlCustomParserProperty &operator=(const QQmlCustomParserProperty &);
-    ~QQmlCustomParserProperty();
-
-    QString name() const;
-    QQmlScript::Location location() const;
-
-    bool isList() const;
-    // Will be one of QQmlScript::Variant, QQmlCustomParserProperty or
-    // QQmlCustomParserNode
-    QList<QVariant> assignedValues() const;
-
-private:
-    friend class QQmlCustomParserNodePrivate;
-    friend class QQmlCustomParserPropertyPrivate;
-    QQmlCustomParserPropertyPrivate *d;
-};
-
-class QQmlCustomParserNodePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlCustomParserNode
-{
-public:
-    QQmlCustomParserNode();
-    QQmlCustomParserNode(const QQmlCustomParserNode &);
-    QQmlCustomParserNode &operator=(const QQmlCustomParserNode &);
-    ~QQmlCustomParserNode();
-
-    QString name() const;
-    QQmlScript::Location location() const;
-
-    QList<QQmlCustomParserProperty> properties() const;
-
-private:
-    friend class QQmlCustomParserNodePrivate;
-    QQmlCustomParserNodePrivate *d;
-};
-
 struct QQmlCustomParserCompilerBackend
 {
     virtual ~QQmlCustomParserCompilerBackend() {}
@@ -116,7 +71,6 @@ struct QQmlCustomParserCompilerBackend
     int evaluateEnum(const QString &scope, const QByteArray& enumValue, bool *ok) const;
     const QMetaObject *resolveType(const QString& name) const;
 
-    virtual QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&, QQmlCustomParser *) { return QQmlBinding::Invalid; }
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *, QQmlCustomParser *) { return QQmlBinding::Invalid; }
 
     virtual QQmlJS::AST::Node *astForBinding(int, int) const { return 0; }
@@ -132,23 +86,19 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    QQmlCustomParser() : compiler(0), object(0), m_flags(NoFlag) {}
-    QQmlCustomParser(Flags f) : compiler(0), object(0), m_flags(f) {}
+    QQmlCustomParser() : compiler(0), m_flags(NoFlag) {}
+    QQmlCustomParser(Flags f) : compiler(0), m_flags(f) {}
     virtual ~QQmlCustomParser() {}
 
     void clearErrors();
     Flags flags() const { return m_flags; }
 
-    virtual QByteArray compile(const QList<QQmlCustomParserProperty> &)=0;
     virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
     virtual void setCustomData(QObject *, const QByteArray &)=0;
 
     QList<QQmlError> errors() const { return exceptions; }
 
 protected:
-    void error(const QString& description);
-    void error(const QQmlCustomParserProperty&, const QString& description);
-    void error(const QQmlCustomParserNode&, const QString& description);
     void error(const QV4::CompiledData::Binding *binding, const QString& description)
     { error(binding->location, description); }
     void error(const QV4::CompiledData::Object *object, const QString& description)
@@ -159,7 +109,6 @@ protected:
 
     const QMetaObject *resolveType(const QString&) const;
 
-    QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&);
     QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding);
 
     QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
@@ -167,9 +116,7 @@ protected:
 private:
     QList<QQmlError> exceptions;
     QQmlCustomParserCompilerBackend *compiler;
-    QQmlScript::Object *object;
     Flags m_flags;
-    friend class QQmlCompiler;
     friend class QQmlPropertyValidator;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
@@ -180,8 +127,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
 #endif
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QQmlCustomParserProperty)
-Q_DECLARE_METATYPE(QQmlCustomParserNode)
 
 #endif

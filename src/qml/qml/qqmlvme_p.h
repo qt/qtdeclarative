@@ -55,7 +55,6 @@
 
 #include "qqmlerror.h"
 #include <private/qbitfield_p.h>
-#include "qqmlinstruction_p.h"
 #include <private/qrecursionwatcher_p.h>
 
 #include <QtCore/QStack>
@@ -122,67 +121,12 @@ private:
 
 class Q_QML_PRIVATE_EXPORT QQmlVME
 {
-    Q_DECLARE_TR_FUNCTIONS(QQmlVME)
 public:
-    QQmlVME() : data(0), componentAttached(0) {}
-    QQmlVME(void *data) : data(data), componentAttached(0) {}
-
-    void *data;
-    QQmlComponentAttached *componentAttached;
-    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
-
-    void init(QQmlContextData *, QQmlCompiledData *, int start,
-              QQmlContextData * = 0);
-    bool initDeferred(QObject *);
-    void reset();
-
-    QObject *execute(QList<QQmlError> *errors, const QQmlInstantiationInterrupt & = QQmlInstantiationInterrupt());
-    QQmlContextData *complete(const QQmlInstantiationInterrupt & = QQmlInstantiationInterrupt());
-
     static void enableComponentComplete();
     static void disableComponentComplete();
     static bool componentCompleteEnabled();
 
 private:
-    friend class QQmlVMEGuard;
-
-    QObject *run(QList<QQmlError> *errors, const QQmlInstantiationInterrupt &
-#ifdef QML_THREADED_VME_INTERPRETER
-                 , void *const**storeJumpTable = 0
-#endif
-                );
-
-#ifdef QML_THREADED_VME_INTERPRETER
-    static void *const*instructionJumpTable();
-    friend class QQmlCompiledData;
-#endif
-
-    QQmlEngine *engine;
-    QRecursionNode recursion;
-
-#ifdef QML_ENABLE_TRACE
-    QQmlCompiledData *rootComponent;
-#endif
-
-    QFiniteStack<QObject *> objects;
-    QFiniteStack<QQmlVMETypes::List> lists;
-
-    QFiniteStack<QQmlAbstractBinding *> bindValues;
-    QFiniteStack<QQmlParserStatus *> parserStatus;
-#ifdef QML_ENABLE_TRACE
-    QFiniteStack<QQmlData *> parserStatusData;
-#endif
-    QQmlVmeProfiler profiler;
-
-    QQmlGuardedContextData rootContext;
-    QQmlGuardedContextData creationContext;
-
-    typedef QQmlVMETypes::State State;
-    QStack<State> states;
-
-    static void blank(QFiniteStack<QQmlParserStatus *> &);
-    static void blank(QFiniteStack<QQmlAbstractBinding *> &);
-
     static bool s_enableComponentComplete;
 };
 
@@ -195,7 +139,6 @@ public:
     QQmlVMEGuard();
     ~QQmlVMEGuard();
 
-    void guard(QQmlVME *);
     void guard(QQmlObjectCreator *);
     void clear();
 

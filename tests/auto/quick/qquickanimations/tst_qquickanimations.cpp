@@ -111,6 +111,7 @@ private slots:
     void pathAnimationInOutBackBug();
     void scriptActionBug();
     void groupAnimationNullChildBug();
+    void scriptActionCrash();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1477,6 +1478,20 @@ void tst_qquickanimations::groupAnimationNullChildBug()
         delete root;
     }
 }
+
+//ScriptAction should not crash if changing a state in a transition
+void tst_qquickanimations::scriptActionCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("scriptActionCrash.qml"));
+    QObject *obj = c.create();
+
+    //just testing that we don't crash
+    QTest::qWait(1000); //5x transition duration
+
+    delete obj;
+}
+
 
 
 QTEST_MAIN(tst_qquickanimations)

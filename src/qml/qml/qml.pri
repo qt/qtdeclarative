@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qqmlinstruction.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -13,7 +12,6 @@ SOURCES += \
     $$PWD/qqmlpropertyvalueinterceptor.cpp \
     $$PWD/qqmlproxymetaobject.cpp \
     $$PWD/qqmlvme.cpp \
-    $$PWD/qqmlcompiler.cpp \
     $$PWD/qqmlcompileddata.cpp \
     $$PWD/qqmlboundsignal.cpp \
     $$PWD/qqmlmetatype.cpp \
@@ -60,7 +58,6 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
-    $$PWD/qqmlinstruction_p.h \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
@@ -70,7 +67,6 @@ HEADERS += \
     $$PWD/qqmlincubator.h \
     $$PWD/qqmlincubator_p.h \
     $$PWD/qqmlcustomparser_p.h \
-    $$PWD/qqmlcustomparser_p_p.h \
     $$PWD/qqmlpropertyvaluesource.h \
     $$PWD/qqmlpropertyvalueinterceptor_p.h \
     $$PWD/qqmlboundsignal_p.h \

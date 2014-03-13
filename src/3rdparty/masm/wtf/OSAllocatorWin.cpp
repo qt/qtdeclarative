@@ -72,6 +72,7 @@ void OSAllocator::decommit(void* address, size_t bytes)
 
 void OSAllocator::releaseDecommitted(void* address, size_t bytes)
 {
+    (void) bytes; // suppress unused formal parameter warning
     // According to http://msdn.microsoft.com/en-us/library/aa366892(VS.85).aspx,
     // dwSize must be 0 if dwFreeType is MEM_RELEASE.
     bool result = VirtualFree(address, 0, MEM_RELEASE);

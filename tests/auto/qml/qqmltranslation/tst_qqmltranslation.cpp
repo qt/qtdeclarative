@@ -43,6 +43,9 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QTranslator>
+#include <QQmlContext>
+#include <private/qqmlcompiler_p.h>
+#include <private/qqmlengine_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmltranslation : public QQmlDataTest
@@ -61,16 +64,18 @@ void tst_qqmltranslation::translation_data()
 {
     QTest::addColumn<QString>("translation");
     QTest::addColumn<QUrl>("testFile");
+    QTest::addColumn<bool>("verifyCompiledData");
 
-    QTest::newRow("qml") << QStringLiteral("qml_fr") << testFileUrl("translation.qml");
-    QTest::newRow("qrc") << QStringLiteral(":/qml_fr.qm") << QUrl("qrc:/translation.qml");
-    QTest::newRow("js") << QStringLiteral("qml_fr") << testFileUrl("jstranslation.qml");
+    QTest::newRow("qml") << QStringLiteral("qml_fr") << testFileUrl("translation.qml") << true;
+    QTest::newRow("qrc") << QStringLiteral(":/qml_fr.qm") << QUrl("qrc:/translation.qml") << true;
+    QTest::newRow("js") << QStringLiteral("qml_fr") << testFileUrl("jstranslation.qml") << false;
 }
 
 void tst_qqmltranslation::translation()
 {
     QFETCH(QString, translation);
     QFETCH(QUrl, testFile);
+    QFETCH(bool, verifyCompiledData);
 
     QTranslator translator;
     translator.load(translation, dataDirectory());
@@ -80,6 +85,38 @@ void tst_qqmltranslation::translation()
     QQmlComponent component(&engine, testFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
+
+    if (verifyCompiledData) {
+        QQmlContext *context = qmlContext(object);
+        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
+        QQmlTypeData *typeData = engine->typeLoader.getType(context->baseUrl());
+        QQmlCompiledData *cdata = typeData->compiledData();
+        QVERIFY(cdata);
+
+        QSet<QString> compiledTranslations;
+        compiledTranslations << QStringLiteral("basic")
+                             << QStringLiteral("disambiguation")
+                             << QStringLiteral("singular") << QStringLiteral("plural");
+
+        const QV4::CompiledData::QmlUnit *unit = cdata->qmlUnit;
+        const QV4::CompiledData::Object *rootObject = unit->objectAt(unit->indexOfRootObject);
+        const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
+        for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
+            const QString propertyName = unit->header.stringAt(binding->propertyNameIndex);
+
+            const bool expectCompiledTranslation = compiledTranslations.contains(propertyName);
+
+            if (expectCompiledTranslation) {
+                if (binding->type != QV4::CompiledData::Binding::Type_Translation)
+                    qDebug() << "binding for property" << propertyName << "is not a compiled translation";
+                QCOMPARE(binding->type, quint32(QV4::CompiledData::Binding::Type_Translation));
+            } else {
+                if (binding->type == QV4::CompiledData::Binding::Type_Translation)
+                    qDebug() << "binding for property" << propertyName << "is not supposed to be a compiled translation";
+                QVERIFY(binding->type != QV4::CompiledData::Binding::Type_Translation);
+            }
+        }
+    }
 
     QCOMPARE(object->property("basic").toString(), QLatin1String("bonjour"));
     QCOMPARE(object->property("basic2").toString(), QLatin1String("au revoir"));
@@ -108,6 +145,28 @@ void tst_qqmltranslation::idTranslation()
     QQmlComponent component(&engine, testFileUrl("idtranslation.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+
+    {
+        QQmlContext *context = qmlContext(object);
+        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
+        QQmlTypeData *typeData = engine->typeLoader.getType(context->baseUrl());
+        QQmlCompiledData *cdata = typeData->compiledData();
+        QVERIFY(cdata);
+
+        const QV4::CompiledData::QmlUnit *unit = cdata->qmlUnit;
+        const QV4::CompiledData::Object *rootObject = unit->objectAt(unit->indexOfRootObject);
+        const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
+        for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
+            const QString propertyName = unit->header.stringAt(binding->propertyNameIndex);
+            if (propertyName == "idTranslation") {
+                if (binding->type != QV4::CompiledData::Binding::Type_TranslationById)
+                    qDebug() << "binding for property" << propertyName << "is not a compiled translation";
+                QCOMPARE(binding->type, quint32(QV4::CompiledData::Binding::Type_TranslationById));
+            } else {
+                QVERIFY(binding->type != QV4::CompiledData::Binding::Type_Translation);
+            }
+        }
+    }
 
     QCOMPARE(object->property("idTranslation").toString(), QLatin1String("bonjour tout le monde"));
     QCOMPARE(object->property("idTranslation2").toString(), QLatin1String("bonjour tout le monde"));

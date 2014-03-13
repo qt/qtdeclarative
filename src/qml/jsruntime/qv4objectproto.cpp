@@ -92,14 +92,14 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
             obj->setPrototype(proto.getPointer());
         return obj.asReturnedValue();
     }
-    return __qmljs_to_object(v4->currentContext(), ValueRef(&callData->args[0]));
+    return RuntimeHelpers::toObject(v4->currentContext(), ValueRef(&callData->args[0]));
 }
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 {
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return m->engine()->newObject()->asReturnedValue();
-    return __qmljs_to_object(m->engine()->currentContext(), ValueRef(&callData->args[0]));
+    return RuntimeHelpers::toObject(m->engine()->currentContext(), ValueRef(&callData->args[0]));
 }
 
 void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
@@ -134,8 +134,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     Scoped<String> id_proto(scope, v4->id___proto__);
-    Property p = Property::fromAccessor(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer(),
-                                        v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
+    Property p(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer(),
+               v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
     insertMember(StringRef(v4->id___proto__), p, Attr_Accessor|Attr_NotEnumerable);
 }
 
@@ -417,7 +417,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
     } else if (ctx->callData->thisObject.isNull()) {
         return ctx->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
     } else {
-        ScopedObject obj(scope, __qmljs_to_object(ctx, ValueRef(&ctx->callData->thisObject)));
+        ScopedObject obj(scope, RuntimeHelpers::toObject(ctx, ValueRef(&ctx->callData->thisObject)));
         QString className = obj->className();
         return ctx->engine->newString(QString::fromLatin1("[object %1]").arg(className))->asReturnedValue();
     }

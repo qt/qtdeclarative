@@ -148,7 +148,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef nam
             Property *pd = s->__getOwnProperty__(*index, &a);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                 *attrs = a;
-                *p = *pd;
+                p->copy(*pd, a);
                 return;
             }
         }
@@ -305,7 +305,7 @@ ReturnedValue StringPrototype::method_concat(CallContext *context)
 
     ScopedValue v(scope);
     for (int i = 0; i < context->callData->argc; ++i) {
-        v = __qmljs_to_string(context, ValueRef(&context->callData->args[i]));
+        v = RuntimeHelpers::toString(context, ValueRef(&context->callData->args[i]));
         if (scope.hasException())
             return Encode::undefined();
         Q_ASSERT(v->isString());
@@ -349,7 +349,7 @@ ReturnedValue StringPrototype::method_lastIndexOf(CallContext *context)
         searchString = context->callData->args[0].toQString();
 
     ScopedValue posArg(scope, context->argument(1));
-    double position = __qmljs_to_number(posArg);
+    double position = RuntimeHelpers::toNumber(posArg);
     if (std::isnan(position))
         position = +qInf();
     else

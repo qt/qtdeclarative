@@ -212,22 +212,26 @@ QQmlInstantiator::~QQmlInstantiator()
 }
 
 /*!
-    \qmlsignal QtQml::Instantiator::onObjectAdded(int index, QtObject object)
+    \qmlsignal QtQml::Instantiator::objectAdded(int index, QtObject object)
 
-    This handler is called when an object is added to the Instantiator. The \a index
+    This signal is emitted when an object is added to the Instantiator. The \a index
     parameter holds the index which the object has been given, and the \a object
     parameter holds the \l QtObject that has been added.
+
+    The corresponding handler is \c onObjectAdded.
 */
 
 /*!
-    \qmlsignal QtQml::Instantiator::onObjectRemoved(int index, QtObject object)
+    \qmlsignal QtQml::Instantiator::objectRemoved(int index, QtObject object)
 
-    This handler is called when an object is added to the Instantiator. The \a index
+    This signal is emitted when an object is removed from the Instantiator. The \a index
     parameter holds the index which the object had been given, and the \a object
     parameter holds the \l QtObject that has been removed.
 
     Do not keep a reference to \a object if it was created by this Instantiator, as
-    in these cases it will be deleted shortly after the handler is called.
+    in these cases it will be deleted shortly after the signal is handled.
+
+    The corresponding handler is \c onObjectRemoved.
 */
 /*!
     \qmlproperty bool QtQml::Instantiator::active

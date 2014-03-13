@@ -137,6 +137,25 @@ struct PoolList
         }
     }
 
+    T *unlink(T *before, T *item) {
+        T * const newNext = item->next;
+
+        if (before)
+            before->next = newNext;
+        else
+            first = newNext;
+
+        if (item == last) {
+            if (newNext)
+                last = newNext;
+            else
+                last = first;
+        }
+
+        --count;
+        return newNext;
+    }
+
     T *slowAt(int index) const
     {
         T *result = first;
@@ -152,8 +171,8 @@ template <typename T>
 class FixedPoolArray
 {
     T *data;
-    int count;
 public:
+    int count;
 
     void init(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
@@ -172,6 +191,12 @@ public:
         Q_ASSERT(index >= 0 && index < count);
         return data[index];
     }
+
+    T &operator[](int index) {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
 
     int indexOf(const T &value) const {
         for (int i = 0; i < count; ++i)
@@ -275,6 +300,8 @@ public:
 
     QString appendBinding(Binding *b, bool isListBinding);
     Binding *findBinding(quint32 nameIndex) const;
+    Binding *unlinkBinding(Binding *before, Binding *binding) { return bindings->unlink(before, binding); }
+    void insertSorted(Binding *b);
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
     FixedPoolArray<int> *runtimeFunctionIndices;
@@ -378,7 +405,7 @@ public:
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
-    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object);
+    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
 

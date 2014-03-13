@@ -27,7 +27,7 @@
 /*!
 \page qtqml-documents-networktransparency.html
 \title Resource Loading and Network Transparency
-\brief about loading files and resources accross a network
+\brief about loading files and resources across a network
 
 QML supports network transparency by using URLs (rather than file names) for all
 references from a QML document to other content. This means that anywhere a URL source is expected,
@@ -122,7 +122,7 @@ or programs written with runtimes such as Python and Perl. That trust is establi
 of a number of mechanisms, including the availability of package signing on some platforms.
 
 In order to preserve the trust of users, QML application developers should not load
-and execute arbitary JavaScript or QML resources.  For example, consider the QML code below:
+and execute arbitrary JavaScript or QML resources.  For example, consider the QML code below:
 
 \qml
 import QtQuick 2.0

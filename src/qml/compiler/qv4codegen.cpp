@@ -2562,7 +2562,7 @@ bool Codegen::visit(TryStatement *ast)
     IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
 
     // We always need a finally body to clean up the exception handler
-    // exceptions thrown in finally get catched by the surrounding catch block
+    // exceptions thrown in finally get caught by the surrounding catch block
     IR::BasicBlock *finallyBody = 0;
     IR::BasicBlock *catchBody = 0;
     IR::BasicBlock *catchExceptionHandler = 0;

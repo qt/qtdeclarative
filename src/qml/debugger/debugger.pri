@@ -34,3 +34,10 @@ HEADERS += \
     $$PWD/qqmlabstractprofileradapter_p.h \
     $$PWD/qv4profileradapter_p.h \
     $$PWD/qqmlprofiler_p.h
+
+INCLUDEPATH += $$PWD
+
+!contains(DEFINES, QT_QML_NO_DEBUGGER): static {
+    DEFINES += QML_DEBUGGER_EMBED
+    include(../../plugins/qmltooling/qmldbg_tcp/qmldbg_tcp.pri)
+}

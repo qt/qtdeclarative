@@ -951,6 +951,7 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     widthPropertyRef =  findProperty(rootObject.properties, "width");
 
     QCOMPARE(widthPropertyRef.value, QVariant(20));
+    QEXPECT_FAIL("", "Cannot retrieve text for a binding (QTBUG-37273)", Continue);
     QCOMPARE(widthPropertyRef.binding, QString("height"));
 
     //

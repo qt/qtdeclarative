@@ -54,6 +54,13 @@
 #include <QtQml/qqmlengine.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
+#include <QtGui/QOffscreenSurface>
+
+#ifdef Q_OS_WIN
+#  include <QtWidgets/QMessageBox>
+#  include <QtCore/QLibraryInfo>
+#  include <QtCore/qt_windows.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -81,6 +88,12 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
+void QQuickWidgetPrivate::handleWindowChange()
+{
+    renderControl->stop();
+    destroyContext();
+}
+
 QQuickWidgetPrivate::QQuickWidgetPrivate()
     : root(0)
     , component(0)
@@ -91,17 +104,22 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , updateTimer(0)
     , eventPending(false)
     , updatePending(false)
+    , fakeHidden(false)
 {
     renderControl = new QQuickRenderControl;
     offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
+    offscreenSurface = new QOffscreenSurface;
+    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
+    offscreenSurface->create();
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
+    delete offscreenSurface;
     delete offscreenWindow;
     delete renderControl;
     delete fbo;
@@ -150,14 +168,17 @@ void QQuickWidgetPrivate::renderSceneGraph()
     Q_Q(QQuickWidget);
     updatePending = false;
 
+    if (!q->isVisible() || fakeHidden)
+        return;
+
     QOpenGLContext *context = offscreenWindow->openglContext();
     if (!context) {
         qWarning("QQuickWidget: render scenegraph with no context");
         return;
     }
 
-    Q_ASSERT(q->window()->windowHandle()->handle());
-    context->makeCurrent(q->window()->windowHandle());
+    Q_ASSERT(offscreenSurface);
+    context->makeCurrent(offscreenSurface);
     renderControl->polishItems();
     renderControl->sync();
     renderControl->render();
@@ -175,7 +196,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
     This is a convenience wrapper for QQuickWindow which will automatically load and display a QML
     scene when given the URL of the main source file. Alternatively, you can instantiate your own
-    objects using QQmlComponent and place them in a manually setup QQuickWidget.
+    objects using QQmlComponent and place them in a manually set up QQuickWidget.
 
     Typical usage:
 
@@ -189,22 +210,22 @@ void QQuickWidgetPrivate::renderSceneGraph()
     you can connect to the statusChanged() signal and monitor for QQuickWidget::Error.
     The errors are available via QQuickWidget::errors().
 
-    QQuickWidget also manages sizing of the view and root object.  By default, the \l resizeMode
+    QQuickWidget also manages sizing of the view and root object. By default, the \l resizeMode
     is SizeViewToRootObject, which will load the component and resize it to the
-    size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
+    size of the view. Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
 
     \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
     The restrictions on stacking order do not apply, making QQuickWidget the more flexible
-    alternative behaving more like an ordinary widget. This comes at the expense of
+    alternative, behaving more like an ordinary widget. This comes at the expense of
     performance. Unlike QQuickWindow and QQuickView, QQuickWidget involves rendering into OpenGL
     framebuffer objects. This will naturally carry a minor performance hit.
 
     \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
-    some of the benefits of threaded rendering, for example Animator classes and vsync driven
+    some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
 
-    \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
+    \sa {Exposing Attributes of C++ Types to QML}, QQuickView
 */
 
 
@@ -273,7 +294,7 @@ QQuickWidget::~QQuickWidget()
   Ensure that the URL provided is full and correct, in particular, use
   \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-  Note that setting a source URL will result in the QML component being
+  \note Setting a source URL will result in the QML component being
   instantiated, even if the URL is unchanged from the current value.
 */
 
@@ -283,7 +304,7 @@ QQuickWidget::~QQuickWidget()
     Ensure that the URL provided is full and correct, in particular, use
     \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-    Calling this method multiple times with the same url will result
+    Calling this method multiple times with the same URL will result
     in the QML component being reinstantiated.
  */
 void QQuickWidget::setSource(const QUrl& url)
@@ -296,7 +317,7 @@ void QQuickWidget::setSource(const QUrl& url)
 /*!
     \internal
 
-    Set the source \a url, \a component and content \a item (root of the QML object hierarchy) directly.
+    Sets the source \a url, \a component and content \a item (root of the QML object hierarchy) directly.
  */
 void QQuickWidget::setContent(const QUrl& url, QQmlComponent *component, QObject* item)
 {
@@ -359,7 +380,7 @@ QQmlContext* QQuickWidget::rootContext() const
     \value Null This QQuickWidget has no source set.
     \value Ready This QQuickWidget has loaded and created the QML component.
     \value Loading This QQuickWidget is loading network data.
-    \value Error One or more errors has occurred. Call errors() to retrieve a list
+    \value Error One or more errors occurred. Call errors() to retrieve a list
            of errors.
 */
 
@@ -370,6 +391,21 @@ QQmlContext* QQuickWidget::rootContext() const
   \value SizeViewToRootObject The view resizes with the root item in the QML.
   \value SizeRootObjectToView The view will automatically resize the root item to the size of the view.
 */
+
+/*!
+    \fn void QQuickWidget::sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message)
+
+    This signal is emitted when an error occurred during scene graph initialization.
+
+    Applications should connect to this signal if they wish to handle errors,
+    like OpenGL context creation failures, in a custom way. When no slot is
+    connected to the signal, the behavior will be different: Quick will print
+    the message, or show a message box, and terminate the application.
+
+    This signal will be emitted from the gui thread.
+
+    \sa QQuickWindow::sceneGraphError()
+ */
 
 /*!
     \property QQuickWidget::status
@@ -390,7 +426,9 @@ QQuickWidget::Status QQuickWidget::status() const
 
 /*!
     Return the list of errors that occurred during the last compile or create
-    operation.  When the status is not Error, an empty list is returned.
+    operation. When the status is not \l Error, an empty list is returned.
+
+    \sa status
 */
 QList<QQmlError> QQuickWidget::errors() const
 {
@@ -411,7 +449,7 @@ QList<QQmlError> QQuickWidget::errors() const
 
 /*!
     \property QQuickWidget::resizeMode
-    \brief whether the view should resize the window contents
+    \brief Determines whether the view should resize the window contents.
 
     If this property is set to SizeViewToRootObject (the default), the view
     resizes to the size of the root item in the QML.
@@ -493,37 +531,58 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
     return rootObjectSize;
 }
 
-void QQuickWidgetPrivate::createContext()
+void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &format, bool isEs)
 {
     Q_Q(QQuickWidget);
+
+    QString translatedMessage;
+    QString untranslatedMessage;
+    QQuickWindowPrivate::contextCreationFailureMessage(format, &translatedMessage, &untranslatedMessage, isEs);
+
+    static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWidget::sceneGraphError);
+    const bool signalConnected = q->isSignalConnected(errorSignal);
+    if (signalConnected)
+        emit q->sceneGraphError(QQuickWindow::ContextNotAvailable, translatedMessage);
+
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+    if (!signalConnected && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow())
+        QMessageBox::critical(q, QCoreApplication::applicationName(), translatedMessage);
+#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+    if (!signalConnected)
+        qFatal("%s", qPrintable(untranslatedMessage));
+}
+
+void QQuickWidgetPrivate::createContext()
+{
     if (context)
         return;
 
     context = new QOpenGLContext;
-
-    QSurfaceFormat format = q->window()->windowHandle()->requestedFormat();
-    QSGRenderContext *renderContext = QQuickWindowPrivate::get(offscreenWindow)->context;
-    // Depth, stencil, etc. must be set like a QQuickWindow would do.
-    QSurfaceFormat sgFormat = renderContext->sceneGraphContext()->defaultSurfaceFormat();
-    format.setDepthBufferSize(qMax(format.depthBufferSize(), sgFormat.depthBufferSize()));
-    format.setStencilBufferSize(qMax(format.stencilBufferSize(), sgFormat.stencilBufferSize()));
-    format.setAlphaBufferSize(qMax(format.alphaBufferSize(), sgFormat.alphaBufferSize()));
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    context->setFormat(format);
+    context->setFormat(offscreenWindow->requestedFormat());
 
     if (QSGContext::sharedOpenGLContext())
         context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
     if (!context->create()) {
-        qWarning("QQuickWidget: failed to create OpenGL context");
+        const bool isEs = context->isES();
         delete context;
         context = 0;
+        handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
+        return;
     }
 
-    Q_ASSERT(q->window()->windowHandle()->handle());
-    if (context->makeCurrent(q->window()->windowHandle()))
+    if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
         qWarning("QQuickWidget: failed to make window surface current");
+}
+
+void QQuickWidgetPrivate::destroyContext()
+{
+    if (!context)
+        return;
+    renderControl->invalidate();
+    delete context;
+    context = 0;
 }
 
 void QQuickWidget::createFramebufferObject()
@@ -544,8 +603,7 @@ void QQuickWidget::createFramebufferObject()
         context->create();
     }
 
-    Q_ASSERT(window()->windowHandle()->handle());
-    context->makeCurrent(window()->windowHandle());
+    context->makeCurrent(d->offscreenSurface);
     d->fbo = new QOpenGLFramebufferObject(size());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
@@ -674,8 +732,8 @@ QSize QQuickWidget::sizeHint() const
 /*!
   Returns the initial size of the root object.
 
-  If \l resizeMode is QQuickItem::SizeRootObjectToView the root object will be
-  resized to the size of the view.  initialSize contains the size of the
+  If \l resizeMode is SizeRootObjectToView, the root object will be
+  resized to the size of the view. This function returns the size of the
   root object before it was resized.
 */
 QSize QQuickWidget::initialSize() const
@@ -704,6 +762,17 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     if (d->resizeMode == SizeRootObjectToView)
         d->updateSize();
 
+    if (e->size().isEmpty()) {
+        //stop rendering
+        d->fakeHidden = true;
+        return;
+    }
+    if (d->fakeHidden) {
+        //restart rendering
+        d->fakeHidden = false;
+        d->renderControl->sync();
+    }
+
     d->createContext();
     createFramebufferObject();
     d->offscreenWindow->resizeEvent(e);
@@ -715,8 +784,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         return;
     }
 
-    Q_ASSERT(window()->windowHandle()->handle());
-    context->makeCurrent(window()->windowHandle());
+    context->makeCurrent(d->offscreenSurface);
     d->renderControl->render();
     glFlush();
     context->doneCurrent();
@@ -754,6 +822,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     d->offscreenWindow->mouseMoveEvent(&mappedEvent);
 }
 
+/*! \reimp */
 void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
@@ -769,26 +838,29 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
     d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
 }
 
+/*! \reimp */
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
-    QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = true;
-
     d->updatePending = false;
+    d->createContext();
     triggerUpdate();
 }
 
+/*! \reimp */
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-    QQuickWindowPrivate::get(d->offscreenWindow)->forceRendering = false;
 
-    QOpenGLContext *context = d->offscreenWindow->openglContext();
-    if (!context) {
+    if (!d->context) {
         qWarning("QQuickWidget::hideEvent with no context");
         return;
     }
-    context->makeCurrent(d->offscreenWindow);
+    bool success = d->context->makeCurrent(d->offscreenSurface);
+    if (!success) {
+        qWarning("QQuickWidget::hideEvent could not make context current");
+        return;
+    }
     d->renderControl->stop();
 }
 
@@ -844,7 +916,9 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::TouchCancel:
         // Touch events only have local and global positions, no need to map.
         return d->offscreenWindow->event(e);
-
+    case QEvent::WindowChangeInternal:
+        d->handleWindowChange();
+        break;
     default:
         break;
     }

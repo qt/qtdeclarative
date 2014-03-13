@@ -86,9 +86,7 @@ public:
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);
 
-    QString sourceFile() const { return m_fileName; }
-    quint16 lineNumber() const { return m_line; }
-    quint16 columnNumber() const { return m_column; }
+    QQmlSourceLocation sourceLocation() const;
     QString expression() const;
     QV4::Function *function() const;
     QObject *target() const { return m_target; }
@@ -100,23 +98,33 @@ private:
 
     void init(QQmlContextData *ctxt, QObject *scope);
 
+    bool expressionFunctionValid() const { return m_extra.flag(); }
+    void setExpressionFunctionValid(bool v) { m_extra.setFlagValue(v); }
+
+    bool invalidParameterName() const { return m_extra.flag2(); }
+    void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
+
     QV4::PersistentValue m_v8qmlscope;
     QV4::PersistentValue m_v8function;
-
-    QString m_handlerName;
-    QString m_parameterString;
-    //once m_v8function is valid, we clear expression and
-    //extract it from m_v8function if needed.
-    QString m_expression;   //only used when expression needs to be rewritten
-    QString m_fileName;
-    quint16 m_line;
-    quint16 m_column;
 
     QObject *m_target;
     int m_index;
 
-    bool m_expressionFunctionValid:1;
-    bool m_invalidParameterName:1;
+    // only needed when !expressionFunctionValid()
+    struct ExtraData {
+        ExtraData(const QString &handlerName, const QString &parameterString,
+                  const QString &expression, const QString &fileName,
+                  quint16 line, quint16 column);
+        QString m_handlerName;
+        QString m_parameterString;
+        QString m_expression;
+        QQmlSourceLocation m_sourceLocation;
+    };
+
+    // We store some flag bits in the following flag pointers.
+    //    flag  - expressionFunctionValid
+    //    flag2 - invalidParameterName
+    QFlagPointer<ExtraData> m_extra;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBoundSignal

@@ -676,7 +676,7 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
         if (DateObject *d = arg->asDateObject())
             arg = d->value;
         else
-            arg = __qmljs_to_primitive(arg, PREFERREDTYPE_HINT);
+            arg = RuntimeHelpers::toPrimitive(arg, PREFERREDTYPE_HINT);
 
         if (arg->isString())
             t = ParseString(arg->stringValue()->toQString());
@@ -1307,8 +1307,8 @@ ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue O(scope, __qmljs_to_object(ctx, ValueRef(&ctx->callData->thisObject)));
-    ScopedValue tv(scope, __qmljs_to_primitive(O, NUMBER_HINT));
+    ScopedValue O(scope, RuntimeHelpers::toObject(ctx, ValueRef(&ctx->callData->thisObject)));
+    ScopedValue tv(scope, RuntimeHelpers::toPrimitive(O, NUMBER_HINT));
 
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Encode::null();

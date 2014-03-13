@@ -57,7 +57,8 @@
 #  include "private/qv4isel_masm_p.h"
 #endif // V4_ENABLE_JIT
 
-#include <QtCore>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QFile>
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>

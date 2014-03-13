@@ -222,7 +222,6 @@ public:
 
     uint lastWheelEventAccepted : 1;
     bool componentCompleted : 1;
-    bool forceRendering : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
@@ -242,6 +241,11 @@ public:
     static int data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, int);
     static void data_clear(QQmlListProperty<QObject> *);
+
+    static void contextCreationFailureMessage(const QSurfaceFormat &format,
+                                              QString *translatedMessage,
+                                              QString *untranslatedMessage,
+                                              bool isEs);
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);

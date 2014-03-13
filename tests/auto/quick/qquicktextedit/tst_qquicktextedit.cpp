@@ -108,6 +108,8 @@ private slots:
     void width();
     void wrap();
     void textFormat();
+    void lineCount_data();
+    void lineCount();
 
     // ### these tests may be trivial
     void hAlign();
@@ -613,6 +615,55 @@ void tst_qquicktextedit::textFormat()
     }
 }
 
+static int calcLineCount(QTextDocument* doc)
+{
+    int subLines = 0;
+    for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {
+        QTextLayout *layout = it.layout();
+        if (!layout)
+            continue;
+        subLines += layout->lineCount()-1;
+    }
+    return doc->lineCount() + subLines;
+}
+
+void tst_qquicktextedit::lineCount_data()
+{
+    QTest::addColumn<QStringList>("texts");
+    QTest::newRow("plaintext") << standard;
+    QTest::newRow("richtext") << richText;
+}
+
+void tst_qquicktextedit::lineCount()
+{
+    QFETCH(QStringList, texts);
+
+    foreach (const QString& text, texts) {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\nTextEdit { }", QUrl());
+
+        QQuickTextEdit *textedit = qobject_cast<QQuickTextEdit*>(component.create());
+        QVERIFY(textedit);
+
+        QTextDocument *doc = QQuickTextEditPrivate::get(textedit)->document;
+        QVERIFY(doc);
+
+        textedit->setText(text);
+
+        textedit->setWidth(100.0);
+        QCOMPARE(textedit->lineCount(), calcLineCount(doc));
+
+        textedit->setWrapMode(QQuickTextEdit::Wrap);
+        QCOMPARE(textedit->lineCount(), calcLineCount(doc));
+
+        textedit->setWidth(50.0);
+        QCOMPARE(textedit->lineCount(), calcLineCount(doc));
+
+        textedit->setWrapMode(QQuickTextEdit::NoWrap);
+        QCOMPARE(textedit->lineCount(), calcLineCount(doc));
+    }
+}
+
 //the alignment tests may be trivial o.oa
 void tst_qquicktextedit::hAlign()
 {
@@ -976,6 +1027,19 @@ void tst_qquicktextedit::vAlign()
     QVERIFY(textEditObject->cursorRectangle().bottom() > 50);
     QVERIFY(textEditObject->positionToRectangle(0).top() < 50);
     QVERIFY(textEditObject->positionToRectangle(0).bottom() > 50);
+
+    // Test vertical alignment after resizing the height.
+    textEditObject->setHeight(textEditObject->height() - 20);
+    QVERIFY(textEditObject->cursorRectangle().top() < 40);
+    QVERIFY(textEditObject->cursorRectangle().bottom() > 40);
+    QVERIFY(textEditObject->positionToRectangle(0).top() < 40);
+    QVERIFY(textEditObject->positionToRectangle(0).bottom() > 40);
+
+    textEditObject->setHeight(textEditObject->height() + 40);
+    QVERIFY(textEditObject->cursorRectangle().top() < 60);
+    QVERIFY(textEditObject->cursorRectangle().bottom() > 60);
+    QVERIFY(textEditObject->positionToRectangle(0).top() < 60);
+    QVERIFY(textEditObject->positionToRectangle(0).bottom() > 60);
 }
 
 void tst_qquicktextedit::font()

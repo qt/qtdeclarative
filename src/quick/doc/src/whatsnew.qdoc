@@ -258,7 +258,7 @@ the window loses focus.
         \endlist
 \endlist
 
-\section2 Specialised Containers
+\section2 Specialized Containers
 
 \list
 \li Flickable:
@@ -365,7 +365,7 @@ the window loses focus.
 \li \l Loader:
     \list
     \li New \l{Loader::}{asynchronous} property allows components to be instantiated with lower
-        chance of blocking.  If source is used with \e {asynchonous: true} the component will be compiled in
+        chance of blocking.  If source is used with \e {asynchronous: true} the component will be compiled in
         a background thread.
     \li New \l{Loader::}{active} property can delay instantiation of a \l Loader object's
         \l{Loader::}{item}.

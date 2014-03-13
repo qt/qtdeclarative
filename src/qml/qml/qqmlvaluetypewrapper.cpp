@@ -46,6 +46,7 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
@@ -380,10 +381,10 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             cacheData.valueTypeCoreIndex = index;
             cacheData.valueTypePropType = p.userType();
 
-            QV4::StackFrame frame = v4->currentStackFrame();
+            QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, f);
+            bindingFunction->initBindingLocation();
 
-            newBinding = new QQmlBinding(value, reference->object, context,
-                                         frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
+            newBinding = new QQmlBinding(value, reference->object, context);
             newBinding->setTarget(reference->object, cacheData, context);
         }
 

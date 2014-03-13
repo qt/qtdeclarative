@@ -212,7 +212,11 @@ class YarrGenerator : private MacroAssembler {
         if (charClass->m_ranges.size()) {
             unsigned matchIndex = 0;
             JumpList failures;
-            matchCharacterClassRange(character, failures, matchDest, &charClass->m_ranges[0], charClass->m_ranges.size(), &matchIndex, charClass->m_matches.isEmpty() ? 0 : &charClass->m_matches[0], charClass->m_matches.size());
+            ASSERT(charClass->m_ranges.size() <= UINT_MAX);
+            matchCharacterClassRange(character, failures, matchDest, &charClass->m_ranges[0],
+                    static_cast<unsigned>(charClass->m_ranges.size()),
+                    &matchIndex, charClass->m_matches.isEmpty() ? 0 : &charClass->m_matches[0],
+                    static_cast<unsigned>(charClass->m_matches.size()));
             while (matchIndex < charClass->m_matches.size())
                 matchDest.append(branch32(Equal, character, Imm32((unsigned short)charClass->m_matches[matchIndex++])));
 
@@ -234,7 +238,8 @@ class YarrGenerator : private MacroAssembler {
                 matchDest.append(branch32(Equal, character, Imm32((unsigned short)ch)));
             }
 
-            if (unsigned countAZaz = matchesAZaz.size()) {
+            ASSERT(matchesAZaz.size() <= UINT_MAX);
+            if (unsigned countAZaz = static_cast<int>(matchesAZaz.size())) {
                 or32(TrustedImm32(32), character);
                 for (unsigned i = 0; i < countAZaz; ++i)
                     matchDest.append(branch32(Equal, character, TrustedImm32(matchesAZaz[i])));

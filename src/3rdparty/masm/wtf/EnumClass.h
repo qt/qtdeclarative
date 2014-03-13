@@ -30,7 +30,7 @@
 
 namespace WTF {
 
-// How to define a type safe enum list using the ENUM_CLASS macros?
+// How to define a type-safe enum list using the ENUM_CLASS macros?
 // ===============================================================
 // To get an enum list like this:
 //
@@ -62,12 +62,12 @@ namespace WTF {
 
 #else // !COMPILER_SUPPORTS(CXX_STRONG_ENUMS)
 
-// How to define a type safe enum list using the EnumClass template?
+// How to define a type-safe enum list using the EnumClass template?
 // ================================================================
 // Definition should be a struct that encapsulates an enum list.
 // The enum list should be names Enums.
 //
-// Here's an example of how to define a type safe enum named MyEnum using
+// Here's an example of how to define a type-safe enum named MyEnum using
 // the EnumClass template:
 //
 //     struct MyEnumDefinition {

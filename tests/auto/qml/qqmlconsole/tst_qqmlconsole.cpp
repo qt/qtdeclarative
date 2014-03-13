@@ -42,6 +42,7 @@
 #include <QDebug>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QLoggingCategory>
 #include "../../shared/util.h"
 
 class tst_qqmlconsole : public QQmlDataTest
@@ -64,6 +65,11 @@ private:
 void tst_qqmlconsole::logging()
 {
     QUrl testUrl = testFileUrl("logging.qml");
+
+    QLoggingCategory loggingCategory("qml");
+    QVERIFY(loggingCategory.isDebugEnabled());
+    QVERIFY(loggingCategory.isWarningEnabled());
+    QVERIFY(loggingCategory.isCriticalEnabled());
 
     QTest::ignoreMessage(QtDebugMsg, "console.debug");
     QTest::ignoreMessage(QtDebugMsg, "console.log");

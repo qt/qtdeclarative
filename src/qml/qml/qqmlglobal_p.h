@@ -368,6 +368,16 @@ public:
     QStringList args;
 };
 
+struct QQmlSourceLocation
+{
+    QQmlSourceLocation() : line(0), column(0) {}
+    QQmlSourceLocation(const QString &sourceFile, quint16 line, quint16 column)
+        : sourceFile(sourceFile), line(line), column(column) {}
+    QString sourceFile;
+    quint16 line;
+    quint16 column;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLGLOBAL_H

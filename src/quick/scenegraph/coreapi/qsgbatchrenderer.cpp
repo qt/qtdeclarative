@@ -604,12 +604,12 @@ void Element::computeBounds()
     boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
 
-bool Batch::isMaterialCompatible(Element *e) const
+BatchCompatibility Batch::isMaterialCompatible(Element *e) const
 {
     // If material has changed between opaque and translucent, it is not compatible
     QSGMaterial *m = e->node->activeMaterial();
     if (isOpaque != ((m->flags() & QSGMaterial::Blending) == 0))
-        return false;
+        return BatchBreaksOnBlending;
 
     Element *n = first;
     // Skip to the first node other than e which has not been removed
@@ -619,10 +619,12 @@ bool Batch::isMaterialCompatible(Element *e) const
     // Only 'e' in this batch, so a material change doesn't change anything as long as
     // its blending is still in sync with this batch...
     if (!n)
-        return true;
+        return BatchIsCompatible;
 
     QSGMaterial *nm = n->node->activeMaterial();
-    return nm->type() == m->type() && nm->compare(m) == 0;
+    return (nm->type() == m->type() && nm->compare(m) == 0)
+            ? BatchIsCompatible
+            : BatchBreaksOnCompare;
 }
 
 /*
@@ -1182,7 +1184,10 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         Element *e = shadowNode->element();
         if (e) {
             if (e->batch) {
-                if (!e->batch->isMaterialCompatible(e))
+                BatchCompatibility compat = e->batch->isMaterialCompatible(e);
+                if (compat == BatchBreaksOnBlending)
+                    m_rebuild |= Renderer::FullRebuild;
+                else if (compat == BatchBreaksOnCompare)
                     invalidateBatchAndOverlappingRenderOrders(e->batch);
             } else {
                 m_rebuild |= Renderer::BuildBatches;
@@ -1736,7 +1741,7 @@ void Renderer::uploadBatch(Batch *b)
                 if (iCount == 0)
                     iCount = eg->vertexCount();
                 // merged Triangle strips need to contain degenerate triangles at the beginning and end.
-                // One could save 2 ushorts here by ditching the the padding for the front of the
+                // One could save 2 ushorts here by ditching the padding for the front of the
                 // first and the end of the last, but for simplicity, we simply don't care.
                 if (g->drawingMode() == GL_TRIANGLE_STRIP)
                     iCount += sizeof(quint16);
@@ -2040,6 +2045,8 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
     QSGMaterial *material = gn->activeMaterial();
     ShaderManager::Shader *sms = m_useDepthBuffer ? m_shaderManager->prepareMaterial(material) : m_shaderManager->prepareMaterialNoRewrite(material);
+    if (!sms)
+        return;
     QSGMaterialShader *program = sms->program;
 
     if (m_currentShader != sms)
@@ -2124,6 +2131,8 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
     QSGMaterial *material = gn->activeMaterial();
     ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material);
+    if (!sms)
+        return;
     QSGMaterialShader *program = sms->program;
 
     if (sms != m_currentShader)
@@ -2392,16 +2401,19 @@ void Renderer::render()
 
     deleteRemovedElements();
 
-    // Then sort opaque batches so that we're drawing the batches with the highest
-    // order first, maximizing the benefit of front-to-back z-ordering.
-    if (m_opaqueBatches.size())
-        std::sort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
+    if (m_rebuild != 0) {
+        // Then sort opaque batches so that we're drawing the batches with the highest
+        // order first, maximizing the benefit of front-to-back z-ordering.
+        if (m_opaqueBatches.size())
+            std::sort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
 
-    // Sort alpha batches back to front so that they render correctly.
-    if (m_alphaBatches.size())
-        std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
+        // Sort alpha batches back to front so that they render correctly.
+        if (m_alphaBatches.size())
+            std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
 
-    m_zRange = 1.0 / (m_nextRenderOrder);
+        m_zRange = 1.0 / (m_nextRenderOrder);
+    }
+
 
     if (Q_UNLIKELY(debug_upload)) qDebug() << "Uploading Opaque Batches:";
     for (int i=0; i<m_opaqueBatches.size(); ++i)
@@ -2680,7 +2692,7 @@ void Renderer::visualizeOverdraw_helper(Node *node)
         shader->setUniformValue(shader->matrix, matrix);
 
         QColor color = node->element()->batch->isOpaque ? QColor::fromRgbF(0.3, 1.0, 0.3) : QColor::fromRgbF(1.0, 0.3, 0.3);
-        float ca = 0.33;
+        float ca = 0.33f;
         shader->setUniformValue(shader->color, color.redF() * ca, color.greenF() * ca, color.blueF() * ca, ca);
 
         visualizeDrawGeometry(gn->geometry());
@@ -2702,7 +2714,7 @@ void Renderer::visualizeOverdraw()
     glBlendFunc(GL_ONE, GL_ONE);
 
     static float step = 0;
-    step += M_PI * 2 / 1000.;
+    step += static_cast<float>(M_PI * 2 / 1000.);
     if (step > M_PI * 2)
         step = 0;
     float angle = 80.0 * sin(step);
@@ -2793,7 +2805,7 @@ void Renderer::visualize()
     glEnableVertexAttribArray(0);
 
     // Blacken out the actual rendered content...
-    float bgOpacity = 0.8;
+    float bgOpacity = 0.8f;
     if (m_visualizeMode == VisualizeBatches)
         bgOpacity = 1.0;
     float v[] = { -1, 1,   1, 1,   -1, -1,   1, -1 };
@@ -2811,7 +2823,7 @@ void Renderer::visualize()
     } else if (m_visualizeMode == VisualizeClipping) {
         QRect viewport = viewportRect();
         shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), 0.5, 0);
-        shader->setUniformValue(shader->color, 0.2, 0, 0, 0.2);
+        shader->setUniformValue(shader->color, GLfloat(0.2), 0, 0, GLfloat(0.2));
         visualizeClipping(rootNode());
     } else if (m_visualizeMode == VisualizeChanges) {
         visualizeChanges(m_nodes.value(rootNode()));

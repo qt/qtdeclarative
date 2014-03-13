@@ -210,7 +210,6 @@ public:
     InternalClass *dateClass;
 
     InternalClass *functionClass;
-    InternalClass *functionWithProtoClass;
     InternalClass *protoClass;
 
     InternalClass *regExpClass;
@@ -232,7 +231,8 @@ public:
     EvalFunction *evalFunction;
     FunctionObject *thrower;
 
-    QVector<Property> argumentsAccessors;
+    Property *argumentsAccessors;
+    int nArgumentsAccessors;
 
     StringValue id_undefined;
     StringValue id_null;
@@ -267,7 +267,6 @@ public:
     StringValue id_valueOf;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
-    QMap<quintptr, QV4::Function*> allFunctions;
 
     quint32 m_engineId;
 
@@ -352,8 +351,6 @@ public:
     void initRootContext();
 
     InternalClass *newClass(const InternalClass &other);
-
-    Function *functionForProgramCounter(quintptr pc) const;
 
     QmlExtensions *qmlExtensions();
 

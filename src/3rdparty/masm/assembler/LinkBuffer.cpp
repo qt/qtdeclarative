@@ -52,7 +52,13 @@ LinkBuffer::CodeRef LinkBuffer::finalizeCodeWithDisassembly(const char* format, 
     va_end(argList);
     dataLogF(":\n");
     
-    dataLogF("    Code at [%p, %p):\n", result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
+    dataLogF(
+#if OS(WINDOWS)
+                "    Code at [0x%p, 0x%p):\n",
+#else
+                "    Code at [%p, %p):\n",
+#endif
+                result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
     disassemble(result.code(), m_size, "    ", WTF::dataFile());
     
     return result;
@@ -154,7 +160,8 @@ void LinkBuffer::performFinalization()
 #if ENABLE(BRANCH_COMPACTION)
     ExecutableAllocator::makeExecutable(code(), m_initialSize);
 #else
-    ExecutableAllocator::makeExecutable(code(), m_size);
+    ASSERT(m_size <= INT_MAX);
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
 #endif
     MacroAssembler::cacheFlush(code(), m_size);
 }

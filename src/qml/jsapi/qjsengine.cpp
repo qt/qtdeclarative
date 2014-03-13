@@ -391,7 +391,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
             *reinterpret_cast<QString*>(ptr) = vp->string;
             return true;
         }
-        double d = QV4::__qmljs_string_to_number(vp->string);
+        double d = QV4::RuntimeHelpers::stringToNumber(vp->string);
         switch (type) {
             case QMetaType::Int:
                 *reinterpret_cast<int*>(ptr) = QV4::Primitive::toInt32(d);

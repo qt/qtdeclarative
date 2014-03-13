@@ -86,10 +86,8 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool gener
         run(i);
 
     QV4::CompiledData::CompilationUnit *unit = backendCompileStep();
-    if (generateUnitData) {
+    if (generateUnitData)
         unit->data = jsGenerator->generateUnit();
-        unit->ownsData = true;
-    }
     return unit;
 }
 
