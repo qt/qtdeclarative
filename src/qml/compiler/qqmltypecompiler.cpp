@@ -2510,6 +2510,7 @@ void QQmlJavaScriptBindingExpressionSimplificationPass::reduceTranslationBinding
         if (simplifyBinding(irFunction, binding)) {
             irFunctionsToRemove.append(irFunctionIndex);
             jsModule->functions[irFunctionIndex] = 0;
+            delete irFunction;
         }
     }
 }
