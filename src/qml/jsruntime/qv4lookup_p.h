@@ -71,7 +71,10 @@ struct Lookup {
             unsigned type;
         };
     };
-    int level;
+    union {
+        int level;
+        uint index2;
+    };
     uint index;
     String *name;
 
@@ -84,9 +87,15 @@ struct Lookup {
     static void indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
 
     static ReturnedValue getterGeneric(Lookup *l, const ValueRef object);
+    static ReturnedValue getterTwoClasses(Lookup *l, const ValueRef object);
+    static ReturnedValue getterFallback(Lookup *l, const ValueRef object);
+
     static ReturnedValue getter0(Lookup *l, const ValueRef object);
     static ReturnedValue getter1(Lookup *l, const ValueRef object);
     static ReturnedValue getter2(Lookup *l, const ValueRef object);
+    static ReturnedValue getter0getter0(Lookup *l, const ValueRef object);
+    static ReturnedValue getter0getter1(Lookup *l, const ValueRef object);
+    static ReturnedValue getter1getter1(Lookup *l, const ValueRef object);
     static ReturnedValue getterAccessor0(Lookup *l, const ValueRef object);
     static ReturnedValue getterAccessor1(Lookup *l, const ValueRef object);
     static ReturnedValue getterAccessor2(Lookup *l, const ValueRef object);
@@ -107,10 +116,13 @@ struct Lookup {
     static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionContext *ctx);
 
     static void setterGeneric(Lookup *l, const ValueRef object, const ValueRef value);
+    static void setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef value);
+    static void setterFallback(Lookup *l, const ValueRef object, const ValueRef value);
     static void setter0(Lookup *l, const ValueRef object, const ValueRef value);
     static void setterInsert0(Lookup *l, const ValueRef object, const ValueRef value);
     static void setterInsert1(Lookup *l, const ValueRef object, const ValueRef value);
     static void setterInsert2(Lookup *l, const ValueRef object, const ValueRef value);
+    static void setter0setter0(Lookup *l, const ValueRef object, const ValueRef value);
 
     ReturnedValue lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs);
     ReturnedValue lookup(Object *obj, PropertyAttributes *attrs);

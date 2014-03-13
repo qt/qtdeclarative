@@ -485,6 +485,8 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)
                 l->getter = Lookup::getter2;
+            else
+                l->getter = Lookup::getterFallback;
             return v;
         } else {
             if (l->level == 0)
@@ -493,6 +495,8 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
                 l->getter = Lookup::getterAccessor1;
             else if (l->level == 2)
                 l->getter = Lookup::getterAccessor2;
+            else
+                l->getter = Lookup::getterFallback;
             return v;
         }
     }
@@ -544,8 +548,11 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     }
     o = o->prototype();
     l->classList[2] = o->internalClass;
-    if (!o->prototype())
+    if (!o->prototype()) {
         l->setter = Lookup::setterInsert2;
+        return;
+    }
+    l->setter = Lookup::setterGeneric;
 }
 
 void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *pd, PropertyAttributes *attrs)
