@@ -77,7 +77,6 @@ bool QQmlTypeCompiler::compile()
         compiledData->importCache->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
 
     typeData->imports().populateCache(compiledData->importCache);
-    compiledData->importCache->addref();
 
     const QHash<int, QQmlTypeData::TypeReference> &resolvedTypes = typeData->resolvedTypeRefs();
     for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
