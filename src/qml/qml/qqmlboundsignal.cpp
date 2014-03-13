@@ -117,6 +117,7 @@ void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
 
 QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 {
+    delete m_extra.data();
 }
 
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
