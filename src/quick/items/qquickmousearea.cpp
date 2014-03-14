@@ -258,30 +258,32 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onEntered()
+    \qmlsignal QtQuick::MouseArea::entered()
 
-    This handler is called when the mouse enters the mouse area.
+    This signal is emitted when the mouse enters the mouse area.
 
-    By default the onEntered handler is only called while a button is
-    pressed. Setting hoverEnabled to true enables handling of
-    onEntered when no mouse button is pressed.
+    By default this signal is only emitted if a button is currently
+    pressed. Set \l hoverEnabled to true to emit this signal
+    even when no mouse button is pressed.
 
     \sa hoverEnabled
+
+    The corresponding handler is \c onEntered.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onExited()
+    \qmlsignal QtQuick::MouseArea::exited()
 
-    This handler is called when the mouse exits the mouse area.
+    This signal is emitted when the mouse exits the mouse area.
 
-    By default the onExited handler is only called while a button is
-    pressed. Setting hoverEnabled to true enables handling of
-    onExited when no mouse button is pressed.
+    By default this signal is only emitted if a button is currently
+    pressed. Set \l hoverEnabled to true to emit this signal
+    even when no mouse button is pressed.
 
     The example below shows a fairly typical relationship between
     two MouseAreas, with \c mouseArea2 on top of \c mouseArea1. Moving the
-    mouse into \c mouseArea2 from \c mouseArea1 will cause \c onExited
-    to be called for \c mouseArea1.
+    mouse into \c mouseArea2 from \c mouseArea1 will cause \c mouseArea1
+    to emit the \c exited signal.
     \qml
     Rectangle {
         width: 400; height: 400
@@ -299,112 +301,134 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     }
     \endqml
 
-    If instead you give the two mouseAreas a parent-child relationship,
+    If instead you give the two MouseAreas a parent-child relationship,
     moving the mouse into \c mouseArea2 from \c mouseArea1 will \b not
-    cause \c onExited to be called for \c mouseArea1. Instead, they will
+    cause \c mouseArea1 to emit \c exited. Instead, they will
     both be considered to be simultaneously hovered.
 
     \sa hoverEnabled
+
+    The corresponding handler is \c onExited.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onPositionChanged(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::positionChanged(MouseEvent mouse)
 
-    This handler is called when the mouse position changes.
+    This signal is emitted when the mouse position changes.
 
     The \l {MouseEvent}{mouse} parameter provides information about the mouse, including the x and y
     position, and any buttons currently pressed.
 
-    The \e accepted property of the MouseEvent parameter is ignored in this handler.
+    By default this signal is only emitted if a button is currently
+    pressed. Set \l hoverEnabled to true to emit this signal
+    even when no mouse button is pressed.
 
-    By default the onPositionChanged handler is only called while a button is
-    pressed.  Setting hoverEnabled to true enables handling of
-    onPositionChanged when no mouse button is pressed.
+    When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter has no effect.
+
+    The corresponding handler is \c onPositionChanged.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onClicked(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::clicked(MouseEvent mouse)
 
-    This handler is called when there is a click. A click is defined as a press followed by a release,
+    This signal is emitted when there is a click. A click is defined as a press followed by a release,
     both inside the MouseArea (pressing, moving outside the MouseArea, and then moving back inside and
     releasing is also considered a click).
 
     The \l {MouseEvent}{mouse} parameter provides information about the click, including the x and y
     position of the release of the click, and whether the click was held.
 
-    The \e accepted property of the MouseEvent parameter is ignored in this handler.
+    When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter has no effect.
+
+    The corresponding handler is \c onClicked.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onPressed(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::pressed(MouseEvent mouse)
 
-    This handler is called when there is a press.
+    This signal is emitted when there is a press.
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
     position and which button was pressed.
 
-    The \e accepted property of the MouseEvent parameter determines whether this MouseArea
-    will handle the press and all future mouse events until release.  The default is to accept
-    the event and not allow other MouseArea beneath this one to handle the event.  If \e accepted
-    is set to false, no further events will be sent to this MouseArea until the button is next
-    pressed.
+    When handling this signal, use the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter to control whether this MouseArea handles the press and all future mouse events until
+    release. The default is to accept the event and not allow other MouseAreas beneath this one to
+    handle the event.  If \e accepted is set to false, no further events will be sent to this MouseArea
+    until the button is next pressed.
+
+    The corresponding handler is \c onPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onReleased(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::released(MouseEvent mouse)
 
-    This handler is called when there is a release.
+    This signal is emitted when there is a release.
     The \l {MouseEvent}{mouse} parameter provides information about the click, including the x and y
     position of the release of the click, and whether the click was held.
 
-    The \e accepted property of the MouseEvent parameter is ignored in this handler.
+    When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter has no effect.
+
+    The corresponding handler is \c onReleased.
 
     \sa onCanceled
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onPressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::pressAndHold(MouseEvent mouse)
 
-    This handler is called when there is a long press (currently 800ms).
+    This signal is emitted when there is a long press (currently 800ms).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
     position of the press, and which button is pressed.
 
-    The \e accepted property of the MouseEvent parameter is ignored in this handler.
+    When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter has no effect.
+
+    The corresponding handler is \c onPressAndHold.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onDoubleClicked(MouseEvent mouse)
+    \qmlsignal QtQuick::MouseArea::doubleClicked(MouseEvent mouse)
 
-    This handler is called when there is a double-click (a press followed by a release followed by a press).
+    This signal is emitted when there is a double-click (a press followed by a release followed by a press).
     The \l {MouseEvent}{mouse} parameter provides information about the click, including the x and y
     position of the release of the click, and whether the click was held.
 
-    If the \e accepted property of the \l {MouseEvent}{mouse} parameter is set to false
-    in the handler, the onPressed/onReleased/onClicked handlers will be called for the second
-    click; otherwise they are suppressed.  The accepted property defaults to true.
+    When handling this signal, if the \l {MouseEvent::}{accepted} property of the \a mouse
+    parameter is set to false, the pressed/released/clicked signals will be emitted for the second
+    click; otherwise they are suppressed.  The \c accepted property defaults to true.
+
+    The corresponding handler is \c onDoubleClicked.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onCanceled()
+    \qmlsignal QtQuick::MouseArea::canceled()
 
-    This handler is called when mouse events have been canceled, either because an event was not accepted, or
+    This signal is emitted when mouse events have been canceled, either because an event was not accepted, or
     because another item stole the mouse event handling.
 
     This signal is for advanced use: it is useful when there is more than one MouseArea
     that is handling input, or when there is a MouseArea inside a \l Flickable. In the latter
-    case, if you execute some logic on the pressed signal and then start dragging, the
+    case, if you execute some logic in the \c onPressed signal handler and then start dragging, the
     \l Flickable will steal the mouse handling from the MouseArea. In these cases, to reset
     the logic when the MouseArea has lost the mouse handling to the \l Flickable,
-    \c onCanceled should be used in addition to onReleased.
+    \c canceled should be handled in addition to \l released.
+
+    The corresponding handler is \c onCanceled.
 */
 
 /*!
-    \qmlsignal QtQuick::MouseArea::onWheel(WheelEvent wheel)
+    \qmlsignal QtQuick::MouseArea::wheel(WheelEvent wheel)
 
-    This handler is called in response to both mouse wheel and trackpad scroll gestures.
+    This signal is emitted in response to both mouse wheel and trackpad scroll gestures.
 
     The \l {WheelEvent}{wheel} parameter provides information about the event, including the x and y
     position, any buttons currently pressed, and information about the wheel movement, including
     angleDelta and pixelDelta.
+
+    The corresponding handler is \c onWheel.
 */
 
 QQuickMouseArea::QQuickMouseArea(QQuickItem *parent)

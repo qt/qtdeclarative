@@ -923,276 +923,354 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::pressed(KeyEvent event)
 
-    This handler is called when a key has been pressed. The \a event
+    This signal is emitted when a key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onReleased(KeyEvent event)
+    \qmlsignal QtQuick::Keys::released(KeyEvent event)
 
-    This handler is called when a key has been released. The \a event
+    This signal is emitted when a key has been released. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onReleased.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit0Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit0Pressed(KeyEvent event)
 
-    This handler is called when the digit '0' has been pressed. The \a event
+    This signal is emitted when the digit '0' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit0Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit1Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit1Pressed(KeyEvent event)
 
-    This handler is called when the digit '1' has been pressed. The \a event
+    This signal is emitted when the digit '1' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit1Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit2Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit2Pressed(KeyEvent event)
 
-    This handler is called when the digit '2' has been pressed. The \a event
+    This signal is emitted when the digit '2' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit2Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit3Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit3Pressed(KeyEvent event)
 
-    This handler is called when the digit '3' has been pressed. The \a event
+    This signal is emitted when the digit '3' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit3Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit4Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit4Pressed(KeyEvent event)
 
-    This handler is called when the digit '4' has been pressed. The \a event
+    This signal is emitted when the digit '4' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit4Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit5Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit5Pressed(KeyEvent event)
 
-    This handler is called when the digit '5' has been pressed. The \a event
+    This signal is emitted when the digit '5' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit5Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit6Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit6Pressed(KeyEvent event)
 
-    This handler is called when the digit '6' has been pressed. The \a event
+    This signal is emitted when the digit '6' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit6Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit7Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit7Pressed(KeyEvent event)
 
-    This handler is called when the digit '7' has been pressed. The \a event
+    This signal is emitted when the digit '7' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit7Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit8Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit8Pressed(KeyEvent event)
 
-    This handler is called when the digit '8' has been pressed. The \a event
+    This signal is emitted when the digit '8' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit8Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDigit9Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::digit9Pressed(KeyEvent event)
 
-    This handler is called when the digit '9' has been pressed. The \a event
+    This signal is emitted when the digit '9' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDigit9Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onLeftPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::leftPressed(KeyEvent event)
 
-    This handler is called when the Left arrow has been pressed. The \a event
+    This signal is emitted when the Left arrow has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onLeftPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onRightPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::rightPressed(KeyEvent event)
 
-    This handler is called when the Right arrow has been pressed. The \a event
+    This signal is emitted when the Right arrow has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onRightPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onUpPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::upPressed(KeyEvent event)
 
-    This handler is called when the Up arrow has been pressed. The \a event
+    This signal is emitted when the Up arrow has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onUpPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDownPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::downPressed(KeyEvent event)
 
-    This handler is called when the Down arrow has been pressed. The \a event
+    This signal is emitted when the Down arrow has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDownPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onTabPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::tabPressed(KeyEvent event)
 
-    This handler is called when the Tab key has been pressed. The \a event
+    This signal is emitted when the Tab key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onTabPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onBacktabPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::backtabPressed(KeyEvent event)
 
-    This handler is called when the Shift+Tab key combination (Backtab) has
+    This signal is emitted when the Shift+Tab key combination (Backtab) has
     been pressed. The \a event parameter provides information about the event.
+
+    The corresponding handler is \c onBacktabPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onAsteriskPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::asteriskPressed(KeyEvent event)
 
-    This handler is called when the Asterisk '*' has been pressed. The \a event
+    This signal is emitted when the Asterisk '*' has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onAsteriskPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onEscapePressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::escapePressed(KeyEvent event)
 
-    This handler is called when the Escape key has been pressed. The \a event
+    This signal is emitted when the Escape key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onEscapePressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onReturnPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::returnPressed(KeyEvent event)
 
-    This handler is called when the Return key has been pressed. The \a event
+    This signal is emitted when the Return key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onReturnPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onEnterPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::enterPressed(KeyEvent event)
 
-    This handler is called when the Enter key has been pressed. The \a event
+    This signal is emitted when the Enter key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onEnterPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onDeletePressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::deletePressed(KeyEvent event)
 
-    This handler is called when the Delete key has been pressed. The \a event
+    This signal is emitted when the Delete key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onDeletePressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onSpacePressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::spacePressed(KeyEvent event)
 
-    This handler is called when the Space key has been pressed. The \a event
+    This signal is emitted when the Space key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onSpacePressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onBackPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::backPressed(KeyEvent event)
 
-    This handler is called when the Back key has been pressed. The \a event
+    This signal is emitted when the Back key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onBackPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onCancelPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::cancelPressed(KeyEvent event)
 
-    This handler is called when the Cancel key has been pressed. The \a event
+    This signal is emitted when the Cancel key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onCancelPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onSelectPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::selectPressed(KeyEvent event)
 
-    This handler is called when the Select key has been pressed. The \a event
+    This signal is emitted when the Select key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onSelectPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onYesPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::yesPressed(KeyEvent event)
 
-    This handler is called when the Yes key has been pressed. The \a event
+    This signal is emitted when the Yes key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onYesPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onNoPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::noPressed(KeyEvent event)
 
-    This handler is called when the No key has been pressed. The \a event
+    This signal is emitted when the No key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onNoPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onContext1Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::context1Pressed(KeyEvent event)
 
-    This handler is called when the Context1 key has been pressed. The \a event
+    This signal is emitted when the Context1 key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onContext1Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onContext2Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::context2Pressed(KeyEvent event)
 
-    This handler is called when the Context2 key has been pressed. The \a event
+    This signal is emitted when the Context2 key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onContext2Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onContext3Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::context3Pressed(KeyEvent event)
 
-    This handler is called when the Context3 key has been pressed. The \a event
+    This signal is emitted when the Context3 key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onContext3Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onContext4Pressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::context4Pressed(KeyEvent event)
 
-    This handler is called when the Context4 key has been pressed. The \a event
+    This signal is emitted when the Context4 key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onContext4Pressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onCallPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::callPressed(KeyEvent event)
 
-    This handler is called when the Call key has been pressed. The \a event
+    This signal is emitted when the Call key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onCallPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onHangupPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::hangupPressed(KeyEvent event)
 
-    This handler is called when the Hangup key has been pressed. The \a event
+    This signal is emitted when the Hangup key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onHangupPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onFlipPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::flipPressed(KeyEvent event)
 
-    This handler is called when the Flip key has been pressed. The \a event
+    This signal is emitted when the Flip key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onFlipPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onMenuPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::menuPressed(KeyEvent event)
 
-    This handler is called when the Menu key has been pressed. The \a event
+    This signal is emitted when the Menu key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onMenuPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onVolumeUpPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::volumeUpPressed(KeyEvent event)
 
-    This handler is called when the VolumeUp key has been pressed. The \a event
+    This signal is emitted when the VolumeUp key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onVolumeUpPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::onVolumeDownPressed(KeyEvent event)
+    \qmlsignal QtQuick::Keys::volumeDownPressed(KeyEvent event)
 
-    This handler is called when the VolumeDown key has been pressed. The \a event
+    This signal is emitted when the VolumeDown key has been pressed. The \a event
     parameter provides information about the event.
+
+    The corresponding handler is \c onVolumeDownPressed.
 */
 
 QQuickKeysAttached::QQuickKeysAttached(QObject *parent)

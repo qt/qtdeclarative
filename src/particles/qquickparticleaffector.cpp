@@ -115,12 +115,12 @@ QT_BEGIN_NAMESPACE
     non-rectangular area.
 */
 /*!
-    \qmlsignal QtQuick.Particles::Affector::onAffected(real x, real y)
+    \qmlsignal QtQuick.Particles::Affector::affected(real x, real y)
 
-    This handler is called when a particle is selected to be affected. It will not be called
+    This signal is emitted when a particle is selected to be affected. It will not be emitted
     if a particle is considered by the Affector but not actually altered in any way.
 
-    In the special case where an Affector has no possible effect (e.g. Affector {}), affected
+    In the special case where an Affector has no possible effect (e.g. Affector {}), this signal
     will be emitted for all particles being considered if you connect to it. This allows you to
     execute arbitrary code in response to particles (use the Affector::onAffectParticles
     signal handler if you want to execute code which affects the particles
@@ -128,6 +128,8 @@ QT_BEGIN_NAMESPACE
     signal with a high-volume particle system.
 
     x,y is the particle's current position.
+
+    The corresponding handler is \c onAffected.
 */
 QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
     QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_onceOff(false), m_enabled(true)

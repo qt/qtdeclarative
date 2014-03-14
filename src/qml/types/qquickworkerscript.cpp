@@ -720,10 +720,12 @@ void QQuickWorkerScript::componentComplete()
 }
 
 /*!
-    \qmlsignal WorkerScript::onMessage(jsobject msg)
+    \qmlsignal WorkerScript::message(jsobject msg)
 
-    This handler is called when a message \a msg is received from a worker
+    This signal is emitted when a message \a msg is received from a worker
     script in another thread through a call to sendMessage().
+
+    The corresponding handler is \c onMessage.
 */
 
 bool QQuickWorkerScript::event(QEvent *event)

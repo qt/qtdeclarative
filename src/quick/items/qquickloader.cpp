@@ -816,10 +816,12 @@ void QQuickLoader::componentComplete()
 }
 
 /*!
-    \qmlsignal QtQuick::Loader::onLoaded()
+    \qmlsignal QtQuick::Loader::loaded()
 
-    This handler is called when the \l status becomes \c Loader.Ready, or on successful
+    This signal is emitted when the \l status becomes \c Loader.Ready, or on successful
     initial load.
+
+    The corresponding handler is \c onLoaded.
 */
 
 

@@ -2840,7 +2840,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 */
 
 /*!
-    \qmlsignal closing(CloseEvent close)
+    \qmlsignal QtQuick.Window::Window::closing(CloseEvent close)
     \since 5.1
 
     This signal is emitted when the user tries to close the window.
@@ -2849,6 +2849,8 @@ QOpenGLContext *QQuickWindow::openglContext() const
     property is true by default so that the window is allowed to close; but you
     can implement an onClosing() handler and set close.accepted = false if
     you need to do something else before the window can be closed.
+
+    The corresponding handler is \c onClosing.
  */
 
 

@@ -259,60 +259,72 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onPressed(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::pressed(list<TouchPoint> touchPoints)
 
-    This handler is called when new touch points are added. \a touchPoints is a list of these new points.
+    This signal is emitted when new touch points are added. \a touchPoints is a list of these new points.
 
-    If minimumTouchPoints is set to a value greater than one, this handler will not be called until the minimum number
-    of required touch points has been reached. At that point, onPressed will be called with all the current touch points.
+    If minimumTouchPoints is set to a value greater than one, this signal will not be emitted until the minimum number
+    of required touch points has been reached.
+
+    The corresponding handler is \c onPressed.
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::updated(list<TouchPoint> touchPoints)
 
-    This handler is called when existing touch points are updated. \a touchPoints is a list of these updated points.
+    This signal is emitted when existing touch points are updated. \a touchPoints is a list of these updated points.
+
+    The corresponding handler is \c onUpdated.
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onReleased(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::released(list<TouchPoint> touchPoints)
 
-    This handler is called when existing touch points are removed. \a touchPoints is a list of these removed points.
+    This signal is emitted when existing touch points are removed. \a touchPoints is a list of these removed points.
+
+    The corresponding handler is \c onReleased.
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onCanceled(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::canceled(list<TouchPoint> touchPoints)
 
-    This handler is called when new touch events have been canceled because another item stole the touch event handling.
+    This signal is emitted when new touch events have been canceled because another item stole the touch event handling.
 
     This signal is for advanced use: it is useful when there is more than one MultiPointTouchArea
     that is handling input, or when there is a MultiPointTouchArea inside a \l Flickable. In the latter
-    case, if you execute some logic on the onPressed signal and then start dragging, the
+    case, if you execute some logic in the \c onPressed signal handler and then start dragging, the
     \l Flickable may steal the touch handling from the MultiPointTouchArea. In these cases, to reset
     the logic when the MultiPointTouchArea has lost the touch handling to the \l Flickable,
-    \c onCanceled should be used in addition to onReleased.
+    \c canceled should be handled in addition to \l released.
 
     \a touchPoints is the list of canceled points.
+
+    The corresponding handler is \c onCanceled.
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onGestureStarted(GestureEvent gesture)
+    \qmlsignal QtQuick::MultiPointTouchArea::gestureStarted(GestureEvent gesture)
 
-    This handler is called when the global drag threshold has been reached.
+    This signal is emitted when the global drag threshold has been reached.
 
-    This function is typically used when a MultiPointTouchAreas has been nested in a Flickable or another MultiPointTouchArea.
-    When the threshold has been reached, and the handler called, you can determine whether or not the touch
+    This signal is typically used when a MultiPointTouchArea has been nested in a Flickable or another MultiPointTouchArea.
+    When the threshold has been reached and the signal is handled, you can determine whether or not the touch
     area should grab the current touch points. By default they will not be grabbed; to grab them call \c gesture.grab(). If the
     gesture is not grabbed, the nesting Flickable, for example, would also have an opportunity to grab.
 
     The gesture object also includes information on the current set of \c touchPoints and the \c dragThreshold.
+
+    The corresponding handler is \c onGestureStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::MultiPointTouchArea::onTouchUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::touchUpdated(list<TouchPoint> touchPoints)
 
-    This handler is called when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
+    This signal is emitted when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
     removing or canceling previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
     points.
+
+    The corresponding handler is \c onTouchUpdated.
 */
 
 /*!

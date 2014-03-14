@@ -190,33 +190,39 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchStarted()
+    \qmlsignal QtQuick::PinchArea::pinchStarted()
 
-    This handler is called when the pinch area detects that a pinch gesture has started.
+    This signal is emitted when the pinch area detects that a pinch gesture has started.
 
     The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
     including the scale, center and angle of the pinch.
 
     To ignore this gesture set the \c pinch.accepted property to false.  The gesture
     will be canceled and no further events will be sent.
+
+    The corresponding handler is \c onPinchStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchUpdated()
+    \qmlsignal QtQuick::PinchArea::pinchUpdated()
 
-    This handler is called when the pinch area detects that a pinch gesture has changed.
+    This signal is emitted when the pinch area detects that a pinch gesture has changed.
 
     The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
     including the scale, center and angle of the pinch.
+
+    The corresponding handler is \c onPinchUpdated.
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchFinished()
+    \qmlsignal QtQuick::PinchArea::pinchFinished()
 
-    This handler is called when the pinch area detects that a pinch gesture has finished.
+    This signal is emitted when the pinch area detects that a pinch gesture has finished.
 
     The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
     including the scale, center and angle of the pinch.
+
+    The corresponding handler is \c onPinchFinished.
 */
 
 

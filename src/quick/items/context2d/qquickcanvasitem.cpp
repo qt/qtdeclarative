@@ -896,9 +896,11 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 }
 
 /*!
-    \qmlsignal QtQuick::Canvas::onImageLoaded()
+    \qmlsignal QtQuick::Canvas::imageLoaded()
 
-    This handler is called when an image has been loaded.
+    This signal is emitted when an image has been loaded.
+
+    The corresponding handler is \c onImageLoaded.
 
     \sa loadImage()
 */
@@ -1098,20 +1100,24 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 }
 
 /*!
-    \qmlsignal QtQuick::Canvas::onPaint(rect region)
+    \qmlsignal QtQuick::Canvas::paint(rect region)
 
-    This handler is called to render the \a region. If a context is active it
-    can be referenced from the context property.
+    This signal is emitted when the \a region needs to be rendered. If a context
+    is active it can be referenced from the context property.
 
-    This signal can be triggered markdirty(), requestPaint() or by changing
+    This signal can be triggered by markdirty(), requestPaint() or by changing
     the current canvas window.
+
+    The corresponding handler is \c onPaint.
 */
 
 /*!
-    \qmlsignal QtQuick::Canvas::onPainted()
+    \qmlsignal QtQuick::Canvas::painted()
 
-    This handler is called after all context painting commands are executed and
+    This signal is emitted after all context painting commands are executed and
     the Canvas has been rendered.
+
+    The corresponding handler is \c onPainted.
 */
 
 QT_END_NAMESPACE

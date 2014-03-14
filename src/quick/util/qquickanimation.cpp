@@ -200,19 +200,21 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
 }
 
 /*!
-    \qmlsignal QtQuick::Animation::onStarted()
+    \qmlsignal QtQuick::Animation::started()
 
-    This signal handler is called when the animation begins.
+    This signal is emitted when the animation begins.
 
     It is only triggered for top-level, standalone animations. It will not be
     triggered for animations in a Behavior or Transition, or animations
     that are part of an animation group.
+
+    The corresponding handler is \c onStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::Animation::onStopped()
+    \qmlsignal QtQuick::Animation::stopped()
 
-    This signal handler is called when the animation ends.
+    This signal is emitted when the animation ends.
 
     The animation may have been stopped manually, or may have run to completion.
 
@@ -220,8 +222,10 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
     triggered for animations in a Behavior or Transition, or animations
     that are part of an animation group.
 
-    If \l alwaysRunToEnd is true, onStopped will not be called until the animation
+    If \l alwaysRunToEnd is true, this signal will not be emitted until the animation
     has completed its current iteration.
+
+    The corresponding handler is \c onStopped.
 */
 
 void QQuickAbstractAnimation::setRunning(bool r)

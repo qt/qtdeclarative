@@ -116,11 +116,13 @@ TextEdit {
 */
 
 /*!
-    \qmlsignal QtQuick::TextEdit::onLinkActivated(string link)
+    \qmlsignal QtQuick::TextEdit::linkActivated(string link)
 
-    This handler is called when the user clicks on a link embedded in the text.
+    This signal is emitted when the user clicks on a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
+
+    The corresponding handler is \c onLinkActivated.
 */
 
 // This is a pretty arbitrary figure. The idea is that we don't want to break down the document
@@ -2509,12 +2511,14 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
 }
 
 /*!
-    \qmlsignal QtQuick::TextEdit::onLinkHovered(string link)
+    \qmlsignal QtQuick::TextEdit::linkHovered(string link)
     \since 5.2
 
-    This handler is called when the user hovers a link embedded in the text.
+    This signal is emitted when the user hovers a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
+
+    The corresponding handler is \c onLinkHovered.
 
     \sa hoveredLink, linkAt()
 */
