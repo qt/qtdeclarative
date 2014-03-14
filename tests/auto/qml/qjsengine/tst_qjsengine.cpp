@@ -1011,6 +1011,7 @@ void tst_QJSEngine::evaluate_data()
     QTest::newRow("/a/g") << QString("/a/g") << -1 << false << -1;
     QTest::newRow("/a/gim") << QString("/a/gim") << -1 << false << -1;
     QTest::newRow("/a/gimp") << QString("/a/gimp") << 1 << true << 1;
+    QTest::newRow("empty-array-concat") << QString("var a = []; var b = [1]; var c = a.concat(b); ") << 1 << false << -1;
 }
 
 void tst_QJSEngine::evaluate()

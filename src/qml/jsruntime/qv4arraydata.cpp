@@ -580,6 +580,8 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
 
     if (other->isSparse())
         obj->initSparseArray();
+    else
+        obj->arrayCreate();
 
     uint oldSize = obj->getLength();
 
