@@ -486,6 +486,9 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles
 
 void ListModel::set(int elementIndex, QV4::ObjectRef object, QV8Engine *eng)
 {
+    if (!object)
+        return;
+
     ListElement *e = elements[elementIndex];
 
     QV4::ExecutionEngine *v4 = object->engine();

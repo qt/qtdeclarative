@@ -528,6 +528,8 @@ void tst_qqmllistmodel::dynamic_data()
         QTest::newRow("nested-count") << "{append({'foo':123,'bars':[{'a':1},{'a':2},{'a':3}]}); get(0).bars.count}" << 3 << "" << dr;
         QTest::newRow("nested-clear") << "{append({'foo':123,'bars':[{'a':1},{'a':2},{'a':3}]}); get(0).bars.clear(); get(0).bars.count}" << 0 << "" << dr;
     }
+
+    QTest::newRow("jsarray") << "{append({'foo':['1', '2', '3']});get(0).foo.get(0)}" << 0 << "" << false;
 }
 
 void tst_qqmllistmodel::dynamic()
