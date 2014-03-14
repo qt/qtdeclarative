@@ -94,7 +94,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0));
+    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0, true));
     w->isNullWrapper = true;
     return w.asReturnedValue();
 }
