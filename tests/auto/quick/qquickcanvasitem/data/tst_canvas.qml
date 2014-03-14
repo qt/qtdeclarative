@@ -180,20 +180,28 @@ CanvasTestCase {
        tryCompare(c, "availableChangedCount", 1);
        //scene graph could be available immediately
        //in this case, we force waiting a short while until the init paint finished
-       if (c.visible) {
-           tryCompare(c, "paintedCount", 1);
-       } else {
-           tryCompare(c, "paintedCount", 0);
-       }
+       tryCompare(c, "paintedCount", 1);
        ctx.fillRect(0, 0, c.width, c.height);
        c.toDataURL();
-       if (c.visible) {
-           tryCompare(c, "paintCount", 1);
-           tryCompare(c, "paintedCount", 2);
-       } else {
-           tryCompare(c, "paintCount", 0);
-           tryCompare(c, "paintedCount", 1);
-       }
+       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintCount", 1);
+       // implicit repaint when visible and resized
+       testCase.visible = true;
+       c.width += 1;
+       c.height += 1;
+       tryCompare(c, "paintCount", 2);
+       tryCompare(c, "paintedCount", 2);
+       // allow explicit repaint even when hidden
+       testCase.visible = false;
+       c.requestPaint();
+       tryCompare(c, "paintCount", 3);
+       tryCompare(c, "paintedCount", 2);
+       // no implicit repaint when resized but hidden
+       c.width += 1;
+       c.height += 1;
+       waitForRendering(c);
+       compare(c.paintCount, 3);
+       tryCompare(c, "paintedCount", 2);
        c.destroy();
   }
    function test_loadImage(row) {

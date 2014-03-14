@@ -590,8 +590,10 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &
         emit canvasWindowChanged();
     }
 
-    if (d->available && newSize != oldGeometry.size())
-        requestPaint();
+    if (d->available && newSize != oldGeometry.size()) {
+        if (isVisible() || (d->extra.isAllocated() && d->extra->effectRefCount > 0))
+            requestPaint();
+    }
 }
 
 void QQuickCanvasItem::releaseResources()
@@ -640,9 +642,6 @@ void QQuickCanvasItem::updatePolish()
     QQuickItem::updatePolish();
 
     Q_D(QQuickCanvasItem);
-    if (!isVisible() && !(d->extra.isAllocated() && d->extra->effectRefCount>0))
-        return;
-
     if (d->context && d->renderStrategy != QQuickCanvasItem::Cooperative)
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, antialiasing());
 
