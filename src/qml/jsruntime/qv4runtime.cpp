@@ -215,7 +215,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
         *result = QStringLiteral("NaN");
         return;
     } else if (qIsInf(num)) {
-        *result = QLatin1String(num < 0 ? "-Infinity" : "Infinity");
+        *result = num < 0 ? QStringLiteral("-Infinity") : QStringLiteral("Infinity");
         return;
     }
 
