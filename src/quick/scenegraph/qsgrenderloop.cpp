@@ -126,8 +126,6 @@ public:
     QSGContext *sceneGraphContext() const;
     QSGRenderContext *createRenderContext(QSGContext *) const { return rc; }
 
-    QList<QQuickWindow *> windows() const { return m_windows.keys(); }
-
     bool event(QEvent *);
 
     struct WindowData {

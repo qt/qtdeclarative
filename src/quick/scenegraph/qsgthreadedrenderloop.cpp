@@ -738,14 +738,6 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     QSG_GUI_DEBUG((void *) 0, "QSGThreadedRenderLoop() created");
 }
 
-QList<QQuickWindow *> QSGThreadedRenderLoop::windows() const
-{
-    QList<QQuickWindow *> list;
-    foreach (const Window &w, m_windows)
-        list << w.window;
-    return list;
-}
-
 QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) const
 {
     return sg->createRenderContext();

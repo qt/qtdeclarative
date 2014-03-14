@@ -111,15 +111,6 @@ QSGWindowsRenderLoop::~QSGWindowsRenderLoop()
     delete m_sg;
 }
 
-QList<QQuickWindow *> QSGWindowsRenderLoop::windows() const
-{
-    QList<QQuickWindow *> list;
-    foreach (const WindowData &w, m_windows)
-        list << w.window;
-    return list;
-}
-
-
 bool QSGWindowsRenderLoop::interleaveIncubation() const
 {
     return m_animationDriver->isRunning() && anyoneShowing();

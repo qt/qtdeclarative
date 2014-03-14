@@ -93,8 +93,6 @@ public:
     QSGContext *sceneGraphContext() const;
     QSGRenderContext *createRenderContext(QSGContext *) const { return m_renderContext.data(); }
 
-    QList<QQuickWindow *> windows() const { return QList<QQuickWindow *>(); };
-
     static void createOpenGLContext(QQuickWindow *window);
 
 private:

@@ -452,6 +452,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         sg = renderControl->sceneGraphContext();
         context = renderControl->renderContext(sg);
     } else {
+        windowManager->addWindow(q);
         sg = windowManager->sceneGraphContext();
         context = windowManager->createRenderContext(sg);
     }
@@ -1077,10 +1078,12 @@ QQuickWindow::~QQuickWindow()
     Q_D(QQuickWindow);
 
     d->animationController->deleteLater();
-    if (d->renderControl)
+    if (d->renderControl) {
         d->renderControl->windowDestroyed();
-    else if (d->windowManager)
+    } else if (d->windowManager) {
+        d->windowManager->removeWindow(this);
         d->windowManager->windowDestroyed(this);
+    }
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
