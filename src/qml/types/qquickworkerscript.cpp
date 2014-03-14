@@ -340,7 +340,11 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
         return true;
     } else if (event->type() == (QEvent::Type)WorkerRemoveEvent::WorkerRemove) {
         WorkerRemoveEvent *workerEvent = static_cast<WorkerRemoveEvent *>(event);
-        workers.remove(workerEvent->workerId());
+        QHash<int, WorkerScript *>::iterator itr = workers.find(workerEvent->workerId());
+        if (itr != workers.end()) {
+            delete itr.value();
+            workers.erase(itr);
+        }
         return true;
     } else {
         return QObject::event(event);
