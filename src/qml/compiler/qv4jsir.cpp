@@ -745,7 +745,12 @@ Expr *BasicBlock::CONST(Type type, double value)
             type = SInt32Type;
         else
             type = DoubleType;
+    } else if (type == NullType) {
+        value = 0;
+    } else if (type == UndefinedType) {
+        value = qSNaN();
     }
+
     e->init(type, value);
     return e;
 }

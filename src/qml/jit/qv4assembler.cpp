@@ -338,8 +338,11 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
         convertUInt32ToDouble(toUInt32Register(src, Assembler::ScratchRegister),
                                    dest, Assembler::ReturnValueRegister);
         return Assembler::Jump();
+    case IR::NullType:
+    case IR::UndefinedType:
     case IR::BoolType:
         // TODO?
+    case IR::StringType:
         return jump();
     default:
         break;

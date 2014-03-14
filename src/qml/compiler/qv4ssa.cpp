@@ -2305,6 +2305,10 @@ void convertConst(Const *c, Type targetType)
     case BoolType:
         c->value = !(c->value == 0 || std::isnan(c->value));
         break;
+    case NullType:
+    case UndefinedType:
+        c->value = qSNaN();
+        c->type = targetType;
     default:
         Q_UNIMPLEMENTED();
         Q_ASSERT(!"Unimplemented!");
@@ -2991,6 +2995,11 @@ private:
             }
         }
 
+        if (e1->type == IR::NullType && e2->type == IR::NullType)
+            return true;
+        if (e1->type == IR::UndefinedType && e2->type == IR::UndefinedType)
+            return true;
+
         return false;
     }
 };
@@ -3116,18 +3125,20 @@ bool tryOptimizingComparison(Expr *&expr)
         expr = leftConst;
         return true;
     case OpStrictEqual:
-        if (!strictlyEqualTypes(leftConst->type, rightConst->type))
-            return false;
-        // intentional fall-through
+        leftConst->value = Runtime::compareStrictEqual(&l, &r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
     case OpEqual:
         leftConst->value = Runtime::compareEqual(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpStrictNotEqual:
-        if (!strictlyEqualTypes(leftConst->type, rightConst->type))
-            return false;
-        // intentional fall-through
+        leftConst->value = Runtime::compareStrictNotEqual(&l, &r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
     case OpNotEqual:
         leftConst->value = Runtime::compareNotEqual(&l, &r);
         leftConst->type = BoolType;
@@ -3214,13 +3225,9 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
 
                 // constant propagation:
                 if (Const *sourceConst = m->source->asConst()) {
-                    if (sourceConst->type & NumberType || sourceConst->type == BoolType) {
-                        // TODO: when propagating other constants, e.g. undefined, the other
-                        // optimization passes have to be changed to cope with them.
-                        W += replaceUses(targetTemp, sourceConst);
-                        defUses.removeDef(*targetTemp);
-                        W.clear(s);
-                    }
+                    W += replaceUses(targetTemp, sourceConst);
+                    defUses.removeDef(*targetTemp);
+                    W.clear(s);
                     continue;
                 }
                 if (Member *member = m->source->asMember()) {
