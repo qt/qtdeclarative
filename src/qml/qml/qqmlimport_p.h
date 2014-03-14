@@ -174,6 +174,7 @@ private:
                           const QString &typeNamespace, QList<QQmlError> *errors);
     bool registerPluginTypes(QObject *instance, const QString &basePath,
                           const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors);
+    void clearDirCache();
 
     struct QmldirCache {
         int versionMajor;

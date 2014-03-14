@@ -1578,8 +1578,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
 QQmlImportDatabase::~QQmlImportDatabase()
 {
-    qDeleteAll(qmldirCache);
-    qmldirCache.clear();
+    clearDirCache();
 }
 
 /*!
@@ -1814,7 +1813,7 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
     fileImportPath = paths;
 
     // Our existing cached paths may have been invalidated
-    qmldirCache.clear();
+    clearDirCache();
 }
 
 /*!
@@ -2022,6 +2021,22 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
 #else
     return false;
 #endif
+}
+
+void QQmlImportDatabase::clearDirCache()
+{
+    QStringHash<QmldirCache *>::ConstIterator itr = qmldirCache.begin();
+    while (itr != qmldirCache.end()) {
+        QmldirCache *cache = *itr;
+        do {
+            QmldirCache *nextCache = cache->next;
+            delete cache;
+            cache = nextCache;
+        } while (cache);
+
+        ++itr;
+    }
+    qmldirCache.clear();
 }
 
 QT_END_NAMESPACE
