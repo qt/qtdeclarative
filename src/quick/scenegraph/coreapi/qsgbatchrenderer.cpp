@@ -1445,7 +1445,7 @@ void Renderer::invalidateBatchAndOverlappingRenderOrders(Batch *batch)
  */
 void Renderer::cleanupBatches(QDataBuffer<Batch *> *batches) {
     if (batches->size()) {
-        std::sort(&batches->first(), &batches->last() + 1, qsg_sort_batch_is_valid);
+        std::stable_sort(&batches->first(), &batches->last() + 1, qsg_sort_batch_is_valid);
         int count = 0;
         while (count < batches->size() && batches->at(count)->first)
             ++count;
