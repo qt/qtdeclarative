@@ -1104,6 +1104,23 @@ class CustomBindingParser : public QQmlCustomParser
     virtual void setCustomData(QObject *object, const QByteArray &data);
 };
 
+class RootObjectInCreationTester : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *subObject READ subObject WRITE setSubObject FINAL)
+    Q_CLASSINFO("DeferredPropertyNames", "subObject");
+public:
+    RootObjectInCreationTester()
+        : obj(0)
+    {}
+
+    QObject *subObject() const { return obj; }
+    void setSubObject(QObject *o) { obj = o; }
+
+private:
+    QObject *obj;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

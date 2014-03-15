@@ -241,6 +241,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 {
     QQmlData *declarativeData = QQmlData::get(instance);
     context = declarativeData->deferredData->context;
+    sharedState->rootContext = context;
     const int objectIndex = declarativeData->deferredData->deferredIdx;
 
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);

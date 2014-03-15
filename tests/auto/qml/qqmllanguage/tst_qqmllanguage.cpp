@@ -222,6 +222,8 @@ private slots:
     void preservePropertyCacheOnGroupObjects();
     void propertyCacheInSync();
 
+    void rootObjectInCreationNotForSubObjects();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3622,6 +3624,31 @@ void tst_qqmllanguage::propertyCacheInSync()
     // Those always have to be in sync and correct.
     QVERIFY(ddata->propertyCache == vmemoCache);
     QCOMPARE(anchors->property("margins").toInt(), 50);
+}
+
+void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
+{
+    QQmlComponent component(&engine, testFile("rootObjectInCreationNotForSubObjects.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    // QQmlComponent should have set this back to false anyway
+    QQmlData *ddata = QQmlData::get(o.data());
+    QVERIFY(!ddata->rootObjectInCreation);
+
+    QObject *subObject = qvariant_cast<QObject*>(o->property("subObject"));
+    QVERIFY(!subObject);
+
+    qmlExecuteDeferred(o.data());
+
+    subObject = qvariant_cast<QObject*>(o->property("subObject"));
+    QVERIFY(subObject);
+
+    ddata = QQmlData::get(subObject);
+    // This should never have been set in the first place as there is no
+    // QQmlComponent to set it back to false.
+    QVERIFY(!ddata->rootObjectInCreation);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
