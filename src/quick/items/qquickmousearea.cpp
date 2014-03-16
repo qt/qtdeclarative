@@ -373,7 +373,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     The corresponding handler is \c onReleased.
 
-    \sa onCanceled
+    \sa canceled
 */
 
 /*!
@@ -1237,7 +1237,7 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
     \c drag.axis. For example, if \c anchors.left or \c anchors.right was set
     for \c rect in the above example, it cannot be dragged along the X-axis.
     This can be avoided by settng the anchor value to \c undefined in
-    an \l onPressed handler.
+    an \l {pressed}{onPressed} handler.
 
     If \c drag.filterChildren is set to true, a drag can override descendant MouseAreas.  This
     enables a parent MouseArea to handle drags, for example, while descendants handle clicks:

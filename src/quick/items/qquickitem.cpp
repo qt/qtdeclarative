@@ -1744,12 +1744,12 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \section2 Key Handling
 
     Key handling is available to all Item-based visual types via the \l Keys
-    attached property.  The \e Keys attached property provides basic handlers
-    such as \l {Keys::}{onPressed} and \l {Keys}{::onReleased}, as well as
-    handlers for specific keys, such as \l {Keys::}{onSpacePressed}.  The
+    attached property.  The \e Keys attached property provides basic signals
+    such as \l {Keys::}{pressed} and \l {Keys::}{released}, as well as
+    signals for specific keys, such as \l {Keys::}{spacePressed}.  The
     example below assigns \l {Keyboard Focus in Qt Quick}{keyboard focus} to
-    the item and handles the left key via the general \e onPressed handler
-    and the return key via the onReturnPressed handler:
+    the item and handles the left key via the general \c onPressed handler
+    and the return key via the \c onReturnPressed handler:
 
     \qml
     import QtQuick 2.0

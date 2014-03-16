@@ -271,10 +271,10 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \li Replace all HTML event handlers with the MouseArea item.
     \li Change setInterval/setTimeout function calls with the \l Timer item or
        the use of requestAnimationFrame().
-    \li Place painting code into the onPaint handler and trigger
+    \li Place painting code into the \c onPaint handler and trigger
        painting by calling the markDirty() or requestPaint() methods.
     \li To draw images, load them by calling the Canvas's loadImage() method and then request to paint
-       them in the onImageLoaded handler.
+       them in the \c onImageLoaded handler.
     \endlist
 
     \sa Context2D
@@ -843,10 +843,9 @@ void QQuickCanvasItem::requestPaint()
     \qmlmethod QtQuick::Canvas::markDirty(rect area)
 
     Mark the given \a area as dirty, so that when this area is visible the
-    canvas renderer will redraw it. This will trigger the onPaint signal
-    handler function.
+    canvas renderer will redraw it. This will trigger the \c paint signal.
 
-    \sa onPaint, requestPaint()
+    \sa paint, requestPaint()
 */
 
 void QQuickCanvasItem::markDirty(const QRectF& rect)
@@ -909,11 +908,11 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
   \qmlmethod QtQuick::Canvas::loadImage(url image)
     Loads the given \c image asynchronously.
 
-    When the image is ready, onImageLoaded will be emitted.
+    When the image is ready, \l imageLoaded will be emitted.
     The loaded image can be unloaded by the unloadImage() method.
 
     Note: Only loaded images can be painted on the Canvas item.
-  \sa unloadImage, onImageLoaded, isImageLoaded(),
+  \sa unloadImage, imageLoaded, isImageLoaded(),
       Context2D::createImageData(), Context2D::drawImage()
 */
 void QQuickCanvasItem::loadImage(const QUrl& url)
@@ -940,7 +939,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
   Once an image is unloaded it cannot be painted by the canvas context
   unless it is loaded again.
 
-  \sa loadImage(), onImageLoaded, isImageLoaded(),
+  \sa loadImage(), imageLoaded, isImageLoaded(),
       Context2D::createImageData(), Context2D::drawImage
 */
 void QQuickCanvasItem::unloadImage(const QUrl& url)

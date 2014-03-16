@@ -2916,7 +2916,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2936,7 +2936,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage()
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2957,7 +2957,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage()
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */

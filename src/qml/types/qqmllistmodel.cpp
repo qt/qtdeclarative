@@ -1520,11 +1520,11 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
 
     The timer in the main example sends messages to the worker script by calling
     \l WorkerScript::sendMessage(). When this message is received,
-    \l{WorkerScript::onMessage}{WorkerScript.onMessage()} is invoked in \c dataloader.js,
+    \c WorkerScript.onMessage() is invoked in \c dataloader.js,
     which appends the current time to the list model.
 
-    Note the call to sync() from the \l{WorkerScript::onMessage}{WorkerScript.onMessage()}
-    handler. You must call sync() or else the changes made to the list from the external
+    Note the call to sync() from the external thread.
+    You must call sync() or else the changes made to the list from that
     thread will not be reflected in the list model in the main thread.
 
     \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, {Qt QML}

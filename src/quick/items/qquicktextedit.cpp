@@ -2531,7 +2531,7 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     embedded in the text. The link must be in rich text or HTML format
     and the link string provides access to the particular link.
 
-    \sa onLinkHovered, linkAt()
+    \sa linkHovered, linkAt()
 */
 
 QString QQuickTextEdit::hoveredLink() const

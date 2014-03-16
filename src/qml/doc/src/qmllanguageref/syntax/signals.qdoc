@@ -65,7 +65,7 @@ Rectangle {
 }
 \endqml
 
-Looking at the \l MouseArea documentation, you can see the \l {MouseArea::onClicked}{clicked} signal is emitted with a parameter named \c mouse which is a \l MouseEvent object that contains further details about the mouse click event. This name can be referred to in our \c onClicked handler to access this parameter. For example, the \l MouseEvent type has \c x and \c y coordinates that allows us to print out the exact location where the mouse was clicked:
+Looking at the \l MouseArea documentation, you can see the \l {MouseArea::}{clicked} signal is emitted with a parameter named \c mouse which is a \l MouseEvent object that contains further details about the mouse click event. This name can be referred to in our \c onClicked handler to access this parameter. For example, the \l MouseEvent type has \c x and \c y coordinates that allows us to print out the exact location where the mouse was clicked:
 
 \qml
 import QtQuick 2.0

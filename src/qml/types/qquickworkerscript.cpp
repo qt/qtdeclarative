@@ -584,7 +584,7 @@ void QQuickWorkerScriptEngine::run()
     that the main GUI thread is not blocked.
 
     Messages can be passed between the new thread and the parent thread
-    using \l sendMessage() and the \l {WorkerScript::onMessage}{onMessage()} handler.
+    using \l sendMessage() and the \c onMessage() handler.
 
     An example:
 
