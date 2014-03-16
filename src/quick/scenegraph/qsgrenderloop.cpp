@@ -311,6 +311,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete gl;
         gl = 0;
+    } else if (window == gl->surface()) {
+        gl->doneCurrent();
     }
 }
 
