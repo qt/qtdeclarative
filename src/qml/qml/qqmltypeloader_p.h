@@ -84,7 +84,7 @@ class QQmlTypeData;
 class QQmlDataLoader;
 class QQmlExtensionInterface;
 
-namespace QtQml {
+namespace QmlIR {
 struct ParsedQML;
 }
 
@@ -455,7 +455,7 @@ private:
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    QScopedPointer<QtQml::ParsedQML> parsedQML;
+    QScopedPointer<QmlIR::ParsedQML> parsedQML;
     QList<QQmlScript::Import> m_newImports;
     QList<QQmlScript::Pragma> m_newPragmas;
 

@@ -703,7 +703,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             if (!name.isEmpty()) {
                 if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                     || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
-                    property = PropertyResolver(_propertyCache).signal(name, /*notInRevision*/0, _qobject, context);
+                    property = QmlIR::PropertyResolver(_propertyCache).signal(name, /*notInRevision*/0, _qobject, context);
                 else
                     property = _propertyCache->property(name, _qobject, context);
             } else

@@ -2317,7 +2317,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
         ctx->catchException();
         return false;
     }
-    return Runtime::strictEqual(value, result);
+    return QV4::Runtime::strictEqual(value, result);
 }
 
 static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,

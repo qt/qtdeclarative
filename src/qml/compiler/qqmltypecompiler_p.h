@@ -54,7 +54,7 @@ class QQmlError;
 class QQmlTypeData;
 class QQmlImports;
 
-namespace QtQml {
+namespace QmlIR {
 struct ParsedQML;
 }
 
@@ -69,7 +69,7 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QtQml::ParsedQML *parsedQML);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::ParsedQML *parsedQML);
 
     bool compile();
 
@@ -87,7 +87,7 @@ public:
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
-    QList<QtQml::QmlObject*> *qmlObjects();
+    QList<QmlIR::Object*> *qmlObjects();
     int rootObjectIndex() const;
     void setPropertyCaches(const QVector<QQmlPropertyCache *> &caches);
     const QVector<QQmlPropertyCache *> &propertyCaches() const;
@@ -109,7 +109,7 @@ private:
     QQmlEnginePrivate *engine;
     QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
-    QtQml::ParsedQML *parsedQML;
+    QmlIR::ParsedQML *parsedQML;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
 };
@@ -138,10 +138,10 @@ public:
 protected:
     bool buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
     bool ensureMetaObject(int objectIndex);
-    bool createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache);
+    bool createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
 
     QQmlEnginePrivate *enginePrivate;
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QVector<QByteArray> vmeMetaObjects;
@@ -161,9 +161,9 @@ public:
     bool convertSignalHandlerExpressionsToFunctionDeclarations();
 
 private:
-    bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
+    bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlIR::Object *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
 
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QSet<QString> &illegalNames;
@@ -182,13 +182,13 @@ public:
     bool resolveEnumBindings();
 
 private:
-    bool tryQualifiedEnumAssignment(const QmlObject *obj, const QQmlPropertyCache *propertyCache,
+    bool tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache,
                                     const QQmlPropertyData *prop,
-                                    QtQml::Binding *binding);
+                                    QmlIR::Binding *binding);
     int evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const;
 
 
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QVector<QQmlPropertyCache *> propertyCaches;
     const QQmlImports *imports;
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
@@ -202,7 +202,7 @@ public:
 
     void annotateBindingsToAliases();
 private:
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QVector<QQmlPropertyCache *> propertyCaches;
 };
 
@@ -215,14 +215,14 @@ public:
     bool resolve();
 
 protected:
-    void findAndRegisterImplicitComponents(const QtQml::QmlObject *obj, QQmlPropertyCache *propertyCache);
+    void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;
 
-    QList<QtQml::QmlObject*> *qmlObjects;
+    QList<QmlIR::Object*> *qmlObjects;
     const int indexOfRootObject;
 
     // indices of the objects that are actually Component {}
@@ -282,7 +282,7 @@ private:
 class QQmlJSCodeGenerator : public QQmlCompilePass
 {
 public:
-    QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QtQml::JSCodeGen *v4CodeGen);
+    QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen);
 
     bool generateCodeForComponents();
 
@@ -295,9 +295,9 @@ private:
     const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QVector<QQmlPropertyCache *> &propertyCaches;
-    QtQml::JSCodeGen * const v4CodeGen;
+    QmlIR::JSCodeGen * const v4CodeGen;
 };
 
 class QQmlDefaultPropertyMerger : public QQmlCompilePass
@@ -310,7 +310,7 @@ public:
 private:
     void mergeDefaultProperties(int objectIndex);
 
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QVector<QQmlPropertyCache*> &propertyCaches;
 };
 
@@ -328,17 +328,17 @@ private:
     virtual void visitJump(QV4::IR::Jump *) {}
     virtual void visitCJump(QV4::IR::CJump *) { discard(); }
     virtual void visitExp(QV4::IR::Exp *) { discard(); }
-    virtual void visitPhi(IR::Phi *) {}
+    virtual void visitPhi(QV4::IR::Phi *) {}
     virtual void visitRet(QV4::IR::Ret *ret);
 
-    void visitFunctionCall(const QString *name, IR::ExprList *args, IR::Temp *target);
+    void visitFunctionCall(const QString *name, QV4::IR::ExprList *args, QV4::IR::Temp *target);
 
     void discard() { _canSimplify = false; }
 
-    bool simplifyBinding(QV4::IR::Function *function, Binding *binding);
-    bool detectTranslationCallAndConvertBinding(Binding *binding);
+    bool simplifyBinding(QV4::IR::Function *function, QmlIR::Binding *binding);
+    bool detectTranslationCallAndConvertBinding(QmlIR::Binding *binding);
 
-    const QList<QtQml::QmlObject*> &qmlObjects;
+    const QList<QmlIR::Object*> &qmlObjects;
     const QHash<int, QQmlCustomParser*> &customParsers;
     QV4::IR::Module *jsModule;
 
@@ -347,7 +347,7 @@ private:
     QVector<int> _functionParameters;
     int _functionCallReturnValue;
 
-    QHash<int, IR::Expr*> _temps;
+    QHash<int, QV4::IR::Expr*> _temps;
     int _returnValueOfBindingExpression;
     int _synthesizedConsts;
 

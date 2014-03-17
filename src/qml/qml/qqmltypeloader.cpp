@@ -2133,8 +2133,8 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
     QQmlEngine *qmlEngine = typeLoader()->engine();
-    parsedQML.reset(new QtQml::ParsedQML(QV8Engine::getV4(qmlEngine)->debugger != 0));
-    QQmlCodeGenerator compiler(QV8Engine::get(qmlEngine)->illegalNames());
+    parsedQML.reset(new QmlIR::ParsedQML(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    QmlIR::QQmlCodeGenerator compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
         setError(compiler.errors);
         return;
@@ -2207,13 +2207,13 @@ void QQmlTypeData::dataReceived(const Data &data)
     // ### convert to use new data structure once old compiler is gone.
     if (m_newPragmas.isEmpty()) {
         m_newPragmas.reserve(parsedQML->pragmas.size());
-        foreach (QtQml::Pragma *p, parsedQML->pragmas) {
+        foreach (QmlIR::Pragma *p, parsedQML->pragmas) {
             QQmlScript::Pragma pragma;
             pragma.location.start.line = p->location.line;
             pragma.location.start.column = p->location.column;
 
             switch (p->type) {
-            case QtQml::Pragma::PragmaSingleton: pragma.type = QQmlScript::Pragma::Singleton; break;
+            case QmlIR::Pragma::PragmaSingleton: pragma.type = QQmlScript::Pragma::Singleton; break;
             default: break;
             }
 

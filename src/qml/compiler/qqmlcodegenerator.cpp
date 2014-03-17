@@ -58,7 +58,7 @@ static const quint32 emptyStringIndex = 0;
 
 DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
 
-using namespace QtQml;
+using namespace QmlIR;
 
 #define COMPILE_EXCEPTION(location, desc) \
     { \
@@ -66,7 +66,7 @@ using namespace QtQml;
         return false; \
     }
 
-void QmlObject::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &loc)
+void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &loc)
 {
     inheritedTypeNameIndex = typeNameIndex;
 
@@ -75,7 +75,7 @@ void QmlObject::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const 
 
     idIndex = id;
     indexOfDefaultProperty = -1;
-    properties = pool->New<PoolList<QmlProperty> >();
+    properties = pool->New<PoolList<Property> >();
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
@@ -84,16 +84,7 @@ void QmlObject::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const 
     declarationsOverride = 0;
 }
 
-void QmlObject::dump(DebugStream &out)
-{
-    out << inheritedTypeNameIndex << " {" << endl;
-    out.indent++;
-
-    out.indent--;
-    out << "}" << endl;
-}
-
-QString QmlObject::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
+QString Object::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
 {
     QSet<int> functionNames;
     for (Function *f = functions->first; f; f = f->next) {
@@ -104,7 +95,7 @@ QString QmlObject::sanityCheckFunctionNames(const QSet<QString> &illegalNames, Q
             return tr("Duplicate method name");
         functionNames.insert(f->nameIndex);
 
-        for (QtQml::Signal *s = qmlSignals->first; s; s = s->next) {
+        for (QmlIR::Signal *s = qmlSignals->first; s; s = s->next) {
             if (s->nameIndex == f->nameIndex)
                 return tr("Duplicate method name");
         }
@@ -118,9 +109,9 @@ QString QmlObject::sanityCheckFunctionNames(const QSet<QString> &illegalNames, Q
     return QString(); // no error
 }
 
-QString QmlObject::appendSignal(Signal *signal)
+QString Object::appendSignal(Signal *signal)
 {
-    QmlObject *target = declarationsOverride;
+    Object *target = declarationsOverride;
     if (!target)
         target = this;
 
@@ -133,13 +124,13 @@ QString QmlObject::appendSignal(Signal *signal)
     return QString(); // no error
 }
 
-QString QmlObject::appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation)
+QString Object::appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation)
 {
-    QmlObject *target = declarationsOverride;
+    Object *target = declarationsOverride;
     if (!target)
         target = this;
 
-    for (QmlProperty *p = target->properties->first; p; p = p->next)
+    for (Property *p = target->properties->first; p; p = p->next)
         if (p->nameIndex == prop->nameIndex)
             return tr("Duplicate property name");
 
@@ -157,15 +148,15 @@ QString QmlObject::appendProperty(QmlProperty *prop, const QString &propertyName
     return QString(); // no error
 }
 
-void QmlObject::appendFunction(QtQml::Function *f)
+void Object::appendFunction(QmlIR::Function *f)
 {
-    QmlObject *target = declarationsOverride;
+    Object *target = declarationsOverride;
     if (!target)
         target = this;
     target->functions->append(f);
 }
 
-QString QmlObject::appendBinding(Binding *b, bool isListBinding)
+QString Object::appendBinding(Binding *b, bool isListBinding)
 {
     const bool bindingToDefaultProperty = (b->propertyNameIndex == 0);
     if (!isListBinding && !bindingToDefaultProperty
@@ -183,7 +174,7 @@ QString QmlObject::appendBinding(Binding *b, bool isListBinding)
     return QString(); // no error
 }
 
-Binding *QmlObject::findBinding(quint32 nameIndex) const
+Binding *Object::findBinding(quint32 nameIndex) const
 {
     for (Binding *b = bindings->first; b; b = b->next)
         if (b->propertyNameIndex == nameIndex)
@@ -191,7 +182,7 @@ Binding *QmlObject::findBinding(quint32 nameIndex) const
     return 0;
 }
 
-void QmlObject::insertSorted(Binding *b)
+void Object::insertSorted(Binding *b)
 {
     Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::valueLocation>(b);
     bindings->insertAfter(insertionPoint, b);
@@ -349,7 +340,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiScriptBinding *node)
 bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = node->qualifiedId->identifierToken;
-    QmlObject *object = 0;
+    Object *object = 0;
     QQmlJS::AST::UiQualifiedId *name = node->qualifiedId;
     if (!resolveQualifiedId(&name, &object))
         return false;
@@ -413,7 +404,7 @@ void QQmlCodeGenerator::accept(QQmlJS::AST::Node *node)
     QQmlJS::AST::Node::acceptChild(node, this);
 }
 
-bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride)
+bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
 {
     if (QQmlJS::AST::UiQualifiedId *lastName = qualifiedTypeNameId) {
         while (lastName->next)
@@ -424,7 +415,7 @@ bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifi
         }
     }
 
-    QmlObject *obj = New<QmlObject>();
+    Object *obj = New<Object>();
     _objects.append(obj);
     *objectIndex = _objects.size() - 1;
     qSwap(_object, obj);
@@ -433,7 +424,7 @@ bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifi
     _object->declarationsOverride = declarationsOverride;
 
     // A new object is also a boundary for property declarations.
-    QmlProperty *declaration = 0;
+    Property *declaration = 0;
     qSwap(_propertyDeclaration, declaration);
 
     accept(initializer);
@@ -720,7 +711,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
             return false;
         }
 
-        QmlProperty *property = New<QmlProperty>();
+        Property *property = New<Property>();
         property->flags = 0;
         if (node->isReadonlyMember)
             property->flags |= QV4::CompiledData::Property::IsReadOnly;
@@ -933,7 +924,7 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
 void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
-    QmlObject *object = 0;
+    Object *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
     qSwap(_object, object);
@@ -944,7 +935,7 @@ void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::
 void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
-    QmlObject *object = 0;
+    Object *object = 0;
     if (!resolveQualifiedId(&name, &object, isOnAssignment))
         return;
     qSwap(_object, object);
@@ -983,7 +974,7 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifi
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
 
-    const QmlObject *obj = _objects.at(objectIndex);
+    const Object *obj = _objects.at(objectIndex);
     binding->valueLocation = obj->location;
 
     binding->flags = 0;
@@ -1009,7 +1000,7 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifi
     }
 }
 
-QmlObject *QQmlCodeGenerator::bindingsTarget() const
+Object *QQmlCodeGenerator::bindingsTarget() const
 {
     if (_propertyDeclaration && _object->declarationsOverride)
         return _object->declarationsOverride;
@@ -1064,7 +1055,7 @@ bool QQmlCodeGenerator::setId(const QQmlJS::AST::SourceLocation &idLocation, QQm
     return true;
 }
 
-bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment)
+bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment)
 {
     QQmlJS::AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
@@ -1155,14 +1146,14 @@ void QQmlCodeGenerator::recordError(const QQmlJS::AST::SourceLocation &location,
 
 void QQmlCodeGenerator::collectTypeReferences()
 {
-    foreach (QmlObject *obj, _objects) {
+    foreach (Object *obj, _objects) {
         if (obj->inheritedTypeNameIndex != emptyStringIndex) {
             QV4::CompiledData::TypeReference &r = _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
             r.needsCreation = true;
             r.errorWhenNotFound = true;
         }
 
-        for (const QmlProperty *prop = obj->firstProperty(); prop; prop = prop->next) {
+        for (const Property *prop = obj->firstProperty(); prop; prop = prop->next) {
             if (prop->type >= QV4::CompiledData::Property::Custom) {
                 // ### FIXME: We could report the more accurate location here by using prop->location, but the old
                 // compiler can't and the tests expect it to be the object location right now.
@@ -1225,10 +1216,10 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
 
-    QHash<QmlObject*, quint32> objectOffsets;
+    QHash<Object*, quint32> objectOffsets;
 
     int objectsSize = 0;
-    foreach (QmlObject *o, output.objects) {
+    foreach (Object *o, output.objects) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
         objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->signalCount(), o->bindingCount());
 
@@ -1264,7 +1255,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
     // write objects
     quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
-    foreach (QmlObject *o, output.objects) {
+    foreach (Object *o, output.objects) {
         *objectTable++ = objectOffsets.value(o);
 
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
@@ -1297,7 +1288,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
             *functionsTable++ = o->runtimeFunctionIndices->at(f->index);
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
-        for (const QmlProperty *p = o->firstProperty(); p; p = p->next) {
+        for (const Property *p = o->firstProperty(); p; p = p->next) {
             QV4::CompiledData::Property *propertyToWrite = reinterpret_cast<QV4::CompiledData::Property*>(propertiesPtr);
             *propertyToWrite = *p;
             propertiesPtr += sizeof(QV4::CompiledData::Property);
@@ -1346,7 +1337,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
     return qmlUnit;
 }
 
-char *QmlUnitGenerator::writeBindings(char *bindingPtr, QmlObject *o, BindingFilter filter) const
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const
 {
     for (const Binding *b = o->firstBinding(); b; b = b->next) {
         if (!(b->*(filter))())
@@ -1365,7 +1356,7 @@ int QmlUnitGenerator::getStringId(const QString &str) const
     return jsUnitGenerator->getStringId(str);
 }
 
-JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, IR::Module *jsModule, QQmlJS::Engine *jsEngine,
+JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule, QQmlJS::Engine *jsEngine,
                      QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QStringList &stringPool)
     : QQmlJS::Codegen(/*strict mode*/false)
     , sourceCode(sourceCode)
@@ -1494,7 +1485,7 @@ QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache
     return pd;
 }
 
-static void initMetaObjectResolver(IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
 enum MetaObjectResolverFlags {
     AllPropertiesAreFinal      = 0x1,
@@ -1503,11 +1494,11 @@ enum MetaObjectResolverFlags {
     ResolveTypeInformationOnly = 0x8
 };
 
-static void initMetaObjectResolver(IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
-static IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, IR::MemberExpressionResolver *resolver, IR::Member *member)
+static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
 {
-    IR::Type result = IR::VarType;
+    QV4::IR::Type result = QV4::IR::VarType;
 
     QQmlType *type = static_cast<QQmlType*>(resolver->data);
 
@@ -1517,7 +1508,7 @@ static IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, IR::MemberExpressio
         if (ok) {
             member->setEnumValue(value);
             resolver->clear();
-            return IR::SInt32Type;
+            return QV4::IR::SInt32Type;
         }
     }
 
@@ -1540,7 +1531,7 @@ static IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, IR::MemberExpressio
     return result;
 }
 
-static void initQmlTypeResolver(IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
+static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
 {
     resolver->resolveMember = &resolveQmlType;
     resolver->data = qmlType;
@@ -1548,9 +1539,9 @@ static void initQmlTypeResolver(IR::MemberExpressionResolver *resolver, QQmlType
     resolver->flags = 0;
 }
 
-static IR::Type resolveImportNamespace(QQmlEnginePrivate *, IR::MemberExpressionResolver *resolver, IR::Member *member)
+static QV4::IR::Type resolveImportNamespace(QQmlEnginePrivate *, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
 {
-    IR::Type result = IR::VarType;
+    QV4::IR::Type result = QV4::IR::VarType;
     QQmlTypeNameCache *typeNamespace = static_cast<QQmlTypeNameCache*>(resolver->extraData);
     void *importNamespace = resolver->data;
 
@@ -1559,14 +1550,14 @@ static IR::Type resolveImportNamespace(QQmlEnginePrivate *, IR::MemberExpression
         member->freeOfSideEffects = true;
         if (r.scriptIndex != -1) {
             // TODO: remember the index and replace with subscript later.
-            result = IR::VarType;
+            result = QV4::IR::VarType;
         } else if (r.type) {
             // TODO: Propagate singleton information, so that it is loaded
             // through the singleton getter in the run-time. Until then we
             // can't accelerate access :(
             if (!r.type->isSingleton()) {
                 initQmlTypeResolver(resolver, r.type);
-                return IR::QObjectType;
+                return QV4::IR::QObjectType;
             }
         } else {
             Q_ASSERT(false); // How can this happen?
@@ -1577,7 +1568,7 @@ static IR::Type resolveImportNamespace(QQmlEnginePrivate *, IR::MemberExpression
     return result;
 }
 
-static void initImportNamespaceResolver(IR::MemberExpressionResolver *resolver, QQmlTypeNameCache *imports, const void *importNamespace)
+static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlTypeNameCache *imports, const void *importNamespace)
 {
     resolver->resolveMember = &resolveImportNamespace;
     resolver->data = const_cast<void*>(importNamespace);
@@ -1585,9 +1576,9 @@ static void initImportNamespaceResolver(IR::MemberExpressionResolver *resolver, 
     resolver->flags = 0;
 }
 
-static IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, IR::MemberExpressionResolver *resolver, IR::Member *member)
+static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
 {
-    IR::Type result = IR::VarType;
+    QV4::IR::Type result = QV4::IR::VarType;
     QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
 
     if (member->name->constData()->isUpper() && (resolver->flags & LookupsIncludeEnums)) {
@@ -1600,7 +1591,7 @@ static IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, IR::Memb
             if (ok) {
                 member->setEnumValue(value);
                 resolver->clear();
-                return IR::SInt32Type;
+                return QV4::IR::SInt32Type;
             }
         }
     }
@@ -1633,24 +1624,24 @@ static IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, IR::Memb
             // Enums cannot be mapped to IR types, they need to go through the run-time handling
             // of accepting strings that will then be converted to the right values.
             if (property->isEnum())
-                return IR::VarType;
+                return QV4::IR::VarType;
 
             switch (property->propType) {
-            case QMetaType::Bool: result = IR::BoolType; break;
-            case QMetaType::Int: result = IR::SInt32Type; break;
-            case QMetaType::Double: result = IR::DoubleType; break;
-            case QMetaType::QString: result = IR::StringType; break;
+            case QMetaType::Bool: result = QV4::IR::BoolType; break;
+            case QMetaType::Int: result = QV4::IR::SInt32Type; break;
+            case QMetaType::Double: result = QV4::IR::DoubleType; break;
+            case QMetaType::QString: result = QV4::IR::StringType; break;
             default:
                 if (property->isQObject()) {
                     if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
                         initMetaObjectResolver(resolver, cache);
-                        return IR::QObjectType;
+                        return QV4::IR::QObjectType;
                     }
                 } else if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType)) {
                     if (QQmlPropertyCache *cache = qmlEngine->cache(valueType->metaObject())) {
                         initMetaObjectResolver(resolver, cache);
                         resolver->flags |= ResolveTypeInformationOnly;
-                        return IR::QObjectType;
+                        return QV4::IR::QObjectType;
                     }
                 }
                 break;
@@ -1661,7 +1652,7 @@ static IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, IR::Memb
     return result;
 }
 
-static void initMetaObjectResolver(IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject)
+static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject)
 {
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
@@ -1676,19 +1667,19 @@ void JSCodeGen::beginFunctionBodyHook()
     _importedScriptsTemp = _block->newTemp();
     _idArrayTemp = _block->newTemp();
 
-    IR::Temp *temp = _block->TEMP(_contextObjectTemp);
+    QV4::IR::Temp *temp = _block->TEMP(_contextObjectTemp);
     initMetaObjectResolver(&temp->memberResolver, _contextObject);
-    move(temp, _block->NAME(IR::Name::builtin_qml_context_object, 0, 0));
+    move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context_object, 0, 0));
 
     temp = _block->TEMP(_scopeObjectTemp);
     initMetaObjectResolver(&temp->memberResolver, _scopeObject);
-    move(temp, _block->NAME(IR::Name::builtin_qml_scope_object, 0, 0));
+    move(temp, _block->NAME(QV4::IR::Name::builtin_qml_scope_object, 0, 0));
 
-    move(_block->TEMP(_importedScriptsTemp), _block->NAME(IR::Name::builtin_qml_imported_scripts_object, 0, 0));
-    move(_block->TEMP(_idArrayTemp), _block->NAME(IR::Name::builtin_qml_id_array, 0, 0));
+    move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
+    move(_block->TEMP(_idArrayTemp), _block->NAME(QV4::IR::Name::builtin_qml_id_array, 0, 0));
 }
 
-IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
+QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 {
     if (_disableAcceleratedLookups)
         return 0;
@@ -1710,8 +1701,8 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
             _function->idObjectDependencies.insert(mapping.idIndex);
-            IR::Expr *s = subscript(_block->TEMP(_idArrayTemp), _block->CONST(IR::SInt32Type, mapping.idIndex));
-            IR::Temp *result = _block->TEMP(_block->newTemp());
+            QV4::IR::Expr *s = subscript(_block->TEMP(_idArrayTemp), _block->CONST(QV4::IR::SInt32Type, mapping.idIndex));
+            QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);
             if (mapping.type) {
@@ -1726,13 +1717,13 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {
-                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(IR::SInt32Type, r.scriptIndex));
+                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
             } else if (r.type) {
-                IR::Name *typeName = _block->NAME(name, line, col);
+                QV4::IR::Name *typeName = _block->NAME(name, line, col);
                 // Make sure the run-time loads this through the more efficient singleton getter.
                 typeName->qmlSingleton = r.type->isCompositeSingleton();
                 typeName->freeOfSideEffects = true;
-                IR::Temp *result = _block->TEMP(_block->newTemp());
+                QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 _block->MOVE(result, typeName);
 
                 result = _block->TEMP(result->index);
@@ -1740,9 +1731,9 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
                 return result;
             } else {
                 Q_ASSERT(r.importNamespace);
-                IR::Name *namespaceName = _block->NAME(name, line, col);
+                QV4::IR::Name *namespaceName = _block->NAME(name, line, col);
                 namespaceName->freeOfSideEffects = true;
-                IR::Temp *result = _block->TEMP(_block->newTemp());
+                QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 initImportNamespaceResolver(&result->memberResolver, imports, r.importNamespace);
 
                 _block->MOVE(result, namespaceName);
@@ -1757,9 +1748,9 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            IR::Temp *base = _block->TEMP(_scopeObjectTemp);
+            QV4::IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
-            return _block->MEMBER(base, _function->newString(name), pd, IR::Member::MemberOfQmlScopeObject);
+            return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlScopeObject);
         }
     }
 
@@ -1769,9 +1760,9 @@ IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            IR::Temp *base = _block->TEMP(_contextObjectTemp);
+            QV4::IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
-            return _block->MEMBER(base, _function->newString(name), pd, IR::Member::MemberOfQmlContextObject);
+            return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlContextObject);
         }
     }
 

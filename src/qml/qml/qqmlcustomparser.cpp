@@ -102,7 +102,7 @@ void QQmlCustomParser::clearErrors()
 
     An error is generated referring to the \a location in the source file.
 */
-void QQmlCustomParser::error(const CompiledData::Location &location, const QString &description)
+void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
     error.setLine(location.line);

@@ -57,28 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlTypeNameCache;
 
-namespace QtQml {
-
-using namespace QV4;
-
-struct DebugStream
-{
-    DebugStream(QTextStream &stream)
-        : stream(stream)
-        , indent(0)
-    {}
-
-    template <typename T>
-    QTextStream &operator<<(const T &value)
-    {
-        return stream << QByteArray(indent * 4, ' ') << value;
-    }
-
-    QTextStream &noindent() { return stream; }
-
-    QTextStream &stream;
-    int indent;
-};
+namespace QmlIR {
 
 template <typename T>
 struct PoolList
@@ -206,7 +185,7 @@ public:
     }
 };
 
-struct QmlObject;
+struct Object;
 
 struct SignalParameter : public QV4::CompiledData::Parameter
 {
@@ -224,9 +203,9 @@ struct Signal
     Signal *next;
 };
 
-struct QmlProperty : public QV4::CompiledData::Property
+struct Property : public QV4::CompiledData::Property
 {
-    QmlProperty *next;
+    Property *next;
 };
 
 struct Binding : public QV4::CompiledData::Binding
@@ -264,9 +243,9 @@ struct CompiledFunctionOrExpression
     CompiledFunctionOrExpression *next;
 };
 
-struct QmlObject
+struct Object
 {
-    Q_DECLARE_TR_FUNCTIONS(QmlObject)
+    Q_DECLARE_TR_FUNCTIONS(Object)
 public:
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
@@ -275,7 +254,7 @@ public:
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
 
-    const QmlProperty *firstProperty() const { return properties->first; }
+    const Property *firstProperty() const { return properties->first; }
     int propertyCount() const { return properties->count; }
     const Signal *firstSignal() const { return qmlSignals->first; }
     int signalCount() const { return qmlSignals->count; }
@@ -286,17 +265,15 @@ public:
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
-    QmlObject *declarationsOverride;
+    Object *declarationsOverride;
 
     void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
-
-    void dump(DebugStream &out);
 
     QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
     QString appendSignal(Signal *signal);
-    QString appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
-    void appendFunction(QtQml::Function *f);
+    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
+    void appendFunction(QmlIR::Function *f);
 
     QString appendBinding(Binding *b, bool isListBinding);
     Binding *findBinding(quint32 nameIndex) const;
@@ -307,7 +284,7 @@ public:
     FixedPoolArray<int> *runtimeFunctionIndices;
 
 private:
-    PoolList<QmlProperty> *properties;
+    PoolList<Property> *properties;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
@@ -336,7 +313,7 @@ struct ParsedQML
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
     int indexOfRootObject;
-    QList<QmlObject*> objects;
+    QList<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
     QV4::CompiledData::TypeReferenceMap typeReferences;
@@ -376,8 +353,8 @@ public:
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride = 0);
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, QmlObject *declarationsOverride = 0)
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = 0);
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = 0)
     { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
@@ -399,13 +376,13 @@ public:
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
-    QmlObject *bindingsTarget() const;
+    Object *bindingsTarget() const;
 
     bool setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value);
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
-    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment = false);
+    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
 
@@ -426,12 +403,12 @@ public:
 
     QList<QV4::CompiledData::Import*> _imports;
     QList<Pragma*> _pragmas;
-    QList<QmlObject*> _objects;
+    QList<Object*> _objects;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
-    QmlObject *_object;
-    QmlProperty *_propertyDeclaration;
+    Object *_object;
+    Property *_propertyDeclaration;
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
@@ -450,7 +427,7 @@ struct Q_QML_EXPORT QmlUnitGenerator
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
-    char *writeBindings(char *bindingPtr, QmlObject *o, BindingFilter filter) const;
+    char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
 
     int getStringId(const QString &str) const;
 
@@ -478,7 +455,7 @@ struct PropertyResolver
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen(const QString &fileName, const QString &sourceCode, IR::Module *jsModule,
+    JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
               const QStringList &stringPool);
 
@@ -498,7 +475,7 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 
 protected:
     virtual void beginFunctionBodyHook();
-    virtual IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
