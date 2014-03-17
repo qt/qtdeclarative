@@ -58,8 +58,8 @@ class QSGThreadedRenderLoop : public QSGRenderLoop
 public:
     QSGThreadedRenderLoop();
 
-    void show(QQuickWindow *window);
-    void hide(QQuickWindow *window);
+    void show(QQuickWindow *) {}
+    void hide(QQuickWindow *);
 
     void windowDestroyed(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
@@ -73,7 +73,7 @@ public:
 
     QAnimationDriver *animationDriver() const;
 
-    void releaseResources(QQuickWindow *window) { releaseResources(window, false); }
+    void releaseResources(QQuickWindow *window);
 
     bool event(QEvent *);
 
@@ -93,7 +93,7 @@ private:
 
     friend class QSGRenderThread;
 
-    void releaseResources(QQuickWindow *window, bool inDestructor);
+    void releaseResources(Window *window, bool inDestructor);
     bool checkAndResetForceUpdate(QQuickWindow *window);
 
     bool anyoneShowing() const;
@@ -102,10 +102,10 @@ private:
     void startOrStopAnimationTimer();
     void maybePostPolishRequest(Window *w);
     void waitForReleaseComplete();
-    bool polishAndSync(Window *w);
+    void polishAndSync(Window *w, bool inExpose = false);
     void maybeUpdate(Window *window);
 
-    void handleExposure(Window *w);
+    void handleExposure(QQuickWindow *w);
     void handleObscurity(Window *w);
 
 
@@ -116,7 +116,7 @@ private:
     int m_animation_timer;
     int m_exhaust_delay;
 
-    bool m_locked;
+    bool m_lockedForSync;
 };
 
 

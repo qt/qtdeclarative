@@ -393,7 +393,7 @@ void tst_qquickwindow::aboutToStopSignal()
 
     window.hide();
 
-    QVERIFY(spy.count() > 0);
+    QTRY_VERIFY(spy.count() > 0);
 }
 
 //If the item calls update inside updatePaintNode, it should schedule another sync pass
