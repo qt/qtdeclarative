@@ -174,8 +174,11 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             d->maximumTime = qMax(time, d->maximumTime);
         } else if (event == QQmlProfilerService::AnimationFrame) {
             int frameRate, animationCount;
+            int threadId = 0;
             stream >> frameRate >> animationCount;
-            emit this->frame(time, frameRate, animationCount);
+            if (!stream.atEnd())
+                stream >> threadId;
+            emit this->frame(time, frameRate, animationCount, threadId);
             d->maximumTime = qMax(time, d->maximumTime);
         } else if (event == QQmlProfilerService::StartTrace) {
             emit this->traceStarted(time);

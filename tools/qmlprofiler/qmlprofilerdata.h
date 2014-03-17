@@ -88,7 +88,7 @@ public slots:
                      const QmlEventLocation &location);
     void addV8Event(int depth, const QString &function, const QString &filename,
                     int lineNumber, double totalTime, double selfTime);
-    void addFrameEvent(qint64 time, int framerate, int animationcount);
+    void addFrameEvent(qint64 time, int framerate, int animationcount, int threadId);
 
     void complete();
     bool save(const QString &filename);
