@@ -2210,6 +2210,11 @@ void tst_qqmllanguage::importsLocal_data()
            "Test {}"
         << (!qmlCheckTypes()?"TestType":"")
         << (!qmlCheckTypes()?"":"Test is ambiguous. Found in org/qtproject/Test/ and in subdir/");
+    QTest::newRow("file URL survives percent-encoding")
+        << "import \"" + QUrl::fromLocalFile(QDir::currentPath() + "/{subdir}").toString() + "\"\n"
+           "Test {}"
+        << "QQuickRectangle"
+        << "";
 }
 
 void tst_qqmllanguage::importsLocal()

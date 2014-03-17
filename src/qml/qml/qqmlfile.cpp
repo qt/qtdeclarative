@@ -666,18 +666,13 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 
 static QString toLocalFile(const QString &url)
 {
-    if (!url.startsWith(QLatin1String("file://"), Qt::CaseInsensitive))
+    const QUrl file(url);
+    if (!file.isLocalFile())
         return QString();
-
-    QString file = url.mid(7);
 
     //XXX TODO: handle windows hostnames: "//servername/path/to/file.txt"
 
-    // magic for drives on windows
-    if (file.length() > 2 && file.at(0) == QLatin1Char('/') && file.at(2) == QLatin1Char(':'))
-        file.remove(0, 1);
-
-    return file;
+    return file.toLocalFile();
 }
 
 /*!
