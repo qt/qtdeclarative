@@ -320,6 +320,7 @@ private slots:
     void singletonWithEnum();
     void lazyBindingEvaluation();
     void varPropertyAccessOnObjectWithInvalidContext();
+    void contextObjectOnLazyBindings();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7577,6 +7578,18 @@ void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
        qDebug() << component.errors().first().toString();
    QVERIFY(!obj.isNull());
    QVERIFY(obj->property("success") == true);
+}
+
+void tst_qqmlecmascript::contextObjectOnLazyBindings()
+{
+    QQmlComponent component(&engine, testFileUrl("contextObjectOnLazyBindings.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
+        qDebug() << component.errors().first().toString();
+    QVERIFY(!obj.isNull());
+    QObject *subObject = qvariant_cast<QObject*>(obj->property("subObject"));
+    QVERIFY(subObject);
+    QCOMPARE(subObject->property("testValue").toInt(), int(42));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

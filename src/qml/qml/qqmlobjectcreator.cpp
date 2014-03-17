@@ -213,7 +213,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         context->importedScripts = sharedState->creationContext->importedScripts;
     }
 
-    QObject *instance = createInstance(objectToCreate, parent);
+    QObject *instance = createInstance(objectToCreate, parent, /*isContextObject*/true);
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
         Q_ASSERT(ddata);
@@ -221,8 +221,6 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
             ddata->compiledData->release();
         ddata->compiledData = compiledData;
         ddata->compiledData->addref();
-
-        context->contextObject = instance;
     }
 
     Q_QML_VME_PROFILE(sharedState->profiler, stop());
@@ -1014,7 +1012,7 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
     errors << error;
 }
 
-QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
+QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
 {
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
@@ -1110,6 +1108,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent)
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
     if (idEntry != objectIndexToId.constEnd())
         context->setIdProperty(idEntry.value(), instance);
+
+    // Register the context object in the context early on in order for pending binding
+    // initialization to find it available.
+    if (isContextObject)
+        context->contextObject = instance;
 
     QBitArray bindingsToSkip;
     if (customParser) {

@@ -96,7 +96,7 @@ private:
 
     void init(QQmlContextData *parentContext);
 
-    QObject *createInstance(int index, QObject *parent = 0);
+    QObject *createInstance(int index, QObject *parent = 0, bool isContextObject = false);
 
     bool populateInstance(int index, QObject *instance,
                           QObject *bindingTarget, QQmlPropertyData *valueTypeProperty,
