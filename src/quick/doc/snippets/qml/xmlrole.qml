@@ -52,7 +52,7 @@ XmlListModel {
 
 //![1]
     // XmlRole queries will be made on <book> elements
-    query: "/catalogue/book"
+    query: "/catalog/book"
 
     // query the book title
     XmlRole { name: "title"; query: "title/string()" }
@@ -71,14 +71,16 @@ XmlListModel {
 }
 //![1]
 
+//![2]
 ListView {
     width: 300; height: 200
     model: model
     delegate: Column {
-        Text { text: title + " (" + type + ")"; font.bold: true }
+        Text { text: title + " (" + type + ")"; font.bold: wanted }
         Text { text: first_author }
         Text { text: year }
     }
+//![2]
 }
 
 }
