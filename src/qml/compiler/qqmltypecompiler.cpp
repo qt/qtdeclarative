@@ -1666,6 +1666,11 @@ QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::Comp
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
 
+static bool compareNameIndices(const QV4::CompiledData::Binding *binding, quint32 name)
+{
+    return binding->propertyNameIndex < name;
+}
+
 bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
@@ -1696,12 +1701,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex);
     QList<const QV4::CompiledData::Binding*> customBindings;
 
-    struct GroupPropertyFinder {
-        bool operator()(const QV4::CompiledData::Binding *binding, quint32 name) const {
-            return binding->propertyNameIndex < name;
-        }
-    };
-
     // Collect group properties first for sanity checking
     // vector values are sorted by property name string index.
     GroupPropertyVector groupProperties;
@@ -1718,7 +1717,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             return false;
         }
 
-        GroupPropertyVector::const_iterator pos = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, GroupPropertyFinder());
+        GroupPropertyVector::const_iterator pos = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, compareNameIndices);
         groupProperties.insert(pos, binding);
     }
 
@@ -1836,7 +1835,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
 
         if (pd) {
-            GroupPropertyVector::const_iterator assignedGroupProperty = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, GroupPropertyFinder());
+            GroupPropertyVector::const_iterator assignedGroupProperty = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, compareNameIndices);
             const bool assigningToGroupProperty = assignedGroupProperty != groupProperties.constEnd() && !(binding->propertyNameIndex < (*assignedGroupProperty)->propertyNameIndex);
 
             if (!pd->isWritable()
