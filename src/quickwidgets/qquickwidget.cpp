@@ -97,6 +97,9 @@ void QQuickWidgetPrivate::handleWindowChange()
 QQuickWidgetPrivate::QQuickWidgetPrivate()
     : root(0)
     , component(0)
+    , offscreenWindow(0)
+    , offscreenSurface(0)
+    , renderControl(0)
     , fbo(0)
     , context(0)
     , resizeMode(QQuickWidget::SizeViewToRootObject)
@@ -110,9 +113,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
-    offscreenSurface = new QOffscreenSurface;
-    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
-    offscreenSurface->create();
+    createOffscreenSurface();
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
@@ -123,6 +124,15 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
     delete offscreenWindow;
     delete renderControl;
     delete fbo;
+}
+
+void QQuickWidgetPrivate::createOffscreenSurface()
+{
+    delete offscreenSurface;
+    offscreenSurface = 0;
+    offscreenSurface = new QOffscreenSurface;
+    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
+    offscreenSurface->create();
 }
 
 void QQuickWidgetPrivate::execute()
@@ -939,6 +949,44 @@ void QQuickWidget::triggerUpdate()
         d->updateTimer = startTimer(exhaustDelay, Qt::PreciseTimer);
         d->eventPending = true;
     }
+}
+
+/*!
+    Sets the surface \a format for the context and offscreen surface used
+    by this widget.
+
+    Call this function when there is a need to request a context for a
+    given OpenGL version or profile. The sizes for depth, stencil and
+    alpha buffers are taken care of automatically and there is no need
+    to request those explicitly.
+
+    \sa QWindow::setFormat(), QWindow::format(), format()
+*/
+void QQuickWidget::setFormat(const QSurfaceFormat &format)
+{
+    Q_D(QQuickWidget);
+    QSurfaceFormat currentFormat = d->offscreenWindow->format();
+    QSurfaceFormat newFormat = format;
+    newFormat.setDepthBufferSize(qMax(newFormat.depthBufferSize(), currentFormat.depthBufferSize()));
+    newFormat.setStencilBufferSize(qMax(newFormat.stencilBufferSize(), currentFormat.stencilBufferSize()));
+    newFormat.setAlphaBufferSize(qMax(newFormat.alphaBufferSize(), currentFormat.alphaBufferSize()));
+    if (currentFormat != newFormat) {
+        d->offscreenWindow->setFormat(newFormat);
+        d->createOffscreenSurface();
+    }
+}
+
+/*!
+    Returns the actual surface format.
+
+    If the widget has not yet been shown, the requested format is returned.
+
+    \sa setFormat()
+*/
+QSurfaceFormat QQuickWidget::format() const
+{
+    Q_D(const QQuickWidget);
+    return d->offscreenWindow->format();
 }
 
 QT_END_NAMESPACE
