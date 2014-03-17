@@ -2314,9 +2314,9 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
     const bool isDebug = QLibraryInfo::isDebugBuild();
     const QString eglLibName = QLatin1String(isDebug ? "libEGLd.dll" : "libEGL.dll");
     const QString glesLibName = QLatin1String(isDebug ? "libGLESv2d.dll" : "libGLESv2.dll");
-     //: %1 Context type (Open GL, EGL), ANGLE %2, %3 library names
+     //: %1 Context type (Open GL, EGL), %2 format, ANGLE %3, %4 library names
     const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
-        "Failed to create %1 context for format %2."
+        "Failed to create %1 context for format %2.\n"
         "This is most likely caused by not having the necessary graphics drivers installed.\n\n"
         "Install a driver providing OpenGL 2.0 or higher, or, if this is not possible, "
         "make sure the ANGLE Open GL ES 2.0 emulation libraries (%3, %4 and d3dcompiler_*.dll) "
