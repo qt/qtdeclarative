@@ -1038,7 +1038,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
@@ -1053,7 +1053,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
@@ -1093,7 +1093,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     if (blockNeedsDebugInstruction) {
         // this is required so stepOut will always be guaranteed to stop in every stack frame
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
