@@ -85,7 +85,7 @@ class QQmlDataLoader;
 class QQmlExtensionInterface;
 
 namespace QmlIR {
-struct ParsedQML;
+struct Document;
 }
 
 class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
@@ -275,7 +275,7 @@ public:
         ~Blob();
 
         QQmlTypeLoader *typeLoader() const { return m_typeLoader; }
-        const QQmlImports &imports() const { return m_imports; }
+        const QQmlImports &imports() const { return m_importCache; }
 
     protected:
         bool addImport(const QQmlScript::Import &import, QList<QQmlError> *errors);
@@ -294,7 +294,7 @@ public:
 
     protected:
         QQmlTypeLoader *m_typeLoader;
-        QQmlImports m_imports;
+        QQmlImports m_importCache;
         bool m_isSingleton;
         QHash<const QQmlScript::Import *, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
@@ -455,9 +455,9 @@ private:
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    QScopedPointer<QmlIR::ParsedQML> parsedQML;
-    QList<QQmlScript::Import> m_newImports;
-    QList<QQmlScript::Pragma> m_newPragmas;
+    QScopedPointer<QmlIR::Document> m_document;
+    QList<QQmlScript::Import> m_imports;
+    QList<QQmlScript::Pragma> m_pragmas;
 
     QList<ScriptReference> m_scripts;
 

@@ -45,6 +45,7 @@
 #include <qqmlerror.h>
 #include <qhash.h>
 #include <private/qqmlcompiler_p.h>
+#include <private/qqmlirbuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,7 +56,7 @@ class QQmlTypeData;
 class QQmlImports;
 
 namespace QmlIR {
-struct ParsedQML;
+struct Document;
 }
 
 namespace QV4 {
@@ -69,7 +70,7 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::ParsedQML *parsedQML);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::Document *document);
 
     bool compile();
 
@@ -109,7 +110,7 @@ private:
     QQmlEnginePrivate *engine;
     QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
-    QmlIR::ParsedQML *parsedQML;
+    QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
 };
@@ -154,7 +155,7 @@ protected:
 // to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
 struct SignalHandlerConverter : public QQmlCompilePass
 {
-    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
+    Q_DECLARE_TR_FUNCTIONS(SignalHandlerConverter)
 public:
     SignalHandlerConverter(QQmlTypeCompiler *typeCompiler);
 

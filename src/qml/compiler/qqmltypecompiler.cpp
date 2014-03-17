@@ -41,7 +41,7 @@
 
 #include "qqmltypecompiler_p.h"
 
-#include <private/qqmlcompiler_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
@@ -57,11 +57,11 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::ParsedQML *parsedQML)
+QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::Document *parsedQML)
     : engine(engine)
     , compiledData(compiledData)
     , typeData(typeData)
-    , parsedQML(parsedQML)
+    , document(parsedQML)
 {
 }
 
@@ -140,8 +140,8 @@ bool QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
-    compiledData->datas.reserve(parsedQML->objects.count());
-    compiledData->propertyCaches.reserve(parsedQML->objects.count());
+    compiledData->datas.reserve(document->objects.count());
+    compiledData->propertyCaches.reserve(document->objects.count());
 
     {
         QQmlPropertyCacheCreator propertyCacheBuilder(this);
@@ -203,7 +203,7 @@ bool QQmlTypeCompiler::compile()
 
     // Compile JS binding expressions and signal handlers
     {
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, compiledData->importCache, parsedQML->jsGenerator.strings);
+        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, compiledData->importCache, document->jsGenerator.strings);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return false;
@@ -216,14 +216,14 @@ bool QQmlTypeCompiler::compile()
 
     QV4::ExecutionEngine *v4 = engine->v4engine();
 
-    QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
+    QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
     isel->setUseFastLookups(false);
     QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
 
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML);
+    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*document);
 
     if (jsUnit) {
         Q_ASSERT(!jsUnit->data);
@@ -295,17 +295,17 @@ void QQmlTypeCompiler::recordError(const QQmlError &error)
 
 QString QQmlTypeCompiler::stringAt(int idx) const
 {
-    return parsedQML->stringAt(idx);
+    return document->stringAt(idx);
 }
 
 int QQmlTypeCompiler::registerString(const QString &str)
 {
-    return parsedQML->jsGenerator.registerString(str);
+    return document->jsGenerator.registerString(str);
 }
 
 QV4::IR::Module *QQmlTypeCompiler::jsIRModule() const
 {
-    return &parsedQML->jsModule;
+    return &document->jsModule;
 }
 
 const QV4::CompiledData::QmlUnit *QQmlTypeCompiler::qmlUnit() const
@@ -325,20 +325,20 @@ QHash<int, QQmlCompiledData::TypeReference*> *QQmlTypeCompiler::resolvedTypes()
 
 QList<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects()
 {
-    return &parsedQML->objects;
+    return &document->objects;
 }
 
 int QQmlTypeCompiler::rootObjectIndex() const
 {
-    return parsedQML->indexOfRootObject;
+    return document->indexOfRootObject;
 }
 
 void QQmlTypeCompiler::setPropertyCaches(const QVector<QQmlPropertyCache *> &caches)
 {
     Q_ASSERT(compiledData->propertyCaches.isEmpty());
     compiledData->propertyCaches = caches;
-    Q_ASSERT(caches.count() >= parsedQML->indexOfRootObject);
-    compiledData->rootPropertyCache = caches.at(parsedQML->indexOfRootObject);
+    Q_ASSERT(caches.count() >= document->indexOfRootObject);
+    compiledData->rootPropertyCache = caches.at(document->indexOfRootObject);
     compiledData->rootPropertyCache->addref();
 }
 
@@ -375,17 +375,17 @@ QHash<int, QQmlCompiledData::CustomParserData> *QQmlTypeCompiler::customParserDa
 
 QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
 {
-    return parsedQML->jsParserEngine.pool();
+    return document->jsParserEngine.pool();
 }
 
 QStringRef QQmlTypeCompiler::newStringRef(const QString &string)
 {
-    return parsedQML->jsParserEngine.newStringRef(string);
+    return document->jsParserEngine.newStringRef(string);
 }
 
 const QStringList &QQmlTypeCompiler::stringPool() const
 {
-    return parsedQML->jsGenerator.strings;
+    return document->jsGenerator.strings;
 }
 
 void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
@@ -946,7 +946,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             continue;
         }
 
-        if (!QmlIR::QQmlCodeGenerator::isSignalPropertyName(propertyName))
+        if (!QmlIR::IRBuilder::isSignalPropertyName(propertyName))
             continue;
 
         QmlIR::PropertyResolver resolver(propertyCache);
@@ -1749,7 +1749,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                     customParserBindings.setBit(i);
                     continue;
                 }
-            } else if (QmlIR::QQmlCodeGenerator::isSignalPropertyName(name)
+            } else if (QmlIR::IRBuilder::isSignalPropertyName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 customBindings << binding;
                 customParserBindings.setBit(i);

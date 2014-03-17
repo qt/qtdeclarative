@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QQMLCODEGENERATOR_P_H
-#define QQMLCODEGENERATOR_P_H
+#ifndef QQMLIRBUILDER_P_H
+#define QQMLIRBUILDER_P_H
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmlpool_p.h>
@@ -223,7 +223,7 @@ struct Function
     Function *next;
 };
 
-struct CompiledFunctionOrExpression
+struct Q_QML_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
         : node(0)
@@ -243,7 +243,7 @@ struct CompiledFunctionOrExpression
     CompiledFunctionOrExpression *next;
 };
 
-struct Object
+struct Q_QML_EXPORT Object
 {
     Q_DECLARE_TR_FUNCTIONS(Object)
 public:
@@ -290,7 +290,7 @@ private:
     PoolList<Function> *functions;
 };
 
-struct Pragma
+struct Q_QML_EXPORT Pragma
 {
     enum PragmaType {
         PragmaSingleton = 0x1
@@ -300,9 +300,9 @@ struct Pragma
     QV4::CompiledData::Location location;
 };
 
-struct ParsedQML
+struct Q_QML_EXPORT Document
 {
-    ParsedQML(bool debugMode)
+    Document(bool debugMode)
         : jsModule(debugMode)
         , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
     {}
@@ -321,13 +321,12 @@ struct ParsedQML
     QString stringAt(int index) const { return jsGenerator.strings.value(index); }
 };
 
-// Doesn't really generate code per-se, but more the data structure
-struct Q_QML_EXPORT QQmlCodeGenerator : public QQmlJS::AST::Visitor
+struct Q_QML_EXPORT IRBuilder : public QQmlJS::AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
-    QQmlCodeGenerator(const QSet<QString> &illegalNames);
-    bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output);
+    IRBuilder(const QSet<QString> &illegalNames);
+    bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, Document *output);
 
     static bool isSignalPropertyName(const QString &name);
 
@@ -423,7 +422,7 @@ struct Q_QML_EXPORT QmlUnitGenerator
     {
     }
 
-    QV4::CompiledData::QmlUnit *generate(ParsedQML &output);
+    QV4::CompiledData::QmlUnit *generate(Document &output);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
@@ -434,7 +433,7 @@ private:
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
 };
 
-struct PropertyResolver
+struct Q_QML_EXPORT PropertyResolver
 {
     PropertyResolver(QQmlPropertyCache *cache)
         : cache(cache)
@@ -496,8 +495,8 @@ private:
     int _idArrayTemp;
 };
 
-} // namespace QtQml
+} // namespace QmlIR
 
 QT_END_NAMESPACE
 
-#endif // QQMLCODEGENERATOR_P_H
+#endif // QQMLIRBUILDER_P_H

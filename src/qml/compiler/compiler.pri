@@ -11,7 +11,7 @@ HEADERS += \
     $$PWD/qv4isel_moth_p.h \
     $$PWD/qv4isel_util_p.h \
     $$PWD/qv4ssa_p.h \
-    $$PWD/qqmlcodegenerator_p.h \
+    $$PWD/qqmlirbuilder_p.h \
     $$PWD/qqmltypecompiler_p.h
 
 SOURCES += \
@@ -23,5 +23,5 @@ SOURCES += \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
     $$PWD/qv4ssa.cpp \
-    $$PWD/qqmlcodegenerator.cpp \
+    $$PWD/qqmlirbuilder.cpp \
     $$PWD/qqmltypecompiler.cpp

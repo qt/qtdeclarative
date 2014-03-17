@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qqmlcodegenerator_p.h"
+#include "qqmlirbuilder_p.h"
 
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
@@ -197,7 +197,7 @@ QStringList Signal::parameterStringList(const QStringList &stringPool) const
     return result;
 }
 
-QQmlCodeGenerator::QQmlCodeGenerator(const QSet<QString> &illegalNames)
+IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
     : illegalNames(illegalNames)
     , _object(0)
     , _propertyDeclaration(0)
@@ -205,7 +205,7 @@ QQmlCodeGenerator::QQmlCodeGenerator(const QSet<QString> &illegalNames)
 {
 }
 
-bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output)
+bool IRBuilder::generateFromQml(const QString &code, const QUrl &url, const QString &urlString, Document *output)
 {
     this->url = url;
     QQmlJS::AST::UiProgram *program = 0;
@@ -268,7 +268,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     return errors.isEmpty();
 }
 
-bool QQmlCodeGenerator::isSignalPropertyName(const QString &name)
+bool IRBuilder::isSignalPropertyName(const QString &name)
 {
     if (name.length() < 3) return false;
     if (!name.startsWith(QStringLiteral("on"))) return false;
@@ -282,18 +282,18 @@ bool QQmlCodeGenerator::isSignalPropertyName(const QString &name)
     return false; // consists solely of underscores - invalid.
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayMemberList *ast)
+bool IRBuilder::visit(QQmlJS::AST::UiArrayMemberList *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiProgram *)
+bool IRBuilder::visit(QQmlJS::AST::UiProgram *)
 {
     Q_ASSERT(!"should not happen");
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectDefinition *node)
+bool IRBuilder::visit(QQmlJS::AST::UiObjectDefinition *node)
 {
     // The grammar can't distinguish between two different definitions here:
     //     Item { ... }
@@ -322,7 +322,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectDefinition *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectBinding *node)
+bool IRBuilder::visit(QQmlJS::AST::UiObjectBinding *node)
 {
     int idx = 0;
     if (!defineQMLObject(&idx, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer))
@@ -331,13 +331,13 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectBinding *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiScriptBinding *node)
+bool IRBuilder::visit(QQmlJS::AST::UiScriptBinding *node)
 {
     appendBinding(node->qualifiedId, node->statement);
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
+bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = node->qualifiedId->identifierToken;
     Object *object = 0;
@@ -374,37 +374,37 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiArrayBinding *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiHeaderItemList *list)
+bool IRBuilder::visit(QQmlJS::AST::UiHeaderItemList *list)
 {
     return QQmlJS::AST::Visitor::visit(list);
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectInitializer *ast)
+bool IRBuilder::visit(QQmlJS::AST::UiObjectInitializer *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiObjectMemberList *ast)
+bool IRBuilder::visit(QQmlJS::AST::UiObjectMemberList *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiParameterList *ast)
+bool IRBuilder::visit(QQmlJS::AST::UiParameterList *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiQualifiedId *id)
+bool IRBuilder::visit(QQmlJS::AST::UiQualifiedId *id)
 {
     return QQmlJS::AST::Visitor::visit(id);
 }
 
-void QQmlCodeGenerator::accept(QQmlJS::AST::Node *node)
+void IRBuilder::accept(QQmlJS::AST::Node *node)
 {
     QQmlJS::AST::Node::acceptChild(node, this);
 }
 
-bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
+bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
 {
     if (QQmlJS::AST::UiQualifiedId *lastName = qualifiedTypeNameId) {
         while (lastName->next)
@@ -446,7 +446,7 @@ bool QQmlCodeGenerator::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifi
     return true;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiImport *node)
+bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
 {
     QString uri;
     QV4::CompiledData::Import *import = New<QV4::CompiledData::Import>();
@@ -518,7 +518,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiImport *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPragma *node)
+bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
 {
     Pragma *pragma = New<Pragma>();
 
@@ -562,7 +562,7 @@ static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
     return QStringList();
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
+bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
     static const struct TypeNameToType {
         const char *name;
@@ -800,7 +800,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiPublicMember *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(QQmlJS::AST::UiSourceElement *node)
+bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
 {
     if (QQmlJS::AST::FunctionDeclaration *funDecl = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration *>(node->sourceElement)) {
         CompiledFunctionOrExpression *foe = New<CompiledFunctionOrExpression>();
@@ -823,7 +823,7 @@ bool QQmlCodeGenerator::visit(QQmlJS::AST::UiSourceElement *node)
     return false;
 }
 
-QString QQmlCodeGenerator::asString(QQmlJS::AST::UiQualifiedId *node)
+QString IRBuilder::asString(QQmlJS::AST::UiQualifiedId *node)
 {
     QString s;
 
@@ -837,7 +837,7 @@ QString QQmlCodeGenerator::asString(QQmlJS::AST::UiQualifiedId *node)
     return s;
 }
 
-QStringRef QQmlCodeGenerator::asStringRef(QQmlJS::AST::Node *node)
+QStringRef IRBuilder::asStringRef(QQmlJS::AST::Node *node)
 {
     if (!node)
         return QStringRef();
@@ -845,7 +845,7 @@ QStringRef QQmlCodeGenerator::asStringRef(QQmlJS::AST::Node *node)
     return textRefAt(node->firstSourceLocation(), node->lastSourceLocation());
 }
 
-void QQmlCodeGenerator::extractVersion(QStringRef string, int *maj, int *min)
+void IRBuilder::extractVersion(QStringRef string, int *maj, int *min)
 {
     *maj = -1; *min = -1;
 
@@ -863,12 +863,12 @@ void QQmlCodeGenerator::extractVersion(QStringRef string, int *maj, int *min)
     }
 }
 
-QStringRef QQmlCodeGenerator::textRefAt(const QQmlJS::AST::SourceLocation &first, const QQmlJS::AST::SourceLocation &last) const
+QStringRef IRBuilder::textRefAt(const QQmlJS::AST::SourceLocation &first, const QQmlJS::AST::SourceLocation &last) const
 {
     return QStringRef(&sourceCode, first.offset, last.offset + last.length - first.offset);
 }
 
-void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement)
+void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement)
 {
     QQmlJS::AST::SourceLocation loc = statement->firstSourceLocation();
     binding->valueLocation.line = loc.startLine;
@@ -921,7 +921,7 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, QQm
     }
 }
 
-void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value)
+void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     Object *object = 0;
@@ -932,7 +932,7 @@ void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::
     qSwap(_object, object);
 }
 
-void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
+void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     Object *object = 0;
@@ -943,7 +943,7 @@ void QQmlCodeGenerator::appendBinding(QQmlJS::AST::UiQualifiedId *name, int obje
     qSwap(_object, object);
 }
 
-void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
+void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
 {
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         setId(nameLocation, value);
@@ -962,7 +962,7 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifi
     }
 }
 
-void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
+void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
@@ -1000,14 +1000,14 @@ void QQmlCodeGenerator::appendBinding(const QQmlJS::AST::SourceLocation &qualifi
     }
 }
 
-Object *QQmlCodeGenerator::bindingsTarget() const
+Object *IRBuilder::bindingsTarget() const
 {
     if (_propertyDeclaration && _object->declarationsOverride)
         return _object->declarationsOverride;
     return _object;
 }
 
-bool QQmlCodeGenerator::setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value)
+bool IRBuilder::setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value)
 {
     QQmlJS::AST::SourceLocation loc = value->firstSourceLocation();
     QStringRef str;
@@ -1055,7 +1055,7 @@ bool QQmlCodeGenerator::setId(const QQmlJS::AST::SourceLocation &idLocation, QQm
     return true;
 }
 
-bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment)
+bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment)
 {
     QQmlJS::AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
@@ -1134,7 +1134,7 @@ bool QQmlCodeGenerator::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToRe
     return true;
 }
 
-void QQmlCodeGenerator::recordError(const QQmlJS::AST::SourceLocation &location, const QString &description)
+void IRBuilder::recordError(const QQmlJS::AST::SourceLocation &location, const QString &description)
 {
     QQmlError error;
     error.setUrl(url);
@@ -1144,7 +1144,7 @@ void QQmlCodeGenerator::recordError(const QQmlJS::AST::SourceLocation &location,
     errors << error;
 }
 
-void QQmlCodeGenerator::collectTypeReferences()
+void IRBuilder::collectTypeReferences()
 {
     foreach (Object *obj, _objects) {
         if (obj->inheritedTypeNameIndex != emptyStringIndex) {
@@ -1170,7 +1170,7 @@ void QQmlCodeGenerator::collectTypeReferences()
     }
 }
 
-QQmlScript::LocationSpan QQmlCodeGenerator::location(QQmlJS::AST::SourceLocation start, QQmlJS::AST::SourceLocation end)
+QQmlScript::LocationSpan IRBuilder::location(QQmlJS::AST::SourceLocation start, QQmlJS::AST::SourceLocation end)
 {
     QQmlScript::LocationSpan rv;
     rv.start.line = start.startLine;
@@ -1182,7 +1182,7 @@ QQmlScript::LocationSpan QQmlCodeGenerator::location(QQmlJS::AST::SourceLocation
     return rv;
 }
 
-bool QQmlCodeGenerator::isStatementNodeScript(QQmlJS::AST::Statement *statement)
+bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 {
     if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement)) {
         QQmlJS::AST::ExpressionNode *expr = stmt->expression;
@@ -1207,7 +1207,7 @@ bool QQmlCodeGenerator::isStatementNodeScript(QQmlJS::AST::Statement *statement)
     return true;
 }
 
-QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
+QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
 {
     jsUnitGenerator = &output.jsGenerator;
     int unitSize = 0;

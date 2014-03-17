@@ -61,7 +61,6 @@
 #include "qqmlpropertycache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
-#include <private/qqmlcodegenerator_p.h>
 #include "private/qv4identifier_p.h"
 #include <private/qqmljsastfwd_p.h>
 #include "qqmlcustomparser_p.h"
