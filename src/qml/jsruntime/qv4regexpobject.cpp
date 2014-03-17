@@ -243,7 +243,7 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 void RegExpCtor::clearLastMatch()
 {
     lastMatch = Primitive::nullValue();
-    lastInput = engine()->newIdentifier(QString());
+    lastInput = engine()->id_empty;
     lastMatchStart = 0;
     lastMatchEnd = 0;
 }

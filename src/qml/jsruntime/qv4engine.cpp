@@ -219,6 +219,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     stringClass = InternalClass::create(this, String::staticVTable(), 0);
     regExpValueClass = InternalClass::create(this, RegExp::staticVTable(), 0);
 
+    id_empty = newIdentifier(QString());
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
     id_true = newIdentifier(QStringLiteral("true"));
@@ -830,11 +831,22 @@ void ExecutionEngine::markObjects()
         c = c->parent;
     }
 
+    id_empty->mark(this);
+    id_undefined->mark(this);
+    id_null->mark(this);
+    id_true->mark(this);
+    id_false->mark(this);
+    id_boolean->mark(this);
+    id_number->mark(this);
+    id_string->mark(this);
+    id_object->mark(this);
+    id_function->mark(this);
     id_length->mark(this);
     id_prototype->mark(this);
     id_constructor->mark(this);
     id_arguments->mark(this);
     id_caller->mark(this);
+    id_callee->mark(this);
     id_this->mark(this);
     id___proto__->mark(this);
     id_enumerable->mark(this);

@@ -234,6 +234,7 @@ public:
     Property *argumentsAccessors;
     int nArgumentsAccessors;
 
+    StringValue id_empty;
     StringValue id_undefined;
     StringValue id_null;
     StringValue id_true;
