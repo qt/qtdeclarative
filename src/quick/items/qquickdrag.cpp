@@ -523,7 +523,7 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
     \endlist
 
     When using \c Drag.Automatic you should also define \l mimeData and bind the
-    \active property to the active property of \l MouseArea.drag.
+    \l active property to the active property of \l MouseArea.drag.
  */
 
 QQuickDrag::DragType QQuickDragAttached::dragType() const
