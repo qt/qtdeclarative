@@ -43,18 +43,19 @@
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmlpool_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qv4compiler_p.h>
+#include <private/qqmlpropertycache_p.h>
 #include <QTextStream>
 #include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
+class QQmlContextData;
 class QQmlTypeNameCache;
 
 namespace QmlIR {
@@ -324,6 +325,7 @@ struct Q_QML_EXPORT Document
     QString stringAt(int index) const { return jsGenerator.strings.value(index); }
 
     void extractScriptMetaData(QString &script, QQmlError *error);
+    static void removeScriptPragmas(QString &script);
 };
 
 struct Q_QML_EXPORT IRBuilder : public QQmlJS::AST::Visitor

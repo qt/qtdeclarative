@@ -386,7 +386,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (f.open(QIODevice::ReadOnly)) {
         QByteArray data = f.readAll();
         QString sourceCode = QString::fromUtf8(data);
-        QQmlScript::Parser::extractPragmas(sourceCode);
+        QmlIR::Document::removeScriptPragmas(sourceCode);
 
         WorkerScript *script = workers.value(id);
         if (!script)

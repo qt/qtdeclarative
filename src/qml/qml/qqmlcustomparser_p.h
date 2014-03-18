@@ -55,7 +55,6 @@
 
 #include "qqmlmetatype_p.h"
 #include "qqmlerror.h"
-#include "qqmlscript_p.h"
 #include "qqmlbinding_p.h"
 
 #include <QtCore/qbytearray.h>

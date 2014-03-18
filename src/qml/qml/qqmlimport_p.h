@@ -47,7 +47,6 @@
 #include <QtCore/qset.h>
 #include <QtCore/qstringlist.h>
 #include <private/qqmldirparser_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmlmetatype_p.h>
 
 //

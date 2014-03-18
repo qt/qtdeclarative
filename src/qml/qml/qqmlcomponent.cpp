@@ -51,7 +51,6 @@
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
 #include "qqmlglobal_p.h"
-#include "qqmlscript_p.h"
 #include <private/qqmlenginedebugservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"

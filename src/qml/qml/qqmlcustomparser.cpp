@@ -47,8 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlScript;
-
 /*!
     \class QQmlCustomParser
     \brief The QQmlCustomParser class allows you to add new arbitrary types to QML.

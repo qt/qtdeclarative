@@ -47,7 +47,6 @@
 
 
 #include <private/qqmlcustomparser_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmlengine_p.h>
 
 #include <private/qv4object_p.h>

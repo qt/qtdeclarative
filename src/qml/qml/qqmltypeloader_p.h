@@ -62,7 +62,6 @@
 #include <QtQml/qqmlabstracturlinterceptor.h>
 
 #include <private/qhashedstring_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmlcleanup_p.h>
 #include <private/qqmldirparser_p.h>

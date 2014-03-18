@@ -459,6 +459,51 @@ void Document::extractScriptMetaData(QString &script, QQmlError *error)
     return;
 }
 
+void Document::removeScriptPragmas(QString &script)
+{
+    const QString pragma(QLatin1String("pragma"));
+    const QString library(QLatin1String("library"));
+
+    QQmlJS::Lexer l(0);
+    l.setCode(script, 0);
+
+    int token = l.lex();
+
+    while (true) {
+        if (token != QQmlJSGrammar::T_DOT)
+            return;
+
+        int startOffset = l.tokenOffset();
+        int startLine = l.tokenStartLine();
+
+        token = l.lex();
+
+        if (token != QQmlJSGrammar::T_PRAGMA ||
+            l.tokenStartLine() != startLine ||
+            script.mid(l.tokenOffset(), l.tokenLength()) != pragma)
+            return;
+
+        token = l.lex();
+
+        if (token != QQmlJSGrammar::T_IDENTIFIER ||
+            l.tokenStartLine() != startLine)
+            return;
+
+        QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
+        int endOffset = l.tokenLength() + l.tokenOffset();
+
+        token = l.lex();
+        if (l.tokenStartLine() == startLine)
+            return;
+
+        if (pragmaValue == library) {
+            replaceWithSpace(script, startOffset, endOffset - startOffset);
+        } else {
+            return;
+        }
+    }
+}
+
 IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
     : illegalNames(illegalNames)
     , _object(0)
