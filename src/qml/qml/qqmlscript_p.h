@@ -147,17 +147,7 @@ public:
 class Q_QML_PRIVATE_EXPORT Parser
 {
 public:
-    class JavaScriptMetaData {
-    public:
-        JavaScriptMetaData()
-        : pragmas(QQmlScript::Object::ScriptBlock::None) {}
-
-        QQmlScript::Object::ScriptBlock::Pragmas pragmas;
-        QList<Import> imports;
-    };
-
     static QQmlScript::Object::ScriptBlock::Pragmas extractPragmas(QString &);
-    static JavaScriptMetaData extractMetaData(QString &, QQmlError *error);
 };
 
 }

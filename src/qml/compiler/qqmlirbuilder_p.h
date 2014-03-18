@@ -305,6 +305,7 @@ struct Q_QML_EXPORT Document
     Document(bool debugMode)
         : jsModule(debugMode)
         , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
+        , unitFlags(0)
     {}
     QString code;
     QQmlJS::Engine jsParserEngine;
@@ -315,10 +316,14 @@ struct Q_QML_EXPORT Document
     int indexOfRootObject;
     QList<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
+    quint32 unitFlags;
 
     QV4::CompiledData::TypeReferenceMap typeReferences;
 
+    int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.strings.value(index); }
+
+    void extractScriptMetaData(QString &script, QQmlError *error);
 };
 
 struct Q_QML_EXPORT IRBuilder : public QQmlJS::AST::Visitor

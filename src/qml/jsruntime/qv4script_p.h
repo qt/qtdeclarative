@@ -100,7 +100,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static CompiledData::CompilationUnit *precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
+    static QV4::CompiledData::CompilationUnit *precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
 };

@@ -498,7 +498,6 @@ public:
     QString urlString;
     QQmlTypeNameCache *importCache;
     QList<QQmlScriptBlob *> scripts;
-    QQmlScript::Object::ScriptBlock::Pragmas pragmas;
 
     QV4::PersistentValue scriptValueForContext(QQmlContextData *parentCtxt);
 
@@ -546,11 +545,10 @@ protected:
 private:
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    QString m_source;
-    QQmlScript::Parser::JavaScriptMetaData m_metadata;
-
     QList<ScriptReference> m_scripts;
     QQmlScriptData *m_scriptData;
+    QList<QQmlScript::Import> m_imports; // ### temporary until addImport is changed
+    QmlIR::Document m_irUnit;
 };
 
 class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob

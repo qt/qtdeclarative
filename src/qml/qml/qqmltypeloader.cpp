@@ -2451,7 +2451,6 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Locati
 
 QQmlScriptData::QQmlScriptData()
     : importCache(0)
-    , pragmas(QQmlScript::Object::ScriptBlock::None)
     , m_loaded(false)
     , m_precompiledScript(0)
     , m_program(0)
@@ -2497,7 +2496,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
     QV4::Scope scope(v4);
 
-    bool shared = pragmas & QQmlScript::Object::ScriptBlock::Shared;
+    bool shared = m_precompiledScript->data->flags & QV4::CompiledData::Unit::IsSharedLibrary;
 
     QQmlContextData *effectiveCtxt = parentCtxt;
     if (shared)
@@ -2590,6 +2589,7 @@ void QQmlScriptData::clear()
 
 QQmlScriptBlob::QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *loader)
 : QQmlTypeLoader::Blob(url, JavaScriptFile, loader), m_scriptData(0)
+, m_irUnit(QV8Engine::getV4(loader->engine())->debugger != 0)
 {
 }
 
@@ -2608,25 +2608,62 @@ QQmlScriptData *QQmlScriptBlob::scriptData() const
 
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
-    m_source = QString::fromUtf8(data.data(), data.size());
+    QString source = QString::fromUtf8(data.data(), data.size());
 
     m_scriptData = new QQmlScriptData();
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
 
     QQmlError metaDataError;
-    m_metadata = QQmlScript::Parser::extractMetaData(m_source, &metaDataError);
+    m_irUnit.extractScriptMetaData(source, &metaDataError);
     if (metaDataError.isValid()) {
         metaDataError.setUrl(finalUrl());
         setError(metaDataError);
         return;
     }
 
+    QList<QQmlError> errors;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+    m_scriptData->m_precompiledScript = QV4::Script::precompile(&m_irUnit.jsModule, &m_irUnit.jsGenerator, v4, m_scriptData->url, source, &errors);
+    if (m_scriptData->m_precompiledScript)
+        m_scriptData->m_precompiledScript->ref();
+    source.clear();
+    if (!errors.isEmpty()) {
+        setError(errors);
+        return;
+    }
+
+    QmlIR::QmlUnitGenerator qmlGenerator;
+    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(m_irUnit);
+    if (m_scriptData->m_precompiledScript) {
+        Q_ASSERT(!m_scriptData->m_precompiledScript->data);
+        Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
+        // The js unit owns the data and will free the qml unit.
+        m_scriptData->m_precompiledScript->data = &qmlUnit->header;
+    }
+
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
-    QList<QQmlError> errors;
+    for (quint32 i = 0; i < qmlUnit->nImports; ++i) {
+        const QV4::CompiledData::Import *imp = qmlUnit->importAt(i);
+        QQmlScript::Import import;
+        import.uri = qmlUnit->header.stringAt(imp->uriIndex);
+        import.qualifier = qmlUnit->header.stringAt(imp->qualifierIndex);
+        import.majorVersion = imp->majorVersion;
+        import.minorVersion = imp->minorVersion;
+        import.location.start.line = imp->location.line;
+        import.location.start.column = imp->location.column;
 
-    foreach (const QQmlScript::Import &import, m_metadata.imports) {
+        switch (imp->type) {
+        case QV4::CompiledData::Import::ImportFile: import.type = QQmlScript::Import::File; break;
+        case QV4::CompiledData::Import::ImportLibrary: import.type = QQmlScript::Import::Library; break;
+        case QV4::CompiledData::Import::ImportScript: import.type = QQmlScript::Import::Script; break;
+        default: break;
+        }
+        m_imports << import;
+    }
+
+    foreach (const QQmlScript::Import &import, m_imports) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
@@ -2680,19 +2717,6 @@ void QQmlScriptBlob::done()
     }
 
     m_importCache.populateCache(m_scriptData->importCache);
-
-    m_scriptData->pragmas = m_metadata.pragmas;
-
-    QList<QQmlError> errors;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, &errors);
-    if (m_scriptData->m_precompiledScript)
-        m_scriptData->m_precompiledScript->ref();
-    m_source.clear();
-    if (!errors.isEmpty()) {
-        setError(errors);
-        return;
-    }
 }
 
 void QQmlScriptBlob::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace)

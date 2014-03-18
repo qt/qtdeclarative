@@ -197,6 +197,268 @@ QStringList Signal::parameterStringList(const QStringList &stringPool) const
     return result;
 }
 
+static void replaceWithSpace(QString &str, int idx, int n)
+{
+    QChar *data = str.data() + idx;
+    const QChar space(QLatin1Char(' '));
+    for (int ii = 0; ii < n; ++ii)
+        *data++ = space;
+}
+
+#define CHECK_LINE if (l.tokenStartLine() != startLine) return;
+#define CHECK_TOKEN(t) if (token != QQmlJSGrammar:: t) return;
+
+static const int uriTokens[] = {
+    QQmlJSGrammar::T_IDENTIFIER,
+    QQmlJSGrammar::T_PROPERTY,
+    QQmlJSGrammar::T_SIGNAL,
+    QQmlJSGrammar::T_READONLY,
+    QQmlJSGrammar::T_ON,
+    QQmlJSGrammar::T_BREAK,
+    QQmlJSGrammar::T_CASE,
+    QQmlJSGrammar::T_CATCH,
+    QQmlJSGrammar::T_CONTINUE,
+    QQmlJSGrammar::T_DEFAULT,
+    QQmlJSGrammar::T_DELETE,
+    QQmlJSGrammar::T_DO,
+    QQmlJSGrammar::T_ELSE,
+    QQmlJSGrammar::T_FALSE,
+    QQmlJSGrammar::T_FINALLY,
+    QQmlJSGrammar::T_FOR,
+    QQmlJSGrammar::T_FUNCTION,
+    QQmlJSGrammar::T_IF,
+    QQmlJSGrammar::T_IN,
+    QQmlJSGrammar::T_INSTANCEOF,
+    QQmlJSGrammar::T_NEW,
+    QQmlJSGrammar::T_NULL,
+    QQmlJSGrammar::T_RETURN,
+    QQmlJSGrammar::T_SWITCH,
+    QQmlJSGrammar::T_THIS,
+    QQmlJSGrammar::T_THROW,
+    QQmlJSGrammar::T_TRUE,
+    QQmlJSGrammar::T_TRY,
+    QQmlJSGrammar::T_TYPEOF,
+    QQmlJSGrammar::T_VAR,
+    QQmlJSGrammar::T_VOID,
+    QQmlJSGrammar::T_WHILE,
+    QQmlJSGrammar::T_CONST,
+    QQmlJSGrammar::T_DEBUGGER,
+    QQmlJSGrammar::T_RESERVED_WORD,
+    QQmlJSGrammar::T_WITH,
+
+    QQmlJSGrammar::EOF_SYMBOL
+};
+static inline bool isUriToken(int token)
+{
+    const int *current = uriTokens;
+    while (*current != QQmlJSGrammar::EOF_SYMBOL) {
+        if (*current == token)
+            return true;
+        ++current;
+    }
+    return false;
+}
+
+void Document::extractScriptMetaData(QString &script, QQmlError *error)
+{
+    Q_ASSERT(error);
+
+    const QString js(QLatin1String(".js"));
+    const QString library(QLatin1String("library"));
+
+    QQmlJS::MemoryPool *pool = jsParserEngine.pool();
+
+    QQmlJS::Lexer l(0);
+    l.setCode(script, 0);
+
+    int token = l.lex();
+
+    while (true) {
+        if (token != QQmlJSGrammar::T_DOT)
+            return;
+
+        int startOffset = l.tokenOffset();
+        int startLine = l.tokenStartLine();
+        int startColumn = l.tokenStartColumn();
+
+        QQmlError importError;
+        importError.setLine(startLine + 1); // 0-based, adjust to be 1-based
+
+        token = l.lex();
+
+        CHECK_LINE;
+
+        if (token == QQmlJSGrammar::T_IMPORT) {
+
+            // .import <URI> <Version> as <Identifier>
+            // .import <file.js> as <Identifier>
+
+            token = l.lex();
+
+            CHECK_LINE;
+            QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
+
+            if (token == QQmlJSGrammar::T_STRING_LITERAL) {
+
+                QString file = l.tokenText();
+
+                if (!file.endsWith(js)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Imported file must be a script"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                bool invalidImport = false;
+
+                token = l.lex();
+
+                if ((token != QQmlJSGrammar::T_AS) || (l.tokenStartLine() != startLine)) {
+                    invalidImport = true;
+                } else {
+                    token = l.lex();
+
+                    if ((token != QQmlJSGrammar::T_IDENTIFIER) || (l.tokenStartLine() != startLine))
+                        invalidImport = true;
+                }
+
+
+                if (invalidImport) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","File import requires a qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                int endOffset = l.tokenLength() + l.tokenOffset();
+
+                QString importId = script.mid(l.tokenOffset(), l.tokenLength());
+
+                token = l.lex();
+
+                if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                replaceWithSpace(script, startOffset, endOffset - startOffset);
+
+                import->type = QV4::CompiledData::Import::ImportScript;
+                import->uriIndex = registerString(file);
+                import->qualifierIndex = registerString(importId);
+                import->location.line = startLine;
+                import->location.column = startColumn;
+                imports << import;
+            } else {
+                // URI
+                QString uri;
+
+                while (true) {
+                    if (!isUriToken(token)) {
+                        importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid module URI"));
+                        importError.setColumn(l.tokenStartColumn());
+                        *error = importError;
+                        return;
+                    }
+
+                    uri.append(l.tokenText());
+
+                    token = l.lex();
+                    CHECK_LINE;
+                    if (token != QQmlJSGrammar::T_DOT)
+                        break;
+
+                    uri.append(QLatin1Char('.'));
+
+                    token = l.lex();
+                    CHECK_LINE;
+                }
+
+                if (token != QQmlJSGrammar::T_NUMERIC_LITERAL) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a version"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                int vmaj, vmin;
+                IRBuilder::extractVersion(QStringRef(&script, l.tokenOffset(), l.tokenLength()),
+                                          &vmaj, &vmin);
+
+                bool invalidImport = false;
+
+                token = l.lex();
+
+                if ((token != QQmlJSGrammar::T_AS) || (l.tokenStartLine() != startLine)) {
+                    invalidImport = true;
+                } else {
+                    token = l.lex();
+
+                    if ((token != QQmlJSGrammar::T_IDENTIFIER) || (l.tokenStartLine() != startLine))
+                        invalidImport = true;
+                }
+
+
+                if (invalidImport) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                int endOffset = l.tokenLength() + l.tokenOffset();
+
+                QString importId = script.mid(l.tokenOffset(), l.tokenLength());
+
+                token = l.lex();
+
+                if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
+                    *error = importError;
+                    return;
+                }
+
+                replaceWithSpace(script, startOffset, endOffset - startOffset);
+
+                import->type = QV4::CompiledData::Import::ImportLibrary;
+                import->uriIndex = registerString(uri);
+                import->majorVersion = vmaj;
+                import->minorVersion = vmin;
+                import->qualifierIndex = registerString(importId);
+                import->location.line = startLine;
+                import->location.column = startColumn;
+                imports << import;
+            }
+        } else if (token == QQmlJSGrammar::T_PRAGMA) {
+            token = l.lex();
+
+            CHECK_TOKEN(T_IDENTIFIER);
+            CHECK_LINE;
+
+            QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
+            int endOffset = l.tokenLength() + l.tokenOffset();
+
+            if (pragmaValue == library) {
+                unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
+                replaceWithSpace(script, startOffset, endOffset - startOffset);
+            } else {
+                return;
+            }
+
+            token = l.lex();
+            if (l.tokenStartLine() == startLine)
+                return;
+
+        } else {
+            return;
+        }
+    }
+    return;
+}
+
 IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
     : illegalNames(illegalNames)
     , _object(0)
@@ -1239,6 +1501,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output, int *to
     jsUnit = 0;
 
     QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<QV4::CompiledData::QmlUnit *>(data);
+    qmlUnit->header.flags |= output.unitFlags;
     qmlUnit->header.flags |= QV4::CompiledData::Unit::IsQml;
     qmlUnit->offsetToImports = unitSize;
     qmlUnit->nImports = output.imports.count();
