@@ -261,6 +261,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     ArrayPrototype *arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
+    simpleArrayDataClass = InternalClass::create(this, SimpleArrayData::staticVTable(), 0);
+
     InternalClass *argsClass = InternalClass::create(this, ArgumentsObject::staticVTable(), objectPrototype);
     argsClass = argsClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);

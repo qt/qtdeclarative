@@ -204,6 +204,7 @@ public:
 
     InternalClass *objectClass;
     InternalClass *arrayClass;
+    InternalClass *simpleArrayDataClass;
     InternalClass *stringObjectClass;
     InternalClass *booleanClass;
     InternalClass *numberClass;

@@ -140,8 +140,8 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     V4_ARRAYDATA
 
     SimpleArrayData(ExecutionEngine *engine)
-        : ArrayData(engine->emptyClass)
-    { setVTable(staticVTable()); }
+        : ArrayData(engine->simpleArrayDataClass)
+    {}
 
     uint len;
     uint offset;
