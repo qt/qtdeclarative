@@ -1432,18 +1432,6 @@ void IRBuilder::collectTypeReferences()
     }
 }
 
-QQmlScript::LocationSpan IRBuilder::location(QQmlJS::AST::SourceLocation start, QQmlJS::AST::SourceLocation end)
-{
-    QQmlScript::LocationSpan rv;
-    rv.start.line = start.startLine;
-    rv.start.column = start.startColumn;
-    rv.end.line = end.startLine;
-    rv.end.column = end.startColumn + end.length - 1;
-    rv.range.offset = start.offset;
-    rv.range.length = end.offset + end.length - start.offset;
-    return rv;
-}
-
 bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 {
     if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement)) {

@@ -368,10 +368,6 @@ public:
     { return QStringRef(&sourceCode, loc.offset, loc.length); }
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,
                          const QQmlJS::AST::SourceLocation &last) const;
-    static QQmlScript::LocationSpan location(QQmlJS::AST::UiQualifiedId *id)
-    {
-        return location(id->identifierToken, id->identifierToken);
-    }
 
     void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement);
 
@@ -391,8 +387,6 @@ public:
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
 
     void collectTypeReferences();
-
-    static QQmlScript::LocationSpan location(QQmlJS::AST::SourceLocation start, QQmlJS::AST::SourceLocation end);
 
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }

@@ -71,37 +71,6 @@ namespace QQmlJS { class Engine; namespace AST { class Node; class StringLiteral
 
 namespace QQmlScript {
 
-struct Location
-{
-    Location() : line(0), column(0) {}
-    quint16 line;
-    quint16 column;
-
-    inline bool operator<(const Location &other) {
-        return line < other.line ||
-               (line == other.line && column < other.column);
-    }
-};
-
-struct LocationRange
-{
-    LocationRange() : offset(0), length(0) {}
-    quint32 offset;
-    quint32 length;
-};
-
-struct LocationSpan
-{
-    Location start;
-    Location end;
-    LocationRange range;
-
-    bool operator<(LocationSpan &o) const {
-        return (start.line < o.start.line) ||
-               (start.line == o.start.line && start.column < o.start.column);
-    }
-};
-
 class Object;
 class TypeReference : public QQmlPool::Class
 {
