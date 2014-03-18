@@ -54,7 +54,6 @@
 #include <WTFStubs.h>
 
 #include <iostream>
-#include <cassert>
 
 #if ENABLE(ASSEMBLER)
 

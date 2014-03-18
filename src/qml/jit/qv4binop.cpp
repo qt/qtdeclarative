@@ -148,7 +148,7 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));
     } else {
-        assert(!"unreachable");
+        Q_ASSERT(!"unreachable");
     }
 
     if (done.isSet())

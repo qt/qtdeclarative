@@ -118,7 +118,7 @@ inline QV4::Runtime::BinaryOperation aluOpFunction(IR::AluOp op)
     case IR::OpOr:
         return 0;
     default:
-        assert(!"Unknown AluOp");
+        Q_ASSERT(!"Unknown AluOp");
         return 0;
     }
 };
@@ -377,7 +377,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_currentStatement, cs);
 
     int locals = frameSize();
-    assert(locals >= 0);
+    Q_ASSERT(locals >= 0);
 
     IR::BasicBlock *exceptionHandler = 0;
 
@@ -607,7 +607,7 @@ void InstructionSelection::loadQmlSingleton(const QString &name, IR::Temp *temp)
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
 {
-    assert(sourceConst);
+    Q_ASSERT(sourceConst);
 
     Instruction::MoveConst move;
     move.source = convertToValue(sourceConst).asReturnedValue();
@@ -1009,7 +1009,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         *args = argLocation;
     if (e) {
         // We need to move all the temps into the function arg array
-        assert(argLocation >= 0);
+        Q_ASSERT(argLocation >= 0);
         while (e) {
             if (IR::Const *c = e->expr->asConst()) {
                 Instruction::MoveConst move;
@@ -1467,7 +1467,7 @@ QByteArray InstructionSelection::squeezeCode() const
 }
 
 Param InstructionSelection::getParam(IR::Expr *e) {
-    assert(e);
+    Q_ASSERT(e);
 
     if (IR::Const *c = e->asConst()) {
         int idx = jsUnitGenerator()->registerConstant(convertToValue(c).asReturnedValue());

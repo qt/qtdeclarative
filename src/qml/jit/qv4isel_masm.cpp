@@ -58,7 +58,6 @@
 #include <WTFStubs.h>
 
 #include <iostream>
-#include <cassert>
 
 #if ENABLE(ASSEMBLER)
 
@@ -132,7 +131,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
             it.next();
             IR::BasicBlock *block = it.key();
             Label target = _addrs.value(block);
-            assert(target.isSet());
+            Q_ASSERT(target.isSet());
             foreach (Jump jump, it.value())
                 jump.linkTo(target, this);
         }
@@ -160,7 +159,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
             it.next();
             IR::BasicBlock *block = it.key();
             Label target = _addrs.value(block);
-            assert(target.isSet());
+            Q_ASSERT(target.isSet());
             foreach (DataLabelPtr label, it.value())
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
@@ -941,7 +940,7 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr 
 void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
                                         IR::Temp *result)
 {
-    assert(base != 0);
+    Q_ASSERT(base != 0);
 
     prepareCallData(args, base);
 
@@ -961,7 +960,7 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
 void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
                                          IR::Temp *result)
 {
-    assert(base != 0);
+    Q_ASSERT(base != 0);
 
     prepareCallData(args, base);
     generateFunctionCall(result, Runtime::callElement, Assembler::ContextRegister,
@@ -1264,7 +1263,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Temp *source, IR::Temp *targe
 
 void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
-    assert(func != 0);
+    Q_ASSERT(func != 0);
     prepareCallData(args, 0);
 
     if (useFastLookups && func->global) {
@@ -1301,7 +1300,7 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
 
 void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
-    assert(value != 0);
+    Q_ASSERT(value != 0);
 
     prepareCallData(args, 0);
     generateFunctionCall(result, Runtime::constructValue,
@@ -1371,7 +1370,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         Runtime::CompareOperationContext opContext = 0;
         const char *opName = 0;
         switch (b->op) {
-        default: Q_UNREACHABLE(); assert(!"todo"); break;
+        default: Q_UNREACHABLE(); Q_ASSERT(!"todo"); break;
         case IR::OpGt: setOp(op, opName, Runtime::compareGreaterThan); break;
         case IR::OpLt: setOp(op, opName, Runtime::compareLessThan); break;
         case IR::OpGe: setOp(op, opName, Runtime::compareGreaterEqual); break;

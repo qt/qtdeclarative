@@ -522,7 +522,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
         return QJSValue();
 
     ExecutionEngine *engine = d->engine;
-    assert(engine);
+    Q_ASSERT(engine);
 
     Scope scope(engine);
     ScopedCallData callData(scope, args.length());
@@ -571,7 +571,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         return QJSValue();
 
     ExecutionEngine *engine = d->engine;
-    assert(engine);
+    Q_ASSERT(engine);
     Scope scope(engine);
 
     if (!instance.d->checkEngine(engine)) {
@@ -623,7 +623,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         return QJSValue();
 
     ExecutionEngine *engine = d->engine;
-    assert(engine);
+    Q_ASSERT(engine);
 
     Scope scope(engine);
     ScopedCallData callData(scope, args.size());

@@ -50,8 +50,6 @@
 
 #include <QString>
 
-#include <cassert>
-
 namespace {
 Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 #define qout *qout()
@@ -70,8 +68,8 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *exe
         ownJSGenerator.reset(jsGenerator);
     }
     this->jsGenerator = jsGenerator;
-    assert(execAllocator);
-    assert(module);
+    Q_ASSERT(execAllocator);
+    Q_ASSERT(module);
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()
@@ -221,7 +219,7 @@ void IRDecoder::visitMove(IR::Move *s)
     Q_UNIMPLEMENTED();
     s->dump(qout, IR::Stmt::MIR);
     qout << endl;
-    assert(!"TODO");
+    Q_ASSERT(!"TODO");
 }
 
 IRDecoder::~IRDecoder()
@@ -252,7 +250,7 @@ void IRDecoder::visitExp(IR::Exp *s)
 void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 {
     IR::Name *baseName = call->base->asName();
-    assert(baseName != 0);
+    Q_ASSERT(baseName != 0);
 
     switch (baseName->builtin) {
     case IR::Name::builtin_invalid:
@@ -294,7 +292,7 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 
     case IR::Name::builtin_throw: {
         IR::Expr *arg = call->args->expr;
-        assert(arg->asTemp() || arg->asConst());
+        Q_ASSERT(arg->asTemp() || arg->asConst());
         callBuiltinThrow(arg);
     } return;
 
@@ -314,18 +312,18 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 
     case IR::Name::builtin_foreach_iterator_object: {
         IR::Expr *arg = call->args->expr;
-        assert(arg != 0);
+        Q_ASSERT(arg != 0);
         callBuiltinForeachIteratorObject(arg, result);
     } return;
 
     case IR::Name::builtin_foreach_next_property_name: {
         IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        Q_ASSERT(arg != 0);
         callBuiltinForeachNextPropertyname(arg, result);
     } return;
     case IR::Name::builtin_push_with_scope: {
         IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        Q_ASSERT(arg != 0);
         callBuiltinPushWithScope(arg);
     } return;
 
@@ -337,10 +335,10 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
         if (!call->args)
             return;
         IR::Const *deletable = call->args->expr->asConst();
-        assert(deletable->type == IR::BoolType);
+        Q_ASSERT(deletable->type == IR::BoolType);
         for (IR::ExprList *it = call->args->next; it; it = it->next) {
             IR::Name *arg = it->expr->asName();
-            assert(arg != 0);
+            Q_ASSERT(arg != 0);
             callBuiltinDeclareVar(deletable->value != 0, *arg->id);
         }
     } return;
@@ -396,6 +394,6 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 
     Q_UNIMPLEMENTED();
     call->dump(qout); qout << endl;
-    assert(!"TODO!");
+    Q_ASSERT(!"TODO!");
     Q_UNREACHABLE();
 }

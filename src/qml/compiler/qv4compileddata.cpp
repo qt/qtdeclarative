@@ -66,8 +66,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     this->engine = engine;
     engine->compilationUnits.insert(this);
 
-    assert(!runtimeStrings);
-    assert(data);
+    Q_ASSERT(!runtimeStrings);
+    Q_ASSERT(data);
     runtimeStrings = (QV4::StringValue *)malloc(data->stringTableSize * sizeof(QV4::StringValue));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::StringValue));
