@@ -102,23 +102,6 @@ struct LocationSpan
     }
 };
 
-class Import
-{
-public:
-    Import() : type(Library), majorVersion(-1), minorVersion(-1) {}
-
-    enum Type { Library, File, Script };
-    Type type;
-
-    QString uri;
-    QString qualifier;
-
-    int majorVersion;
-    int minorVersion;
-
-    QQmlScript::LocationSpan location;
-};
-
 class Object;
 class TypeReference : public QQmlPool::Class
 {

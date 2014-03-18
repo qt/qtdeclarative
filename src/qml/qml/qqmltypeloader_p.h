@@ -279,25 +279,28 @@ public:
         const QQmlImports &imports() const { return m_importCache; }
 
     protected:
-        bool addImport(const QQmlScript::Import &import, QList<QQmlError> *errors);
+        bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
         bool addPragma(const QmlIR::Pragma &pragma, QList<QQmlError> *errors);
 
-        bool fetchQmldir(const QUrl &url, const QQmlScript::Import *import, int priority, QList<QQmlError> *errors);
-        bool updateQmldir(QQmlQmldirData *data, const QQmlScript::Import *import, QList<QQmlError> *errors);
+        bool fetchQmldir(const QUrl &url, const QV4::CompiledData::Import *import, int priority, QList<QQmlError> *errors);
+        bool updateQmldir(QQmlQmldirData *data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
 
     private:
         virtual bool qmldirDataAvailable(QQmlQmldirData *, QList<QQmlError> *);
 
-        virtual void scriptImported(QQmlScriptBlob *, const QQmlScript::Location &, const QString &, const QString &) {}
+        virtual void scriptImported(QQmlScriptBlob *, const QV4::CompiledData::Location &, const QString &, const QString &) {}
 
         virtual void dependencyError(QQmlDataBlob *);
         virtual void dependencyComplete(QQmlDataBlob *);
 
     protected:
+        const QString &stringAt(int index) const { Q_ASSERT(m_stringPool); return m_stringPool->at(index); }
+
         QQmlTypeLoader *m_typeLoader;
         QQmlImports m_importCache;
+        QStringList *m_stringPool; // used to resolve string indices in imports
         bool m_isSingleton;
-        QHash<const QQmlScript::Import *, int> m_unresolvedImports;
+        QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
     };
 
@@ -399,7 +402,7 @@ public:
     {
         TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
 
-        QQmlScript::Location location;
+        QV4::CompiledData::Location location;
         QQmlType *type;
         int majorVersion;
         int minorVersion;
@@ -412,7 +415,7 @@ public:
     {
         ScriptReference() : script(0) {}
 
-        QQmlScript::Location location;
+        QV4::CompiledData::Location location;
         QString qualifier;
         QQmlScriptBlob *script;
     };
@@ -454,10 +457,9 @@ private:
     void compile();
     bool resolveType(const QQmlScript::TypeReference *parserRef, int &majorVersion, int &minorVersion, TypeReference &ref);
 
-    virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
+    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
 
     QScopedPointer<QmlIR::Document> m_document;
-    QList<QQmlScript::Import> m_imports;
 
     QList<ScriptReference> m_scripts;
 
@@ -472,7 +474,7 @@ private:
 
     QList<TypeDataCallback *> m_callbacks;
 
-    QQmlScript::Import *m_implicitImport;
+    QV4::CompiledData::Import *m_implicitImport;
     bool m_implicitImportLoaded;
     bool loadImplicitImport();
 };
@@ -530,7 +532,7 @@ public:
     {
         ScriptReference() : script(0) {}
 
-        QQmlScript::Location location;
+        QV4::CompiledData::Location location;
         QString qualifier;
         QString nameSpace;
         QQmlScriptBlob *script;
@@ -543,11 +545,10 @@ protected:
     virtual void done();
 
 private:
-    virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
+    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
 
     QList<ScriptReference> m_scripts;
     QQmlScriptData *m_scriptData;
-    QList<QQmlScript::Import> m_imports; // ### temporary until addImport is changed
     QmlIR::Document m_irUnit;
 };
 
@@ -561,8 +562,8 @@ private:
 public:
     const QString &content() const;
 
-    const QQmlScript::Import *import() const;
-    void setImport(const QQmlScript::Import *);
+    const QV4::CompiledData::Import *import() const;
+    void setImport(const QV4::CompiledData::Import *);
 
     int priority() const;
     void setPriority(int);
@@ -572,7 +573,7 @@ protected:
 
 private:
     QString m_content;
-    const QQmlScript::Import *m_import;
+    const QV4::CompiledData::Import *m_import;
     int m_priority;
 };
 

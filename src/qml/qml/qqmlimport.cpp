@@ -296,7 +296,7 @@ public:
 
     QQmlImportNamespace::Import *addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                       const QString &uri, const QString &url,
-                                                      int vmaj, int vmin, QQmlScript::Import::Type type,
+                                                      int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
 
    bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
@@ -1211,7 +1211,7 @@ QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) 
 
 QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                                       const QString &uri, const QString &url, int vmaj, int vmin,
-                                                                      QQmlScript::Import::Type type,
+                                                                      QV4::CompiledData::Import::ImportType type,
                                                                       QList<QQmlError> *errors, bool lowPrecedence)
 {
     Q_ASSERT(nameSpace);
@@ -1224,7 +1224,7 @@ QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImport
     import->url = url;
     import->majversion = vmaj;
     import->minversion = vmin;
-    import->isLibrary = (type == QQmlScript::Import::Library);
+    import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
 
     if (lowPrecedence)
         nameSpace->imports.append(import);
@@ -1245,7 +1245,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     QQmlImportNamespace *nameSpace = importNamespace(prefix);
     Q_ASSERT(nameSpace);
 
-    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, uri, qmldirUrl, vmaj, vmin, QQmlScript::Import::Library, errors);
+    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, uri, qmldirUrl, vmaj, vmin, QV4::CompiledData::Import::ImportLibrary, errors);
     Q_ASSERT(inserted);
 
     if (!incomplete) {
@@ -1375,7 +1375,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     if (!url.endsWith(Slash) && !url.endsWith(Backslash))
         url += Slash;
 
-    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QQmlScript::Import::File, errors, isImplicitImport);
+    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QV4::CompiledData::Import::ImportFile, errors, isImplicitImport);
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
