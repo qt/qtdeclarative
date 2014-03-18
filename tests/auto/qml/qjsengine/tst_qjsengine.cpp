@@ -115,7 +115,8 @@ private slots:
     void jsForInStatement_prototypeProperties();
     void jsForInStatement_mutateWhileIterating();
     void jsForInStatement_arrays();
-    void jsForInStatement_nullAndUndefined();
+    void jsForInStatement_constant();
+    void with_constant();
     void stringObjects();
     void jsStringPrototypeReplaceBugs();
     void getterSetterThisObject_global();
@@ -1983,7 +1984,7 @@ void tst_QJSEngine::jsForInStatement_arrays()
     }
 }
 
-void tst_QJSEngine::jsForInStatement_nullAndUndefined()
+void tst_QJSEngine::jsForInStatement_constant()
 {
     QJSEngine eng;
     {
@@ -1993,6 +1994,34 @@ void tst_QJSEngine::jsForInStatement_nullAndUndefined()
     }
     {
         QJSValue ret = eng.evaluate("r = true; for (var p in null) r = false; r");
+        QVERIFY(ret.isBool());
+        QVERIFY(ret.toBool());
+    }
+    {
+        QJSValue ret = eng.evaluate("r = false; for (var p in 1) r = true; r");
+        QVERIFY(ret.isBool());
+        QVERIFY(!ret.toBool());
+    }
+    {
+        QJSValue ret = eng.evaluate("r = false; for (var p in 'abc') r = true; r");
+        QVERIFY(ret.isBool());
+        QVERIFY(ret.toBool());
+    }
+}
+
+void tst_QJSEngine::with_constant()
+{
+    QJSEngine eng;
+    {
+        QJSValue ret = eng.evaluate("r = false; with(null) { r= true; } r");
+        QVERIFY(ret.isError());
+    }
+    {
+        QJSValue ret = eng.evaluate("r = false; with(undefined) { r= true; } r");
+        QVERIFY(ret.isError());
+    }
+    {
+        QJSValue ret = eng.evaluate("r = false; with(1) { r= true; } r");
         QVERIFY(ret.isBool());
         QVERIFY(ret.toBool());
     }

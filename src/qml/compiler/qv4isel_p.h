@@ -125,7 +125,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinReThrow() = 0;
     virtual void callBuiltinUnwindException(IR::Temp *) = 0;
     virtual void callBuiltinPushCatchScope(const QString &exceptionName) = 0;
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result) = 0;
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result) = 0;
     virtual void callBuiltinPushWithScope(IR::Temp *arg) = 0;
     virtual void callBuiltinPopScope() = 0;

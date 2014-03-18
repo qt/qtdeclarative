@@ -207,7 +207,7 @@ protected: // IRDecoder
     virtual void callBuiltinReThrow() {}
     virtual void callBuiltinUnwindException(IR::Temp *) {}
     virtual void callBuiltinPushCatchScope(const QString &) {};
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *, IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(IR::Temp *, IR::Temp *) {}
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *, IR::Temp *) {}
     virtual void callBuiltinPushWithScope(IR::Temp *) {}

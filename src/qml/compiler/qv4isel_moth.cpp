@@ -1231,7 +1231,7 @@ void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionNam
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result)
 {
     Instruction::CallBuiltinForeachIteratorObject call;
     call.arg = getParam(arg);

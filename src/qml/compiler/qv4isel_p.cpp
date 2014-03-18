@@ -313,7 +313,7 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
     } return;
 
     case IR::Name::builtin_foreach_iterator_object: {
-        IR::Temp *arg = call->args->expr->asTemp();
+        IR::Expr *arg = call->args->expr;
         assert(arg != 0);
         callBuiltinForeachIteratorObject(arg, result);
     } return;

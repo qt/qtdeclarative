@@ -632,7 +632,7 @@ ReturnedValue Runtime::foreachIterator(ExecutionContext *ctx, const ValueRef in)
     Scope scope(ctx);
     Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
-        o = in;
+        o = in->toObject(ctx);
     Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o));
     return it.asReturnedValue();
 }
