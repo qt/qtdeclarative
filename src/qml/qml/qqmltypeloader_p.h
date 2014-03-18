@@ -455,7 +455,7 @@ protected:
 private:
     void resolveTypes();
     void compile();
-    bool resolveType(const QQmlScript::TypeReference *parserRef, int &majorVersion, int &minorVersion, TypeReference &ref);
+    bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
 

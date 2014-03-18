@@ -71,14 +71,6 @@ namespace QQmlJS { class Engine; namespace AST { class Node; class StringLiteral
 
 namespace QQmlScript {
 
-class Object;
-class TypeReference : public QQmlPool::Class
-{
-public:
-    // type as it has been referenced in Qml
-    QString name;
-};
-
 class Object : public QQmlPool::Class
 {
 public:

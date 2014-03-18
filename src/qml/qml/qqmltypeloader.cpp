@@ -2276,11 +2276,10 @@ void QQmlTypeData::resolveTypes()
     // Lets handle resolved composite singleton types
     foreach (const QQmlImports::CompositeSingletonReference &csRef, m_importCache.resolvedCompositeSingletons()) {
         TypeReference ref;
-        QQmlScript::TypeReference parserRef;
-        parserRef.name = csRef.typeName;
+        QString typeName = csRef.typeName;
 
         if (!csRef.prefix.isEmpty()) {
-            parserRef.name.prepend(csRef.prefix + QLatin1Char('.'));
+            typeName.prepend(csRef.prefix + QLatin1Char('.'));
             // Add a reference to the enclosing namespace
             m_namespaces.insert(csRef.prefix);
         }
@@ -2288,7 +2287,7 @@ void QQmlTypeData::resolveTypes()
         int majorVersion = -1;
         int minorVersion = -1;
 
-        if (!resolveType(&parserRef, majorVersion, minorVersion, ref))
+        if (!resolveType(typeName, majorVersion, minorVersion, ref))
             return;
 
         if (ref.type->isCompositeSingleton()) {
@@ -2378,19 +2377,19 @@ void QQmlTypeData::resolveTypes()
     }
 }
 
-bool QQmlTypeData::resolveType(const QQmlScript::TypeReference *parserRef, int &majorVersion, int &minorVersion, TypeReference &ref)
+bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref)
 {
     QQmlImportNamespace *typeNamespace = 0;
     QList<QQmlError> errors;
 
-    bool typeFound = m_importCache.resolveType(parserRef->name, &ref.type,
+    bool typeFound = m_importCache.resolveType(typeName, &ref.type,
                                           &majorVersion, &minorVersion, &typeNamespace, &errors);
     if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
         // Lazy loading of implicit import
         if (loadImplicitImport()) {
             // Try again to find the type
             errors.clear();
-            typeFound = m_importCache.resolveType(parserRef->name, &ref.type,
+            typeFound = m_importCache.resolveType(typeName, &ref.type,
                                               &majorVersion, &minorVersion, &typeNamespace, &errors);
         } else {
             return false; //loadImplicitImport() hit an error, and called setError already
@@ -2403,7 +2402,7 @@ bool QQmlTypeData::resolveType(const QQmlScript::TypeReference *parserRef, int &
         //  - type with unknown namespace (UnknownNamespace.SomeType {})
         QQmlError error;
         if (typeNamespace) {
-            error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(parserRef->name));
+            error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(typeName));
         } else {
             if (errors.size()) {
                 error = errors.takeFirst();
@@ -2413,7 +2412,7 @@ bool QQmlTypeData::resolveType(const QQmlScript::TypeReference *parserRef, int &
                 error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
             }
             error.setUrl(m_importCache.baseUrl());
-            error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(parserRef->name).arg(error.description()));
+            error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(typeName).arg(error.description()));
         }
 
         errors.prepend(error);
