@@ -68,6 +68,7 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qqmlirbuilder_p.h>
 
 #include <private/qv4value_inl_p.h>
 #include <private/qv4script_p.h>
@@ -279,7 +280,7 @@ public:
 
     protected:
         bool addImport(const QQmlScript::Import &import, QList<QQmlError> *errors);
-        bool addPragma(const QQmlScript::Pragma &pragma, QList<QQmlError> *errors);
+        bool addPragma(const QmlIR::Pragma &pragma, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, const QQmlScript::Import *import, int priority, QList<QQmlError> *errors);
         bool updateQmldir(QQmlQmldirData *data, const QQmlScript::Import *import, QList<QQmlError> *errors);
@@ -457,7 +458,6 @@ private:
 
     QScopedPointer<QmlIR::Document> m_document;
     QList<QQmlScript::Import> m_imports;
-    QList<QQmlScript::Pragma> m_pragmas;
 
     QList<ScriptReference> m_scripts;
 
@@ -536,8 +536,6 @@ public:
         QString nameSpace;
         QQmlScriptBlob *script;
     };
-
-    QQmlScript::Object::ScriptBlock::Pragmas pragmas() const;
 
     QQmlScriptData *scriptData() const;
 

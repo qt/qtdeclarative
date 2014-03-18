@@ -1207,7 +1207,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
     return true;
 }
 
-QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
+QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output, int *totalUnitSizeInBytes)
 {
     jsUnitGenerator = &output.jsGenerator;
     int unitSize = 0;
@@ -1231,6 +1231,8 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
     }
 
     const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize;
+    if (totalUnitSizeInBytes)
+        *totalUnitSizeInBytes = totalSize;
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
     free(jsUnit);

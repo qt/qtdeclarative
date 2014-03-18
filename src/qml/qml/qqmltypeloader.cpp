@@ -51,7 +51,6 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
-#include <private/qqmlirbuilder_p.h>
 #include <private/qqmltypecompiler_p.h>
 
 #include <QtCore/qdir.h>
@@ -1337,11 +1336,11 @@ bool QQmlTypeLoader::Blob::addImport(const QQmlScript::Import &import, QList<QQm
     return true;
 }
 
-bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::addPragma(const QmlIR::Pragma &pragma, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
 
-    if (pragma.type == QQmlScript::Pragma::Singleton) {
+    if (pragma.type == QmlIR::Pragma::PragmaSingleton) {
         QUrl myUrl = finalUrl();
 
         QQmlType *ret = QQmlMetaType::qmlType(myUrl, true);
@@ -1349,8 +1348,8 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
             QQmlError error;
             error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
             error.setUrl(myUrl);
-            error.setLine(pragma.location.start.line);
-            error.setColumn(pragma.location.start.column);
+            error.setLine(pragma.location.line);
+            error.setColumn(pragma.location.column);
             errors->prepend(error);
             return false;
         }
@@ -1359,8 +1358,8 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
             QQmlError error;
             error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(ret->qmlTypeName()));
             error.setUrl(myUrl);
-            error.setLine(pragma.location.start.line);
-            error.setColumn(pragma.location.start.column);
+            error.setLine(pragma.location.line);
+            error.setColumn(pragma.location.column);
             errors->prepend(error);
             return false;
         }
@@ -1371,8 +1370,8 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
         QQmlError error;
         error.setDescription(QLatin1String("Invalid pragma"));
         error.setUrl(finalUrl());
-        error.setLine(pragma.location.start.line);
-        error.setColumn(pragma.location.start.column);
+        error.setLine(pragma.location.line);
+        error.setColumn(pragma.location.column);
         errors->prepend(error);
         return false;
     }
@@ -2201,24 +2200,8 @@ void QQmlTypeData::dataReceived(const Data &data)
         }
     }
 
-    if (m_pragmas.isEmpty()) {
-        m_pragmas.reserve(m_document->pragmas.count());
-        foreach (QmlIR::Pragma *p, m_document->pragmas) {
-            QQmlScript::Pragma pragma;
-            pragma.location.start.line = p->location.line;
-            pragma.location.start.column = p->location.column;
-
-            switch (p->type) {
-            case QmlIR::Pragma::PragmaSingleton: pragma.type = QQmlScript::Pragma::Singleton; break;
-            default: break;
-            }
-
-            m_pragmas << pragma;
-        }
-    }
-
-    foreach (const QQmlScript::Pragma &pragma, m_pragmas) {
-        if (!addPragma(pragma, &errors)) {
+    foreach (QmlIR::Pragma *pragma, m_document->pragmas) {
+        if (!addPragma(*pragma, &errors)) {
             Q_ASSERT(errors.size());
             setError(errors);
             return;
@@ -2616,11 +2599,6 @@ QQmlScriptBlob::~QQmlScriptBlob()
         m_scriptData->release();
         m_scriptData = 0;
     }
-}
-
-QQmlScript::Object::ScriptBlock::Pragmas QQmlScriptBlob::pragmas() const
-{
-    return m_metadata.pragmas;
 }
 
 QQmlScriptData *QQmlScriptBlob::scriptData() const

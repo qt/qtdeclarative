@@ -119,17 +119,6 @@ public:
     QQmlScript::LocationSpan location;
 };
 
-class Pragma
-{
-public:
-    Pragma() : type(Singleton) {}
-
-    enum Type { Singleton };
-    Type type;
-
-    QQmlScript::LocationSpan location;
-};
-
 class Object;
 class TypeReference : public QQmlPool::Class
 {

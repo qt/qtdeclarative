@@ -422,7 +422,7 @@ struct Q_QML_EXPORT QmlUnitGenerator
     {
     }
 
-    QV4::CompiledData::QmlUnit *generate(Document &output);
+    QV4::CompiledData::QmlUnit *generate(Document &output, int *totalUnitSizeInBytes = 0);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;

@@ -168,7 +168,8 @@ struct Unit
         IsJavascript = 0x1,
         IsQml = 0x2,
         StaticData = 0x4, // Unit data persistent in memory?
-        IsSingleton = 0x8
+        IsSingleton = 0x8,
+        IsSharedLibrary = 0x10 // .pragma shared?
     };
     quint32 flags;
     uint stringTableSize;
