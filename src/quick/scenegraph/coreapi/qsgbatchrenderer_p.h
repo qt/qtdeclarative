@@ -499,6 +499,8 @@ private:
 
     uint m_rebuild;
     qreal m_zRange;
+    int m_renderOrderRebuildLower;
+    int m_renderOrderRebuildUpper;
 
     GLuint m_bufferStrategy;
     int m_batchNodeThreshold;
