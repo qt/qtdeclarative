@@ -77,7 +77,9 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
-bool QQuickWindowPrivate::defaultAlphaBuffer(0);
+bool QQuickWindowPrivate::defaultAlphaBuffer = false;
+bool QQuickWindowPrivate::defaultFormatInitialized = false;
+QSurfaceFormat QQuickWindowPrivate::defaultFormat;
 
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
@@ -457,7 +459,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     }
 
     q->setSurfaceType(QWindow::OpenGLSurface);
-    q->setFormat(sg->defaultSurfaceFormat());
+    q->setFormat(q->defaultFormat());
 
     animationController = new QQuickAnimatorController();
     animationController->m_window = q;
@@ -3417,6 +3419,130 @@ void QQuickWindow::resetOpenGLState()
     gl->glUseProgram(0);
 
     QOpenGLFramebufferObject::bindDefault();
+}
+
+/*!
+ * \brief QQuickWindow::setDefaultFormat
+ * \since 5.4
+ * @brief Sets the global default surface format that is used for all new QQuickWindow instances.
+ *
+ * While it is possible to specify a QSurfaceFormat for every QQuickWindow by
+ * calling the member function setFormat(), windows may also be created from
+ * QML by using the Window and ApplicationWindow elements. In this case there
+ * is no C++ code involved in the creation of the window instance, yet
+ * applications may still wish to set certain surface format values, for
+ * example to request a given OpenGL version or profile. Such applications can
+ * call this static functions in main(). \a format will be used for all Quick
+ * windows created afterwards.
+ *
+ * \note The default value for the default format is not necessarily a
+ * default-constructed QSurfaceFormat. It may already have depth, stencil and alpha
+ * buffer sizes set. Unless there is a need to change all these sizes, the format should
+ * first be queried via defaultFormat() and the changes should be applied to that,
+ * instead of merely starting with default-constructed QSurfaceFormat.
+ *
+ * \sa setFormat(), format(), defaultFormat()
+ */
+void QQuickWindow::setDefaultFormat(const QSurfaceFormat &format)
+{
+    QQuickWindowPrivate::defaultFormatInitialized = true;
+    QQuickWindowPrivate::defaultFormat = format;
+}
+
+/*!
+ * \brief QQuickWindow::defaultFormat
+ * \since 5.4
+ * \return The global default surface format that is used for all QQuickWindow instances.
+ * \note This function requires a QGuiApplication or QApplication instance.
+ */
+QSurfaceFormat QQuickWindow::defaultFormat()
+{
+    if (!QQuickWindowPrivate::defaultFormatInitialized) {
+        QQuickWindowPrivate::defaultFormatInitialized = true;
+        QQuickWindowPrivate::defaultFormat = QSGRenderLoop::instance()->sceneGraphContext()->defaultSurfaceFormat();
+    }
+    return QQuickWindowPrivate::defaultFormat;
+}
+
+/*!
+ * \brief QQuickWindow::glslVersion
+ * \since 5.4
+ * \return The OpenGL Shading Language version for this window.
+ *
+ * QML components that need to be usable on different platforms and environments may need
+ * to deal with different OpenGL versions if they include ShaderEffect items. The source
+ * code for a given shader may not be compatible with an OpenGL context that targets a
+ * different OpenGL version or profile, hence it might be necessary to provide multiple
+ * versions of the shader. This property helps in deciding which shader source should be
+ * chosen.
+ *
+ * The value corresponds to GLSL version declarations, for example an OpenGL 4.2 core
+ * profile context will result in the value \e{420 core}, while an OpenGL ES 3.0 context
+ * gives \e{300 es}. For OpenGL (ES) 2 the value will be an empty string since the
+ * corresponding shading language does not use version declarations.
+ *
+ * \note The value does not necessarily indicate that the shader source must target that
+ * specific version. For example, compatibility profiles and ES 3.x all allow using
+ * OpenGL 2 style shaders. The most important for reusable components is to check for
+ * core profiles since these do not accept shaders with the old syntax.
+ *
+ * \sa setFormat(), glslIsCoreProfile()
+ */
+QString QQuickWindow::glslVersion() const
+{
+    QString ver;
+    QOpenGLContext *ctx = openglContext();
+    if (ctx) {
+        const QSurfaceFormat fmt = ctx->format();
+        if (fmt.renderableType() == QSurfaceFormat::OpenGLES
+                && fmt.majorVersion() >= 3) {
+            ver += QLatin1Char(fmt.majorVersion() + '0');
+            ver += QLatin1Char(fmt.minorVersion() + '0');
+            ver += QLatin1String("0 es");
+        } else if (fmt.renderableType() == QSurfaceFormat::OpenGL
+                   && fmt.majorVersion() >= 3) {
+            if (fmt.version() == qMakePair(3, 0)) {
+                ver = QStringLiteral("130");
+            } else if (fmt.version() == qMakePair(3, 1)) {
+                ver = QStringLiteral("140");
+            } else if (fmt.version() == qMakePair(3, 2)) {
+                ver = QStringLiteral("150");
+            } else {
+                ver += QLatin1Char(fmt.majorVersion() + '0');
+                ver += QLatin1Char(fmt.minorVersion() + '0');
+                ver += QLatin1Char('0');
+            }
+            if (fmt.version() >= qMakePair(3, 2)) {
+                if (fmt.profile() == QSurfaceFormat::CoreProfile)
+                    ver += QStringLiteral(" core");
+                else if (fmt.profile() == QSurfaceFormat::CompatibilityProfile)
+                    ver += QStringLiteral(" compatibility");
+            }
+        }
+    }
+    return ver;
+}
+
+/*!
+ * \brief QQuickWindow::glslIsCoreProfile
+ * \since 5.4
+ * \return True if the window is rendering using OpenGL core profile.
+ *
+ * This is convenience function to check if the window's OpenGL context is a core profile
+ * context. It is more efficient to perform the check via this function than parsing the
+ * string returned from glslVersion().
+ *
+ * Resusable QML components will typically use this function in bindings in order to
+ * choose between core and non core profile compatible shader sources.
+ *
+ * To retrieve more information about the shading language, use glslVersion().
+ *
+ * \sa glslVersion()
+ */
+bool QQuickWindow::glslIsCoreProfile() const
+{
+    QOpenGLContext *ctx = openglContext();
+    return ctx ? ctx->format().profile() == QSurfaceFormat::CoreProfile : false;
 }
 
 /*!

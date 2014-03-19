@@ -357,6 +357,9 @@ private slots:
 
     void contentItemSize();
 
+    void defaultSurfaceFormat();
+    void glslVersion();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -1739,6 +1742,79 @@ void tst_qquickwindow::contentItemSize()
     // wait for resize event
     QTRY_COMPARE(QSizeF(contentItem->width(), contentItem->height()), size);
     QCOMPARE(QSizeF(rect->width(), rect->height()), size);
+}
+
+void tst_qquickwindow::defaultSurfaceFormat()
+{
+    // It is quite difficult to verify anything for real since the resulting format after
+    // surface/context creation can be anything, depending on the platform and drivers,
+    // and many options and settings may fail in various configurations, but test at
+    // least using some harmless settings to check that the global, static format is
+    // taken into account in the requested format.
+
+    QSurfaceFormat savedDefaultFormat = QQuickWindow::defaultFormat();
+
+    // Verify that depth and stencil are set, as they should be, unless they are disabled
+    // via environment variables.
+    QVERIFY(savedDefaultFormat.depthBufferSize() >= 16);
+    QVERIFY(savedDefaultFormat.stencilBufferSize() >= 8);
+
+    QSurfaceFormat format = savedDefaultFormat;
+    format.setSwapInterval(0);
+    format.setRedBufferSize(8);
+    format.setGreenBufferSize(8);
+    format.setBlueBufferSize(8);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    format.setOption(QSurfaceFormat::DebugContext);
+    QQuickWindow::setDefaultFormat(format);
+
+    QQuickWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    const QSurfaceFormat reqFmt = window.requestedFormat();
+    QCOMPARE(format.swapInterval(), reqFmt.swapInterval());
+    QCOMPARE(format.redBufferSize(), reqFmt.redBufferSize());
+    QCOMPARE(format.greenBufferSize(), reqFmt.greenBufferSize());
+    QCOMPARE(format.blueBufferSize(), reqFmt.blueBufferSize());
+    QCOMPARE(format.profile(), reqFmt.profile());
+    QCOMPARE(int(format.options()), int(reqFmt.options()));
+
+    QQuickWindow::setDefaultFormat(savedDefaultFormat);
+}
+
+void tst_qquickwindow::glslVersion()
+{
+    QQuickWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // Core profile is never requested by default.
+    QVERIFY(!window.glslIsCoreProfile());
+
+    // Get the format from the context, not the window. The actual OpenGL version and
+    // related settings are associated with the context and are only written back to the
+    // context's format.
+    QSurfaceFormat format = window.openglContext()->format();
+
+    if (format.renderableType() == QSurfaceFormat::OpenGL) {
+        if (format.majorVersion() == 2)
+            QCOMPARE(window.glslVersion(), QString());
+        else if (format.majorVersion() == 3)
+            QVERIFY(window.glslVersion().startsWith('3')
+                    || window.glslVersion() == QStringLiteral("130")
+                    || window.glslVersion() == QStringLiteral("140")
+                    || window.glslVersion() == QStringLiteral("150"));
+        else if (format.majorVersion() == 4)
+            QVERIFY(window.glslVersion().startsWith('4'));
+        QVERIFY(!window.glslVersion().contains(QStringLiteral("core")));
+        QVERIFY(!window.glslVersion().contains(QStringLiteral("es")));
+    } else if (format.renderableType() == QSurfaceFormat::OpenGLES) {
+        if (format.majorVersion() == 2)
+            QCOMPARE(window.glslVersion(), QString());
+        else
+            QVERIFY(window.glslVersion().contains(QStringLiteral("es")));
+    }
 }
 
 QTEST_MAIN(tst_qquickwindow)

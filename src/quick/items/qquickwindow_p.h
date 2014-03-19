@@ -247,6 +247,9 @@ public:
                                               QString *untranslatedMessage,
                                               bool isEs);
 
+    static bool defaultFormatInitialized;
+    static QSurfaceFormat defaultFormat;
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
