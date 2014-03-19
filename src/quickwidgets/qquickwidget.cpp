@@ -614,7 +614,7 @@ void QQuickWidget::createFramebufferObject()
     }
 
     context->makeCurrent(d->offscreenSurface);
-    d->fbo = new QOpenGLFramebufferObject(size());
+    d->fbo = new QOpenGLFramebufferObject(size() * window()->devicePixelRatio());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
 
