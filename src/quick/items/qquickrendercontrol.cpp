@@ -317,6 +317,8 @@ void QQuickRenderControl::render()
 
 /*!
   Grabs the contents of the scene and returns it as an image.
+
+  \note Requires the context to be current.
  */
 QImage QQuickRenderControl::grab()
 {

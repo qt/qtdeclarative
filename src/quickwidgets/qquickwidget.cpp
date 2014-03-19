@@ -1089,4 +1089,19 @@ QSurfaceFormat QQuickWidget::format() const
     return d->offscreenWindow->format();
 }
 
+/*!
+  Renders a frame and reads it back into an image.
+
+  \note This is a potentially expensive operation.
+ */
+QImage QQuickWidget::grabFramebuffer() const
+{
+    Q_D(const QQuickWidget);
+    if (!d->context)
+        return QImage();
+
+    d->context->makeCurrent(d->offscreenSurface);
+    return d->renderControl->grab();
+}
+
 QT_END_NAMESPACE

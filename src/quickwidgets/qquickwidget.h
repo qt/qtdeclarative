@@ -47,6 +47,7 @@
 #include <QtCore/qurl.h>
 #include <QtQml/qqmldebug.h>
 #include <QtQuickWidgets/qtquickwidgetsglobal.h>
+#include <QtGui/qimage.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,6 +65,7 @@ class Q_QUICKWIDGETS_EXPORT QQuickWidget : public QWidget
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
     Q_ENUMS(ResizeMode Status)
+
 public:
     explicit QQuickWidget(QWidget *parent = 0);
     QQuickWidget(QQmlEngine* engine, QWidget *parent);
@@ -91,6 +93,8 @@ public:
 
     void setFormat(const QSurfaceFormat &format);
     QSurfaceFormat format() const;
+
+    QImage grabFramebuffer() const;
 
 public Q_SLOTS:
     void setSource(const QUrl&);
