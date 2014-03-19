@@ -113,7 +113,7 @@ public:
     QSize initialSize;
     QElapsedTimer frameTimer;
 
-    int updateTimer;
+    QBasicTimer updateTimer;
     bool eventPending;
     bool updatePending;
     bool fakeHidden;

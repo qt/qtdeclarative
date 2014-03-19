@@ -104,7 +104,6 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , context(0)
     , resizeMode(QQuickWidget::SizeViewToRootObject)
     , initialSize(0,0)
-    , updateTimer(0)
     , eventPending(false)
     , updatePending(false)
     , fakeHidden(false)
@@ -697,7 +696,8 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
     }
     if (root) {
         initialSize = rootObjectSize();
-        if ((resizeMode == QQuickWidget::SizeViewToRootObject || q->width() <= 1 || q->height() <= 1) &&
+        bool resized = q->testAttribute(Qt::WA_Resized);
+        if ((resizeMode == QQuickWidget::SizeViewToRootObject || !resized) &&
             initialSize != q->size()) {
             q->resize(initialSize);
         }
@@ -712,8 +712,7 @@ GLuint QQuickWidgetPrivate::textureId() const
 
 /*!
   \internal
-  If the \l {QTimerEvent} {timer event} \a e is this
-  view's resize timer, sceneResized() is emitted.
+  Handle item resize and scene updates.
  */
 void QQuickWidget::timerEvent(QTimerEvent* e)
 {
@@ -721,6 +720,11 @@ void QQuickWidget::timerEvent(QTimerEvent* e)
     if (!e || e->timerId() == d->resizetimer.timerId()) {
         d->updateSize();
         d->resizetimer.stop();
+    } else if (e->timerId() == d->updateTimer.timerId()) {
+        d->eventPending = false;
+        d->updateTimer.stop();
+        if (d->updatePending)
+            d->renderSceneGraph();
     }
 }
 
@@ -912,14 +916,6 @@ bool QQuickWidget::event(QEvent *e)
     Q_D(QQuickWidget);
 
     switch (e->type()) {
-    case QEvent::Timer:
-        d->eventPending = false;
-        killTimer(d->updateTimer);
-        d->updateTimer = 0;
-        if (d->updatePending)
-            d->renderSceneGraph();
-        return true;
-
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:
@@ -946,7 +942,7 @@ void QQuickWidget::triggerUpdate()
     d->updatePending = true;
      if (!d->eventPending) {
         const int exhaustDelay = 5;
-        d->updateTimer = startTimer(exhaustDelay, Qt::PreciseTimer);
+        d->updateTimer.start(exhaustDelay, Qt::PreciseTimer, this);
         d->eventPending = true;
     }
 }
