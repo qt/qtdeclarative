@@ -2986,7 +2986,7 @@ QImage QQuickWindow::grabWindow()
         d->syncSceneGraph();
         d->renderSceneGraph(size());
 
-        QImage image = qt_gl_read_framebuffer(size(), false, false);
+        QImage image = qt_gl_read_framebuffer(size() * devicePixelRatio(), false, false);
         d->cleanupNodesOnShutdown();
         d->context->invalidate();
         context.doneCurrent();

@@ -452,7 +452,7 @@ bool QSGRenderThread::event(QEvent *e)
             QQuickWindowPrivate::get(window)->renderSceneGraph(windowSize);
 
             QSG_RT_DEBUG(" - grabbing result...");
-            *ce->image = qt_gl_read_framebuffer(windowSize, false, false);
+            *ce->image = qt_gl_read_framebuffer(windowSize * window->devicePixelRatio(), false, false);
         }
         QSG_RT_DEBUG(" - waking gui to handle grab result");
         waitCondition.wakeOne();

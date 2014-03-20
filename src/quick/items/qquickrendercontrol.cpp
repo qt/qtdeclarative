@@ -217,7 +217,7 @@ QImage QQuickRenderControl::grab()
         return QImage();
 
     render();
-    QImage grabContent = qt_gl_read_framebuffer(d->window->size(), false, false);
+    QImage grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->devicePixelRatio(), false, false);
     return grabContent;
 }
 
