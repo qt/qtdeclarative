@@ -59,7 +59,7 @@ class tst_qquickpixmapcache : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickpixmapcache() : server(14452) {}
+    tst_qquickpixmapcache() {}
 
 private slots:
     void initTestCase();
@@ -115,6 +115,8 @@ static const bool localfile_optimized = false;
 void tst_qquickpixmapcache::initTestCase()
 {
     QQmlDataTest::initTestCase();
+
+    QVERIFY2(server.listen(14452), qPrintable(server.errorString()));
 
     // This avoids a race condition/deadlock bug in network config
     // manager when it is accessed by the HTTP server thread before
@@ -379,7 +381,8 @@ void tst_qquickpixmapcache::shrinkcache()
 void createNetworkServer()
 {
    QEventLoop eventLoop;
-   TestHTTPServer server(14453);
+   TestHTTPServer server;
+   QVERIFY2(server.listen(14453), qPrintable(server.errorString()));
    server.serveDirectory(QQmlDataTest::instance()->testFile("http"));
    QTimer::singleShot(100, &eventLoop, SLOT(quit()));
    eventLoop.exec();
@@ -407,7 +410,8 @@ void tst_qquickpixmapcache::networkCrash()
 // QTBUG-22125
 void tst_qquickpixmapcache::lockingCrash()
 {
-    TestHTTPServer server(14453);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14453), qPrintable(server.errorString()));
     server.serveDirectory(testFile("http"), TestHTTPServer::Delay);
 
     {

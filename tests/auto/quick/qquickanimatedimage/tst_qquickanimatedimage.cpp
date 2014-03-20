@@ -259,8 +259,8 @@ void tst_qquickanimatedimage::remote()
     QFETCH(QString, fileName);
     QFETCH(bool, paused);
 
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -324,8 +324,8 @@ void tst_qquickanimatedimage::invalidSource()
 
 void tst_qquickanimatedimage::sourceSizeChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -390,8 +390,8 @@ void tst_qquickanimatedimage::sourceSizeChanges()
 
 void tst_qquickanimatedimage::qtbug_16520()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -413,8 +413,8 @@ void tst_qquickanimatedimage::qtbug_16520()
 
 void tst_qquickanimatedimage::progressAndStatusChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;

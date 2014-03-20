@@ -176,9 +176,9 @@ void tst_qquickimage::imageSource()
     QFETCH(bool, cache);
     QFETCH(QString, error);
 
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
     if (remote) {
-        QVERIFY(server.isValid());
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         server.serveDirectory(dataDirectory());
         server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
     }
@@ -524,8 +524,8 @@ void tst_qquickimage::noLoading()
 {
     qRegisterMetaType<QQuickImageBase::Status>();
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
     server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
 
@@ -685,8 +685,8 @@ void tst_qquickimage::nullPixmapPaint()
 
 void tst_qquickimage::imageCrash_QTBUG_22125()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     {
@@ -756,8 +756,8 @@ void tst_qquickimage::sourceSize()
 
 void tst_qquickimage::sourceSizeChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -822,8 +822,8 @@ void tst_qquickimage::sourceSizeChanges()
 
 void tst_qquickimage::progressAndStatusChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;

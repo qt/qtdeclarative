@@ -240,13 +240,12 @@ void tst_qqmlxmlhttprequest::open()
     QFETCH(QString, url);
     QFETCH(bool, remote);
 
-    QScopedPointer<TestHTTPServer> server; // ensure deletion in case test fails
+    TestHTTPServer server;
     if (remote) {
-        server.reset(new TestHTTPServer(SERVER_PORT));
-        QVERIFY(server->isValid());
-        QVERIFY(server->wait(testFileUrl("open_network.expect"),
-                             testFileUrl("open_network.reply"),
-                             testFileUrl("testdocument.html")));
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY(server.wait(testFileUrl("open_network.expect"),
+                            testFileUrl("open_network.reply"),
+                            testFileUrl("testdocument.html")));
     }
 
     QQmlComponent component(&engine, qmlFile);
@@ -322,8 +321,8 @@ void tst_qqmlxmlhttprequest::open_arg_count()
 // Test valid setRequestHeader() calls
 void tst_qqmlxmlhttprequest::setRequestHeader()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("setRequestHeader.expect"),
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -340,8 +339,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader()
 // Test valid setRequestHeader() calls with different header cases
 void tst_qqmlxmlhttprequest::setRequestHeader_caseInsensitive()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("setRequestHeader.expect"),
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -397,8 +396,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
 {
     QFETCH(QString, name);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("open_network.expect"),
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
@@ -423,8 +422,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
 // Test that attempting to set a header after a request is sent throws an exception
 void tst_qqmlxmlhttprequest::setRequestHeader_sent()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("open_network.expect"),
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
@@ -475,8 +474,8 @@ void tst_qqmlxmlhttprequest::send_alreadySent()
 void tst_qqmlxmlhttprequest::send_ignoreData()
 {
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_GET.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             testFileUrl("testdocument.html")));
@@ -492,8 +491,8 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
     }
 
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_HEAD.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
@@ -509,8 +508,8 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
     }
 
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_DELETE.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
@@ -532,8 +531,8 @@ void tst_qqmlxmlhttprequest::send_withdata()
     QFETCH(QString, file_expected);
     QFETCH(QString, file_qml);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl(file_expected),
                         testFileUrl("send_data.reply"),
                         testFileUrl("testdocument.html")));
@@ -602,8 +601,8 @@ void tst_qqmlxmlhttprequest::abort_opened()
 // Test abort() aborts in progress send
 void tst_qqmlxmlhttprequest::abort()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("abort.expect"),
                         testFileUrl("abort.reply"),
                         testFileUrl("testdocument.html")));
@@ -626,8 +625,8 @@ void tst_qqmlxmlhttprequest::getResponseHeader()
 {
     QQmlEngine engine; // Avoid cookie contamination
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("getResponseHeader.expect"),
                         testFileUrl("getResponseHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -693,8 +692,8 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders()
 {
     QQmlEngine engine; // Avoid cookie contamination
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("getResponseHeader.expect"),
                         testFileUrl("getResponseHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -754,8 +753,8 @@ void tst_qqmlxmlhttprequest::status()
     QFETCH(QUrl, replyUrl);
     QFETCH(int, status);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         testFileUrl("testdocument.html")));
@@ -793,8 +792,8 @@ void tst_qqmlxmlhttprequest::statusText()
     QFETCH(QUrl, replyUrl);
     QFETCH(QString, statusText);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         testFileUrl("testdocument.html")));
@@ -833,8 +832,8 @@ void tst_qqmlxmlhttprequest::responseText()
     QFETCH(QUrl, bodyUrl);
     QFETCH(QString, responseText);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         bodyUrl));
@@ -934,8 +933,8 @@ void tst_qqmlxmlhttprequest::invalidMethodUsage()
 void tst_qqmlxmlhttprequest::redirects()
 {
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirecttarget.html");
         server.serveDirectory(dataDirectory());
 
@@ -951,8 +950,8 @@ void tst_qqmlxmlhttprequest::redirects()
     }
 
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirectmissing.html");
         server.serveDirectory(dataDirectory());
 
@@ -968,8 +967,8 @@ void tst_qqmlxmlhttprequest::redirects()
     }
 
     {
-        TestHTTPServer server(SERVER_PORT);
-        QVERIFY(server.isValid());
+        TestHTTPServer server;
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirect.html");
         server.serveDirectory(dataDirectory());
 
@@ -1070,8 +1069,8 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     // ensure that we don't crash by attempting to evaluate
     // without a valid calling context.
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQmlComponent component(&engine, testFileUrl("stateChangeCallingContext.qml"));

@@ -112,7 +112,11 @@ int main(int argc, char *argv[])
                << "\":\n\n" << QDir(directory).entryList(QDir::Files).join(QLatin1Char('\n'))
                << "\n\non http://localhost:" << port << '\n';
 
-    TestHTTPServer server(port);
+    TestHTTPServer server;
+    if (!server.listen(port)) {
+        std::wcout << "Couldn't listen on port " << port << server.errorString().toLocal8Bit();
+        exit(-1);
+    }
     server.serveDirectory(directory);
 
     return a.exec();

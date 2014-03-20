@@ -247,8 +247,8 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
 
 void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;
@@ -268,8 +268,8 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 
 void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;

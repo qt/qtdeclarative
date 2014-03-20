@@ -2237,7 +2237,8 @@ void tst_qqmllanguage::basicRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server(14447);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, url);
@@ -2281,7 +2282,8 @@ void tst_qqmllanguage::importsRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server(14447);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     testType(qml,type,error);
@@ -2373,7 +2375,8 @@ void tst_qqmllanguage::importsInstalledRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server(14447);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QString serverdir = "http://127.0.0.1:14447/lib/";
@@ -2439,7 +2442,8 @@ void tst_qqmllanguage::importsPath()
     QFETCH(QString, qml);
     QFETCH(QString, value);
 
-    TestHTTPServer server(14447);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     engine.setImportPathList(QStringList(defaultImportPathList) << importPath);
@@ -3018,7 +3022,8 @@ void tst_qqmllanguage::registeredCompositeType()
 // QTBUG-18268
 void tst_qqmllanguage::remoteLoadCrash()
 {
-    TestHTTPServer server(14448);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14448), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
@@ -3508,7 +3513,8 @@ void tst_qqmllanguage::compositeSingletonQmlDirError()
 // Load a remote composite singleton type via qmldir that defines the type as a singleton
 void tst_qqmllanguage::compositeSingletonRemote()
 {
-    TestHTTPServer server(14447);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFile("singletonTest15.qml"));

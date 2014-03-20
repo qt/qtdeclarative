@@ -51,9 +51,10 @@ class TestHTTPServer : public QObject
 {
     Q_OBJECT
 public:
-    TestHTTPServer(quint16 port);
+    TestHTTPServer();
 
-    bool isValid() const;
+    bool listen(quint16 port);
+    QString errorString() const;
 
     enum Mode { Normal, Delay, Disconnect };
     bool serveDirectory(const QString &, Mode = Normal);

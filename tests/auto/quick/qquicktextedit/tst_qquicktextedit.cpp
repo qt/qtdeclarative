@@ -2603,7 +2603,8 @@ void tst_qquicktextedit::cursorDelegate()
 
 void tst_qquicktextedit::remoteCursorDelegate()
 {
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
@@ -2740,7 +2741,8 @@ void tst_qquicktextedit::delegateLoading()
     QFETCH(QString, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
     server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
     server.serveDirectory(testFile("http"));
@@ -5214,7 +5216,8 @@ void tst_qquicktextedit::embeddedImages()
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(testFile("http"));
 
     if (!error.isEmpty())

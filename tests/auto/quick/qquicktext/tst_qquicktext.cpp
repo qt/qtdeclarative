@@ -2022,7 +2022,8 @@ void tst_qquicktext::embeddedImages()
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(testFile("http"));
 
     if (!error.isEmpty())
@@ -2760,7 +2761,8 @@ void tst_qquicktext::imgTagsBaseUrl()
     QFETCH(QUrl, contextUrl);
     QFETCH(qreal, imgHeight);
 
-    TestHTTPServer server(SERVER_PORT);
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(testFile(""));
 
     QByteArray baseUrlFragment;

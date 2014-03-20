@@ -143,11 +143,10 @@ void tst_qquickborderimage::imageSource()
     QFETCH(bool, remote);
     QFETCH(QString, error);
 
-    TestHTTPServer *server = 0;
+    TestHTTPServer server;
     if (remote) {
-        server = new TestHTTPServer(SERVER_PORT);
-        QVERIFY(server->isValid());
-        server->serveDirectory(dataDirectory());
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        server.serveDirectory(dataDirectory());
     }
 
     if (!error.isEmpty())
@@ -177,7 +176,6 @@ void tst_qquickborderimage::imageSource()
     }
 
     delete obj;
-    delete server;
 }
 
 void tst_qquickborderimage::clearSource()
@@ -292,11 +290,11 @@ void tst_qquickborderimage::sciSource()
     QFETCH(bool, valid);
 
     bool remote = source.startsWith("http");
-    TestHTTPServer *server = 0;
+
+    TestHTTPServer server;
     if (remote) {
-        server = new TestHTTPServer(SERVER_PORT);
-        QVERIFY(server->isValid());
-        server->serveDirectory(dataDirectory());
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        server.serveDirectory(dataDirectory());
     }
 
     QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\"; width: 300; height: 300 }";
@@ -325,7 +323,6 @@ void tst_qquickborderimage::sciSource()
     }
 
     delete obj;
-    delete server;
 }
 
 void tst_qquickborderimage::sciSource_data()
@@ -435,11 +432,10 @@ void tst_qquickborderimage::statusChanges()
     QFETCH(bool, remote);
     QFETCH(QQuickImageBase::Status, finalStatus);
 
-    TestHTTPServer *server = 0;
+    TestHTTPServer server;
     if (remote) {
-        server = new TestHTTPServer(SERVER_PORT);
-        QVERIFY(server->isValid());
-        server->serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        server.serveDirectory(dataDirectory());
     }
 
     QString componentStr = "import QtQuick 2.0\nBorderImage { width: 300; height: 300 }";
@@ -452,18 +448,17 @@ void tst_qquickborderimage::statusChanges()
     QVERIFY(obj != 0);
     obj->setSource(source);
     if (remote)
-        server->sendDelayedItem();
+        server.sendDelayedItem();
     QTRY_VERIFY(obj->status() == finalStatus);
     QCOMPARE(spy.count(), emissions);
 
     delete obj;
-    delete server;
 }
 
 void tst_qquickborderimage::sourceSizeChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -528,8 +523,8 @@ void tst_qquickborderimage::sourceSizeChanges()
 
 void tst_qquickborderimage::progressAndStatusChanges()
 {
-    TestHTTPServer server(14449);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;

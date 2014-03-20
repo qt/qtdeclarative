@@ -446,8 +446,8 @@ void tst_QQuickLoader::noResize()
 
 void tst_QQuickLoader::networkRequestUrl()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
@@ -470,8 +470,8 @@ void tst_QQuickLoader::networkRequestUrl()
 /* XXX Component waits until all dependencies are loaded.  Is this actually possible? */
 void tst_QQuickLoader::networkComponent()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQmlComponent component(&engine);
@@ -503,8 +503,8 @@ void tst_QQuickLoader::networkComponent()
 
 void tst_QQuickLoader::failNetworkRequest()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QTest::ignoreMessage(QtWarningMsg, SERVER_ADDR "/IDontExist.qml: File not found");
@@ -718,8 +718,8 @@ void tst_QQuickLoader::initialPropertyValues()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     foreach (const QString &warning, expectedWarnings)

@@ -267,8 +267,8 @@ void tst_qqmlcomponent::qmlCreateParentReference()
 
 void tst_qqmlcomponent::async()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
@@ -287,8 +287,8 @@ void tst_qqmlcomponent::async()
 
 void tst_qqmlcomponent::asyncHierarchy()
 {
-    TestHTTPServer server(SERVER_PORT);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     // ensure that the item hierarchy is compiled correctly.

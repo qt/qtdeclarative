@@ -4169,8 +4169,8 @@ void tst_qqmlecmascript::importScripts()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
-    TestHTTPServer server(8111);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory() + "/remote");
 
     QStringList importPathList = engine.importPathList();
@@ -5997,8 +5997,8 @@ void tst_qqmlecmascript::include()
 
     // Remote - error
     {
-    TestHTTPServer server(8111);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFileUrl("include_remote_missing.qml"));
@@ -6022,8 +6022,8 @@ void tst_qqmlecmascript::includeRemoteSuccess()
 #endif
 
     // Remote - success
-    TestHTTPServer server(8111);
-    QVERIFY(server.isValid());
+    TestHTTPServer server;
+    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFileUrl("include_remote.qml"));

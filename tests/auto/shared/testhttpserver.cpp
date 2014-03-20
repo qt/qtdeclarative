@@ -71,7 +71,8 @@ slowFiles/slowMain.qml
 \endcode
 it can be added like this:
 \code
-TestHTTPServer server(14445);
+TestHTTPServer server;
+QVERIFY2(server.listen(14445), qPrintable(server.errorString()));
 server.serveDirectory("disconnect", TestHTTPServer::Disconnect);
 server.serveDirectory("files");
 server.serveDirectory("slowFiles", TestHTTPServer::Delay);
@@ -87,17 +88,21 @@ The following request urls will then result in the appropriate action:
 \row \li http://localhost:14445/slowMain.qml \li slowMain.qml returned after 500ms
 \endtable
 */
-TestHTTPServer::TestHTTPServer(quint16 port)
+TestHTTPServer::TestHTTPServer()
 : m_state(AwaitingHeader)
 {
     QObject::connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 
-    server.listen(QHostAddress::LocalHost, port);
 }
 
-bool TestHTTPServer::isValid() const
+bool TestHTTPServer::listen(quint16 port)
 {
-    return server.isListening();
+    return server.listen(QHostAddress::LocalHost, port);
+}
+
+QString TestHTTPServer::errorString() const
+{
+    return server.errorString();
 }
 
 bool TestHTTPServer::serveDirectory(const QString &dir, Mode mode)

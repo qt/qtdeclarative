@@ -75,8 +75,7 @@ private:
     TestHTTPServer server;
 };
 
-tst_qquickfontloader::tst_qquickfontloader() :
-    server(SERVER_PORT)
+tst_qquickfontloader::tst_qquickfontloader()
 {
 }
 
@@ -84,7 +83,7 @@ void tst_qquickfontloader::initTestCase()
 {
     QQmlDataTest::initTestCase();
     server.serveDirectory(dataDirectory());
-    QVERIFY(server.isValid());
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
 }
 
 void tst_qquickfontloader::noFont()
