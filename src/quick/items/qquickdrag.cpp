@@ -694,17 +694,21 @@ void QQuickDragAttached::cancel()
 }
 
 /*!
-    \qmlattachedsignal QtQuick::Drag::onDragStarted()
+    \qmlattachedsignal QtQuick::Drag::dragStarted()
 
-    This handler is called when a drag is started with the \l startDrag method
+    This signal is emitted when a drag is started with the \l startDrag() method
     or when it is started automatically using the \l dragType property.
+
+    The corresponding handler is \c onDragStarted.
  */
 
 /*!
-    \qmlattachedsignal QtQuick::Drag::onDragFinished(DropAction action)
+    \qmlattachedsignal QtQuick::Drag::dragFinished(DropAction action)
 
-    This handler is called when a drag finishes and the drag was started with the
-    \l startDrag method or started automatically using the \l dragType property.
+    This signal is emitted when a drag finishes and the drag was started with the
+    \l startDrag() method or started automatically using the \l dragType property.
+
+    The corresponding handler is \c onDragFinished.
  */
 
 Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)

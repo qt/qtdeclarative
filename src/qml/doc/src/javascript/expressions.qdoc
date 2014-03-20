@@ -327,8 +327,8 @@ instances - can use this attached property.  If there is more than one
 \c onCompleted() handler to execute at startup, they are run sequentially in
 an undefined order.
 
-Likewise, the \l {Component::onDestruction} handler definitions are triggered
-on component destruction.
+Likewise, every \c Component will emit a \l {Component::destruction}{destruction()}
+signal just before being destroyed.
 
 */
 

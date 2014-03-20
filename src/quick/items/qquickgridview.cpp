@@ -1305,16 +1305,20 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlattachedsignal QtQuick::GridView::onAdd()
-    This attached handler is called immediately after an item is added to the view.
+    \qmlattachedsignal QtQuick::GridView::add()
+    This attached signal is emitted immediately after an item is added to the view.
+
+    The corresponding handler is \c onAdd.
 */
 
 /*!
-    \qmlattachedsignal QtQuick::GridView::onRemove()
-    This attached handler is called immediately before an item is removed from the view.
+    \qmlattachedsignal QtQuick::GridView::remove()
+    This attached signal is emitted immediately before an item is removed from the view.
 
     If a \l remove transition has been specified, it is applied after
-    this signal handler is called, providing that delayRemove is false.
+    this signal is handled, providing that \l delayRemove is false.
+
+    The corresponding handler is \c onRemove.
 */
 
 
@@ -1797,7 +1801,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     populated, or when the view's \l model changes. (In those cases, the \l populate transition is
     applied instead.) Additionally, this transition should \e not animate the height of the new item;
     doing so will cause any items beneath the new item to be laid out at the wrong position. Instead,
-    the height can be animated within a \l {ListView::onAdd}{ListView.onAdd} in the delegate.
+    the height can be animated within the \l {add}{onAdd} handler in the delegate.
 
     \sa addDisplaced, populate, ViewTransition
 */
