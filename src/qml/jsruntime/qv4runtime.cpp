@@ -1230,6 +1230,8 @@ ReturnedValue Runtime::getQmlIdArray(NoThrowContext *ctx)
 ReturnedValue Runtime::getQmlContextObject(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    if (!context)
+        return Encode::undefined();
     return QObjectWrapper::wrap(ctx->engine, context->contextObject);
 }
 
@@ -1277,6 +1279,8 @@ void Runtime::setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object
 ReturnedValue Runtime::getQmlImportedScripts(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    if (!context)
+        return Encode::undefined();
     return context->importedScripts.value();
 }
 
