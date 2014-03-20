@@ -134,6 +134,8 @@ public:
 
     virtual void setCustomRenderMode(const QByteArray &) { };
 
+    void clearChangedFlag() { m_changed_emitted = false; }
+
 Q_SIGNALS:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 

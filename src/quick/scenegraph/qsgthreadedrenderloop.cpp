@@ -538,6 +538,10 @@ void QSGRenderThread::sync()
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
+        // If the scene graph was touched since the last sync() make sure it sends the
+        // changed signal.
+        if (d->renderer)
+            d->renderer->clearChangedFlag();
         d->syncSceneGraph();
         if (!hadRenderer && d->renderer) {
             QSG_RT_DEBUG(" - renderer was created, hooking up changed signal");
