@@ -142,6 +142,9 @@
     the unique QSGSimpleMaterialShader implementation must be
     instantiated with a unique C++ type.
 
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
+
     \sa {Scene Graph - Simple Material}
  */
 
@@ -243,6 +246,9 @@
     generated state() function.
 
     \inmodule QtQuick
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa QSGSimpleMaterialShader
 */

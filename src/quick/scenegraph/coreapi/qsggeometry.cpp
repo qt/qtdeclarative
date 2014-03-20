@@ -286,6 +286,9 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 
     \sa QSGGeometryNode, {Scene Graph - Custom Geometry}
 
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
+
  */
 
 /*!

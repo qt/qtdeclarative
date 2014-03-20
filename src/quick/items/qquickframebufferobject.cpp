@@ -70,7 +70,7 @@ public:
  * for integrating OpenGL rendering using a framebuffer object (FBO)
  * with Qt Quick.
  *
- * On most platforms, the rendering will occur on a dedicated thread.
+ * On most platforms, the rendering will occur on a \l {Scene Graph and Rendering}{dedicated thread}.
  * For this reason, the QQuickFramebufferObject class enforces a strict
  * separation between the item implementation and the FBO rendering. All
  * item logic, such as properties and UI-related helper functions needed by
@@ -99,7 +99,7 @@ public:
  * to \c false and return a texture of your choosing from
  * QQuickFramebufferObject::Renderer::createFramebufferObject().
  *
- * \sa {Scene Graph - Rendering FBOs}
+ * \sa {Scene Graph - Rendering FBOs}, {Scene Graph and Rendering}
  */
 
 /*!

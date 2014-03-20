@@ -235,6 +235,9 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     the function removedFromAtlas() can be used to extract a
     non-atlassed copy.
 
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
+
     \sa {Scene Graph - Rendering FBOs}, {Scene Graph - Rendering FBOs in a thread}
  */
 
@@ -766,6 +769,9 @@ void QSGPlainTexture::bind()
 
     To update the content of the texture, call updateTexture() explicitly. Simply calling bind()
     will not update the texture.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 

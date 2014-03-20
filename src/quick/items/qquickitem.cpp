@@ -1681,8 +1681,8 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     thumb is to only use classes with the "QSG" prefix inside the
     QQuickItem::updatePaintNode() function.
 
-    To read more about how the scene graph rendering works, see
-    \l{Scene Graph and Rendering}
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \section1 Custom QPainter Items
 
@@ -3422,6 +3422,9 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     render thread, so apply caution when doing anything other than rendering
     in this function. Similarly for signals, these will be emitted on the render
     thread and will thus often be delivered via queued connections.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
     QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty()

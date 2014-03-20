@@ -976,8 +976,6 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     For easily displaying a scene from a QML file, see \l{QQuickView}.
 
-
-
     \section1 Rendering
 
     QQuickWindow uses a scene graph on top of OpenGL to
@@ -1031,6 +1029,9 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     resources. Calling releaseResources() may result in the entire
     scene graph and its OpenGL context being deleted. The
     sceneGraphInvalidated() signal will be emitted when this happens.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa {Scene Graph - OpenGL Under QML}
 
