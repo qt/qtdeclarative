@@ -145,6 +145,8 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
 
+    Q_PROPERTY(QQuickWindow *window READ window NOTIFY windowChanged REVISION 2)
+
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
     Q_ENUMS(TransformOrigin)
