@@ -583,6 +583,53 @@ public:
         return dominates(dominator->index(), dominated->index());
     }
 
+    // Calculate a depth-first iteration order on the nodes of the dominator tree.
+    //
+    // The order of the nodes in the vector is not the same as one where a recursive depth-first
+    // iteration is done on a tree. Rather, the nodes are (reverse) sorted on tree depth.
+    // So for the:
+    //    1 dominates 2
+    //    2 dominates 3
+    //    3 dominates 4
+    //    2 dominates 5
+    // the order will be:
+    //    4, 3, 5, 2, 1
+    // or:
+    //    4, 5, 3, 2, 1
+    // So the order of nodes on the same depth is undefined, but it will be after the nodes
+    // they dominate, and before the nodes that dominate them.
+    //
+    // The reason for this order is that a proper DFS pre-/post-order would require inverting
+    // the idom vector by either building a real tree datastructure or by searching the idoms
+    // for siblings and children. Both have a higher time complexity than sorting by depth.
+    QVector<BasicBlock *> calculateDFNodeIterOrder() const
+    {
+        std::vector<int> depths = calculateNodeDepths();
+        struct Cmp {
+            std::vector<int> *nodeDepths;
+            Cmp(std::vector<int> *nodeDepths)
+                : nodeDepths(nodeDepths)
+            { Q_ASSERT(nodeDepths); }
+            bool operator()(BasicBlock *one, BasicBlock *two) const
+            {
+                if (one->isRemoved())
+                    return false;
+                if (two->isRemoved())
+                    return true;
+                return nodeDepths->at(one->index()) > nodeDepths->at(two->index());
+            }
+        };
+        QVector<BasicBlock *> order = function->basicBlocks();
+        std::sort(order.begin(), order.end(), Cmp(&depths));
+        for (int i = 0; i < order.size(); ) {
+            if (order[i]->isRemoved())
+                order.remove(i);
+            else
+                ++i;
+        }
+        return order;
+    }
+
 private:
     bool dominates(BasicBlockIndex dominator, BasicBlockIndex dominated) const {
         // dominator can be Invalid when the dominated block has no dominator (i.e. the start node)
@@ -597,6 +644,57 @@ private:
         }
 
         return false;
+    }
+
+    // Algorithm:
+    //  - for each node:
+    //    - get the depth of a node. If it's unknown (-1):
+    //      - get the depth of the immediate dominator.
+    //      - if that's unknown too, calculate it by calling calculateNodeDepth
+    //      - set the current node's depth to that of immediate dominator + 1
+    std::vector<int> calculateNodeDepths() const
+    {
+        std::vector<int> nodeDepths(function->basicBlockCount(), -1);
+        nodeDepths[0] = 0;
+        foreach (BasicBlock *bb, function->basicBlocks()) {
+            if (bb->isRemoved())
+                continue;
+
+            int &bbDepth = nodeDepths[bb->index()];
+            if (bbDepth == -1) {
+                const int immDom = idom[bb->index()];
+                int immDomDepth = nodeDepths[immDom];
+                if (immDomDepth == -1)
+                    immDomDepth = calculateNodeDepth(immDom, nodeDepths);
+                bbDepth = immDomDepth + 1;
+            }
+        }
+        return nodeDepths;
+    }
+
+    // Algorithm:
+    //   - search for the first dominator of a node that has a known depth. As all nodes are
+    //     reachable from the start node, and that node's depth is 0, this is finite.
+    //   - while doing that search, put all unknown nodes in the worklist
+    //   - pop all nodes from the worklist, and set their depth to the previous' (== dominating)
+    //     node's depth + 1
+    // This way every node's depth is calculated once, and the complexity is O(n).
+    int calculateNodeDepth(int nodeIdx, std::vector<int> &nodeDepths) const
+    {
+        std::vector<int> worklist;
+        worklist.reserve(8);
+        int depth = -1;
+
+        do {
+            worklist.push_back(nodeIdx);
+            nodeIdx = idom[nodeIdx];
+            depth = nodeDepths[nodeIdx];
+        } while (depth == -1);
+
+        for (std::vector<int>::const_reverse_iterator it = worklist.rbegin(), eit = worklist.rend(); it != eit; ++it)
+            nodeDepths[*it] = ++depth;
+
+        return depth;
     }
 };
 
@@ -2643,10 +2741,8 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
                 continue;
 
             // We found a critical edge.
-            BasicBlock *containingGroup = inBB->isGroupStart() ? inBB : inBB->containingGroup();
-
             // create the basic block:
-            BasicBlock *newBB = f->newBasicBlock(containingGroup, bb->catchBlock);
+            BasicBlock *newBB = f->newBasicBlock(bb->catchBlock);
             Jump *s = f->NewStmt<Jump>();
             worklist.registerNewStatement(s);
             defUses.registerNewStatement(s);
@@ -2685,6 +2781,127 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
         }
     }
 }
+
+// Detect all (sub-)loops in a function.
+//
+// Doing loop detection on the CFG is better than relying on the statement information in
+// order to mark loops. Although JavaScript only has natural loops, it can still be the case
+// that something is not a loop even though a loop-like-statement is in the source. For
+// example:
+//    while (true) {
+//      if (i > 0)
+//        break;
+//      else
+//        break;
+//    }
+//
+// Algorithm:
+//  - do a DFS on the dominator tree, where for each node:
+//    - collect all back-edges
+//    - if there are back-edges, the node is a loop-header for a new loop, so:
+//      - walk the CFG is reverse-direction, and for every node:
+//        - if the node already belongs to a loop, we've found a nested loop:
+//          - get the loop-header for the (outermost) nested loop
+//          - add that loop-header to the current loop
+//          - continue by walking all incoming edges that do not yet belong to the current loop
+//        - if the node does not belong to a loop yet, add it to the current loop, and
+//          go on with all incoming edges
+//
+// Loop-header detection by checking for back-edges is very straight forward: a back-edge is
+// an incoming edge where the other node is dominated by the current node. Meaning: all
+// execution paths that reach that other node have to go through the current node, that other
+// node ends with a (conditional) jump back to the loop header.
+//
+// The exact order of the DFS on the dominator tree is not important. The only property has to
+// be that a node is only visited when all the nodes it dominates have been visited before.
+// The reason for the DFS is that for nested loops, the inner loop's loop-header is dominated
+// by the outer loop's header. So, by visiting depth-first, sub-loops are identified before
+// their containing loops, which makes nested-loop identification free. An added benefit is
+// that the nodes for those sub-loops are only processed once.
+//
+// Note: independent loops that share the same header are merged together. For example, in
+// the code snippet below, there are 2 back-edges into the loop-header, but only one single
+// loop will be detected.
+//    while (a) {
+//      if (b)
+//        continue;
+//      else
+//        continue;
+//    }
+class LoopDetection
+{
+    const DominatorTree &dt;
+
+    Q_DISABLE_COPY(LoopDetection)
+
+public:
+    LoopDetection(const DominatorTree &dt)
+        : dt(dt)
+    {}
+
+    void run()
+    {
+        foreach (BasicBlock *bb, dt.calculateDFNodeIterOrder()) {
+            Q_ASSERT(!bb->isRemoved());
+
+            std::vector<BasicBlock *> backedges;
+            backedges.reserve(4);
+
+            foreach (BasicBlock *in, bb->in)
+                if (dt.dominates(bb, in))
+                    backedges.push_back(in);
+
+            if (!backedges.empty()) {
+                subLoop(bb, backedges);
+            }
+        }
+    }
+
+private:
+    void subLoop(BasicBlock *loopHead, const std::vector<BasicBlock *> &backedges)
+    {
+        loopHead->markAsGroupStart();
+
+        std::vector<BasicBlock *> worklist(backedges.begin(), backedges.end());
+        while (!worklist.empty()) {
+            BasicBlock *predIt = worklist.back();
+            worklist.pop_back();
+
+            BasicBlock *subloop = predIt->containingGroup();
+            if (subloop) {
+                // This is a discovered block. Find its outermost discovered loop.
+                while (BasicBlock *parentLoop = subloop->containingGroup())
+                  subloop = parentLoop;
+
+                // If it is already discovered to be a subloop of this loop, continue.
+                if (subloop == loopHead)
+                    continue;
+
+                // Yay, it's a subloop of this loop.
+                subloop->setContainingGroup(loopHead);
+                predIt = subloop;
+
+                // Add all predecessors of the subloop header to the worklist, as long as
+                // those predecessors are not in the current subloop. It might be the case
+                // that they are in other loops, which we will then add as a subloop to the
+                // current loop.
+                foreach (BasicBlock *predIn, predIt->in)
+                    if (predIn->containingGroup() != subloop)
+                        worklist.push_back(predIn);
+            } else {
+                if (predIt == loopHead)
+                    continue;
+
+                // This is an undiscovered block. Map it to the current loop.
+                predIt->setContainingGroup(loopHead);
+
+                // Add all incoming edges to the worklist.
+                foreach (BasicBlock *bb, predIt->in)
+                    worklist.push_back(bb);
+            }
+        }
+    }
+};
 
 // High-level algorithm:
 //  0. start with the first node (the start node) of a function
@@ -4087,6 +4304,9 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        qout << "Cleaning up unreachable basic blocks..." << endl;
         cleanupBasicBlocks(function);
 //        showMeTheCode(function);
+
+        LoopDetection(df).run();
+        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
 //        df.dumpImmediateDominators();

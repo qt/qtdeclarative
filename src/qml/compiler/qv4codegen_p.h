@@ -256,28 +256,20 @@ protected:
     struct Loop {
         AST::LabelledStatement *labelledStatement;
         AST::Statement *node;
-        QV4::IR::BasicBlock *groupStartBlock;
         QV4::IR::BasicBlock *breakBlock;
         QV4::IR::BasicBlock *continueBlock;
         Loop *parent;
         ScopeAndFinally *scopeAndFinally;
 
-        Loop(AST::Statement *node, QV4::IR::BasicBlock *groupStartBlock, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock, Loop *parent)
-            : labelledStatement(0), node(node), groupStartBlock(groupStartBlock), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
+        Loop(AST::Statement *node, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock, Loop *parent)
+            : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
     };
 
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
-    void enterLoop(AST::Statement *node, QV4::IR::BasicBlock *startBlock, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock);
+    void enterLoop(AST::Statement *node, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock);
     void leaveLoop();
-    QV4::IR::BasicBlock *groupStartBlock() const
-    {
-        for (Loop *it = _loop; it; it = it->parent)
-            if (it->groupStartBlock)
-                return it->groupStartBlock;
-        return 0;
-    }
     QV4::IR::BasicBlock *exceptionHandler() const
     {
         if (_exceptionHandlers.isEmpty())

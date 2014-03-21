@@ -436,9 +436,9 @@ const QString *Function::newString(const QString &text)
     return &*strings.insert(text);
 }
 
-BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode)
+BasicBlock *Function::newBasicBlock(BasicBlock *catchBlock, BasicBlockInsertMode mode)
 {
-    BasicBlock *block = new BasicBlock(this, containingLoop, catchBlock);
+    BasicBlock *block = new BasicBlock(this, catchBlock);
     return mode == InsertBlock ? addBasicBlock(block) : block;
 }
 

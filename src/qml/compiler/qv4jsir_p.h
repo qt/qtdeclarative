@@ -783,10 +783,10 @@ public:
     QVector<BasicBlock *> out;
     QQmlJS::AST::SourceLocation nextLocation;
 
-    BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
+    BasicBlock(Function *function, BasicBlock *catcher)
         : function(function)
         , catchBlock(catcher)
-        , _containingGroup(containingLoop)
+        , _containingGroup(0)
         , _index(-1)
         , _isExceptionHandler(false)
         , _groupStart(false)
@@ -1013,7 +1013,7 @@ struct Function {
         DontInsertBlock
     };
 
-    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
+    BasicBlock *newBasicBlock(BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
     const QString *newString(const QString &text);
 
     void RECEIVE(const QString &name) { formals.append(newString(name)); }
