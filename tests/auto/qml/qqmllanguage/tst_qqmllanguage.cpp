@@ -65,6 +65,17 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
+static inline bool isCaseSensitiveFileSystem(const QString &path) {
+    Q_UNUSED(path)
+#if defined(Q_OS_MAC)
+    return pathconf(path.toLatin1().constData(), _PC_CASE_SENSITIVE);
+#elif defined(Q_OS_WIN)
+    return false;
+#else
+    return true;
+#endif
+}
+
 /*
 This test case covers QML language issues.  This covers everything that does not
 involve evaluating ECMAScript expressions and bindings.
@@ -495,13 +506,11 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("notAvailable") << "notAvailable.qml" << "notAvailable.errors.txt" << false;
     QTest::newRow("singularProperty") << "singularProperty.qml" << "singularProperty.errors.txt" << false;
     QTest::newRow("singularProperty.2") << "singularProperty.2.qml" << "singularProperty.2.errors.txt" << false;
-    QTest::newRow("incorrectCase") << "incorrectCase.qml"
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-        << "incorrectCase.errors.insensitive.txt"
-#else
-        << "incorrectCase.errors.sensitive.txt"
-#endif
-        << false;
+
+    const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
+        QStringLiteral("incorrectCase.errors.sensitive.txt") :
+        QStringLiteral("incorrectCase.errors.insensitive.txt");
+    QTest::newRow("incorrectCase") << "incorrectCase.qml" << expectedError << false;
 
     QTest::newRow("metaobjectRevision.1") << "metaobjectRevision.1.qml" << "metaobjectRevision.1.errors.txt" << false;
     QTest::newRow("metaobjectRevision.2") << "metaobjectRevision.2.qml" << "metaobjectRevision.2.errors.txt" << false;
@@ -2577,12 +2586,9 @@ void tst_qqmllanguage::importIncorrectCase()
     QList<QQmlError> errors = component.errors();
     QCOMPARE(errors.count(), 1);
 
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-    QString expectedError = QLatin1String("File name case mismatch");
-#else
-    QString expectedError = QLatin1String("File not found");
-#endif
-
+    const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
+        QStringLiteral("File not found") :
+        QStringLiteral("File name case mismatch");
     QCOMPARE(errors.at(0).description(), expectedError);
 
     engine.setImportPathList(defaultImportPathList);
