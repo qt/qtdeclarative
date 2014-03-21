@@ -105,7 +105,6 @@ public:
     static QObject *context_at(QQmlListProperty<QObject> *, int);
 };
 
-class QQmlVME;
 class QQmlComponentAttached;
 class QQmlGuardedContextData;
 class Q_QML_PRIVATE_EXPORT QQmlContextData

@@ -77,7 +77,6 @@ private:
 
     friend class QQmlObjectCreator;
     friend class QQmlScriptStringPrivate;
-    friend class QQmlVME;
     friend class QQmlExpression;
     friend class QQmlBinding;
 };

@@ -140,7 +140,7 @@ bool QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
-    compiledData->datas.reserve(document->objects.count());
+    compiledData->metaObjects.reserve(document->objects.count());
     compiledData->propertyCaches.reserve(document->objects.count());
 
     {
@@ -349,13 +349,13 @@ const QVector<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
 
 void QQmlTypeCompiler::setVMEMetaObjects(const QVector<QByteArray> &metaObjects)
 {
-    Q_ASSERT(compiledData->datas.isEmpty());
-    compiledData->datas = metaObjects;
+    Q_ASSERT(compiledData->metaObjects.isEmpty());
+    compiledData->metaObjects = metaObjects;
 }
 
 QVector<QByteArray> *QQmlTypeCompiler::vmeMetaObjects() const
 {
-    return &compiledData->datas;
+    return &compiledData->metaObjects;
 }
 
 QHash<int, int> *QQmlTypeCompiler::objectIndexToIdForRoot()

@@ -506,7 +506,6 @@ protected:
     virtual void clear(); // From QQmlCleanup
 
 private:
-    friend class QQmlVME;
     friend class QQmlScriptBlob;
 
     void initialize(QQmlEngine *);

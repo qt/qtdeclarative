@@ -88,7 +88,6 @@ public:
     QUrl baseUrl() const;
 
 private:
-    friend class QQmlVME;
     friend class QQmlEngine;
     friend class QQmlEnginePrivate;
     friend class QQmlExpression;

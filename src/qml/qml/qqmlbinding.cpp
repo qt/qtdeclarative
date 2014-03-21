@@ -130,23 +130,19 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     QString url;
     QString code;
 
-    int id = scriptPrivate->bindingId;
-    if (id >= 0) {
-        QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
-        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-            QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
-            Q_ASSERT(typeData);
+    QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
+    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
+    if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
+        QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
+        Q_ASSERT(typeData);
 
-            if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                code = cdata->primitives.at(id);
-                url = cdata->name;
-            }
-
-            typeData->release();
+        if (QQmlCompiledData *cdata = typeData->compiledData()) {
+            url = cdata->name;
         }
-    } else
-        code = scriptPrivate->script;
+
+        typeData->release();
+    }
+    code = scriptPrivate->script;
 
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));

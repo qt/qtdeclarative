@@ -168,16 +168,9 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                int id = scriptPrivate->bindingId;
-                if (id >= 0) {
-                    defaultConstruction = false;
-                    d->init(evalCtxtData, cdata->primitives.at(id), scopeObject,
-                            cdata->name, scriptPrivate->lineNumber, scriptPrivate->columnNumber);
-                } else {
-                    d->url = cdata->name;
-                    d->line = scriptPrivate->lineNumber;
-                    d->column = scriptPrivate->columnNumber;
-                }
+                d->url = cdata->name;
+                d->line = scriptPrivate->lineNumber;
+                d->column = scriptPrivate->columnNumber;
             }
 
             typeData->release();
