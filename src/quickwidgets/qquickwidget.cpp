@@ -197,11 +197,28 @@ void QQuickWidgetPrivate::renderSceneGraph()
 }
 
 /*!
+    \module QtQuickWidgets
+    \title Qt Quick Widgets C++ Classes
+    \ingroup modules
+    \brief The C++ API provided by the Qt Quick Widgets module
+    \qtvariable quickwidgets
+
+    To link against the module, add this line to your \l qmake
+    \c .pro file:
+
+    \code
+    QT += quickwidgets
+    \endcode
+
+    For more information, see the QQuickWidget class documentation.
+*/
+
+/*!
     \class QQuickWidget
     \since 5.3
     \brief The QQuickWidget class provides a widget for displaying a Qt Quick user interface.
 
-    \inmodule QtQuick
+    \inmodule QtQuickWidgets
 
     This is a convenience wrapper for QQuickWindow which will automatically load and display a QML
     scene when given the URL of the main source file. Alternatively, you can instantiate your own
