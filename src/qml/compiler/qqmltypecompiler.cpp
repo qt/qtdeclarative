@@ -2693,11 +2693,11 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
 
     // It would seem unlikely that function with some many basic blocks (after optimization)
     // consists merely of a qsTr call or a constant value return ;-)
-    if (function->basicBlocks.count() > 10)
+    if (function->basicBlockCount() > 10)
         return false;
 
-    foreach (QV4::IR::BasicBlock *bb, function->basicBlocks) {
-        foreach (QV4::IR::Stmt *s, bb->statements) {
+    foreach (QV4::IR::BasicBlock *bb, function->basicBlocks()) {
+        foreach (QV4::IR::Stmt *s, bb->statements()) {
             s->accept(this);
             if (!_canSimplify)
                 return false;
@@ -2866,8 +2866,8 @@ void QQmlIRFunctionCleanser::clean()
     module->functions = newFunctions;
 
     foreach (QV4::IR::Function *function, module->functions) {
-        foreach (QV4::IR::BasicBlock *block, function->basicBlocks) {
-            foreach (QV4::IR::Stmt *s, block->statements) {
+        foreach (QV4::IR::BasicBlock *block, function->basicBlocks()) {
+            foreach (QV4::IR::Stmt *s, block->statements()) {
                 s->accept(this);
             }
         }

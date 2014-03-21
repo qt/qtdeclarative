@@ -643,6 +643,8 @@ struct Stmt {
     virtual Phi *asPhi() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
+private: // For memory management in BasicBlock
+    friend struct BasicBlock;
     void destroyData() {
         delete d;
         d = 0;
@@ -762,122 +764,74 @@ struct Q_QML_EXPORT Module {
     void setFileName(const QString &name);
 };
 
-// Map from meta property index (existence implies dependency) to notify signal index
-typedef QHash<int, int> PropertyDependencyMap;
-
-struct Function {
-    Module *module;
-    QQmlJS::MemoryPool *pool;
-    const QString *name;
-    QVector<BasicBlock *> basicBlocks;
-    int tempCount;
-    int maxNumberOfArguments;
-    QSet<QString> strings;
-    QList<const QString *> formals;
-    QList<const QString *> locals;
-    QVector<Function *> nestedFunctions;
-    Function *outer;
-
-    int insideWithOrCatch;
-
-    uint hasDirectEval: 1;
-    uint usesArgumentsObject : 1;
-    uint usesThis : 1;
-    uint isStrict: 1;
-    uint isNamedExpression : 1;
-    uint hasTry: 1;
-    uint hasWith: 1;
-    uint unused : 25;
-
-    // Location of declaration in source code (-1 if not specified)
-    int line;
-    int column;
-
-    // Qml extension:
-    QSet<int> idObjectDependencies;
-    PropertyDependencyMap contextObjectPropertyDependencies;
-    PropertyDependencyMap scopeObjectPropertyDependencies;
-
-    template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
-
-    Function(Module *module, Function *outer, const QString &name)
-        : module(module)
-        , pool(&module->pool)
-        , tempCount(0)
-        , maxNumberOfArguments(0)
-        , outer(outer)
-        , insideWithOrCatch(0)
-        , hasDirectEval(false)
-        , usesArgumentsObject(false)
-        , isStrict(false)
-        , isNamedExpression(false)
-        , hasTry(false)
-        , hasWith(false)
-        , unused(0)
-        , line(-1)
-        , column(-1)
-    { this->name = newString(name); }
-
-    ~Function();
-
-    enum BasicBlockInsertMode {
-        InsertBlock,
-        DontInsertBlock
-    };
-
-    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
-    const QString *newString(const QString &text);
-
-    void RECEIVE(const QString &name) { formals.append(newString(name)); }
-    void LOCAL(const QString &name) { locals.append(newString(name)); }
-
-    inline BasicBlock *insertBasicBlock(BasicBlock *block) { basicBlocks.append(block); return block; }
-
-    void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
-
-    void removeSharedExpressions();
-
-    int indexOfArgument(const QStringRef &string) const;
-
-    bool variablesCanEscape() const
-    { return hasDirectEval || !nestedFunctions.isEmpty() || module->debugMode; }
-};
-
 struct BasicBlock {
+private:
+    Q_DISABLE_COPY(BasicBlock)
+
+public:
     Function *function;
     BasicBlock *catchBlock;
-    QVector<Stmt *> statements;
     QVector<BasicBlock *> in;
     QVector<BasicBlock *> out;
     QBitArray liveIn;
     QBitArray liveOut;
-    int index;
-    bool isExceptionHandler;
     QQmlJS::AST::SourceLocation nextLocation;
 
     BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
         : function(function)
         , catchBlock(catcher)
-        , index(-1)
-        , isExceptionHandler(false)
         , _containingGroup(containingLoop)
+        , _index(-1)
+        , _isExceptionHandler(false)
         , _groupStart(false)
+        , _isRemoved(false)
     {}
-    ~BasicBlock() {}
+    ~BasicBlock();
 
-    template <typename Instr> inline Instr i(Instr i) { statements.append(i); return i; }
+    const QVector<Stmt *> &statements() const
+    {
+        Q_ASSERT(!isRemoved());
+        return _statements;
+    }
+
+    int statementCount() const
+    {
+        Q_ASSERT(!isRemoved());
+        return _statements.size();
+    }
+
+    void setStatements(const QVector<Stmt *> &newStatements);
+
+    template <typename Instr> inline Instr i(Instr i)
+    {
+        Q_ASSERT(!isRemoved());
+        appendStatement(i);
+        return i;
+    }
+
+    void appendStatement(Stmt *statement);
+    void prependStatement(Stmt *stmt);
+    void insertStatementBefore(Stmt *before, Stmt *newStmt);
+    void insertStatementBefore(int index, Stmt *newStmt);
+    void insertStatementBeforeTerminator(Stmt *stmt);
+    void replaceStatement(int index, Stmt *newStmt);
+    void removeStatement(Stmt *stmt);
+    void removeStatement(int idx);
 
     inline bool isEmpty() const {
-        return statements.isEmpty();
+        Q_ASSERT(!isRemoved());
+        return _statements.isEmpty();
     }
 
     inline Stmt *terminator() const {
-        if (! statements.isEmpty() && statements.at(statements.size() - 1)->asTerminator() != 0)
-            return statements.at(statements.size() - 1);
+        Q_ASSERT(!isRemoved());
+        if (! _statements.isEmpty() && _statements.last()->asTerminator() != 0)
+            return _statements.last();
         return 0;
     }
 
     inline bool isTerminated() const {
+        Q_ASSERT(!isRemoved());
         if (terminator() != 0)
             return true;
         return false;
@@ -918,20 +872,174 @@ struct BasicBlock {
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
-    void appendStatement(Stmt *statement);
-
     BasicBlock *containingGroup() const
-    { return _containingGroup; }
+    {
+        Q_ASSERT(!isRemoved());
+        return _containingGroup;
+    }
+
+    void setContainingGroup(BasicBlock *loopHeader)
+    {
+        Q_ASSERT(!isRemoved());
+        _containingGroup = loopHeader;
+    }
 
     bool isGroupStart() const
-    { return _groupStart; }
+    {
+        Q_ASSERT(!isRemoved());
+        return _groupStart;
+    }
 
     void markAsGroupStart()
-    { _groupStart = true; }
+    {
+        Q_ASSERT(!isRemoved());
+        _groupStart = true;
+    }
+
+    // Returns the index of the basic-block.
+    // See Function for the full description.
+    int index() const
+    {
+        Q_ASSERT(!isRemoved());
+        return _index;
+    }
+
+    bool isExceptionHandler() const
+    { return _isExceptionHandler; }
+
+    void setExceptionHandler(bool onoff)
+    { _isExceptionHandler = onoff; }
+
+    bool isRemoved() const
+    { return _isRemoved; }
+
+private: // For Function's eyes only.
+    friend struct Function;
+    void setIndex(int index)
+    {
+        Q_ASSERT(_index < 0);
+        changeIndex(index);
+    }
+
+    void changeIndex(int index)
+    {
+        Q_ASSERT(index >= 0);
+        _index = index;
+    }
+
+    void markAsRemoved()
+    {
+        _isRemoved = true;
+        _index = -1;
+    }
 
 private:
+    QVector<Stmt *> _statements;
     BasicBlock *_containingGroup;
-    bool _groupStart;
+    int _index;
+    unsigned _isExceptionHandler : 1;
+    unsigned _groupStart : 1;
+    unsigned _isRemoved : 1;
+};
+
+// Map from meta property index (existence implies dependency) to notify signal index
+typedef QHash<int, int> PropertyDependencyMap;
+
+// The Function owns (manages), among things, a list of basic-blocks. All the blocks have an index,
+// which corresponds to the index in the entry/index in the vector in which they are stored. This
+// means that algorithms/classes can also store any information about a basic block in an array,
+// where the index corresponds to the index of the basic block, which can then be used to query
+// the function for a pointer to a basic block. This also means that basic-blocks cannot be removed
+// or renumbered.
+//
+// Note that currently there is one exception: after optimization and block scheduling, the
+// method setScheduledBlocks can be called once, to register a newly ordered list. For debugging
+// purposes, these blocks are not immediately renumbered, so renumberBasicBlocks should be called
+// immediately after changing the order. That will restore the property of having a corresponding
+// block-index and block-position-in-basicBlocks-vector.
+//
+// In order for optimization/transformation passes to skip uninteresting basic blocks that will be
+// removed, the block can be marked as such. After doing so, any access will result in a failing
+// assertion.
+struct Function {
+    Module *module;
+    QQmlJS::MemoryPool *pool;
+    const QString *name;
+    int tempCount;
+    int maxNumberOfArguments;
+    QSet<QString> strings;
+    QList<const QString *> formals;
+    QList<const QString *> locals;
+    QVector<Function *> nestedFunctions;
+    Function *outer;
+
+    int insideWithOrCatch;
+
+    uint hasDirectEval: 1;
+    uint usesArgumentsObject : 1;
+    uint usesThis : 1;
+    uint isStrict: 1;
+    uint isNamedExpression : 1;
+    uint hasTry: 1;
+    uint hasWith: 1;
+    uint unused : 25;
+
+    // Location of declaration in source code (-1 if not specified)
+    int line;
+    int column;
+
+    // Qml extension:
+    QSet<int> idObjectDependencies;
+    PropertyDependencyMap contextObjectPropertyDependencies;
+    PropertyDependencyMap scopeObjectPropertyDependencies;
+
+    template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
+
+    Function(Module *module, Function *outer, const QString &name);
+    ~Function();
+
+    enum BasicBlockInsertMode {
+        InsertBlock,
+        DontInsertBlock
+    };
+
+    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
+    const QString *newString(const QString &text);
+
+    void RECEIVE(const QString &name) { formals.append(newString(name)); }
+    void LOCAL(const QString &name) { locals.append(newString(name)); }
+
+    BasicBlock *addBasicBlock(BasicBlock *block);
+
+    void removeBasicBlock(BasicBlock *block)
+    { block->markAsRemoved(); }
+
+    const QVector<BasicBlock *> &basicBlocks() const
+    { return _basicBlocks; }
+
+    BasicBlock *basicBlock(int idx) const
+    { return _basicBlocks.at(idx); }
+
+    int basicBlockCount() const
+    { return _basicBlocks.size(); }
+
+    int liveBasicBlocksCount() const;
+
+    void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
+
+    void removeSharedExpressions();
+
+    int indexOfArgument(const QStringRef &string) const;
+
+    bool variablesCanEscape() const
+    { return hasDirectEval || !nestedFunctions.isEmpty() || module->debugMode; }
+
+    void setScheduledBlocks(const QVector<BasicBlock *> &scheduled);
+    void renumberBasicBlocks();
+
+private:
+    QVector<BasicBlock *> _basicBlocks;
+    QVector<BasicBlock *> *_allBasicBlocks;
 };
 
 class CloneExpr: protected IR::ExprVisitor

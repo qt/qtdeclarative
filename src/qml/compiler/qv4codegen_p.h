@@ -283,7 +283,7 @@ protected:
     }
     void pushExceptionHandler(QV4::IR::BasicBlock *handler)
     {
-        handler->isExceptionHandler = true;
+        handler->setExceptionHandler(true);
         _exceptionHandlers.push(handler);
     }
     void popExceptionHandler()

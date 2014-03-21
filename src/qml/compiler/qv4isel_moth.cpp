@@ -257,7 +257,7 @@ protected:
 
         if (IR::Jump *jump = s->asJump()) {
             IR::MoveMapping moves;
-            foreach (IR::Stmt *succStmt, jump->target->statements) {
+            foreach (IR::Stmt *succStmt, jump->target->statements()) {
                 if (IR::Phi *phi = succStmt->asPhi()) {
                     forceActivation(*phi->targetTemp);
                     for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
@@ -386,10 +386,11 @@ void InstructionSelection::run(int functionIndex)
     addInstruction(push);
 
     currentLine = 0;
-    for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+    QVector<IR::BasicBlock *> basicBlocks = _function->basicBlocks();
+    for (int i = 0, ei = basicBlocks.size(); i != ei; ++i) {
         blockNeedsDebugInstruction = irModule->debugMode;
-        _block = _function->basicBlocks[i];
-        _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
+        _block = basicBlocks[i];
+        _nextBlock = (i < ei - 1) ? basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
 
         if (_block->catchBlock != exceptionHandler) {
@@ -404,7 +405,7 @@ void InstructionSelection::run(int functionIndex)
             exceptionHandler = _block->catchBlock;
         }
 
-        foreach (IR::Stmt *s, _block->statements) {
+        foreach (IR::Stmt *s, _block->statements()) {
             _currentStatement = s;
 
             if (s->location.isValid()) {

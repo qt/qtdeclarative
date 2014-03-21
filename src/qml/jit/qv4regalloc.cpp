@@ -97,8 +97,8 @@ public:
 
     void collect(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks) {
-            foreach (Stmt *s, bb->statements) {
+        foreach (BasicBlock *bb, function->basicBlocks()) {
+            foreach (Stmt *s, bb->statements()) {
                 Q_ASSERT(s->id > 0);
                 _currentStmt = s;
                 s->accept(this);
@@ -705,8 +705,8 @@ public:
         for (int i = 0, ei = _intervals.size(); i != ei; ++i)
             _unprocessed[i] = &_intervals[i];
 
-        _liveAtStart.reserve(function->basicBlocks.size());
-        _liveAtEnd.reserve(function->basicBlocks.size());
+        _liveAtStart.reserve(function->basicBlockCount());
+        _liveAtEnd.reserve(function->basicBlockCount());
     }
 
     void run() {
@@ -718,13 +718,14 @@ public:
 private:
     void renumber()
     {
-        foreach (BasicBlock *bb, _function->basicBlocks) {
+        foreach (BasicBlock *bb, _function->basicBlocks()) {
+            QVector<Stmt *> statements = bb->statements();
             QVector<Stmt *> newStatements;
-            newStatements.reserve(bb->statements.size() + 7);
+            newStatements.reserve(bb->statements().size() + 7);
 
             bool seenFirstNonPhiStmt = false;
-            for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
-                _currentStmt = bb->statements[i];
+            for (int i = 0, ei = statements.size(); i != ei; ++i) {
+                _currentStmt = statements[i];
                 _loads.clear();
                 _stores.clear();
                 addNewIntervals();
@@ -766,7 +767,7 @@ private:
             }
 #endif
 
-            bb->statements = newStatements;
+            bb->setStatements(newStatements);
         }
 
     }
@@ -833,7 +834,7 @@ private:
 
     void resolve()
     {
-        foreach (BasicBlock *bb, _function->basicBlocks) {
+        foreach (BasicBlock *bb, _function->basicBlocks()) {
             foreach (BasicBlock *bbOut, bb->out)
                 resolveEdge(bb, bbOut);
         }
@@ -848,11 +849,11 @@ private:
 
         MoveMapping mapping;
 
-        const int predecessorEnd = predecessor->statements.last()->id; // the terminator is always last and always has an id set...
+        const int predecessorEnd = predecessor->terminator()->id; // the terminator is always last and always has an id set...
         Q_ASSERT(predecessorEnd > 0); // ... but we verify it anyway for good measure.
 
         int successorStart = -1;
-        foreach (Stmt *s, successor->statements) {
+        foreach (Stmt *s, successor->statements()) {
             if (s && s->id > 0) {
                 successorStart = s->id;
                 break;
@@ -869,7 +870,7 @@ private:
             Expr *moveFrom = 0;
 
             if (it->start() == successorStart) {
-                foreach (Stmt *s, successor->statements) {
+                foreach (Stmt *s, successor->statements()) {
                     if (!s || s->id < 1)
                         continue;
                     if (Phi *phi = s->asPhi()) {
@@ -925,14 +926,14 @@ private:
 
                 Q_ASSERT(!_info->isPhiTarget(it->temp()) || it->isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
-                    const int successorEnd = successor->statements.last()->id;
+                    const int successorEnd = successor->terminator()->id;
                     const int idx = successor->in.indexOf(predecessor);
                     foreach (const Use &use, _info->uses(it->temp())) {
                         if (use.pos == static_cast<unsigned>(successorStart)) {
                             // only check the current edge, not all other possible ones. This is
                             // important for phi nodes: they have uses that are only valid when
                             // coming in over a specific edge.
-                            foreach (Stmt *s, successor->statements) {
+                            foreach (Stmt *s, successor->statements()) {
                                 if (Phi *phi = s->asPhi()) {
                                     Q_ASSERT(it->temp().index != phi->targetTemp->index);
                                     Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0

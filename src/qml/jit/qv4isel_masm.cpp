@@ -342,12 +342,14 @@ void InstructionSelection::run(int functionIndex)
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     int lastLine = 0;
-    for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
-        IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
-        _block = _function->basicBlocks[i];
+    for (int i = 0, ei = _function->basicBlockCount(); i != ei; ++i) {
+        IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlock(i + 1) : 0;
+        _block = _function->basicBlock(i);
+        if (_block->isRemoved())
+            continue;
         _as->registerBlock(_block, nextBlock);
 
-        foreach (IR::Stmt *s, _block->statements) {
+        foreach (IR::Stmt *s, _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
                     Assembler::Address lineAddr(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lineNumber));

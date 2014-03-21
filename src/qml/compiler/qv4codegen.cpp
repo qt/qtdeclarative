@@ -2041,7 +2041,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     sourceElements(body);
 
-    _function->insertBasicBlock(_exitBlock);
+    _function->addBasicBlock(_exitBlock);
 
     _block->JUMP(_exitBlock);
 
@@ -2597,7 +2597,7 @@ bool Codegen::visit(TryStatement *ast)
 
     if (ast->catchExpression) {
         pushExceptionHandler(catchExceptionHandler);
-        _function->insertBasicBlock(catchBody);
+        _function->addBasicBlock(catchBody);
         _block = catchBody;
 
         ++_function->insideWithOrCatch;
@@ -2615,7 +2615,7 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(finallyBody ? finallyBody : end);
         popExceptionHandler();
 
-        _function->insertBasicBlock(catchExceptionHandler);
+        _function->addBasicBlock(catchExceptionHandler);
         catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
         if (finallyBody || surroundingExceptionHandler)
             catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
@@ -2626,7 +2626,7 @@ bool Codegen::visit(TryStatement *ast)
     _scopeAndFinally = tcf.parent;
 
     if (finallyBody) {
-        _function->insertBasicBlock(finallyBody);
+        _function->addBasicBlock(finallyBody);
         _block = finallyBody;
 
         int hasException = _block->newTemp();
@@ -2641,7 +2641,7 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(end);
     }
 
-    _function->insertBasicBlock(end);
+    _function->addBasicBlock(end);
     _block = end;
 
     return false;

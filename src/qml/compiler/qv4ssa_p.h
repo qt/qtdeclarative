@@ -139,11 +139,10 @@ public:
 
 class Q_QML_EXPORT Optimizer
 {
+    Q_DISABLE_COPY(Optimizer)
+
 public:
-    Optimizer(Function *function)
-        : function(function)
-        , inSSA(false)
-    {}
+    Optimizer(Function *function);
 
     void run(QQmlEnginePrivate *qmlEngine);
     void convertOutOfSSA();
