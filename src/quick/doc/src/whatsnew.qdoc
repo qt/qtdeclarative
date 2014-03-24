@@ -53,7 +53,6 @@ features introduced by the new import and new classes in Qt 5.1:
     \endlist
     These types are kept due to compatibility reasons and are replaced by the
     \l{Qt QML Models QML Types}{Qt QML Models} types.
-    \endlist
 \endlist
 
 \section2 New Submodules

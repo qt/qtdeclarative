@@ -407,7 +407,7 @@ void QQmlIncubationController::incubateFor(int msecs)
 
 /*!
 Incubate objects while the bool pointed to by \a flag is true, or until there are no
-more objects to incubate, or up to msecs if msecs is not zero.
+more objects to incubate, or up to \a msecs if \a msecs is not zero.
 
 Generally this method is used in conjunction with a thread or a UNIX signal that sets
 the bool pointed to by \a flag to false when it wants incubation to be interrupted.
@@ -687,7 +687,7 @@ void QQmlIncubator::statusChanged(Status status)
 }
 
 /*!
-Called after the object is first created, but before property bindings are
+Called after the \a object is first created, but before property bindings are
 evaluated and, if applicable, QQmlParserStatus::componentComplete() is
 called.  This is equivalent to the point between QQmlComponent::beginCreate()
 and QQmlComponent::endCreate(), and can be used to assign initial values

@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
  * \class QQmlAbstractProfilerAdapter
+ * \inmodule QtQml
  * Abstract base class for all adapters between profilers and the QQmlProfilerService. Adapters have
  * to retrieve profiler-specific data and convert it to the format sent over the wire. Adapters must
  * live in the QDebugServer thread but the actual profilers can live in different threads. The
@@ -101,7 +102,7 @@ void QQmlAbstractProfilerAdapter::stopProfiling() {
 }
 
 /*!
- * \fn bool QQmlAbstractProfilerAdapter::isRunning()
+ * \fn bool QQmlAbstractProfilerAdapter::isRunning() const
  * Returns if the profiler is currently running. The profiler is considered to be running after
  * \c startProfiling() has been called until \c stopProfiling() is called. That is independent of
  * \c waiting. The profiler may be running and waiting at the same time.

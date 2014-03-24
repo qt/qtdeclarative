@@ -69,7 +69,7 @@
     as a new QML type. It provides the current time through \c hour and \c minute
     properties.
 
-    \snippet plugins/plugin.cpp 0
+    \snippet qmlextensionplugins/plugin.cpp 0
     \dots
 
     To make this type available, we create a plugin class named \c QExampleQmlPlugin
@@ -79,7 +79,7 @@
     definition to register the plugin with the Qt meta object system using a unique
     identifier for the plugin.
 
-    \snippet plugins/plugin.cpp plugin
+    \snippet qmlextensionplugins/plugin.cpp plugin
 
     The \c TimeModel class receives a \c{1.0} version of this plugin library, as
     a QML type called \c Time. The Q_ASSERT() macro can ensure the type namespace is
@@ -112,15 +112,15 @@
     that is built by the project (as shown above in the \c .pro file) so both of these
     need to be specified in the \c qmldir file:
 
-    \quotefile plugins/imports/TimeExample/qmldir
+    \quotefile qmlextensionplugins/imports/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time component is
     accessible by any QML component that imports the \c TimeExample
     module
 
-    \snippet plugins/plugins.qml 0
+    \snippet qmlextensionplugins/plugins.qml 0
 
-    The full source code is available in the \l {qml/plugins}{plugins example}.
+    The full source code is available in the \l {qml/qmlextensionplugins}{plugins example}.
 
 
 \section1 Reference

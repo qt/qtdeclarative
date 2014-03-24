@@ -165,7 +165,7 @@ void QQmlProfiler::reportData()
  * If profiling is enabled clears the current range data, then stops the
  * profiler previously running in the foreground if any, then starts a new one
  * in the foreground, setting the given location. \a url is the URL of
- * file being executed, \line line is the current line in in that file, and
+ * file being executed, \a line is the current line in in that file, and
  * \a column is the current column in that file.
  */
 
@@ -183,7 +183,7 @@ void QQmlProfiler::reportData()
  */
 
 /*!
- * \fn void QQmlVmeProfiler::clear()
+ * \fn void QQmlVmeProfiler::clear(bool stopProfiling = false)
  * Stops the currently running (foreground and background) profilers and removes all saved
  * data about paused profilers.
  */
@@ -198,7 +198,7 @@ void QQmlProfiler::reportData()
  * Stops the profiler currently running in the foreground, if any and puts the
  * next profiler from the background in its place if there are any profilers in
  * the background. Additionally the rangeLocation is set. \a url is the URL of
- * file being executed, \line line is the current line in in that file, and
+ * file being executed, \a line is the current line in in that file, and
  * \a column is the current column in that file.
  */
 
