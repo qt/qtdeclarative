@@ -1,6 +1,7 @@
 TEMPLATE = app
 
 QT += qml quick
+qtHaveModule(multimedia): QT += multimedia
 SOURCES += main.cpp
 RESOURCES += maroon.qrc
 
