@@ -32,6 +32,6 @@
     \brief A simple calculator app, designed for portrait devices.
     \image qtquick-demo-calqlatr.png
 
-    This app has the logic implemented in Javascipt and the appearance implemented in QML.
+    This app has the logic implemented in JavaScript and the appearance implemented in QML.
 */
 
