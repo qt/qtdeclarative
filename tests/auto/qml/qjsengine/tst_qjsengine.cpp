@@ -163,6 +163,9 @@ tst_QJSEngine::~tst_QJSEngine()
 {
 }
 
+Q_DECLARE_METATYPE(Qt::KeyboardModifier)
+Q_DECLARE_METATYPE(Qt::KeyboardModifiers)
+
 class OverloadedSlots : public QObject
 {
     Q_OBJECT
@@ -175,6 +178,7 @@ signals:
     void slotWithoutArgCalled();
     void slotWithSingleArgCalled(const QString &arg);
     void slotWithArgumentsCalled(const QString &arg1, const QString &arg2, const QString &arg3);
+    void slotWithOverloadedArgumentsCalled(const QString &arg, Qt::KeyboardModifier modifier, Qt::KeyboardModifiers moreModifiers);
 
 public slots:
     void slotToCall() { emit slotWithoutArgCalled(); }
@@ -182,6 +186,10 @@ public slots:
     void slotToCall(const QString &arg, const QString &arg2, const QString &arg3 = QString())
     {
         slotWithArgumentsCalled(arg, arg2, arg3);
+    }
+    void slotToCall(const QString &arg, Qt::KeyboardModifier modifier, Qt::KeyboardModifiers blah = Qt::ShiftModifier)
+    {
+        emit slotWithOverloadedArgumentsCalled(arg, modifier, blah);
     }
 };
 
@@ -227,6 +235,18 @@ void tst_QJSEngine::callQObjectSlot()
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
         QCOMPARE(arguments.at(1).toString(), QString("arg2"));
         QCOMPARE(arguments.at(2).toString(), QString("arg3"));
+    }
+
+    {
+        QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString, Qt::KeyboardModifier, Qt::KeyboardModifiers)));
+        eng.evaluate(QStringLiteral("dummy.slotToCall('arg', %1);").arg(QString::number(Qt::ControlModifier)));
+        QCOMPARE(spy.count(), 1);
+
+        const QList<QVariant> arguments = spy.first();
+        QCOMPARE(arguments.at(0).toString(), QString("arg"));
+        QCOMPARE(arguments.at(1).toInt(), int(Qt::ControlModifier));
+        QCOMPARE(int(qvariant_cast<Qt::KeyboardModifiers>(arguments.at(2))), int(Qt::ShiftModifier));
+
     }
 }
 

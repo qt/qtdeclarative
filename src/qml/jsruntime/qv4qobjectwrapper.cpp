@@ -1315,6 +1315,11 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
             methodOffset -= QMetaObject_methods(mo);
         }
 
+        // If we've been called before with the same override index, then
+        // we can't go any further...
+        if (&dummy == current && dummy.coreIndex == current->overrideIndex)
+            return 0;
+
         QMetaMethod method = mo->method(current->overrideIndex);
         dummy.load(method);
 
