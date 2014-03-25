@@ -3241,6 +3241,10 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     support QSGTexture::Repeat. Other values from CreateTextureOption are
     ignored.
 
+    The returned texture will be using \c GL_TEXTURE_2D as texture target and
+    \c GL_RGBA as internal format. Reimplement QSGTexture to create textures
+    with different parameters.
+
     \warning This function will return 0 if the scene graph has not yet been
     initialized.
 
@@ -3252,7 +3256,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 
     This function can be called from any thread.
 
-    \sa sceneGraphInitialized()
+    \sa sceneGraphInitialized(), QSGTexture
  */
 
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
@@ -3275,13 +3279,17 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
     The caller of the function is responsible for deleting the returned texture.
 
+    The returned texture will be using \c GL_TEXTURE_2D as texture target and
+    assumes that internal format is \c {GL_RGBA}. Reimplement QSGTexture to
+    create textures with different parameters.
+
     Use \a options to customize the texture attributes. The TextureUsesAtlas
     option is ignored.
 
     \warning This function will return 0 if the scenegraph has not yet been
     initialized.
 
-    \sa sceneGraphInitialized()
+    \sa sceneGraphInitialized(), QSGTexture
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {
