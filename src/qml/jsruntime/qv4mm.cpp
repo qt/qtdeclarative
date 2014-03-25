@@ -76,9 +76,6 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 using namespace WTF;
 
-static const std::size_t CHUNK_SIZE = 1024*32;
-
-
 struct MemoryManager::Data
 {
     bool gcBlocked;
@@ -94,6 +91,7 @@ struct MemoryManager::Data
     int totalItems;
     int totalAlloc;
     uint maxShift;
+    std::size_t maxChunkSize;
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -126,6 +124,7 @@ struct MemoryManager::Data
         , totalItems(0)
         , totalAlloc(0)
         , maxShift(6)
+        , maxChunkSize(32*1024)
         , largeItems(0)
         , deletable(0)
     {
@@ -141,6 +140,11 @@ struct MemoryManager::Data
         uint override = overrideMaxShift.toUInt(&ok);
         if (ok && override <= 11 && override > 0)
             maxShift = override;
+
+        QByteArray maxChunkString = qgetenv("QV4_MM_MAX_CHUNK_SIZE");
+        std::size_t tmpMaxChunkSize = maxChunkString.toUInt(&ok);
+        if (ok)
+            maxChunkSize = tmpMaxChunkSize;
     }
 
     ~Data()
@@ -211,7 +215,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         uint shift = ++m_d->nChunks[pos];
         if (shift > m_d->maxShift)
             shift = m_d->maxShift;
-        std::size_t allocSize = CHUNK_SIZE*(size_t(1) << shift);
+        std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
