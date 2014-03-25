@@ -850,6 +850,7 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
 
     Window win;
     win.window = window;
+    win.actualWindowFormat = window->format();
     win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
     win.timerId = 0;
     win.updateDuringSync = false;
@@ -1102,7 +1103,7 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
         if (!window->handle()) {
             QSG_GUI_DEBUG(w->window, " - using fallback surface");
             fallback = new QOffscreenSurface();
-            fallback->setFormat(window->requestedFormat());
+            fallback->setFormat(w->actualWindowFormat);
             fallback->create();
         }
 
