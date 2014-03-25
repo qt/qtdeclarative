@@ -594,8 +594,6 @@ static inline bool scanEscapeSequence(const QChar *&json, const QChar *end, uint
                 return false;
             ++json;
         }
-        if (*ch <= 0x1f)
-            return false;
         return true;
     }
     default:
