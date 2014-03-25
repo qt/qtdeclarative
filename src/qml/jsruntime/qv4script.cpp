@@ -61,7 +61,7 @@
 using namespace QV4;
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval)
+    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
     , qml(qml)
     , qmlContext(0)
 {
@@ -82,7 +82,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 }
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval)
+    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
     , qml(qml)
     , qmlContext(0)
 {
