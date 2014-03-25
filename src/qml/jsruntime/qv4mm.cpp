@@ -125,7 +125,7 @@ struct MemoryManager::Data
         , engine(0)
         , totalItems(0)
         , totalAlloc(0)
-        , maxShift(10)
+        , maxShift(6)
         , largeItems(0)
         , deletable(0)
     {
@@ -207,7 +207,7 @@ Managed *MemoryManager::alloc(std::size_t size)
 
     // no free item available, allocate a new chunk
     {
-        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (32MB by default)
+        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (2MB by default)
         uint shift = ++m_d->nChunks[pos];
         if (shift > m_d->maxShift)
             shift = m_d->maxShift;
