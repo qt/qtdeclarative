@@ -1753,11 +1753,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 customBindings << binding;
                 customParserBindings.setBit(i);
                 continue;
-            } else if (binding->type == QV4::CompiledData::Binding::Type_Object
-                       || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-                customBindings << binding;
-                customParserBindings.setBit(i);
-                continue;
             }
         }
 
@@ -1808,7 +1803,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         bool seenSubObjectWithId = false;
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object && !customParser) {
             qSwap(_seenObjectWithId, seenSubObjectWithId);
             const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::valueType(pd->propType));
             qSwap(_seenObjectWithId, seenSubObjectWithId);

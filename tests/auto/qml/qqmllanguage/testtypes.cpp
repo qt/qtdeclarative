@@ -92,6 +92,7 @@ void registerTypes()
     qmlRegisterType<MyCreateableDerivedClass,1>("Test", 1, 1, "MyCreateableDerivedClass");
 
     qmlRegisterCustomType<CustomBinding>("Test", 1, 0, "CustomBinding", new CustomBindingParser);
+    qmlRegisterCustomType<SimpleObjectWithCustomParser>("Test", 1, 0, "SimpleObjectWithCustomParser", new SimpleObjectCustomParser);
 
     qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
 }
@@ -190,4 +191,19 @@ QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit 
     }
 
     return QByteArray();
+}
+
+
+QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *, int, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    return QByteArray::number(bindings.count());
+}
+
+void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &data)
+{
+   SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
+   Q_ASSERT(o);
+   bool ok = false;
+   o->setCustomBindingsCount(data.toInt(&ok));
+   Q_ASSERT(ok);
 }

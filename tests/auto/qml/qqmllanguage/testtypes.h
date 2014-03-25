@@ -1104,6 +1104,33 @@ class CustomBindingParser : public QQmlCustomParser
     virtual void setCustomData(QObject *object, const QByteArray &data);
 };
 
+class SimpleObjectWithCustomParser : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
+public:
+    SimpleObjectWithCustomParser()
+        : m_intProperty(0)
+        , m_customBindingsCount(0)
+    {}
+
+    int intProperty() const { return m_intProperty; }
+    void setIntProperty(int value) { m_intProperty = value; }
+
+    void setCustomBindingsCount(int count) { m_customBindingsCount = count; }
+    int customBindingsCount() const { return m_customBindingsCount; }
+
+private:
+    int m_intProperty;
+    int m_customBindingsCount;
+};
+
+class SimpleObjectCustomParser : public QQmlCustomParser
+{
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *, int, const QList<const QV4::CompiledData::Binding *> &bindings);
+    virtual void setCustomData(QObject *object, const QByteArray &data);
+};
+
 class RootObjectInCreationTester : public QObject
 {
     Q_OBJECT
