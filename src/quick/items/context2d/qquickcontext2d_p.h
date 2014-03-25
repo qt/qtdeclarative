@@ -49,6 +49,7 @@
 #include <private/qquickcanvasitem_p.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qpainterpath.h>
+#include <QtGui/qoffscreensurface.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qqueue.h>
@@ -229,7 +230,7 @@ public:
     QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url);
 
     QOpenGLContext *glContext() { return m_glContext; }
-    QSurface *surface() { return m_surface; }
+    QSurface *surface() { return m_surface.data(); }
     void setGrabbedImage(const QImage& grab);
 
     State state;
@@ -241,7 +242,7 @@ public:
     QV4::PersistentValue m_strokeStyle;
     QV4::PersistentValue m_v4path;
     QV8Engine *m_v8engine;
-    QSurface *m_surface;
+    QScopedPointer<QOffscreenSurface> m_surface;
     QOpenGLContext *m_glContext;
     QV4::PersistentValue m_v4value;
     QQuickContext2DTexture *m_texture;

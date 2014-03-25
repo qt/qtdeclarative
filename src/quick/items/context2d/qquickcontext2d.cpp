@@ -4136,7 +4136,9 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
          QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->openglContext();
-         m_surface = window;
+         m_surface.reset(new QOffscreenSurface);
+         m_surface->setFormat(window->format());
+         m_surface->create();
          m_glContext = new QOpenGLContext;
          m_glContext->setFormat(cc->format());
          m_glContext->setShareContext(cc);
