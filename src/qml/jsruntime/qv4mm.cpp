@@ -81,7 +81,6 @@ static const std::size_t CHUNK_SIZE = 1024*32;
 
 struct MemoryManager::Data
 {
-    bool enableGC;
     bool gcBlocked;
     bool scribble;
     bool aggressiveGC;
@@ -120,9 +119,8 @@ struct MemoryManager::Data
     QVector<unsigned> allocSizeCounters;
 #endif // DETAILED_MM_STATS
 
-    Data(bool enableGC)
-        : enableGC(enableGC)
-        , gcBlocked(false)
+    Data()
+        : gcBlocked(false)
         , engine(0)
         , totalItems(0)
         , totalAlloc(0)
@@ -165,11 +163,10 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 } // namespace QV4
 
 MemoryManager::MemoryManager()
-    : m_d(new Data(true))
+    : m_d(new Data)
     , m_persistentValues(0)
     , m_weakValues(0)
 {
-    setEnableGC(true);
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
@@ -436,7 +433,7 @@ void MemoryManager::setGCBlocked(bool blockGC)
 
 void MemoryManager::runGC()
 {
-    if (!m_d->enableGC || m_d->gcBlocked) {
+    if (m_d->gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
     }
@@ -457,11 +454,6 @@ void MemoryManager::runGC()
 //              << "ms" << std::endl;
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
     m_d->totalAlloc = 0;
-}
-
-void MemoryManager::setEnableGC(bool enableGC)
-{
-    m_d->enableGC = enableGC;
 }
 
 MemoryManager::~MemoryManager()

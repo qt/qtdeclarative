@@ -107,7 +107,6 @@ public:
     void setGCBlocked(bool blockGC);
     void runGC();
 
-    void setEnableGC(bool enableGC);
     void setExecutionEngine(ExecutionEngine *engine);
 
     void dumpStats() const;
