@@ -78,62 +78,6 @@ using namespace WTF;
 
 static const std::size_t CHUNK_SIZE = 1024*32;
 
-#if OS(WINCE)
-void* g_stackBase = 0;
-
-inline bool isPageWritable(void* page)
-{
-    MEMORY_BASIC_INFORMATION memoryInformation;
-    DWORD result = VirtualQuery(page, &memoryInformation, sizeof(memoryInformation));
-
-    // return false on error, including ptr outside memory
-    if (result != sizeof(memoryInformation))
-        return false;
-
-    DWORD protect = memoryInformation.Protect & ~(PAGE_GUARD | PAGE_NOCACHE);
-    return protect == PAGE_READWRITE
-        || protect == PAGE_WRITECOPY
-        || protect == PAGE_EXECUTE_READWRITE
-        || protect == PAGE_EXECUTE_WRITECOPY;
-}
-
-static void* getStackBase(void* previousFrame)
-{
-    // find the address of this stack frame by taking the address of a local variable
-    bool isGrowingDownward;
-    void* thisFrame = (void*)(&isGrowingDownward);
-
-    isGrowingDownward = previousFrame < &thisFrame;
-    static DWORD pageSize = 0;
-    if (!pageSize) {
-        SYSTEM_INFO systemInfo;
-        GetSystemInfo(&systemInfo);
-        pageSize = systemInfo.dwPageSize;
-    }
-
-    // scan all of memory starting from this frame, and return the last writeable page found
-    register char* currentPage = (char*)((DWORD)thisFrame & ~(pageSize - 1));
-    if (isGrowingDownward) {
-        while (currentPage > 0) {
-            // check for underflow
-            if (currentPage >= (char*)pageSize)
-                currentPage -= pageSize;
-            else
-                currentPage = 0;
-            if (!isPageWritable(currentPage))
-                return currentPage + pageSize;
-        }
-        return 0;
-    } else {
-        while (true) {
-            // guaranteed to complete because isPageWritable returns false at end of memory
-            currentPage += pageSize;
-            if (!isPageWritable(currentPage))
-                return currentPage;
-        }
-    }
-}
-#endif
 
 struct MemoryManager::Data
 {
@@ -141,9 +85,7 @@ struct MemoryManager::Data
     bool gcBlocked;
     bool scribble;
     bool aggressiveGC;
-    bool exactGC;
     ExecutionEngine *engine;
-    quintptr *stackTop;
 
     enum { MaxItemSize = 512 };
     Managed *smallItems[MaxItemSize/16];
@@ -182,7 +124,6 @@ struct MemoryManager::Data
         : enableGC(enableGC)
         , gcBlocked(false)
         , engine(0)
-        , stackTop(0)
         , totalItems(0)
         , totalAlloc(0)
         , maxShift(10)
@@ -194,7 +135,6 @@ struct MemoryManager::Data
         memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = qgetenv("QV4_MM_CONSERVATIVE_GC").isEmpty();
 
         QByteArray overrideMaxShift = qgetenv("QV4_MM_MAXBLOCK_SHIFT");
         bool ok;
@@ -233,50 +173,6 @@ MemoryManager::MemoryManager()
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
-
-#if OS(QNX)
-    // TLS is at the top of each thread's stack,
-    // so the stack base for thread is the result of __tls()
-    m_d->stackTop = reinterpret_cast<quintptr *>(
-          (((quintptr)__tls() + __PAGESIZE - 1) & ~(__PAGESIZE - 1)));
-#elif USE(PTHREADS)
-#  if OS(DARWIN)
-    void *st = pthread_get_stackaddr_np(pthread_self());
-    m_d->stackTop = static_cast<quintptr *>(st);
-#  else
-    void* stackBottom = 0;
-    pthread_attr_t attr;
-#if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
-    if (pthread_attr_get_np(pthread_self(), &attr) == 0) {
-#else
-    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
-#endif
-        size_t stackSize = 0;
-        pthread_attr_getstack(&attr, &stackBottom, &stackSize);
-        pthread_attr_destroy(&attr);
-
-        m_d->stackTop = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
-    } else {
-        // can't scan the native stack so have to rely on exact gc
-        m_d->stackTop = 0;
-        m_d->exactGC = true;
-    }
-#  endif
-#elif OS(WINCE)
-    if (false && g_stackBase) {
-        // This code path is disabled as we have no way of initializing it yet
-        m_d->stackTop = static_cast<quintptr *>(g_stackBase);
-    } else {
-        int dummy;
-        m_d->stackTop = static_cast<quintptr *>(getStackBase(&dummy));
-    }
-#elif OS(WINDOWS)
-    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
-    m_d->stackTop = static_cast<quintptr*>(tib->StackBase);
-#else
-#  error "Unsupported platform: no way to get the top-of-stack."
-#endif
-
 }
 
 Managed *MemoryManager::alloc(std::size_t size)
@@ -381,37 +277,6 @@ void MemoryManager::mark()
     }
 
     collectFromJSStack();
-
-    if (!m_d->exactGC) {
-        // push all caller saved registers to the stack, so we can find the objects living in these registers
-#if COMPILER(MSVC) && !OS(WINRT) // WinRT must use exact GC
-#  if CPU(X86_64)
-        HANDLE thread = GetCurrentThread();
-        WOW64_CONTEXT ctxt;
-        /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
-#  elif CPU(X86)
-        HANDLE thread = GetCurrentThread();
-        CONTEXT ctxt;
-        /*bool success =*/ GetThreadContext(thread, &ctxt);
-#  endif // CPU
-#elif COMPILER(CLANG) || COMPILER(GCC)
-#  if CPU(X86_64)
-        quintptr regs[5];
-        asm(
-            "mov %%rbp, %0\n"
-            "mov %%r12, %1\n"
-            "mov %%r13, %2\n"
-            "mov %%r14, %3\n"
-            "mov %%r15, %4\n"
-            : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
-            :
-            :
-        );
-#  endif // CPU
-#endif // COMPILER
-
-        collectFromStack();
-    }
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -652,57 +517,6 @@ void MemoryManager::willAllocate(std::size_t size)
 }
 
 #endif // DETAILED_MM_STATS
-
-void MemoryManager::collectFromStack() const
-{
-    quintptr valueOnStack = 0;
-
-    if (!m_d->heapChunks.count())
-        return;
-
-    quintptr *current = (&valueOnStack) + 1;
-//    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
-
-#if V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(current, (m_d->stackTop - current)*sizeof(quintptr));
-#endif
-
-    char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
-    char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
-    int i = 0;
-    for (QVector<Data::Chunk>::Iterator it = m_d->heapChunks.begin(), end =
-         m_d->heapChunks.end(); it != end; ++it) {
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) - 1;
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
-    }
-    Q_ASSERT(i == m_d->heapChunks.count() * 2);
-
-    for (; current < m_d->stackTop; ++current) {
-        char* genericPtr = reinterpret_cast<char *>(*current);
-
-        if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
-            continue;
-        int index = std::lower_bound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
-        // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
-        Q_ASSERT(index >= 0 && index < m_d->heapChunks.count() * 2);
-        if (index & 1) {
-            int size = m_d->heapChunks.at(index >> 1).chunkSize;
-            Managed *m = reinterpret_cast<Managed *>(genericPtr);
-//            qDebug() << "   inside" << size;
-
-            if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1] - 1   ) % size)
-                // wrongly aligned value, skip it
-                continue;
-
-            if (!m->inUse)
-                // Skip pointers to already freed objects, they are bogus as well
-                continue;
-
-//            qDebug() << "       marking";
-            m->mark(m_d->engine);
-        }
-    }
-}
 
 void MemoryManager::collectFromJSStack() const
 {

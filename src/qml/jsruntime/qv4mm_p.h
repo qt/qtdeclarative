@@ -124,7 +124,6 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectFromStack() const;
     void collectFromJSStack() const;
     void mark();
     void sweep(bool lastSweep = false);
