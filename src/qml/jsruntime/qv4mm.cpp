@@ -84,6 +84,7 @@ struct MemoryManager::Data
     bool gcBlocked;
     bool scribble;
     bool aggressiveGC;
+    bool gcStats;
     ExecutionEngine *engine;
 
     enum { MaxItemSize = 512 };
@@ -133,6 +134,7 @@ struct MemoryManager::Data
         memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
+        gcStats = !qgetenv("QV4_MM_STATS").isEmpty();
 
         QByteArray overrideMaxShift = qgetenv("QV4_MM_MAXBLOCK_SHIFT");
         bool ok;
@@ -438,22 +440,52 @@ void MemoryManager::runGC()
         return;
     }
 
-//    QTime t; t.start();
+    if (!m_d->gcStats) {
+        mark();
+        sweep();
+    } else {
+        int totalMem = 0;
+        for (int i = 0; i < m_d->heapChunks.size(); ++i)
+            totalMem += m_d->heapChunks.at(i).memory.size();
 
-//    qDebug() << ">>>>>>>>runGC";
+        QTime t;
+        t.start();
+        mark();
+        int markTime = t.elapsed();
+        t.restart();
+        int usedBefore = getUsedMem();
+        sweep();
+        int usedAfter = getUsedMem();
+        int sweepTime = t.elapsed();
 
-    mark();
-//    std::cerr << "GC: marked " << marks
-//              << " objects in " << t.elapsed()
-//              << "ms" << std::endl;
+        qDebug() << "========== GC ==========";
+        qDebug() << "Marked object in" << markTime << "ms.";
+        qDebug() << "Sweeped object in" << sweepTime << "ms.";
+        qDebug() << "Allocated" << totalMem << "bytes in" << m_d->heapChunks.size() << "chunks.";
+        qDebug() << "Used memory before GC:" << usedBefore;
+        qDebug() << "Used memory after GC:" << usedAfter;
+        qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
+        qDebug() << "======== End GC ========";
+    }
 
-//    t.restart();
-    /*std::size_t freedCount =*/ sweep();
-//    std::cerr << "GC: sweep freed " << freedCount
-//              << " objects in " << t.elapsed()
-//              << "ms" << std::endl;
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
     m_d->totalAlloc = 0;
+}
+
+uint MemoryManager::getUsedMem()
+{
+    uint usedMem = 0;
+    for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
+        char *chunkStart = reinterpret_cast<char *>(i->memory.base());
+        char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
+        for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
+            Managed *m = reinterpret_cast<Managed *>(chunk);
+            Q_ASSERT((qintptr) chunk % 16 == 0);
+            if (m->inUse)
+                usedMem += i->chunkSize;
+        }
+    }
+    return usedMem;
 }
 
 MemoryManager::~MemoryManager()
