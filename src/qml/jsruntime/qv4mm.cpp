@@ -82,7 +82,6 @@ static const std::size_t CHUNK_SIZE = 1024*32;
 struct MemoryManager::Data
 {
     bool gcBlocked;
-    bool scribble;
     bool aggressiveGC;
     bool gcStats;
     ExecutionEngine *engine;
@@ -134,7 +133,6 @@ struct MemoryManager::Data
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
-        scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
         gcStats = !qgetenv("QV4_MM_STATS").isEmpty();
 
@@ -151,10 +149,6 @@ struct MemoryManager::Data
             i->memory.deallocate();
     }
 };
-
-#define SCRIBBLE(obj, c, size) \
-    if (m_d->scribble) \
-        ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 
 
 namespace QV4 {
@@ -411,7 +405,6 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
                 VALGRIND_MEMPOOL_FREE(this, m);
 #endif
                 *f = m;
-                SCRIBBLE(m, 0x99, size);
             }
         }
     }
