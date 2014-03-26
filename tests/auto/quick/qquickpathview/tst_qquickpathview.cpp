@@ -47,6 +47,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/private/qquickpathview_p.h>
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
@@ -142,6 +143,7 @@ private slots:
     void indexAt_itemAt();
     void indexAt_itemAt_data();
     void cacheItemCount();
+    void incorrectSteal();
 };
 
 class TestObject : public QObject
@@ -2121,6 +2123,62 @@ void tst_QQuickPathView::cacheItemCount()
         controller.incubateWhile(&b);
     }
 
+}
+
+void tst_QQuickPathView::incorrectSteal()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("incorrectSteal.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathview != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != 0);
+
+    QSignalSpy movingSpy(pathview, SIGNAL(movingChanged()));
+    QSignalSpy moveStartedSpy(pathview, SIGNAL(movementStarted()));
+    QSignalSpy moveEndedSpy(pathview, SIGNAL(movementEnded()));
+
+    QSignalSpy fflickingSpy(flickable, SIGNAL(flickingChanged()));
+    QSignalSpy fflickStartedSpy(flickable, SIGNAL(flickStarted()));
+    QSignalSpy fflickEndedSpy(flickable, SIGNAL(flickEnded()));
+
+    int waitInterval = 5;
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(23,218));
+
+    QTest::mouseMove(window.data(), QPoint(25,218), waitInterval);
+    QTest::mouseMove(window.data(), QPoint(26,218), waitInterval);
+    QTest::mouseMove(window.data(), QPoint(28,219), waitInterval);
+    QTest::mouseMove(window.data(), QPoint(31,219), waitInterval);
+    QTest::mouseMove(window.data(), QPoint(39,219), waitInterval);
+
+    // first move beyond threshold does not trigger drag
+    QVERIFY(!pathview->isMoving());
+    QVERIFY(!pathview->isDragging());
+    QCOMPARE(movingSpy.count(), 0);
+    QCOMPARE(moveStartedSpy.count(), 0);
+    QCOMPARE(moveEndedSpy.count(), 0);
+    QCOMPARE(fflickingSpy.count(), 0);
+    QCOMPARE(fflickStartedSpy.count(), 0);
+    QCOMPARE(fflickEndedSpy.count(), 0);
+
+    // no further moves after the initial move beyond threshold
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(53,219));
+    QTRY_COMPARE(movingSpy.count(), 2);
+    QTRY_COMPARE(moveEndedSpy.count(), 1);
+    QCOMPARE(moveStartedSpy.count(), 1);
+    // Flickable should not handle this
+    QEXPECT_FAIL("", "QTBUG-37859", Abort);
+    QCOMPARE(fflickingSpy.count(), 0);
+    QCOMPARE(fflickStartedSpy.count(), 0);
+    QCOMPARE(fflickEndedSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_QQuickPathView)
