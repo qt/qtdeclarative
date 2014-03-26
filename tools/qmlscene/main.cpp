@@ -58,6 +58,7 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qabstractanimation_p.h>
+#include <private/qsgcontext_p.h>
 
 #ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
@@ -155,6 +156,7 @@ struct Options
         , quitImmediately(false)
         , resizeViewToRootItem(false)
         , multisample(false)
+        , contextSharing(true)
     {
     }
 
@@ -171,6 +173,7 @@ struct Options
     bool quitImmediately;
     bool resizeViewToRootItem;
     bool multisample;
+    bool contextSharing;
     QString translationFile;
 };
 
@@ -354,6 +357,7 @@ static void usage()
     qWarning("  --slow-animations ......................... Run all animations in slow motion");
     qWarning("  --resize-to-root .......................... Resize the window to the size of the root item");
     qWarning("  --quit .................................... Quit immediately after starting");
+    qWarning("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
     qWarning("  -I <path> ................................. Add <path> to the list of import paths");
     qWarning("  -B <name> <file> .......................... Add a named bundle");
     qWarning("  -translation <translationfile> ............ Set the language to run in");
@@ -393,6 +397,8 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
+            else if (lowerArgument == QLatin1String("--disable-context-sharing"))
+                options.contextSharing = false;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
             else if (lowerArgument == QLatin1String("-b") && i + 2 < argc) {
@@ -447,6 +453,15 @@ int main(int argc, char ** argv)
 #else
         displayFileDialog(&options);
 #endif
+
+    // QWebEngine needs a shared context in order for the GPU thread to
+    // upload textures.
+    QScopedPointer<QOpenGLContext> shareContext;
+    if (options.contextSharing) {
+        shareContext.reset(new QOpenGLContext);
+        shareContext->create();
+        QSGContext::setSharedOpenGLContext(shareContext.data());
+    }
 
     int exitCode = 0;
 
