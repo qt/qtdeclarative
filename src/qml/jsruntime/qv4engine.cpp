@@ -216,6 +216,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
     executionContextClass = InternalClass::create(this, ExecutionContext::staticVTable(), 0);
+    constructClass = InternalClass::create(this, Object::staticVTable(), 0);
     stringClass = InternalClass::create(this, String::staticVTable(), 0);
     regExpValueClass = InternalClass::create(this, RegExp::staticVTable(), 0);
 

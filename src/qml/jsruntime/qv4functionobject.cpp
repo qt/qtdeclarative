@@ -540,7 +540,7 @@ InternalClass *SimpleScriptFunction::internalClassForConstructor()
     Scope scope(internalClass->engine);
     ScopedObject p(scope, proto);
     if (p)
-        classForConstructor = InternalClass::create(scope.engine, Object::staticVTable(), p.getPointer());
+        classForConstructor = internalClass->engine->constructClass->changePrototype(p.getPointer());
     else
         classForConstructor = scope.engine->objectClass;
 

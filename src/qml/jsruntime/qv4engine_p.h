@@ -200,6 +200,7 @@ public:
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
     InternalClass *executionContextClass;
+    InternalClass *constructClass;
     InternalClass *stringClass;
 
     InternalClass *objectClass;
