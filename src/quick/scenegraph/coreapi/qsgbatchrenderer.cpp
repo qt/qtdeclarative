@@ -1459,7 +1459,7 @@ void Renderer::prepareOpaqueBatches()
 {
     for (int i=m_opaqueRenderList.size() - 1; i >= 0; --i) {
         Element *ei = m_opaqueRenderList.at(i);
-        if (!ei || ei->batch)
+        if (!ei || ei->batch || ei->node->geometry()->vertexCount() == 0)
             continue;
         Batch *batch = newBatch();
         batch->first = ei;
@@ -1481,7 +1481,7 @@ void Renderer::prepareOpaqueBatches()
                 continue;
             if (ej->root != ei->root)
                 break;
-            if (ej->batch)
+            if (ej->batch || ej->node->geometry()->vertexCount() == 0)
                 continue;
 
             QSGGeometryNode *gnj = ej->node;
@@ -1552,6 +1552,9 @@ void Renderer::prepareAlphaBatches()
             continue;
         }
 
+        if (ei->node->geometry()->vertexCount() == 0)
+            continue;
+
         Batch *batch = newBatch();
         batch->first = ei;
         batch->root = ei->root;
@@ -1578,6 +1581,8 @@ void Renderer::prepareAlphaBatches()
                 continue;
 
             QSGGeometryNode *gnj = ej->node;
+            if (gnj->geometry()->vertexCount() == 0)
+                continue;
 
             if (gni->clipList() == gnj->clipList()
                     && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
