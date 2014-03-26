@@ -300,6 +300,9 @@ ReturnedValue Runtime::deleteName(ExecutionContext *ctx, const StringRef name)
 
 QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
+    // As nothing in this method can call into the memory manager, avoid using a Scope
+    // for performance reasons
+
     FunctionObject *f = right->asFunctionObject();
     if (!f)
         return ctx->throwTypeError();
@@ -307,23 +310,20 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
     if (f->subtype == FunctionObject::BoundFunction)
         f = static_cast<BoundFunction *>(f)->target;
 
-    Scope scope(ctx->engine);
-    ScopedObject v(scope, left);
+    Object *v = left->asObject();
     if (!v)
         return Encode(false);
 
-    Scoped<Object> o(scope, f->protoProperty());
-    if (!o) {
-        scope.engine->currentContext()->throwTypeError();
-        return Encode(false);
-    }
+    Object *o = QV4::Value::fromReturnedValue(f->protoProperty()).asObject();
+    if (!o)
+        return ctx->throwTypeError();
 
     while (v) {
         v = v->prototype();
 
-        if (! v)
+        if (!v)
             break;
-        else if (o.getPointer() == v)
+        else if (o == v)
             return Encode(true);
     }
 
