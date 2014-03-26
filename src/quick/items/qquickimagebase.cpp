@@ -319,7 +319,7 @@ static QString image2xPath(const QString &path)
     const int dotIndex = path.lastIndexOf(QLatin1Char('.'));
     if (dotIndex == -1)
         return path;
-    if (path.contains("@2x."))
+    if (path.contains(QLatin1String("@2x.")))
         return path;
 
     QString retinaPath = path;
@@ -339,7 +339,7 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
         return;
 
     // Special case: the url in the QML source refers directly to an "@2x" file.
-    if (localFile.contains("@2x")) {
+    if (localFile.contains(QLatin1String("@2x"))) {
         *sourceDevicePixelRatio = qreal(2.0);
         return;
     }
