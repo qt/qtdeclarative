@@ -106,7 +106,6 @@ const ObjectVTable String::static_vtbl =
     DEFINE_MANAGED_VTABLE_INT(String),
     0,
     0,
-    0 /*collectDeletables*/,
     get,
     getIndexed,
     put,

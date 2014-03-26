@@ -114,6 +114,7 @@ struct MemoryManager::Data
 
     LargeItem *largeItems;
 
+    GCDeletable *deletable;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
@@ -127,6 +128,7 @@ struct MemoryManager::Data
         , totalAlloc(0)
         , maxShift(10)
         , largeItems(0)
+        , deletable(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
@@ -347,11 +349,8 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    GCDeletable *deletable = 0;
-    GCDeletable **firstDeletable = &deletable;
-
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
+        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
 
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
@@ -370,16 +369,17 @@ void MemoryManager::sweep(bool lastSweep)
         i = *last;
     }
 
-    deletable = *firstDeletable;
+    GCDeletable *deletable = m_d->deletable;
     while (deletable) {
         GCDeletable *next = deletable->next;
         deletable->lastCall = lastSweep;
         delete deletable;
         deletable = next;
     }
+    m_d->deletable = 0;
 }
 
-void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
+void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
     Managed **f = &m_d->smallItems[size >> 4];
@@ -402,9 +402,6 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                Object *o = m->asObject();
-                if (o && o->vtable()->collectDeletables)
-                    o->vtable()->collectDeletables(m, deletable);
                 m->internalClass->vtable->destroy(m);
 
                 memset(m, 0, size);
@@ -523,6 +520,12 @@ void MemoryManager::dumpStats() const
         }
     }
 #endif // DETAILED_MM_STATS
+}
+
+void MemoryManager::registerDeletable(GCDeletable *d)
+{
+    d->next = m_d->deletable;
+    m_d->deletable = d;
 }
 
 ExecutionEngine *MemoryManager::engine() const

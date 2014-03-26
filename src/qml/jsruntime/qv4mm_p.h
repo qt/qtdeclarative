@@ -111,6 +111,8 @@ public:
 
     void dumpStats() const;
 
+    void registerDeletable(GCDeletable *d);
+
 protected:
     /// expects size to be aligned
     // TODO: try to inline
@@ -126,7 +128,7 @@ private:
     void collectFromJSStack() const;
     void mark();
     void sweep(bool lastSweep = false);
-    void sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);
+    void sweep(char *chunkStart, std::size_t chunkSize, size_t size);
     uint getUsedMem();
 
 protected:

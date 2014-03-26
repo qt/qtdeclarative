@@ -64,6 +64,7 @@
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4mm_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -1004,9 +1005,9 @@ namespace {
     };
 }
 
-void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
+void QObjectWrapper::destroy(Managed *that)
 {
-    QObjectWrapper *This = static_cast<QObjectWrapper*>(m);
+    QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
     QPointer<QObject> &object = This->m_object;
     if (!object)
         return;
@@ -1019,12 +1020,13 @@ void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
         return;
 
     QObjectDeleter *deleter = new QObjectDeleter(object);
-    object = 0;
-    deleter->next = *deletable;
-    *deletable = deleter;
+    This->engine()->memoryManager->registerDeletable(deleter);
+
+    This->~QObjectWrapper();
 }
 
-DEFINE_MANAGED_VTABLE_WITH_DELETABLES(QObjectWrapper);
+
+DEFINE_OBJECT_VTABLE(QObjectWrapper);
 
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread
