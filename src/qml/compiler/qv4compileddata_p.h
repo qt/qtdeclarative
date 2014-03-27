@@ -228,10 +228,10 @@ struct Unit
         return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
     }
 
-    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps, uint nConstants,
+    static int calculateSize(uint headerSize, uint nFunctions, uint nRegExps, uint nConstants,
                              uint nLookups, uint nClasses) {
         return (headerSize
-                + (nStrings + nFunctions + nClasses) * sizeof(uint)
+                + (nFunctions + nClasses) * sizeof(uint)
                 + nRegExps * RegExp::calculateSize()
                 + nConstants * sizeof(QV4::ReturnedValue)
                 + nLookups * Lookup::calculateSize()

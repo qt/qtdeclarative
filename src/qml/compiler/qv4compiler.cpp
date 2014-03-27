@@ -217,20 +217,20 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, stringTable.stringCount(), irModule->functions.size(), regexps.size(),
+    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, irModule->functions.size(), regexps.size(),
                                                           constants.size(), lookups.size(), jsClasses.count());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QV4::IR::Function *f = irModule->functions.at(i);
-        functionOffsets.insert(f, functionDataSize + unitSize + stringTable.dataSize());
+        functionOffsets.insert(f, functionDataSize + unitSize);
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
-    const int totalSize = unitSize + functionDataSize + stringTable.dataSize() + jsClassDataSize;
+    const int totalSize = unitSize + functionDataSize + jsClassDataSize + stringTable.sizeOfTableAndData();
     char *data = (char *)malloc(totalSize);
     memset(data, 0, totalSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
@@ -240,10 +240,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->flags = QV4::CompiledData::Unit::IsJavascript;
     unit->version = 1;
     unit->unitSize = totalSize;
-    unit->stringTableSize = stringTable.stringCount();
-    unit->offsetToStringTable = headerSize;
     unit->functionTableSize = irModule->functions.size();
-    unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+    unit->offsetToFunctionTable = headerSize;
     unit->lookupTableSize = lookups.count();
     unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->regexpTableSize = regexps.size();
@@ -252,21 +250,16 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToConstantTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
     unit->jsClassTableSize = jsClasses.count();
     unit->offsetToJSClassTable = unit->offsetToConstantTable + unit->constantTableSize * sizeof(ReturnedValue);
+    unit->stringTableSize = stringTable.stringCount();
+    unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
     unit->indexOfRootFunction = -1;
     unit->sourceFileIndex = getStringId(irModule->fileName);
-
-    // write strings and string table
-    {
-        uint *stringTablePtr = (uint *)(data + unit->offsetToStringTable);
-        char *string = data + unitSize;
-        stringTable.serialize(stringTablePtr, data, string);
-    }
 
     uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
     for (int i = 0; i < irModule->functions.size(); ++i)
         functionTable[i] = functionOffsets.value(irModule->functions.at(i));
 
-    char *f = data + unitSize + stringTable.dataSize();
+    char *f = data + unitSize;
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QV4::IR::Function *function = irModule->functions.at(i);
         if (function == irModule->rootFunction)
@@ -288,7 +281,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 
     // write js classes and js class lookup table
     uint *jsClassTable = (uint*)(data + unit->offsetToJSClassTable);
-    char *jsClass = data + unitSize + stringTable.dataSize() + functionDataSize;
+    char *jsClass = data + unitSize + functionDataSize;
     for (int i = 0; i < jsClasses.count(); ++i) {
         jsClassTable[i] = jsClass - data;
 
@@ -302,6 +295,13 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             *memberToWrite++ = member;
 
         jsClass += CompiledData::JSClass::calculateSize(members.count());
+    }
+
+    // write strings and string table
+    {
+        uint *stringTablePtr = (uint *)(data + unit->offsetToStringTable);
+        char *string = data + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+        stringTable.serialize(stringTablePtr, data, string);
     }
 
     return unit;

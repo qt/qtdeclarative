@@ -66,7 +66,8 @@ struct Q_QML_EXPORT StringTableGenerator {
     int getStringId(const QString &string) const;
     QString stringForIndex(int index) const { return strings.at(index); }
     uint stringCount() const { return strings.size(); }
-    uint dataSize() const { return stringDataSize; }
+
+    uint sizeOfTableAndData() const { return stringDataSize + strings.count() * sizeof(uint); }
 
     void clear();
 
