@@ -627,6 +627,7 @@ static double getLocalTZA()
 #ifndef Q_OS_WIN
     struct tm t;
     time_t curr;
+    tzset();
     time(&curr);
     localtime_r(&curr, &t);
     time_t locl = mktime(&t);
