@@ -221,7 +221,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_extra->m_parameterString.clear();
 
             m_v8function = evalFunction(context(), scopeObject(), expression,
-                                        m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_v8qmlscope);
+                                        m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_extra->m_v8qmlscope);
 
             if (m_v8function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();

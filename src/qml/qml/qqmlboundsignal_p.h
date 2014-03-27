@@ -104,7 +104,6 @@ private:
     bool invalidParameterName() const { return m_extra.flag2(); }
     void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
 
-    QV4::PersistentValue m_v8qmlscope;
     QV4::PersistentValue m_v8function;
 
     QObject *m_target;
@@ -119,6 +118,7 @@ private:
         QString m_parameterString;
         QString m_expression;
         QQmlSourceLocation m_sourceLocation;
+        QV4::PersistentValue m_v8qmlscope;
     };
 
     // We store some flag bits in the following flag pointers.
