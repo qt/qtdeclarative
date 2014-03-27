@@ -99,7 +99,7 @@ public:
     QHash<int, QQmlCompiledData::CustomParserData> *customParserData();
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
-    const QStringList &stringPool() const;
+    const QV4::Compiler::StringTableGenerator *stringPool() const;
     void setCustomParserBindings(const QVector<int> &bindings);
     void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
 

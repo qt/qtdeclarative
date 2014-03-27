@@ -60,6 +60,9 @@ class QQmlTypeNameCache;
 
 namespace QmlIR {
 
+struct Document;
+struct IRLoader;
+
 template <typename T>
 struct PoolList
 {
@@ -199,7 +202,7 @@ struct Signal
     QV4::CompiledData::Location location;
     PoolList<SignalParameter> *parameters;
 
-    QStringList parameterStringList(const QStringList &stringPool) const;
+    QStringList parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const;
 
     Signal *next;
 };
@@ -285,6 +288,8 @@ public:
     FixedPoolArray<int> *runtimeFunctionIndices;
 
 private:
+    friend struct IRLoader;
+
     PoolList<Property> *properties;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
@@ -303,15 +308,11 @@ struct Q_QML_EXPORT Pragma
 
 struct Q_QML_EXPORT Document
 {
-    Document(bool debugMode)
-        : jsModule(debugMode)
-        , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
-        , unitFlags(0)
-    {}
+    Document(bool debugMode);
     QString code;
     QQmlJS::Engine jsParserEngine;
     QV4::IR::Module jsModule;
-    QList<QV4::CompiledData::Import*> imports;
+    QList<const QV4::CompiledData::Import *> imports;
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
     int indexOfRootObject;
@@ -319,10 +320,14 @@ struct Q_QML_EXPORT Document
     QV4::Compiler::JSUnitGenerator jsGenerator;
     quint32 unitFlags;
 
+    QV4::CompiledData::CompilationUnit *javaScriptCompilationUnit;
+    QHash<int, QStringList> extraSignalParameters;
+
     QV4::CompiledData::TypeReferenceMap typeReferences;
+    void collectTypeReferences();
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
-    QString stringAt(int index) const { return jsGenerator.strings.value(index); }
+    QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
 
     void extractScriptMetaData(QString &script, QQmlError *error);
     static void removeScriptPragmas(QString &script);
@@ -388,12 +393,10 @@ public:
 
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
 
-    void collectTypeReferences();
-
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
 
-    QString stringAt(int index) const { return jsGenerator->strings.at(index); }
+    QString stringAt(int index) const { return jsGenerator->stringForIndex(index); }
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
 
@@ -401,7 +404,7 @@ public:
 
     QSet<QString> illegalNames;
 
-    QList<QV4::CompiledData::Import*> _imports;
+    QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
     QList<Object*> _objects;
 
@@ -418,20 +421,11 @@ public:
 
 struct Q_QML_EXPORT QmlUnitGenerator
 {
-    QmlUnitGenerator()
-        : jsUnitGenerator(0)
-    {
-    }
-
-    QV4::CompiledData::QmlUnit *generate(Document &output, int *totalUnitSizeInBytes = 0);
+    QV4::CompiledData::QmlUnit *generate(Document &output);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
     char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
-
-    int getStringId(const QString &str) const;
-
-    QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
 };
 
 struct Q_QML_EXPORT PropertyResolver
@@ -457,7 +451,7 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
     JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
-              const QStringList &stringPool);
+              const QV4::Compiler::StringTableGenerator *stringPool);
 
     struct IdMapping
     {
@@ -484,7 +478,7 @@ private:
     QQmlJS::Engine *jsEngine; // needed for memory pool
     QQmlJS::AST::UiProgram *qmlRoot;
     QQmlTypeNameCache *imports;
-    const QStringList &stringPool;
+    const QV4::Compiler::StringTableGenerator *stringPool;
 
     bool _disableAcceleratedLookups;
     ObjectIdMapping _idObjects;

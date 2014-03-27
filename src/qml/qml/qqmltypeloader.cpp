@@ -1172,7 +1172,7 @@ void QQmlDataLoader::shutdownThread()
 }
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
-  : QQmlDataBlob(url, type), m_typeLoader(loader), m_importCache(loader), m_stringPool(0), m_isSingleton(false)
+  : QQmlDataBlob(url, type), m_typeLoader(loader), m_importCache(loader), m_isSingleton(false)
 {
 }
 
@@ -2046,7 +2046,7 @@ void QQmlTypeData::done()
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
-            QString typeName = m_document->jsGenerator.strings.at(it.key());
+            QString typeName = m_document->stringAt(it.key());
 
             QList<QQmlError> errors = type.typeData->errors();
             QQmlError error;
@@ -2142,7 +2142,7 @@ void QQmlTypeData::dataReceived(const Data &data)
         return;
     }
 
-    m_stringPool = &m_document->jsGenerator.strings;
+    m_document->collectTypeReferences();
 
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
@@ -2172,7 +2172,7 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     QList<QQmlError> errors;
 
-    foreach (QV4::CompiledData::Import *import, m_document->imports) {
+    foreach (const QV4::CompiledData::Import *import, m_document->imports) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
@@ -2230,6 +2230,11 @@ void QQmlTypeData::downloadProgressChanged(qreal p)
         TypeDataCallback *callback = m_callbacks.at(ii);
         callback->typeDataProgress(this, p);
     }
+}
+
+QString QQmlTypeData::stringAt(int index) const
+{
+    return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
 void QQmlTypeData::compile()
@@ -2299,15 +2304,7 @@ void QQmlTypeData::resolveTypes()
         }
     }
 
-    QV4::CompiledData::TypeReferenceMap typeReferences;
-    QStringList names;
-    if (m_document) {
-        typeReferences = m_document->typeReferences;
-        names = m_document->jsGenerator.strings;
-    } else {
-        // ### collect from available QV4::CompiledData::QmlUnit
-    }
-    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = typeReferences.constBegin(), end = typeReferences.constEnd();
+    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_document->typeReferences.constBegin(), end = m_document->typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {
 
         TypeReference ref; // resolved reference
@@ -2319,7 +2316,7 @@ void QQmlTypeData::resolveTypes()
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
 
-        const QString name = names.at(unresolvedRef.key());
+        const QString name = stringAt(unresolvedRef.key());
         bool typeFound = m_importCache.resolveType(name, &ref.type,
                 &majorVersion, &minorVersion, &typeNamespace, &errors);
         if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
@@ -2606,8 +2603,6 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         return;
     }
 
-    m_stringPool = &m_irUnit.jsGenerator.strings;
-
     QList<QQmlError> errors;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
     m_scriptData->m_precompiledScript = QV4::Script::precompile(&m_irUnit.jsModule, &m_irUnit.jsGenerator, v4, m_scriptData->url, source, &errors);
@@ -2619,6 +2614,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         return;
     }
 
+    m_irUnit.javaScriptCompilationUnit = m_scriptData->m_precompiledScript;
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(m_irUnit);
     if (m_scriptData->m_precompiledScript) {
@@ -2685,6 +2681,11 @@ void QQmlScriptBlob::done()
     }
 
     m_importCache.populateCache(m_scriptData->importCache);
+}
+
+QString QQmlScriptBlob::stringAt(int index) const
+{
+    return m_scriptData->m_precompiledScript->data->stringAt(index);
 }
 
 void QQmlScriptBlob::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace)

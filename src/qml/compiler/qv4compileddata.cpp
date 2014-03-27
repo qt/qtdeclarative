@@ -46,6 +46,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
 
 #include <algorithm>
@@ -178,6 +179,11 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
         for (uint i = 0; i < data->lookupTableSize; ++i)
             runtimeLookups[i].name->mark(e);
     }
+}
+
+Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
+{
+    return irDocument->jsGenerator.generateUnit();
 }
 
 QString Binding::valueAsString(const Unit *unit) const

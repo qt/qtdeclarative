@@ -293,11 +293,10 @@ public:
         virtual void dependencyComplete(QQmlDataBlob *);
 
     protected:
-        const QString &stringAt(int index) const { Q_ASSERT(m_stringPool); return m_stringPool->at(index); }
+        virtual QString stringAt(int) const { return QString(); }
 
         QQmlTypeLoader *m_typeLoader;
         QQmlImports m_importCache;
-        QStringList *m_stringPool; // used to resolve string indices in imports
         bool m_isSingleton;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
@@ -451,6 +450,8 @@ protected:
     virtual void allDependenciesDone();
     virtual void downloadProgressChanged(qreal);
 
+    virtual QString stringAt(int index) const;
+
 private:
     void resolveTypes();
     void compile();
@@ -541,6 +542,8 @@ public:
 protected:
     virtual void dataReceived(const Data &);
     virtual void done();
+
+    virtual QString stringAt(int index) const;
 
 private:
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);

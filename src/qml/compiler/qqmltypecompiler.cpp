@@ -202,37 +202,32 @@ bool QQmlTypeCompiler::compile()
     }
 
     // Compile JS binding expressions and signal handlers
-    {
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, compiledData->importCache, document->jsGenerator.strings);
+    if (!document->javaScriptCompilationUnit) {
+        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, compiledData->importCache, &document->jsGenerator.stringTable);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return false;
-    }
 
-    {
         QQmlJavaScriptBindingExpressionSimplificationPass pass(this);
         pass.reduceTranslationBindings();
+
+        QV4::ExecutionEngine *v4 = engine->v4engine();
+        QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
+        isel->setUseFastLookups(false);
+        document->javaScriptCompilationUnit = isel->compile(/*generated unit data*/false);
     }
-
-    QV4::ExecutionEngine *v4 = engine->v4engine();
-
-    QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
-    isel->setUseFastLookups(false);
-    QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
 
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*document);
 
-    if (jsUnit) {
-        Q_ASSERT(!jsUnit->data);
-        Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
-        // The js unit owns the data and will free the qml unit.
-        jsUnit->data = &qmlUnit->header;
-    }
+    Q_ASSERT(document->javaScriptCompilationUnit);
+    Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
+    // The js unit owns the data and will free the qml unit.
+    document->javaScriptCompilationUnit->data = &qmlUnit->header;
 
-    compiledData->compilationUnit = jsUnit;
+    compiledData->compilationUnit = document->javaScriptCompilationUnit;
     if (compiledData->compilationUnit)
         compiledData->compilationUnit->ref();
     compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
@@ -383,9 +378,9 @@ QStringRef QQmlTypeCompiler::newStringRef(const QString &string)
     return document->jsParserEngine.newStringRef(string);
 }
 
-const QStringList &QQmlTypeCompiler::stringPool() const
+const QV4::Compiler::StringTableGenerator *QQmlTypeCompiler::stringPool() const
 {
-    return document->jsGenerator.strings;
+    return &document->jsGenerator.stringTable;
 }
 
 void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
