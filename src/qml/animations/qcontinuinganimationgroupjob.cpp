@@ -121,5 +121,12 @@ void QContinuingAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
     stop();
 }
 
+void QContinuingAnimationGroupJob::debugAnimation(QDebug d) const
+{
+    d << "ContinuingAnimationGroupJob(" << hex << (void *) this << dec << ")";
+
+    debugChildren(d);
+}
+
 QT_END_NAMESPACE
 

@@ -413,4 +413,11 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
     m_totalCurrentTime = m_currentTime + m_loopCount * duration();
 }
 
+void QSequentialAnimationGroupJob::debugAnimation(QDebug d) const
+{
+    d << "SequentialAnimationGroupJob(" << hex << (void *) this << dec << ")" << "currentAnimation:" << (void *)m_currentAnimation;
+
+    debugChildren(d);
+}
+
 QT_END_NAMESPACE

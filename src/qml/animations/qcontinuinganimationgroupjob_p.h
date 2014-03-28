@@ -60,6 +60,7 @@ protected:
     void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
     void updateDirection(QAbstractAnimationJob::Direction direction);
     void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
+    void debugAnimation(QDebug d) const;
 };
 
 QT_END_NAMESPACE

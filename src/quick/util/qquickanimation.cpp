@@ -873,6 +873,19 @@ void QActionAnimation::updateState(State newState, State oldState)
     }
 }
 
+void QActionAnimation::debugAnimation(QDebug d) const
+{
+    d << "ActionAnimation(" << hex << (void *) this << dec << ")";
+
+    if (animAction) {
+        int indentLevel = 1;
+        const QAbstractAnimationJob *job = this;
+        while ((job = job->group()))
+            ++indentLevel;
+        animAction->debugAction(d, indentLevel);
+    }
+}
+
 /*!
     \qmltype ScriptAction
     \instantiates QQuickScriptAction
@@ -955,6 +968,22 @@ void QQuickScriptAction::setStateChangeScriptName(const QString &name)
 QAbstractAnimationAction* QQuickScriptActionPrivate::createAction()
 {
     return new Proxy(this);
+}
+
+void QQuickScriptActionPrivate::debugAction(QDebug d, int indentLevel) const
+{
+    QQmlScriptString scriptStr = hasRunScriptScript ? runScriptScript : script;
+
+    if (!scriptStr.isEmpty()) {
+        QQmlExpression expr(scriptStr);
+
+        QByteArray ind(indentLevel, ' ');
+        QString exprStr = expr.expression();
+        int endOfFirstLine = exprStr.indexOf('\n');
+        d << "\n" << ind.constData() << exprStr.left(endOfFirstLine);
+        if (endOfFirstLine != -1 && endOfFirstLine < exprStr.length())
+            d << "...";
+    }
 }
 
 void QQuickScriptActionPrivate::execute()
@@ -1168,6 +1197,14 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
             for (int ii = 0; ii < actions.count(); ++ii) {
                 const QQuickStateAction &action = actions.at(ii);
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+            }
+        }
+        virtual void debugAction(QDebug d, int indentLevel) const {
+            QByteArray ind(indentLevel, ' ');
+            for (int ii = 0; ii < actions.count(); ++ii) {
+                const QQuickStateAction &action = actions.at(ii);
+                d << "\n" << ind.constData() << "target:" << action.property.object() << "property:" << action.property.name()
+                  << "value:" << action.toValue;
             }
         }
     };
@@ -1929,6 +1966,19 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     QAbstractAnimationJob::topLevelAnimationLoopChanged();
 }
 
+void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
+{
+    d << "BulkValueAnimation(" << hex << (void *) this << dec << ")" << "duration:" << duration();
+
+    if (animValue) {
+        int indentLevel = 1;
+        const QAbstractAnimationJob *job = this;
+        while ((job = job->group()))
+            ++indentLevel;
+        animValue->debugUpdater(d, indentLevel);
+    }
+}
+
 /*!
     \qmltype PropertyAnimation
     \instantiates QQuickPropertyAnimation
@@ -2500,6 +2550,16 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
     }
     wasDeleted = 0;
     fromSourced = true;
+}
+
+void QQuickAnimationPropertyUpdater::debugUpdater(QDebug d, int indentLevel) const
+{
+    QByteArray ind(indentLevel, ' ');
+    for (int i = 0; i < actions.count(); ++i) {
+        const QQuickStateAction &action = actions.at(i);
+        d << "\n" << ind.constData() << "target:" << action.property.object() << "property:" << action.property.name()
+          << "from:" << action.fromValue << "to:" << action.toValue;
+    }
 }
 
 QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateActions &actions,

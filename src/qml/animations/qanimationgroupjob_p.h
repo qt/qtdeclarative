@@ -76,6 +76,8 @@ protected:
     int uncontrolledAnimationFinishTime(QAbstractAnimationJob *anim) const { return anim->m_uncontrolledFinishTime; }
     void setUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim, int time);
 
+    void debugChildren(QDebug d) const;
+
 private:
     //definition
     QAbstractAnimationJob *m_firstChild;

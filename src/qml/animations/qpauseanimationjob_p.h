@@ -58,6 +58,7 @@ public:
 
 protected:
     void updateCurrentTime(int);
+    void debugAnimation(QDebug d) const;
 
 private:
     //definition
