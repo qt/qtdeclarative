@@ -105,9 +105,9 @@ public:
         // Allow incubation for 1/3 of a frame.
         m_incubation_time = qMax(1, int(1000 / QGuiApplication::primaryScreen()->refreshRate()) / 3);
 
-        m_animation_driver = m_renderLoop->animationDriver();
-        if (m_animation_driver) {
-            connect(m_animation_driver, SIGNAL(stopped()), this, SLOT(animationStopped()));
+        QAnimationDriver *animationDriver = m_renderLoop->animationDriver();
+        if (animationDriver) {
+            connect(animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
             connect(m_renderLoop, SIGNAL(timeToIncubate()), this, SLOT(incubate()));
         }
     }
@@ -153,7 +153,6 @@ protected:
 private:
     QSGRenderLoop *m_renderLoop;
     int m_incubation_time;
-    QAnimationDriver *m_animation_driver;
     int m_timer;
 };
 
