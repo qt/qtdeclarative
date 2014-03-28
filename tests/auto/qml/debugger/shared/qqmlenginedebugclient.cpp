@@ -84,7 +84,8 @@ QQmlEngineDebugClient::QQmlEngineDebugClient(
         QQmlDebugConnection *connection)
     : QQmlDebugClient(QLatin1String("QmlDebugger"), connection),
       m_nextId(0),
-      m_valid(false)
+      m_valid(false),
+      m_connection(connection)
 {
 }
 
@@ -467,6 +468,9 @@ void QQmlEngineDebugClient::messageReceived(const QByteArray &data)
 {
     m_valid = false;
     QDataStream ds(data);
+    ds.setVersion(m_connection->dataStreamVersion());
+
+
     int queryId;
     QByteArray type;
     ds >> type >> queryId;
