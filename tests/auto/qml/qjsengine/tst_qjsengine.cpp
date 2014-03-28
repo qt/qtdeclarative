@@ -1230,6 +1230,14 @@ void tst_QJSEngine::valueConversion_QVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
 
     QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, 0)).isNull());
+
+    {
+        QVariantMap map;
+        map.insert("42", "the answer to life the universe and everything");
+        QJSValue val = eng.toScriptValue(map);
+        QVERIFY(val.isObject());
+        QCOMPARE(val.property(42).toString(), map.value(QStringLiteral("42")).toString());
+    }
 }
 
 void tst_QJSEngine::valueConversion_basic2()
