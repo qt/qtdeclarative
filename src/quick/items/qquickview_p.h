@@ -106,7 +106,7 @@ struct QQuickRootItemMarker : public QV4::Object
 {
     V4_OBJECT
 
-    QQuickRootItemMarker(QQuickViewPrivate *view);
+    QQuickRootItemMarker(QQmlEngine *engine, QQuickWindow *window);
 
     static void destroy(Managed *that)
     {
@@ -115,7 +115,7 @@ struct QQuickRootItemMarker : public QV4::Object
 
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 
-    QQuickViewPrivate *view;
+    QQuickWindow *window;
 };
 
 QT_END_NAMESPACE
