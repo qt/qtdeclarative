@@ -1008,7 +1008,10 @@ namespace {
 void QObjectWrapper::destroy(Managed *that)
 {
     QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
-    QPointer<QObject> &object = This->m_object;
+    QPointer<QObject> object = This->m_object;
+    ExecutionEngine *engine = This->engine();
+    This->~QObjectWrapper();
+    This = 0;
     if (!object)
         return;
 
@@ -1020,9 +1023,7 @@ void QObjectWrapper::destroy(Managed *that)
         return;
 
     QObjectDeleter *deleter = new QObjectDeleter(object);
-    This->engine()->memoryManager->registerDeletable(deleter);
-
-    This->~QObjectWrapper();
+    engine->memoryManager->registerDeletable(deleter);
 }
 
 
