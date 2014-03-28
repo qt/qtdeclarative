@@ -73,7 +73,8 @@ static inline QMLJS_READONLY Value add_int32(int a, int b)
     );
     if (!overflow)
         return Primitive::fromInt32(aa);
-    return Primitive::fromDouble((double)a + (double)b);
+    qint64 result = static_cast<qint64>(a) + b;
+    return Primitive::fromDouble(result);
 }
 
 static inline QMLJS_READONLY Value sub_int32(int a, int b)
@@ -89,7 +90,8 @@ static inline QMLJS_READONLY Value sub_int32(int a, int b)
     );
     if (!overflow)
         return Primitive::fromInt32(aa);
-    return Primitive::fromDouble((double)a - (double)b);
+    qint64 result = static_cast<qint64>(a) - b;
+    return Primitive::fromDouble(result);
 }
 
 static inline QMLJS_READONLY Value mul_int32(int a, int b)
@@ -105,14 +107,15 @@ static inline QMLJS_READONLY Value mul_int32(int a, int b)
     );
     if (!overflow)
         return Primitive::fromInt32(aa);
-    return Primitive::fromDouble((double)a * (double)b);
+    qint64 result = static_cast<qint64>(a) * b;
+    return Primitive::fromDouble(result);
 }
 
 #else
 
 static inline QMLJS_READONLY Value add_int32(int a, int b)
 {
-    qint64 result = a + b;
+    qint64 result = static_cast<qint64>(a) + b;
     if (result > INT_MAX || result < INT_MIN)
         return Primitive::fromDouble(result);
     return Primitive::fromInt32(static_cast<int>(result));
@@ -120,7 +123,7 @@ static inline QMLJS_READONLY Value add_int32(int a, int b)
 
 static inline QMLJS_READONLY Value sub_int32(int a, int b)
 {
-    qint64 result = a - b;
+    qint64 result = static_cast<qint64>(a) - b;
     if (result > INT_MAX || result < INT_MIN)
         return Primitive::fromDouble(result);
     return Primitive::fromInt32(static_cast<int>(result));
@@ -128,7 +131,7 @@ static inline QMLJS_READONLY Value sub_int32(int a, int b)
 
 static inline QMLJS_READONLY Value mul_int32(int a, int b)
 {
-    qint64 result = a * b;
+    qint64 result = static_cast<qint64>(a) * b;
     if (result > INT_MAX || result < INT_MIN)
         return Primitive::fromDouble(result);
     return Primitive::fromInt32(static_cast<int>(result));
