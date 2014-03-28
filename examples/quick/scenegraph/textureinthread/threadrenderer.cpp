@@ -63,38 +63,24 @@ class RenderThread : public QThread
 {
     Q_OBJECT
 public:
-    RenderThread(const QSize &size, QOpenGLContext *context)
-        : m_renderFbo(0)
+    RenderThread(const QSize &size)
+        : surface(0)
+        , context(0)
+        , m_renderFbo(0)
         , m_displayFbo(0)
         , m_logoRenderer(0)
-        , m_fakeSurface(0)
         , m_size(size)
     {
         ThreadRenderer::threads << this;
-
-        // Set up the QOpenGLContext to use for rendering in this thread. It is sharing
-        // memory space with the GL context of the scene graph. This constructor is called
-        // during updatePaintNode, so we are currently on the scene graph thread with the
-        // scene graph's OpenGL context current.
-        m_context = new QOpenGLContext();
-        m_context->setShareContext(context);
-        m_context->setFormat(context->format());
-        m_context->create();
-        m_context->moveToThread(this);
-
-        // We need a non-visible surface to make current in the other thread
-        // and QWindows must be created and managed on the GUI thread.
-        m_fakeSurface = new QOffscreenSurface();
-        m_fakeSurface->setFormat(context->format());
-        m_fakeSurface->create();
     }
 
-    void setSurface(QOffscreenSurface *surface) { m_fakeSurface = surface; }
+    QOffscreenSurface *surface;
+    QOpenGLContext *context;
 
 public slots:
     void renderNext()
     {
-        m_context->makeCurrent(m_fakeSurface);
+        context->makeCurrent(surface);
 
         if (!m_renderFbo) {
             // Initialize the buffers and renderer
@@ -124,15 +110,15 @@ public slots:
 
     void shutDown()
     {
-        m_context->makeCurrent(m_fakeSurface);
+        context->makeCurrent(surface);
         delete m_renderFbo;
         delete m_displayFbo;
         delete m_logoRenderer;
-        m_context->doneCurrent();
-        delete m_context;
+        context->doneCurrent();
+        delete context;
 
         // schedule this to be deleted only after we're done cleaning up
-        m_fakeSurface->deleteLater();
+        surface->deleteLater();
 
         // Stop event processing, move the thread to GUI and make sure it is deleted.
         exit();
@@ -147,9 +133,6 @@ private:
     QOpenGLFramebufferObject *m_displayFbo;
 
     LogoRenderer *m_logoRenderer;
-
-    QOffscreenSurface *m_fakeSurface;
-    QOpenGLContext *m_context;
     QSize m_size;
 };
 
@@ -226,26 +209,48 @@ private:
     QQuickWindow *m_window;
 };
 
-
-
 ThreadRenderer::ThreadRenderer()
     : m_renderThread(0)
 {
     setFlag(ItemHasContents, true);
+    m_renderThread = new RenderThread(QSize(512, 512));
+}
+
+void ThreadRenderer::ready()
+{
+    m_renderThread->surface = new QOffscreenSurface();
+    m_renderThread->surface->setFormat(m_renderThread->context->format());
+    m_renderThread->surface->create();
+
+    m_renderThread->moveToThread(m_renderThread);
+
+    connect(window(), SIGNAL(sceneGraphInvalidated()), m_renderThread, SLOT(shutDown()), Qt::QueuedConnection);
+
+    m_renderThread->start();
+    update();
 }
 
 QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     TextureNode *node = static_cast<TextureNode *>(oldNode);
 
-    if (!m_renderThread) {
+    if (!m_renderThread->context) {
         QOpenGLContext *current = window()->openglContext();
+        // Some GL implementations requres that the currently bound context is
+        // made non-current before we set up sharing, so we doneCurrent here
+        // and makeCurrent down below while setting up our own context.
         current->doneCurrent();
-        m_renderThread = new RenderThread(QSize(512, 512), current);
+
+        m_renderThread->context = new QOpenGLContext();
+        m_renderThread->context->setFormat(current->format());
+        m_renderThread->context->setShareContext(current);
+        m_renderThread->context->create();
+        m_renderThread->context->moveToThread(m_renderThread);
+
         current->makeCurrent(window());
-        m_renderThread->moveToThread(m_renderThread);
-        m_renderThread->start();
-        connect(window(), SIGNAL(sceneGraphInvalidated()), m_renderThread, SLOT(shutDown()), Qt::QueuedConnection);
+
+        QMetaObject::invokeMethod(this, "ready");
+        return 0;
     }
 
     if (!node) {

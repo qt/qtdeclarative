@@ -85,6 +85,10 @@ Item {
             Scale { id: scale; },
             Translate { id: txIn; x: renderer.width / 2; y: renderer.height / 2 }
         ]
+
+        Behavior on opacity { NumberAnimation { duration: 500 } }
+        opacity: 0
+        Component.onCompleted: renderer.opacity = 1;
     }
 
     // Just to show something interesting
