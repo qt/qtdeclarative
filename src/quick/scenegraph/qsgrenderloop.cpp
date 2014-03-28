@@ -329,8 +329,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!gl) {
         gl = new QOpenGLContext();
         gl->setFormat(window->requestedFormat());
-        if (QSGContext::sharedOpenGLContext())
-            gl->setShareContext(QSGContext::sharedOpenGLContext());
+        if (QOpenGLContextPrivate::globalShareContext())
+            gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
         if (!gl->create()) {
             const bool isEs = gl->isES();
             delete gl;

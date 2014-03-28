@@ -586,8 +586,8 @@ void QQuickWidgetPrivate::createContext()
     context = new QOpenGLContext;
     context->setFormat(offscreenWindow->requestedFormat());
 
-    if (QSGContext::sharedOpenGLContext())
-        context->setShareContext(QSGContext::sharedOpenGLContext()); // ??? is this correct
+    if (QOpenGLContextPrivate::globalShareContext())
+        context->setShareContext(QOpenGLContextPrivate::globalShareContext());
     if (!context->create()) {
         const bool isEs = context->isES();
         delete context;

@@ -58,7 +58,7 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qabstractanimation_p.h>
-#include <private/qsgcontext_p.h>
+#include <private/qopenglcontext_p.h>
 
 #ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
@@ -460,7 +460,7 @@ int main(int argc, char ** argv)
     if (options.contextSharing) {
         shareContext.reset(new QOpenGLContext);
         shareContext->create();
-        QSGContext::setSharedOpenGLContext(shareContext.data());
+        QOpenGLContextPrivate::setGlobalShareContext(shareContext.data());
     }
 
     int exitCode = 0;

@@ -113,11 +113,7 @@ public:
     bool distanceFieldDisabled;
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
     bool distanceFieldAntialiasingDecided;
-
-    static QOpenGLContext *sharedOpenGLContext;
 };
-
-QOpenGLContext *QSGContextPrivate::sharedOpenGLContext = 0;
 
 class QSGTextureCleanupEvent : public QEvent
 {
@@ -175,20 +171,6 @@ QSGContext::~QSGContext()
 QSGRenderContext *QSGContext::createRenderContext()
 {
     return new QSGRenderContext(this);
-}
-
-/*!
- * This function is used by the Qt WebEngine to set up context sharing
- * across multiple windows. Do not use it for any other purpose.
- */
-void QSGContext::setSharedOpenGLContext(QOpenGLContext *context)
-{
-    QSGContextPrivate::sharedOpenGLContext = context;
-}
-
-QOpenGLContext *QSGContext::sharedOpenGLContext()
-{
-    return QSGContextPrivate::sharedOpenGLContext;
 }
 
 void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)

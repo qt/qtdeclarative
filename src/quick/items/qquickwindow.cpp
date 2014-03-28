@@ -2977,7 +2977,7 @@ QImage QQuickWindow::grabWindow()
 
         QOpenGLContext context;
         context.setFormat(requestedFormat());
-        context.setShareContext(QSGContext::sharedOpenGLContext());
+        context.setShareContext(QOpenGLContextPrivate::globalShareContext());
         context.create();
         context.makeCurrent(this);
         d->context->initialize(&context);

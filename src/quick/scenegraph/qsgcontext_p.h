@@ -168,9 +168,6 @@ public:
     virtual QSize minimumFBOSize() const;
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
-    static void setSharedOpenGLContext(QOpenGLContext *context);
-    static QOpenGLContext *sharedOpenGLContext();
-
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
