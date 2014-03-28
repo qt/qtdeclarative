@@ -91,14 +91,13 @@ public:
 
     virtual bool interleaveIncubation() const { return false; }
 
+    static void cleanup();
+
 Q_SIGNALS:
     void timeToIncubate();
 
 protected:
     void handleContextCreationFailure(QQuickWindow *window, bool isEs);
-
-public Q_SLOTS:
-    void cleanup();
 
 private:
     static QSGRenderLoop *s_instance;
