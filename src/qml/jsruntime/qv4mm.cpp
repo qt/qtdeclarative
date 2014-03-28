@@ -364,13 +364,13 @@ void MemoryManager::sweep(bool lastSweep)
     }
 
     GCDeletable *deletable = m_d->deletable;
+    m_d->deletable = 0;
     while (deletable) {
         GCDeletable *next = deletable->next;
         deletable->lastCall = lastSweep;
         delete deletable;
         deletable = next;
     }
-    m_d->deletable = 0;
 }
 
 void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
