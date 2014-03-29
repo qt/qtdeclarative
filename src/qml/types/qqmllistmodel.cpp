@@ -2357,7 +2357,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
     return true;
 }
 
-QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int /*objectIndex*/, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QList<ListInstruction> instr;
     QByteArray data;

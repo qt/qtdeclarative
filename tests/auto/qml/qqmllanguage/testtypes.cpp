@@ -105,9 +105,8 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
-    Q_UNUSED(objectIndex)
     QByteArray result;
     QDataStream ds(&result, QIODevice::WriteOnly);
 
@@ -158,10 +157,9 @@ void CustomBinding::componentComplete()
     }
 }
 
-QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     Q_UNUSED(qmlUnit)
-    Q_UNUSED(objectIndex)
 
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
@@ -194,7 +192,7 @@ QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit 
 }
 
 
-QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *, int, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     return QByteArray::number(bindings.count());
 }

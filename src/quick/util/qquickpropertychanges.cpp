@@ -258,9 +258,8 @@ void QQuickPropertyChangesParser::compileList(QList<QPair<QString, const QV4::Co
     list << qMakePair(propName, binding);
 }
 
-QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &props)
+QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
-    Q_UNUSED(objectIndex)
     QList<QPair<QString, const QV4::CompiledData::Binding *> > data;
     for (int ii = 0; ii < props.count(); ++ii)
         compileList(data, QString(), qmlUnit, props.at(ii));

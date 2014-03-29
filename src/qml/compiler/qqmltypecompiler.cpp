@@ -1898,7 +1898,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         customParser->compiler = this;
         QQmlCompiledData::CustomParserData data;
         data.bindings = customParserBindings;
-        data.compilationArtifact = customParser->compile(qmlUnit, objectIndex, customBindings);
+        data.compilationArtifact = customParser->compile(qmlUnit, customBindings);
         customParser->compiler = 0;
         customParserData->insert(objectIndex, data);
         const QList<QQmlError> parserErrors = customParser->errors();
