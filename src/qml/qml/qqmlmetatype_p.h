@@ -125,6 +125,8 @@ public:
     static void setQQuickAnchorLineCompareFunction(CompareFunction);
     static bool QQuickAnchorLineCompare(const void *p1, const void *p2);
 
+    static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri);
+
     static bool namespaceContainsRegistrations(const QString &);
 
     static void protectNamespace(const QString &);
@@ -240,6 +242,7 @@ private:
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
     friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
     friend int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &);
+    friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);

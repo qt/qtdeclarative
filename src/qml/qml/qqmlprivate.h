@@ -61,6 +61,22 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlPrivate {
+struct CachedQmlUnit;
+}
+
+namespace QV4 {
+struct ExecutionEngine;
+namespace CompiledData {
+struct QmlUnit;
+struct CompilationUnit;
+}
+typedef CompiledData::CompilationUnit *(*CompilationUnitFactoryFunction)();
+}
+namespace QmlIR {
+struct Document;
+typedef void (*IRLoaderFunction)(Document *, const QQmlPrivate::CachedQmlUnit *);
+}
 
 typedef QObject *(*QQmlAttachedPropertiesFunc)(QObject *);
 
@@ -268,13 +284,26 @@ namespace QQmlPrivate
         const char *typeName;
     };
 
+    struct CachedQmlUnit {
+        const QV4::CompiledData::QmlUnit *qmlData;
+        QV4::CompilationUnitFactoryFunction createCompilationUnit;
+        QmlIR::IRLoaderFunction loadIR;
+    };
+
+    typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);
+    struct RegisterQmlUnitCacheHook {
+        int version;
+        QmlUnitCacheLookupFunction lookupCachedQmlUnit;
+    };
+
     enum RegistrationType {
         TypeRegistration       = 0,
         InterfaceRegistration  = 1,
         AutoParentRegistration = 2,
         SingletonRegistration  = 3,
         CompositeRegistration  = 4,
-        CompositeSingletonRegistration = 5
+        CompositeSingletonRegistration = 5,
+        QmlUnitCacheHookRegistration = 6
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);

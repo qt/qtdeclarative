@@ -155,6 +155,7 @@ protected:
 
     // Callbacks made in load thread
     virtual void dataReceived(const Data &) = 0;
+    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) = 0;
     virtual void done();
     virtual void networkError(QNetworkReply::NetworkError);
     virtual void dependencyError(QQmlDataBlob *);
@@ -228,6 +229,7 @@ public:
 
     void load(QQmlDataBlob *, Mode = PreferSynchronous);
     void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
+    void loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
     QQmlEngine *engine() const;
     void initializeEngine(QQmlExtensionInterface *, const char *);
@@ -242,6 +244,7 @@ private:
 
     void loadThread(QQmlDataBlob *);
     void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
+    void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
     void networkReplyFinished(QNetworkReply *);
     void networkReplyProgress(QNetworkReply *, qint64, qint64);
 
@@ -250,6 +253,7 @@ private:
     void setData(QQmlDataBlob *, const QByteArray &);
     void setData(QQmlDataBlob *, QQmlFile *);
     void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
+    void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
     QQmlEngine *m_engine;
     QQmlDataLoaderThread *m_thread;
@@ -447,12 +451,14 @@ protected:
     virtual void done();
     virtual void completed();
     virtual void dataReceived(const Data &);
+    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
     virtual void allDependenciesDone();
     virtual void downloadProgressChanged(qreal);
 
     virtual QString stringAt(int index) const;
 
 private:
+    void continueLoadFromIR();
     void resolveTypes();
     void compile();
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
@@ -541,16 +547,17 @@ public:
 
 protected:
     virtual void dataReceived(const Data &);
+    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
     virtual void done();
 
     virtual QString stringAt(int index) const;
 
 private:
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
+    void initializeFromCompilationUnit(QV4::CompiledData::CompilationUnit *unit);
 
     QList<ScriptReference> m_scripts;
     QQmlScriptData *m_scriptData;
-    QmlIR::Document m_irUnit;
 };
 
 class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob
@@ -571,6 +578,7 @@ public:
 
 protected:
     virtual void dataReceived(const Data &);
+    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*);
 
 private:
     QString m_content;
