@@ -1878,28 +1878,6 @@ QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-int QQmlMetaType::QQuickAnchorLineMetaTypeId()
-{
-    static int id = 0;
-    if (!id) {
-        id = QMetaType::type("QQuickAnchorLine");
-    }
-    return id;
-}
-
-QQmlMetaType::CompareFunction QQmlMetaType::anchorLineCompareFunction = 0;
-
-void QQmlMetaType::setQQuickAnchorLineCompareFunction(CompareFunction fun)
-{
-    anchorLineCompareFunction = fun;
-}
-
-bool QQmlMetaType::QQuickAnchorLineCompare(const void *p1, const void *p2)
-{
-    Q_ASSERT(anchorLineCompareFunction != 0);
-    return anchorLineCompareFunction(p1, p2);
-}
-
 const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
 {
     QReadLocker lock(metaTypeDataLock());

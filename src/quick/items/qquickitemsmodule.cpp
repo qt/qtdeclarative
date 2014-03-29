@@ -127,13 +127,6 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
     return QQmlPrivate::IncompatibleParent;
 }
 
-static bool compareQQuickAnchorLines(const void *p1, const void *p2)
-{
-    const QQuickAnchorLine &l1 = *static_cast<const QQuickAnchorLine*>(p1);
-    const QQuickAnchorLine &l2 = *static_cast<const QQuickAnchorLine*>(p2);
-    return l1 == l2;
-}
-
 static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 {
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
@@ -209,7 +202,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPen>();
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
-    QQmlMetaType::setQQuickAnchorLineCompareFunction(compareQQuickAnchorLines);
 
     qmlRegisterType<QQuickTextDocument>();
 

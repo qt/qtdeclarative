@@ -120,11 +120,6 @@ public:
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();
 
-    static int QQuickAnchorLineMetaTypeId();
-    typedef bool (*CompareFunction)(const void *, const void *);
-    static void setQQuickAnchorLineCompareFunction(CompareFunction);
-    static bool QQuickAnchorLineCompare(const void *p1, const void *p2);
-
     static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri);
 
     static bool namespaceContainsRegistrations(const QString &);
@@ -135,9 +130,6 @@ public:
     static QStringList typeRegistrationFailures();
 
     static QReadWriteLock *typeRegistrationLock();
-
-private:
-    static CompareFunction anchorLineCompareFunction;
 };
 
 struct QQmlMetaTypeData;
