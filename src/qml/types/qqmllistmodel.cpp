@@ -2254,7 +2254,7 @@ void QQmlListModel::sync()
     qmlInfo(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
+bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
@@ -2296,7 +2296,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
             li.dataIdx = ref;
             instr << li;
 
-            if (!compileProperty(qmlUnit, targetObjectIndex, binding, instr, data))
+            if (!compileProperty(qmlUnit, binding, instr, data))
                 return false;
 
             li.type = ListInstruction::Pop;
@@ -2334,38 +2334,8 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
                 bool ok;
                 int v = evaluateEnum(script, &ok);
                 if (!ok) {
-                    using namespace QQmlJS;
-                    AST::Node *node = astForBinding(objectIndex, binding->value.compiledScriptIndex);
-                    if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node))
-                        node = stmt->expression;
-                    AST::StringLiteral *literal = 0;
-                    if (AST::CallExpression *callExpr = AST::cast<AST::CallExpression *>(node)) {
-                        if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(callExpr->base)) {
-                            if (idExpr->name == QLatin1String("QT_TR_NOOP") || idExpr->name == QLatin1String("QT_TRID_NOOP")) {
-                                if (callExpr->arguments && !callExpr->arguments->next)
-                                    literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
-                                if (!literal) {
-                                    error(binding, QQmlListModel::tr("ListElement: improperly specified %1").arg(idExpr->name.toString()));
-                                    return false;
-                                }
-                            } else if (idExpr->name == QLatin1String("QT_TRANSLATE_NOOP")) {
-                                if (callExpr->arguments && callExpr->arguments->next && !callExpr->arguments->next->next)
-                                    literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->next->expression);
-                                if (!literal) {
-                                    error(binding, QQmlListModel::tr("ListElement: improperly specified QT_TRANSLATE_NOOP"));
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-
-                    if (literal) {
-                        d[0] = char(String);
-                        d += literal->value.toUtf8();
-                    } else {
-                        error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
-                        return false;
-                    }
+                    error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
+                    return false;
                 } else {
                     d[0] = char(Number);
                     d += QByteArray::number(v);
@@ -2387,7 +2357,7 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
     return true;
 }
 
-QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int /*objectIndex*/, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QList<ListInstruction> instr;
     QByteArray data;
@@ -2399,7 +2369,7 @@ QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUni
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
             return QByteArray();
         }
-        if (!compileProperty(qmlUnit, objectIndex, binding, instr, data))
+        if (!compileProperty(qmlUnit, binding, instr, data))
             return QByteArray();
     }
 

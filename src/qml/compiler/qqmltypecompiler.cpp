@@ -1641,17 +1641,6 @@ const QQmlImports &QQmlPropertyValidator::imports() const
     return *compiler->imports();
 }
 
-QQmlJS::AST::Node *QQmlPropertyValidator::astForBinding(int objectIndex, int scriptIndex) const
-{
-    const QmlIR::Object *obj = compiler->qmlObjects()->at(objectIndex);
-    // ####
-    int reverseIndex = obj->runtimeFunctionIndices->indexOf(scriptIndex);
-    if (reverseIndex == -1)
-        return 0;
-    QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(reverseIndex);
-    return foe ? foe->node : 0;
-}
-
 QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *)
 {
     const int id = customParserBindings.count();
@@ -2465,7 +2454,6 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
 QQmlJavaScriptBindingExpressionSimplificationPass::QQmlJavaScriptBindingExpressionSimplificationPass(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
-    , customParsers(typeCompiler->customParserCache())
     , jsModule(typeCompiler->jsIRModule())
 {
 
@@ -2484,10 +2472,6 @@ void QQmlJavaScriptBindingExpressionSimplificationPass::reduceTranslationBinding
 void QQmlJavaScriptBindingExpressionSimplificationPass::reduceTranslationBindings(int objectIndex)
 {
     const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-    // Don't feed QV4::CompiledData::Binding::Type_Translation into custom parsers.
-    const bool allowTranslations = !customParsers.contains(obj->inheritedTypeNameIndex);
-    if (!allowTranslations)
-        return;
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Script)
@@ -2704,6 +2688,44 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->type = QV4::CompiledData::Binding::Type_TranslationById;
         binding->stringIndex = compiler->registerString(id);
         binding->value.translationData = translationData;
+        return true;
+    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TR_NOOP") || *_nameOfFunctionCalled == QStringLiteral("QT_TRID_NOOP")) {
+        QVector<int>::ConstIterator param = _functionParameters.constBegin();
+        QVector<int>::ConstIterator end = _functionParameters.constEnd();
+        if (param == end)
+            return false;
+
+        QV4::IR::String *stringParam = _temps[*param]->asString();
+        if (!stringParam)
+            return false;
+
+        ++param;
+        if (param != end)
+            return false;
+
+        binding->type = QV4::CompiledData::Binding::Type_String;
+        binding->stringIndex = compiler->registerString(*stringParam->value);
+        return true;
+    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TRANSLATE_NOOP")) {
+        QVector<int>::ConstIterator param = _functionParameters.constBegin();
+        QVector<int>::ConstIterator end = _functionParameters.constEnd();
+        if (param == end)
+            return false;
+
+        ++param;
+        if (param == end)
+            return false;
+
+        QV4::IR::String *stringParam = _temps[*param]->asString();
+        if (!stringParam)
+            return false;
+
+        ++param;
+        if (param != end)
+            return false;
+
+        binding->type = QV4::CompiledData::Binding::Type_String;
+        binding->stringIndex = compiler->registerString(*stringParam->value);
         return true;
     }
     return false;

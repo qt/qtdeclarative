@@ -142,11 +142,6 @@ QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledD
     return compiler->bindingIdentifier(binding, this);
 }
 
-QQmlJS::AST::Node *QQmlCustomParser::astForBinding(int objectIndex, int scriptIndex) const
-{
-    return compiler->astForBinding(objectIndex, scriptIndex);
-}
-
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()

@@ -254,7 +254,6 @@ public:
 
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
-    virtual QQmlJS::AST::Node *astForBinding(int objectIndex, int scriptIndex) const;
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
 
 private:
@@ -340,7 +339,6 @@ private:
     bool detectTranslationCallAndConvertBinding(QmlIR::Binding *binding);
 
     const QList<QmlIR::Object*> &qmlObjects;
-    const QHash<int, QQmlCustomParser*> &customParsers;
     QV4::IR::Module *jsModule;
 
     bool _canSimplify;

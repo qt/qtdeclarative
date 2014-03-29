@@ -296,17 +296,17 @@ void tst_qqmllistmodel::static_i18n_data()
     QTest::newRow("QT_TR_NOOP extra param")
             << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"hello\",\"world\") }")
             << QVariant(QString())
-            << QString("ListElement: improperly specified QT_TR_NOOP");
+            << QString("ListElement: cannot use script for property value");
 
     QTest::newRow("QT_TRANSLATE_NOOP missing params")
         << "ListElement { foo: QT_TRANSLATE_NOOP() }"
         << QVariant(QString())
-        << QString("ListElement: improperly specified QT_TRANSLATE_NOOP");
+        << QString("ListElement: cannot use script for property value");
 
     QTest::newRow("QT_TRID_NOOP missing param")
         << QString::fromUtf8("ListElement { foo: QT_TRID_NOOP() }")
         << QVariant(QString())
-        << QString("ListElement: improperly specified QT_TRID_NOOP");
+        << QString("ListElement: cannot use script for property value");
 }
 
 void tst_qqmllistmodel::static_i18n()
