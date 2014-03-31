@@ -48,6 +48,9 @@
 using namespace QV4;
 using namespace QV4::Debugging;
 
+typedef QV4::ReturnedValue (*InjectedFunction)(QV4::CallContext*);
+Q_DECLARE_METATYPE(InjectedFunction)
+
 static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
 {
     QEventLoop loop;
@@ -80,9 +83,7 @@ public:
 
     QV4::ExecutionEngine *v4Engine() { return QV8Engine::getV4(this); }
 
-    typedef QV4::ReturnedValue (*InjectedFunction)(QV4::CallContext*);
-
-    Q_INVOKABLE void injectFunction(const QString &functionName, TestEngine::InjectedFunction injectedFunction)
+    Q_INVOKABLE void injectFunction(const QString &functionName, InjectedFunction injectedFunction)
     {
         QV4::ExecutionEngine *v4 = v4Engine();
         QV4::Scope scope(v4);
@@ -96,7 +97,6 @@ signals:
     void evaluateFinished();
 };
 
-Q_DECLARE_METATYPE(TestEngine::InjectedFunction)
 
 namespace {
 class TestCollector: public QV4::Debugging::Debugger::Collector
@@ -404,7 +404,7 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
             "var i = 42;";
 
     QMetaObject::invokeMethod(m_engine, "injectFunction", Qt::BlockingQueuedConnection,
-                              Q_ARG(QString, "someCall"), Q_ARG(TestEngine::InjectedFunction, someCall));
+                              Q_ARG(QString, "someCall"), Q_ARG(InjectedFunction, someCall));
 
     m_debuggerAgent->addBreakPoint("removeBreakPointForNextInstruction", 2);
 
