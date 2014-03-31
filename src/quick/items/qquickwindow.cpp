@@ -287,7 +287,7 @@ void QQuickWindow::update()
     if (d->windowManager)
         d->windowManager->update(this);
     else if (d->renderControl)
-        d->renderControl->update();
+        QQuickRenderControlPrivate::get(d->renderControl)->update();
 }
 
 void forcePolishHelper(QQuickItem *item)
@@ -438,7 +438,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     customRenderMode = qgetenv("QSG_VISUALIZE");
     renderControl = control;
     if (renderControl)
-        renderControl->setWindow(q);
+        QQuickRenderControlPrivate::get(renderControl)->window = q;
 
     if (!renderControl)
         windowManager = QSGRenderLoop::instance();
@@ -447,8 +447,9 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     QSGContext *sg;
     if (renderControl) {
-        sg = renderControl->sceneGraphContext();
-        context = renderControl->renderContext(sg);
+        QQuickRenderControlPrivate *renderControlPriv = QQuickRenderControlPrivate::get(renderControl);
+        sg = renderControlPriv->sg;
+        context = renderControlPriv->rc;
     } else {
         windowManager->addWindow(q);
         sg = windowManager->sceneGraphContext();
@@ -1087,7 +1088,7 @@ QQuickWindow::~QQuickWindow()
 
     d->animationController->deleteLater();
     if (d->renderControl) {
-        d->renderControl->windowDestroyed();
+        QQuickRenderControlPrivate::get(d->renderControl)->windowDestroyed();
     } else if (d->windowManager) {
         d->windowManager->removeWindow(this);
         d->windowManager->windowDestroyed(this);
@@ -1125,8 +1126,9 @@ void QQuickWindow::releaseResources()
 
 
 /*!
-    Sets whether the OpenGL context can be released to \a
-    persistent. The default value is true.
+    Sets whether the OpenGL context should be preserved, and cannot be
+    released until the last window is deleted, to \a persistent. The
+    default value is true.
 
     The OpenGL context can be released to free up graphics resources
     when the window is obscured, hidden or not rendering. When this
@@ -2798,7 +2800,7 @@ void QQuickWindow::maybeUpdate()
 {
     Q_D(QQuickWindow);
     if (d->renderControl)
-        d->renderControl->maybeUpdate();
+        QQuickRenderControlPrivate::get(d->renderControl)->maybeUpdate();
     else if (d->windowManager)
         d->windowManager->maybeUpdate(this);
 }

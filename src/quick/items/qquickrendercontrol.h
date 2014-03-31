@@ -39,50 +39,46 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRENDERCONTROL_P_H
-#define QQUICKRENDERCONTROL_P_H
+#ifndef QQUICKRENDERCONTROL_H
+#define QQUICKRENDERCONTROL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qquickrendercontrol.h"
-#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/qtquickglobal.h>
+#include <QtGui/QImage>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickRenderControlPrivate : public QObjectPrivate
+class QQuickWindow;
+class QOpenGLContext;
+class QQuickRenderControlPrivate;
+
+class Q_QUICK_EXPORT QQuickRenderControl : public QObject
 {
+    Q_OBJECT
+
 public:
-    Q_DECLARE_PUBLIC(QQuickRenderControl)
+    QQuickRenderControl(QObject *parent = 0);
+    ~QQuickRenderControl();
 
-    QQuickRenderControlPrivate();
-    ~QQuickRenderControlPrivate();
+    void initialize(QOpenGLContext *gl);
+    void stop();
 
-    static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
-        return renderControl->d_func();
-    }
+    void polishItems();
+    void render();
+    bool sync();
 
-    static void cleanup();
+    QImage grab();
 
-    void windowDestroyed();
+    static QWindow *renderWindowFor(QQuickWindow *win, QPoint *offset = 0);
+    virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return 0; }
 
-    void update();
-    void maybeUpdate();
+Q_SIGNALS:
+    void renderRequested();
+    void sceneChanged();
 
-    bool initialized;
-    QQuickWindow *window;
-    static QSGContext *sg;
-    QSGRenderContext *rc;
+private:
+    Q_DECLARE_PRIVATE(QQuickRenderControl)
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKRENDERCONTROL_P_H
+#endif // QQUICKRENDERCONTROL_H

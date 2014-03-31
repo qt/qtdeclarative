@@ -87,6 +87,7 @@ public:
     Q_ENUMS(SceneGraphError)
 
     QQuickWindow(QWindow *parent = 0);
+    explicit QQuickWindow(QQuickRenderControl *renderControl);
 
     virtual ~QQuickWindow();
 
@@ -201,7 +202,6 @@ private:
     friend class QQuickWidget;
     friend class QQuickRenderControl;
     friend class QQuickAnimatorController;
-    explicit QQuickWindow(QQuickRenderControl*);
     Q_DISABLE_COPY(QQuickWindow)
 };
 

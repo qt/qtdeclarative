@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include "qquickrendercontrol.h"
 #include "qquickrendercontrol_p.h"
 
 #include <QtCore/QCoreApplication>
@@ -53,7 +54,6 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
-#include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <QtCore/private/qobject_p.h>
 
@@ -61,59 +61,139 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
-class QQuickRenderControlPrivate : public QObjectPrivate
-{
-public:
-    QQuickRenderControlPrivate()
-        : window(0)
-    {
-        sg = QSGContext::createDefaultContext();
-        rc = new QSGRenderContext(sg);
-    }
-
-    ~QQuickRenderControlPrivate()
-     {
-         delete rc;
-         delete sg;
-     }
-
-    QQuickWindow *window;
-    QSGContext *sg;
-    QSGRenderContext *rc;
-};
-
 /*!
   \class QQuickRenderControl
-  \brief The QQuickRenderControl class provides a mechanism for rendering the Qt Quick scenegraph.
 
-  \internal
+  \brief The QQuickRenderControl class provides a mechanism for rendering the Qt
+  Quick scenegraph onto an offscreen render target in a fully
+  application-controlled manner.
+
+  \since 5.4
+
+  QQuickWindow and QQuickView and their associated internal render loops render
+  the Qt Quick scene onto a native window. In some cases, for example when
+  integrating with 3rd party OpenGL renderers, it might be beneficial to get the
+  scene into a texture that can then be used in arbitrary ways by the external
+  rendering engine. QQuickRenderControl makes this possible in a hardware
+  accelerated manner, unlike the performance-wise limited alternative of using
+  QQuickWindow::grabWindow()
+
+  When using a QQuickRenderControl, the QQuickWindow does not have to be shown
+  or even created at all. This means there will not be an underlying native
+  window for it. Instead, the QQuickWindow instance is associated with the
+  render control, using the overload of the QQuickWindow constructor, and an
+  OpenGL framebuffer object by calling QQuickWindow::setRenderTarget().
+
+  Management of the context and framebuffer object is up to the application. The
+  context that will be used by Qt Quick must be created before calling
+  initialize(). The creation of the framebuffer object can be deferred, see
+  below. Qt 5.4 introduces the ability for QOpenGLContext to adopt existing
+  native contexts. Together with QQuickRenderControl this makes it possible to
+  create a QOpenGLContext that shares with an external rendering engine's
+  existing context. This new QOpenGLContext can then be used to render the Qt
+  Quick scene into a texture that is accessible by the other engine's context
+  too.
+
+  Loading and instantiation of the QML components happen by using a
+  QQmlEngine. Once the root object is created, it will need to be parented to
+  the QQuickWindow's contentItem().
+
+  Applications will usually have to connect to 4 important signals:
+
+  \list
+
+  \li QQuickWindow::sceneGraphInitialized() Emitted at some point after calling
+  QQuickRenderControl::initialize(). Upon this signal, the application is
+  expected to create its framebuffer object and associate it with the
+  QQuickWindow.
+
+  \li QQuickWindow::sceneGraphInvalidated() When the scenegraph resources are
+  released, the framebuffer object can be destroyed too.
+
+  \li QQuickRenderControl::renderRequested() Indicates that the scene has to be
+  rendered by calling render(). After making the context current, applications
+  are expected to call render().
+
+  \li QQuickRenderControl::sceneChanged() Inidcates that the scene has changed
+  meaning that, before rendering, polishing and synchronizing is also necessary.
+
+  \endlist
+
+  To send events, for example mouse or keyboard events, to the scene, use
+  QCoreApplication::sendEvent() with the QQuickWindow instance as the receiver.
 
   \inmodule QtQuick
 */
 
-QQuickRenderControl::QQuickRenderControl()
-    : QObject(*(new QQuickRenderControlPrivate), 0)
+QSGContext *QQuickRenderControlPrivate::sg = 0;
+
+QQuickRenderControlPrivate::QQuickRenderControlPrivate()
+    : initialized(0),
+      window(0)
+{
+    if (!sg) {
+        qAddPostRoutine(cleanup);
+        sg = QSGContext::createDefaultContext();
+    }
+    rc = new QSGRenderContext(sg);
+}
+
+QQuickRenderControlPrivate::~QQuickRenderControlPrivate()
+{
+    delete rc;
+}
+
+void QQuickRenderControlPrivate::cleanup()
+{
+    delete sg;
+    sg = 0;
+}
+
+QQuickRenderControl::QQuickRenderControl(QObject *parent)
+    : QObject(*(new QQuickRenderControlPrivate), parent)
 {
 }
 
+/*!
+  Destroys the instance. Releases all scenegraph resources.
+
+  \sa stop()
+ */
 QQuickRenderControl::~QQuickRenderControl()
 {
+    Q_D(QQuickRenderControl);
+
+    stop();
+
+    if (d->window)
+        QQuickWindowPrivate::get(d->window)->renderControl = 0;
 }
 
-void QQuickRenderControl::windowDestroyed()
+void QQuickRenderControlPrivate::windowDestroyed()
 {
-    Q_D(QQuickRenderControl);
-    if (d->window == 0) {
-        d->rc->invalidate();
+    if (window == 0) {
+        rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 }
 
+/*!
+  Initializes the scene graph resources. The context \a gl has to
+  be the current context.
+ */
 void QQuickRenderControl::initialize(QOpenGLContext *gl)
 {
     Q_D(QQuickRenderControl);
-    if (!d->window)
+
+    if (!d->window) {
+        qWarning("QQuickRenderControl::initialize called with no associated window");
         return;
+    }
+
+    if (QOpenGLContext::currentContext() != gl) {
+        qWarning("QQuickRenderControl::initialize called with incorrect current context");
+        return;
+    }
 
     // It is the caller's responsiblity to make a context/surface current.
     // It cannot be done here since the surface to use may not be the
@@ -121,17 +201,14 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
     // window/surface at all.
 
     d->rc->initialize(gl);
-}
 
-void QQuickRenderControl::invalidate()
-{
-    Q_D(QQuickRenderControl);
-    d->rc->invalidate();
+    d->initialized = true;
 }
 
 /*!
   This function should be called as late as possible before
-  sync(). In a threaded scenario, rendering can happen in parallel with this function.
+  sync(). In a threaded scenario, rendering can happen in parallel
+  with this function.
  */
 void QQuickRenderControl::polishItems()
 {
@@ -147,9 +224,13 @@ void QQuickRenderControl::polishItems()
 }
 
 /*!
-  Synchronize GUI and scenegraph. Returns true if the scene graph was changed.
+  This function is used to synchronize the QML scene with the rendering scene
+  graph.
 
-  This function is a synchronization point. Rendering can not happen in parallel.
+  If a dedicated render thread is used, the GUI thread should be blocked for the
+  duration of this call.
+
+  \return \e true if the synchronization changed the scene graph.
  */
 bool QQuickRenderControl::sync()
 {
@@ -165,13 +246,34 @@ bool QQuickRenderControl::sync()
 }
 
 /*!
-  Stop rendering and release resources. This function is typically
-  called when the window is hidden. Requires a current context.
+  Stop rendering and release resources. Requires a current context.
+
+  This is the equivalent of the cleanup operations that happen with a
+  real QQuickWindow when the window becomes hidden.
+
+  This function takes QQuickWindow::persistentSceneGraph() into
+  account, meaning that context-specific resources are not released
+  when persistency is enabled.
+
+  This function is called from the destructor. Therefore there will
+  typically be no need to call it directly. Pay attention however to
+  the fact that this requires the context, that was passed to
+  initialize(), to be the current one at the time of destroying the
+  QQuickRenderControl instance.
+
+  Once stop() has been called, it is possible to reuse the
+  QQuickRenderControl instance by calling initialize() again.
  */
 void QQuickRenderControl::stop()
 {
     Q_D(QQuickRenderControl);
+    if (!d->initialized)
+        return;
+
     if (!d->window)
+        return;
+
+    if (!QOpenGLContext::currentContext())
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
@@ -182,10 +284,12 @@ void QQuickRenderControl::stop()
         d->rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
+
+    d->initialized = false;
 }
 
 /*!
-  Render the scenegraph using the current context.
+  Renders the scenegraph using the current context.
  */
 void QQuickRenderControl::render()
 {
@@ -196,7 +300,6 @@ void QQuickRenderControl::render()
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->renderSceneGraph(d->window->size());
 }
-
 
 /*!
     \fn void QQuickRenderControl::renderRequested()
@@ -212,7 +315,9 @@ void QQuickRenderControl::render()
     true, then render() needs to be called.
 */
 
-
+/*!
+  Grabs the contents of the scene and returns it as an image.
+ */
 QImage QQuickRenderControl::grab()
 {
     Q_D(QQuickRenderControl);
@@ -224,47 +329,16 @@ QImage QQuickRenderControl::grab()
     return grabContent;
 }
 
-QSGContext *QQuickRenderControl::sceneGraphContext() const
+void QQuickRenderControlPrivate::update()
 {
-    Q_D(const QQuickRenderControl);
-    return d->sg;
+    Q_Q(QQuickRenderControl);
+    emit q->renderRequested();
 }
 
-QSGRenderContext *QQuickRenderControl::renderContext(QSGContext *) const
+void QQuickRenderControlPrivate::maybeUpdate()
 {
-    Q_D(const QQuickRenderControl);
-    return d->rc;
-}
-
-void QQuickRenderControl::setWindow(QQuickWindow *window)
-{
-    Q_D(QQuickRenderControl);
-    d->window = window;
-}
-
-/*!
-  Returns the offscreen window.
- */
-
-QQuickWindow *QQuickRenderControl::window() const
-{
-    Q_D(const QQuickRenderControl);
-    return d->window;
-}
-
-/*!
-  Create an offscreen QQuickWindow for this render control,
-  unless the render control already has a window().
-
-  Returns the offscreen window if one is created, otherwise returns null.
-  The caller takes ownership of the window, and is responsible for deleting it.
- */
-QQuickWindow *QQuickRenderControl::createOffscreenWindow()
-{
-    Q_D(QQuickRenderControl);
-    if (!d->window)
-        return new QQuickWindow(this);
-    return 0;
+    Q_Q(QQuickRenderControl);
+    emit q->sceneChanged();
 }
 
 /*!
@@ -284,7 +358,6 @@ QQuickWindow *QQuickRenderControl::createOffscreenWindow()
   inside its window.
 
  */
-
 QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
 {
     if (!win)
@@ -294,7 +367,5 @@ QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
         return rc->renderWindow(offset);
     return 0;
 }
-
-
 
 QT_END_NAMESPACE

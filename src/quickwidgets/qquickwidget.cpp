@@ -72,7 +72,7 @@ class QQuickWidgetRenderControl : public QQuickRenderControl
 {
 public:
     QQuickWidgetRenderControl(QQuickWidget *quickwidget) : m_quickWidget(quickwidget) {}
-    QWindow *renderWindow(QPoint *offset) {
+    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE {
         if (offset)
             *offset = m_quickWidget->mapTo(m_quickWidget->window(), QPoint());
         return m_quickWidget->window()->windowHandle();
@@ -86,7 +86,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     Q_Q(QQuickWidget);
 
     renderControl = new QQuickWidgetRenderControl(q);
-    offscreenWindow = renderControl->createOffscreenWindow();
+    offscreenWindow = new QQuickWindow(renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
 
@@ -162,8 +162,8 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
 
     // context and offscreenSurface are current at this stage, if the context was created.
     Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
+    delete renderControl; // always delete the rendercontrol first
     delete offscreenWindow;
-    delete renderControl;
     delete resolvedFbo;
     delete fbo;
 
@@ -877,7 +877,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 
     d->createContext();
     createFramebufferObject();
-    d->offscreenWindow->resizeEvent(e);
+    QCoreApplication::sendEvent(d->offscreenWindow, e);
     d->offscreenWindow->setGeometry(0, 0, e->size().width(), e->size().height());
 
     QOpenGLContext *context = d->offscreenWindow->openglContext();
@@ -898,7 +898,7 @@ void QQuickWidget::keyPressEvent(QKeyEvent *e)
     Q_D(QQuickWidget);
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
 
-    d->offscreenWindow->keyPressEvent(e);
+    QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
 
 /*! \reimp */
@@ -907,7 +907,7 @@ void QQuickWidget::keyReleaseEvent(QKeyEvent *e)
     Q_D(QQuickWidget);
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
 
-    d->offscreenWindow->keyReleaseEvent(e);
+    QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
 
 /*! \reimp */
@@ -921,7 +921,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     // the windowPos in e is ignored and is replaced by localPos. This is necessary
     // because QQuickWindow thinks of itself as a top-level window always.
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
-    d->offscreenWindow->mouseMoveEvent(&mappedEvent);
+    QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
 }
 
 /*! \reimp */
@@ -934,10 +934,10 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
     // See QTBUG-25831
     QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->screenPos(), e->button(),
                            e->buttons(), e->modifiers());
-    d->offscreenWindow->mousePressEvent(&pressEvent);
+    QCoreApplication::sendEvent(d->offscreenWindow, &pressEvent);
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(),
                             e->modifiers());
-    d->offscreenWindow->mouseDoubleClickEvent(&mappedEvent);
+    QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
 }
 
 /*! \reimp */
@@ -963,7 +963,7 @@ void QQuickWidget::mousePressEvent(QMouseEvent *e)
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
-    d->offscreenWindow->mousePressEvent(&mappedEvent);
+    QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
 }
 
 /*! \reimp */
@@ -973,7 +973,7 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
-    d->offscreenWindow->mouseReleaseEvent(&mappedEvent);
+    QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
 }
 
 #ifndef QT_NO_WHEELEVENT
@@ -984,7 +984,7 @@ void QQuickWidget::wheelEvent(QWheelEvent *e)
     Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // Wheel events only have local and global positions, no need to map.
-    d->offscreenWindow->wheelEvent(e);
+    QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
 #endif
 
@@ -1027,7 +1027,8 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::TouchUpdate:
     case QEvent::TouchCancel:
         // Touch events only have local and global positions, no need to map.
-        return d->offscreenWindow->event(e);
+        return QCoreApplication::sendEvent(d->offscreenWindow, e);
+
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
         break;

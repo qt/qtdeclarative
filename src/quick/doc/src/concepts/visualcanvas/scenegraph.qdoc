@@ -244,11 +244,11 @@ animations, process events, etc.
 
 \endlist
 
-The threaded renderer is currently used by default on Linux, Mac OS X
-and EGLFS based QPA platforms, but this is subject to change. It is
-possible to force use of the threaded renderer by setting \c
-{QML_FORCE_THREADED_RENDERER=1} in the environment.
-
+The threaded renderer is currently used by default on Linux with
+non-Mesa based drivers, OS X and EGLFS based QPA platforms, but this
+is subject to change. It is possible to force use of the threaded
+renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
+environment.
 
 \section2 Non-threaded Render Loop
 
@@ -265,6 +265,16 @@ The following is a simplified illustration of the frame rendering
 sequence in the non-threaded renderer.
 
 \image sg-renderloop-singlethreaded.jpg
+
+
+\section2 Custom control over rendering with QQuickRenderControl
+
+When using QQuickRenderControl, the responsibility for driving the
+rendering loop is transferred to the application. In this case no
+built-in render loop is used. Instead, it is up to the application to
+invoke the polish, synchronize and rendering steps at the appropriate
+time. It is possible to implement either a threaded or non-threaded
+behavior similar to the ones shown above.
 
 
 \section2 Mixing Scene Graph and OpenGL

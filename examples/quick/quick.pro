@@ -22,7 +22,8 @@ SUBDIRS =   quick-accessibility \
             imageprovider \
             window \
             particles \
-            demos
+            demos \
+            rendercontrol
 
 # Widget dependent examples
 qtHaveModule(widgets) {
