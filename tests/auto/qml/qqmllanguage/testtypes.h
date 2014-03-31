@@ -729,14 +729,14 @@ class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
     QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) { return QByteArray(); }
-    void setCustomData(QObject *, const QByteArray &) {}
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
 };
 
 class EnumSupportingCustomParser : public QQmlCustomParser
 {
 public:
     QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &) {}
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
 };
 
 class MyParserStatus : public QObject, public QQmlParserStatus
@@ -1107,7 +1107,7 @@ public:
 class CustomBindingParser : public QQmlCustomParser
 {
     virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    virtual void setCustomData(QObject *object, const QByteArray &data);
+    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
 };
 
 class SimpleObjectWithCustomParser : public QObject
@@ -1134,7 +1134,7 @@ private:
 class SimpleObjectCustomParser : public QQmlCustomParser
 {
     virtual QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings);
-    virtual void setCustomData(QObject *object, const QByteArray &data);
+    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
 };
 
 class RootObjectInCreationTester : public QObject

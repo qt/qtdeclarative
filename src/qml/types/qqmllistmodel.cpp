@@ -2391,7 +2391,7 @@ QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUni
     return rv;
 }
 
-void QQmlListModelParser::setCustomData(QObject *obj, const QByteArray &d)
+void QQmlListModelParser::setCustomData(QObject *obj, const QByteArray &d, QQmlCompiledData *)
 {
     QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 

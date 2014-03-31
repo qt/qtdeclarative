@@ -169,7 +169,7 @@ public:
 
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
     QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &);
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData *);
 
 private:
     struct ListInstruction

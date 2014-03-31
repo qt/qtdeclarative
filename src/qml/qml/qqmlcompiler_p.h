@@ -154,6 +154,9 @@ public:
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
 
+    QV4::Function *functionForBindingId(int bindingId) const
+    { return compilationUnit->runtimeFunctions[customParserBindings[bindingId]]; }
+
 protected:
     virtual void destroy(); // From QQmlRefCount
     virtual void clear(); // From QQmlCleanup

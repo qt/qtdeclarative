@@ -132,11 +132,34 @@ void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
         wrapper->qmlContext->mark(e);
 }
 
-Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction)
+static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
 {
+    QV4::CallContext *signalEmittingContext = ctx->parent->asCallContext();
+    Q_ASSERT(signalEmittingContext);
+    return signalEmittingContext->argument(parameterIndex);
+}
+
+Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
+{
+    ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine->memoryManager) QV4::QmlBindingWrapper(engine->rootContext, qmlScopeObject));
+
+    if (!signalParameters.isEmpty()) {
+        if (error)
+            QQmlPropertyCache::signalParameterStringForJS(qmlContext->engine, signalParameters, error);
+        QV4::ScopedProperty p(valueScope);
+        QV4::ScopedString s(valueScope);
+        int index = 0;
+        foreach (const QByteArray &param, signalParameters) {
+            p->setGetter(new (engine->memoryManager) QV4::IndexedBuiltinFunction(wrapper->context(), index++, signalParameterGetter));
+            p->setSetter(0);
+            s = engine->newString(QString::fromUtf8(param));
+            qmlScopeObject->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+        }
+    }
+
     QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapper->context(), runtimeFunction));
     return function->asReturned<FunctionObject>();
 }

@@ -251,10 +251,9 @@ void tst_qqmlconnections::rewriteErrors()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("rewriteError-unnamed.qml"));
+        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal uses unnamed parameter followed by named parameter.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
         QVERIFY(obj != 0);
-
-        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal uses unnamed parameter followed by named parameter.").toLatin1());
         obj->unnamedArgumentSignal(1, .5, "hello");
         QCOMPARE(obj->ran(), false);
 
@@ -264,10 +263,10 @@ void tst_qqmlconnections::rewriteErrors()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("rewriteError-global.qml"));
+        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal parameter \"parseInt\" hides global variable.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
         QVERIFY(obj != 0);
 
-        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal parameter \"parseInt\" hides global variable.").toLatin1());
         obj->signalWithGlobalName(10);
         QCOMPARE(obj->ran(), false);
 

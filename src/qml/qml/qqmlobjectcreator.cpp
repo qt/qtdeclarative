@@ -1117,7 +1117,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (customParser) {
         QHash<int, QQmlCompiledData::CustomParserData>::ConstIterator entry = compiledData->customParserData.find(index);
         if (entry != compiledData->customParserData.constEnd()) {
-            customParser->setCustomData(instance, entry->compilationArtifact);
+            customParser->setCustomData(instance, entry->compilationArtifact, compiledData);
             bindingsToSkip = entry->bindings;
         }
     }

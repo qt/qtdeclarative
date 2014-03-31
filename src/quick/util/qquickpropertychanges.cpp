@@ -48,6 +48,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <qqmlexpression.h>
 #include <private/qqmlbinding_p.h>
+#include <private/qqmlcompiler_p.h>
 #include <qqmlcontext.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlcontext_p.h>
@@ -204,6 +205,7 @@ public:
 
     QPointer<QObject> object;
     QByteArray data;
+    QQmlRefPointer<QQmlCompiledData> cdata;
 
     bool decoded : 1;
     bool restore : 1;
@@ -324,23 +326,10 @@ void QQuickPropertyChangesPrivate::decode()
 
         QQmlProperty prop = property(name);      //### better way to check for signal property?
         if (prop.type() & QQmlProperty::SignalProperty) {
-            QString expression = data.toString();
-            QUrl url = QUrl();
-            int line = -1;
-            int column = -1;
-
-            QQmlData *ddata = QQmlData::get(q);
-            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty()) {
-                url = ddata->outerContext->url;
-                line = ddata->lineNumber;
-                column = ddata->columnNumber;
-            }
-
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
             handler->property = prop;
             handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                                   QQmlContextData::get(qmlContext(q)), object, expression,
-                                                                   url.toString(), line, column));
+                                                                   QQmlContextData::get(qmlContext(q)), object, cdata->functionForBindingId(id)));
             signalReplacements << handler;
         } else if (isScript) { // binding
             QString expression = data.toString();
@@ -364,12 +353,12 @@ void QQuickPropertyChangesPrivate::decode()
     data.clear();
 }
 
-void QQuickPropertyChangesParser::setCustomData(QObject *object,
-                                            const QByteArray &data)
+void QQuickPropertyChangesParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *cdata)
 {
     QQuickPropertyChangesPrivate *p =
         static_cast<QQuickPropertyChangesPrivate *>(QObjectPrivate::get(object));
     p->data = data;
+    p->cdata = cdata;
     p->decoded = false;
 }
 

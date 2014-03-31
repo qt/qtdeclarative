@@ -95,7 +95,7 @@ public:
     void compileList(QList<QPair<QString, const QV4::CompiledData::Binding *> > &list, const QString &pre, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding);
 
     virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
-    virtual void setCustomData(QObject *, const QByteArray &);
+    virtual void setCustomData(QObject *, const QByteArray &, QQmlCompiledData *);
 };
 
 

@@ -52,12 +52,14 @@
 #include "qqmlglobal_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qv4debugservice_p.h>
+#include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
 #include <private/qv4value_inl_p.h>
 
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -103,6 +105,28 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     setInvalidParameterName(false);
 
     init(ctxt, scope);
+}
+
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+      m_target(target),
+      m_index(index),
+      m_extra(0)
+{
+    setExpressionFunctionValid(true);
+    setInvalidParameterName(false);
+
+    // It's important to call init first, because m_index gets remapped in case of cloned signals.
+    init(ctxt, scope);
+
+    QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
+    QString error;
+    m_v8function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error);
+    if (!error.isEmpty()) {
+        qmlInfo(scopeObject()) << error;
+        setInvalidParameterName(true);
+    } else
+        setInvalidParameterName(false);
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)

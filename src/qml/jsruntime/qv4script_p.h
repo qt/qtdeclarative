@@ -67,7 +67,7 @@ struct QmlBindingWrapper : FunctionObject {
 
     CallContext *context() const { return qmlContext; }
 
-    static Returned<FunctionObject> *createQmlCallableForFunction(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction);
+    static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction, const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
 private:
     Object *qml;

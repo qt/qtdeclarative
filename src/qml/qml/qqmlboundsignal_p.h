@@ -78,6 +78,8 @@ public:
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function);
 
+    QQmlBoundSignalExpression(QObject *target, int index,
+                              QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);

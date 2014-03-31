@@ -81,7 +81,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
 {
     expressionFunctionValid = true;
-    function = QV4::QmlBindingWrapper::createQmlCallableForFunction(QQmlEnginePrivate::getV4Engine(ctxt->engine), ctxt, me, runtimeFunction);
+    function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, me, runtimeFunction);
 
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(me);

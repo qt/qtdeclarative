@@ -125,7 +125,7 @@ QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUni
     return result;
 }
 
-void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data)
+void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
@@ -197,7 +197,7 @@ QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *,
     return QByteArray::number(bindings.count());
 }
 
-void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &data)
+void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
 {
    SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
    Q_ASSERT(o);
