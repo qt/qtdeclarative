@@ -275,7 +275,9 @@ QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit
         QQmlBinding::Identifier id = QQmlBinding::Invalid;
         switch (binding->type) {
         case QV4::CompiledData::Binding::Type_Script:
-            // ### pre-compile binding
+            id = bindingIdentifier(binding);
+            // Fall through as we also need the expression string.
+            // Signal handlers still need to be constructed by string ;(
         case QV4::CompiledData::Binding::Type_String:
             var = binding->valueAsString(&qmlUnit->header);
             break;

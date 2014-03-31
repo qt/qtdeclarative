@@ -147,7 +147,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     setScopeObject(obj ? obj : scriptPrivate->scope);
 
     if (runtimeFunction) {
-        v4function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, scopeObject(), runtimeFunction);
+        v4function = QV4::QmlBindingWrapper::createQmlCallableForFunction(engine->v4engine(), ctxtdata, scopeObject(), runtimeFunction);
     } else {
         QString code = scriptPrivate->script;
         v4function = qmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);
