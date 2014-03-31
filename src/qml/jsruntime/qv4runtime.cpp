@@ -264,7 +264,7 @@ ReturnedValue Runtime::closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    FunctionObject *f = FunctionObject::creatScriptFunction(ctx, clos);
+    FunctionObject *f = FunctionObject::createScriptFunction(ctx, clos);
     return f->asReturnedValue();
 }
 

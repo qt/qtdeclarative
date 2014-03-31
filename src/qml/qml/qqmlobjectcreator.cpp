@@ -819,7 +819,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
         QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
 
         QV4::Scope scope(_qmlContext);
-        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction, /*createProto*/ false));
+        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(_qmlContext, runtimeFunction, /*createProto*/ false));
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex);
@@ -997,7 +997,7 @@ void QQmlObjectCreator::setupFunctions()
         if (!property->isVMEFunction())
             continue;
 
-        function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
+        function = QV4::FunctionObject::createScriptFunction(_qmlContext, runtimeFunction);
         _vmeMetaObject->setVmeMethod(property->coreIndex, function);
     }
 }

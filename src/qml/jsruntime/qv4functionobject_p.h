@@ -135,7 +135,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return v.asFunctionObject();
     }
 
-    static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
     ReturnedValue protoProperty() { return memberData[Index_Prototype].asReturnedValue(); }
 

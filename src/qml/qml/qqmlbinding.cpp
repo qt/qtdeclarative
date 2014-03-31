@@ -92,7 +92,7 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt)
             QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject));
             QV4::ExecutionContext *qmlContext = wrapper->context();
             QV4::Function *runtimeFunction = cdata->compilationUnit->runtimeFunctions[cdata->customParserBindings[id]];
-            QV4::ScopedValue function(valueScope, QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction));
+            QV4::ScopedValue function(valueScope, QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction));
             rv = new QQmlBinding(function, obj, ctxtdata);
         }
 
