@@ -205,3 +205,20 @@ void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &
    o->setCustomBindingsCount(data.toInt(&ok));
    Q_ASSERT(ok);
 }
+
+
+MyQmlObject::MyQmlObject()
+    : m_value(-1)
+    , m_interface(0)
+    , m_qmlobject(0)
+    , m_childAddedEventCount(0)
+{
+    qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType");
+}
+
+bool MyQmlObject::event(QEvent *event)
+{
+    if (event->type() == QEvent::ChildAdded)
+        m_childAddedEventCount++;
+    return QObject::event(event);
+}

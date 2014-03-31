@@ -1073,9 +1073,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 return 0;
             }
         }
-        // ### use no-event variant
         if (parent)
-            instance->setParent(parent);
+            QQml_setParent_noEvent(instance, parent);
 
         ddata = QQmlData::get(instance, /*create*/true);
         ddata->lineNumber = obj->location.line;

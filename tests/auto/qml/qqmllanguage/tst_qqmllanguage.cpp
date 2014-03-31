@@ -236,6 +236,8 @@ private slots:
 
     void rootObjectInCreationNotForSubObjects();
 
+    void noChildEvents();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3675,6 +3677,16 @@ void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
     // This should never have been set in the first place as there is no
     // QQmlComponent to set it back to false.
     QVERIFY(!ddata->rootObjectInCreation);
+}
+
+void tst_qqmllanguage::noChildEvents()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0; import Test 1.0; MyQmlObject { property QtObject child: QtObject {} }", QUrl());
+    VERIFY_ERRORS(0);
+    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->childAddedEventCount(), 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

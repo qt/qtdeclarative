@@ -119,7 +119,7 @@ class MyQmlObject : public QObject, public MyInterface
 
     Q_INTERFACES(MyInterface)
 public:
-    MyQmlObject() : m_value(-1), m_interface(0), m_qmlobject(0) { qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType"); }
+    MyQmlObject();
 
     int value() const { return m_value; }
     void setValue(int v) { m_value = v; }
@@ -161,6 +161,8 @@ public:
     QJSValue qjsvalue() const { return m_qjsvalue; }
     void setQJSValue(const QJSValue &value) { m_qjsvalue = value; emit qjsvalueChanged(); }
 
+    int childAddedEventCount() const { return m_childAddedEventCount; }
+
 public slots:
     void basicSlot() { qWarning("MyQmlObject::basicSlot"); }
     void basicSlotWithArgs(int v) { qWarning("MyQmlObject::basicSlotWithArgs(%d)", v); }
@@ -173,6 +175,9 @@ signals:
     void signalWithDefaultArg(int parameter = 5);
     void qjsvalueChanged();
 
+protected:
+    virtual bool event(QEvent *event);
+
 private:
     friend class tst_qqmllanguage;
     int m_value;
@@ -181,6 +186,7 @@ private:
     MyCustomVariantType m_custom;
     int m_propertyWithNotify;
     QJSValue m_qjsvalue;
+    int m_childAddedEventCount;
 };
 QML_DECLARE_TYPE(MyQmlObject)
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
