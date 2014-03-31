@@ -153,7 +153,8 @@ void QQmlAnimationTimer::startAnimations()
 void QQmlAnimationTimer::stopTimer()
 {
     stopTimerPending = false;
-    if (animations.isEmpty() && !startAnimationPending) {
+    bool pendingStart = startAnimationPending && animationsToStart.size() > 0;
+    if (animations.isEmpty() && !pendingStart) {
         QUnifiedTimer::resumeAnimationTimer(this);
         QUnifiedTimer::stopAnimationTimer(this);
         // invalidate the start reference time
