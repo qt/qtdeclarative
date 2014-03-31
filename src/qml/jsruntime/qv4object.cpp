@@ -48,6 +48,7 @@
 #include "qv4mm_p.h"
 #include "qv4lookup_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4memberdata_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -71,26 +72,24 @@ DEFINE_OBJECT_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
-    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
 {
 }
 
 Object::Object(InternalClass *ic)
     : Managed(ic)
-    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
 {
     Q_ASSERT(internalClass->vtable && internalClass->vtable != &Managed::static_vtbl);
 
-    if (internalClass->size >= memberDataAlloc) {
-        memberDataAlloc = internalClass->size;
-        memberData = new Value[memberDataAlloc];
+    Q_ASSERT(!memberData.d());
+    if (internalClass->size) {
+        Scope scope(engine());
+        ScopedObject protectThis(scope, this);
+        memberData.ensureIndex(engine(), internalClass->size);
     }
 }
 
 Object::~Object()
 {
-    if (memberData != inlineProperties)
-        delete [] memberData;
     _data = 0;
 }
 
@@ -222,24 +221,14 @@ void Object::markObjects(Managed *that, ExecutionEngine *e)
 {
     Object *o = static_cast<Object *>(that);
 
-    for (uint i = 0; i < o->internalClass->size; ++i)
-        o->memberData[i].mark(e);
+    o->memberData.mark(e);
     if (o->arrayData)
         o->arrayData->mark(e);
 }
 
 void Object::ensureMemberIndex(uint idx)
 {
-    if (idx >= memberDataAlloc) {
-        int newAlloc = qMax((uint)8, 2*memberDataAlloc);
-        Value *newMemberData = new Value[newAlloc];
-        memcpy(newMemberData, memberData, sizeof(Value)*memberDataAlloc);
-        memset(newMemberData + memberDataAlloc, 0, sizeof(Value)*(newAlloc - memberDataAlloc));
-        memberDataAlloc = newAlloc;
-        if (memberData != inlineProperties)
-            delete [] memberData;
-        memberData = newMemberData;
-    }
+    memberData.ensureIndex(engine(), idx);
 }
 
 void Object::insertMember(const StringRef s, const Property &p, PropertyAttributes attributes)

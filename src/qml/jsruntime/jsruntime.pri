@@ -26,6 +26,7 @@ SOURCES += \
     $$PWD/qv4globalobject.cpp \
     $$PWD/qv4jsonobject.cpp \
     $$PWD/qv4mathobject.cpp \
+    $$PWD/qv4memberdata.cpp \
     $$PWD/qv4numberobject.cpp \
     $$PWD/qv4object.cpp \
     $$PWD/qv4objectproto.cpp \
@@ -73,6 +74,7 @@ HEADERS += \
     $$PWD/qv4globalobject_p.h \
     $$PWD/qv4jsonobject_p.h \
     $$PWD/qv4mathobject_p.h \
+    $$PWD/qv4memberdata_p.h \
     $$PWD/qv4numberobject_p.h \
     $$PWD/qv4object_p.h \
     $$PWD/qv4objectproto_p.h \

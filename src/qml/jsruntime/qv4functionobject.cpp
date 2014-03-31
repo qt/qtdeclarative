@@ -167,7 +167,8 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
 void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
-    o->scope->mark(e);
+    if (o->scope)
+        o->scope->mark(e);
 
     Object::markObjects(that, e);
 }

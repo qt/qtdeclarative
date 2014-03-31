@@ -229,6 +229,7 @@ public:
     InternalClass *strictArgumentsObjectClass;
 
     InternalClass *variantClass;
+    InternalClass *memberDataClass;
 
     EvalFunction *evalFunction;
     FunctionObject *thrower;

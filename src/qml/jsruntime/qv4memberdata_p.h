@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -38,71 +38,41 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4ARGUMENTSOBJECTS_H
-#define QV4ARGUMENTSOBJECTS_H
+#ifndef QV4MEMBERDATA_H
+#define QV4MEMBERDATA_H
 
-#include "qv4object_p.h"
-#include "qv4functionobject_p.h"
+#include "qv4global_p.h"
+#include "qv4managed_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct ArgumentsGetterFunction: FunctionObject
+struct MemberData : Managed
 {
-    V4_OBJECT
-    uint index;
+    V4_MANAGED
+    uint size;
+    Value data[1];
 
-    ArgumentsGetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
-        setVTable(staticVTable());
-    }
+    MemberData(QV4::InternalClass *ic) : Managed(ic) {}
+    Value &operator[] (uint idx) { return data[idx]; }
 
-    static ReturnedValue call(Managed *that, CallData *d);
-};
-
-struct ArgumentsSetterFunction: FunctionObject
-{
-    V4_OBJECT
-    uint index;
-
-    ArgumentsSetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
-        setVTable(staticVTable());
-    }
-
-    static ReturnedValue call(Managed *that, CallData *callData);
-};
-
-
-struct ArgumentsObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(ArgumentsObject)
-    CallContext *context;
-    bool fullyCreated;
-    Members mappedArguments;
-    ArgumentsObject(CallContext *context);
-    ~ArgumentsObject() {}
-
-    static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->internalClass->vtable->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context->strictMode;
-    }
-
-    enum {
-        LengthPropertyIndex = 0,
-        CalleePropertyIndex = 1,
-        CallerPropertyIndex = 3
-    };
-    bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static bool deleteIndexedProperty(Managed *m, uint index);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static void destroy(Managed *);
+};
 
-    void fullyCreate();
+struct Members : Value
+{
+    void ensureIndex(QV4::ExecutionEngine *e, uint idx);
+    Value &operator[] (uint idx) const { return static_cast<MemberData *>(managed())->data[idx]; }
+    inline uint size() const { return d() ? d()->size : 0; }
+    inline MemberData *d() const { return static_cast<MemberData *>(managed()); }
+    Value *data() const { return static_cast<MemberData *>(managed())->data; }
+
+    void mark(ExecutionEngine *e) const {
+        MemberData *m = d();
+        if (m)
+            m->mark(e);
+    }
 };
 
 }
@@ -110,4 +80,3 @@ struct ArgumentsObject: Object {
 QT_END_NAMESPACE
 
 #endif
-

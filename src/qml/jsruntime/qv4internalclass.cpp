@@ -160,10 +160,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
 
     if (newClass->size > object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size + 1);
-        memmove(object->memberData + idx + 2, object->memberData + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
+        memmove(object->memberData.data() + idx + 2, object->memberData.data() + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
     } else if (newClass->size < object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size - 1);
-        memmove(object->memberData + idx + 1, object->memberData + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
+        memmove(object->memberData.data() + idx + 1, object->memberData.data() + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
     }
     object->internalClass = newClass;
 }
@@ -368,7 +368,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     // remove the entry in memberdata
-    memmove(object->memberData + propIdx, object->memberData + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
+    memmove(object->memberData.data() + propIdx, object->memberData.data() + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
 
     oldClass->transitions.insert(t, object->internalClass);
 }

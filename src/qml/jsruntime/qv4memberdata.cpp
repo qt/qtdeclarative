@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -38,76 +38,49 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4ARGUMENTSOBJECTS_H
-#define QV4ARGUMENTSOBJECTS_H
 
-#include "qv4object_p.h"
-#include "qv4functionobject_p.h"
+#include "qv4memberdata_p.h"
+#include "qv4mm_p.h"
 
-QT_BEGIN_NAMESPACE
+using namespace QV4;
 
-namespace QV4 {
-
-struct ArgumentsGetterFunction: FunctionObject
+const ManagedVTable MemberData::static_vtbl =
 {
-    V4_OBJECT
-    uint index;
-
-    ArgumentsGetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
-        setVTable(staticVTable());
-    }
-
-    static ReturnedValue call(Managed *that, CallData *d);
+    MemberData::IsExecutionContext,
+    MemberData::IsString,
+    MemberData::IsObject,
+    MemberData::IsFunctionObject,
+    MemberData::IsErrorObject,
+    MemberData::IsArrayData,
+    0,
+    MemberData::MyType,
+    "MemberData",
+    destroy,
+    markObjects,
+    isEqualTo
 };
 
-struct ArgumentsSetterFunction: FunctionObject
+
+
+void MemberData::markObjects(Managed *that, ExecutionEngine *e)
 {
-    V4_OBJECT
-    uint index;
-
-    ArgumentsSetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
-        setVTable(staticVTable());
-    }
-
-    static ReturnedValue call(Managed *that, CallData *callData);
-};
-
-
-struct ArgumentsObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(ArgumentsObject)
-    CallContext *context;
-    bool fullyCreated;
-    Members mappedArguments;
-    ArgumentsObject(CallContext *context);
-    ~ArgumentsObject() {}
-
-    static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->internalClass->vtable->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context->strictMode;
-    }
-
-    enum {
-        LengthPropertyIndex = 0,
-        CalleePropertyIndex = 1,
-        CallerPropertyIndex = 3
-    };
-    bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static bool deleteIndexedProperty(Managed *m, uint index);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static void markObjects(Managed *that, ExecutionEngine *e);
-    static void destroy(Managed *);
-
-    void fullyCreate();
-};
-
+    MemberData *m = static_cast<MemberData *>(that);
+    for (uint i = 0; i < m->size; ++i)
+        m->data[i].mark(e);
 }
 
-QT_END_NAMESPACE
-
-#endif
-
+void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
+{
+    uint s = size();
+    if (idx >= s) {
+        int newAlloc = qMax((uint)4, 2*idx);
+        uint alloc = sizeof(MemberData) + (newAlloc)*sizeof(Value);
+        MemberData *newMemberData = reinterpret_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
+        if (d())
+            memcpy(newMemberData, d(), sizeof(MemberData) + s*sizeof(Value));
+        else
+            new (newMemberData) MemberData(e->memberDataClass);
+        newMemberData->size = newAlloc;
+        m = newMemberData;
+    }
+}

@@ -50,6 +50,7 @@
 #include "qv4property_p.h"
 #include "qv4internalclass_p.h"
 #include "qv4arraydata_p.h"
+#include "qv4memberdata_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -107,17 +108,11 @@ struct Q_QML_EXPORT Object: Managed {
     enum {
         IsObject = true
     };
-    uint memberDataAlloc;
-    Value *memberData;
+    Members memberData;
 
     ArrayData *arrayData;
 
-    enum {
-        InlinePropertySize = 4
-    };
-    Value inlineProperties[InlinePropertySize];
-
-    Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData + index); }
+    Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData.data() + index); }
 
     Object(ExecutionEngine *engine);
     Object(InternalClass *internalClass);
