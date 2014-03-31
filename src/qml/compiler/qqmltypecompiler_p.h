@@ -207,6 +207,18 @@ private:
     const QVector<QQmlPropertyCache *> propertyCaches;
 };
 
+class QQmlScriptStringScanner : public QQmlCompilePass
+{
+public:
+    QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler);
+
+    void scan();
+
+private:
+    const QList<QmlIR::Object*> &qmlObjects;
+    const QVector<QQmlPropertyCache *> propertyCaches;
+};
+
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
@@ -238,7 +250,7 @@ protected:
     QList<int> _objectsWithAliases;
 
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
-    const QVector<QQmlPropertyCache *> propertyCaches;
+    QVector<QQmlPropertyCache *> propertyCaches;
     QVector<QByteArray> *vmeMetaObjectData;
     QHash<int, int> *objectIndexToIdForRoot;
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;

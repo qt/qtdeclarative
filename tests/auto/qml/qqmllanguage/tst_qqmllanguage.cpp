@@ -1888,6 +1888,28 @@ void tst_qqmllanguage::scriptString()
         QVERIFY(object != 0);
         QCOMPARE(object->scriptProperty().isUndefinedLiteral(), true);
     }
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptString7.qml"));
+        VERIFY_ERRORS(0);
+
+        MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+        QVERIFY(object != 0);
+        QQmlScriptString ss = object->scriptProperty();
+
+        {
+            QQmlExpression expr(ss, /*context*/0, object);
+            QCOMPARE(expr.evaluate().toInt(), int(100));
+        }
+
+        {
+            SimpleObjectWithCustomParser testScope;
+            QVERIFY(testScope.metaObject()->indexOfProperty("intProperty") != object->metaObject()->indexOfProperty("intProperty"));
+
+            testScope.setIntProperty(42);
+            QQmlExpression expr(ss, /*context*/0, &testScope);
+            QCOMPARE(expr.evaluate().toInt(), int(42));
+        }
+    }
 }
 
 // Check that default property assignments are correctly spliced into explicit

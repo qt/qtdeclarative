@@ -77,7 +77,7 @@ public:
     ~QQmlExpressionPrivate();
 
     void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, const QString &, QObject *, const QString &, quint16, quint16);
+    void init(QQmlContextData *, QV4::Function *runtimeFunction, QObject *);
 
     QVariant value(bool *isUndefined = 0);
 

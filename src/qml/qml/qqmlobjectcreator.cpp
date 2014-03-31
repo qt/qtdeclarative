@@ -744,7 +744,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
     // ### resolve this at compile time
     if (property && property->propType == qMetaTypeId<QQmlScriptString>()) {
         QQmlScriptString ss(binding->valueAsScriptString(&qmlUnit->header), context->asQQmlContext(), _scopeObject);
-        ss.d.data()->bindingId = QQmlBinding::Invalid;
+        ss.d.data()->bindingId = binding->value.compiledScriptIndex;
         ss.d.data()->lineNumber = binding->location.line;
         ss.d.data()->columnNumber = binding->location.column;
         ss.d.data()->isStringLiteral = binding->type == QV4::CompiledData::Binding::Type_String;
@@ -1125,7 +1125,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (isComponent)
         return instance;
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(index);
     Q_ASSERT(!cache.isNull());
     if (installPropertyCache) {
         if (ddata->propertyCache)
@@ -1273,7 +1273,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObjectProtector(valueScope);
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(index);
 
     QQmlVMEMetaObject *vmeMetaObject = 0;
     const QByteArray data = vmeMetaObjectData.value(index);

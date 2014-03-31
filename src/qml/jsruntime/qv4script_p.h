@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlContextData;
+
 namespace QV4 {
 
 struct ExecutionContext;
@@ -64,6 +66,8 @@ struct QmlBindingWrapper : FunctionObject {
     static void markObjects(Managed *m, ExecutionEngine *e);
 
     CallContext *context() const { return qmlContext; }
+
+    static Returned<FunctionObject> *createQmlCallableForFunction(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction);
 
 private:
     Object *qml;

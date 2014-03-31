@@ -54,6 +54,7 @@
 #include <private/qqmlengine_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
+#include <qml/qqmlcontextwrapper_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
@@ -69,8 +70,9 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 
     setVTable(staticVTable());
     function = f;
-    function->compilationUnit->ref();
-    needsActivation = function->needsActivation();
+    if (function)
+        function->compilationUnit->ref();
+    needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -108,7 +110,8 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 
     Scope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
-    Q_ASSERT(This->function);
+    if (!This->function)
+        return QV4::Encode::undefined();
 
     CallContext *ctx = This->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
@@ -127,6 +130,15 @@ void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
     FunctionObject::markObjects(m, e);
     if (wrapper->qmlContext)
         wrapper->qmlContext->mark(e);
+}
+
+Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction)
+{
+    QV4::Scope valueScope(engine);
+    QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine->memoryManager) QV4::QmlBindingWrapper(engine->rootContext, qmlScopeObject));
+    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapper->context(), runtimeFunction));
+    return function->asReturned<FunctionObject>();
 }
 
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
