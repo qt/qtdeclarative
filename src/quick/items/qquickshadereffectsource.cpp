@@ -710,9 +710,15 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
         if (window())
             d->derefWindow();
     }
-    m_sourceItem = item;
 
-    if (item) {
+    if (window() == item->window()) {
+        m_sourceItem = item;
+    } else {
+        qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
+        m_sourceItem = 0;
+    }
+
+    if (m_sourceItem) {
         QQuickItemPrivate *d = QQuickItemPrivate::get(item);
         // 'item' needs a window to get a scene graph node. It usually gets one through its
         // parent, but if the source item is "inline" rather than a reference -- i.e.
