@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
     \li \c previousScale is the scale factor of the previous event.
     \endlist
 
-    When a pinch gesture is started, the scale is 1.0.
+    When a pinch gesture is started, the scale is \c 1.0.
 */
 
 /*!
@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
     \li \c rotation is the total rotation since the pinch gesture started.
     \endlist
 
-    When a pinch gesture is started, the rotation is 0.0.
+    When a pinch gesture is started, the rotation is \c 0.0.
 */
 
 /*!
@@ -192,10 +192,17 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 /*!
     \qmlsignal QtQuick::PinchArea::pinchStarted()
 
-    This signal is emitted when the pinch area detects that a pinch gesture has started.
+    This signal is emitted when the pinch area detects that a pinch gesture has
+    started: two touch points (fingers) have been detected, and they have moved
+    beyond the \l {QStyleHints}{startDragDistance} threshold for the gesture to begin.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    property) provides information about the pinch gesture, including the scale,
+    center and angle of the pinch. At the time of the \c pinchStarted signal,
+    these values are reset to the default values, regardless of the results
+    from previous gestures: pinch.scale will be \c 1.0 and pinch.rotation will be \c 0.0.
+    As the gesture progresses, \l pinchUpdated will report the deviation from those
+    defaults.
 
     To ignore this gesture set the \c pinch.accepted property to false.  The gesture
     will be canceled and no further events will be sent.
@@ -208,8 +215,11 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
     This signal is emitted when the pinch area detects that a pinch gesture has changed.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch
+    gesture, including the scale, center and angle of the pinch. These values
+    reflect changes only since the beginning of the current gesture, and
+    therefore are not limited by the minimum and maximum limits in the
+    \l {PinchArea}{pinch} property.
 
     The corresponding handler is \c onPinchUpdated.
 */
@@ -219,8 +229,9 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
     This signal is emitted when the pinch area detects that a pinch gesture has finished.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    property) provides information about the pinch gesture, including the
+    scale, center and angle of the pinch.
 
     The corresponding handler is \c onPinchFinished.
 */
@@ -245,8 +256,8 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \list
     \li \c pinch.target specifies the id of the item to drag.
     \li \c pinch.active specifies if the target item is currently being dragged.
-    \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
-    \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
+    \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item.scale property, but not the \c PinchEvent \l {PinchEvent}{scale} property.
+    \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item.rotation property, but not the \c PinchEvent \l {PinchEvent}{rotation} property.
     \li \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XAndYAxis)
     \li \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
