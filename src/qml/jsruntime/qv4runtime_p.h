@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -461,6 +461,24 @@ inline ReturnedValue Runtime::lessEqual(const ValueRef left, const ValueRef righ
     return Encode(r);
 }
 
+inline Bool Runtime::compareEqual(const ValueRef left, const ValueRef right)
+{
+    TRACE2(left, right);
+
+    if (left->rawValue() == right->rawValue())
+        // NaN != NaN
+        return !left->isNaN();
+
+    if (left->type() == right->type()) {
+        if (!left->isManaged())
+            return false;
+        if (left->isString() == right->isString())
+            return left->managed()->isEqualTo(right->managed());
+    }
+
+    return RuntimeHelpers::equalHelper(left, right);
+}
+
 inline ReturnedValue Runtime::equal(const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
@@ -491,24 +509,6 @@ inline ReturnedValue Runtime::strictNotEqual(const ValueRef left, const ValueRef
 
     bool r = ! RuntimeHelpers::strictEqual(left, right);
     return Encode(r);
-}
-
-inline Bool Runtime::compareEqual(const ValueRef left, const ValueRef right)
-{
-    TRACE2(left, right);
-
-    if (left->rawValue() == right->rawValue())
-        // NaN != NaN
-        return !left->isNaN();
-
-    if (left->type() == right->type()) {
-        if (!left->isManaged())
-            return false;
-        if (left->isString() == right->isString())
-            return left->managed()->isEqualTo(right->managed());
-    }
-
-    return RuntimeHelpers::equalHelper(left, right);
 }
 
 inline Bool Runtime::compareNotEqual(const ValueRef left, const ValueRef right)
