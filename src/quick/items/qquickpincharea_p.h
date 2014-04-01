@@ -289,6 +289,7 @@ protected:
 #endif
 
 private:
+    void clearPinch();
     void updatePinch();
     void handlePress();
     void handleRelease();

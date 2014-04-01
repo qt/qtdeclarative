@@ -303,7 +303,6 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
     // it's always going to accept the touches, and that means the item underneath
     // will not get them (unless the PA's parent is doing parent filtering,
     // as the Flickable does, for example).
-
     switch (event->type()) {
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
@@ -316,49 +315,54 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
         updatePinch();
         break;
     case QEvent::TouchEnd:
-        d->touchPoints.clear();
-        updatePinch();
+        clearPinch();
         break;
     default:
         QQuickItem::event(event);
     }
 }
 
+void QQuickPinchArea::clearPinch()
+{
+    Q_D(QQuickPinchArea);
+
+    d->touchPoints.clear();
+    if (d->inPinch) {
+        d->inPinch = false;
+        QPointF pinchCenter = mapFromScene(d->sceneLastCenter);
+        QQuickPinchEvent pe(pinchCenter, d->pinchLastScale, d->pinchLastAngle, d->pinchRotation);
+        pe.setStartCenter(d->pinchStartCenter);
+        pe.setPreviousCenter(pinchCenter);
+        pe.setPreviousAngle(d->pinchLastAngle);
+        pe.setPreviousScale(d->pinchLastScale);
+        pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
+        pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
+        pe.setPoint1(mapFromScene(d->lastPoint1));
+        pe.setPoint2(mapFromScene(d->lastPoint2));
+        emit pinchFinished(&pe);
+        if (d->pinch && d->pinch->target())
+            d->pinch->setActive(false);
+    }
+    d->pinchStartDist = 0;
+    d->pinchActivated = false;
+    d->initPinch = false;
+    d->pinchRejected = false;
+    d->stealMouse = false;
+    d->id1 = -1;
+    QQuickWindow *win = window();
+    if (win && win->mouseGrabberItem() == this)
+        ungrabMouse();
+    setKeepMouseGrab(false);
+}
+
 void QQuickPinchArea::updatePinch()
 {
     Q_D(QQuickPinchArea);
-    if (d->touchPoints.count() == 0) {
-        if (d->inPinch) {
-            d->inPinch = false;
-            QPointF pinchCenter = mapFromScene(d->sceneLastCenter);
-            QQuickPinchEvent pe(pinchCenter, d->pinchLastScale, d->pinchLastAngle, d->pinchRotation);
-            pe.setStartCenter(d->pinchStartCenter);
-            pe.setPreviousCenter(pinchCenter);
-            pe.setPreviousAngle(d->pinchLastAngle);
-            pe.setPreviousScale(d->pinchLastScale);
-            pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
-            pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
-            pe.setPoint1(mapFromScene(d->lastPoint1));
-            pe.setPoint2(mapFromScene(d->lastPoint2));
-            emit pinchFinished(&pe);
-            d->pinchStartDist = 0;
-            d->pinchActivated = false;
-            if (d->pinch && d->pinch->target())
-                d->pinch->setActive(false);
-        }
-        d->initPinch = false;
-        d->pinchRejected = false;
-        d->stealMouse = false;
-        setKeepMouseGrab(false);
-        return;
-    }
 
-    if (d->touchPoints.count() == 1) {
-        setKeepMouseGrab(false);
-    }
-
+    QQuickWindow *win = window();
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
     QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
+
     QRectF bounds = clipRect();
     // Pinch is not started unless there are exactly two touch points
     // AND one or more of the points has just now been pressed (wasn't pressed already)
@@ -371,6 +375,13 @@ void QQuickPinchArea::updatePinch()
         d->sceneStartPoint2 = touchPoint2.scenePos();
         d->pinchActivated = true;
         d->initPinch = true;
+
+        int touchMouseId = QQuickWindowPrivate::get(win)->touchMouseId;
+        if (touchPoint1.id() == touchMouseId || touchPoint2.id() == touchMouseId) {
+            if (win && win->mouseGrabberItem() != this) {
+                grabMouse();
+            }
+        }
     }
     if (d->pinchActivated && !d->pinchRejected) {
         const int dragThreshold = qApp->styleHints()->startDragDistance();
@@ -421,12 +432,12 @@ void QQuickPinchArea::updatePinch()
                 pe.setPointCount(d->touchPoints.count());
                 emit pinchStarted(&pe);
                 if (pe.accepted()) {
-                    d->inPinch = true;
-                    d->stealMouse = true;
-                    QQuickWindow *c = window();
-                    if (c && c->mouseGrabberItem() != this)
+                    if (win && win->mouseGrabberItem() != this)
                         grabMouse();
                     setKeepMouseGrab(true);
+                    grabTouchPoints(QVector<int>() << touchPoint1.id() << touchPoint2.id());
+                    d->inPinch = true;
+                    d->stealMouse = true;
                     if (d->pinch && d->pinch->target()) {
                         d->pinchStartPos = pinch()->target()->position();
                         d->pinchStartScale = d->pinch->target()->scale();
@@ -501,22 +512,19 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::TouchBegin:
+        clearPinch(); // fall through
     case QEvent::TouchUpdate: {
-            QTouchEvent *touch = static_cast<QTouchEvent*>(e);
-            if (touch->touchPoints().count() > 1) {
-                touchEvent(touch);
-            } else {
-                d->touchPoints.clear();
-                for (int i = 0; i < touch->touchPoints().count(); ++i)
-                    if (!(touch->touchPoints().at(i).state() & Qt::TouchPointReleased))
-                        d->touchPoints << touch->touchPoints().at(i);
-                updatePinch();
-            }
+             QTouchEvent *touch = static_cast<QTouchEvent*>(e);
+            d->touchPoints.clear();
+            for (int i = 0; i < touch->touchPoints().count(); ++i)
+                if (!(touch->touchPoints().at(i).state() & Qt::TouchPointReleased))
+                    d->touchPoints << touch->touchPoints().at(i);
+            updatePinch();
         }
+        e->setAccepted(d->inPinch);
         return d->inPinch;
     case QEvent::TouchEnd:
-        d->touchPoints.clear();
-        updatePinch();
+        clearPinch();
         break;
     default:
         break;
