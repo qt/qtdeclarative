@@ -167,6 +167,11 @@ bool QQmlTypeCompiler::compile()
     }
 
     {
+        QQmlCustomParserScriptIndexer cpi(this);
+        cpi.annotateBindingsWithScriptStrings();
+    }
+
+    {
         QQmlAliasAnnotator annotator(this);
         annotator.annotateBindingsToAliases();
     }
@@ -401,6 +406,11 @@ void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
 void QQmlTypeCompiler::setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject)
 {
     compiledData->deferredBindingsPerObject = deferredBindingsPerObject;
+}
+
+QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scriptIndex) const
+{
+    return object->bindingAsString(document, scriptIndex);
 }
 
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
@@ -1144,8 +1154,8 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         COMPILE_EXCEPTION(binding, tr("Invalid property assignment: \"%1\" is a read-only property").arg(stringAt(binding->propertyNameIndex)));
 
     Q_ASSERT(binding->type = QV4::CompiledData::Binding::Type_Script);
-    QString string = stringAt(binding->stringIndex);
-    if (!string.at(0).isUpper())
+    const QString string = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
+    if (!string.constData()->isUpper())
         return true;
 
     int dot = string.indexOf(QLatin1Char('.'));
@@ -1234,6 +1244,35 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QByteArray &e
     return -1;
 }
 
+QQmlCustomParserScriptIndexer::QQmlCustomParserScriptIndexer(QQmlTypeCompiler *typeCompiler)
+    : QQmlCompilePass(typeCompiler)
+    , qmlObjects(*typeCompiler->qmlObjects())
+    , customParsers(typeCompiler->customParserCache())
+{
+}
+
+void QQmlCustomParserScriptIndexer::annotateBindingsWithScriptStrings()
+{
+    scanObjectRecursively(compiler->rootObjectIndex());
+}
+
+void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool annotateScriptBindings)
+{
+    const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
+    if (!annotateScriptBindings)
+        annotateScriptBindings = customParsers.contains(obj->inheritedTypeNameIndex);
+    for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            scanObjectRecursively(binding->value.objectIndex, annotateScriptBindings);
+            continue;
+        } else if (binding->type != QV4::CompiledData::Binding::Type_Script)
+            continue;
+        if (!annotateScriptBindings)
+            continue;
+        const QString script = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
+        binding->stringIndex = compiler->registerString(script);
+    }
+}
 
 QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
@@ -1297,6 +1336,9 @@ void QQmlScriptStringScanner::scan()
             QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
             if (foe)
                 foe->disableAcceleratedLookups = true;
+
+            QString script = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
+            binding->stringIndex = compiler->registerString(script);
         }
     }
 }
@@ -1700,6 +1742,17 @@ QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::Comp
     const int id = customParserBindings.count();
     customParserBindings.append(binding->value.compiledScriptIndex);
     return id;
+}
+
+QString QQmlPropertyValidator::bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const
+{
+    const QmlIR::Object *object = compiler->qmlObjects()->value(objectIndex);
+    if (!object)
+        return QString();
+    int reverseIndex = object->runtimeFunctionIndices->indexOf(binding->value.compiledScriptIndex);
+    if (reverseIndex == -1)
+        return QString();
+    return compiler->bindingAsString(object, reverseIndex);
 }
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;

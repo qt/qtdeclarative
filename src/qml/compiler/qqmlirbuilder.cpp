@@ -188,6 +188,17 @@ void Object::insertSorted(Binding *b)
     bindings->insertAfter(insertionPoint, b);
 }
 
+QString Object::bindingAsString(Document *doc, int scriptIndex) const
+{
+    CompiledFunctionOrExpression *foe = functionsAndExpressions->slowAt(scriptIndex);
+    QQmlJS::AST::Node *node = foe->node;
+    if (QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(node))
+        node = exprStmt->expression;
+    QQmlJS::AST::SourceLocation start = node->firstSourceLocation();
+    QQmlJS::AST::SourceLocation end = node->lastSourceLocation();
+    return doc->code.mid(start.offset, end.offset + end.length - start.offset);
+}
+
 QStringList Signal::parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const
 {
     QStringList result;
@@ -1252,11 +1263,9 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         expr->disableAcceleratedLookups = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
-
-        QQmlJS::AST::Node *nodeForString = statement;
-        if (exprStmt)
-            nodeForString = exprStmt->expression;
-        binding->stringIndex = registerString(asStringRef(nodeForString).toString());
+        // We don't need to store the binding script as string, except for script strings
+        // and types with custom parsers. Those will be added later in the compilation phase.
+        binding->stringIndex = emptyStringIndex;
     }
 }
 

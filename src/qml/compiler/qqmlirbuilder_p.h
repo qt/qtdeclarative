@@ -283,6 +283,7 @@ public:
     Binding *findBinding(quint32 nameIndex) const;
     Binding *unlinkBinding(Binding *before, Binding *binding) { return bindings->unlink(before, binding); }
     void insertSorted(Binding *b);
+    QString bindingAsString(Document *doc, int scriptIndex) const;
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
     FixedPoolArray<int> *runtimeFunctionIndices;

@@ -105,6 +105,8 @@ public:
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
 
+    QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
+
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
@@ -195,6 +197,20 @@ private:
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
 };
 
+class QQmlCustomParserScriptIndexer: public QQmlCompilePass
+{
+public:
+    QQmlCustomParserScriptIndexer(QQmlTypeCompiler *typeCompiler);
+
+    void annotateBindingsWithScriptStrings();
+
+private:
+    void scanObjectRecursively(int objectIndex, bool annotateScriptBindings = false);
+
+    const QList<QmlIR::Object*> &qmlObjects;
+    const QHash<int, QQmlCustomParser*> &customParsers;
+};
+
 // Annotate properties bound to aliases with a flag
 class QQmlAliasAnnotator : public QQmlCompilePass
 {
@@ -267,6 +283,7 @@ public:
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
     virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
+    virtual QString bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const;
 
 private:
     bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false);
