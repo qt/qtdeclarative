@@ -73,6 +73,8 @@ private slots:
     void activeFocusOnTab6();
     void activeFocusOnTab7();
     void activeFocusOnTab8();
+    void activeFocusOnTab9();
+    void activeFocusOnTab10();
 
     void nextItemInFocusChain();
     void nextItemInFocusChain2();
@@ -834,6 +836,140 @@ void tst_QQuickItem::activeFocusOnTab8()
 
     QVERIFY(button1->hasActiveFocus());
     QVERIFY(!button2->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab9()
+{
+    if (qt_tab_all_widgets())
+        QSKIP("This function doesn't support iterating all.");
+
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300,300));
+
+    window->setSource(testFileUrl("activeFocusOnTab9.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QVERIFY(content->hasActiveFocus());
+
+    QQuickItem *textinput1 = findItem<QQuickItem>(window->rootObject(), "textinput1");
+    QVERIFY(textinput1);
+    QQuickItem *textedit1 = findItem<QQuickItem>(window->rootObject(), "textedit1");
+    QVERIFY(textedit1);
+
+    QVERIFY(!textinput1->hasActiveFocus());
+    textinput1->forceActiveFocus();
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // Tab: textinput1->textedit1
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // BackTab: textinput1->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab10()
+{
+    if (!qt_tab_all_widgets())
+        QSKIP("This function doesn't support NOT iterating all.");
+
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300,300));
+
+    window->setSource(testFileUrl("activeFocusOnTab9.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QVERIFY(content->hasActiveFocus());
+
+    QQuickItem *textinput1 = findItem<QQuickItem>(window->rootObject(), "textinput1");
+    QVERIFY(textinput1);
+    QQuickItem *textedit1 = findItem<QQuickItem>(window->rootObject(), "textedit1");
+    QVERIFY(textedit1);
+    QQuickItem *textinput2 = findItem<QQuickItem>(window->rootObject(), "textinput2");
+    QVERIFY(textinput2);
+    QQuickItem *textedit2 = findItem<QQuickItem>(window->rootObject(), "textedit2");
+    QVERIFY(textedit2);
+
+    QVERIFY(!textinput1->hasActiveFocus());
+    textinput1->forceActiveFocus();
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // Tab: textinput1->textinput2
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
+
+    // Tab: textinput2->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
+
+    // BackTab: textinput2->textinput1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // BackTab: textinput1->textedit2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit2->hasActiveFocus());
+
+    // BackTab: textedit2->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
 
     delete window;
 }
