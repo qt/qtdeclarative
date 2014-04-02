@@ -3347,9 +3347,9 @@ void tst_QQuickListView::modelChanges()
 void tst_QQuickListView::QTBUG_9791()
 {
     QQuickView *window = createView();
-
     window->setSource(testFileUrl("strictlyenforcerange.qml"));
-    qApp->processEvents();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
     QTRY_VERIFY(listview != 0);
@@ -7047,9 +7047,7 @@ void tst_QQuickListView::outsideViewportChangeNotAffectingView()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    flick(window, QPoint(20, 200), QPoint(20, 20), 10);
-
-    QTRY_COMPARE(listview->isFlicking(), false);
+    listview->setContentY(1250);
 
     QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
     QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
@@ -7147,12 +7145,12 @@ void tst_QQuickListView::displayMargin()
 
 void tst_QQuickListView::highlightItemGeometryChanges()
 {
-    QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("HighlightResize.qml"));
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("HighlightResize.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    QScopedPointer<QObject> object(component.create());
-
-    QQuickListView *listview = qobject_cast<QQuickListView *>(object.data());
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
     QVERIFY(listview);
 
     QCOMPARE(listview->count(), 5);
