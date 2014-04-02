@@ -1136,7 +1136,7 @@ static void incrementIndexes(QQmlDelegateModelItem *cacheItem, int count, const 
             incubationTask->index[i] += deltas[i];
     }
     if (QQmlDelegateModelAttached *attached = cacheItem->attached) {
-        for (int i = 1; i < count; ++i)
+        for (int i = 1; i < qMin<int>(count, Compositor::MaximumGroupCount); ++i)
             attached->m_currentIndex[i] += deltas[i];
     }
 }
@@ -2005,7 +2005,7 @@ QQmlDelegateModelAttached::QQmlDelegateModelAttached(
 {
     QQml_setParent_noEvent(this, parent);
     if (QQDMIncubationTask *incubationTask = m_cacheItem->incubationTask) {
-        for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
+        for (int i = 1; i < qMin<int>(m_cacheItem->metaType->groupCount, Compositor::MaximumGroupCount); ++i)
             m_currentIndex[i] = m_previousIndex[i] = incubationTask->index[i];
     } else {
         QQmlDelegateModelPrivate * const model = QQmlDelegateModelPrivate::get(m_cacheItem->metaType->model);
