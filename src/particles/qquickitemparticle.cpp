@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
-    QQuickParticlePainter(parent), m_fade(true), m_delegate(0)
+    QQuickParticlePainter(parent), m_fade(true), m_lastT(0), m_activeCount(0), m_delegate(0)
 {
     setFlag(QQuickItem::ItemHasContents);
     clock = new Clock(this);
