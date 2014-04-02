@@ -55,6 +55,7 @@
 
 #include <private/qv4function_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qfinitestack_p.h>
 #include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
 
@@ -142,6 +143,11 @@ public:
                                        location.sourceFile, location.line, location.column));
     }
 
+    void startCreating()
+    {
+        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeStart, 1 << Creating));
+    }
+
     void startCreating(const QString &typeName, const QUrl &fileName, int line, int column)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
@@ -149,16 +155,11 @@ public:
                                        1 << Creating, typeName, fileName, line, column));
     }
 
-    void startCreating(const QString &typeName)
+    void updateCreating(const QString &typeName, const QUrl &fileName, int line, int column)
     {
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), (1 << RangeStart | 1 << RangeData),
-                                       1 << Creating, typeName));
-    }
-
-    void creatingLocation(const QUrl &fileName, int line, int column)
-    {
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeLocation, 1 << Creating,
-                                       fileName, line, column));
+        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
+                                       (1 << RangeLocation | 1 << RangeData),
+                                       1 << Creating, typeName, fileName, line, column));
     }
 
     template<RangeType Range>
@@ -246,108 +247,91 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
     }
 };
 
-#define Q_QML_VME_PROFILE(profilerMember, Method) Q_QML_PROFILE_IF_ENABLED(profilerMember.profiler, profilerMember.Method)
-
 struct QQmlVmeProfiler : public QQmlProfilerDefinitions {
 public:
 
     struct Data {
-        Data() : line(0), column(0) {}
-        QUrl url;
-        int line;
-        int column;
-        QString typeName;
+        Data() : m_line(0), m_column(0) {}
+        QUrl m_url;
+        int m_line;
+        int m_column;
+        QString m_typeName;
     };
 
-    QQmlVmeProfiler() : profiler(0), running(false) {}
+    QQmlVmeProfiler() : profiler(0) {}
 
-    void clear(bool stopProfiling = false)
+    void init(QQmlProfiler *p, int maxDepth)
     {
-        ranges.clear();
-        if (running)
-            profiler->endRange<Creating>();
-        for (int i = 0; i < backgroundRanges.count(); ++i) {
-            profiler->endRange<Creating>();
-        }
-        backgroundRanges.clear();
-        running = false;
-        if (stopProfiling) profiler = 0;
+        profiler = p;
+        ranges.allocate(maxDepth);
     }
 
-    void startBackground(const QString &typeName)
+    Data pop()
     {
-        if (running) {
-            profiler->endRange<Creating>();
-            running = false;
-        }
-        profiler->startCreating(typeName);
-        backgroundRanges.push(typeName);
+        if (ranges.count() > 0)
+            return ranges.pop();
+        else
+            return Data();
     }
 
-    void start(const QString &typeName, const QUrl &url, int line, int column)
+    void push(const Data &data)
     {
-        switchRange();
-        setCurrentRange(typeName, url, line, column);
-        profiler->startCreating(typeName, url, line, column);
-    }
-
-    void stop()
-    {
-        if (running) {
-            profiler->endRange<Creating>();
-            running = false;
-        }
-    }
-
-    void pop()
-    {
-        if (ranges.count() > 0) {
-            switchRange();
-            currentRange = ranges.pop();
-            profiler->startCreating(currentRange.typeName, currentRange.url,
-                                                         currentRange.line, currentRange.column);
-        }
-    }
-
-    void push()
-    {
-        if (running)
-            ranges.push(currentRange);
-    }
-
-    void foreground(const QUrl &url, int line, int column)
-    {
-        if (backgroundRanges.count() > 0) {
-            switchRange();
-            setCurrentRange(backgroundRanges.pop(), url, line, column);
-            profiler->creatingLocation(url, line, column);
-        }
+        if (ranges.capacity() > ranges.count())
+            ranges.push(data);
     }
 
     QQmlProfiler *profiler;
 
 private:
+    QFiniteStack<Data> ranges;
+};
 
-    void switchRange()
+#define Q_QML_OC_PROFILE(profilerMember, Code)\
+    Q_QML_PROFILE_IF_ENABLED(profilerMember.profiler, Code)
+
+class QQmlObjectCreationProfiler : public QQmlVmeProfiler::Data {
+public:
+
+    QQmlObjectCreationProfiler(QQmlProfiler *profiler) : profiler(profiler)
     {
-        if (running)
-            profiler->endRange<Creating>();
-        else
-            running = true;
+        Q_QML_PROFILE(profiler, startCreating());
     }
 
-    void setCurrentRange(const QString &typeName, const QUrl &url, int line, int column)
+    ~QQmlObjectCreationProfiler()
     {
-        currentRange.typeName = typeName;
-        currentRange.url = url;
-        currentRange.line = line;
-        currentRange.column = column;
+        Q_QML_PROFILE(profiler, endRange<QQmlProfilerDefinitions::Creating>());
     }
 
-    Data currentRange;
-    QStack<Data> ranges;
-    QStack<QString> backgroundRanges;
-    bool running;
+    void update(const QString &typeName, const QUrl &url, int line, int column)
+    {
+        profiler->updateCreating(typeName, url, line, column);
+        m_typeName = typeName;
+        m_url = url;
+        m_line = line;
+        m_column = column;
+    }
+
+private:
+    QQmlProfiler *profiler;
+};
+
+class QQmlObjectCompletionProfiler {
+public:
+    QQmlObjectCompletionProfiler(QQmlVmeProfiler *parent) :
+        profiler(parent->profiler)
+    {
+        Q_QML_PROFILE_IF_ENABLED(profiler, {
+            QQmlVmeProfiler::Data data = parent->pop();
+            profiler->startCreating(data.m_typeName, data.m_url, data.m_line, data.m_column);
+        });
+    }
+
+    ~QQmlObjectCompletionProfiler()
+    {
+        Q_QML_PROFILE(profiler, endRange<QQmlProfilerDefinitions::Creating>());
+    }
+private:
+    QQmlProfiler *profiler;
 };
 
 QT_END_NAMESPACE

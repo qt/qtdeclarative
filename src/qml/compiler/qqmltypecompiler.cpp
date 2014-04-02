@@ -1408,6 +1408,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
         syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
+        syntheticComponent->location = binding->valueLocation;
 
         if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
             QQmlCompiledData::TypeReference *typeRef = new QQmlCompiledData::TypeReference;
