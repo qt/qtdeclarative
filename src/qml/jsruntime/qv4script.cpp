@@ -54,7 +54,7 @@
 #include <private/qqmlengine_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
-#include <qml/qqmlcontextwrapper_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
