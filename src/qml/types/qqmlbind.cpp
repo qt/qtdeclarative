@@ -113,12 +113,12 @@ public:
     of the binding is undefined when the mouse isn't pressed. We can use the Binding
     type to rewrite the above code and avoid the warning.
 
-    \qml
+    \code
     Binding on value {
         when: mouse.pressed
         value: mouse.mouseX
     }
-    \endqml
+    \endcode
 
     The Binding type will also restore any previously set direct bindings on
     the property. In that sense, it functions much like a simplified State.

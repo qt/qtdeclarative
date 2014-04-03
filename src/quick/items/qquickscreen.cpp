@@ -108,9 +108,9 @@ QT_BEGIN_NAMESPACE
     such as task bars and system menus. If you want to position a Window at
     the right of the desktop, you can bind to it like this:
 
-    \qml
+    \code
     x: Screen.desktopAvailableWidth - width
-    \endqml
+    \endcode
 */
 /*!
     \qmlattachedproperty int Screen::desktopAvailableHeight
@@ -122,9 +122,9 @@ QT_BEGIN_NAMESPACE
     such as task bars and system menus. If you want to position a Window at
     the bottom of the desktop, you can bind to it like this:
 
-    \qml
+    \code
     y: Screen.desktopAvailableHeight - height
-    \endqml
+    \endcode
 */
 /*!
     \qmlattachedproperty real Screen::logicalPixelDensity

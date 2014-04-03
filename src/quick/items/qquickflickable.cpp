@@ -1737,9 +1737,9 @@ void QQuickFlickable::setRebound(QQuickTransition *transition)
     and \l {Item::childrenRect.height}{childrenRect.height} properties
     of the \l contentItem. For example, the previous snippet could be rewritten with:
 
-    \qml
+    \code
     contentWidth: contentItem.childrenRect.width; contentHeight: contentItem.childrenRect.height
-    \endqml
+    \endcode
 
     Though this assumes that the origin of the childrenRect is 0,0.
 */
