@@ -2653,12 +2653,13 @@ void QQmlJavaScriptBindingExpressionSimplificationPass::visitFunctionCall(const 
                 return;
             }
             slot = param->index;
+            _functionParameters.append(slot);
         } else if (QV4::IR::Const *param = args->expr->asConst()) {
             slot = --_synthesizedConsts;
             Q_ASSERT(!_temps.contains(slot));
             _temps[slot] = param;
+            _functionParameters.append(slot);
         }
-        _functionParameters.append(slot);
         args = args->next;
     }
 
