@@ -3,6 +3,7 @@ TARGET = tst_qquickwindow
 SOURCES += tst_qquickwindow.cpp
 
 include (../../shared/util.pri)
+include(../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

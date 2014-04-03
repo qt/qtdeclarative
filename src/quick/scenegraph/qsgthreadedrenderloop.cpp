@@ -51,6 +51,8 @@
 #include <QtGui/QScreen>
 #include <QtGui/QOffscreenSurface>
 
+#include <qpa/qwindowsysteminterface.h>
+
 #include <QtQuick/QQuickWindow>
 #include <private/qquickwindow_p.h>
 
@@ -1063,8 +1065,28 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 {
     QSG_GUI_DEBUG(w->window, "polishAndSync()");
 
-    if (!w->window->isExposed() || !w->window->isVisible() || w->window->size().isEmpty()) {
+    QQuickWindow *window = w->window;
+    if (!window->isExposed() || !window->isVisible() || window->size().isEmpty()) {
         QSG_GUI_DEBUG(w->window, " - not exposed, aborting...");
+        killTimer(w->timerId);
+        w->timerId = 0;
+        return;
+    }
+
+    // Flush pending touch events.
+    // First we force flushing of the windowing system events, so that we're
+    // working with the latest possible data. This can trigger event processing
+    // which in turn can stop rendering this window, so verify that before
+    // proceeding. Then we flush the touch event and as that also does event
+    // processing, verify again that we still are active and rendering.
+    QWindowSystemInterface::flushWindowSystemEvents();
+    w = windowFor(m_windows, window);
+    if (w) {
+        QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
+        w = windowFor(m_windows, window);
+    }
+    if (!w) {
+        QSG_GUI_DEBUG(w->window, " - removed after event flushing..");
         killTimer(w->timerId);
         w->timerId = 0;
         return;
@@ -1081,7 +1103,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
         timer.start();
 #endif
 
-    QQuickWindowPrivate *d = QQuickWindowPrivate::get(w->window);
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
     d->polishItems();
 
 #ifndef QSG_NO_RENDER_TIMING
@@ -1091,14 +1113,14 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     w->updateDuringSync = false;
 
-    emit w->window->afterAnimating();
+    emit window->afterAnimating();
 
-    QSG_GUI_DEBUG(w->window, " - lock for sync...");
+    QSG_GUI_DEBUG(window, " - lock for sync...");
     w->thread->mutex.lock();
     m_lockedForSync = true;
-    w->thread->postEvent(new WMSyncEvent(w->window, inExpose));
+    w->thread->postEvent(new WMSyncEvent(window, inExpose));
 
-    QSG_GUI_DEBUG(w->window, " - wait for sync...");
+    QSG_GUI_DEBUG(window, " - wait for sync...");
 #ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
         waitTime = timer.nsecsElapsed();
@@ -1106,7 +1128,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     w->thread->waitCondition.wait(&w->thread->mutex);
     m_lockedForSync = false;
     w->thread->mutex.unlock();
-    QSG_GUI_DEBUG(w->window, " - unlocked after sync...");
+    QSG_GUI_DEBUG(window, " - unlocked after sync...");
 
 #ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
@@ -1117,9 +1139,9 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     w->timerId = 0;
 
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
-        QSG_GUI_DEBUG(w->window, " - animations advancing");
+        QSG_GUI_DEBUG(window, " - animations advancing");
         m_animation_driver->advance();
-        QSG_GUI_DEBUG(w->window, " - animations done");
+        QSG_GUI_DEBUG(window, " - animations done");
         // We need to trigger another sync to keep animations running...
         maybePostPolishRequest(w);
         emit timeToIncubate();
@@ -1131,7 +1153,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         qDebug(" - Gui Thread: window=%p, polish=%d, lock=%d, block/sync=%d -- animations=%d",
-               w->window,
+               window,
                int(polishTime/1000000),
                int((waitTime - polishTime)/1000000),
                int((syncTime - waitTime)/1000000),
@@ -1143,6 +1165,17 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
             syncTime - waitTime,
             timer.nsecsElapsed() - syncTime));
 #endif
+}
+
+QSGThreadedRenderLoop::Window *QSGThreadedRenderLoop::windowForTimer(int timerId) const
+{
+    for (int i=0; i<m_windows.size(); ++i) {
+        if (m_windows.at(i).timerId == timerId) {
+            return const_cast<Window *>(&m_windows.at(i));
+            break;
+        }
+    }
+    return 0;
 }
 
 bool QSGThreadedRenderLoop::event(QEvent *e)
@@ -1157,13 +1190,7 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
             emit timeToIncubate();
         } else {
             QSG_GUI_DEBUG((void *) 0, "QEvent::Timer -> Polish & Sync");
-            Window *w = 0;
-            for (int i=0; i<m_windows.size(); ++i) {
-                if (m_windows.at(i).timerId == te->timerId()) {
-                    w = const_cast<Window *>(&m_windows.at(i));
-                    break;
-                }
-            }
+            Window *w = windowForTimer(te->timerId());
             if (w)
                 polishAndSync(w);
         }

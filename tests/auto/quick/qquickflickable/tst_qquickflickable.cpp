@@ -100,7 +100,7 @@ private slots:
     void pressDelayWithLoader();
 
 private:
-    void flickWithTouch(QWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
+    void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
     QQmlEngine engine;
 };
 
@@ -1349,20 +1349,18 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QTRY_VERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
 }
 
-void tst_qquickflickable::flickWithTouch(QWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
+void tst_qquickflickable::flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
 {
-    QTest::touchEvent(window, touchDevice)
-        .press(0, from, window);
-    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice).press(0, from, window);
+    QQuickTouchUtils::flush(window);
+
     QPoint diff = to - from;
     for (int i = 1; i <= 8; ++i) {
-        QTest::touchEvent(window, touchDevice)
-            .move(0, from + i*diff/8, window);
-        QTest::qWait(1);
+        QTest::touchEvent(window, touchDevice).move(0, from + i*diff/8, window);
+        QQuickTouchUtils::flush(window);
     }
-    QTest::touchEvent(window, touchDevice)
-        .release(0, to, window);
-    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice).release(0, to, window);
+    QQuickTouchUtils::flush(window);
 }
 
 void tst_qquickflickable::nestedStopAtBounds_data()

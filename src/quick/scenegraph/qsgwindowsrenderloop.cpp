@@ -442,6 +442,11 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     if (!m_gl->makeCurrent(window))
         return;
 
+    d->flushDelayedTouchEvent();
+    // Event delivery or processing has caused the window to stop rendering.
+    if (!windowData(window))
+        return;
+
     QSG_RENDER_TIMING_SAMPLE(time_start);
 
     RLDEBUG(" - polishing");

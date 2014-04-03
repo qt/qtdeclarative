@@ -47,6 +47,9 @@
 
 #include <QtTest/QTest>
 
+#include <private/qquickwindow_p.h>
+
+
 QQuickView *QQuickViewTestUtil::createView()
 {
     QQuickView *window = new QQuickView(0);
@@ -341,3 +344,23 @@ QList<QPair<QString,QString> > QQuickViewTestUtil::ListRange::getModelDataValues
     return data;
 }
 
+namespace QQuickTouchUtils {
+
+    /* QQuickWindow does event compression and only delivers events just
+     * before it is about to render the next frame. Since some tests
+     * rely on events being delivered immediately AND that no other
+     * event processing has occurred in the meanwhile, we flush the
+     * event manually and immediately.
+     */
+    void flush(QQuickWindow *window) {
+        if (!window)
+            return;
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        if (!wd || !wd->delayedTouch)
+            return;
+        wd->reallyDeliverTouchEvent(wd->delayedTouch);
+        delete wd->delayedTouch;
+        wd->delayedTouch = 0;
+    }
+
+}

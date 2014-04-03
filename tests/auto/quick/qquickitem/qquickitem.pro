@@ -3,6 +3,7 @@ TARGET = tst_qquickitem
 SOURCES += tst_qquickitem.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

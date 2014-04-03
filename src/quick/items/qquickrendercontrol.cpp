@@ -140,6 +140,9 @@ void QQuickRenderControl::polishItems()
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+    cd->flushDelayedTouchEvent();
+    if (!d->window)
+        return;
     cd->polishItems();
 }
 

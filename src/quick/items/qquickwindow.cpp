@@ -400,6 +400,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderer(0)
     , windowManager(0)
     , renderControl(0)
+    , touchRecursionGuard(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , persistentGLContext(true)
@@ -457,6 +458,8 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     animationController = new QQuickAnimatorController();
     animationController->m_window = q;
+
+    delayedTouch = 0;
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
@@ -1712,11 +1715,104 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     return true;
 }
 
+static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
+
 // check what kind of touch we have (begin/update) and
 // call deliverTouchPoints to actually dispatch the points
-bool QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
+void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << event;
+    Q_Q(QQuickWindow);
+
+    if (qquickwindow_no_touch_compression || touchRecursionGuard) {
+        reallyDeliverTouchEvent(event);
+        return;
+    }
+
+    Qt::TouchPointStates states = event->touchPointStates();
+    if (((states & (Qt::TouchPointMoved | Qt::TouchPointStationary)) != 0)
+        && ((states & (Qt::TouchPointPressed | Qt::TouchPointReleased)) == 0)) {
+        // we can only compress something that isn't a press or release
+        if (!delayedTouch) {
+            delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
+            delayedTouch->setTimestamp(event->timestamp());
+            if (windowManager)
+                windowManager->maybeUpdate(q);
+            return;
+        } else {
+            // check if this looks like the last touch event
+            if (delayedTouch->type() == event->type() &&
+                delayedTouch->device() == event->device() &&
+                delayedTouch->modifiers() == event->modifiers() &&
+                delayedTouch->touchPoints().count() == event->touchPoints().count())
+            {
+                // possible match.. is it really the same?
+                bool mismatch = false;
+
+                QList<QTouchEvent::TouchPoint> tpts = event->touchPoints();
+                Qt::TouchPointStates states;
+                for (int i = 0; i < event->touchPoints().count(); ++i) {
+                    const QTouchEvent::TouchPoint &tp = tpts.at(i);
+                    const QTouchEvent::TouchPoint &tp2 = delayedTouch->touchPoints().at(i);
+                    if (tp.id() != tp2.id()) {
+                        mismatch = true;
+                        break;
+                    }
+
+                    if (tp2.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
+                        tpts[i].setState(Qt::TouchPointMoved);
+
+                    states |= tpts.at(i).state();
+                }
+
+                // same touch event? then merge if so
+                if (!mismatch) {
+                    delayedTouch->setTouchPoints(tpts);
+                    delayedTouch->setTimestamp(event->timestamp());
+                    return;
+                }
+            }
+
+            // otherwise; we need to deliver the delayed event first, and
+            // then delay this one..
+            reallyDeliverTouchEvent(delayedTouch);
+            delete delayedTouch;
+            delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
+            delayedTouch->setTimestamp(event->timestamp());
+            return;
+        }
+    } else {
+        if (delayedTouch) {
+            // deliver the delayed touch first
+            reallyDeliverTouchEvent(delayedTouch);
+            delete delayedTouch;
+            delayedTouch = 0;
+        }
+        reallyDeliverTouchEvent(event);
+    }
+}
+
+void QQuickWindowPrivate::flushDelayedTouchEvent()
+{
+    if (delayedTouch) {
+        reallyDeliverTouchEvent(delayedTouch);
+        delete delayedTouch;
+        delayedTouch = 0;
+
+        // To flush pending meta-calls triggered from the recently flushed touch events.
+        // This is safe because flushDelayedEvent is only called from eventhandlers.
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+}
+
+void QQuickWindowPrivate::reallyDeliverTouchEvent(QTouchEvent *event)
+{
+    qCDebug(DBG_TOUCH) << " - delivering" << event;
+
+    // If users spin the eventloop as a result of touch delivery, we disable
+    // touch compression and send events directly. This is because we consider
+    // the usecase a bit evil, but we at least don't want to lose events.
+    ++touchRecursionGuard;
 
     // List of all items that received an event before
     // When we have TouchBegin this is and will stay empty
@@ -1766,7 +1862,7 @@ bool QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
         Q_ASSERT(itemForTouchPointId.isEmpty());
     }
 
-    return event->isAccepted();
+    --touchRecursionGuard;
 }
 
 // This function recurses and sends the events to the individual items
