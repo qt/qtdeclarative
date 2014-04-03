@@ -164,7 +164,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     return function->asReturned<FunctionObject>();
 }
 
-DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(QmlBindingWrapper);
 
 struct CompilationUnitHolder : public QV4::Object
 {

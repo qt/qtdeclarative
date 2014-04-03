@@ -44,23 +44,7 @@
 
 using namespace QV4;
 
-const ManagedVTable MemberData::static_vtbl =
-{
-    MemberData::IsExecutionContext,
-    MemberData::IsString,
-    MemberData::IsObject,
-    MemberData::IsFunctionObject,
-    MemberData::IsErrorObject,
-    MemberData::IsArrayData,
-    0,
-    MemberData::MyType,
-    "MemberData",
-    destroy,
-    markObjects,
-    isEqualTo
-};
-
-
+DEFINE_MANAGED_VTABLE_NO_DESTROY(MemberData);
 
 void MemberData::markObjects(Managed *that, ExecutionEngine *e)
 {

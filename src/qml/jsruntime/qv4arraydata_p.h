@@ -149,7 +149,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void getHeadRoom(Object *o);
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
-    static void destroy(Managed *d);
     static void markObjects(Managed *d, ExecutionEngine *e);
 
     static ReturnedValue get(const ArrayData *d, uint index);

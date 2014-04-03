@@ -437,7 +437,7 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, const String
     return QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine());
 }
 
-DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(QQmlIdObjectsArray);
 
 QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
     : Object(engine)

@@ -82,7 +82,6 @@ struct ArgumentsObject: Object {
     bool fullyCreated;
     Members mappedArguments;
     ArgumentsObject(CallContext *context);
-    ~ArgumentsObject() {}
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass->vtable->type == Type_ArgumentsObject &&
@@ -100,7 +99,6 @@ struct ArgumentsObject: Object {
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static void destroy(Managed *);
 
     void fullyCreate();
 };

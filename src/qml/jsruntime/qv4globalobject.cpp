@@ -344,7 +344,7 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
     return QString();
 }
 
-DEFINE_OBJECT_VTABLE(EvalFunction);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)

@@ -155,6 +155,9 @@ struct QQmlBindingFunction : public QV4::FunctionObject
     static ReturnedValue call(Managed *that, CallData *callData);
 
     static void markObjects(Managed *that, ExecutionEngine *e);
+    static void destroy(Managed *that) {
+        static_cast<QQmlBindingFunction *>(that)->~QQmlBindingFunction();
+    }
 
     QV4::FunctionObject *originalFunction;
     // Set when the binding is created later

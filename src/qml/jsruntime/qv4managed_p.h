@@ -141,15 +141,52 @@ struct ObjectVTable
     isEqualTo                                  \
 }
 
+#define DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname) \
+{     \
+    classname::IsExecutionContext,   \
+    classname::IsString,   \
+    classname::IsObject,   \
+    classname::IsFunctionObject,   \
+    classname::IsErrorObject,   \
+    classname::IsArrayData,   \
+    0,                                          \
+    classname::MyType,                          \
+    #classname,                                 \
+    0,                                    \
+    markObjects,                                \
+    isEqualTo                                  \
+}
 
 #define DEFINE_MANAGED_VTABLE(classname) \
 const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname)
+#define DEFINE_MANAGED_VTABLE_NO_DESTROY(classname) \
+const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname)
 
 
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
     DEFINE_MANAGED_VTABLE_INT(classname), \
+    call,                                       \
+    construct,                                  \
+    get,                                        \
+    getIndexed,                                 \
+    put,                                        \
+    putIndexed,                                 \
+    query,                                      \
+    queryIndexed,                               \
+    deleteProperty,                             \
+    deleteIndexedProperty,                      \
+    getLookup,                                  \
+    setLookup,                                  \
+    getLength,                                  \
+    advanceIterator                            \
+}
+
+#define DEFINE_OBJECT_VTABLE_NO_DESTROY(classname) \
+const QV4::ObjectVTable classname::static_vtbl =    \
+{     \
+    DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname), \
     call,                                       \
     construct,                                  \
     get,                                        \
@@ -299,7 +336,6 @@ public:
     bool isEqualTo(Managed *other)
     { return internalClass->vtable->isEqualTo(this, other); }
 
-    static void destroy(Managed *that) { that->_data = 0; }
     static bool isEqualTo(Managed *m, Managed *other);
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }

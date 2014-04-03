@@ -68,7 +68,7 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE(Object);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(Object);
 
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
@@ -88,11 +88,6 @@ Object::Object(InternalClass *ic)
     }
 }
 
-Object::~Object()
-{
-    _data = 0;
-}
-
 bool Object::setPrototype(Object *proto)
 {
     Object *pp = proto;
@@ -103,11 +98,6 @@ bool Object::setPrototype(Object *proto)
     }
     internalClass = internalClass->changePrototype(proto);
     return true;
-}
-
-void Object::destroy(Managed *that)
-{
-    static_cast<Object *>(that)->~Object();
 }
 
 void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef value)
@@ -1162,7 +1152,7 @@ void Object::initSparseArray()
 }
 
 
-DEFINE_OBJECT_VTABLE(ArrayObject);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(ArrayObject);
 
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)

@@ -249,13 +249,13 @@ URIErrorObject::URIErrorObject(ExecutionEngine *engine, const ValueRef message)
 {
 }
 
-DEFINE_OBJECT_VTABLE(ErrorCtor);
-DEFINE_OBJECT_VTABLE(EvalErrorCtor);
-DEFINE_OBJECT_VTABLE(RangeErrorCtor);
-DEFINE_OBJECT_VTABLE(ReferenceErrorCtor);
-DEFINE_OBJECT_VTABLE(SyntaxErrorCtor);
-DEFINE_OBJECT_VTABLE(TypeErrorCtor);
-DEFINE_OBJECT_VTABLE(URIErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(ErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(EvalErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(RangeErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(ReferenceErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(SyntaxErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(TypeErrorCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(URIErrorCtor);
 
 ErrorCtor::ErrorCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Error"))

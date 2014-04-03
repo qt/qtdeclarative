@@ -47,7 +47,7 @@ using namespace QV4;
 
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData),
+    DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(SimpleArrayData),
     SimpleArrayData::Simple,
     SimpleArrayData::reallocate,
     SimpleArrayData::get,
@@ -206,10 +206,6 @@ void ArrayData::ensureAttributes(Object *o)
     ArrayData::realloc(o, Simple, 0, 0, true);
 }
 
-
-void SimpleArrayData::destroy(Managed *)
-{
-}
 
 void SimpleArrayData::markObjects(Managed *d, ExecutionEngine *e)
 {

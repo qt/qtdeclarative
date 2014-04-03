@@ -56,7 +56,7 @@ const ManagedVTable Managed::static_vtbl =
     0,
     Managed::MyType,
     "Managed",
-    destroy,
+    0,
     0 /*markObjects*/,
     isEqualTo
 };

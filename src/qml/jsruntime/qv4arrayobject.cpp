@@ -46,7 +46,7 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE(ArrayCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(ArrayCtor);
 
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Array"))

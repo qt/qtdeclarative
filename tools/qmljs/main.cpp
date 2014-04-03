@@ -90,7 +90,7 @@ struct Print: FunctionObject
     }
 };
 
-DEFINE_OBJECT_VTABLE(Print);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(Print);
 
 struct GC: public FunctionObject
 {
@@ -107,7 +107,7 @@ struct GC: public FunctionObject
     }
 };
 
-DEFINE_OBJECT_VTABLE(GC);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(GC);
 
 } // builtins
 

@@ -86,7 +86,6 @@ struct RegExpObject: Object {
 
     RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
-    ~RegExpObject() {}
 
     void init(ExecutionEngine *engine);
 
@@ -97,7 +96,6 @@ struct RegExpObject: Object {
 
 protected:
     RegExpObject(InternalClass *ic);
-    static void destroy(Managed *that);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 

@@ -143,8 +143,6 @@ protected:
     FunctionObject(InternalClass *ic);
 
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static void destroy(Managed *that)
-    { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
 
 template<>

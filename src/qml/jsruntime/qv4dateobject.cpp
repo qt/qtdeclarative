@@ -641,7 +641,7 @@ static double getLocalTZA()
 #endif
 }
 
-DEFINE_OBJECT_VTABLE(DateObject);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(DateObject);
 
 DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine->dateClass)
@@ -655,7 +655,7 @@ QDateTime DateObject::toQDateTime() const
     return ToDateTime(value.asDouble(), Qt::LocalTime);
 }
 
-DEFINE_OBJECT_VTABLE(DateCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(DateCtor);
 
 DateCtor::DateCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Date"))

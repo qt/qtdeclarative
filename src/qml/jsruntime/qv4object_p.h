@@ -116,7 +116,6 @@ struct Q_QML_EXPORT Object: Managed {
 
     Object(ExecutionEngine *engine);
     Object(InternalClass *internalClass);
-    ~Object();
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass->vtable); }
     Object *prototype() const { return internalClass->prototype; }
@@ -270,7 +269,6 @@ public:
     inline ReturnedValue call(CallData *d)
     { return vtable()->call(this, d); }
 protected:
-    static void destroy(Managed *that);
     static void markObjects(Managed *that, ExecutionEngine *e);
     static ReturnedValue construct(Managed *m, CallData *);
     static ReturnedValue call(Managed *m, CallData *);

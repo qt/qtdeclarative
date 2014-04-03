@@ -66,7 +66,7 @@ static int indent = 0;
 #endif
 
 
-DEFINE_OBJECT_VTABLE(JsonObject);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(JsonObject);
 
 class JsonParser
 {

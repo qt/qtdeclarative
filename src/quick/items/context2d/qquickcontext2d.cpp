@@ -529,13 +529,9 @@ public:
     static QV4::ReturnedValue method_set_textBaseline(QV4::CallContext *ctx);
 
 protected:
-    static void destroy(Managed *that)
-    {
-        static_cast<QQuickJSContext2D *>(that)->~QQuickJSContext2D();
-    }
 };
 
-DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(QQuickJSContext2D);
 
 
 struct QQuickJSContext2DPrototype : public QV4::Object
@@ -641,7 +637,7 @@ public:
 
 };
 
-DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(QQuickJSContext2DPrototype);
 
 
 class QQuickContext2DStyle : public QV4::Object
@@ -923,7 +919,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
 
 DEFINE_REF(QQuickJSContext2DImageData, QV4::Object);
 
-DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(QQuickJSContext2DImageData);
 
 static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {

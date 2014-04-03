@@ -72,7 +72,7 @@
 using namespace QV4;
 
 
-DEFINE_OBJECT_VTABLE(FunctionObject);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(scope->engine->functionClass)
@@ -183,7 +183,7 @@ FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Fu
     return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
 }
 
-DEFINE_OBJECT_VTABLE(FunctionCtor);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(FunctionCtor);
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Function"))
@@ -348,7 +348,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
 
-DEFINE_OBJECT_VTABLE(ScriptFunction);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : SimpleScriptFunction(scope, function, true)
@@ -421,7 +421,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     return result.asReturnedValue();
 }
 
-DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(SimpleScriptFunction);
 
 SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
     : FunctionObject(scope, function->name(), createProto)
@@ -545,7 +545,7 @@ InternalClass *SimpleScriptFunction::internalClassForConstructor()
 
 
 
-DEFINE_OBJECT_VTABLE(BuiltinFunction);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(BuiltinFunction);
 
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
@@ -597,7 +597,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     return f->code(&ctx, f->index);
 }
 
-DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
+DEFINE_OBJECT_VTABLE_NO_DESTROY(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
