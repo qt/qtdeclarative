@@ -1,6 +1,7 @@
 TARGET  = qtaccessiblequick
 
 PLUGIN_TYPE = accessible
+PLUGIN_EXTENDS = quick
 PLUGIN_CLASS_NAME = AccessibleQuickFactory
 load(qt_plugin)
 
