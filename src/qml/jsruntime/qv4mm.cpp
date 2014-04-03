@@ -224,9 +224,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
-#ifndef QT_NO_DEBUG
-        memset(chunk, 0, allocation.memory.size());
-#endif
+
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
@@ -361,6 +359,8 @@ void MemoryManager::sweep(bool lastSweep)
             i = i->next;
             continue;
         }
+        if (m->internalClass->vtable->destroy)
+            m->internalClass->vtable->destroy(m);
 
         *last = i->next;
         free(i);
@@ -400,7 +400,8 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                m->internalClass->vtable->destroy(m);
+                if (m->internalClass->vtable->destroy)
+                    m->internalClass->vtable->destroy(m);
 
                 memset(m, 0, size);
                 m->setNextFree(*f);
