@@ -1275,6 +1275,10 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Sta
     Object *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
+    if (_object == object && name->name == QStringLiteral("id")) {
+        setId(name->identifierToken, value);
+        return;
+    }
     qSwap(_object, object);
     appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), value);
     qSwap(_object, object);
@@ -1293,11 +1297,6 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex,
 
 void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
 {
-    if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
-        setId(nameLocation, value);
-        return;
-    }
-
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->location.line = nameLocation.startLine;

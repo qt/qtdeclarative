@@ -1189,12 +1189,17 @@ void tst_qqmllanguage::idProperty()
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
-    QCOMPARE(object->getChildren()->count(), 1);
+    QCOMPARE(object->getChildren()->count(), 2);
     MyTypeObject *child =
         qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
     QVERIFY(child != 0);
     QCOMPARE(child->id(), QString("myObjectId"));
     QCOMPARE(object->property("object"), QVariant::fromValue((QObject *)child));
+
+    child =
+        qobject_cast<MyTypeObject *>(object->getChildren()->at(1));
+    QVERIFY(child != 0);
+    QCOMPARE(child->id(), QString("name.with.dots"));
 }
 
 // Tests automatic connection to notify signals if "onBlahChanged" syntax is used
