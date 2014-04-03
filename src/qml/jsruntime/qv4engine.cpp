@@ -487,7 +487,7 @@ Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *
     return f->asReturned<FunctionObject>();
 }
 
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
 {
     Q_ASSERT(target);
 

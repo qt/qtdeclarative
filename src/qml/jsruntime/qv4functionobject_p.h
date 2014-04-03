@@ -229,9 +229,9 @@ struct BoundFunction: FunctionObject {
     V4_OBJECT
     FunctionObject *target;
     Value boundThis;
-    QVector<Value> boundArgs;
+    Members boundArgs;
 
-    BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs);
+    BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs);
     ~BoundFunction() {}
 
 

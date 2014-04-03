@@ -341,9 +341,14 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         return ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
-    QVector<Value> boundArgs;
-    for (int i = 1; i < ctx->callData->argc; ++i)
-        boundArgs += ctx->callData->args[i];
+    Members boundArgs;
+    boundArgs.reset();
+    if (ctx->callData->argc > 1) {
+        boundArgs.ensureIndex(scope.engine, ctx->callData->argc - 1);
+        boundArgs.d()->size = ctx->callData->argc - 1;
+        memcpy(boundArgs.data(), ctx->callData->args + 1, (ctx->callData->argc - 1)*sizeof(Value));
+    }
+    ScopedValue protectBoundArgs(scope, boundArgs.d());
 
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
@@ -601,7 +606,7 @@ DEFINE_OBJECT_VTABLE_NO_DESTROY(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
-BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs)
+BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
     , target(target)
     , boundArgs(boundArgs)
@@ -641,7 +646,7 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.data(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->call(callData);
 }
@@ -654,7 +659,7 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
         return Encode::undefined();
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.data(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->construct(callData);
 }
@@ -664,7 +669,6 @@ void BoundFunction::markObjects(Managed *that, ExecutionEngine *e)
     BoundFunction *o = static_cast<BoundFunction *>(that);
     o->target->mark(e);
     o->boundThis.mark(e);
-    for (int i = 0; i < o->boundArgs.size(); ++i)
-        o->boundArgs.at(i).mark(e);
+    o->boundArgs.mark(e);
     FunctionObject::markObjects(that, e);
 }

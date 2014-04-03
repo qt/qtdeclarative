@@ -62,6 +62,7 @@ struct MemberData : Managed
 
 struct Members : Value
 {
+    void reset() { m = 0; }
     void ensureIndex(QV4::ExecutionEngine *e, uint idx);
     Value &operator[] (uint idx) const { return static_cast<MemberData *>(managed())->data[idx]; }
     inline uint size() const { return d() ? d()->size : 0; }

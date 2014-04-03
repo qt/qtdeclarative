@@ -86,6 +86,7 @@ struct SyntaxErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
+struct Members;
 class MemoryManager;
 class ExecutableAllocator;
 
@@ -307,7 +308,7 @@ public:
     ExecutionContext *popContext();
 
     Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
-    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<Value> &boundArgs);
+    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QV4::Members &boundArgs);
 
     Returned<Object> *newObject();
     Returned<Object> *newObject(InternalClass *internalClass);
