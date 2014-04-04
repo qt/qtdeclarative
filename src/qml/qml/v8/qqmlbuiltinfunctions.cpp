@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(QtObject);
+DEFINE_OBJECT_VTABLE(QtObject);
 
 struct StaticQtMetaObject : public QObject
 {

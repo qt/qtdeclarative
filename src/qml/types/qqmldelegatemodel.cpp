@@ -93,7 +93,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     }
 };
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(DelegateModelGroupFunction);
+DEFINE_OBJECT_VTABLE(DelegateModelGroupFunction);
 
 
 
@@ -3237,7 +3237,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     QQmlChangeSet::Change change;
 };
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(QQmlDelegateModelGroupChange);
+DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
 
 class QQmlDelegateModelGroupChangeArray : public QV4::Object
 {

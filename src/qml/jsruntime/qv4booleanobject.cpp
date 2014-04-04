@@ -43,8 +43,8 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(BooleanCtor);
-DEFINE_OBJECT_VTABLE_NO_DESTROY(BooleanObject);
+DEFINE_OBJECT_VTABLE(BooleanCtor);
+DEFINE_OBJECT_VTABLE(BooleanObject);
 
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Boolean"))

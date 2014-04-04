@@ -48,8 +48,8 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(NumberCtor);
-DEFINE_OBJECT_VTABLE_NO_DESTROY(NumberObject);
+DEFINE_OBJECT_VTABLE(NumberCtor);
+DEFINE_OBJECT_VTABLE(NumberObject);
 
 NumberCtor::NumberCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Number"))

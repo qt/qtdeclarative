@@ -302,7 +302,7 @@ public:
 
 };
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(NodePrototype);
+DEFINE_OBJECT_VTABLE(NodePrototype);
 
 class Node : public Object
 {
@@ -1696,7 +1696,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     Object *proto;
 };
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(QQmlXMLHttpRequestCtor);
+DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestCtor);
 
 void QQmlXMLHttpRequestCtor::setupProto()
 {

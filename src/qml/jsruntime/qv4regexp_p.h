@@ -109,7 +109,6 @@ public:
     bool multiLine() const { return m_multiLine; }
     int captureCount() const { return m_subPatternCount + 1; }
 
-protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 

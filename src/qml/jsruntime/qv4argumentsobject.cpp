@@ -44,7 +44,7 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ArgumentsObject);
+DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(CallContext *context)
     : Object(context->strictMode ? context->engine->strictArgumentsObjectClass : context->engine->argumentsObjectClass)
@@ -197,7 +197,7 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     return Attr_Accessor;
 }
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ArgumentsGetterFunction);
+DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
 ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
@@ -212,7 +212,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     return o->context->argument(g->index);
 }
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ArgumentsSetterFunction);
+DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
 ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {

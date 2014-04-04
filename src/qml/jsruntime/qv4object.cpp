@@ -68,7 +68,7 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(Object);
+DEFINE_OBJECT_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
@@ -1152,7 +1152,7 @@ void Object::initSparseArray()
 }
 
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ArrayObject);
+DEFINE_OBJECT_VTABLE(ArrayObject);
 
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)

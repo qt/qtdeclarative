@@ -82,6 +82,10 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     public: \
         enum { MyType = Type_##type };
 
+#define Q_VTABLE_FUNCTION(classname, func) \
+    (classname::func == QV4::Managed::func ? 0 : classname::func)
+
+
 struct GCDeletable
 {
     GCDeletable() : next(0), lastCall(false) {}
@@ -125,6 +129,7 @@ struct ObjectVTable
     void (*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
+
 #define DEFINE_MANAGED_VTABLE_INT(classname) \
 {     \
     classname::IsExecutionContext,   \
@@ -136,31 +141,13 @@ struct ObjectVTable
     0,                                          \
     classname::MyType,                          \
     #classname,                                 \
-    destroy,                                    \
-    markObjects,                                \
-    isEqualTo                                  \
-}
-
-#define DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname) \
-{     \
-    classname::IsExecutionContext,   \
-    classname::IsString,   \
-    classname::IsObject,   \
-    classname::IsFunctionObject,   \
-    classname::IsErrorObject,   \
-    classname::IsArrayData,   \
-    0,                                          \
-    classname::MyType,                          \
-    #classname,                                 \
-    0,                                    \
+    Q_VTABLE_FUNCTION(classname, destroy),                                    \
     markObjects,                                \
     isEqualTo                                  \
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \
 const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname)
-#define DEFINE_MANAGED_VTABLE_NO_DESTROY(classname) \
-const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname)
 
 
 #define DEFINE_OBJECT_VTABLE(classname) \
@@ -182,47 +169,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     getLength,                                  \
     advanceIterator                            \
 }
-
-#define DEFINE_OBJECT_VTABLE_NO_DESTROY(classname) \
-const QV4::ObjectVTable classname::static_vtbl =    \
-{     \
-    DEFINE_MANAGED_VTABLE_NO_DESTROY_INT(classname), \
-    call,                                       \
-    construct,                                  \
-    get,                                        \
-    getIndexed,                                 \
-    put,                                        \
-    putIndexed,                                 \
-    query,                                      \
-    queryIndexed,                               \
-    deleteProperty,                             \
-    deleteIndexedProperty,                      \
-    getLookup,                                  \
-    setLookup,                                  \
-    getLength,                                  \
-    advanceIterator                            \
-}
-
-#define DEFINE_MANAGED_VTABLE_WITH_NAME(classname, name) \
-const QV4::ObjectVTable classname::static_vtbl =    \
-{                                               \
-    DEFINE_MANAGED_VTABLE_INT(name), \
-    call,                                       \
-    construct,                                  \
-    get,                                        \
-    getIndexed,                                 \
-    put,                                        \
-    putIndexed,                                 \
-    query,                                      \
-    queryIndexed,                               \
-    deleteProperty,                             \
-    deleteIndexedProperty,                      \
-    getLookup,                                  \
-    setLookup,                                  \
-    getLength,                                  \
-    advanceIterator                            \
-}
-
 
 struct Q_QML_PRIVATE_EXPORT Managed
 {
@@ -359,6 +305,7 @@ public:
             uchar _flags;
         };
     };
+    static void destroy(Managed *) {}
 
 private:
     friend class MemoryManager;

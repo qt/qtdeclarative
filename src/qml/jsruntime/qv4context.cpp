@@ -51,7 +51,7 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE_NO_DESTROY(ExecutionContext);
+DEFINE_MANAGED_VTABLE(ExecutionContext);
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {

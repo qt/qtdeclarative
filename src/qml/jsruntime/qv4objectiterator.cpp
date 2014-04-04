@@ -192,7 +192,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 }
 
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ForEachIteratorObject);
+DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
 
 void ForEachIteratorObject::markObjects(Managed *that, ExecutionEngine *e)
 {

@@ -75,7 +75,7 @@
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(StringObject);
+DEFINE_OBJECT_VTABLE(StringObject);
 
 StringObject::StringObject(InternalClass *ic)
     : Object(ic)
@@ -171,7 +171,7 @@ void StringObject::markObjects(Managed *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(StringCtor);
+DEFINE_OBJECT_VTABLE(StringCtor);
 
 StringCtor::StringCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("String"))

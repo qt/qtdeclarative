@@ -69,7 +69,7 @@ Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyn
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(RegExpObject);
+DEFINE_OBJECT_VTABLE(RegExpObject);
 
 RegExpObject::RegExpObject(InternalClass *ic)
     : Object(ic)
@@ -226,7 +226,7 @@ uint RegExpObject::flags() const
     return f;
 }
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(RegExpCtor);
+DEFINE_OBJECT_VTABLE(RegExpCtor);
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("RegExp"))

@@ -72,7 +72,7 @@
 using namespace QV4;
 
 
-DEFINE_OBJECT_VTABLE_NO_DESTROY(ObjectCtor);
+DEFINE_OBJECT_VTABLE(ObjectCtor);
 
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Object"))

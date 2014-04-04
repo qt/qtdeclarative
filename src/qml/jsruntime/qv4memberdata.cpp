@@ -44,7 +44,7 @@
 
 using namespace QV4;
 
-DEFINE_MANAGED_VTABLE_NO_DESTROY(MemberData);
+DEFINE_MANAGED_VTABLE(MemberData);
 
 void MemberData::markObjects(Managed *that, ExecutionEngine *e)
 {
