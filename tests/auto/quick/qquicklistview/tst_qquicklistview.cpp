@@ -224,6 +224,9 @@ private slots:
     void QTBUG_36481();
     void QTBUG_35920();
 
+    void roundingErrors();
+    void roundingErrors_data();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -7199,6 +7202,63 @@ void tst_QQuickListView::QTBUG_35920()
         }
     }
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(10,100));
+}
+
+void tst_QQuickListView::roundingErrors()
+{
+    QFETCH(bool, pixelAligned);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("roundingErrors.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    listview->setPixelAligned(pixelAligned);
+    listview->positionViewAtIndex(20, QQuickListView::Beginning);
+
+    QQuickItem *content = listview->contentItem();
+    QVERIFY(content);
+
+    const QPoint viewPos(150, 36);
+    const QPointF contentPos = content->mapFromItem(listview, viewPos);
+
+    QPointer<QQuickItem> item = listview->itemAt(contentPos.x(), contentPos.y());
+    QVERIFY(item);
+
+    // QTBUG-37339: drag an item and verify that it doesn't
+    // get prematurely released due to rounding errors
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, viewPos);
+    for (int i = 0; i < 150; i += 5) {
+        QTest::mouseMove(window.data(), viewPos - QPoint(i, 0));
+        QVERIFY(item);
+    }
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(0, 36));
+
+    // maintain position relative to the right edge
+    listview->setLayoutDirection(Qt::RightToLeft);
+    const qreal contentX = listview->contentX();
+    listview->setContentX(contentX + 0.2);
+    QCOMPARE(listview->contentX(), pixelAligned ? qRound(contentX + 0.2) : contentX + 0.2);
+    listview->setWidth(listview->width() - 0.2);
+    QCOMPARE(listview->contentX(), pixelAligned ? qRound(contentX + 0.2) : contentX + 0.2);
+
+    // maintain position relative to the bottom edge
+    listview->setOrientation(QQuickListView::Vertical);
+    listview->setVerticalLayoutDirection(QQuickListView::BottomToTop);
+    const qreal contentY = listview->contentY();
+    listview->setContentY(contentY + 0.2);
+    QCOMPARE(listview->contentY(), pixelAligned ? qRound(contentY + 0.2) : contentY + 0.2);
+    listview->setHeight(listview->height() - 0.2);
+    QCOMPARE(listview->contentY(), pixelAligned ? qRound(contentY + 0.2) : contentY + 0.2);
+}
+
+void tst_QQuickListView::roundingErrors_data()
+{
+    QTest::addColumn<bool>("pixelAligned");
+    QTest::newRow("pixelAligned=true") << true;
+    QTest::newRow("pixelAligned=false") << false;
 }
 
 QTEST_MAIN(tst_QQuickListView)

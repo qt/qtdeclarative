@@ -2860,11 +2860,11 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     Q_D(QQuickListView);
     if (d->isRightToLeft()) {
         // maintain position relative to the right edge
-        int dx = newGeometry.width() - oldGeometry.width();
+        qreal dx = newGeometry.width() - oldGeometry.width();
         setContentX(contentX() - dx);
     } else if (d->isBottomToTop()) {
         // maintain position relative to the bottom edge
-        int dy = newGeometry.height() - oldGeometry.height();
+        qreal dy = newGeometry.height() - oldGeometry.height();
         setContentY(contentY() - dy);
     }
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
@@ -2974,7 +2974,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
     }
 
     // index can be the next item past the end of the visible items list (i.e. appended)
-    int pos = 0;
+    qreal pos = 0;
     if (visibleItems.count()) {
         pos = index < visibleItems.count() ? visibleItems.at(index)->position()
                                                 : visibleItems.last()->endPosition()+spacing;
@@ -2985,7 +2985,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = 0;
-        int from = tempPos - displayMarginBeginning - buffer;
+        qreal from = tempPos - displayMarginBeginning - buffer;
 
         for (i = count-1; i >= 0; --i) {
             if (pos > from && insertionIdx < visibleIndex) {
@@ -3016,7 +3016,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         }
     } else {
         int i = 0;
-        int to = buffer+displayMarginEnd+tempPos+size();
+        qreal to = buffer + displayMarginEnd + tempPos + size();
         for (i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))

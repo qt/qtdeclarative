@@ -906,12 +906,12 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
     else
         maxExtent = isContentFlowReversed() ? q->minXExtent()-size(): -q->maxXExtent();
     if (!item) {
-        int itemPos = positionAt(idx);
+        qreal itemPos = positionAt(idx);
         changedVisibleIndex(idx);
         // save the currently visible items in case any of them end up visible again
         QList<FxViewItem *> oldVisible = visibleItems;
         visibleItems.clear();
-        setPosition(qMin(qreal(itemPos), maxExtent));
+        setPosition(qMin(itemPos, maxExtent));
         // now release the reference to all the old visible items.
         for (int i = 0; i < oldVisible.count(); ++i)
             releaseItem(oldVisible.at(i));
