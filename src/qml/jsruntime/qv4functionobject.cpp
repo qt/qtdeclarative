@@ -111,7 +111,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
 {
     managedData()->needsActivation = false;
     managedData()->strictMode = false;
-    memberData[Index_Prototype] = Encode::undefined();
+    memberData()[Index_Prototype] = Encode::undefined();
 }
 
 FunctionObject::~FunctionObject()
@@ -130,10 +130,10 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
-        proto->memberData[Index_ProtoConstructor] = this->asReturnedValue();
-        memberData[Index_Prototype] = proto.asReturnedValue();
+        proto->memberData()[Index_ProtoConstructor] = this->asReturnedValue();
+        memberData()[Index_Prototype] = proto.asReturnedValue();
     } else {
-        memberData[Index_Prototype] = Encode::undefined();
+        memberData()[Index_Prototype] = Encode::undefined();
     }
 
     ScopedValue v(s, n.asReturnedValue());
@@ -304,9 +304,9 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            int alen = qMin(len, arr->arrayData->length());
+            int alen = qMin(len, arr->arrayData()->length());
             if (alen)
-                memcpy(callData->args, arr->arrayData->data, alen*sizeof(Value));
+                memcpy(callData->args, arr->arrayData()->data, alen*sizeof(Value));
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

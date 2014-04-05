@@ -152,7 +152,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef nam
                 return;
             }
         }
-        if (s->arrayData) {
+        if (s->arrayData()) {
             it->arrayNode = s->sparseBegin();
             // iterate until we're past the end of the string
             while (it->arrayNode && it->arrayNode->key() < slen)

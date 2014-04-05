@@ -304,9 +304,9 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 
     if (!ctx->callData->argc) {
         ;
-    } else if (!instance->protoHasArray() && instance->arrayData->length() <= len && instance->arrayType() == ArrayData::Simple) {
-        instance->arrayData->vtable()->putArray(instance.getPointer(), len, ctx->callData->args, ctx->callData->argc);
-        len = instance->arrayData->length();
+    } else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayType() == ArrayData::Simple) {
+        instance->arrayData()->vtable()->putArray(instance.getPointer(), len, ctx->callData->args, ctx->callData->argc);
+        len = instance->arrayData()->length();
     } else {
         for (int i = 0; i < ctx->callData->argc; ++i)
             instance->putIndexed(len + i, ctx->callData->args[i]);
@@ -371,8 +371,8 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     ScopedValue result(scope);
 
-    if (!instance->protoHasArray() && !instance->arrayData->hasAttributes() && instance->arrayData->length() <= len) {
-        result = instance->arrayData->vtable()->pop_front(instance.getPointer());
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len) {
+        result = instance->arrayData()->vtable()->pop_front(instance.getPointer());
     } else {
         result = instance->getIndexed(0);
         if (scope.hasException())
@@ -550,8 +550,8 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    if (!instance->protoHasArray() && !instance->arrayData->hasAttributes() && instance->arrayData->length() <= len) {
-        instance->arrayData->vtable()->push_front(instance.getPointer(), ctx->callData->args, ctx->callData->argc);
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len) {
+        instance->arrayData()->vtable()->push_front(instance.getPointer(), ctx->callData->args, ctx->callData->argc);
     } else {
         ScopedValue v(scope);
         for (uint k = len; k > 0; --k) {
@@ -623,13 +623,13 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
             if (exists && RuntimeHelpers::strictEqual(value, searchValue))
                 return Encode(i);
         }
-    } else if (!instance->arrayData) {
+    } else if (!instance->arrayData()) {
         return Encode(-1);
     } else {
         Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
-        if (len > instance->arrayData->length())
-            len = instance->arrayData->length();
-        Value *val = instance->arrayData->data;
+        if (len > instance->arrayData()->length())
+            len = instance->arrayData()->length();
+        Value *val = instance->arrayData()->data;
         Value *end = val + len;
         val += fromIndex;
         while (val < end) {
@@ -638,7 +638,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
                 if (scope.hasException())
                     return Encode::undefined();
                 if (RuntimeHelpers::strictEqual(value, searchValue))
-                    return Encode((uint)(val - instance->arrayData->data));
+                    return Encode((uint)(val - instance->arrayData()->data));
             }
             ++val;
         }

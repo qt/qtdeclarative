@@ -71,10 +71,10 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     } else {
         setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == internalClass()->find(context->engine->id_callee));
-        memberData[CalleePropertyIndex] = context->function->asReturnedValue();
+        memberData()[CalleePropertyIndex] = context->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == internalClass()->find(context->engine->id_length));
-    memberData[LengthPropertyIndex] = Primitive::fromInt32(context->realArgumentCount);
+    memberData()[LengthPropertyIndex] = Primitive::fromInt32(context->realArgumentCount);
 
     Q_ASSERT(internalClass()->vtable == staticVTable());
 }
@@ -105,19 +105,19 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     fullyCreate();
 
     Scope scope(ctx);
-    Property *pd = arrayData->getProperty(index);
+    Property *pd = arrayData()->getProperty(index);
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
     uint numAccessors = qMin((int)context->function->formalParameterCount(), context->realArgumentCount);
     if (pd && index < (uint)numAccessors)
-        isMapped = arrayData->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors[index].getter();
+        isMapped = arrayData()->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors[index].getter();
 
     if (isMapped) {
-        mapAttrs = arrayData->attributes(index);
+        mapAttrs = arrayData()->attributes(index);
         map.copy(*pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
-        pd = arrayData->getProperty(index);
+        pd = arrayData()->getProperty(index);
         pd->value = mappedArguments[index];
     }
 
@@ -134,7 +134,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);
-            pd = arrayData->getProperty(index);
+            pd = arrayData()->getProperty(index);
             pd->copy(map, mapAttrs);
         }
     }

@@ -229,7 +229,7 @@ static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariant
     for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter) {
         s = e->newString(iter.key());
         uint idx = s->asArrayIndex();
-        if (idx > 16 && (!o->arrayData || idx > o->arrayData->length() * 2))
+        if (idx > 16 && (!o->arrayData() || idx > o->arrayData()->length() * 2))
             o->initSparseArray();
         o->put(s, (v = engine->fromVariant(iter.value())));
     }
