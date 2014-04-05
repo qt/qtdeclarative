@@ -69,8 +69,8 @@ public:
     String *insertString(const QString &s);
 
     Identifier *identifier(const String *str) {
-        if (str->identifier)
-            return str->identifier;
+        if (str->stringData()->identifier)
+            return str->stringData()->identifier;
         return identifierImpl(str);
     }
 
@@ -82,11 +82,11 @@ public:
     void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i) {
             String *entry = entries[i];
-            if (!entry || entry->data.markBit)
+            if (!entry || entry->markBit())
                 continue;
-            entry->data.markBit = 1;
-            Q_ASSERT(entry->data.internalClass->vtable->markObjects);
-            entry->data.internalClass->vtable->markObjects(entry, e);
+            entry->managedData()->markBit = 1;
+            Q_ASSERT(entry->internalClass()->vtable->markObjects);
+            entry->internalClass()->vtable->markObjects(entry, e);
         }
     }
 };

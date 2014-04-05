@@ -181,7 +181,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     if (data == propertyData.at(idx))
         return this;
 
-    Transition t = { { string->identifier }, (int)data.flags() };
+    Transition t = { { string->stringData()->identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
     if (tit != transitions.constEnd())
         return tit.value();
@@ -280,7 +280,7 @@ void InternalClass::addMember(Object *object, String *string, PropertyAttributes
 {
     data.resolve();
     object->internalClass()->engine->identifierTable->identifier(string);
-    if (object->internalClass()->propertyTable.lookup(string->identifier) < object->internalClass()->size) {
+    if (object->internalClass()->propertyTable.lookup(string->stringData()->identifier) < object->internalClass()->size) {
         changeMember(object, string, data, index);
         return;
     }
@@ -304,7 +304,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     data.resolve();
     engine->identifierTable->identifier(string);
 
-    if (propertyTable.lookup(string->identifier) < size)
+    if (propertyTable.lookup(string->stringData()->identifier) < size)
         return changeMember(string, data, index);
 
     return addMemberImpl(string, data, index);
@@ -312,7 +312,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
 InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes data, uint *index)
 {
-    Transition t = { { string->identifier }, (int)data.flags() };
+    Transition t = { { string->stringData()->identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (index)
@@ -322,7 +322,7 @@ InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes d
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
-    PropertyHash::Entry e = { string->identifier, newClass->size };
+    PropertyHash::Entry e = { string->stringData()->identifier, newClass->size };
     newClass->propertyTable.addEntry(e, newClass->size);
 
     // The incoming string can come from anywhere, so make sure to
@@ -382,7 +382,7 @@ uint InternalClass::find(const StringRef string)
 uint InternalClass::find(const String *string)
 {
     engine->identifierTable->identifier(string);
-    const Identifier *id = string->identifier;
+    const Identifier *id = string->stringData()->identifier;
 
     uint index = propertyTable.lookup(id);
     if (index < size)

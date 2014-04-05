@@ -69,7 +69,7 @@ IdentifierTable::~IdentifierTable()
 {
     for (int i = 0; i < alloc; ++i)
         if (entries[i])
-            delete entries[i]->identifier;
+            delete entries[i]->stringData()->identifier;
     free(entries);
 }
 
@@ -80,9 +80,9 @@ void IdentifierTable::addEntry(String *str)
     if (str->subtype() == String::StringType_ArrayIndex)
         return;
 
-    str->identifier = new Identifier;
-    str->identifier->string = str->toQString();
-    str->identifier->hashValue = hash;
+    str->stringData()->identifier = new Identifier;
+    str->stringData()->identifier->string = str->toQString();
+    str->stringData()->identifier->hashValue = hash;
 
     bool grow = (alloc <= size*2);
 
@@ -95,7 +95,7 @@ void IdentifierTable::addEntry(String *str)
             String *e = entries[i];
             if (!e)
                 continue;
-            uint idx = e->stringHash % newAlloc;
+            uint idx = e->stringData()->stringHash % newAlloc;
             while (newEntries[idx]) {
                 ++idx;
                 idx %= newAlloc;
@@ -123,7 +123,7 @@ String *IdentifierTable::insertString(const QString &s)
     uint hash = String::createHashValue(s.constData(), s.length());
     uint idx = hash % alloc;
     while (String *e = entries[idx]) {
-        if (e->stringHash == hash && e->toQString() == s)
+        if (e->stringData()->stringHash == hash && e->toQString() == s)
             return e;
         ++idx;
         idx %= alloc;
@@ -137,29 +137,29 @@ String *IdentifierTable::insertString(const QString &s)
 
 Identifier *IdentifierTable::identifierImpl(const String *str)
 {
-    if (str->identifier)
-        return str->identifier;
+    if (str->stringData()->identifier)
+        return str->stringData()->identifier;
     uint hash = str->hashValue();
     if (str->subtype() == String::StringType_ArrayIndex)
         return 0;
 
     uint idx = hash % alloc;
     while (String *e = entries[idx]) {
-        if (e->stringHash == hash && e->isEqualTo(str)) {
-            str->identifier = e->identifier;
-            return e->identifier;
+        if (e->stringData()->stringHash == hash && e->isEqualTo(str)) {
+            str->stringData()->identifier = e->stringData()->identifier;
+            return e->stringData()->identifier;
         }
         ++idx;
         idx %= alloc;
     }
 
     addEntry(const_cast<QV4::String *>(str));
-    return str->identifier;
+    return str->stringData()->identifier;
 }
 
 Identifier *IdentifierTable::identifier(const QString &s)
 {
-    return insertString(s)->identifier;
+    return insertString(s)->stringData()->identifier;
 }
 
 Identifier *IdentifierTable::identifier(const char *s, int len)
@@ -171,15 +171,15 @@ Identifier *IdentifierTable::identifier(const char *s, int len)
     QLatin1String latin(s, len);
     uint idx = hash % alloc;
     while (String *e = entries[idx]) {
-        if (e->stringHash == hash && e->toQString() == latin)
-            return e->identifier;
+        if (e->stringData()->stringHash == hash && e->toQString() == latin)
+            return e->stringData()->identifier;
         ++idx;
         idx %= alloc;
     }
 
     String *str = engine->newString(QString::fromLatin1(s, len))->getPointer();
     addEntry(str);
-    return str->identifier;
+    return str->stringData()->identifier;
 }
 
 }

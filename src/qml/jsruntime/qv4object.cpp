@@ -828,7 +828,7 @@ bool Object::internalDeleteProperty(const StringRef name)
     uint memberIdx = internalClass()->find(name);
     if (memberIdx != UINT_MAX) {
         if (internalClass()->propertyData[memberIdx].isConfigurable()) {
-            InternalClass::removeMember(this, name->identifier);
+            InternalClass::removeMember(this, name->identifier());
             return true;
         }
         if (engine()->currentContext()->strictMode)

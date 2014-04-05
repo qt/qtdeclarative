@@ -133,9 +133,9 @@ void String::destroy(Managed *that)
 void String::markObjects(Managed *that, ExecutionEngine *e)
 {
     String *s = static_cast<String *>(that);
-    if (s->largestSubLength) {
-        s->left->mark(e);
-        s->right->mark(e);
+    if (s->stringData()->largestSubLength) {
+        s->stringData()->left->mark(e);
+        s->stringData()->right->mark(e);
     }
 }
 
@@ -148,7 +148,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     if (name->equals(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Primitive::fromInt32(that->_text->size).asReturnedValue();
+        return Primitive::fromInt32(that->stringData()->text->size).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = v4->stringObjectClass->prototype->__getPropertyDescriptor__(name, &attrs);
@@ -168,7 +168,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     Scope scope(engine);
     ScopedString that(scope, static_cast<String *>(m));
 
-    if (index < static_cast<uint>(that->_text->size)) {
+    if (index < static_cast<uint>(that->stringData()->text->size)) {
         if (hasProperty)
             *hasProperty = true;
         return Encode(engine->newString(that->toQString().mid(index, 1)));
@@ -217,7 +217,7 @@ PropertyAttributes String::query(const Managed *m, StringRef name)
 PropertyAttributes String::queryIndexed(const Managed *m, uint index)
 {
     const String *that = static_cast<const String *>(m);
-    return (index < static_cast<uint>(that->_text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
+    return (index < static_cast<uint>(that->stringData()->text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
 bool String::deleteProperty(Managed *, const StringRef)
@@ -242,7 +242,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())
         return false;
-    if (that->identifier && that->identifier == other->identifier)
+    if (that->identifier() && that->identifier() == other->identifier())
         return true;
     if (that->subtype() >= StringType_UInt && that->subtype() == other->subtype())
         return true;
@@ -252,30 +252,37 @@ bool String::isEqualTo(Managed *t, Managed *o)
 
 
 String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine->stringClass), _text(const_cast<QString &>(text).data_ptr())
-    , identifier(0), stringHash(UINT_MAX)
-    , largestSubLength(0)
+    : Managed(engine->stringClass)
 {
-    _text->ref.ref();
-    len = _text->size;
+    Data *d = stringData();
+    d->text = const_cast<QString &>(text).data_ptr();
+    d->text->ref.ref();
+    d->identifier = 0;
+    d->stringHash = UINT_MAX;
+    d->largestSubLength = 0;
+    d->len = stringData()->text->size;
     setSubtype(StringType_Unknown);
 }
 
 String::String(ExecutionEngine *engine, String *l, String *r)
     : Managed(engine->stringClass)
-    , left(l), right(r)
-    , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
-    , len(l->len + r->len)
 {
     setSubtype(StringType_Unknown);
 
-    if (!l->largestSubLength && l->len > largestSubLength)
-        largestSubLength = l->len;
-    if (!r->largestSubLength && r->len > largestSubLength)
-        largestSubLength = r->len;
+    Data *d = stringData();
+    d->left = l;
+    d->right = r;
+    d->stringHash = UINT_MAX;
+    d->largestSubLength = qMax(l->stringData()->largestSubLength, r->stringData()->largestSubLength);
+    d->len = l->stringData()->len + r->stringData()->len;
+
+    if (!l->stringData()->largestSubLength && l->stringData()->len > stringData()->largestSubLength)
+        stringData()->largestSubLength = l->stringData()->len;
+    if (!r->stringData()->largestSubLength && r->stringData()->len > stringData()->largestSubLength)
+        stringData()->largestSubLength = r->stringData()->len;
 
     // make sure we don't get excessive depth in our strings
-    if (len > 256 && len >= 2*largestSubLength)
+    if (stringData()->len > 256 && stringData()->len >= 2*stringData()->largestSubLength)
         simplifyString();
 }
 
@@ -286,7 +293,7 @@ uint String::toUInt(bool *ok) const
     if (subtype() == StringType_Unknown)
         createHashValue();
     if (subtype() >= StringType_UInt)
-        return stringHash;
+        return stringData()->stringHash;
 
     // ### this conversion shouldn't be required
     double d = RuntimeHelpers::stringToNumber(toQString());
@@ -303,7 +310,7 @@ bool String::equals(const StringRef other) const
         return true;
     if (hashValue() != other->hashValue())
         return false;
-    if (identifier && identifier == other->identifier)
+    if (identifier() && identifier() == other->identifier())
         return true;
     if (subtype() >= StringType_UInt && subtype() == other->subtype())
         return true;
@@ -313,34 +320,34 @@ bool String::equals(const StringRef other) const
 
 void String::makeIdentifierImpl() const
 {
-    if (largestSubLength)
+    if (stringData()->largestSubLength)
         simplifyString();
-    Q_ASSERT(!largestSubLength);
+    Q_ASSERT(!stringData()->largestSubLength);
     engine()->identifierTable->identifier(this);
 }
 
 void String::simplifyString() const
 {
-    Q_ASSERT(largestSubLength);
+    Q_ASSERT(stringData()->largestSubLength);
 
     int l = length();
     QString result(l, Qt::Uninitialized);
     QChar *ch = const_cast<QChar *>(result.constData());
     recursiveAppend(ch);
-    _text = result.data_ptr();
-    _text->ref.ref();
-    identifier = 0;
-    largestSubLength = 0;
+    stringData()->text = result.data_ptr();
+    stringData()->text->ref.ref();
+    stringData()->identifier = 0;
+    stringData()->largestSubLength = 0;
 }
 
 QChar *String::recursiveAppend(QChar *ch) const
 {
-    if (largestSubLength) {
-        ch = left->recursiveAppend(ch);
-        ch = right->recursiveAppend(ch);
+    if (stringData()->largestSubLength) {
+        ch = stringData()->left->recursiveAppend(ch);
+        ch = stringData()->right->recursiveAppend(ch);
     } else {
-        memcpy(ch, _text->data(), _text->size*sizeof(QChar));
-        ch += _text->size;
+        memcpy(ch, stringData()->text->data(), stringData()->text->size*sizeof(QChar));
+        ch += stringData()->text->size;
     }
     return ch;
 }
@@ -348,17 +355,17 @@ QChar *String::recursiveAppend(QChar *ch) const
 
 void String::createHashValue() const
 {
-    if (largestSubLength)
+    if (stringData()->largestSubLength)
         simplifyString();
-    Q_ASSERT(!largestSubLength);
-    const QChar *ch = reinterpret_cast<const QChar *>(_text->data());
-    const QChar *end = ch + _text->size;
+    Q_ASSERT(!stringData()->largestSubLength);
+    const QChar *ch = reinterpret_cast<const QChar *>(stringData()->text->data());
+    const QChar *end = ch + stringData()->text->size;
 
     // array indices get their number as hash value
     bool ok;
-    stringHash = ::toArrayIndex(ch, end, &ok);
+    stringData()->stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok) {
-        setSubtype((stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex);
+        setSubtype((stringData()->stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex);
         return;
     }
 
@@ -368,7 +375,7 @@ void String::createHashValue() const
         ++ch;
     }
 
-    stringHash = h;
+    stringData()->stringHash = h;
     setSubtype(StringType_Regular);
 }
 

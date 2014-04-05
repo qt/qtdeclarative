@@ -70,8 +70,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {
-        if (!largestSubLength && !_text->ref.deref())
-            QStringData::deallocate(_text);
+        if (!stringData()->largestSubLength && !stringData()->text->ref.deref())
+            QStringData::deallocate(stringData()->text);
     }
 
     bool equals(const StringRef other) const;
@@ -80,8 +80,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        Q_ASSERT(!largestSubLength);
-        if (identifier && identifier == other->identifier)
+        Q_ASSERT(!stringData()->largestSubLength);
+        if (stringData()->identifier && stringData()->identifier == other->stringData()->identifier)
             return true;
         if (subtype() >= StringType_UInt && subtype() == other->subtype())
             return true;
@@ -94,10 +94,10 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
 
     inline QString toQString() const {
-        if (largestSubLength)
+        if (stringData()->largestSubLength)
             simplifyString();
-        QStringDataPtr ptr = { _text };
-        _text->ref.ref();
+        QStringDataPtr ptr = { stringData()->text };
+        stringData()->text->ref.ref();
         return QString(ptr);
     }
 
@@ -106,22 +106,22 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     inline unsigned hashValue() const {
         if (subtype() == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!largestSubLength);
+        Q_ASSERT(!stringData()->largestSubLength);
 
-        return stringHash;
+        return stringData()->stringHash;
     }
     uint asArrayIndex() const {
         if (subtype() == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!largestSubLength);
+        Q_ASSERT(!stringData()->largestSubLength);
         if (subtype() == StringType_ArrayIndex)
-            return stringHash;
+            return stringData()->stringHash;
         return UINT_MAX;
     }
     uint toUInt(bool *ok) const;
 
     void makeIdentifier() const {
-        if (identifier)
+        if (stringData()->identifier)
             return;
         makeIdentifierImpl();
     }
@@ -134,27 +134,36 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     bool startsWithUpper() const {
         const String *l = this;
-        while (l->largestSubLength)
-            l = l->left;
-        return l->_text->size && QChar::isUpper(l->_text->data()[0]);
+        while (l->stringData()->largestSubLength)
+            l = l->stringData()->left;
+        return l->stringData()->text->size && QChar::isUpper(l->stringData()->text->data()[0]);
     }
     int length() const {
-        Q_ASSERT((largestSubLength && (len == left->len + right->len)) || len == (uint)_text->size);
-        return len;
+        Q_ASSERT((stringData()->largestSubLength &&
+                  (stringData()->len == stringData()->left->stringData()->len + stringData()->right->stringData()->len)) ||
+                 stringData()->len == (uint)stringData()->text->size);
+        return stringData()->len;
     }
 
-    union {
-        mutable QStringData *_text;
-        mutable String *left;
+    struct Data {
+        union {
+            mutable QStringData *text;
+            mutable String *left;
+        };
+        union {
+            mutable Identifier *identifier;
+            mutable String *right;
+        };
+        mutable uint stringHash;
+        mutable uint largestSubLength;
+        uint len;
     };
-    union {
-        mutable Identifier *identifier;
-        mutable String *right;
-    };
-    mutable uint stringHash;
-    mutable uint largestSubLength;
-    uint len;
+    Data data;
 
+    const Data *stringData() const { return &data; }
+    Data *stringData() { return &data; }
+
+    Identifier *identifier() const { return stringData()->identifier; }
 
 protected:
     static void destroy(Managed *);
