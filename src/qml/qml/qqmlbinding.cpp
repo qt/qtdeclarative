@@ -191,7 +191,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         lineNumber = loc.line;
         columnNumber = loc.column;
     } else {
-        QV4::Function *function = f->asFunctionObject()->function;
+        QV4::Function *function = f->asFunctionObject()->function();
         Q_ASSERT(function);
 
         url = function->sourceFile();
@@ -284,7 +284,7 @@ QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(This->context()->engine);
     QV4::Scope scope(ep->v4engine());
     QV4::ScopedValue f(scope, This->v4function.value());
-    QV4::Function *function = f->asFunctionObject()->function;
+    QV4::Function *function = f->asFunctionObject()->function();
 
     QString url = function->sourceFile();
     quint16 lineNumber = function->compiledFunction->location.line;

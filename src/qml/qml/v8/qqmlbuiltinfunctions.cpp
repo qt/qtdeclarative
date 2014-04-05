@@ -1177,7 +1177,7 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 }
 
 QQmlBindingFunction::QQmlBindingFunction(FunctionObject *originalFunction)
-    : QV4::FunctionObject(originalFunction->scope, originalFunction->name())
+    : QV4::FunctionObject(originalFunction->scope(), originalFunction->name())
     , originalFunction(originalFunction)
 {
     setVTable(staticVTable());

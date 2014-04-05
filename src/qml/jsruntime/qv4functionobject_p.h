@@ -111,11 +111,20 @@ struct Q_QML_EXPORT FunctionObject: Object {
         Index_ProtoConstructor = 0
     };
 
-    ExecutionContext *scope;
+    struct Data {
+        ExecutionContext *scope;
+        Function *function;
+
+    };
+    Data data;
+
+
+    ExecutionContext *scope() { return data.scope; }
+    Function *function() { return data.function; }
+
     ReturnedValue name();
-    unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
-    unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
-    Function *function;
+    unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
+    unsigned int varCount() { return function() ? function()->compiledFunction->nLocals : 0; }
 
     FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);

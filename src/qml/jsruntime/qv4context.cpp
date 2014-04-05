@@ -55,7 +55,7 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
-    Q_ASSERT(function->function);
+    Q_ASSERT(function->function());
 
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
     new (c) CallContext(engine, Type_CallContext);
@@ -64,15 +64,15 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode();
-    c->outer = function->scope;
+    c->outer = function->scope();
 
     c->activation = 0;
 
-    c->compilationUnit = function->function->compilationUnit;
+    c->compilationUnit = function->function()->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
-    const CompiledData::Function *compiledFunction = function->function->compiledFunction;
+    const CompiledData::Function *compiledFunction = function->function()->compiledFunction;
     int nLocals = compiledFunction->nLocals;
     if (nLocals)
         std::fill(c->locals, c->locals + nLocals, Primitive::undefinedValue());
@@ -174,12 +174,12 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
     callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
-    outer = function->scope;
+    outer = function->scope();
 
     activation = qml.getPointer();
 
-    if (function->function) {
-        compilationUnit = function->function->compilationUnit;
+    if (function->function()) {
+        compilationUnit = function->function()->compilationUnit;
         lookups = compilationUnit->runtimeLookups;
     }
 
@@ -190,7 +190,7 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
 
 String * const *CallContext::formals() const
 {
-    return (function && function->function) ? function->function->internalClass->nameMap.constData() : 0;
+    return (function && function->function()) ? function->function()->internalClass->nameMap.constData() : 0;
 }
 
 unsigned int CallContext::formalCount() const
@@ -200,7 +200,7 @@ unsigned int CallContext::formalCount() const
 
 String * const *CallContext::variables() const
 {
-    return (function && function->function) ? function->function->internalClass->nameMap.constData() + function->function->compiledFunction->nFormals : 0;
+    return (function && function->function()) ? function->function()->internalClass->nameMap.constData() + function->function()->compiledFunction->nFormals : 0;
 }
 
 unsigned int CallContext::variableCount() const
@@ -228,7 +228,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation() || hasWith) {
-                uint index = f->function->internalClass->find(name);
+                uint index = f->function()->internalClass->find(name);
                 if (index < UINT_MAX)
                     // ### throw in strict mode?
                     return false;
@@ -301,8 +301,8 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             ScopedObject activation(scope, (Object *)0);
             if (ctx->type >= Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
-                if (c->function->function) {
-                    uint index = c->function->function->internalClass->find(name);
+                if (c->function->function()) {
+                    uint index = c->function->function()->internalClass->find(name);
                     if (index < UINT_MAX) {
                         if (index < c->function->formalParameterCount()) {
                             c->callData->args[c->function->formalParameterCount() - index - 1] = *value;
@@ -373,8 +373,8 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             ScopedFunctionObject f(scope, c->function);
-            if (f->function && (f->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = f->function->internalClass->find(name);
+            if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
+                uint index = f->function()->internalClass->find(name);
                 if (index < UINT_MAX) {
                     if (index < c->function->formalParameterCount())
                         return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
@@ -387,8 +387,8 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
                 if (hasProperty)
                     return v.asReturnedValue();
             }
-            if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name()))
+            if (f->function() && f->function()->isNamedExpression()
+                && name->equals(f->function()->name()))
                 return f.asReturnedValue();
         }
 
@@ -439,8 +439,8 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
-            if (f->function && (f->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = f->function->internalClass->find(name);
+            if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
+                uint index = f->function()->internalClass->find(name);
                 if (index < UINT_MAX) {
                     if (index < c->function->formalParameterCount())
                         return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
@@ -456,8 +456,8 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
                     return v.asReturnedValue();
                 }
             }
-            if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name()))
+            if (f->function() && f->function()->isNamedExpression()
+                && name->equals(f->function()->name()))
                 return c->function->asReturnedValue();
         }
 

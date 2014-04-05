@@ -76,17 +76,18 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(scope->engine->functionClass)
-    , scope(scope)
-    , function(0)
 {
-     init(name, createProto);
+    data.scope = scope;
+    data.function = 0;
+    init(name, createProto);
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
     : Object(scope->engine->functionClass)
-    , scope(scope)
-    , function(0)
 {
+    data.scope = scope;
+    data.function = 0;
+
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, s.engine->newString(name));
@@ -95,9 +96,10 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
     : Object(scope->engine->functionClass)
-    , scope(scope)
-    , function(0)
 {
+    data.scope = scope;
+    data.function = 0;
+
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, name);
@@ -106,9 +108,10 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name
 
 FunctionObject::FunctionObject(InternalClass *ic)
     : Object(ic)
-    , scope(ic->engine->rootContext)
-    , function(0)
 {
+    data.scope = ic->engine->rootContext;
+    data.function = 0;
+
     managedData()->needsActivation = false;
     managedData()->strictMode = false;
     memberData()[Index_Prototype] = Encode::undefined();
@@ -116,8 +119,8 @@ FunctionObject::FunctionObject(InternalClass *ic)
 
 FunctionObject::~FunctionObject()
 {
-    if (function)
-        function->compilationUnit->deref();
+    if (function())
+        function()->compilationUnit->deref();
 }
 
 void FunctionObject::init(const StringRef n, bool createProto)
@@ -129,7 +132,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
     managedData()->strictMode = false;
 
     if (createProto) {
-        Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
+        Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
         proto->memberData()[Index_ProtoConstructor] = this->asReturnedValue();
         memberData()[Index_Prototype] = proto.asReturnedValue();
     } else {
@@ -137,12 +140,12 @@ void FunctionObject::init(const StringRef n, bool createProto)
     }
 
     ScopedValue v(s, n.asReturnedValue());
-    defineReadonlyProperty(scope->engine->id_name, v);
+    defineReadonlyProperty(scope()->engine->id_name, v);
 }
 
 ReturnedValue FunctionObject::name()
 {
-    return get(scope->engine->id_name);
+    return get(scope()->engine->id_name);
 }
 
 
@@ -167,8 +170,8 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
 void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
-    if (o->scope)
-        o->scope->mark(e);
+    if (o->scope())
+        o->scope()->mark(e);
 
     Object::markObjects(that, e);
 }
@@ -394,10 +397,10 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
     ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
 
-    if (f->function->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
+    if (f->function()->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     if (result->isObject())
         return result.asReturnedValue();
@@ -418,10 +421,10 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     CallContext *ctx = context->newCallContext(f, callData);
 
     ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
 
-    if (f->function->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function->compiledFunction);
+    if (f->function()->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function()->compiledFunction);
 
     return result.asReturnedValue();
 }
@@ -436,8 +439,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    this->function = function;
-    this->function->compilationUnit->ref();
+    data.function = function;
+    data.function->compilationUnit->ref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 
@@ -479,9 +482,9 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f.getPointer();
-    ctx.compilationUnit = f->function->compilationUnit;
+    ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope;
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -489,10 +492,10 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    Scoped<Object> result(scope, Q_V4_PROFILE(v4, &ctx, f->function));
+    Scoped<Object> result(scope, Q_V4_PROFILE(v4, &ctx, f->function()));
 
-    if (f->function->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
+    if (f->function()->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     if (!result)
         return callData->thisObject.asReturnedValue();
@@ -516,9 +519,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f;
-    ctx.compilationUnit = f->function->compilationUnit;
+    ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope;
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -526,10 +529,10 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    ScopedValue result(scope, Q_V4_PROFILE(v4, &ctx, f->function));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, &ctx, f->function()));
 
-    if (f->function->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
+    if (f->function()->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     return result.asReturnedValue();
 }
@@ -576,7 +579,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
+    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
@@ -595,7 +598,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
+    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
@@ -640,7 +643,7 @@ void BoundFunction::destroy(Managed *that)
 ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope->engine);
+    Scope scope(f->scope()->engine);
     if (scope.hasException())
         return Encode::undefined();
 
@@ -654,7 +657,7 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope->engine);
+    Scope scope(f->scope()->engine);
     if (scope.hasException())
         return Encode::undefined();
 

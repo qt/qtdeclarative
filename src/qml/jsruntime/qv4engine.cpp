@@ -697,14 +697,14 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->function) {
             StackFrame frame;
-            if (callCtx->function->function)
-                frame.source = callCtx->function->function->sourceFile();
+            if (callCtx->function->function())
+                frame.source = callCtx->function->function()->sourceFile();
             name = callCtx->function->name();
             frame.function = name->toQString();
             frame.line = -1;
             frame.column = -1;
 
-            if (callCtx->function->function)
+            if (callCtx->function->function())
                 // line numbers can be negative for places where you can't set a real breakpoint
                 frame.line = qAbs(callCtx->lineNumber);
 
@@ -784,8 +784,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->function) {
-            if (callCtx->function->function)
-                base.setUrl(callCtx->function->function->sourceFile());
+            if (callCtx->function->function())
+                base.setUrl(callCtx->function->function()->sourceFile());
             break;
         }
         c = c->parent;

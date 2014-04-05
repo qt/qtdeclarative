@@ -69,10 +69,10 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    function = f;
-    if (function)
-        function->compilationUnit->ref();
-    managedData()->needsActivation = function ? function->needsActivation() : false;
+    data.function = f;
+    if (function())
+        function()->compilationUnit->ref();
+    managedData()->needsActivation = function() ? function()->needsActivation() : false;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -91,7 +91,6 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    function = 0;
     managedData()->needsActivation = false;
 
     Scope s(scope);
@@ -110,13 +109,13 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 
     Scope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
-    if (!This->function)
+    if (!This->function())
         return QV4::Encode::undefined();
 
     CallContext *ctx = This->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
-    ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
+    ScopedValue result(scope, This->function()->code(ctx, This->function()->codeData));
     engine->popContext();
 
     return result.asReturnedValue();
