@@ -187,7 +187,10 @@ struct FunctionPrototype: FunctionObject
 
 struct BuiltinFunction: FunctionObject {
     V4_OBJECT
-    ReturnedValue (*code)(CallContext *);
+    struct Data {
+        ReturnedValue (*code)(CallContext *);
+    };
+    Data data;
 
     BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
 
@@ -199,14 +202,17 @@ struct IndexedBuiltinFunction: FunctionObject
 {
     V4_OBJECT
 
-    ReturnedValue (*code)(CallContext *ctx, uint index);
-    uint index;
+    struct Data {
+        ReturnedValue (*code)(CallContext *ctx, uint index);
+        uint index;
+    };
+    Data data;
 
     IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
         : FunctionObject(scope)
-        , code(code)
-        , index(index)
     {
+        data.code = code;
+        data.index = index;
         setVTable(staticVTable());
     }
 
@@ -240,9 +246,17 @@ struct ScriptFunction: SimpleScriptFunction {
 
 struct BoundFunction: FunctionObject {
     V4_OBJECT
-    FunctionObject *target;
-    Value boundThis;
-    Members boundArgs;
+
+    struct Data {
+        FunctionObject *target;
+        Value boundThis;
+        Members boundArgs;
+    };
+    Data data;
+
+    FunctionObject *target() { return data.target; }
+    Value boundThis() const { return data.boundThis; }
+    Members boundArgs() const { return data.boundArgs; }
 
     BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs);
     ~BoundFunction() {}

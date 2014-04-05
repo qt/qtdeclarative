@@ -311,7 +311,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
         return ctx->throwTypeError();
 
     if (f->subtype() == FunctionObject::BoundFunction)
-        f = static_cast<BoundFunction *>(f)->target;
+        f = static_cast<BoundFunction *>(f)->target();
 
     Object *v = left->asObject();
     if (!v)

@@ -557,8 +557,8 @@ DEFINE_OBJECT_VTABLE(BuiltinFunction);
 
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
-    , code(code)
 {
+    data.code = code;
     setVTable(staticVTable());
 }
 
@@ -583,7 +583,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    return f->code(&ctx);
+    return f->data.code(&ctx);
 }
 
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
@@ -602,7 +602,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    return f->code(&ctx, f->index);
+    return f->data.code(&ctx, f->data.index);
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
@@ -611,12 +611,13 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
-    , target(target)
-    , boundArgs(boundArgs)
 {
+    data.target = target;
+    data.boundThis = boundThis;
+    data.boundArgs = boundArgs;
+
     setVTable(staticVTable());
     setSubtype(FunctionObject::BoundFunction);
-    this->boundThis = boundThis;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -647,11 +648,11 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
     if (scope.hasException())
         return Encode::undefined();
 
-    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    callData->thisObject = f->boundThis;
-    memcpy(callData->args, f->boundArgs.data(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
-    return f->target->call(callData);
+    ScopedCallData callData(scope, f->boundArgs().size() + dd->argc);
+    callData->thisObject = f->boundThis();
+    memcpy(callData->args, f->boundArgs().data(), f->boundArgs().size()*sizeof(Value));
+    memcpy(callData->args + f->boundArgs().size(), dd->args, dd->argc*sizeof(Value));
+    return f->target()->call(callData);
 }
 
 ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
@@ -661,17 +662,17 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     if (scope.hasException())
         return Encode::undefined();
 
-    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    memcpy(callData->args, f->boundArgs.data(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
-    return f->target->construct(callData);
+    ScopedCallData callData(scope, f->boundArgs().size() + dd->argc);
+    memcpy(callData->args, f->boundArgs().data(), f->boundArgs().size()*sizeof(Value));
+    memcpy(callData->args + f->boundArgs().size(), dd->args, dd->argc*sizeof(Value));
+    return f->target()->construct(callData);
 }
 
 void BoundFunction::markObjects(Managed *that, ExecutionEngine *e)
 {
     BoundFunction *o = static_cast<BoundFunction *>(that);
-    o->target->mark(e);
-    o->boundThis.mark(e);
-    o->boundArgs.mark(e);
+    o->target()->mark(e);
+    o->boundThis().mark(e);
+    o->boundArgs().mark(e);
     FunctionObject::markObjects(that, e);
 }
