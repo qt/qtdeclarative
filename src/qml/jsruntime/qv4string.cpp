@@ -235,7 +235,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (t == o)
         return true;
 
-    if (!o->internalClass->vtable->isString)
+    if (!o->internalClass()->vtable->isString)
         return false;
 
     String *that = static_cast<String *>(t);
@@ -244,7 +244,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
         return false;
     if (that->identifier && that->identifier == other->identifier)
         return true;
-    if (that->subtype >= StringType_UInt && that->subtype == other->subtype)
+    if (that->subtype() >= StringType_UInt && that->subtype() == other->subtype())
         return true;
 
     return that->toQString() == other->toQString();
@@ -258,7 +258,7 @@ String::String(ExecutionEngine *engine, const QString &text)
 {
     _text->ref.ref();
     len = _text->size;
-    subtype = StringType_Unknown;
+    setSubtype(StringType_Unknown);
 }
 
 String::String(ExecutionEngine *engine, String *l, String *r)
@@ -267,7 +267,7 @@ String::String(ExecutionEngine *engine, String *l, String *r)
     , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
     , len(l->len + r->len)
 {
-    subtype = StringType_Unknown;
+    setSubtype(StringType_Unknown);
 
     if (!l->largestSubLength && l->len > largestSubLength)
         largestSubLength = l->len;
@@ -283,9 +283,9 @@ uint String::toUInt(bool *ok) const
 {
     *ok = true;
 
-    if (subtype == StringType_Unknown)
+    if (subtype() == StringType_Unknown)
         createHashValue();
-    if (subtype >= StringType_UInt)
+    if (subtype() >= StringType_UInt)
         return stringHash;
 
     // ### this conversion shouldn't be required
@@ -305,7 +305,7 @@ bool String::equals(const StringRef other) const
         return false;
     if (identifier && identifier == other->identifier)
         return true;
-    if (subtype >= StringType_UInt && subtype == other->subtype)
+    if (subtype() >= StringType_UInt && subtype() == other->subtype())
         return true;
 
     return toQString() == other->toQString();
@@ -358,7 +358,7 @@ void String::createHashValue() const
     bool ok;
     stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok) {
-        subtype = (stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex;
+        setSubtype((stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex);
         return;
     }
 
@@ -369,7 +369,7 @@ void String::createHashValue() const
     }
 
     stringHash = h;
-    subtype = StringType_Regular;
+    setSubtype(StringType_Regular);
 }
 
 uint String::createHashValue(const QChar *ch, int length)

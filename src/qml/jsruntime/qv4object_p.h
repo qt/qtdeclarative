@@ -117,8 +117,8 @@ struct Q_QML_EXPORT Object: Managed {
     Object(ExecutionEngine *engine);
     Object(InternalClass *internalClass);
 
-    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass->vtable); }
-    Object *prototype() const { return internalClass->prototype; }
+    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass()->vtable); }
+    Object *prototype() const { return internalClass()->prototype; }
     bool setPrototype(Object *proto);
 
     Property *__getOwnProperty__(const StringRef name, PropertyAttributes *attrs = 0);
@@ -172,7 +172,13 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void insertMember(const StringRef s, const Property &p, PropertyAttributes attributes);
 
-    inline ExecutionEngine *engine() const { return internalClass->engine; }
+    inline ExecutionEngine *engine() const { return internalClass()->engine; }
+
+    inline bool hasAccessorProperty() const { return managedData()->hasAccessorProperty; }
+    inline void setHasAccessorProperty() { managedData()->hasAccessorProperty = true; }
+
+    bool isExtensible() const { return managedData()->extensible; }
+    void setExtensible(bool b) { managedData()->extensible = b; }
 
     // Array handling
 
@@ -308,7 +314,7 @@ struct BooleanObject: Object {
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
-        Q_ASSERT(internalClass->vtable == staticVTable());
+        Q_ASSERT(internalClass()->vtable == staticVTable());
         value = Encode(false);
     }
 };
@@ -324,7 +330,7 @@ struct NumberObject: Object {
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
-        Q_ASSERT(internalClass->vtable == staticVTable());
+        Q_ASSERT(internalClass()->vtable == staticVTable());
         value = Encode((int)0);
     }
 };
@@ -370,7 +376,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     // ### Clean up
     arrayCreate();
     if (attributes.isAccessor()) {
-        hasAccessorProperty = 1;
+        setHasAccessorProperty();
         initSparseArray();
     } else if (index > 0x1000 && index > 2*arrayData->alloc) {
         initSparseArray();

@@ -78,13 +78,13 @@ Object::Object(ExecutionEngine *engine)
 Object::Object(InternalClass *ic)
     : Managed(ic)
 {
-    Q_ASSERT(internalClass->vtable && internalClass->vtable != &Managed::static_vtbl);
+    Q_ASSERT(internalClass()->vtable != &Managed::static_vtbl);
 
     Q_ASSERT(!memberData.d());
-    if (internalClass->size) {
+    if (internalClass()->size) {
         Scope scope(engine());
         ScopedObject protectThis(scope, this);
-        memberData.ensureIndex(engine(), internalClass->size);
+        memberData.ensureIndex(engine(), internalClass()->size);
     }
 }
 
@@ -96,7 +96,7 @@ bool Object::setPrototype(Object *proto)
             return false;
         pp = pp->prototype();
     }
-    internalClass = internalClass->changePrototype(proto);
+    setInternalClass(internalClass()->changePrototype(proto));
     return true;
 }
 
@@ -123,7 +123,7 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef value)
 {
-    if (internalClass->engine->hasException)
+    if (internalClass()->engine->hasException)
         return;
 
     if (attrs.isAccessor()) {
@@ -227,10 +227,10 @@ void Object::insertMember(const StringRef s, const Property &p, PropertyAttribut
     InternalClass::addMember(this, s.getPointer(), attributes, &idx);
 
 
-    ensureMemberIndex(internalClass->size);
+    ensureMemberIndex(internalClass()->size);
 
     if (attributes.isAccessor()) {
-        hasAccessorProperty = 1;
+        setHasAccessorProperty();
         Property *pp = propertyAt(idx);
         pp->value = p.value;
         pp->set = p.set;
@@ -246,10 +246,10 @@ Property *Object::__getOwnProperty__(const StringRef name, PropertyAttributes *a
     if (idx != UINT_MAX)
         return __getOwnProperty__(idx, attrs);
 
-    uint member = internalClass->find(name);
+    uint member = internalClass()->find(name);
     if (member < UINT_MAX) {
         if (attrs)
-            *attrs = internalClass->propertyData[member];
+            *attrs = internalClass()->propertyData[member];
         return propertyAt(member);
     }
 
@@ -287,10 +287,10 @@ Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttrib
 
     const Object *o = this;
     while (o) {
-        uint idx = o->internalClass->find(name.getPointer());
+        uint idx = o->internalClass()->find(name.getPointer());
         if (idx < UINT_MAX) {
             if (attrs)
-                *attrs = o->internalClass->propertyData[idx];
+                *attrs = o->internalClass()->propertyData[idx];
             return o->propertyAt(idx);
         }
 
@@ -362,7 +362,7 @@ bool Object::hasOwnProperty(const StringRef name) const
     if (idx != UINT_MAX)
         return hasOwnProperty(idx);
 
-    if (internalClass->find(name) < UINT_MAX)
+    if (internalClass()->find(name) < UINT_MAX)
         return true;
     if (!query(name).isEmpty())
         return true;
@@ -420,9 +420,9 @@ PropertyAttributes Object::query(const Managed *m, StringRef name)
         return queryIndexed(m, idx);
 
     const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass->find(name.getPointer());
+    idx = o->internalClass()->find(name.getPointer());
     if (idx < UINT_MAX)
-        return o->internalClass->propertyData[idx];
+        return o->internalClass()->propertyData[idx];
 
     return Attr_Invalid;
 }
@@ -487,11 +487,11 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     Scope scope(m->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
 
-    InternalClass *c = o->internalClass;
+    InternalClass *c = o->internalClass();
     uint idx = c->find(l->name);
     if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
-        if (idx != UINT_MAX && o->internalClass->propertyData[idx].isData() && o->internalClass->propertyData[idx].isWritable()) {
-            l->classList[0] = o->internalClass;
+        if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
+            l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
             o->memberData[idx] = *value;
@@ -499,7 +499,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->propertyAt(idx), o->internalClass->propertyData[idx], value);
+            o->putValue(o->propertyAt(idx), o->internalClass()->propertyData[idx], value);
             return;
         }
     }
@@ -507,26 +507,26 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     ScopedString s(scope, l->name);
     o->put(s, value);
 
-    if (o->internalClass == c)
+    if (o->internalClass() == c)
         return;
-    idx = o->internalClass->find(l->name);
+    idx = o->internalClass()->find(l->name);
     if (idx == UINT_MAX)
         return;
     l->classList[0] = c;
-    l->classList[3] = o->internalClass;
+    l->classList[3] = o->internalClass();
     l->index = idx;
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert0;
         return;
     }
     o = o->prototype();
-    l->classList[1] = o->internalClass;
+    l->classList[1] = o->internalClass();
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert1;
         return;
     }
     o = o->prototype();
-    l->classList[2] = o->internalClass;
+    l->classList[2] = o->internalClass();
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert2;
         return;
@@ -578,8 +578,8 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         }
     }
 
-    while (it->memberIndex < o->internalClass->size) {
-        String *n = o->internalClass->nameMap.at(it->memberIndex);
+    while (it->memberIndex < o->internalClass()->size) {
+        String *n = o->internalClass()->nameMap.at(it->memberIndex);
         if (!n) {
             // accessor properties have a dummy entry with n == 0
             ++it->memberIndex;
@@ -587,7 +587,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         }
 
         Property *p = o->propertyAt(it->memberIndex);
-        PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
+        PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
             name = n;
@@ -611,11 +611,11 @@ ReturnedValue Object::internalGet(const StringRef name, bool *hasProperty)
 
     Object *o = this;
     while (o) {
-        uint idx = o->internalClass->find(name.getPointer());
+        uint idx = o->internalClass()->find(name.getPointer());
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(o->propertyAt(idx), o->internalClass->propertyData.at(idx));
+            return getValue(o->propertyAt(idx), o->internalClass()->propertyData.at(idx));
         }
 
         o = o->prototype();
@@ -663,7 +663,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 // Section 8.12.5
 void Object::internalPut(const StringRef name, const ValueRef value)
 {
-    if (internalClass->engine->hasException)
+    if (internalClass()->engine->hasException)
         return;
 
     uint idx = name->asArrayIndex();
@@ -672,12 +672,12 @@ void Object::internalPut(const StringRef name, const ValueRef value)
 
     name->makeIdentifier();
 
-    uint member = internalClass->find(name.getPointer());
+    uint member = internalClass()->find(name.getPointer());
     Property *pd = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
         pd = propertyAt(member);
-        attrs = internalClass->propertyData[member];
+        attrs = internalClass()->propertyData[member];
     }
 
     // clause 1
@@ -703,7 +703,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
         }
         return;
     } else if (!prototype()) {
-        if (!extensible)
+        if (!isExtensible())
             goto reject;
     } else {
         // clause 4
@@ -711,10 +711,10 @@ void Object::internalPut(const StringRef name, const ValueRef value)
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
-            } else if (!extensible || !attrs.isWritable()) {
+            } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
             }
-        } else if (!extensible) {
+        } else if (!isExtensible()) {
             goto reject;
         }
     }
@@ -747,7 +747,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
 
 void Object::internalPutIndexed(uint index, const ValueRef value)
 {
-    if (internalClass->engine->hasException)
+    if (internalClass()->engine->hasException)
         return;
 
     PropertyAttributes attrs;
@@ -775,7 +775,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
             pd->value = *value;
         return;
     } else if (!prototype()) {
-        if (!extensible)
+        if (!isExtensible())
             goto reject;
     } else {
         // clause 4
@@ -783,10 +783,10 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
-            } else if (!extensible || !attrs.isWritable()) {
+            } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
             }
-        } else if (!extensible) {
+        } else if (!isExtensible()) {
             goto reject;
         }
     }
@@ -816,7 +816,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 // Section 8.12.7
 bool Object::internalDeleteProperty(const StringRef name)
 {
-    if (internalClass->engine->hasException)
+    if (internalClass()->engine->hasException)
         return false;
 
     uint idx = name->asArrayIndex();
@@ -825,9 +825,9 @@ bool Object::internalDeleteProperty(const StringRef name)
 
     name->makeIdentifier();
 
-    uint memberIdx = internalClass->find(name);
+    uint memberIdx = internalClass()->find(name);
     if (memberIdx != UINT_MAX) {
-        if (internalClass->propertyData[memberIdx].isConfigurable()) {
+        if (internalClass()->propertyData[memberIdx].isConfigurable()) {
             InternalClass::removeMember(this, name->identifier);
             return true;
         }
@@ -841,7 +841,7 @@ bool Object::internalDeleteProperty(const StringRef name)
 
 bool Object::internalDeleteIndexedProperty(uint index)
 {
-    if (internalClass->engine->hasException)
+    if (internalClass()->engine->hasException)
         return false;
 
     if (!arrayData || arrayData->vtable()->del(this, index))
@@ -867,9 +867,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     uint memberIndex;
 
     if (isArrayObject() && name->equals(ctx->engine->id_length)) {
-        assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
+        assert(ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->engine->id_length));
         Property *lp = propertyAt(ArrayObject::LengthPropertyIndex);
-        cattrs = internalClass->propertyData.constData() + ArrayObject::LengthPropertyIndex;
+        cattrs = internalClass()->propertyData.constData() + ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
         if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
@@ -890,18 +890,18 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         if (!succeeded)
             goto reject;
         if (attrs.isAccessor())
-            hasAccessorProperty = 1;
+            setHasAccessorProperty();
         return true;
     }
 
     // Clause 1
-    memberIndex = internalClass->find(name.getPointer());
+    memberIndex = internalClass()->find(name.getPointer());
     current = (memberIndex < UINT_MAX) ? propertyAt(memberIndex) : 0;
-    cattrs = internalClass->propertyData.constData() + memberIndex;
+    cattrs = internalClass()->propertyData.constData() + memberIndex;
 
     if (!current) {
         // clause 3
-        if (!extensible)
+        if (!isExtensible())
             goto reject;
         // clause 4
         Property pd;
@@ -921,7 +921,7 @@ reject:
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
 {
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= getLength() && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (ArgumentsObject::isNonStrictArgumentsObject(this))
@@ -947,7 +947,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
 
     if (!current) {
         // clause 3
-        if (!extensible)
+        if (!isExtensible())
             goto reject;
         // clause 4
         Property pp;
@@ -980,7 +980,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
     PropertyAttributes cattrs;
     if (!member.isNull()) {
         current = propertyAt(index);
-        cattrs = internalClass->propertyData[index];
+        cattrs = internalClass()->propertyData[index];
     } else {
         current = arrayData->getProperty(index);
         cattrs = arrayData->attributes(index);
@@ -1054,7 +1054,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
         setArrayAttributes(index, cattrs);
     }
     if (cattrs.isAccessor())
-        hasAccessorProperty = 1;
+        setHasAccessorProperty();
     return true;
   reject:
     if (ctx->strictMode)
@@ -1076,7 +1076,7 @@ void Object::copyArrayData(Object *other)
     Q_ASSERT(isArrayObject());
     Scope scope(engine());
 
-    if (other->protoHasArray() || other->hasAccessorProperty) {
+    if (other->protoHasArray() || other->hasAccessorProperty()) {
         uint len = other->getLength();
         Q_ASSERT(len);
 
@@ -1086,7 +1086,7 @@ void Object::copyArrayData(Object *other)
         }
     } else if (!other->arrayData) {
         ;
-    } else if (other->hasAccessorProperty && other->arrayData->attrs && other->arrayData->isSparse()){
+    } else if (other->hasAccessorProperty() && other->arrayData->attrs && other->arrayData->isSparse()){
         // do it the slow way
         ScopedValue v(scope);
         for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other->arrayData)->sparse->begin();
@@ -1122,7 +1122,7 @@ uint Object::getLength(const Managed *m)
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());
-    if (!internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (!internalClass()->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         return false;
     uint oldLen = getLength();
     bool ok = true;
@@ -1203,7 +1203,7 @@ QStringList ArrayObject::toQStringList() const
 {
     QStringList result;
 
-    QV4::ExecutionEngine *engine = internalClass->engine;
+    QV4::ExecutionEngine *engine = internalClass()->engine;
     Scope scope(engine);
     ScopedValue v(scope);
 

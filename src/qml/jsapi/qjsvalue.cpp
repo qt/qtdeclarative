@@ -682,7 +682,7 @@ QJSValue QJSValue::prototype() const
     Scoped<Object> p(scope, o->prototype());
     if (!p)
         return QJSValue(NullValue);
-    return new QJSValuePrivate(o->internalClass->engine, p);
+    return new QJSValuePrivate(o->internalClass()->engine, p);
 }
 
 /*!

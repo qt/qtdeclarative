@@ -188,17 +188,17 @@ private:
 
 protected:
     Managed(InternalClass *internal)
-        : internalClass(internal), _data(0)
     {
-        Q_ASSERT(internalClass && internalClass->vtable);
-        inUse = 1; extensible = 1;
+        Q_ASSERT(internal && internal->vtable);
+        managedData()->internalClass = internal;
+        managedData()->_data = 0;
+        managedData()->inUse = 1;
+        managedData()->extensible = 1;
     }
 
 public:
     void *operator new(size_t size, MemoryManager *mm);
     void *operator new(size_t, Managed *m) { return m; }
-    void operator delete(void *ptr);
-    void operator delete(void *ptr, MemoryManager *mm);
 
     inline void mark(QV4::ExecutionEngine *engine);
 
@@ -231,12 +231,12 @@ public:
     template <typename T>
     T *as() {
         // ### FIXME:
-        if (!this || !internalClass)
+        if (!this || !internalClass())
             return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
-        return internalClass->vtable == T::staticVTable() ? static_cast<T *>(this) : 0;
+        return internalClass()->vtable == T::staticVTable() ? static_cast<T *>(this) : 0;
     }
     template <typename T>
     const T *as() const {
@@ -246,24 +246,24 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
-        return internalClass->vtable == T::staticVTable() ? static_cast<const T *>(this) : 0;
+        return internalClass()->vtable == T::staticVTable() ? static_cast<const T *>(this) : 0;
     }
 
-    String *asString() { return internalClass->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
-    Object *asObject() { return internalClass->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
-    ArrayObject *asArrayObject() { return internalClass->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
-    FunctionObject *asFunctionObject() { return internalClass->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
-    BooleanObject *asBooleanObject() { return internalClass->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
-    NumberObject *asNumberObject() { return internalClass->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
-    StringObject *asStringObject() { return internalClass->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
-    DateObject *asDateObject() { return internalClass->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
-    ErrorObject *asErrorObject() { return internalClass->vtable->isErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
-    ArgumentsObject *asArgumentsObject() { return internalClass->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
+    String *asString() { return internalClass()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
+    Object *asObject() { return internalClass()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
+    ArrayObject *asArrayObject() { return internalClass()->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
+    FunctionObject *asFunctionObject() { return internalClass()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
+    BooleanObject *asBooleanObject() { return internalClass()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
+    NumberObject *asNumberObject() { return internalClass()->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
+    StringObject *asStringObject() { return internalClass()->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
+    DateObject *asDateObject() { return internalClass()->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
+    ErrorObject *asErrorObject() { return internalClass()->vtable->isErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
+    ArgumentsObject *asArgumentsObject() { return internalClass()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
-    bool isListType() const { return internalClass->vtable->type == Type_QmlSequence; }
+    bool isListType() const { return internalClass()->vtable->type == Type_QmlSequence; }
 
-    bool isArrayObject() const { return internalClass->vtable->type == Type_ArrayObject; }
-    bool isStringObject() const { return internalClass->vtable->type == Type_StringObject; }
+    bool isArrayObject() const { return internalClass()->vtable->type == Type_ArrayObject; }
+    bool isStringObject() const { return internalClass()->vtable->type == Type_StringObject; }
 
     QString className() const;
 
@@ -280,33 +280,46 @@ public:
     void setVTable(const ManagedVTable *vt);
 
     bool isEqualTo(Managed *other)
-    { return internalClass->vtable->isEqualTo(this, other); }
+    { return internalClass()->vtable->isEqualTo(this, other); }
 
     static bool isEqualTo(Managed *m, Managed *other);
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
-
-    InternalClass *internalClass;
-
-    union {
-        uint _data;
-        struct {
-            uchar markBit :  1;
-            uchar inUse   :  1;
-            uchar extensible : 1; // used by Object
-            uchar _unused : 1;
-            uchar needsActivation : 1; // used by FunctionObject
-            uchar strictMode : 1; // used by FunctionObject
-            uchar bindingKeyFlag : 1;
-            uchar hasAccessorProperty : 1;
-            uchar _type;
-            mutable uchar subtype;
-            uchar _flags;
+    struct Data {
+        InternalClass *internalClass;
+        union {
+            uint _data;
+            struct {
+                uchar markBit :  1;
+                uchar inUse   :  1;
+                uchar extensible : 1; // used by Object
+                uchar _unused : 1;
+                uchar needsActivation : 1; // used by FunctionObject
+                uchar strictMode : 1; // used by FunctionObject
+                uchar bindingKeyFlag : 1;
+                uchar hasAccessorProperty : 1;
+                uchar _type;
+                mutable uchar subtype;
+                uchar _flags;
+            };
         };
     };
-    static void destroy(Managed *) {}
+    Data data;
 
+    Data *managedData() { return &data; }
+    const Data *managedData() const { return &data; }
+
+    InternalClass *internalClass() const { return managedData()->internalClass; }
+    void setInternalClass(InternalClass *ic) { managedData()->internalClass = ic; }
+
+    uchar subtype() const { return managedData()->subtype; }
+    void setSubtype(uchar subtype) const { managedData()->subtype = subtype; }
+
+    bool inUse() const { return managedData()->inUse; }
+    bool markBit() const { return managedData()->markBit; }
+
+    static void destroy(Managed *) {}
 private:
     friend class MemoryManager;
     friend struct Identifiers;

@@ -63,7 +63,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     c->function = function;
     c->realArgumentCount = callData->argc;
 
-    c->strictMode = function->strictMode;
+    c->strictMode = function->strictMode();
     c->outer = function->scope;
 
     c->activation = 0;
@@ -227,7 +227,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
         } else if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
-            if (f->needsActivation || hasWith) {
+            if (f->needsActivation() || hasWith) {
                 uint index = f->function->internalClass->find(name);
                 if (index < UINT_MAX)
                     // ### throw in strict mode?
@@ -249,7 +249,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount());
+    return function->needsActivation() || callData->argc < static_cast<int>(function->formalParameterCount());
 }
 
 void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
@@ -323,9 +323,9 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
                     activation->put(name, value);
                     return;
                 } else {
-                    uint member = activation->internalClass->find(name);
+                    uint member = activation->internalClass()->find(name);
                     if (member < UINT_MAX) {
-                        activation->putValue(activation->propertyAt(member), activation->internalClass->propertyData[member], value);
+                        activation->putValue(activation->propertyAt(member), activation->internalClass()->propertyData[member], value);
                         return;
                     }
                 }
@@ -373,7 +373,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             ScopedFunctionObject f(scope, c->function);
-            if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
+            if (f->function && (f->needsActivation() || hasWith || hasCatchScope)) {
                 uint index = f->function->internalClass->find(name);
                 if (index < UINT_MAX) {
                     if (index < c->function->formalParameterCount())
@@ -439,7 +439,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
-            if (f->function && (f->needsActivation || hasWith || hasCatchScope)) {
+            if (f->function && (f->needsActivation() || hasWith || hasCatchScope)) {
                 uint index = f->function->internalClass->find(name);
                 if (index < UINT_MAX) {
                     if (index < c->function->formalParameterCount())

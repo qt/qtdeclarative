@@ -82,11 +82,11 @@ public:
     void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i) {
             String *entry = entries[i];
-            if (!entry || entry->markBit)
+            if (!entry || entry->data.markBit)
                 continue;
-            entry->markBit = 1;
-            Q_ASSERT(entry->internalClass->vtable->markObjects);
-            entry->internalClass->vtable->markObjects(entry, e);
+            entry->data.markBit = 1;
+            Q_ASSERT(entry->data.internalClass->vtable->markObjects);
+            entry->data.internalClass->vtable->markObjects(entry, e);
         }
     }
 };

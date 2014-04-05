@@ -155,18 +155,18 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
-    InternalClass *newClass = object->internalClass->changeMember(string, data, &idx);
+    InternalClass *newClass = object->internalClass()->changeMember(string, data, &idx);
     if (index)
         *index = idx;
 
-    if (newClass->size > object->internalClass->size) {
-        Q_ASSERT(newClass->size == object->internalClass->size + 1);
-        memmove(object->memberData.data() + idx + 2, object->memberData.data() + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
-    } else if (newClass->size < object->internalClass->size) {
-        Q_ASSERT(newClass->size == object->internalClass->size - 1);
-        memmove(object->memberData.data() + idx + 1, object->memberData.data() + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
+    if (newClass->size > object->internalClass()->size) {
+        Q_ASSERT(newClass->size == object->internalClass()->size + 1);
+        memmove(object->memberData.data() + idx + 2, object->memberData.data() + idx + 1, (object->internalClass()->size - idx - 1)*sizeof(Value));
+    } else if (newClass->size < object->internalClass()->size) {
+        Q_ASSERT(newClass->size == object->internalClass()->size - 1);
+        memmove(object->memberData.data() + idx + 1, object->memberData.data() + idx + 2, (object->internalClass()->size - idx - 2)*sizeof(Value));
     }
-    object->internalClass = newClass;
+    object->setInternalClass(newClass);
 }
 
 InternalClass *InternalClass::changeMember(String *string, PropertyAttributes data, uint *index)
@@ -279,18 +279,18 @@ void InternalClass::addMember(Object *object, StringRef string, PropertyAttribut
 void InternalClass::addMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     data.resolve();
-    object->internalClass->engine->identifierTable->identifier(string);
-    if (object->internalClass->propertyTable.lookup(string->identifier) < object->internalClass->size) {
+    object->internalClass()->engine->identifierTable->identifier(string);
+    if (object->internalClass()->propertyTable.lookup(string->identifier) < object->internalClass()->size) {
         changeMember(object, string, data, index);
         return;
     }
 
     uint idx;
-    InternalClass *newClass = object->internalClass->addMemberImpl(string, data, &idx);
+    InternalClass *newClass = object->internalClass()->addMemberImpl(string, data, &idx);
     if (index)
         *index = idx;
 
-    object->internalClass = newClass;
+    object->setInternalClass(newClass);
 }
 
 
@@ -346,15 +346,15 @@ InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes d
 
 void InternalClass::removeMember(Object *object, Identifier *id)
 {
-    InternalClass *oldClass = object->internalClass;
+    InternalClass *oldClass = object->internalClass();
     uint propIdx = oldClass->propertyTable.lookup(id);
     Q_ASSERT(propIdx < oldClass->size);
 
     Transition t = { { id } , -1 };
-    QHash<Transition, InternalClass *>::const_iterator tit = object->internalClass->transitions.constFind(t);
+    QHash<Transition, InternalClass *>::const_iterator tit = object->internalClass()->transitions.constFind(t);
 
-    if (tit != object->internalClass->transitions.constEnd()) {
-        object->internalClass = tit.value();
+    if (tit != object->internalClass()->transitions.constEnd()) {
+        object->setInternalClass(tit.value());
     } else {
         // create a new class and add it to the tree
         InternalClass *newClass = oldClass->engine->emptyClass->changeVTable(oldClass->vtable);
@@ -365,13 +365,13 @@ void InternalClass::removeMember(Object *object, Identifier *id)
             if (!oldClass->propertyData.at(i).isEmpty())
                 newClass = newClass->addMember(oldClass->nameMap.at(i), oldClass->propertyData.at(i));
         }
-        object->internalClass = newClass;
+        object->setInternalClass(newClass);
     }
 
     // remove the entry in memberdata
-    memmove(object->memberData.data() + propIdx, object->memberData.data() + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
+    memmove(object->memberData.data() + propIdx, object->memberData.data() + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
 
-    oldClass->transitions.insert(t, object->internalClass);
+    oldClass->transitions.insert(t, object->internalClass());
 }
 
 uint InternalClass::find(const StringRef string)

@@ -58,8 +58,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     setArrayType(ArrayData::Complex);
 
     if (context->strictMode) {
-        Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
-        Q_ASSERT(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
+        Q_ASSERT(CalleePropertyIndex == internalClass()->find(context->engine->id_callee));
+        Q_ASSERT(CallerPropertyIndex == internalClass()->find(context->engine->id_caller));
         propertyAt(CalleePropertyIndex)->value = v4->thrower;
         propertyAt(CalleePropertyIndex)->set = v4->thrower;
         propertyAt(CallerPropertyIndex)->value = v4->thrower;
@@ -69,14 +69,14 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         arrayPut(0, context->callData->args, context->callData->argc);
         fullyCreated = true;
     } else {
-        hasAccessorProperty = 1;
-        Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
+        setHasAccessorProperty();
+        Q_ASSERT(CalleePropertyIndex == internalClass()->find(context->engine->id_callee));
         memberData[CalleePropertyIndex] = context->function->asReturnedValue();
     }
-    Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
+    Q_ASSERT(LengthPropertyIndex == internalClass()->find(context->engine->id_length));
     memberData[LengthPropertyIndex] = Primitive::fromInt32(context->realArgumentCount);
 
-    Q_ASSERT(internalClass->vtable == staticVTable());
+    Q_ASSERT(internalClass()->vtable == staticVTable());
 }
 
 void ArgumentsObject::fullyCreate()

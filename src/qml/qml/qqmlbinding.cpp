@@ -185,7 +185,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     QV4::Scope scope(ep->v4engine());
     QV4::ScopedFunctionObject f(scope, v4function.value());
     Q_ASSERT(f);
-    if (f->bindingKeyFlag) {
+    if (f->bindingKeyFlag()) {
         QQmlSourceLocation loc = f->as<QV4::QQmlBindingFunction>()->bindingLocation;
         url = loc.sourceFile;
         lineNumber = loc.line;

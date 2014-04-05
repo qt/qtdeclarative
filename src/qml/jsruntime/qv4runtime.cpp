@@ -310,7 +310,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
     if (!f)
         return ctx->throwTypeError();
 
-    if (f->subtype == FunctionObject::BoundFunction)
+    if (f->subtype() == FunctionObject::BoundFunction)
         f = static_cast<BoundFunction *>(f)->target;
 
     Object *v = left->asObject();
@@ -382,7 +382,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
             typeHint = NUMBER_HINT;
     }
 
-    ExecutionEngine *engine = object->internalClass->engine;
+    ExecutionEngine *engine = object->internalClass()->engine;
     if (engine->hasException)
         return Encode::undefined();
 

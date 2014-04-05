@@ -76,7 +76,7 @@ RegExpObject::RegExpObject(InternalClass *ic)
     , value(RegExp::create(ic->engine, QString(), false, false))
     , global(false)
 {
-    Q_ASSERT(internalClass->vtable == staticVTable());
+    Q_ASSERT(internalClass()->vtable == staticVTable());
     init(ic->engine);
 }
 
@@ -180,7 +180,7 @@ void RegExpObject::markObjects(Managed *that, ExecutionEngine *e)
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
-    Q_ASSERT(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    Q_ASSERT(0 == internalClass()->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return propertyAt(0);
 }
 

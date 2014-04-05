@@ -1181,7 +1181,7 @@ QQmlBindingFunction::QQmlBindingFunction(FunctionObject *originalFunction)
     , originalFunction(originalFunction)
 {
     setVTable(staticVTable());
-    bindingKeyFlag = true;
+    managedData()->bindingKeyFlag = true;
 }
 
 void QQmlBindingFunction::initBindingLocation()

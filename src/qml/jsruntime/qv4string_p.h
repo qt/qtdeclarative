@@ -72,7 +72,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     ~String() {
         if (!largestSubLength && !_text->ref.deref())
             QStringData::deallocate(_text);
-        _data = 0;
     }
 
     bool equals(const StringRef other) const;
@@ -84,7 +83,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         Q_ASSERT(!largestSubLength);
         if (identifier && identifier == other->identifier)
             return true;
-        if (subtype >= StringType_UInt && subtype == other->subtype)
+        if (subtype() >= StringType_UInt && subtype() == other->subtype())
             return true;
 
         return toQString() == other->toQString();
@@ -105,17 +104,17 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     void simplifyString() const;
 
     inline unsigned hashValue() const {
-        if (subtype == StringType_Unknown)
+        if (subtype() == StringType_Unknown)
             createHashValue();
         Q_ASSERT(!largestSubLength);
 
         return stringHash;
     }
     uint asArrayIndex() const {
-        if (subtype == StringType_Unknown)
+        if (subtype() == StringType_Unknown)
             createHashValue();
         Q_ASSERT(!largestSubLength);
-        if (subtype == StringType_ArrayIndex)
+        if (subtype() == StringType_ArrayIndex)
             return stringHash;
         return UINT_MAX;
     }

@@ -121,7 +121,6 @@ RegExp::~RegExp()
         RegExpCacheKey key(this);
         m_cache->remove(key);
     }
-    _data = 0;
 }
 
 void RegExp::destroy(Managed *that)

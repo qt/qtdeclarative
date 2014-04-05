@@ -70,33 +70,15 @@ void *Managed::operator new(size_t size, MemoryManager *mm)
     return mm->allocManaged(size);
 }
 
-void Managed::operator delete(void *ptr)
-{
-    if (!ptr)
-        return;
-
-    Managed *m = static_cast<Managed *>(ptr);
-    m->_data = 0;
-    m->markBit = 0;
-    m->~Managed();
-}
-
-void Managed::operator delete(void *ptr, MemoryManager *mm)
-{
-    Q_UNUSED(mm);
-
-    operator delete(ptr);
-}
-
 ExecutionEngine *Managed::engine() const
 {
-    return internalClass ? internalClass->engine : 0;
+    return internalClass()->engine;
 }
 
 QString Managed::className() const
 {
     const char *s = 0;
-    switch (Type(internalClass->vtable->type)) {
+    switch (Type(internalClass()->vtable->type)) {
     case Type_Invalid:
     case Type_String:
         return QString();
@@ -125,7 +107,7 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        switch (ErrorObject::ErrorType(subtype)) {
+        switch (ErrorObject::ErrorType(subtype())) {
         case ErrorObject::Error:
             s = "Error";
             break;
@@ -178,8 +160,8 @@ QString Managed::className() const
 
 void Managed::setVTable(const ManagedVTable *vt)
 {
-    Q_ASSERT(internalClass);
-    internalClass = internalClass->changeVTable(vt);
+    Q_ASSERT(internalClass());
+    managedData()->internalClass = internalClass()->changeVTable(vt);
 }
 
 bool Managed::isEqualTo(Managed *, Managed *)

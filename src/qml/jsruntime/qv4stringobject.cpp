@@ -80,7 +80,7 @@ DEFINE_OBJECT_VTABLE(StringObject);
 StringObject::StringObject(InternalClass *ic)
     : Object(ic)
 {
-    Q_ASSERT(internalClass->vtable == staticVTable());
+    Q_ASSERT(internalClass()->vtable == staticVTable());
 
     Scope scope(engine());
     ScopedObject protectThis(scope, this);
@@ -113,7 +113,7 @@ Property *StringObject::getIndex(uint index) const
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    tmpProperty.value = Encode(internalClass->engine->newString(str.mid(index, 1)));
+    tmpProperty.value = Encode(internalClass()->engine->newString(str.mid(index, 1)));
     return &tmpProperty;
 }
 

@@ -225,7 +225,7 @@ struct URIErrorPrototype: ErrorObject
 
 inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 {
-    return subtype == SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+    return subtype() == SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
 }
 
 }

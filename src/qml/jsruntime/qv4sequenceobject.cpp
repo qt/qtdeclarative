@@ -231,7 +231,7 @@ public:
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)
     {
-        if (internalClass->engine->hasException)
+        if (internalClass()->engine->hasException)
             return;
 
         /* Qt containers have int (rather than uint) allowable indexes. */

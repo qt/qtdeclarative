@@ -268,9 +268,9 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    o->extensible = false;
+    o->setExtensible(false);
 
-    o->internalClass = o->internalClass->sealed();
+    o->setInternalClass(o->internalClass()->sealed());
 
     if (o->arrayData) {
         ArrayData::ensureAttributes(o.getPointer());
@@ -293,9 +293,9 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     if (ArgumentsObject::isNonStrictArgumentsObject(o.getPointer()))
         Scoped<ArgumentsObject>(scope, o)->fullyCreate();
 
-    o->extensible = false;
+    o->setExtensible(false);
 
-    o->internalClass = o->internalClass->frozen();
+    o->setInternalClass(o->internalClass()->frozen());
 
     if (o->arrayData) {
         ArrayData::ensureAttributes(o.getPointer());
@@ -316,7 +316,7 @@ ReturnedValue ObjectPrototype::method_preventExtensions(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    o->extensible = false;
+    o->setExtensible(false);
     return o.asReturnedValue();
 }
 
@@ -327,10 +327,10 @@ ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    if (o->extensible)
+    if (o->isExtensible())
         return Encode(false);
 
-    if (o->internalClass != o->internalClass->sealed())
+    if (o->internalClass() != o->internalClass()->sealed())
         return Encode(false);
 
     if (!o->arrayData || !o->arrayData->length())
@@ -356,10 +356,10 @@ ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    if (o->extensible)
+    if (o->isExtensible())
         return Encode(false);
 
-    if (o->internalClass != o->internalClass->frozen())
+    if (o->internalClass() != o->internalClass()->frozen())
         return Encode(false);
 
     if (!o->arrayData->length())
@@ -385,7 +385,7 @@ ReturnedValue ObjectPrototype::method_isExtensible(CallContext *ctx)
     if (!o)
         return ctx->throwTypeError();
 
-    return Encode((bool)o->extensible);
+    return Encode((bool)o->isExtensible());
 }
 
 ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
@@ -578,7 +578,7 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
     if (!!p) {
         if (o->prototype() == p.getPointer()) {
             ok = true;
-        } else if (o->extensible) {
+        } else if (o->isExtensible()) {
             ok = o->setPrototype(p.getPointer());
         }
     }

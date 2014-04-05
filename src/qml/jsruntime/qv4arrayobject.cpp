@@ -613,7 +613,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 
     ScopedValue value(scope);
 
-    if (instance->hasAccessorProperty || (instance->arrayType() >= ArrayData::Sparse) || instance->protoHasArray()) {
+    if (instance->hasAccessorProperty() || (instance->arrayType() >= ArrayData::Sparse) || instance->protoHasArray()) {
         // lets be safe and slow
         for (uint i = fromIndex; i < len; ++i) {
             bool exists;

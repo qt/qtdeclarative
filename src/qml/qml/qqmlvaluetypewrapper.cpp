@@ -197,7 +197,7 @@ bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     assert(lv);
 
     if (QV4::VariantObject *rv = other->as<VariantObject>())
-        return lv->isEqual(rv->data);
+        return lv->isEqual(rv->ExecutionEngine::ScarceResourceData::data);
 
     if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
         return lv->isEqual(v->toVariant());
@@ -362,7 +362,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
 
         QV4::ScopedFunctionObject f(scope, value);
         if (f) {
-            if (!f->bindingKeyFlag) {
+            if (!f->bindingKeyFlag()) {
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
                 Scoped<String> e(scope, r->v8->toString(error));

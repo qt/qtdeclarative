@@ -460,7 +460,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     QV4::Scope scope(ctx);
     QV4::ScopedFunctionObject f(scope, value);
     if (f) {
-        if (!f->bindingKeyFlag) {
+        if (!f->bindingKeyFlag()) {
             if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
@@ -1759,7 +1759,7 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     , m_index(index)
 {
     setVTable(staticVTable());
-    subtype = WrappedQtMethod;
+    setSubtype(WrappedQtMethod);
     m_qmlGlobal = qmlGlobal;
 }
 

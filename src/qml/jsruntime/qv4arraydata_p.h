@@ -97,7 +97,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     PropertyAttributes *attrs;
     Value *data;
 
-    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
     bool isSparse() const { return this && type == Sparse; }
 
     uint length() const {

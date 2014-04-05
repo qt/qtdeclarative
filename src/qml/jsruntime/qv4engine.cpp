@@ -327,7 +327,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype));
     variantClass = InternalClass::create(this, VariantObject::staticVTable(), variantPrototype);
     Q_ASSERT(variantClass->prototype == variantPrototype);
-    Q_ASSERT(variantPrototype->internalClass->prototype == objectPrototype);
+    Q_ASSERT(variantPrototype->internalClass()->prototype == objectPrototype);
 
     sequencePrototype = new (memoryManager) SequencePrototype(arrayClass);
 
@@ -372,7 +372,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
     rootContext->callData->thisObject = globalObject;
-    Q_ASSERT(globalObject->internalClass->vtable);
+    Q_ASSERT(globalObject->internalClass()->vtable);
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);

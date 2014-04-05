@@ -237,7 +237,6 @@ Managed *MemoryManager::alloc(std::size_t size)
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
-            o->_data = 0;
             *last = o;
             last = o->nextFreeRef();
             chunk += size;
@@ -318,8 +317,8 @@ void MemoryManager::mark()
     // now that we marked all roots, start marking recursively and popping from the mark stack
     while (m_d->engine->jsStackTop > markBase) {
         Managed *m = m_d->engine->popForGC();
-        Q_ASSERT (m->internalClass->vtable->markObjects);
-        m->internalClass->vtable->markObjects(m, m_d->engine);
+        Q_ASSERT (m->internalClass()->vtable->markObjects);
+        m->internalClass()->vtable->markObjects(m, m_d->engine);
     }
 }
 
@@ -335,7 +334,7 @@ void MemoryManager::sweep(bool lastSweep)
             continue;
         }
         if (Managed *m = weak->value.asManaged()) {
-            if (!m->markBit) {
+            if (!m->markBit()) {
                 weak->value = Primitive::undefinedValue();
                 PersistentValuePrivate *n = weak->next;
                 weak->removeFromList();
@@ -348,7 +347,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
         for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {
-            if (!it.value()->markBit)
+            if (!it.value()->markBit())
                 it = multiplyWrappedQObjects->erase(it);
             else
                 ++it;
@@ -362,15 +361,15 @@ void MemoryManager::sweep(bool lastSweep)
     Data::LargeItem **last = &m_d->largeItems;
     while (i) {
         Managed *m = i->managed();
-        Q_ASSERT(m->inUse);
-        if (m->markBit) {
-            m->markBit = 0;
+        Q_ASSERT(m->inUse());
+        if (m->markBit()) {
+            m->managedData()->markBit = 0;
             last = &i->next;
             i = i->next;
             continue;
         }
-        if (m->internalClass->vtable->destroy)
-            m->internalClass->vtable->destroy(m);
+        if (m->internalClass()->vtable->destroy)
+            m->internalClass()->vtable->destroy(m);
 
         *last = i->next;
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
@@ -403,16 +402,16 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 
         Q_ASSERT((qintptr) chunk % 16 == 0);
 
-        if (m->inUse) {
-            if (m->markBit) {
-                m->markBit = 0;
+        if (m->inUse()) {
+            if (m->markBit()) {
+                m->managedData()->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << *f << m->nextFree();
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->internalClass->vtable->destroy)
-                    m->internalClass->vtable->destroy(m);
+                if (m->internalClass()->vtable->destroy)
+                    m->internalClass()->vtable->destroy(m);
 
                 memset(m, 0, size);
                 m->setNextFree(*f);
@@ -486,7 +485,7 @@ size_t MemoryManager::getUsedMem() const
         for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
             Managed *m = reinterpret_cast<Managed *>(chunk);
             Q_ASSERT((qintptr) chunk % 16 == 0);
-            if (m->inUse)
+            if (m->inUse())
                 usedMem += i->chunkSize;
         }
     }
@@ -570,7 +569,7 @@ void MemoryManager::collectFromJSStack() const
     Value *top = m_d->engine->jsStackTop;
     while (v < top) {
         Managed *m = v->asManaged();
-        if (m && m->inUse)
+        if (m && m->inUse())
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(m_d->engine);
         ++v;

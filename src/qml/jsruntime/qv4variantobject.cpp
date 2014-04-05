@@ -91,7 +91,7 @@ QVariant VariantObject::toVariant(const QV4::ValueRef v)
 
 bool VariantObject::isScarce() const
 {
-    QVariant::Type t = data.type();
+    QVariant::Type t = ExecutionEngine::ScarceResourceData::data.type();
     return t == QVariant::Pixmap || t == QVariant::Image;
 }
 
@@ -109,10 +109,10 @@ bool VariantObject::isEqualTo(Managed *m, Managed *other)
     assert(lv);
 
     if (QV4::VariantObject *rv = other->as<QV4::VariantObject>())
-        return lv->data == rv->data;
+        return lv->ExecutionEngine::ScarceResourceData::data == rv->ExecutionEngine::ScarceResourceData::data;
 
     if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
-        return v->isEqual(lv->data);
+        return v->isEqual(lv->ExecutionEngine::ScarceResourceData::data);
 
     return false;
 }
@@ -133,7 +133,7 @@ void VariantObject::removeVmePropertyReference()
         // and add to the ep->scarceResources list
         // since it is now eligible to be released
         // automatically by the engine.
-        internalClass->engine->scarceResources.insert(this);
+        internalClass()->engine->scarceResources.insert(this);
     }
 }
 
@@ -167,7 +167,7 @@ QV4::ReturnedValue VariantPrototype::method_destroy(CallContext *ctx)
     if (o) {
         if (o->isScarce())
             o->node.remove();
-        o->data = QVariant();
+        o->ExecutionEngine::ScarceResourceData::data = QVariant();
     }
     return Encode::undefined();
 }
@@ -178,9 +178,9 @@ QV4::ReturnedValue VariantPrototype::method_toString(CallContext *ctx)
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (!o)
         return Encode::undefined();
-    QString result = o->data.toString();
-    if (result.isEmpty() && !o->data.canConvert(QVariant::String))
-        result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->data.typeName()));
+    QString result = o->ExecutionEngine::ScarceResourceData::data.toString();
+    if (result.isEmpty() && !o->ExecutionEngine::ScarceResourceData::data.canConvert(QVariant::String))
+        result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->ExecutionEngine::ScarceResourceData::data.typeName()));
     return Encode(ctx->engine->newString(result));
 }
 
@@ -189,7 +189,7 @@ QV4::ReturnedValue VariantPrototype::method_valueOf(CallContext *ctx)
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (o) {
-        QVariant v = o->data;
+        QVariant v = o->ExecutionEngine::ScarceResourceData::data;
         switch (v.type()) {
         case QVariant::Invalid:
             return Encode::undefined();

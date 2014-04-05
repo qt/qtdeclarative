@@ -109,8 +109,8 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , scope(ic->engine->rootContext)
     , function(0)
 {
-    needsActivation = false;
-    strictMode = false;
+    managedData()->needsActivation = false;
+    managedData()->strictMode = false;
     memberData[Index_Prototype] = Encode::undefined();
 }
 
@@ -122,11 +122,11 @@ FunctionObject::~FunctionObject()
 
 void FunctionObject::init(const StringRef n, bool createProto)
 {
-    Scope s(internalClass->engine);
+    Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
 
-    needsActivation = true;
-    strictMode = false;
+    managedData()->needsActivation = true;
+    managedData()->strictMode = false;
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
@@ -148,14 +148,14 @@ ReturnedValue FunctionObject::name()
 
 ReturnedValue FunctionObject::newInstance()
 {
-    Scope scope(internalClass->engine);
+    Scope scope(internalClass()->engine);
     ScopedCallData callData(scope, 0);
     return construct(callData);
 }
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    that->internalClass->engine->currentContext()->throwTypeError();
+    that->internalClass()->engine->currentContext()->throwTypeError();
     return Encode::undefined();
 }
 
@@ -195,7 +195,7 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
-    ExecutionEngine *v4 = f->internalClass->engine;
+    ExecutionEngine *v4 = f->internalClass()->engine;
     ExecutionContext *ctx = v4->currentContext();
     QString arguments;
     QString body;
@@ -229,7 +229,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 
     IR::Module module(v4->debugger != 0);
 
-    QQmlJS::RuntimeCodegen cg(v4->currentContext(), f->strictMode);
+    QQmlJS::RuntimeCodegen cg(v4->currentContext(), f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
@@ -300,7 +300,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() != ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty) {
+        if (arr->arrayType() != ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty()) {
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
@@ -363,8 +363,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    needsActivation = function->needsActivation();
-    strictMode = function->isStrict();
+    managedData()->needsActivation = function->needsActivation();
+    managedData()->strictMode = function->isStrict();
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
@@ -378,7 +378,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
 ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->internalClass->engine;
+    ExecutionEngine *v4 = that->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -407,7 +407,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    ExecutionEngine *v4 = f->internalClass->engine;
+    ExecutionEngine *v4 = f->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -447,8 +447,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
     ExecutionEngine *v4 = scope->engine;
 
-    needsActivation = function->needsActivation();
-    strictMode = function->isStrict();
+    managedData()->needsActivation = function->needsActivation();
+    managedData()->strictMode = function->isStrict();
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
@@ -461,7 +461,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
 ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->internalClass->engine;
+    ExecutionEngine *v4 = that->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -476,7 +476,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->strictMode;
+    ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f.getPointer();
     ctx.compilationUnit = f->function->compilationUnit;
@@ -501,7 +501,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->internalClass->engine;
+    ExecutionEngine *v4 = that->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -513,7 +513,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->strictMode;
+    ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f;
     ctx.compilationUnit = f->function->compilationUnit;
@@ -538,10 +538,10 @@ InternalClass *SimpleScriptFunction::internalClassForConstructor()
 {
     ReturnedValue proto = protoProperty();
     InternalClass *classForConstructor;
-    Scope scope(internalClass->engine);
+    Scope scope(internalClass()->engine);
     ScopedObject p(scope, proto);
     if (p)
-        classForConstructor = internalClass->engine->constructClass->changePrototype(p.getPointer());
+        classForConstructor = internalClass()->engine->constructClass->changePrototype(p.getPointer());
     else
         classForConstructor = scope.engine->objectClass;
 
@@ -561,13 +561,13 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
-    return f->internalClass->engine->currentContext()->throwTypeError();
+    return f->internalClass()->engine->currentContext()->throwTypeError();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 {
     BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->internalClass->engine;
+    ExecutionEngine *v4 = f->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -586,7 +586,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->internalClass->engine;
+    ExecutionEngine *v4 = f->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -612,7 +612,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
     , boundArgs(boundArgs)
 {
     setVTable(staticVTable());
-    subtype = FunctionObject::BoundFunction;
+    setSubtype(FunctionObject::BoundFunction);
     this->boundThis = boundThis;
 
     Scope s(scope);

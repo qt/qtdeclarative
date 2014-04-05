@@ -583,7 +583,7 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
     uint oldSize = obj->getLength();
 
     if (other->isSparse()) {
-        if (otherObj->hasAccessorProperty && other->hasAttributes()) {
+        if (otherObj->hasAccessorProperty() && other->hasAttributes()) {
             Scope scope(obj->engine());
             ScopedValue v(scope);
             for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse->begin();

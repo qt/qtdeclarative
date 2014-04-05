@@ -64,7 +64,7 @@ struct DateObject: Object {
 
 protected:
     DateObject(InternalClass *ic): Object(ic) {
-        Q_ASSERT(internalClass->vtable == staticVTable());
+        Q_ASSERT(internalClass()->vtable == staticVTable());
         value = Primitive::fromDouble(qSNaN());
     }
 };

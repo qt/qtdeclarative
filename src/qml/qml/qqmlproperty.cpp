@@ -1534,7 +1534,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         return false;
     } else if (isVarProperty) {
         QV4::FunctionObject *f = result->asFunctionObject();
-        if (f && f->bindingKeyFlag) {
+        if (f && f->bindingKeyFlag()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
             // in an array in a var property if they need to, but the common case is user error.
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
@@ -1552,7 +1552,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         writeValueProperty(object, core, QVariant(), context, flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
         QV4::FunctionObject *f = result->asFunctionObject();
-        if (f && f->bindingKeyFlag) {
+        if (f && f->bindingKeyFlag()) {
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             expression->delayedError()->setErrorObject(object);
             return false;
@@ -1570,7 +1570,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->setErrorObject(object);
         return false;
     } else if (QV4::FunctionObject *f = result->asFunctionObject()) {
-        if (f->bindingKeyFlag)
+        if (f->bindingKeyFlag())
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else
             expression->delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));

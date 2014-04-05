@@ -86,7 +86,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     : Object(ic)
     , stack(0)
 {
-    subtype = t;
+    setSubtype(t);
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
@@ -109,7 +109,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
     : Object(ic)
     , stack(0)
 {
-    subtype = t;
+    setSubtype(t);
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
@@ -132,7 +132,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     : Object(ic)
     , stack(0)
 {
-    subtype = t;
+    setSubtype(t);
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
