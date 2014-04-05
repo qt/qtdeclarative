@@ -54,18 +54,29 @@ namespace QV4 {
 struct DateObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(DateObject)
-    Value value;
-    DateObject(ExecutionEngine *engine, const ValueRef date): Object(engine->dateClass) {
-        value = date;
+
+    struct Data {
+        Value value;
+    };
+    Data data;
+
+    Value date() const { return data.value; }
+    Value &date() { return data.value; }
+    void setDate(const ValueRef d) { data.value = d; }
+
+    DateObject(ExecutionEngine *engine, const ValueRef date)
+        : Object(engine->dateClass)
+    {
+        setDate(date);
     }
-    DateObject(ExecutionEngine *engine, const QDateTime &value);
+    DateObject(ExecutionEngine *engine, const QDateTime &date);
 
     QDateTime toQDateTime() const;
 
 protected:
     DateObject(InternalClass *ic): Object(ic) {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        value = Primitive::fromDouble(qSNaN());
+        data.value = Primitive::fromDouble(qSNaN());
     }
 };
 

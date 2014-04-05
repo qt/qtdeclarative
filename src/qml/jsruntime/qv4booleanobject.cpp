@@ -87,7 +87,7 @@ ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
         Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
         if (!thisObject)
             return ctx->throwTypeError();
-        result = thisObject->value.booleanValue();
+        result = thisObject->value().booleanValue();
     }
 
     return Encode(ctx->engine->newString(QLatin1String(result ? "true" : "false")));
@@ -103,5 +103,5 @@ ReturnedValue BooleanPrototype::method_valueOf(CallContext *ctx)
     if (!thisObject)
         return ctx->throwTypeError();
 
-    return thisObject->value.asReturnedValue();
+    return thisObject->value().asReturnedValue();
 }

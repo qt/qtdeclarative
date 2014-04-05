@@ -108,7 +108,7 @@ inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
     NumberObject *n = ctx->callData->thisObject.asNumberObject();
     if (!n)
         return ctx->throwTypeError();
-    return n->value.asReturnedValue();
+    return n->value().asReturnedValue();
 }
 
 inline double thisNumber(ExecutionContext *ctx)
@@ -118,7 +118,7 @@ inline double thisNumber(ExecutionContext *ctx)
     NumberObject *n = ctx->callData->thisObject.asNumberObject();
     if (!n)
         return ctx->throwTypeError();
-    return n->value.asDouble();
+    return n->value().asDouble();
 }
 
 ReturnedValue NumberPrototype::method_toString(CallContext *ctx)

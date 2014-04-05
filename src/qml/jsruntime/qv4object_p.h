@@ -317,32 +317,48 @@ private:
 struct BooleanObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(BooleanObject)
-    Value value;
+
+    struct Data {
+        Value value;
+    };
+    Data data;
+
+    Value value() const { return data.value; }
+
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
-        : Object(engine->booleanClass) {
-        value = val;
+        : Object(engine->booleanClass)
+    {
+        data.value = val;
     }
 protected:
     BooleanObject(InternalClass *ic)
-        : Object(ic) {
+        : Object(ic)
+    {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        value = Encode(false);
+        data.value = Encode(false);
     }
 };
 
 struct NumberObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(NumberObject)
-    Value value;
+
+    struct Data {
+        Value value;
+    };
+    Data data;
+
+    Value value() const { return data.value; }
+
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
-        value = val;
+        data.value = val;
     }
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        value = Encode((int)0);
+        data.value = Encode((int)0);
     }
 };
 

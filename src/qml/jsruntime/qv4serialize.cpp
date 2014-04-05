@@ -208,7 +208,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
     } else if (QV4::DateObject *d = v->asDateObject()) {
         reserve(data, sizeof(quint32) + sizeof(double));
         push(data, valueheader(WorkerDate));
-        push(data, d->value.asDouble());
+        push(data, d->date().asDouble());
     } else if (v->as<RegExpObject>()) {
         Scoped<RegExpObject> re(scope, v);
         quint32 flags = re->flags();
