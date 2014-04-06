@@ -80,15 +80,21 @@ struct RegExpObject: Object {
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
-    RegExp* value;
-    Property *lastIndexProperty(ExecutionContext *ctx);
-    bool global;
+    struct Data {
+        RegExp* value;
+        bool global;
+    };
+    Data data;
+
+    RegExp* value() const { return data.value; }
+    bool global() const { return data.global; }
 
     RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
 
     void init(ExecutionEngine *engine);
 
+    Property *lastIndexProperty(ExecutionContext *ctx);
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;
@@ -106,10 +112,18 @@ struct RegExpCtor: FunctionObject
     V4_OBJECT
     RegExpCtor(ExecutionContext *scope);
 
-    Value lastMatch;
-    StringValue lastInput;
-    int lastMatchStart;
-    int lastMatchEnd;
+    struct Data {
+        Value lastMatch;
+        StringValue lastInput;
+        int lastMatchStart;
+        int lastMatchEnd;
+    };
+    Data data;
+
+    Value lastMatch() { return data.lastMatch; }
+    StringValue lastInput() { return data.lastInput; }
+    int lastMatchStart() { return data.lastMatchStart; }
+    int lastMatchEnd() { return data.lastMatchEnd; }
     void clearLastMatch();
 
     static ReturnedValue construct(Managed *m, CallData *callData);

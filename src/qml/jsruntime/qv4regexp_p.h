@@ -95,19 +95,38 @@ class RegExp : public Managed
 {
     V4_MANAGED
     Q_MANAGED_TYPE(RegExp)
-public:
+
+    struct Data {
+        QString pattern;
+        OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
+#if ENABLE(YARR_JIT)
+        JSC::Yarr::YarrCodeBlock jitCode;
+#endif
+        RegExpCache *cache;
+        int subPatternCount;
+        bool ignoreCase;
+        bool multiLine;
+    };
+    Data data;
+
+    QString pattern() const { return data.pattern; }
+    OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return data.byteCode; }
+#if ENABLE(YARR_JIT)
+    JSC::Yarr::YarrCodeBlock jitCode() const { return data.jitCode; }
+#endif
+    RegExpCache *cache() const { return data.cache; }
+    int subPatternCount() const { return data.subPatternCount; }
+    bool ignoreCase() const { return data.ignoreCase; }
+    bool multiLine() const { return data.multiLine; }
+
     static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
     ~RegExp();
 
-    QString pattern() const { return m_pattern; }
-
-    bool isValid() const { return m_byteCode.get(); }
+    bool isValid() const { return data.byteCode.get(); }
 
     uint match(const QString& string, int start, uint *matchOffsets);
 
-    bool ignoreCase() const { return m_ignoreCase; }
-    bool multiLine() const { return m_multiLine; }
-    int captureCount() const { return m_subPatternCount + 1; }
+    int captureCount() const { return subPatternCount() + 1; }
 
     static void destroy(Managed *that);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
@@ -117,15 +136,6 @@ private:
     Q_DISABLE_COPY(RegExp);
     RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
 
-    const QString m_pattern;
-    OwnPtr<JSC::Yarr::BytecodePattern> m_byteCode;
-#if ENABLE(YARR_JIT)
-    JSC::Yarr::YarrCodeBlock m_jitCode;
-#endif
-    RegExpCache *m_cache;
-    int m_subPatternCount;
-    const bool m_ignoreCase;
-    const bool m_multiLine;
 };
 
 inline RegExpCacheKey::RegExpCacheKey(const RegExp *re)

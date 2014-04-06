@@ -396,7 +396,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
         // ### CHECK
         return context->throwTypeError();
 
-    bool global = rx->global;
+    bool global = rx->global();
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
     ScopedString execString(scope, context->engine->newString(QStringLiteral("exec")));
@@ -510,7 +510,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
         uint offset = 0;
 
         // We extract the pointer here to work around a compiler bug on Android.
-        Scoped<RegExp> re(scope, regExp->value);
+        Scoped<RegExp> re(scope, regExp->value());
         while (true) {
             int oldSize = nMatchOffsets;
             if (allocatedMatchOffsets < nMatchOffsets + re->captureCount() * 2) {
@@ -530,10 +530,10 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
-        if (regExp->global)
+        if (regExp->global())
             regExp->lastIndexProperty(ctx)->value = Primitive::fromUInt32(0);
-        numStringMatches = nMatchOffsets / (regExp->value->captureCount() * 2);
-        numCaptures = regExp->value->captureCount();
+        numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
+        numCaptures = regExp->value()->captureCount();
     } else {
         numCaptures = 1;
         QString searchString = searchValue->toString(ctx)->toQString();
@@ -620,8 +620,8 @@ ReturnedValue StringPrototype::method_search(CallContext *ctx)
         regExp = regExpValue->as<RegExpObject>();
         Q_ASSERT(regExp);
     }
-    uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
-    uint result = regExp->value->match(string, /*offset*/0, matchOffsets);
+    uint* matchOffsets = (uint*)alloca(regExp->value()->captureCount() * 2 * sizeof(uint));
+    uint result = regExp->value()->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
         return Encode(-1);
     return Encode(result);
@@ -684,7 +684,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
 
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
-        if (re->value->pattern().isEmpty()) {
+        if (re->value()->pattern().isEmpty()) {
             re = (RegExpObject *)0;
             separatorValue = ctx->engine->newString(QString());
         }
@@ -693,9 +693,9 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
     ScopedString s(scope);
     if (re) {
         uint offset = 0;
-        uint* matchOffsets = (uint*)alloca(re->value->captureCount() * 2 * sizeof(uint));
+        uint* matchOffsets = (uint*)alloca(re->value()->captureCount() * 2 * sizeof(uint));
         while (true) {
-            uint result = re->value->match(text, offset, matchOffsets);
+            uint result = re->value()->match(text, offset, matchOffsets);
             if (result == JSC::Yarr::offsetNoMatch)
                 break;
 
@@ -705,7 +705,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
             if (array->getLength() >= limit)
                 break;
 
-            for (int i = 1; i < re->value->captureCount(); ++i) {
+            for (int i = 1; i < re->value()->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
                 array->push_back((s = ctx->engine->newString(text.mid(start, end - start))));
