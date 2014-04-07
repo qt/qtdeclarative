@@ -48,6 +48,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QSurface>
+#include <QtGui/QWindow>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 
 #include <private/qsgtexture_p.h>
@@ -102,6 +103,15 @@ Manager::Manager()
 
     int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512, qsg_powerOfTwo(surfaceSize.width()))));
     int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512, qsg_powerOfTwo(surfaceSize.height()))));
+
+    if (surface->surfaceClass() == QSurface::Window) {
+        QWindow *window = static_cast<QWindow *>(surface);
+        // Coverwindows, optimize for memory rather than speed
+        if ((window->type() & Qt::CoverWindow) == Qt::CoverWindow) {
+            w /= 2;
+            h /= 2;
+        }
+    }
 
     m_atlas_size_limit = qsg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
     m_atlas_size = QSize(w, h);
