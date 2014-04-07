@@ -61,6 +61,7 @@ private slots:
     void behavior();
     void deleteOnUpdate();
     void zeroDuration();
+    void noStart();
 
 private:
     QQmlEngine engine;
@@ -261,6 +262,27 @@ void tst_qquicksmoothedanimation::zeroDuration()
     QTRY_COMPARE(theRect->x(), qreal(200));
 
     delete rect;
+}
+
+//verify that an empty SmoothedAnimation does not fire up the animation system
+//and keep it running forever
+void tst_qquicksmoothedanimation::noStart()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("smoothedanimation1.qml"));
+    QQuickSmoothedAnimation *obj = qobject_cast<QQuickSmoothedAnimation*>(c.create());
+
+    QVERIFY(obj != 0);
+
+    obj->start();
+    QCOMPARE(obj->isRunning(), false);
+    QTest::qWait(100);
+    QCOMPARE(obj->isRunning(), false);
+    //this could fail if the test is being run in parallel with other tests
+    //or if an earlier test failed and didn't clean up (left an animation running)
+    //QCOMPARE(QUnifiedTimer::instance()->runningAnimationCount(), 0);
+
+    delete obj;
 }
 
 QTEST_MAIN(tst_qquicksmoothedanimation)
