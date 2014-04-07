@@ -105,6 +105,8 @@ QSGSimpleTextureNode::QSGSimpleTextureNode()
     setGeometry(&m_geometry);
     setMaterial(&m_material);
     setOpaqueMaterial(&m_opaque_material);
+    m_material.setMipmapFiltering(QSGTexture::None);
+    m_opaque_material.setMipmapFiltering(QSGTexture::None);
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("simpletexture"));
 #endif
