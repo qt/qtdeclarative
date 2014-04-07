@@ -151,6 +151,8 @@ private slots:
     void regexpLastMatch();
     void indexedAccesses();
 
+    void prototypeChainGc();
+
 signals:
     void testSignal();
 };
@@ -2940,6 +2942,22 @@ void tst_QJSEngine::indexedAccesses()
     QVERIFY(v.isString());
     v = engine.evaluate("function foo() { return \"xy\"[2] } foo()");
     QVERIFY(v.isUndefined());
+}
+
+void tst_QJSEngine::prototypeChainGc()
+{
+    QJSEngine engine;
+
+    QJSValue getProto = engine.evaluate("Object.getPrototypeOf");
+
+    QJSValue factory = engine.evaluate("function() { return Object.create(Object.create({})); }");
+    QVERIFY(factory.isCallable());
+    QJSValue obj = factory.call();
+    engine.collectGarbage();
+
+    QJSValue proto = getProto.call(QJSValueList() << obj);
+    proto = getProto.call(QJSValueList() << proto);
+    QVERIFY(proto.isObject());
 }
 
 QTEST_MAIN(tst_QJSEngine)
