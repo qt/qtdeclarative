@@ -1388,7 +1388,8 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ContentNotFoundError ||
         error == QNetworkReply::AuthenticationRequiredError ||
         error == QNetworkReply::ContentReSendError ||
-        error == QNetworkReply::UnknownContentError) {
+        error == QNetworkReply::UnknownContentError ||
+        error == QNetworkReply::ProtocolInvalidOperationError) {
         m_state = Loading;
         dispatchCallback(me);
     } else {
