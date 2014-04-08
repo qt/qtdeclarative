@@ -88,7 +88,7 @@ QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectM
 void QQuickCustomMaterialShader::deactivate()
 {
     QSGMaterialShader::deactivate();
-    glDisable(GL_CULL_FACE);
+    QOpenGLContext::currentContext()->functions()->glDisable(GL_CULL_FACE);
 }
 
 void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -146,7 +146,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         continue;
                     }
                 }
-                glBindTexture(GL_TEXTURE_2D, 0);
+                functions->glBindTexture(GL_TEXTURE_2D, 0);
             } else if (d.specialType == UniformData::Opacity) {
                 program()->setUniformValue(loc, state.opacity());
             } else if (d.specialType == UniformData::Matrix) {
@@ -217,15 +217,15 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
     if (oldEffect == 0 || material->cullMode != oldMaterial->cullMode) {
         switch (material->cullMode) {
         case QQuickShaderEffectMaterial::FrontFaceCulling:
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
+            functions->glEnable(GL_CULL_FACE);
+            functions->glCullFace(GL_FRONT);
             break;
         case QQuickShaderEffectMaterial::BackFaceCulling:
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
+            functions->glEnable(GL_CULL_FACE);
+            functions->glCullFace(GL_BACK);
             break;
         default:
-            glDisable(GL_CULL_FACE);
+            functions->glDisable(GL_CULL_FACE);
             break;
         }
     }
@@ -256,7 +256,7 @@ void QQuickCustomMaterialShader::compile()
     char const *const *attr = attributeNames();
 #ifndef QT_NO_DEBUG
     int maxVertexAttribs = 0;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
     int attrCount = 0;
     while (attrCount < maxVertexAttribs && attr[attrCount])
         ++attrCount;

@@ -139,8 +139,9 @@ private:
     QOpenGLVertexArrayObject m_vao;
 
     QOpenGLSharedResourceGuard *m_fboGuard;
+    QOpenGLFunctions *m_funcs;
 #if !defined(QT_OPENGL_ES_2)
-    QOpenGLFunctions_3_2_Core *m_funcs;
+    QOpenGLFunctions_3_2_Core *m_coreFuncs;
 #endif
 };
 

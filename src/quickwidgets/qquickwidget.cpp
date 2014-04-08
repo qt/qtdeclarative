@@ -211,7 +211,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
     renderControl->polishItems();
     renderControl->sync();
     renderControl->render();
-    glFlush();
+    context->functions()->glFlush();
     context->doneCurrent();
     q->update();
 }
@@ -837,7 +837,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 
     context->makeCurrent(d->offscreenSurface);
     d->renderControl->render();
-    glFlush();
+    context->functions()->glFlush();
     context->doneCurrent();
 }
 

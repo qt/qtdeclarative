@@ -53,6 +53,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QOpenGLVertexArrayObject>
+#include <QtGui/QOpenGLFunctions_1_0>
 
 #include <private/qquickprofiler_p.h>
 
@@ -2195,8 +2196,11 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
             glLineWidth(g->lineWidth());
 #if !defined(QT_OPENGL_ES_2)
-        else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS)
-            glPointSize(g->lineWidth());
+        else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
+            QOpenGLFunctions_1_0 *gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
+            gl1funcs->initializeOpenGLFunctions();
+            gl1funcs->glPointSize(g->lineWidth());
+        }
 #endif
 
         if (g->indexCount())
@@ -2227,11 +2231,7 @@ void Renderer::renderBatches()
     glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
 
     if (m_useDepthBuffer) {
-#if defined(QT_OPENGL_ES)
-        glClearDepthf(1);
-#else
-        glClearDepth(1);
-#endif
+        glClearDepthf(1); // calls glClearDepth() under the hood for desktop OpenGL
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
         glDepthMask(true);

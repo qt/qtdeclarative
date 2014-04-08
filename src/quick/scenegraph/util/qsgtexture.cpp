@@ -496,6 +496,7 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
 void QSGTexture::updateBindOptions(bool force)
 {
     Q_D(QSGTexture);
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     force |= isAtlasTexture();
 
     if (force || d->filteringChanged) {
@@ -509,8 +510,8 @@ void QSGTexture::updateBindOptions(bool force)
             else if (d->mipmapMode == Linear)
                 minFilter = linear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
         }
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
         d->filteringChanged = false;
     }
 
@@ -524,8 +525,8 @@ void QSGTexture::updateBindOptions(bool force)
                 qWarning("Scene Graph: This system does not support the REPEAT wrap mode for non-power-of-two textures.");
         }
 #endif
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, d->horizontalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, d->verticalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, d->horizontalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, d->verticalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         d->wrapChanged = false;
     }
 }
@@ -546,7 +547,7 @@ QSGPlainTexture::QSGPlainTexture()
 QSGPlainTexture::~QSGPlainTexture()
 {
     if (m_texture_id && m_owns_texture)
-        glDeleteTextures(1, &m_texture_id);
+        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
 }
 
 void qsg_swizzleBGRAToRGBA(QImage *image)
@@ -579,7 +580,7 @@ int QSGPlainTexture::textureId() const
             return 0;
         } else if (m_texture_id == 0){
             // Generate a texture id for use later and return it.
-            glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
+            QOpenGLContext::currentContext()->functions()->glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
             return m_texture_id;
         }
     }
@@ -589,7 +590,7 @@ int QSGPlainTexture::textureId() const
 void QSGPlainTexture::setTextureId(int id)
 {
     if (m_texture_id && m_owns_texture)
-        glDeleteTextures(1, &m_texture_id);
+        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
 
     m_texture_id = id;
     m_dirty_texture = false;
@@ -600,11 +601,12 @@ void QSGPlainTexture::setTextureId(int id)
 
 void QSGPlainTexture::bind()
 {
+    QOpenGLContext *context = QOpenGLContext::currentContext();
+    QOpenGLFunctions *funcs = context->functions();
     if (!m_dirty_texture) {
-        glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
         if (mipmapFiltering() != QSGTexture::None && !m_mipmaps_generated) {
-            QOpenGLContext *ctx = QOpenGLContext::currentContext();
-            ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+            funcs->glGenerateMipmap(GL_TEXTURE_2D);
             m_mipmaps_generated = true;
         }
         updateBindOptions(m_dirty_bind_options);
@@ -622,7 +624,7 @@ void QSGPlainTexture::bind()
 
     if (m_image.isNull()) {
         if (m_texture_id && m_owns_texture) {
-            glDeleteTextures(1, &m_texture_id);
+            funcs->glDeleteTextures(1, &m_texture_id);
 #ifndef QSG_NO_RENDER_TIMING
             if (qsg_render_timing) {
                 qDebug("   - texture deleted in %dms (size: %dx%d)",
@@ -642,8 +644,8 @@ void QSGPlainTexture::bind()
     }
 
     if (m_texture_id == 0)
-        glGenTextures(1, &m_texture_id);
-    glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        funcs->glGenTextures(1, &m_texture_id);
+    funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
 #ifndef QSG_NO_RENDER_TIMING
     qint64 bindTime = 0;
@@ -683,7 +685,6 @@ void QSGPlainTexture::bind()
     static bool wrongfullyReportsBgra8888Support = false;
 #endif
 
-    QOpenGLContext *context = QOpenGLContext::currentContext();
     if (context->hasExtension(QByteArrayLiteral("GL_EXT_bgra"))) {
         externalFormat = GL_BGRA;
 #ifdef QT_OPENGL_ES
@@ -711,7 +712,7 @@ void QSGPlainTexture::bind()
     if (profileFrames)
         swizzleTime = qsg_renderer_timer.nsecsElapsed();
 #endif
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
+    funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
 #ifndef QSG_NO_RENDER_TIMING
     qint64 uploadTime = 0;
@@ -721,7 +722,7 @@ void QSGPlainTexture::bind()
 
 
     if (mipmapFiltering() != QSGTexture::None) {
-        context->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+        funcs->glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmaps_generated = true;
     }
 

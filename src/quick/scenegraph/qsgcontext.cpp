@@ -207,13 +207,14 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
     if (!dumped && qEnvironmentVariableIsSet("QSG_INFO")) {
         dumped = true;
         QSurfaceFormat format = renderContext->openglContext()->format();
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
         qDebug() << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
         qDebug() << "Depth Buffer:      " << format.depthBufferSize();
         qDebug() << "Stencil Buffer:    " << format.stencilBufferSize();
         qDebug() << "Samples:           " << format.samples();
-        qDebug() << "GL_VENDOR:         " << (const char *) glGetString(GL_VENDOR);
-        qDebug() << "GL_RENDERER:       " << (const char *) glGetString(GL_RENDERER);
-        qDebug() << "GL_VERSION:        " << (const char *) glGetString(GL_VERSION);
+        qDebug() << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
+        qDebug() << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
+        qDebug() << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
         QSet<QByteArray> exts = renderContext->openglContext()->extensions();
         QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
         qDebug() << "GL_EXTENSIONS:    " << all.constData();
@@ -441,10 +442,11 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
     m_sg->renderContextInitialized(this);
 
 #ifdef Q_OS_LINUX
-    const char *vendor = (const char *) glGetString(GL_VENDOR);
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
     if (strstr(vendor, "nouveau"))
         m_brokenIBOs = true;
-    const char *renderer = (const char *) glGetString(GL_RENDERER);
+    const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
     if (strstr(renderer, "llvmpipe"))
         m_serializedRender = true;
     if (strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))

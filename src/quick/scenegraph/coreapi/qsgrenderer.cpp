@@ -76,13 +76,13 @@ void QSGBindable::clear(QSGRenderer::ClearMode mode) const
     if (mode & QSGRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
     if (mode & QSGRenderer::ClearDepthBuffer) bits |= GL_DEPTH_BUFFER_BIT;
     if (mode & QSGRenderer::ClearStencilBuffer) bits |= GL_STENCIL_BUFFER_BIT;
-    glClear(bits);
+    QOpenGLContext::currentContext()->functions()->glClear(bits);
 }
 
 // Reactivate the color buffer after switching to the stencil.
 void QSGBindable::reactivate() const
 {
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    QOpenGLContext::currentContext()->functions()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
 QSGBindableFbo::QSGBindableFbo(QOpenGLFramebufferObject *fbo) : m_fbo(fbo)

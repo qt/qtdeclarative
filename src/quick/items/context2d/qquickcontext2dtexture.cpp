@@ -414,7 +414,7 @@ QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
     delete m_multisampledFbo;
     delete m_paint_device;
 
-    glDeleteTextures(2, m_displayTextures);
+    QOpenGLContext::currentContext()->functions()->glDeleteTextures(2, m_displayTextures);
 }
 
 QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture)
@@ -601,15 +601,16 @@ void QQuickContext2DFBOTexture::endPainting()
         if (m_onCustomThread)
             m_mutex.lock();
 
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
         if (m_displayTextures[0] == 0) {
             m_displayTexture = 1;
-            glGenTextures(2, m_displayTextures);
+            funcs->glGenTextures(2, m_displayTextures);
         }
 
         m_fbo->bind();
         GLuint target = m_displayTexture == 0 ? 1 : 0;
-        glBindTexture(GL_TEXTURE_2D, m_displayTextures[target]);
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, m_fbo->width(), m_fbo->height(), 0);
+        funcs->glBindTexture(GL_TEXTURE_2D, m_displayTextures[target]);
+        funcs->glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, m_fbo->width(), m_fbo->height(), 0);
 
         if (m_onCustomThread)
             m_mutex.unlock();

@@ -78,7 +78,7 @@ namespace
     BindableFbo::~BindableFbo()
     {
         if (qmlFboFlushBeforeDetach())
-            glFlush();
+            QOpenGLContext::currentContext()->functions()->glFlush();
         if (m_depthStencil)
             m_depthStencil->detach();
     }
@@ -173,7 +173,7 @@ void QQuickShaderEffectTexture::invalidated()
     m_debugOverlay = 0;
 #endif
     if (m_transparentTexture) {
-        glDeleteTextures(1, &m_transparentTexture);
+        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_transparentTexture);
         m_transparentTexture = 0;
     }
 }
@@ -200,18 +200,18 @@ void QQuickShaderEffectTexture::bind()
     if (!m_recursive && m_fbo && ((m_multisampling && m_secondaryFbo->isBound()) || m_fbo->isBound()))
         qWarning("ShaderEffectSource: \'recursive\' must be set to true when rendering recursively.");
 #endif
-
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     if (!m_fbo && m_format == GL_RGBA) {
         if (m_transparentTexture == 0) {
-            glGenTextures(1, &m_transparentTexture);
-            glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
+            funcs->glGenTextures(1, &m_transparentTexture);
+            funcs->glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
             const uint zero = 0;
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &zero);
+            funcs->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &zero);
         } else {
-            glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
+            funcs->glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
         }
     } else {
-        glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : 0);
+        funcs->glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : 0);
         updateBindOptions();
     }
 }
@@ -345,6 +345,7 @@ void QQuickShaderEffectTexture::grab()
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     bool deleteFboLater = false;
     if (!m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format
         || (!m_fbo->format().mipmap() && m_mipmap))
@@ -377,7 +378,7 @@ void QQuickShaderEffectTexture::grab()
                 deleteFboLater = true;
                 delete m_secondaryFbo;
                 m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
-                glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
+                funcs->glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
                 updateBindOptions(true);
                 m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
             } else {
@@ -385,7 +386,7 @@ void QQuickShaderEffectTexture::grab()
                 delete m_secondaryFbo;
                 m_fbo = new QOpenGLFramebufferObject(m_size, format);
                 m_secondaryFbo = 0;
-                glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+                funcs->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
                 m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_fbo);
             }
@@ -398,7 +399,7 @@ void QQuickShaderEffectTexture::grab()
         Q_ASSERT(!m_multisampling);
 
         m_secondaryFbo = new QOpenGLFramebufferObject(m_size, m_fbo->format());
-        glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
+        funcs->glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
         updateBindOptions(true);
     }
 
@@ -418,7 +419,6 @@ void QQuickShaderEffectTexture::grab()
 
     m_dirtyTexture = false;
 
-    QOpenGLContext *ctx = m_context->openglContext();
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
@@ -436,7 +436,7 @@ void QQuickShaderEffectTexture::grab()
             format.setMipmap(m_mipmap);
             format.setSamples(0);
             m_fbo = new QOpenGLFramebufferObject(m_size, format);
-            glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+            funcs->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
             updateBindOptions(true);
         }
 
@@ -453,7 +453,7 @@ void QQuickShaderEffectTexture::grab()
                 format.setInternalTextureFormat(m_format);
                 format.setMipmap(m_mipmap);
                 m_fbo = new QOpenGLFramebufferObject(m_size, format);
-                glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+                funcs->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
             }
             qSwap(m_fbo, m_secondaryFbo);
@@ -463,8 +463,8 @@ void QQuickShaderEffectTexture::grab()
     }
 
     if (m_mipmap) {
-        glBindTexture(GL_TEXTURE_2D, textureId());
-        ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+        funcs->glBindTexture(GL_TEXTURE_2D, textureId());
+        funcs->glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip, opacity and render list update.

@@ -186,7 +186,7 @@ public Q_SLOTS:
         if (renderPending) {
             renderPending = false;
             fbo->bind();
-            glViewport(0, 0, fbo->width(), fbo->height());
+            QOpenGLContext::currentContext()->functions()->glViewport(0, 0, fbo->width(), fbo->height());
             renderer->render();
             fbo->bindDefault();
 

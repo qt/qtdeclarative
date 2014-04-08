@@ -346,7 +346,8 @@ void QSGMaterialShader::compile()
     char const *const *attr = attributeNames();
 #ifndef QT_NO_DEBUG
     int maxVertexAttribs = 0;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    funcs->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
     for (int i = 0; attr[i]; ++i) {
         if (i >= maxVertexAttribs) {
             qFatal("List of attribute names is either too long or not null-terminated.\n"

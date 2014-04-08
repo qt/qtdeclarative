@@ -3481,32 +3481,32 @@ void QQuickWindow::resetOpenGLState()
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     int maxAttribs;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+    gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
     for (int i=0; i<maxAttribs; ++i) {
         gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
         gl->glDisableVertexAttribArray(i);
     }
 
     gl->glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    gl->glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_SCISSOR_TEST);
+    gl->glDisable(GL_DEPTH_TEST);
+    gl->glDisable(GL_STENCIL_TEST);
+    gl->glDisable(GL_SCISSOR_TEST);
 
-    glColorMask(true, true, true, true);
-    glClearColor(0, 0, 0, 0);
+    gl->glColorMask(true, true, true, true);
+    gl->glClearColor(0, 0, 0, 0);
 
-    glDepthMask(true);
-    glDepthFunc(GL_LESS);
+    gl->glDepthMask(true);
+    gl->glDepthFunc(GL_LESS);
     gl->glClearDepthf(1);
 
-    glStencilMask(0xff);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    gl->glStencilMask(0xff);
+    gl->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    gl->glStencilFunc(GL_ALWAYS, 0, 0xff);
 
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ZERO);
+    gl->glDisable(GL_BLEND);
+    gl->glBlendFunc(GL_ONE, GL_ZERO);
 
     gl->glUseProgram(0);
 

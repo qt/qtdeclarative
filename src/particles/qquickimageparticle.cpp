@@ -1416,7 +1416,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             g->setDrawingMode(GL_POINTS);
             if (m_debugMode){
                 GLfloat pointSizeRange[2];
-                glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, pointSizeRange);
+                QOpenGLContext::currentContext()->functions()->glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, pointSizeRange);
                 qDebug() << "Using point sprites, GL_ALIASED_POINT_SIZE_RANGE " <<pointSizeRange[0] << ":" << pointSizeRange[1];
             }
         }else

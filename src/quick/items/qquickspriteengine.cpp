@@ -47,6 +47,7 @@
 #include <QPainter>
 #include <QSet>
 #include <QtGui/qopengl.h>
+#include <QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE
 
@@ -388,7 +389,7 @@ QImage QQuickSpriteEngine::assembledImage()
     m_imageStateCount = 0;
     int maxSize = 0;
 
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+    QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
 #ifdef SPRITE_IMAGE_DEBUG
     qDebug() << "MAX TEXTURE SIZE" << maxSize;
 #endif

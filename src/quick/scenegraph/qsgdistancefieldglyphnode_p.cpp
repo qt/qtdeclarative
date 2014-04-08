@@ -178,15 +178,16 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         updateTextureScale(QVector2D(1.0 / material->textureSize().width(),
                                      1.0 / material->textureSize().height()));
 
-        glBindTexture(GL_TEXTURE_2D, material->texture()->textureId);
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+        funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId);
 
         if (updated) {
             // Set the mag/min filters to be linear. We only need to do this when the texture
             // has been recreated.
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
     }
 }
@@ -511,13 +512,13 @@ void QSGHiQSubPixelDistanceFieldTextMaterialShader::initialize()
 void QSGHiQSubPixelDistanceFieldTextMaterialShader::activate()
 {
     QSGDistanceFieldTextMaterialShader::activate();
-    glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
+    QOpenGLContext::currentContext()->functions()->glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
 }
 
 void QSGHiQSubPixelDistanceFieldTextMaterialShader::deactivate()
 {
     QSGDistanceFieldTextMaterialShader::deactivate();
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    QOpenGLContext::currentContext()->functions()->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void QSGHiQSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)

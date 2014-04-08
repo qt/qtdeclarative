@@ -125,13 +125,14 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
             || oldMaterial->texture()->textureId() != material->texture()->textureId()) {
         program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
                                                                1.0 / material->cacheTextureHeight()));
-        glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+        funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
 
         // Set the mag/min filters to be nearest. We only need to do this when the texture
         // has been recreated.
         if (updated) {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
     }
 
@@ -215,16 +216,18 @@ void QSG24BitTextMaskShader::initialize()
 
 void QSG24BitTextMaskShader::activate()
 {
-    glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    funcs->glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
     if (m_useSRGB)
-        glEnable(GL_FRAMEBUFFER_SRGB);
+        funcs->glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
 void QSG24BitTextMaskShader::deactivate()
 {
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    funcs->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     if (m_useSRGB)
-        glDisable(GL_FRAMEBUFFER_SRGB);
+        funcs->glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 static inline qreal qt_sRGB_to_linear_RGB(qreal f)
@@ -250,7 +253,7 @@ void QSG24BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *
         QVector4D color = material->color();
         if (m_useSRGB)
             color = qt_sRGB_to_linear_RGB(color);
-        state.context()->functions()->glBlendColor(color.x(), color.y(), color.z(), color.w());
+        QOpenGLContext::currentContext()->functions()->glBlendColor(color.x(), color.y(), color.z(), color.w());
         color = qsg_premultiply(color, state.opacity());
         program()->setUniformValue(m_color_id, color.w());
     }
@@ -313,13 +316,14 @@ void QSGStyledTextShader::updateState(const RenderState &state,
             || oldMaterial->texture()->textureId() != material->texture()->textureId()) {
         program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
                                                                 1.0 / material->cacheTextureHeight()));
-        glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+        funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
 
         // Set the mag/min filters to be linear. We only need to do this when the texture
         // has been recreated.
         if (updated) {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
     }
 

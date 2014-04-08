@@ -99,7 +99,7 @@ Manager::Manager()
     QSurface *surface = gl->surface();
     QSize surfaceSize = surface->size();
     int max;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
+    gl->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
 
     int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512, qsg_powerOfTwo(surfaceSize.width()))));
     int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512, qsg_powerOfTwo(surfaceSize.height()))));
@@ -171,7 +171,7 @@ Atlas::Atlas(const QSize &size)
     static bool wrongfullyReportsBgra8888Support = false;
 #endif // ANDROID
 
-    const char *ext = (const char *) glGetString(GL_EXTENSIONS);
+    const char *ext = (const char *) QOpenGLContext::currentContext()->functions()->glGetString(GL_EXTENSIONS);
     if (!wrongfullyReportsBgra8888Support
             && (strstr(ext, "GL_EXT_bgra")
                 || strstr(ext, "GL_EXT_texture_format_BGRA8888")
@@ -202,7 +202,7 @@ Atlas::~Atlas()
 void Atlas::invalidate()
 {
     if (m_texture_id && QOpenGLContext::currentContext())
-        glDeleteTextures(1, &m_texture_id);
+        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
     m_texture_id = 0;
 }
 
@@ -223,7 +223,7 @@ int Atlas::textureId() const
 {
     if (!m_texture_id) {
         Q_ASSERT(QOpenGLContext::currentContext());
-        glGenTextures(1, &const_cast<Atlas *>(this)->m_texture_id);
+        QOpenGLContext::currentContext()->functions()->glGenTextures(1, &const_cast<Atlas *>(this)->m_texture_id);
     }
 
     return m_texture_id;
@@ -274,11 +274,14 @@ void Atlas::upload(Texture *texture)
 
     if (m_externalFormat == GL_RGBA)
         swizzleBGRAToRGBA(&tmp);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y(), r.width(), r.height(), m_externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
+    QOpenGLContext::currentContext()->functions()->glTexSubImage2D(GL_TEXTURE_2D, 0,
+                                                                   r.x(), r.y(), r.width(), r.height(),
+                                                                   m_externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 }
 
 void Atlas::uploadBgra(Texture *texture)
 {
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     const QRect &r = texture->atlasSubRect();
     QImage image = texture->image();
 
@@ -304,48 +307,48 @@ void Atlas::uploadBgra(Texture *texture)
     dst[0] = src[0];
     memcpy(dst + 1, src, iw * sizeof(quint32));
     dst[1 + iw] = src[iw-1];
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y(), iw + 2, 1, m_externalFormat, GL_UNSIGNED_BYTE, dst);
+    funcs->glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y(), iw + 2, 1, m_externalFormat, GL_UNSIGNED_BYTE, dst);
 
     // bottom row, padded corners
     const quint32 *lastRow = src + bpl * (ih - 1);
     dst[0] = lastRow[0];
     memcpy(dst + 1, lastRow, iw * sizeof(quint32));
     dst[1 + iw] = lastRow[iw-1];
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y() + ih + 1, iw + 2, 1, m_externalFormat, GL_UNSIGNED_BYTE, dst);
+    funcs->glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y() + ih + 1, iw + 2, 1, m_externalFormat, GL_UNSIGNED_BYTE, dst);
 
     // left column
     for (int i=0; i<ih; ++i)
         dst[i] = src[i * bpl];
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y() + 1, 1, ih, m_externalFormat, GL_UNSIGNED_BYTE, dst);
+    funcs->glTexSubImage2D(GL_TEXTURE_2D, 0, r.x(), r.y() + 1, 1, ih, m_externalFormat, GL_UNSIGNED_BYTE, dst);
 
     // right column
     for (int i=0; i<ih; ++i)
         dst[i] = src[i * bpl + iw - 1];
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + iw + 1, r.y() + 1, 1, ih, m_externalFormat, GL_UNSIGNED_BYTE, dst);
+    funcs->glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + iw + 1, r.y() + 1, 1, ih, m_externalFormat, GL_UNSIGNED_BYTE, dst);
 
     // Inner part of the image....
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, m_externalFormat, GL_UNSIGNED_BYTE, src);
-
+    funcs->glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, m_externalFormat, GL_UNSIGNED_BYTE, src);
 }
 
 void Atlas::bind(QSGTexture::Filtering filtering)
 {
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     if (!m_allocated) {
         m_allocated = true;
 
-        while (glGetError() != GL_NO_ERROR) ;
+        while (funcs->glGetError() != GL_NO_ERROR) ;
 
-        glGenTextures(1, &m_texture_id);
-        glBindTexture(GL_TEXTURE_2D, m_texture_id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        funcs->glGenTextures(1, &m_texture_id);
+        funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
         if (!QOpenGLContext::currentContext()->isOpenGLES())
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+            funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
-        glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);
+        funcs->glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);
 
 #if 0
         QImage pink(m_size.width(), m_size.height(), QImage::Format_ARGB32_Premultiplied);
@@ -362,21 +365,21 @@ void Atlas::bind(QSGTexture::Filtering filtering)
         p.fillRect(0, 0, m_size.width(), m_size.height(), blueGrad);
         p.end();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, pink.constBits());
+        funcs->glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, pink.constBits());
 #endif
 
-        GLenum errorCode = glGetError();
+        GLenum errorCode = funcs->glGetError();
         if (errorCode == GL_OUT_OF_MEMORY) {
             qDebug("QSGTextureAtlas: texture atlas allocation failed, out of memory");
-            glDeleteTextures(1, &m_texture_id);
+            funcs->glDeleteTextures(1, &m_texture_id);
             m_texture_id = 0;
         } else if (errorCode != GL_NO_ERROR) {
             qDebug("QSGTextureAtlas: texture atlas allocation failed, code=%x", errorCode);
-            glDeleteTextures(1, &m_texture_id);
+            funcs->glDeleteTextures(1, &m_texture_id);
             m_texture_id = 0;
         }
     } else {
-        glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
     }
 
     if (m_texture_id == 0)
@@ -416,8 +419,8 @@ void Atlas::bind(QSGTexture::Filtering filtering)
     }
 
     GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, f);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, f);
+    funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, f);
+    funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, f);
 
     m_pending_uploads.clear();
 }
