@@ -932,7 +932,6 @@ void tst_qqmllocale::dateFromLocaleString_data()
 
 void tst_qqmllocale::dateFromLocaleString()
 {
-    QSKIP("Needs fixes in our date time parser");
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
@@ -977,7 +976,6 @@ void tst_qqmllocale::dateFromLocaleDateString_data()
 
 void tst_qqmllocale::dateFromLocaleDateString()
 {
-    QSKIP("Needs fixes in our date time parser");
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
@@ -1022,7 +1020,6 @@ void tst_qqmllocale::dateFromLocaleTimeString_data()
 
 void tst_qqmllocale::dateFromLocaleTimeString()
 {
-    QSKIP("Needs fixes in our date time parser");
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
