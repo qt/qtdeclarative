@@ -1650,6 +1650,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->proto)
             c->proto->mark(e);
+        FunctionObject::markObjects(that, e);
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
