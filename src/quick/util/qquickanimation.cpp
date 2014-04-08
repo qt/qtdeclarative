@@ -2344,8 +2344,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     groups of three points defining a curve from 0,0 to 1,1 - control1, control2,
     end point: [cx1, cy1, cx2, cy2, endx, endy, ...].  The last point must be 1,1.
 
-    See the \l {qml/animation/easing}{easing} example for a demonstration of
-    the different easing settings.
+    See the \l {Qt Quick Examples - Animation#Easing Curves}{Easing Curves} for a demonstration of the different easing settings.
 //! propertyanimation.easing
 */
 QEasingCurve QQuickPropertyAnimation::easing() const

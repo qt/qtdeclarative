@@ -554,7 +554,7 @@ The API can be used from JavaScript functions in your QML:
 The API conforms to the Synchronous API of the HTML5 Web Database API,
 \link http://www.w3.org/TR/2009/WD-webdatabase-20091029/ W3C Working Draft 29 October 2009\endlink.
 
-The \l{localstorage/localstorage}{SQL Local Storage example} demonstrates the basics of
+The \l{Qt Quick Examples - Local Storage}{SQL Local Storage example} demonstrates the basics of
 using the Offline Storage API.
 
 \section3 Open or create a databaseData

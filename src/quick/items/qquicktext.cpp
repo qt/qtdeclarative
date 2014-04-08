@@ -1227,7 +1227,7 @@ void QQuickTextPrivate::ensureDoc()
 
     Text provides read-only text. For editable text, see \l TextEdit.
 
-    \sa {declarative/text/fonts}{Fonts example}
+    \sa {Qt Quick Examples - Text#Fonts}{Fonts example}
 */
 QQuickText::QQuickText(QQuickItem *parent)
 : QQuickImplicitSizeItem(*(new QQuickTextPrivate), parent)

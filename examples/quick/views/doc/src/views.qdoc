@@ -68,7 +68,7 @@
 
     \section1 Highlight
 
-    \e Highlight demonstrates adding a custom highlight to a \l ListView.
+    \e Highlight demonstrates adding a custom highlight to a ListView.
     \snippet views/listview/highlight.qml 0
 
     \section1 Highlight Ranges

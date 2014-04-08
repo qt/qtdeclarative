@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -623,8 +623,8 @@ void QQuickWorkerScriptEngine::run()
 
     Worker script can not use \l {qtqml-javascript-imports.html}{.import} syntax.
 
-    \sa {declarative/threading/workerscript}{WorkerScript example},
-        {declarative/threading/threadedlistmodel}{Threaded ListModel example}
+    \sa {Qt Quick Examples - Threading},
+        {Threaded ListModel Example}
 */
 QQuickWorkerScript::QQuickWorkerScript(QObject *parent)
 : QObject(parent), m_engine(0), m_scriptId(-1), m_componentComplete(true)

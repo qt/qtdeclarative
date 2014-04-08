@@ -253,7 +253,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     \snippet qml/mousearea/mousearea.qml intro-extended
 
-    \sa MouseEvent, {declarative/touchinteraction/mousearea}{MouseArea example},
+    \sa MouseEvent, {mousearea}{MouseArea example},
     {Important Concepts In Qt Quick - User Input}
 */
 

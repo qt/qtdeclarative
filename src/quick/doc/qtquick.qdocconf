@@ -67,6 +67,8 @@ excludedirs += ../../imports/dialogs \
                ../../imports/models \
                ../../../examples/quick/dialogs
 
+manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example"
+
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"

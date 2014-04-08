@@ -170,7 +170,7 @@ QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
     }
     \endqml
 
-    \sa {declarative/text/fonts}{Fonts example}
+    \sa {Qt Quick Examples - Text#Fonts}{Qt Quick Examples - Text Fonts}
 */
 QQuickFontLoader::QQuickFontLoader(QObject *parent)
     : QObject(*(new QQuickFontLoaderPrivate), parent)

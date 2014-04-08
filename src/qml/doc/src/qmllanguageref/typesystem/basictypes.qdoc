@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -498,6 +498,7 @@ property is only invoked when the property is reassigned to a different object v
     "destroy" method on the \c var property from within JavaScript.  They
     may also explicitly preserve the scarce resource by calling the
     "preserve" method on the \c var property from within JavaScript.
+
     For more information regarding the usage of a scarce resource, please
     see \l{Scarce Resources in JavaScript}.
 
@@ -542,7 +543,7 @@ property is only invoked when the property is reassigned to a different object v
     "destroy" method on the \c variant property from within JavaScript.  They
     may also explicitly preserve the scarce resource by calling the
     "preserve" method on the \c variant property from within JavaScript.
-    For more information regarding the usage of a scarce resource, please
+    For more information on the usage of a scarce resource, please
     see \l{Scarce Resources in JavaScript}.
 
     \section1 Storing Arrays and Objects

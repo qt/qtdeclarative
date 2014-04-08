@@ -223,5 +223,5 @@ This is equivalent to writing the two transitions separately.
 The \l ParallelAnimation type makes sure that the two types of animations (number and color) start at the same time.
 We could also run them one after the other by using \l SequentialAnimation instead.
 
-For more details on states and transitions, see \l {Qt Quick States} and the \l{quick/animation/states}{states and transitions example}.
+For more details on states and transitions, see \l {Qt Quick States} and the \l{animation/states}{states and transitions example}.
 */

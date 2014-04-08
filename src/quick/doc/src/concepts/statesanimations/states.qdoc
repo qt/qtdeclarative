@@ -121,7 +121,7 @@ interpolation behaviors are definable. The
 {Animation and Transitions} article has more information about creating state
 animations.
 
-The \l {declarative/animation/states}{States and Transitions example}
+The \l {animation/states}{States and Transitions example}
 demonstrates how to declare a basic set of states and apply animated
 transitions between them.
 

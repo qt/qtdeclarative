@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qmlextensionplugins/plugins.qml 0
 
-    The full source code is available in the \l {qml/qmlextensionplugins}{plugins example}.
+    The full source code is available in the \l {qmlextensionplugins}{plugins example}.
 
     The \l {Writing QML Extensions with C++} tutorial also contains a chapter
     on creating QML plugins.
