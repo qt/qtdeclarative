@@ -905,8 +905,11 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
-    if (!r)
+    if (!r) {
+        if (hasProperty)
+            *hasProperty = false;
         return v4->currentContext()->throwTypeError();
+    }
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -960,8 +963,11 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
-    if (!r)
+    if (!r) {
+        if (hasProperty)
+            *hasProperty = false;
         return v4->currentContext()->throwTypeError();
+    }
 
     QV8Engine *engine = v4->v8Engine;
 

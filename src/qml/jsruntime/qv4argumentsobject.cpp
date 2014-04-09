@@ -160,6 +160,8 @@ ReturnedValue ArgumentsObject::getIndexed(Managed *m, uint index, bool *hasPrope
             *hasProperty = true;
         return args->context->callData->args[index].asReturnedValue();
     }
+    if (hasProperty)
+        *hasProperty = false;
     return Encode::undefined();
 }
 

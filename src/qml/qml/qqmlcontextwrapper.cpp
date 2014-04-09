@@ -461,6 +461,9 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
         return Encode::undefined();
     }
 
+    if (hasProperty)
+        *hasProperty = true;
+
     ExecutionEngine *v4 = m->engine();
     QQmlEnginePrivate *ep = v4->v8Engine->engine() ? QQmlEnginePrivate::get(v4->v8Engine->engine()) : 0;
     if (ep)

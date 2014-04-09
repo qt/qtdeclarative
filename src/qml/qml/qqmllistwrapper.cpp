@@ -129,13 +129,21 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
 
     QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
-    if (!w)
+    if (!w) {
+        if (hasProperty)
+            *hasProperty = false;
         return e->currentContext()->throwTypeError();
+    }
 
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
-    if (index < count && w->property.at)
+    if (index < count && w->property.at) {
+        if (hasProperty)
+            *hasProperty = true;
         return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
+    }
 
+    if (hasProperty)
+        *hasProperty = false;
     return Primitive::undefinedValue().asReturnedValue();
 }
 
