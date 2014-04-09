@@ -51,6 +51,7 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qtemporaryfile.h>
+#include <QtCore/qsortfilterproxymodel.h>
 #include "../../shared/util.h"
 #include <private/qqmlengine_p.h>
 
@@ -106,6 +107,7 @@ private slots:
     void selectAncestor();
 
     void roleCrash();
+    void proxyCrash();
 
 private:
     QString errorString(QAbstractItemModel *model) {
@@ -983,6 +985,28 @@ void tst_qquickxmllistmodel::roleCrash()
 {
     // don't crash
     QQmlComponent component(&engine, testFileUrl("roleCrash.qml"));
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
+    QVERIFY(model != 0);
+    delete model;
+}
+
+class SortFilterProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *source READ source WRITE setSource)
+
+public:
+    SortFilterProxyModel(QObject *parent = 0) : QSortFilterProxyModel(parent) { sort(0); }
+    QObject *source() const { return sourceModel(); }
+    void setSource(QObject *source) { setSourceModel(qobject_cast<QAbstractItemModel *>(source)); }
+};
+
+void tst_qquickxmllistmodel::proxyCrash()
+{
+    qmlRegisterType<SortFilterProxyModel>("SortFilterProxyModel", 1, 0, "SortFilterProxyModel");
+
+    // don't crash
+    QQmlComponent component(&engine, testFileUrl("proxyCrash.qml"));
     QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
     delete model;

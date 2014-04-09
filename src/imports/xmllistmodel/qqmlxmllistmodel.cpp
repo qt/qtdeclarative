@@ -543,7 +543,7 @@ class QQuickXmlListModelPrivate : public QAbstractItemModelPrivate
     Q_DECLARE_PUBLIC(QQuickXmlListModel)
 public:
     QQuickXmlListModelPrivate()
-        : isComponentComplete(true), size(-1), highestRole(Qt::UserRole)
+        : isComponentComplete(true), size(0), highestRole(Qt::UserRole)
         , reply(0), status(QQuickXmlListModel::Null), progress(0.0)
         , queryId(-1), roleObjects(), redirectCount(0) {}
 
