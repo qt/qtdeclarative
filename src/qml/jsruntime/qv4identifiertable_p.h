@@ -80,9 +80,14 @@ public:
     Identifier *identifierImpl(const String *str);
 
     void mark(ExecutionEngine *e) {
-        for (int i = 0; i < alloc; ++i)
-            if (entries[i])
-                entries[i]->mark(e);
+        for (int i = 0; i < alloc; ++i) {
+            String *entry = entries[i];
+            if (!entry || entry->markBit)
+                continue;
+            entry->markBit = 1;
+            Q_ASSERT(entry->internalClass->vtable->markObjects);
+            entry->internalClass->vtable->markObjects(entry, e);
+        }
     }
 };
 
