@@ -154,7 +154,7 @@ void tst_qquickimage::imageSource_data()
     if (QImageReader::supportedImageFormats().contains("svgz"))
         QTest::newRow("remote svgz") << "/heart.svgz" << 550.0 << 500.0 << true << false << false << "";
     QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
-        << false << true << "<Unknown File>:2:1: QML Image: Error downloading {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
+        << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
 
 }
 
