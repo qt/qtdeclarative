@@ -430,11 +430,10 @@ public:
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
         qml->writeBooleanBinding(QLatin1String("isComposite"), true);
 
-        if (!compositeType->isCreatable())
+        if (compositeType->isSingleton()) {
             qml->writeBooleanBinding(QLatin1String("isCreatable"), false);
-
-        if (compositeType->isSingleton())
             qml->writeBooleanBinding(QLatin1String("isSingleton"), true);
+        }
 
         for (int index = mainMeta->classInfoCount() - 1 ; index >= 0 ; --index) {
             QMetaClassInfo classInfo = mainMeta->classInfo(index);
