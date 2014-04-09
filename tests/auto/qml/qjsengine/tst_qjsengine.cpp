@@ -153,6 +153,8 @@ private slots:
 
     void prototypeChainGc();
 
+    void dynamicProperties();
+
 signals:
     void testSignal();
 };
@@ -2958,6 +2960,15 @@ void tst_QJSEngine::prototypeChainGc()
     QJSValue proto = getProto.call(QJSValueList() << obj);
     proto = getProto.call(QJSValueList() << proto);
     QVERIFY(proto.isObject());
+}
+
+void tst_QJSEngine::dynamicProperties()
+{
+    QJSEngine engine;
+    QObject *obj = new QObject;
+    QJSValue wrapper = engine.newQObject(obj);
+    wrapper.setProperty("someRandomProperty", 42);
+    QCOMPARE(wrapper.property("someRandomProperty").toInt(), 42);
 }
 
 QTEST_MAIN(tst_QJSEngine)

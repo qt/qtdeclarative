@@ -682,9 +682,16 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
     if (!setQmlProperty(v4->currentContext(), qmlContext, that->m_object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value)) {
-        QString error = QLatin1String("Cannot assign to non-existent property \"") +
-                        name->toQString() + QLatin1Char('\"');
-        v4->currentContext()->throwError(error);
+        QQmlData *ddata = QQmlData::get(that->m_object);
+        // Types created by QML are not extensible at run-time, but for other QObjects we can store them
+        // as regular JavaScript properties, like on JavaScript objects.
+        if (ddata && ddata->compiledData) {
+            QString error = QLatin1String("Cannot assign to non-existent property \"") +
+                            name->toQString() + QLatin1Char('\"');
+            v4->currentContext()->throwError(error);
+        } else {
+            QV4::Object::put(m, name, value);
+        }
     }
 }
 
