@@ -39,7 +39,7 @@ class MacroAssemblerARMv7 : public AbstractMacroAssembler<ARMv7Assembler> {
     //        - dTR is likely used more than aTR, and we'll get better instruction
     //        encoding if it's in the low 8 registers.
     static const RegisterID dataTempRegister = ARMRegisters::ip;
-    static const RegisterID addressTempRegister = ARMRegisters::r3;
+    static const RegisterID addressTempRegister = ARMRegisters::r10;
 
     static const ARMRegisters::FPDoubleRegisterID fpTempRegister = ARMRegisters::d7;
     inline ARMRegisters::FPSingleRegisterID fpTempRegisterAsSingle() { return ARMRegisters::asSingle(fpTempRegister); }
