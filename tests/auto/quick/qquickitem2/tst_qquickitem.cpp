@@ -85,6 +85,7 @@ private slots:
     void standardKeys();
     void keysProcessingOrder();
     void keysim();
+    void keysForward();
     void keyNavigation_data();
     void keyNavigation();
     void keyNavigation_RightToLeft();
@@ -1384,6 +1385,78 @@ void tst_QQuickItem::keysim()
     QCOMPARE(input->text(), QLatin1String("Hello world!"));
 
     delete window;
+}
+
+void tst_QQuickItem::keysForward()
+{
+    QQuickView window;
+    window.setBaseSize(QSize(240,320));
+
+    window.setSource(testFileUrl("keysforward.qml"));
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QVERIFY(QGuiApplication::focusWindow() == &window);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(window.rootObject());
+    QVERIFY(rootItem);
+    QQuickItem *sourceItem = rootItem->property("source").value<QQuickItem *>();
+    QVERIFY(sourceItem);
+    QQuickItem *primaryTarget = rootItem->property("primaryTarget").value<QQuickItem *>();
+    QVERIFY(primaryTarget);
+    QQuickItem *secondaryTarget = rootItem->property("secondaryTarget").value<QQuickItem *>();
+    QVERIFY(secondaryTarget);
+
+    // primary target accepts/consumes Key_P
+    QKeyEvent pressKeyP(QEvent::KeyPress, Qt::Key_P, Qt::NoModifier, "P");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyP);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QVERIFY(pressKeyP.isAccepted());
+
+    QKeyEvent releaseKeyP(QEvent::KeyRelease, Qt::Key_P, Qt::NoModifier, "P");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyP);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QVERIFY(releaseKeyP.isAccepted());
+
+    // secondary target accepts/consumes Key_S
+    QKeyEvent pressKeyS(QEvent::KeyPress, Qt::Key_S, Qt::NoModifier, "S");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyS);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S);
+    QVERIFY(pressKeyS.isAccepted());
+
+    QKeyEvent releaseKeyS(QEvent::KeyRelease, Qt::Key_S, Qt::NoModifier, "S");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyS);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S);
+    QVERIFY(releaseKeyS.isAccepted());
+
+    // neither target accepts/consumes Key_Q
+    QKeyEvent pressKeyQ(QEvent::KeyPress, Qt::Key_Q, Qt::NoModifier, "Q");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyQ);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList() << Qt::Key_Q);
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_Q);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S << Qt::Key_Q);
+    QVERIFY(!pressKeyQ.isAccepted());
+
+    QKeyEvent releaseKeyQ(QEvent::KeyRelease, Qt::Key_Q, Qt::NoModifier, "Q");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyQ);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList() << Qt::Key_Q);
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_Q);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S << Qt::Key_Q);
+    QVERIFY(!releaseKeyQ.isAccepted());
 }
 
 QQuickItemPrivate *childPrivate(QQuickItem *rootItem, const char * itemString)

@@ -1333,7 +1333,7 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->window()->sendEvent(i, event);
+                QCoreApplication::sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inPress = false;
                     return;
@@ -1375,7 +1375,7 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->window()->sendEvent(i, event);
+                QCoreApplication::sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inRelease = false;
                     return;
