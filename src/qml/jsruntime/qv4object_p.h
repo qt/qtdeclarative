@@ -118,6 +118,7 @@ struct Q_QML_EXPORT Object: Managed {
     const Data *objectData() const { return &data; }
     Data *objectData() { return &data; }
 
+    Members &memberData() { return objectData()->memberData; }
     Members memberData() const { return objectData()->memberData; }
     const ArrayData *arrayData() const { return objectData()->arrayData; }
     ArrayData *arrayData() { return objectData()->arrayData; }
@@ -210,7 +211,7 @@ public:
     }
     void setArrayAttributes(uint i, PropertyAttributes a) {
         Q_ASSERT(arrayData());
-        if (arrayData()->attrs || a != Attr_Data) {
+        if (arrayData()->attrs() || a != Attr_Data) {
             ArrayData::ensureAttributes(this);
             a.resolve();
             arrayData()->vtable()->setAttribute(this, i, a);
@@ -220,13 +221,13 @@ public:
     void push_back(const ValueRef v);
 
     ArrayData::Type arrayType() const {
-        return arrayData() ? arrayData()->type : ArrayData::Simple;
+        return arrayData() ? arrayData()->type() : ArrayData::Simple;
     }
     // ### remove me
     void setArrayType(ArrayData::Type t) {
         Q_ASSERT(t != ArrayData::Simple && t != ArrayData::Sparse);
         arrayCreate();
-        arrayData()->type = t;
+        arrayData()->setType(t);
     }
 
     inline void arrayReserve(uint n) {
@@ -242,8 +243,8 @@ public:
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse->begin() : 0; }
-    SparseArrayNode *sparseEnd() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse->end() : 0; }
+    SparseArrayNode *sparseBegin() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->begin() : 0; }
+    SparseArrayNode *sparseEnd() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->end() : 0; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -405,7 +406,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     if (attributes.isAccessor()) {
         setHasAccessorProperty();
         initSparseArray();
-    } else if (index > 0x1000 && index > 2*arrayData()->alloc) {
+    } else if (index > 0x1000 && index > 2*arrayData()->alloc()) {
         initSparseArray();
     } else {
         arrayData()->vtable()->reallocate(this, index + 1, false);
@@ -423,7 +424,7 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
 inline void Object::arraySet(uint index, ValueRef value)
 {
     arrayCreate();
-    if (index > 0x1000 && index > 2*arrayData()->alloc) {
+    if (index > 0x1000 && index > 2*arrayData()->alloc()) {
         initSparseArray();
     }
     Property *pd = ArrayData::insert(this, index);

@@ -92,13 +92,27 @@ struct Q_QML_EXPORT ArrayData : public Managed
         Custom = 3
     };
 
-    uint alloc;
-    Type type;
-    PropertyAttributes *attrs;
-    Value *data;
+    struct Data {
+        uint alloc;
+        Type type;
+        PropertyAttributes *attrs;
+        Value *arrayData;
+    };
+    Data data;
+
+    uint alloc() const { return data.alloc; }
+    uint &alloc() { return data.alloc; }
+    void setAlloc(uint a) { data.alloc = a; }
+    Type type() const { return data.type; }
+    void setType(Type t) { data.type = t; }
+    PropertyAttributes *attrs() const { return data.attrs; }
+    void setAttrs(PropertyAttributes *a) { data.attrs = a; }
+    Value *arrayData() const { return data.arrayData; }
+    Value *&arrayData() { return data.arrayData; }
+    void setArrayData(Value *v) { data.arrayData = v; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
-    bool isSparse() const { return this && type == Sparse; }
+    bool isSparse() const { return this && type() == Sparse; }
 
     uint length() const {
         if (!this)
@@ -107,11 +121,11 @@ struct Q_QML_EXPORT ArrayData : public Managed
     }
 
     bool hasAttributes() const {
-        return this && attrs;
+        return this && attrs();
     }
     PropertyAttributes attributes(int i) const {
         Q_ASSERT(this);
-        return attrs ? vtable()->attribute(this, i) : Attr_Data;
+        return attrs() ? vtable()->attribute(this, i) : Attr_Data;
     }
 
     bool isEmpty(uint i) const {
@@ -143,8 +157,16 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
         : ArrayData(engine->simpleArrayDataClass)
     {}
 
-    uint len;
-    uint offset;
+    struct Data {
+        uint len;
+        uint offset;
+    };
+    Data data;
+
+    uint &len() { return data.len; }
+    uint len() const { return data.len; }
+    uint &offset() { return data.offset; }
+    uint offset() const { return data.offset; }
 
     static void getHeadRoom(Object *o);
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
@@ -171,8 +193,16 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         : ArrayData(engine->emptyClass)
     { setVTable(staticVTable()); }
 
-    uint freeList;
-    SparseArray *sparse;
+    struct Data {
+        uint freeList;
+        SparseArray *sparse;
+    };
+    Data data;
+
+    uint &freeList() { return data.freeList; }
+    uint freeList() const { return data.freeList; }
+    SparseArray *sparse() const { return data.sparse; }
+    void setSparse(SparseArray *s) { data.sparse = s; }
 
     static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
@@ -198,16 +228,16 @@ inline Property *ArrayData::getProperty(uint index) const
 {
     if (!this)
         return 0;
-    if (type != Sparse) {
+    if (type() != Sparse) {
         const SimpleArrayData *that = static_cast<const SimpleArrayData *>(this);
-        if (index >= that->len || data[index].isEmpty())
+        if (index >= that->len() || arrayData()[index].isEmpty())
             return 0;
-        return reinterpret_cast<Property *>(data + index);
+        return reinterpret_cast<Property *>(arrayData() + index);
     } else {
-        SparseArrayNode *n = static_cast<const SparseArrayData *>(this)->sparse->findNode(index);
+        SparseArrayNode *n = static_cast<const SparseArrayData *>(this)->sparse()->findNode(index);
         if (!n)
             return 0;
-        return reinterpret_cast<Property *>(data + n->value);
+        return reinterpret_cast<Property *>(arrayData() + n->value);
     }
 }
 

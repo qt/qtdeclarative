@@ -309,7 +309,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
         } else {
             int alen = qMin(len, arr->arrayData()->length());
             if (alen)
-                memcpy(callData->args, arr->arrayData()->data, alen*sizeof(Value));
+                memcpy(callData->args, arr->arrayData()->arrayData(), alen*sizeof(Value));
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

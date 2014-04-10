@@ -629,7 +629,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
         if (len > instance->arrayData()->length())
             len = instance->arrayData()->length();
-        Value *val = instance->arrayData()->data;
+        Value *val = instance->arrayData()->arrayData();
         Value *end = val + len;
         val += fromIndex;
         while (val < end) {
@@ -638,7 +638,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
                 if (scope.hasException())
                     return Encode::undefined();
                 if (RuntimeHelpers::strictEqual(value, searchValue))
-                    return Encode((uint)(val - instance->arrayData()->data));
+                    return Encode((uint)(val - instance->arrayData()->arrayData()));
             }
             ++val;
         }

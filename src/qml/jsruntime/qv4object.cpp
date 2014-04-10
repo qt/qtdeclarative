@@ -549,7 +549,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
             while (it->arrayNode != o->sparseEnd()) {
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
-                Property *p = reinterpret_cast<Property *>(o->arrayData()->data + pidx);
+                Property *p = reinterpret_cast<Property *>(o->arrayData()->arrayData() + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = o->arrayData()->attributes(k);
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -565,7 +565,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
         }
         // dense arrays
         while (it->arrayIndex < o->arrayData()->length()) {
-            Value *val = o->arrayData()->data + it->arrayIndex;
+            Value *val = o->arrayData()->arrayData() + it->arrayIndex;
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
             ++it->arrayIndex;
             if (!val->isEmpty()
@@ -1086,28 +1086,28 @@ void Object::copyArrayData(Object *other)
         }
     } else if (!other->arrayData()) {
         ;
-    } else if (other->hasAccessorProperty() && other->arrayData()->attrs && other->arrayData()->isSparse()){
+    } else if (other->hasAccessorProperty() && other->arrayData()->attrs() && other->arrayData()->isSparse()){
         // do it the slow way
         ScopedValue v(scope);
-        for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other->arrayData())->sparse->begin();
-             it != static_cast<const SparseArrayData *>(other->arrayData())->sparse->end(); it = it->nextNode()) {
-            v = other->getValue(reinterpret_cast<Property *>(other->arrayData()->data + it->value), other->arrayData()->attrs[it->value]);
+        for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other->arrayData())->sparse()->begin();
+             it != static_cast<const SparseArrayData *>(other->arrayData())->sparse()->end(); it = it->nextNode()) {
+            v = other->getValue(reinterpret_cast<Property *>(other->arrayData()->arrayData() + it->value), other->arrayData()->attrs()[it->value]);
             arraySet(it->key(), v);
         }
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
-        ArrayData::realloc(this, other->arrayData()->type, 0, other->arrayData()->alloc, other->arrayData()->attrs);
+        ArrayData::realloc(this, other->arrayData()->type(), 0, other->arrayData()->alloc(), other->arrayData()->attrs());
         if (other->arrayType() == ArrayData::Sparse) {
             SparseArrayData *od = static_cast<SparseArrayData *>(other->arrayData());
             SparseArrayData *dd = static_cast<SparseArrayData *>(arrayData());
-            dd->sparse = new SparseArray(*od->sparse);
-            dd->freeList = od->freeList;
+            dd->setSparse(new SparseArray(*od->sparse()));
+            dd->freeList() = od->freeList();
         } else {
             SimpleArrayData *d = static_cast<SimpleArrayData *>(arrayData());
-            d->len = static_cast<SimpleArrayData *>(other->arrayData())->len;
-            d->offset = 0;
+            d->len() = static_cast<SimpleArrayData *>(other->arrayData())->len();
+            d->offset() = 0;
         }
-        memcpy(arrayData()->data, other->arrayData()->data, arrayData()->alloc*sizeof(Value));
+        memcpy(arrayData()->arrayData(), other->arrayData()->arrayData(), arrayData()->alloc()*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }

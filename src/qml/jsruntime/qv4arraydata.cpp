@@ -90,19 +90,19 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
         alloc = 8;
 
     if (d) {
-        bool hasAttrs = d->attrs;
+        bool hasAttrs = d->attrs();
         enforceAttributes |= hasAttrs;
 
-        if (!offset && alloc <= d->alloc && newType == d->type && hasAttrs == enforceAttributes)
+        if (!offset && alloc <= d->alloc() && newType == d->type() && hasAttrs == enforceAttributes)
             return;
 
-        oldAlloc = d->alloc;
-        if (d->type < Sparse) {
-            offset = qMax(offset, static_cast<SimpleArrayData *>(d)->offset);
-            toCopy = static_cast<SimpleArrayData *>(d)->len;
+        oldAlloc = d->alloc();
+        if (d->type() < Sparse) {
+            offset = qMax(offset, static_cast<SimpleArrayData *>(d)->offset());
+            toCopy = static_cast<SimpleArrayData *>(d)->len();
         } else {
             Q_ASSERT(!offset);
-            toCopy = d->alloc;
+            toCopy = d->alloc();
             newType = Sparse;
         }
     }
@@ -118,32 +118,32 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
         size += sizeof(SimpleArrayData);
         SimpleArrayData *newData = static_cast<SimpleArrayData *>(o->engine()->memoryManager->allocManaged(size));
         new (newData) SimpleArrayData(o->engine());
-        newData->alloc = alloc - offset;
-        newData->type = newType;
-        newData->data = reinterpret_cast<Value *>(newData + 1) + offset;
-        newData->attrs = enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->data + alloc) + offset : 0;
-        newData->offset = offset;
-        newData->len = d ? static_cast<SimpleArrayData *>(d)->len : 0;
+        newData->setAlloc(alloc - offset);
+        newData->setType(newType);
+        newData->setArrayData(reinterpret_cast<Value *>(newData + 1) + offset);
+        newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->arrayData() + alloc) + offset : 0);
+        newData->offset() = offset;
+        newData->len() = d ? static_cast<SimpleArrayData *>(d)->len() : 0;
         o->setArrayData(newData);
     } else {
         size += sizeof(SparseArrayData);
         SparseArrayData *newData = static_cast<SparseArrayData *>(o->engine()->memoryManager->allocManaged(size));
         new (newData) SparseArrayData(o->engine());
-        newData->alloc = alloc;
-        newData->type = newType;
-        newData->data = reinterpret_cast<Value *>(newData + 1);
-        newData->attrs = enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->data + alloc) : 0;
+        newData->setAlloc(alloc);
+        newData->setType(newType);
+        newData->setArrayData(reinterpret_cast<Value *>(newData + 1));
+        newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->arrayData() + alloc) : 0);
         o->setArrayData(newData);
     }
 
     if (d) {
-        memcpy(o->arrayData()->data, d->data, sizeof(Value)*toCopy);
+        memcpy(o->arrayData()->arrayData(), d->arrayData(), sizeof(Value)*toCopy);
         if (enforceAttributes) {
-            if (d->attrs)
-                memcpy(o->arrayData()->attrs, d->attrs, sizeof(PropertyAttributes)*toCopy);
+            if (d->attrs())
+                memcpy(o->arrayData()->attrs(), d->attrs(), sizeof(PropertyAttributes)*toCopy);
             else
                 for (uint i = 0; i < toCopy; ++i)
-                    o->arrayData()->attrs[i] = Attr_Data;
+                    o->arrayData()->attrs()[i] = Attr_Data;
         }
     }
 
@@ -151,33 +151,33 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
         return;
 
     SparseArrayData *newData = static_cast<SparseArrayData *>(o->arrayData());
-    if (d && d->type == Sparse) {
+    if (d && d->type() == Sparse) {
         SparseArrayData *old = static_cast<SparseArrayData *>(d);
-        newData->sparse = old->sparse;
-        old->sparse = 0;
-        newData->freeList = old->freeList;
+        newData->setSparse(old->sparse());
+        old->setSparse(0);
+        newData->freeList() = old->freeList();
     } else {
-        newData->sparse = new SparseArray;
-        uint *lastFree = &newData->freeList;
+        newData->setSparse(new SparseArray);
+        uint *lastFree = &newData->freeList();
         for (uint i = 0; i < toCopy; ++i) {
-            if (!newData->data[i].isEmpty()) {
-                SparseArrayNode *n = newData->sparse->insert(i);
+            if (!newData->arrayData()[i].isEmpty()) {
+                SparseArrayNode *n = newData->sparse()->insert(i);
                 n->value = i;
             } else {
                 *lastFree = i;
-                newData->data[i].tag = Value::Empty_Type;
-                lastFree = &newData->data[i].uint_32;
+                newData->arrayData()[i].tag = Value::Empty_Type;
+                lastFree = &newData->arrayData()[i].uint_32;
             }
         }
     }
 
-    uint *lastFree = &newData->freeList;
-    for (uint i = toCopy; i < newData->alloc; ++i) {
+    uint *lastFree = &newData->freeList();
+    for (uint i = toCopy; i < newData->alloc(); ++i) {
         *lastFree = i;
-        newData->data[i].tag = Value::Empty_Type;
-        lastFree = &newData->data[i].uint_32;
+        newData->arrayData()[i].tag = Value::Empty_Type;
+        lastFree = &newData->arrayData()[i].uint_32;
     }
-    *lastFree = newData->alloc;
+    *lastFree = newData->alloc();
 
     // ### Could explicitly free the old data
 }
@@ -187,8 +187,8 @@ void SimpleArrayData::getHeadRoom(Object *o)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
     Q_ASSERT(dd);
-    Q_ASSERT(!dd->offset);
-    uint offset = qMax(dd->len >> 2, (uint)16);
+    Q_ASSERT(!dd->offset());
+    uint offset = qMax(dd->len() >> 2, (uint)16);
     realloc(o, Simple, offset, 0, false);
 }
 
@@ -200,7 +200,7 @@ ArrayData *SimpleArrayData::reallocate(Object *o, uint n, bool enforceAttributes
 
 void ArrayData::ensureAttributes(Object *o)
 {
-    if (o->arrayData() && o->arrayData()->attrs)
+    if (o->arrayData() && o->arrayData()->attrs())
         return;
 
     ArrayData::realloc(o, Simple, 0, 0, true);
@@ -210,29 +210,29 @@ void ArrayData::ensureAttributes(Object *o)
 void SimpleArrayData::markObjects(Managed *d, ExecutionEngine *e)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(d);
-    uint l = dd->len;
+    uint l = dd->len();
     for (uint i = 0; i < l; ++i)
-        dd->data[i].mark(e);
+        dd->arrayData()[i].mark(e);
 }
 
 ReturnedValue SimpleArrayData::get(const ArrayData *d, uint index)
 {
     const SimpleArrayData *dd = static_cast<const SimpleArrayData *>(d);
-    if (index >= dd->len)
+    if (index >= dd->len())
         return Primitive::emptyValue().asReturnedValue();
-    return dd->data[index].asReturnedValue();
+    return dd->arrayData()[index].asReturnedValue();
 }
 
 bool SimpleArrayData::put(Object *o, uint index, ValueRef value)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    Q_ASSERT(index >= dd->len || !dd->attrs || !dd->attrs[index].isAccessor());
+    Q_ASSERT(index >= dd->len() || !dd->attrs() || !dd->attrs()[index].isAccessor());
     // ### honour attributes
-    dd->data[index] = value;
-    if (index >= dd->len) {
-        if (dd->attrs)
-            dd->attrs[index] = Attr_Data;
-        dd->len = index + 1;
+    dd->arrayData()[index] = value;
+    if (index >= dd->len()) {
+        if (dd->attrs())
+            dd->attrs()[index] = Attr_Data;
+        dd->len() = index + 1;
     }
     return true;
 }
@@ -240,46 +240,46 @@ bool SimpleArrayData::put(Object *o, uint index, ValueRef value)
 bool SimpleArrayData::del(Object *o, uint index)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    if (index >= dd->len)
+    if (index >= dd->len())
         return true;
 
-    if (!dd->attrs || dd->attrs[index].isConfigurable()) {
-        dd->data[index] = Primitive::emptyValue();
-        if (dd->attrs)
-            dd->attrs[index] = Attr_Data;
+    if (!dd->attrs() || dd->attrs()[index].isConfigurable()) {
+        dd->arrayData()[index] = Primitive::emptyValue();
+        if (dd->attrs())
+            dd->attrs()[index] = Attr_Data;
         return true;
     }
-    if (dd->data[index].isEmpty())
+    if (dd->arrayData()[index].isEmpty())
         return true;
     return false;
 }
 
 void SimpleArrayData::setAttribute(Object *o, uint index, PropertyAttributes attrs)
 {
-    o->arrayData()->attrs[index] = attrs;
+    o->arrayData()->attrs()[index] = attrs;
 }
 
 PropertyAttributes SimpleArrayData::attribute(const ArrayData *d, uint index)
 {
-    return d->attrs[index];
+    return d->attrs()[index];
 }
 
 void SimpleArrayData::push_front(Object *o, Value *values, uint n)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    Q_ASSERT(!dd->attrs);
+    Q_ASSERT(!dd->attrs());
     for (int i = n - 1; i >= 0; --i) {
-        if (!dd->offset) {
+        if (!dd->offset()) {
             getHeadRoom(o);
             dd = static_cast<SimpleArrayData *>(o->arrayData());
         }
 
 
-        --dd->offset;
-        --dd->data;
-        ++dd->len;
-        ++dd->alloc;
-        *dd->data = values[i].asReturnedValue();
+        --dd->offset();
+        --dd->arrayData();
+        ++dd->len();
+        ++dd->alloc();
+        *dd->arrayData() = values[i].asReturnedValue();
     }
 
 }
@@ -287,92 +287,92 @@ void SimpleArrayData::push_front(Object *o, Value *values, uint n)
 ReturnedValue SimpleArrayData::pop_front(Object *o)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    Q_ASSERT(!dd->attrs);
-    if (!dd->len)
+    Q_ASSERT(!dd->attrs());
+    if (!dd->len())
         return Encode::undefined();
 
-    ReturnedValue v = dd->data[0].isEmpty() ? Encode::undefined() : dd->data[0].asReturnedValue();
-    ++dd->offset;
-    ++dd->data;
-    --dd->len;
-    --dd->alloc;
+    ReturnedValue v = dd->arrayData()[0].isEmpty() ? Encode::undefined() : dd->arrayData()[0].asReturnedValue();
+    ++dd->offset();
+    ++dd->arrayData();
+    --dd->len();
+    --dd->alloc();
     return v;
 }
 
 uint SimpleArrayData::truncate(Object *o, uint newLen)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    if (dd->len < newLen)
+    if (dd->len() < newLen)
         return newLen;
 
-    if (dd->attrs) {
-        Value *it = dd->data + dd->len;
-        const Value *begin = dd->data + newLen;
+    if (dd->attrs()) {
+        Value *it = dd->arrayData() + dd->len();
+        const Value *begin = dd->arrayData() + newLen;
         while (--it >= begin) {
-            if (!it->isEmpty() && !dd->attrs[it - dd->data].isConfigurable()) {
-                newLen = it - dd->data + 1;
+            if (!it->isEmpty() && !dd->attrs()[it - dd->arrayData()].isConfigurable()) {
+                newLen = it - dd->arrayData() + 1;
                 break;
             }
             *it = Primitive::emptyValue();
         }
     }
-    dd->len = newLen;
+    dd->len() = newLen;
     return newLen;
 }
 
 uint SimpleArrayData::length(const ArrayData *d)
 {
-    return static_cast<const SimpleArrayData *>(d)->len;
+    return static_cast<const SimpleArrayData *>(d)->len();
 }
 
 bool SimpleArrayData::putArray(Object *o, uint index, Value *values, uint n)
 {
     SimpleArrayData *dd = static_cast<SimpleArrayData *>(o->arrayData());
-    if (index + n > dd->alloc) {
+    if (index + n > dd->alloc()) {
         reallocate(o, index + n + 1, false);
         dd = static_cast<SimpleArrayData *>(o->arrayData());
     }
-    for (uint i = dd->len; i < index; ++i)
-        dd->data[i] = Primitive::emptyValue();
+    for (uint i = dd->len(); i < index; ++i)
+        dd->arrayData()[i] = Primitive::emptyValue();
     for (uint i = 0; i < n; ++i)
-        dd->data[index + i] = values[i];
-    dd->len = qMax(dd->len, index + n);
+        dd->arrayData()[index + i] = values[i];
+    dd->len() = qMax(dd->len(), index + n);
     return true;
 }
 
 void SparseArrayData::free(ArrayData *d, uint idx)
 {
-    Q_ASSERT(d && d->type == ArrayData::Sparse);
+    Q_ASSERT(d && d->type() == ArrayData::Sparse);
     SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    Value *v = dd->data + idx;
-    if (dd->attrs && dd->attrs[idx].isAccessor()) {
+    Value *v = dd->arrayData() + idx;
+    if (dd->attrs() && dd->attrs()[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
         v[1].tag = Value::Empty_Type;
-        v[1].uint_32 = dd->freeList;
+        v[1].uint_32 = dd->freeList();
         v[0].tag = Value::Empty_Type;
         v[0].uint_32 = idx + 1;
     } else {
         v->tag = Value::Empty_Type;
-        v->uint_32 = dd->freeList;
+        v->uint_32 = dd->freeList();
     }
-    dd->freeList = idx;
-    if (dd->attrs)
-        dd->attrs[idx].clear();
+    dd->freeList() = idx;
+    if (dd->attrs())
+        dd->attrs()[idx].clear();
 }
 
 
 void SparseArrayData::destroy(Managed *d)
 {
     SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    delete dd->sparse;
+    delete dd->sparse();
 }
 
 void SparseArrayData::markObjects(Managed *d, ExecutionEngine *e)
 {
     SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    uint l = dd->alloc;
+    uint l = dd->alloc();
     for (uint i = 0; i < l; ++i)
-        dd->data[i].mark(e);
+        dd->arrayData()[i].mark(e);
 }
 
 ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
@@ -384,45 +384,45 @@ ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes
 // double slots are required for accessor properties
 uint SparseArrayData::allocate(Object *o, bool doubleSlot)
 {
-    Q_ASSERT(o->arrayData()->type == ArrayData::Sparse);
+    Q_ASSERT(o->arrayData()->type() == ArrayData::Sparse);
     SparseArrayData *dd = static_cast<SparseArrayData *>(o->arrayData());
     if (doubleSlot) {
-        uint *last = &dd->freeList;
+        uint *last = &dd->freeList();
         while (1) {
-            if (*last + 1 >= dd->alloc) {
-                reallocate(o, o->arrayData()->alloc + 2, true);
+            if (*last + 1 >= dd->alloc()) {
+                reallocate(o, o->arrayData()->alloc() + 2, true);
                 dd = static_cast<SparseArrayData *>(o->arrayData());
-                last = &dd->freeList;
+                last = &dd->freeList();
             }
 
-            if (dd->data[*last].uint_32 == (*last + 1)) {
+            if (dd->arrayData()[*last].uint_32 == (*last + 1)) {
                 // found two slots in a row
                 uint idx = *last;
-                *last = dd->data[*last + 1].uint_32;
-                o->arrayData()->attrs[idx] = Attr_Accessor;
+                *last = dd->arrayData()[*last + 1].uint_32;
+                o->arrayData()->attrs()[idx] = Attr_Accessor;
                 return idx;
             }
-            last = &dd->data[*last].uint_32;
+            last = &dd->arrayData()[*last].uint_32;
         }
     } else {
-        if (dd->alloc == dd->freeList) {
-            reallocate(o, o->arrayData()->alloc + 2, false);
+        if (dd->alloc() == dd->freeList()) {
+            reallocate(o, o->arrayData()->alloc() + 2, false);
             dd = static_cast<SparseArrayData *>(o->arrayData());
         }
-        uint idx = dd->freeList;
-        dd->freeList = dd->data[idx].uint_32;
-        if (dd->attrs)
-            dd->attrs[idx] = Attr_Data;
+        uint idx = dd->freeList();
+        dd->freeList() = dd->arrayData()[idx].uint_32;
+        if (dd->attrs())
+            dd->attrs()[idx] = Attr_Data;
         return idx;
     }
 }
 
 ReturnedValue SparseArrayData::get(const ArrayData *d, uint index)
 {
-    SparseArrayNode *n = static_cast<const SparseArrayData *>(d)->sparse->findNode(index);
+    SparseArrayNode *n = static_cast<const SparseArrayData *>(d)->sparse()->findNode(index);
     if (!n)
         return Primitive::emptyValue().asReturnedValue();
-    return d->data[n->value].asReturnedValue();
+    return d->arrayData()[n->value].asReturnedValue();
 }
 
 bool SparseArrayData::put(Object *o, uint index, ValueRef value)
@@ -430,92 +430,92 @@ bool SparseArrayData::put(Object *o, uint index, ValueRef value)
     if (value->isEmpty())
         return true;
 
-    SparseArrayNode *n = static_cast<SparseArrayData *>(o->arrayData())->sparse->insert(index);
-    Q_ASSERT(n->value == UINT_MAX || !o->arrayData()->attrs || !o->arrayData()->attrs[n->value].isAccessor());
+    SparseArrayNode *n = static_cast<SparseArrayData *>(o->arrayData())->sparse()->insert(index);
+    Q_ASSERT(n->value == UINT_MAX || !o->arrayData()->attrs() || !o->arrayData()->attrs()[n->value].isAccessor());
     if (n->value == UINT_MAX)
         n->value = allocate(o);
-    o->arrayData()->data[n->value] = value;
-    if (o->arrayData()->attrs)
-        o->arrayData()->attrs[n->value] = Attr_Data;
+    o->arrayData()->arrayData()[n->value] = value;
+    if (o->arrayData()->attrs())
+        o->arrayData()->attrs()[n->value] = Attr_Data;
     return true;
 }
 
 bool SparseArrayData::del(Object *o, uint index)
 {
     SparseArrayData *dd = static_cast<SparseArrayData *>(o->arrayData());
-    SparseArrayNode *n = dd->sparse->findNode(index);
+    SparseArrayNode *n = dd->sparse()->findNode(index);
     if (!n)
         return true;
 
     uint pidx = n->value;
-    Q_ASSERT(!dd->data[pidx].isEmpty());
+    Q_ASSERT(!dd->arrayData()[pidx].isEmpty());
 
     bool isAccessor = false;
-    if (dd->attrs) {
-        if (!dd->attrs[pidx].isConfigurable())
+    if (dd->attrs()) {
+        if (!dd->attrs()[pidx].isConfigurable())
             return false;
 
-        isAccessor = dd->attrs[pidx].isAccessor();
-        dd->attrs[pidx] = Attr_Data;
+        isAccessor = dd->attrs()[pidx].isAccessor();
+        dd->attrs()[pidx] = Attr_Data;
     }
 
     if (isAccessor) {
         // free up both indices
-        dd->data[pidx + 1].tag = Value::Undefined_Type;
-        dd->data[pidx + 1].uint_32 = static_cast<SparseArrayData *>(dd)->freeList;
-        dd->data[pidx].tag = Value::Undefined_Type;
-        dd->data[pidx].uint_32 = pidx + 1;
+        dd->arrayData()[pidx + 1].tag = Value::Undefined_Type;
+        dd->arrayData()[pidx + 1].uint_32 = static_cast<SparseArrayData *>(dd)->freeList();
+        dd->arrayData()[pidx].tag = Value::Undefined_Type;
+        dd->arrayData()[pidx].uint_32 = pidx + 1;
     } else {
-        dd->data[pidx].tag = Value::Undefined_Type;
-        dd->data[pidx].uint_32 = static_cast<SparseArrayData *>(dd)->freeList;
+        dd->arrayData()[pidx].tag = Value::Undefined_Type;
+        dd->arrayData()[pidx].uint_32 = static_cast<SparseArrayData *>(dd)->freeList();
     }
 
-    dd->freeList = pidx;
-    dd->sparse->erase(n);
+    dd->freeList() = pidx;
+    dd->sparse()->erase(n);
     return true;
 }
 
 void SparseArrayData::setAttribute(Object *o, uint index, PropertyAttributes attrs)
 {
     SparseArrayData *d = static_cast<SparseArrayData *>(o->arrayData());
-    SparseArrayNode *n = d->sparse->insert(index);
+    SparseArrayNode *n = d->sparse()->insert(index);
     if (n->value == UINT_MAX) {
         n->value = allocate(o, attrs.isAccessor());
         d = static_cast<SparseArrayData *>(o->arrayData());
     }
-    else if (attrs.isAccessor() != d->attrs[n->value].isAccessor()) {
+    else if (attrs.isAccessor() != d->attrs()[n->value].isAccessor()) {
         // need to convert the slot
         free(d, n->value);
         n->value = allocate(o, attrs.isAccessor());
     }
-    o->arrayData()->attrs[n->value] = attrs;
+    o->arrayData()->attrs()[n->value] = attrs;
 }
 
 PropertyAttributes SparseArrayData::attribute(const ArrayData *d, uint index)
 {
-    SparseArrayNode *n = static_cast<const SparseArrayData *>(d)->sparse->insert(index);
+    SparseArrayNode *n = static_cast<const SparseArrayData *>(d)->sparse()->insert(index);
     if (!n)
         return PropertyAttributes();
-    return d->attrs[n->value];
+    return d->attrs()[n->value];
 }
 
 void SparseArrayData::push_front(Object *o, Value *values, uint n)
 {
-    Q_ASSERT(!o->arrayData()->attrs);
+    Q_ASSERT(!o->arrayData()->attrs());
     for (int i = n - 1; i >= 0; --i) {
         uint idx = allocate(o);
-        o->arrayData()->data[idx] = values[i];
-        static_cast<SparseArrayData *>(o->arrayData())->sparse->push_front(idx);
+        o->arrayData()->arrayData()[idx] = values[i];
+        static_cast<SparseArrayData *>(o->arrayData())->sparse()->push_front(idx);
     }
 }
 
 ReturnedValue SparseArrayData::pop_front(Object *o)
 {
-    Q_ASSERT(!o->arrayData()->attrs);
-    uint idx = static_cast<SparseArrayData *>(o->arrayData())->sparse->pop_front();
+    Q_ASSERT(!o->arrayData()->attrs());
+    uint idx = static_cast<SparseArrayData *>(o->arrayData())->sparse()->pop_front();
     ReturnedValue v;
     if (idx != UINT_MAX) {
-        v = o->arrayData()->data[idx].asReturnedValue();
+        v = o->arrayData()->arrayData()[idx].asReturnedValue();
         free(o->arrayData(), idx);
     } else {
         v = Encode::undefined();
@@ -526,12 +526,12 @@ ReturnedValue SparseArrayData::pop_front(Object *o)
 uint SparseArrayData::truncate(Object *o, uint newLen)
 {
     SparseArrayData *d = static_cast<SparseArrayData *>(o->arrayData());
-    SparseArrayNode *begin = d->sparse->lowerBound(newLen);
-    if (begin != d->sparse->end()) {
-        SparseArrayNode *it = d->sparse->end()->previousNode();
+    SparseArrayNode *begin = d->sparse()->lowerBound(newLen);
+    if (begin != d->sparse()->end()) {
+        SparseArrayNode *it = d->sparse()->end()->previousNode();
         while (1) {
-            if (d->attrs) {
-                if (!d->attrs[it->value].isConfigurable()) {
+            if (d->attrs()) {
+                if (!d->attrs()[it->value].isConfigurable()) {
                     newLen = it->key() + 1;
                     break;
                 }
@@ -539,7 +539,7 @@ uint SparseArrayData::truncate(Object *o, uint newLen)
             free(d, it->value);
             bool brk = (it == begin);
             SparseArrayNode *prev = it->previousNode();
-            static_cast<SparseArrayData *>(d)->sparse->erase(it);
+            static_cast<SparseArrayData *>(d)->sparse()->erase(it);
             if (brk)
                 break;
             it = prev;
@@ -551,9 +551,9 @@ uint SparseArrayData::truncate(Object *o, uint newLen)
 uint SparseArrayData::length(const ArrayData *d)
 {
     const SparseArrayData *dd = static_cast<const SparseArrayData *>(d);
-    if (!dd->sparse)
+    if (!dd->sparse())
         return 0;
-    SparseArrayNode *n = dd->sparse->end();
+    SparseArrayNode *n = dd->sparse()->end();
     n = n->previousNode();
     return n ? n->key() + 1 : 0;
 }
@@ -586,18 +586,18 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
         if (otherObj->hasAccessorProperty() && other->hasAttributes()) {
             Scope scope(obj->engine());
             ScopedValue v(scope);
-            for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse->begin();
-                 it != static_cast<const SparseArrayData *>(other)->sparse->end(); it = it->nextNode()) {
-                v = otherObj->getValue(reinterpret_cast<Property *>(other->data + it->value), other->attrs[it->value]);
+            for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse()->begin();
+                 it != static_cast<const SparseArrayData *>(other)->sparse()->end(); it = it->nextNode()) {
+                v = otherObj->getValue(reinterpret_cast<Property *>(other->arrayData() + it->value), other->attrs()[it->value]);
                 obj->arraySet(oldSize + it->key(), v);
             }
         } else {
-            for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse->begin();
-                 it != static_cast<const SparseArrayData *>(other)->sparse->end(); it = it->nextNode())
-                obj->arraySet(oldSize + it->key(), ValueRef(other->data[it->value]));
+            for (const SparseArrayNode *it = static_cast<const SparseArrayData *>(other)->sparse()->begin();
+                 it != static_cast<const SparseArrayData *>(other)->sparse()->end(); it = it->nextNode())
+                obj->arraySet(oldSize + it->key(), ValueRef(other->arrayData()[it->value]));
         }
     } else {
-        obj->arrayPut(oldSize, other->data, n);
+        obj->arrayPut(oldSize, other->arrayData(), n);
     }
 
     return oldSize + n;
@@ -605,28 +605,28 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
 
 Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
 {
-    if (!isAccessor && o->arrayData()->type != ArrayData::Sparse) {
+    if (!isAccessor && o->arrayData()->type() != ArrayData::Sparse) {
         SimpleArrayData *d = static_cast<SimpleArrayData *>(o->arrayData());
-        if (index < 0x1000 || index < d->len + (d->len >> 2)) {
-            if (index >= o->arrayData()->alloc) {
+        if (index < 0x1000 || index < d->len() + (d->len() >> 2)) {
+            if (index >= o->arrayData()->alloc()) {
                 o->arrayReserve(index + 1);
                 d = static_cast<SimpleArrayData *>(o->arrayData());
             }
-            if (index >= d->len) {
+            if (index >= d->len()) {
                 // mark possible hole in the array
-                for (uint i = d->len; i < index; ++i)
-                    d->data[i] = Primitive::emptyValue();
-                d->len = index + 1;
+                for (uint i = d->len(); i < index; ++i)
+                    d->arrayData()[i] = Primitive::emptyValue();
+                d->len() = index + 1;
             }
-            return reinterpret_cast<Property *>(o->arrayData()->data + index);
+            return reinterpret_cast<Property *>(o->arrayData()->arrayData() + index);
         }
     }
 
     o->initSparseArray();
-    SparseArrayNode *n = static_cast<SparseArrayData *>(o->arrayData())->sparse->insert(index);
+    SparseArrayNode *n = static_cast<SparseArrayData *>(o->arrayData())->sparse()->insert(index);
     if (n->value == UINT_MAX)
         n->value = SparseArrayData::allocate(o, isAccessor);
-    return reinterpret_cast<Property *>(o->arrayData()->data + n->value);
+    return reinterpret_cast<Property *>(o->arrayData()->arrayData() + n->value);
 }
 
 
@@ -686,50 +686,50 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
     // The spec says the sorting goes through a series of get,put and delete operations.
     // this implies that the attributes don't get sorted around.
 
-    if (thisObject->arrayData()->type == ArrayData::Sparse) {
+    if (thisObject->arrayData()->type() == ArrayData::Sparse) {
         // since we sort anyway, we can simply iterate over the entries in the sparse
         // array and append them one by one to a regular one.
         SparseArrayData *sparse = static_cast<SparseArrayData *>(thisObject->arrayData());
 
-        if (!sparse->sparse->nEntries())
+        if (!sparse->sparse()->nEntries())
             return;
 
         thisObject->setArrayData(0);
-        ArrayData::realloc(thisObject, ArrayData::Simple, 0, sparse->sparse->nEntries(), sparse->attrs ? true : false);
+        ArrayData::realloc(thisObject, ArrayData::Simple, 0, sparse->sparse()->nEntries(), sparse->attrs() ? true : false);
         SimpleArrayData *d = static_cast<SimpleArrayData *>(thisObject->arrayData());
 
-        SparseArrayNode *n = sparse->sparse->begin();
+        SparseArrayNode *n = sparse->sparse()->begin();
         uint i = 0;
-        if (sparse->attrs) {
-            while (n != sparse->sparse->end()) {
+        if (sparse->attrs()) {
+            while (n != sparse->sparse()->end()) {
                 if (n->value >= len)
                     break;
 
-                PropertyAttributes a = sparse->attrs ? sparse->attrs[n->value] : Attr_Data;
-                d->data[i] = thisObject->getValue(reinterpret_cast<Property *>(sparse->data + n->value), a);
-                d->attrs[i] = a.isAccessor() ? Attr_Data : a;
+                PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
+                d->arrayData()[i] = thisObject->getValue(reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
+                d->attrs()[i] = a.isAccessor() ? Attr_Data : a;
 
                 n = n->nextNode();
                 ++i;
             }
         } else {
-            while (n != sparse->sparse->end()) {
+            while (n != sparse->sparse()->end()) {
                 if (n->value >= len)
                     break;
-                d->data[i] = sparse->data[n->value];
+                d->arrayData()[i] = sparse->arrayData()[n->value];
                 n = n->nextNode();
                 ++i;
             }
         }
-        d->len = i;
+        d->len() = i;
         if (len > i)
             len = i;
-        if (n != sparse->sparse->end()) {
+        if (n != sparse->sparse()->end()) {
             // have some entries outside the sort range that we need to ignore when sorting
             thisObject->initSparseArray();
-            while (n != sparse->sparse->end()) {
-                PropertyAttributes a = sparse->attrs ? sparse->attrs[n->value] : Attr_Data;
-                thisObject->arraySet(n->value, *reinterpret_cast<Property *>(sparse->data + n->value), a);
+            while (n != sparse->sparse()->end()) {
+                PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
+                thisObject->arraySet(n->value, *reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
 
                 n = n->nextNode();
             }
@@ -738,18 +738,18 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
         // ### explicitly delete sparse
     } else {
         SimpleArrayData *d = static_cast<SimpleArrayData *>(thisObject->arrayData());
-        if (len > d->len)
-            len = d->len;
+        if (len > d->len())
+            len = d->len();
 
         // sort empty values to the end
         for (uint i = 0; i < len; i++) {
-            if (thisObject->arrayData()->data[i].isEmpty()) {
+            if (thisObject->arrayData()->arrayData()[i].isEmpty()) {
                 while (--len > i)
-                    if (!thisObject->arrayData()->data[len].isEmpty())
+                    if (!thisObject->arrayData()->arrayData()[len].isEmpty())
                         break;
-                Q_ASSERT(!thisObject->arrayData()->attrs || !thisObject->arrayData()->attrs[len].isAccessor());
-                thisObject->arrayData()->data[i] = thisObject->arrayData()->data[len];
-                thisObject->arrayData()->data[len] = Primitive::emptyValue();
+                Q_ASSERT(!thisObject->arrayData()->attrs() || !thisObject->arrayData()->attrs()[len].isAccessor());
+                thisObject->arrayData()->arrayData()[i] = thisObject->arrayData()->arrayData()[len];
+                thisObject->arrayData()->arrayData()[len] = Primitive::emptyValue();
             }
         }
 
@@ -760,7 +760,7 @@ void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const Valu
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 
-    Value *begin = thisObject->arrayData()->data;
+    Value *begin = thisObject->arrayData()->arrayData();
     std::sort(begin, begin + len, lessThan);
 
 #ifdef CHECK_SPARSE_ARRAYS
