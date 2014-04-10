@@ -85,14 +85,22 @@ struct Q_QML_EXPORT ObjectIterator
 struct ForEachIteratorObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(ForeachIteratorObject)
-    ObjectIterator it;
+    struct Data {
+        Data(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags)
+            : it(scratch1, scratch2, o, flags) {}
+        Data(Scope &scope, const ObjectRef o, uint flags)
+            : it (scope, o, flags) {}
+        ObjectIterator it;
+    };
+    Data data;
+
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
-        : Object(ctx->engine), it(workArea, workArea + 1,
-                                  o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
+        : Object(ctx->engine), data(workArea, workArea + 1,
+                                    o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
         setVTable(staticVTable());
     }
 
-    ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
+    ReturnedValue nextPropertyName() { return data.it.nextPropertyNameAsString(); }
 
 protected:
     static void markObjects(Managed *that, ExecutionEngine *e);
