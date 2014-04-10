@@ -75,6 +75,11 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch");
+Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse");
+Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus");
+Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty");
+
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
@@ -189,16 +194,6 @@ or more items in one scope having focus set), the same rule is applied item by i
 thus the first item that has focus will get it (assuming the scope doesn't already
 have a scope focused item), and the other items will have their focus cleared.
 */
-
-
-// #define FOCUS_DEBUG
-// #define MOUSE_DEBUG
-// #define TOUCH_DEBUG
-// #define DIRTY_DEBUG
-
-#ifdef FOCUS_DEBUG
-void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
-#endif
 
 QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
 : transformNode(0)
@@ -699,14 +694,12 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     Q_ASSERT(item);
     Q_ASSERT(scope || item == contentItem);
 
-#ifdef FOCUS_DEBUG
-    qWarning() << "QQuickWindowPrivate::setFocusInScope():";
-    qWarning() << "    scope:" << (QObject *)scope;
+    qCDebug(DBG_FOCUS) << "QQuickWindowPrivate::setFocusInScope():";
+    qCDebug(DBG_FOCUS) << "    scope:" << (QObject *)scope;
     if (scope)
-        qWarning() << "    scopeSubFocusItem:" << (QObject *)QQuickItemPrivate::get(scope)->subFocusItem;
-    qWarning() << "    item:" << (QObject *)item;
-    qWarning() << "    activeFocusItem:" << (QObject *)activeFocusItem;
-#endif
+        qCDebug(DBG_FOCUS) << "    scopeSubFocusItem:" << (QObject *)QQuickItemPrivate::get(scope)->subFocusItem;
+    qCDebug(DBG_FOCUS) << "    item:" << (QObject *)item;
+    qCDebug(DBG_FOCUS) << "    activeFocusItem:" << (QObject *)activeFocusItem;
 
     QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : 0;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -802,12 +795,10 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     Q_ASSERT(item);
     Q_ASSERT(scope || item == contentItem);
 
-#ifdef FOCUS_DEBUG
-    qWarning() << "QQuickWindowPrivate::clearFocusInScope():";
-    qWarning() << "    scope:" << (QObject *)scope;
-    qWarning() << "    item:" << (QObject *)item;
-    qWarning() << "    activeFocusItem:" << (QObject *)activeFocusItem;
-#endif
+    qCDebug(DBG_FOCUS) << "QQuickWindowPrivate::clearFocusInScope():";
+    qCDebug(DBG_FOCUS) << "    scope:" << (QObject *)scope;
+    qCDebug(DBG_FOCUS) << "    item:" << (QObject *)item;
+    qCDebug(DBG_FOCUS) << "    activeFocusItem:" << (QObject *)activeFocusItem;
 
     QQuickItemPrivate *scopePrivate = 0;
     if (scope) {
@@ -1473,10 +1464,7 @@ void QQuickWindow::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-#ifdef MOUSE_DEBUG
-    qWarning() << "QQuickWindow::mousePressEvent()" << event->localPos() << event->button() << event->buttons();
-#endif
-
+    qCDebug(DBG_MOUSE) << "QQuickWindow::mousePressEvent()" << event->localPos() << event->button() << event->buttons();
     d->deliverMouseEvent(event);
 }
 
@@ -1490,9 +1478,7 @@ void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-#ifdef MOUSE_DEBUG
-    qWarning() << "QQuickWindow::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons();
-#endif
+    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons();
 
     if (!d->mouseGrabberItem) {
         QWindow::mouseReleaseEvent(event);
@@ -1514,9 +1500,7 @@ void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
         return;
     }
 
-#ifdef MOUSE_DEBUG
-    qWarning() << "QQuickWindow::mouseDoubleClickEvent()" << event->localPos() << event->button() << event->buttons();
-#endif
+    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseDoubleClickEvent()" << event->localPos() << event->button() << event->buttons();
 
     if (!d->mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
         if (d->deliverInitialMousePressEvent(d->contentItem, event))
@@ -1555,9 +1539,7 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-#ifdef MOUSE_DEBUG
-    qWarning() << "QQuickWindow::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
-#endif
+    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
 
 #ifndef QT_NO_CURSOR
     d->updateCursor(event->windowPos());
@@ -1696,9 +1678,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickWindow);
-#ifdef MOUSE_DEBUG
-    qWarning() << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta();
-#endif
+    qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta();
 
     //if the actual wheel event was accepted, accept the compatibility wheel event and return early
     if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
@@ -1713,9 +1693,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
-#ifdef TOUCH_DEBUG
-    qWarning("touchCancelEvent");
-#endif
+    qCDebug(DBG_TOUCH) << event;
     Q_Q(QQuickWindow);
     // A TouchCancel event will typically not contain any points.
     // Deliver it to all items that have active touches.
@@ -1738,14 +1716,7 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 // call deliverTouchPoints to actually dispatch the points
 bool QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
 {
-#ifdef TOUCH_DEBUG
-    if (event->type() == QEvent::TouchBegin)
-        qWarning() << "touchBeginEvent";
-    else if (event->type() == QEvent::TouchUpdate)
-        qWarning() << "touchUpdateEvent points";
-    else if (event->type() == QEvent::TouchEnd)
-        qWarning("touchEndEvent");
-#endif
+    qCDebug(DBG_TOUCH) << event;
 
     // List of all items that received an event before
     // When we have TouchBegin this is and will stay empty
@@ -2451,9 +2422,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
 
 void QQuickWindowPrivate::updateDirtyNodes()
 {
-#ifdef DIRTY_DEBUG
-    qWarning() << "QQuickWindowPrivate::updateDirtyNodes():";
-#endif
+    qCDebug(DBG_DIRTY) << "QQuickWindowPrivate::updateDirtyNodes():";
 
     cleanupNodes();
 
@@ -2466,9 +2435,7 @@ void QQuickWindowPrivate::updateDirtyNodes()
         QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(item);
         itemPriv->removeFromDirtyList();
 
-#ifdef DIRTY_DEBUG
-        qWarning() << "   QSGNode:" << item << qPrintable(itemPriv->dirtyToString());
-#endif
+        qCDebug(DBG_DIRTY) << "   QSGNode:" << item << qPrintable(itemPriv->dirtyToString());
         updateDirtyNode(item);
     }
 }

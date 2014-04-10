@@ -59,6 +59,7 @@
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
 #include <QtGui/qpa/qplatformtheme.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlengine_p.h>
@@ -87,25 +88,24 @@ QT_BEGIN_NAMESPACE
 static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
 #endif
 
-#ifdef FOCUS_DEBUG
-void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
-void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
+void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
 {
-    qWarning()
-            << QByteArray(depth, '\t').constData()
-            << (scope && QQuickItemPrivate::get(scope)->subFocusItem == item ? '*' : ' ')
-            << item->hasFocus()
-            << item->hasActiveFocus()
-            << item->isFocusScope()
-            << item;
-    foreach (QQuickItem *child, item->childItems()) {
-        printFocusTree(
-                child,
-                item->isFocusScope() || !scope ? item : scope,
-                item->isFocusScope() || !scope ? depth + 1 : depth);
+    if (DBG_FOCUS().isEnabled(QtDebugMsg)) {
+        qCDebug(DBG_FOCUS)
+                << QByteArray(depth, '\t').constData()
+                << (scope && QQuickItemPrivate::get(scope)->subFocusItem == item ? '*' : ' ')
+                << item->hasFocus()
+                << item->hasActiveFocus()
+                << item->isFocusScope()
+                << item;
+        foreach (QQuickItem *child, item->childItems()) {
+            debugFocusTree(
+                    child,
+                    item->isFocusScope() || !scope ? item : scope,
+                    item->isFocusScope() || !scope ? depth + 1 : depth);
+        }
     }
 }
-#endif
 
 static void QQuickItem_parentNotifier(QObject *o, qintptr, QQmlNotifier **n)
 {
@@ -2182,14 +2182,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
         if (current == startItem && from == firstFromItem) {
             // wrapped around, avoid endless loops
             if (originalItem == contentItem) {
-#ifdef FOCUS_DEBUG
-                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
-#endif
+                qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
                 return item->window()->contentItem();
             } else {
-#ifdef FOCUS_DEBUG
-                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
-#endif
+                qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
                 return startItem;
             }
         }
