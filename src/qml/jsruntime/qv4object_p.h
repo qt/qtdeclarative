@@ -103,26 +103,26 @@ struct URIErrorPrototype;
 
 
 struct Q_QML_EXPORT Object: Managed {
-    V4_OBJECT
+    struct Data : Managed::Data {
+        Members memberData;
+        ArrayData *arrayData;
+    };
+    struct {
+        Members memberData;
+        ArrayData *arrayData;
+    } __data;
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(Object)
+
     enum {
         IsObject = true
     };
 
-    struct Data {
-        Members memberData;
-        ArrayData *arrayData;
-    };
-    Data data;
-
-    const Data *objectData() const { return &data; }
-    Data *objectData() { return &data; }
-
-    Members &memberData() { return objectData()->memberData; }
-    Members memberData() const { return objectData()->memberData; }
-    const ArrayData *arrayData() const { return objectData()->arrayData; }
-    ArrayData *arrayData() { return objectData()->arrayData; }
-    void setArrayData(ArrayData *a) { objectData()->arrayData = a; }
+    Members &memberData() { return d()->memberData; }
+    Members memberData() const { return d()->memberData; }
+    const ArrayData *arrayData() const { return d()->arrayData; }
+    ArrayData *arrayData() { return d()->arrayData; }
+    void setArrayData(ArrayData *a) { d()->arrayData = a; }
 
     Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData().data() + index); }
 

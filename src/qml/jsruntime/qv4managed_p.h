@@ -78,6 +78,12 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
 
+#define V4_OBJECT_NEW \
+        V4_OBJECT \
+        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
+        Data *d() { return &static_cast<Data &>(Managed::data); }
+
 #define Q_MANAGED_TYPE(type) \
     public: \
         enum { MyType = Type_##type };
