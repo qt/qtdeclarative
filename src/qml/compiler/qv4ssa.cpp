@@ -1178,17 +1178,21 @@ public:
         DefUse()
             : defStmt(0)
             , blockOfStatement(0)
-        {}
+        { uses.reserve(8); }
         Stmt *defStmt;
         BasicBlock *blockOfStatement;
-        QList<Stmt *> uses;
+        QVector<Stmt *> uses;
     };
 
 private:
     IR::Function *function;
     typedef QHash<UntypedTemp, DefUse> DefUses;
     DefUses _defUses;
-    QHash<Stmt *, QList<Temp> > _usesPerStatement;
+    class Temps: public QVector<Temp> {
+    public:
+        Temps() { reserve(4); }
+    };
+    QHash<Stmt *, Temps > _usesPerStatement;
 
     BasicBlock *_block;
     Stmt *_stmt;
@@ -1203,8 +1207,8 @@ private:
         if (!isCollectible(t))
             return;
 
-        _defUses[*t].uses.append(_stmt);
-        _usesPerStatement[_stmt].append(*t);
+        _defUses[*t].uses.push_back(_stmt);
+        _usesPerStatement[_stmt].push_back(*t);
     }
 
     void addDef(Temp *t) {
@@ -1262,11 +1266,20 @@ public:
         _defUses.remove(var);
     }
 
-    void addUses(const Temp &variable, const QList<Stmt *> &newUses)
-    { _defUses[variable].uses.append(newUses); }
+    void addUses(const Temp &variable, const QVector<Stmt *> &newUses)
+    {
+        QVector<Stmt *> &uses = _defUses[variable].uses;
+        foreach (Stmt *stmt, newUses)
+            if (std::find(uses.begin(), uses.end(), stmt) == uses.end())
+                uses.push_back(stmt);
+    }
 
-    void addUse(const Temp &variable, Stmt * newUse)
-    { _defUses[variable].uses.append(newUse); }
+    void addUse(const Temp &variable, Stmt *newUse)
+    {
+        QVector<Stmt *> &uses = _defUses[variable].uses;
+        if (std::find(uses.begin(), uses.end(), newUse) == uses.end())
+            uses.push_back(newUse);
+    }
 
     int useCount(const UntypedTemp &variable) const
     { return _defUses[variable].uses.size(); }
@@ -1278,14 +1291,24 @@ public:
     { return _defUses[variable].blockOfStatement; }
 
     void removeUse(Stmt *usingStmt, const Temp &var)
-    { _defUses[var].uses.removeAll(usingStmt); }
-
-    QList<Temp> usedVars(Stmt *s) const
-    { return _usesPerStatement[s]; }
-
-    const QList<Stmt *> &uses(const UntypedTemp &var) const
     {
-        static const QList<Stmt *> noUses;
+        QVector<Stmt *> &uses = _defUses[var].uses;
+        uses.resize(std::remove(uses.begin(), uses.end(), usingStmt) - uses.begin());
+    }
+
+    const QVector<Temp> &usedVars(Stmt *s) const
+    {
+        static const QVector<Temp> noVars;
+        QHash<Stmt *, Temps >::const_iterator it = _usesPerStatement.find(s);
+        if (it == _usesPerStatement.end())
+            return noVars;
+        else
+            return *it;
+    }
+
+    const QVector<Stmt *> uses(const UntypedTemp &var) const
+    {
+        static const QVector<Stmt *> noUses;
 
         DefUses::const_iterator it = _defUses.find(var);
         if (it == _defUses.end())
@@ -1795,7 +1818,65 @@ class TypeInference: public StmtVisitor, public ExprVisitor {
     const DefUsesCalculator &_defUses;
     typedef QHash<Temp, DiscoveredType> TempTypes;
     TempTypes _tempTypes;
-    QList<Stmt *> _worklist;
+    class W {
+        std::vector<bool> worklist;
+        std::vector<Stmt *> stmts;
+        int count;
+    public:
+        W(IR::Function *f)
+            : count(0)
+        {
+            foreach (BasicBlock *bb, f->basicBlocks()) {
+                if (bb->isRemoved())
+                    continue;
+                foreach (Stmt *stmt, bb->statements())
+                    stmt->id = count++;
+                stmts.insert(stmts.end(), bb->statements().begin(), bb->statements().end());
+            }
+            worklist.resize(stmts.size(), true);
+        }
+
+        ~W()
+        {
+            foreach (Stmt *stmt, stmts)
+                stmt->id = -1;
+        }
+
+        void append(const QVector<Stmt*>&stmts)
+        {
+            foreach (Stmt *stmt, stmts)
+                append(stmt);
+        }
+
+        void append(Stmt *stmt)
+        {
+            Q_ASSERT(stmt->id >= 0);
+
+            if (worklist[stmt->id])
+                return;
+            worklist[stmt->id] = true;
+            ++count;
+        }
+
+        bool empty() const
+        { return count == 0; }
+
+        Stmt *takeNext(Stmt *last)
+        {
+            if (empty())
+                return 0;
+
+            const int startAt = last ? last->id + 1 : 0;
+            Q_ASSERT(startAt >= 0);
+
+            size_t pos = std::distance(worklist.begin(), std::find(worklist.begin() + startAt, worklist.end(), true));
+            if (pos >= worklist.size())
+                pos = std::distance(worklist.begin(), std::find(worklist.begin(), worklist.begin() + startAt, true));
+            --count;
+            worklist[pos] = false;
+            return stmts[pos];
+        }
+    } *_worklist;
     struct TypingResult {
         DiscoveredType type;
         bool fullyTyped;
@@ -1809,51 +1890,41 @@ public:
     TypeInference(QQmlEnginePrivate *qmlEngine, const DefUsesCalculator &defUses)
         : qmlEngine(qmlEngine)
         , _defUses(defUses)
+        , _worklist(0)
         , _ty(UnknownType)
     {}
 
     void run(IR::Function *f) {
+        W w(f);
+        _worklist = &w;
         function = f;
 
-        // TODO: the worklist handling looks a bit inefficient... check if there is something better
-        _worklist.clear();
-        for (int i = 0, ei = function->basicBlockCount(); i != ei; ++i) {
-            BasicBlock *bb = function->basicBlock(i);
-            if (bb->isRemoved())
+        Stmt *s = 0;
+        while ((s = _worklist->takeNext(s))) {
+            if (s->asJump())
                 continue;
-            if (i == 0 || !bb->in.isEmpty())
-                _worklist += bb->statements().toList();
-        }
-
-        while (!_worklist.isEmpty()) {
-            QList<Stmt *> worklist = QSet<Stmt *>::fromList(_worklist).toList();
-            _worklist.clear();
-            while (!worklist.isEmpty()) {
-                Stmt *s = worklist.first();
-                worklist.removeFirst();
-                if (s->asJump())
-                    continue;
 
 #if defined(SHOW_SSA)
-                qout<<"Typing stmt ";s->dump(qout);qout<<endl;
+            qout<<"Typing stmt ";s->dump(qout);qout<<endl;
 #endif
 
-                if (!run(s)) {
-                    _worklist += s;
+            if (!run(s)) {
+                _worklist->append(s);
 #if defined(SHOW_SSA)
-                    qout<<"Pushing back stmt: ";
-                    s->dump(qout);qout<<endl;
-                } else {
-                    qout<<"Finished: ";
-                    s->dump(qout);qout<<endl;
+                qout<<"Pushing back stmt: ";
+                s->dump(qout);qout<<endl;
+            } else {
+                qout<<"Finished: ";
+                s->dump(qout);qout<<endl;
 #endif
-                }
             }
         }
 
         PropagateTempTypes propagator(_defUses);
         for (QHash<Temp, DiscoveredType>::const_iterator i = _tempTypes.begin(), ei = _tempTypes.end(); i != ei; ++i)
             propagator.run(i.key(), i.value());
+
+        _worklist = 0;
     }
 
 private:
@@ -1904,7 +1975,7 @@ private:
                 }
 #endif
 
-                _worklist += _defUses.uses(*t);
+                _worklist->append(_defUses.uses(*t));
             }
         } else {
             e->type = (Type) ty.type;
@@ -2194,7 +2265,7 @@ public:
 private:
     bool isUsedAsInt32(const UntypedTemp &t, const QVector<UntypedTemp> &knownOk) const
     {
-        const QList<Stmt *> &uses = _defUses.uses(t);
+        const QVector<Stmt *> &uses = _defUses.uses(t);
         if (uses.isEmpty())
             return false;
 
@@ -2849,7 +2920,7 @@ public:
         , _replacement(0)
     {}
 
-    void operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QList<Stmt *> *newUses = 0)
+    void operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QVector<Stmt *> *newUses = 0)
     {
         Q_ASSERT(replacement->asTemp() || replacement->asConst() || replacement->asName());
 
@@ -2858,7 +2929,7 @@ public:
         qSwap(_toReplace, toReplace);
         qSwap(_replacement, replacement);
 
-        const QList<Stmt *> &uses = _defUses.uses(*_toReplace);
+        const QVector<Stmt *> &uses = _defUses.uses(*_toReplace);
         if (newUses)
             newUses->reserve(uses.size());
 
@@ -2869,7 +2940,7 @@ public:
 //            qout<<"     -> ";use->dump(qout);qout<<"\n";
             W += use;
             if (newUses)
-                newUses->append(use);
+                newUses->push_back(use);
         }
 
         qSwap(_replacement, replacement);
@@ -3111,7 +3182,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 Temp *t = phi->targetTemp;
                 Expr *e = phi->d->incoming.first();
 
-                QList<Stmt *> newT2Uses;
+                QVector<Stmt *> newT2Uses;
                 replaceUses(t, e, W, &newT2Uses);
                 if (Temp *t2 = e->asTemp()) {
                     defUses.removeUse(s, *t2);
@@ -3188,7 +3259,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
 
                 // copy propagation:
                 if (Temp *sourceTemp = unescapableTemp(m->source, function)) {
-                    QList<Stmt *> newT2Uses;
+                    QVector<Stmt *> newT2Uses;
                     replaceUses(targetTemp, sourceTemp, W, &newT2Uses);
                     defUses.removeUse(s, *sourceTemp);
                     defUses.addUses(*sourceTemp, newT2Uses);
