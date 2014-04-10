@@ -51,10 +51,17 @@ namespace QV4 {
 struct ArgumentsGetterFunction: FunctionObject
 {
     V4_OBJECT
-    uint index;
+    struct Data {
+        uint index;
+    };
+    Data data;
+
+    uint index() const { return data.index; }
 
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
+        : FunctionObject(scope)
+    {
+        data.index = index;
         setVTable(staticVTable());
     }
 
@@ -64,10 +71,17 @@ struct ArgumentsGetterFunction: FunctionObject
 struct ArgumentsSetterFunction: FunctionObject
 {
     V4_OBJECT
-    uint index;
+    struct Data {
+        uint index;
+    };
+    Data data;
+
+    uint index() const { return data.index; }
 
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
-        : FunctionObject(scope), index(index) {
+        : FunctionObject(scope)
+    {
+        data.index = index;
         setVTable(staticVTable());
     }
 
@@ -78,14 +92,22 @@ struct ArgumentsSetterFunction: FunctionObject
 struct ArgumentsObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(ArgumentsObject)
-    CallContext *context;
-    bool fullyCreated;
-    Members mappedArguments;
+    struct Data {
+        CallContext *context;
+        bool fullyCreated;
+        Members mappedArguments;
+    };
+    Data data;
+
+    CallContext *context() const { return data.context; }
+    bool fullyCreated() const { return data.fullyCreated; }
+    Members mappedArguments() const { return data.mappedArguments; }
+
     ArgumentsObject(CallContext *context);
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context->strictMode;
+                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
     }
 
     enum {
