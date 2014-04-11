@@ -446,6 +446,7 @@ public:
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
+        Label label;
         const char* functionName;
     };
     struct PointerToValue {
@@ -473,6 +474,7 @@ public:
         ctl.call = call();
         ctl.externalFunction = function;
         ctl.functionName = functionName;
+        ctl.label = label();
         _callsToLink.append(ctl);
     }
 

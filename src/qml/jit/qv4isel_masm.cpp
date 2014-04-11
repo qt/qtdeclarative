@@ -115,7 +115,13 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
          it != end; ++it) {
         QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
         ptrString.prepend("0x");
-        processedOutput = processedOutput.replace(ptrString, it.value());
+        int idx = processedOutput.indexOf(ptrString);
+        if (idx < 0)
+            continue;
+        idx = processedOutput.lastIndexOf('\n', idx);
+        if (idx < 0)
+            continue;
+        processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; call ") + it.value());
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
     fflush(stderr);
@@ -143,7 +149,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
         linkBuffer.link(ctl.call, ctl.externalFunction);
-        functions[ctl.externalFunction.value()] = ctl.functionName;
+        functions[linkBuffer.locationOf(ctl.label).dataLocation()] = ctl.functionName;
     }
 
     foreach (const DataLabelPatch &p, _dataLabelPatches)
