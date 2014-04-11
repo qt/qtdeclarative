@@ -185,11 +185,9 @@ Atlas::~Atlas()
 
 void Atlas::invalidate()
 {
-    Q_ASSERT(QOpenGLContext::currentContext());
-    if (m_texture_id) {
+    if (m_texture_id && QOpenGLContext::currentContext())
         glDeleteTextures(1, &m_texture_id);
-        m_texture_id = 0;
-    }
+    m_texture_id = 0;
 }
 
 Texture *Atlas::create(const QImage &image)

@@ -836,10 +836,12 @@ static void qsg_wipeBatch(Batch *batch, QOpenGLFunctions *funcs)
 
 Renderer::~Renderer()
 {
-    // Clean up batches and buffers
-    for (int i=0; i<m_opaqueBatches.size(); ++i) qsg_wipeBatch(m_opaqueBatches.at(i), this);
-    for (int i=0; i<m_alphaBatches.size(); ++i) qsg_wipeBatch(m_alphaBatches.at(i), this);
-    for (int i=0; i<m_batchPool.size(); ++i) qsg_wipeBatch(m_batchPool.at(i), this);
+    if (QOpenGLContext::currentContext()) {
+        // Clean up batches and buffers
+        for (int i=0; i<m_opaqueBatches.size(); ++i) qsg_wipeBatch(m_opaqueBatches.at(i), this);
+        for (int i=0; i<m_alphaBatches.size(); ++i) qsg_wipeBatch(m_alphaBatches.at(i), this);
+        for (int i=0; i<m_batchPool.size(); ++i) qsg_wipeBatch(m_batchPool.at(i), this);
+    }
 
     // The shadowtree
     qDeleteAll(m_nodes.values());

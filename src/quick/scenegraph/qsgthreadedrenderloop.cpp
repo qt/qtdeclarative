@@ -398,6 +398,7 @@ bool QSGRenderThread::event(QEvent *e)
             QSG_RT_DEBUG(" - setting exit flag and invalidating GL");
             invalidateOpenGL(wme->window, wme->inDestructor, wme->fallbackSurface);
             active = gl;
+            Q_ASSERT_X(!wme->inDestructor || !active, "QSGRenderThread::invalidateOpenGL()", "Thread's active state is not set to false when shutting down");
             if (sleeping)
                 stopEventProcessing = true;
         } else {
@@ -462,11 +463,8 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     bool wipeGL = inDestructor || (wipeSG && !window->isPersistentOpenGLContext());
 
     bool current = gl->makeCurrent(fallback ? static_cast<QSurface *>(fallback) : static_cast<QSurface *>(window));
-    if (!current) {
-#ifndef QT_NO_DEBUG
-        qWarning() << "Scene Graph failed to acquire GL context during cleanup";
-#endif
-        return;
+    if (Q_UNLIKELY(!current)) {
+        QSG_RT_DEBUG(" - cleanup without an OpenGL context");
     }
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
@@ -475,14 +473,16 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
         dd->cleanupNodesOnShutdown();
     } else {
         QSG_RT_DEBUG(" - persistent SG, avoiding cleanup");
-        gl->doneCurrent();
+        if (current)
+            gl->doneCurrent();
         return;
     }
 
     sgrc->invalidate();
     QCoreApplication::processEvents();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    gl->doneCurrent();
+    if (current)
+        gl->doneCurrent();
     QSG_RT_DEBUG(" - invalidated scenegraph..");
 
     if (wipeGL) {
