@@ -110,6 +110,7 @@ private slots:
     void assignLiteralToVariant();
     void assignLiteralToVar();
     void assignLiteralToJSValue();
+    void assignNullStrings();
     void bindJSValueToVar();
     void bindJSValueToVariant();
     void bindJSValueToType();
@@ -871,6 +872,19 @@ void tst_qqmllanguage::assignLiteralToJSValue()
         QVERIFY(value.isNumber());
         QCOMPARE(value.toNumber(), qreal(27));
     }
+}
+
+void tst_qqmllanguage::assignNullStrings()
+{
+    QQmlComponent component(&engine, testFileUrl("assignNullStrings.qml"));
+    VERIFY_ERRORS(0);
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->stringProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isNull());
+    QMetaObject::invokeMethod(object, "assignNullStringsFromJs", Qt::DirectConnection);
+    QVERIFY(object->stringProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isNull());
 }
 
 void tst_qqmllanguage::bindJSValueToVar()
