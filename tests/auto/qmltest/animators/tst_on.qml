@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -54,7 +54,7 @@ Item {
               && !anims.running && !animr.running
               && !animo.running;
         function test_endresult() {
-            compare(box.xChangeCounter, 1);
+            tryCompare(box.xChangeCounter, 1);
             compare(box.yChangeCounter, 1);
             compare(box.scaleChangeCounter, 1);
             compare(box.rotationChangeCounter, 1);
