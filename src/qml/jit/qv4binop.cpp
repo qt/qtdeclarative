@@ -299,13 +299,19 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->lshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                          Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->lshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                             Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
-            if (!rightSource->asConst())
-                as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
+            as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->lshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeInt32(targetReg, target);
@@ -314,12 +320,19 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->rshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                          Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->rshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                             Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->rshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeInt32(targetReg, target);
@@ -328,12 +341,19 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->urshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                           Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->urshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                              Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->urshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeUInt32(targetReg, target);
