@@ -2337,7 +2337,6 @@ void QQuickTextInput::setPersistentSelection(bool on)
     emit persistentSelectionChanged();
 }
 
-#ifndef QT_NO_CLIPBOARD
 /*!
     \qmlproperty bool QtQuick::TextInput::canPaste
 
@@ -2346,6 +2345,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
 */
 bool QQuickTextInput::canPaste() const
 {
+#if !defined(QT_NO_CLIPBOARD)
     Q_D(const QQuickTextInput);
     if (!d->canPasteValid) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
@@ -2353,8 +2353,10 @@ bool QQuickTextInput::canPaste() const
         const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
     }
     return d->canPaste;
-}
+#else
+    return false;
 #endif
+}
 
 /*!
     \qmlproperty bool QtQuick::TextInput::canUndo

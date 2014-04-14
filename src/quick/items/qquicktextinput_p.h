@@ -99,9 +99,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
-#ifndef QT_NO_CLIPBOARD
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
-#endif
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
 #ifndef QT_NO_IM
@@ -256,9 +254,7 @@ public:
     QRectF boundingRect() const;
     QRectF clipRect() const;
 
-#ifndef QT_NO_CLIPBOARD
     bool canPaste() const;
-#endif
 
     bool canUndo() const;
     bool canRedo() const;
