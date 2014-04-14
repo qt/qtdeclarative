@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -33,22 +33,20 @@
     \image qtquick-demo-tweetsearch-med-1.png
     \image qtquick-demo-tweetsearch-med-2.png
 
-    \section1 Demo Introduction
-
-    The Tweet Search demo searches items posted to Twitter service
-    using a number of query parameters. Search can be done for tweets
-    from a specified user, a hashtag or a search phrase.
+    \e{Tweet Search} is a QML application that searches items posted to Twitter
+    service using a number of query parameters. Search can be done for tweets
+    from a specified user, a hashtag, or a search phrase.
 
     The search result is a list of items showing the contents of the
     tweet as well as the name and image of the user who posted it.
     Hashtags, names and links in the content are clickable. Clicking
     on the image will flip the item to reveal more information.
 
-    \section1 Running the Demo
+    \include examples-run.qdocinc
 
     Tweet Search uses Twitter API v1.1 for running seaches.
 
-    \section2 Authentication
+    \section1 Request Authentication
 
     Each request must be authenticated on behalf of the application.
     For demonstration purposes, the application uses a hard-coded
@@ -67,7 +65,7 @@
 
     Rebuild and run the demo.
 
-    \section2 JSON Parsing
+    \section1 JSON Parsing
 
     Search results are returned in JSON (JavaScript Object Notation)
     format. \c TweetsModel uses an \l XMLHTTPRequest object to send
@@ -76,4 +74,6 @@
     representing a tweet is then added to a \l ListModel:
 
     \snippet demos/tweetsearch/content/TweetsModel.qml requesting
+
+    \sa {QML Applications}
 */
