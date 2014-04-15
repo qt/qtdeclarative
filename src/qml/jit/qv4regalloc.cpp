@@ -1085,6 +1085,8 @@ RegisterAllocator::~RegisterAllocator()
 
 void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 {
+    _lastAssignedRegister.reserve(function->tempCount);
+    _assignedSpillSlots.reserve(function->tempCount);
     _activeSpillSlots.resize(function->tempCount);
 
 #ifdef DEBUG_REGALLOC
@@ -1141,11 +1143,10 @@ static inline LifeTimeInterval createFixedInterval(int reg, bool isFP, int range
     Temp t;
     t.init(Temp::PhysicalRegister, reg, 0);
     t.type = isFP ? IR::DoubleType : IR::SInt32Type;
-    LifeTimeInterval i;
+    LifeTimeInterval i(rangeCount);
     i.setTemp(t);
     i.setReg(reg);
     i.setFixedInterval(true);
-    i.reserveRanges(rangeCount);
     return i;
 }
 
@@ -1187,7 +1188,7 @@ void RegisterAllocator::linearScan()
 
         // check for intervals in active that are handled or inactive
         for (int i = 0; i < _active.size(); ) {
-            const LifeTimeInterval &it = _active[i];
+            const LifeTimeInterval &it = _active.at(i);
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
@@ -1202,7 +1203,7 @@ void RegisterAllocator::linearScan()
 
         // check for intervals in inactive that are handled or active
         for (int i = 0; i < _inactive.size(); ) {
-            LifeTimeInterval &it = _inactive[i];
+            const LifeTimeInterval &it = _inactive.at(i);
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
@@ -1604,7 +1605,7 @@ void RegisterAllocator::assignSpillSlot(const Temp &t, int startPos, int endPos)
         return;
 
     for (int i = 0, ei = _activeSpillSlots.size(); i != ei; ++i) {
-        if (_activeSpillSlots[i] < startPos) {
+        if (_activeSpillSlots.at(i) < startPos) {
             _activeSpillSlots[i] = endPos;
             _assignedSpillSlots.insert(t, i);
             return;

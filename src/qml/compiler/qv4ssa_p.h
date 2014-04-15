@@ -77,12 +77,12 @@ private:
 public:
     enum { Invalid = -1 };
 
-    LifeTimeInterval()
+    LifeTimeInterval(int rangeCapacity = 2)
         : _end(Invalid)
         , _reg(Invalid)
         , _isFixedInterval(0)
         , _isSplitFromInterval(0)
-    { _ranges.reserve(2); }
+    { _ranges.reserve(rangeCapacity); }
 
     bool isValid() const { return _end != Invalid; }
 
@@ -93,7 +93,6 @@ public:
     void setFrom(Stmt *from);
     void addRange(int from, int to);
     const Ranges &ranges() const { return _ranges; }
-    void reserveRanges(int capacity) { _ranges.reserve(capacity); }
 
     int start() const { return _ranges.first().start; }
     int end() const { return _end; }
