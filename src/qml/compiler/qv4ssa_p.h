@@ -82,7 +82,7 @@ public:
         , _reg(Invalid)
         , _isFixedInterval(0)
         , _isSplitFromInterval(0)
-    {}
+    { _ranges.reserve(2); }
 
     bool isValid() const { return _end != Invalid; }
 
@@ -92,7 +92,7 @@ public:
 
     void setFrom(Stmt *from);
     void addRange(int from, int to);
-    Ranges ranges() const { return _ranges; }
+    const Ranges &ranges() const { return _ranges; }
     void reserveRanges(int capacity) { _ranges.reserve(capacity); }
 
     int start() const { return _ranges.first().start; }

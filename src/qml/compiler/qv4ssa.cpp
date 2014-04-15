@@ -3538,6 +3538,7 @@ public:
             _sortedRanges.append(range);
         }
         std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
+        _intervals.clear();
     }
 
     QVector<LifeTimeInterval> ranges() const { return _sortedRanges; }
@@ -3692,8 +3693,8 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
 
     // search where to split the interval
     for (int i = 0, ei = _ranges.size(); i < ei; ++i) {
-        if (_ranges[i].start <= atPosition) {
-            if (_ranges[i].end >= atPosition) {
+        if (_ranges.at(i).start <= atPosition) {
+            if (_ranges.at(i).end >= atPosition) {
                 // split happens in the middle of a range. Keep this range in both the old and the
                 // new interval, and correct the end/start later
                 _ranges.resize(i + 1);

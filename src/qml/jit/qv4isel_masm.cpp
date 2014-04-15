@@ -374,14 +374,14 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_removableJumps, removableJumps);
 }
 
-void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
+const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
 {
     compilationUnit->constantValues.append(*values);
     values->clear();
 
     QVector<QV4::Primitive> &finalValues = compilationUnit->constantValues.last();
     finalValues.squeeze();
-    return finalValues.data();
+    return finalValues.constData();
 }
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
@@ -1620,10 +1620,10 @@ Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(const Prim
 
 void Assembler::ConstantTable::finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel)
 {
-    void *tablePtr = isel->addConstantTable(&_values);
+    const void *tablePtr = isel->addConstantTable(&_values);
 
     foreach (DataLabelPtr label, _toPatch)
-        linkBuffer.patch(label, tablePtr);
+        linkBuffer.patch(label, const_cast<void *>(tablePtr));
 }
 
 bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,

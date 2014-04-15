@@ -72,7 +72,7 @@ public:
 
     virtual void run(int functionIndex);
 
-    void *addConstantTable(QVector<QV4::Primitive> *values);
+    const void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
