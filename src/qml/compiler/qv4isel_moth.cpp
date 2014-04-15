@@ -360,7 +360,7 @@ void InstructionSelection::run(int functionIndex)
                 qgetenv("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION").isEmpty();
 
         if (doStackSlotAllocation) {
-            AllocateStackSlots(opt.lifeRanges()).forFunction(_function);
+            AllocateStackSlots(opt.lifeTimeIntervals()).forFunction(_function);
         } else {
             opt.convertOutOfSSA();
             ConvertTemps().toStackSlots(_function);

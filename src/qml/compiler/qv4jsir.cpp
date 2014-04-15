@@ -164,6 +164,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     void operator()(IR::Function *function)
     {
         subexpressions.clear();
+        subexpressions.reserve(function->basicBlockCount() * 8);
 
         foreach (BasicBlock *block, function->basicBlocks()) {
             if (block->isRemoved())

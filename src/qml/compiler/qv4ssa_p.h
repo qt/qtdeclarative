@@ -152,7 +152,7 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
 
-    QVector<LifeTimeInterval> lifeRanges() const;
+    QVector<LifeTimeInterval> lifeTimeIntervals() const;
 
     QSet<IR::Jump *> calculateOptionalJumps();
 

@@ -463,16 +463,18 @@ class DominatorTree {
     void calculateIDoms() {
         Q_ASSERT(function->basicBlock(0)->in.isEmpty());
 
-        vertex = std::vector<int>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        parent = std::vector<int>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        dfnum = std::vector<int>(function->basicBlockCount(), 0);
-        semi = std::vector<BasicBlockIndex>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        ancestor = std::vector<BasicBlockIndex>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        idom = std::vector<BasicBlockIndex>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        samedom = std::vector<BasicBlockIndex>(function->basicBlockCount(), InvalidBasicBlockIndex);
-        best = std::vector<BasicBlockIndex>(function->basicBlockCount(), InvalidBasicBlockIndex);
+        const int bbCount = function->basicBlockCount();
+        vertex = std::vector<int>(bbCount, InvalidBasicBlockIndex);
+        parent = std::vector<int>(bbCount, InvalidBasicBlockIndex);
+        dfnum = std::vector<int>(bbCount, 0);
+        semi = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        ancestor = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        idom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        samedom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        best = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
 
         QHash<BasicBlockIndex, std::vector<BasicBlockIndex> > bucket;
+        bucket.reserve(bbCount);
 
         DFS(function->basicBlock(0)->index());
         Q_ASSERT(N == function->liveBasicBlocksCount());
@@ -716,8 +718,9 @@ private:
 };
 
 class VariableCollector: public StmtVisitor, ExprVisitor {
-    QHash<Temp, QSet<BasicBlock *> > _defsites;
-    QHash<BasicBlock *, QSet<Temp> > A_orig;
+    typedef QHash<Temp, QSet<BasicBlock *> > DefSites;
+    DefSites _defsites;
+    QVector<QSet<Temp> > A_orig;
     QSet<Temp> nonLocals;
     QSet<Temp> killed;
 
@@ -734,6 +737,9 @@ public:
         : function(function)
     {
         _defsites.reserve(function->tempCount);
+        A_orig.resize(function->basicBlockCount());
+        for (int i = 0, ei = A_orig.size(); i != ei; ++i)
+            A_orig[i].reserve(8);
 
 #if defined(SHOW_SSA)
         qout << "Variables collected:" << endl;
@@ -772,7 +778,7 @@ public:
     }
 
     QSet<Temp> inBlock(BasicBlock *n) const {
-        return A_orig[n];
+        return A_orig.at(n->index());
     }
 
     bool isNonLocal(const Temp &var) const { return nonLocals.contains(var); }
@@ -818,8 +824,15 @@ protected:
                 qout << " -> L" << currentBB->index << endl;
 #endif // SHOW_SSA
 
-                _defsites[*t].insert(currentBB);
-                A_orig[currentBB].insert(*t);
+                DefSites::iterator defsitesIt = _defsites.find(*t);
+                if (defsitesIt == _defsites.end()) {
+                    QSet<BasicBlock *> bbs;
+                    bbs.reserve(4);
+                    defsitesIt = _defsites.insert(*t, bbs);
+                }
+                defsitesIt->insert(currentBB);
+
+                A_orig[currentBB->index()].insert(*t);
 
                 // For semi-pruned SSA:
                 killed.insert(*t);
@@ -1203,8 +1216,16 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
     // Collect all applicable variables:
     VariableCollector variables(function);
 
+    // Prepare for phi node insertion:
+    QVector<QSet<Temp> > A_phi;
+    A_phi.resize(function->basicBlockCount());
+    for (int i = 0, ei = A_phi.size(); i != ei; ++i) {
+        QSet<Temp> temps;
+        temps.reserve(4);
+        A_phi[i] = temps;
+    }
+
     // Place phi functions:
-    QHash<BasicBlock *, QSet<Temp> > A_phi;
     foreach (Temp a, variables.vars()) {
         if (!variables.isNonLocal(a))
             continue; // for semi-pruned SSA
@@ -1217,9 +1238,9 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
             for (BasicBlockSet::const_iterator it = dominatorFrontierForN.begin(), eit = dominatorFrontierForN.end();
                  it != eit; ++it) {
                 BasicBlock *y = *it;
-                if (!A_phi[y].contains(a)) {
+                if (!A_phi.at(y->index()).contains(a)) {
                     insertPhiNode(a, y, function);
-                    A_phi[y].insert(a);
+                    A_phi[y->index()].insert(a);
                     if (!variables.inBlock(y).contains(a))
                         W.append(y);
                 }
@@ -3509,13 +3530,16 @@ protected:
 class LifeRanges {
     typedef QSet<Temp> LiveRegs;
 
-    QHash<BasicBlock *, LiveRegs> _liveIn;
+    QVector<LiveRegs> _liveIn;
     QHash<Temp, LifeTimeInterval> _intervals;
-    QVector<LifeTimeInterval> _sortedRanges;
+    typedef QVector<LifeTimeInterval> LifeTimeIntervals;
+    LifeTimeIntervals _sortedIntervals;
 
 public:
     LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
     {
+        _liveIn.resize(function->basicBlockCount());
+
         int id = 0;
         foreach (BasicBlock *bb, function->basicBlocks()) {
             foreach (Stmt *s, bb->statements()) {
@@ -3531,30 +3555,29 @@ public:
             buildIntervals(bb, startEndLoops.value(bb, 0), function);
         }
 
-        _sortedRanges.reserve(_intervals.size());
+        _sortedIntervals.reserve(_intervals.size());
         for (QHash<Temp, LifeTimeInterval>::const_iterator i = _intervals.begin(), ei = _intervals.end(); i != ei; ++i) {
-            LifeTimeInterval range = i.value();
-            range.setTemp(i.key());
-            _sortedRanges.append(range);
+            LifeTimeIntervals::iterator lti = _sortedIntervals.insert(_sortedIntervals.end(), i.value());
+            lti->setTemp(i.key());
         }
-        std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
+        std::sort(_sortedIntervals.begin(), _sortedIntervals.end(), LifeTimeInterval::lessThan);
         _intervals.clear();
     }
 
-    QVector<LifeTimeInterval> ranges() const { return _sortedRanges; }
+    QVector<LifeTimeInterval> intervals() const { return _sortedIntervals; }
 
     void dump() const
     {
         qout << "Life ranges:" << endl;
         qout << "Intervals:" << endl;
-        foreach (const LifeTimeInterval &range, _sortedRanges) {
+        foreach (const LifeTimeInterval &range, _sortedIntervals) {
             range.dump(qout);
             qout << endl;
         }
 
-        foreach (BasicBlock *bb, _liveIn.keys()) {
-            qout << "L" << bb->index() <<" live-in: ";
-            QList<Temp> live = QList<Temp>::fromSet(_liveIn.value(bb));
+        for (int i = 0, ei = _liveIn.size(); i != ei; ++i) {
+            qout << "L" << i <<" live-in: ";
+            QList<Temp> live = QList<Temp>::fromSet(_liveIn.at(i));
             std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
@@ -3569,7 +3592,7 @@ private:
     {
         LiveRegs live;
         foreach (BasicBlock *successor, bb->out) {
-            live.unite(_liveIn[successor]);
+            live.unite(_liveIn[successor->index()]);
             const int bbIndex = successor->in.indexOf(bb);
             Q_ASSERT(bbIndex >= 0);
 
@@ -3617,7 +3640,7 @@ private:
                 _intervals[opd].addRange(statements.first()->id, loopEnd->terminator()->id);
         }
 
-        _liveIn[bb] = live;
+        _liveIn[bb->index()] = live;
     }
 };
 
@@ -3916,14 +3939,14 @@ void Optimizer::convertOutOfSSA() {
     }
 }
 
-QVector<LifeTimeInterval> Optimizer::lifeRanges() const
+QVector<LifeTimeInterval> Optimizer::lifeTimeIntervals() const
 {
     Q_ASSERT(isInSSA());
 
     LifeRanges lifeRanges(function, startEndLoops);
 //    lifeRanges.dump();
 //    showMeTheCode(function);
-    return lifeRanges.ranges();
+    return lifeRanges.intervals();
 }
 
 QSet<Jump *> Optimizer::calculateOptionalJumps()

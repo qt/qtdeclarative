@@ -1091,7 +1091,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     qDebug() << "*** Running regalloc for function" << (function->name ? qPrintable(*function->name) : "NO NAME") << "***";
 #endif // DEBUG_REGALLOC
 
-    _unhandled = opt.lifeRanges();
+    _unhandled = opt.lifeTimeIntervals();
 
     _info.reset(new RegAllocInfo);
     _info->collect(function);
