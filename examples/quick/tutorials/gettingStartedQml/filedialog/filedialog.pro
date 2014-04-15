@@ -24,7 +24,7 @@ copyfile = $$PWD/qmldir
 copydest = $$DESTDIR
 
 # On Windows, use backslashes as directory separators
-win32: {
+equals(QMAKE_HOST.os, Windows) {
     copyfile ~= s,/,\\,g
     copydest ~= s,/,\\,g
 }
