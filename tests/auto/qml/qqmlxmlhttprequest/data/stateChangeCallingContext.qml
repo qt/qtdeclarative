@@ -8,7 +8,7 @@ Item {
 
     SequentialAnimation {
         id: anim
-        PauseAnimation { duration: 525 } // delay mode is 500 msec.
+        PauseAnimation { duration: 1000 } // delay mode is 500 msec.
         ScriptAction { script: loadcomponent(0) }
         PauseAnimation { duration: 525 } // delay mode is 500 msec.
         ScriptAction { script: loadcomponent(1) }
