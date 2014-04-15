@@ -1010,9 +1010,7 @@ struct Function {
     void LOCAL(const QString &name) { locals.append(newString(name)); }
 
     BasicBlock *addBasicBlock(BasicBlock *block);
-
-    void removeBasicBlock(BasicBlock *block)
-    { block->markAsRemoved(); }
+    void removeBasicBlock(BasicBlock *block);
 
     const QVector<BasicBlock *> &basicBlocks() const
     { return _basicBlocks; }

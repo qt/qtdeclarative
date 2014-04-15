@@ -2824,39 +2824,38 @@ void cleanupBasicBlocks(IR::Function *function)
     // Algorithm: this is the iterative version of a depth-first search for all blocks that are
     // reachable through outgoing edges, starting with the start block and all exception handler
     // blocks.
-    QSet<BasicBlock *> postponed, done;
-    QSet<BasicBlock *> toRemove;
-    toRemove.reserve(function->basicBlockCount());
-    done.reserve(function->basicBlockCount());
-    postponed.reserve(8);
+    QBitArray reachableBlocks(function->basicBlockCount());
+    QVector<BasicBlock *> postponed;
+    postponed.reserve(16);
     for (int i = 0, ei = function->basicBlockCount(); i != ei; ++i) {
         BasicBlock *bb = function->basicBlock(i);
         if (i == 0 || bb->isExceptionHandler())
-            postponed.insert(bb);
-        else
-            toRemove.insert(bb);
+            postponed.append(bb);
     }
 
     while (!postponed.isEmpty()) {
-        QSet<BasicBlock *>::iterator it = postponed.begin();
-        BasicBlock *bb = *it;
-        postponed.erase(it);
-        done.insert(bb);
+        BasicBlock *bb = postponed.back();
+        postponed.pop_back();
+        if (bb->isRemoved()) // this block was removed before, we don't need to clean it up.
+            continue;
+
+        reachableBlocks.setBit(bb->index());
 
         foreach (BasicBlock *outBB, bb->out) {
-            if (!done.contains(outBB)) {
-                postponed.insert(outBB);
-                toRemove.remove(outBB);
-            }
+            if (!reachableBlocks.at(outBB->index()))
+                postponed.append(outBB);
         }
     }
 
-    foreach (BasicBlock *bb, toRemove) {
+    foreach (BasicBlock *bb, function->basicBlocks()) {
+        if (bb->isRemoved()) // the block has already been removed, so ignore it
+            continue;
+        if (reachableBlocks.at(bb->index())) // the block is reachable, so ignore it
+            continue;
+
         foreach (BasicBlock *outBB, bb->out) {
-            if (toRemove.contains(outBB))
+            if (outBB->isRemoved() || !reachableBlocks.at(outBB->index()))
                 continue; // We do not need to unlink from blocks that are scheduled to be removed.
-                          // Actually, it is potentially dangerous: if that block was already
-                          // destroyed, this could result in a use-after-free.
 
             int idx = outBB->in.indexOf(bb);
             if (idx != -1) {

@@ -712,6 +712,13 @@ BasicBlock *Function::addBasicBlock(BasicBlock *block)
     return block;
 }
 
+void Function::removeBasicBlock(BasicBlock *block)
+{
+    block->markAsRemoved();
+    block->in.clear();
+    block->out.clear();
+}
+
 int Function::liveBasicBlocksCount() const
 {
     int count = 0;
