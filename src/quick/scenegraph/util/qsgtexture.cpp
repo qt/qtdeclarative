@@ -567,6 +567,7 @@ void QSGPlainTexture::setImage(const QImage &image)
     m_has_alpha = image.hasAlphaChannel();
     m_dirty_texture = true;
     m_dirty_bind_options = true;
+    m_mipmaps_generated = false;
  }
 
 int QSGPlainTexture::textureId() const
