@@ -2069,7 +2069,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
 #endif // QT_NO_DATESTRING
     case QVariant::Point: {
         bool ok = false;
-        QQmlStringConverters::pointFFromString(binding->valueAsString(&qmlUnit->header), &ok).toPoint();
+        QQmlStringConverters::pointFFromString(binding->valueAsString(&qmlUnit->header), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
             return false;
@@ -2087,7 +2087,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Size: {
         bool ok = false;
-        QQmlStringConverters::sizeFFromString(binding->valueAsString(&qmlUnit->header), &ok).toSize();
+        QQmlStringConverters::sizeFFromString(binding->valueAsString(&qmlUnit->header), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: size expected"));
             return false;
@@ -2105,7 +2105,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Rect: {
         bool ok = false;
-        QQmlStringConverters::rectFFromString(binding->valueAsString(&qmlUnit->header), &ok).toRect();
+        QQmlStringConverters::rectFFromString(binding->valueAsString(&qmlUnit->header), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: rect expected"));
             return false;
