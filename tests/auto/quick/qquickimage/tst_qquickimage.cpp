@@ -308,6 +308,10 @@ void tst_qquickimage::mirror()
     qreal height = 250;
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
+#if defined(Q_OS_BLACKBERRY)
+        QWindow dummy;          // On BlackBerry first window is always full screen,
+        dummy.showFullScreen(); // so make test window a second window.
+#endif
         QQuickView *window = new QQuickView;
         window->setSource(testFileUrl("mirror.qml"));
 
@@ -316,7 +320,7 @@ void tst_qquickimage::mirror()
 
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
-        window->show();
+        window->showNormal();
         QVERIFY(QTest::qWaitForWindowExposed(window));
 
         QImage screenshot = window->grabWindow();
