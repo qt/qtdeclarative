@@ -119,20 +119,21 @@ struct Q_QML_PRIVATE_EXPORT Value
 
 #if QT_POINTER_SIZE == 4
     enum Masks {
-        NaN_Mask = 0x7ff80000,
-        NotDouble_Mask = 0x7ffc0000,
-        Type_Mask = 0xffff8000,
-        Immediate_Mask = NotDouble_Mask | 0x00008000,
-        IsNullOrUndefined_Mask = Immediate_Mask | 0x20000,
+        SilentNaNBit           =                  0x00040000,
+        NaN_Mask               =                  0x7ff80000,
+        NotDouble_Mask         =                  0x7ffa0000,
+        Type_Mask              =                  0xffffc000,
+        Immediate_Mask         = NotDouble_Mask | 0x00004000 | SilentNaNBit,
+        IsNullOrUndefined_Mask = Immediate_Mask |    0x08000,
         Tag_Shift = 32
     };
     enum ValueType {
         Undefined_Type = Immediate_Mask | 0x00000,
-        Null_Type = Immediate_Mask | 0x10000,
-        Boolean_Type = Immediate_Mask | 0x20000,
-        Integer_Type = Immediate_Mask | 0x30000,
-        Managed_Type = NotDouble_Mask | 0x00000,
-        Empty_Type = NotDouble_Mask | 0x30000
+        Null_Type      = Immediate_Mask | 0x10000,
+        Boolean_Type   = Immediate_Mask | 0x08000,
+        Integer_Type   = Immediate_Mask | 0x18000,
+        Managed_Type   = NotDouble_Mask | 0x00000 | SilentNaNBit,
+        Empty_Type     = NotDouble_Mask | 0x18000 | SilentNaNBit
     };
 
     enum ImmediateFlags {
