@@ -77,7 +77,7 @@ private:
 public:
     enum { Invalid = -1 };
 
-    LifeTimeInterval(int rangeCapacity = 2)
+    explicit LifeTimeInterval(int rangeCapacity = 2)
         : _end(Invalid)
         , _reg(Invalid)
         , _isFixedInterval(0)

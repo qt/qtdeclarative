@@ -1077,6 +1077,8 @@ RegisterAllocator::RegisterAllocator(const QVector<int> &normalRegisters, const 
 {
     Q_ASSERT(normalRegisters.size() >= 2);
     Q_ASSERT(fpRegisters.size() >= 2);
+    _active.reserve((normalRegisters.size() + fpRegisters.size()) * 2);
+    _inactive.reserve(_active.size());
 }
 
 RegisterAllocator::~RegisterAllocator()
@@ -1094,6 +1096,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 #endif // DEBUG_REGALLOC
 
     _unhandled = opt.lifeTimeIntervals();
+    _handled.reserve(_unhandled.size());
 
     _info.reset(new RegAllocInfo);
     _info->collect(function);
@@ -1113,10 +1116,6 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 #endif // DEBUG_REGALLOC
 
     prepareRanges();
-
-    _handled.reserve(_unhandled.size());
-    _active.reserve(32);
-    _inactive.reserve(16);
 
     Optimizer::showMeTheCode(function);
 
@@ -1138,45 +1137,55 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 #endif // DEBUG_REGALLOC
 }
 
-static inline LifeTimeInterval createFixedInterval(int reg, bool isFP, int rangeCount)
+static inline LifeTimeInterval createFixedInterval(int rangeCount)
 {
+    LifeTimeInterval i(rangeCount);
+    i.setReg(0);
+
+    Temp t;
+    t.init(Temp::PhysicalRegister, 0, 0);
+    t.type = IR::SInt32Type;
+    i.setTemp(t);
+
+    return i;
+}
+
+static inline LifeTimeInterval cloneFixedInterval(int reg, bool isFP, LifeTimeInterval lti)
+{
+    lti.setReg(reg);
+    lti.setFixedInterval(true);
+
     Temp t;
     t.init(Temp::PhysicalRegister, reg, 0);
     t.type = isFP ? IR::DoubleType : IR::SInt32Type;
-    LifeTimeInterval i(rangeCount);
-    i.setTemp(t);
-    i.setReg(reg);
-    i.setFixedInterval(true);
-    return i;
+    lti.setTemp(t);
+
+    return lti;
 }
 
 void RegisterAllocator::prepareRanges()
 {
+    LifeTimeInterval ltiWithCalls = createFixedInterval(_info->calls().size());
+    foreach (int callPosition, _info->calls())
+        ltiWithCalls.addRange(callPosition, callPosition);
+
     const int regCount = _normalRegisters.size();
-    _fixedRegisterRanges.resize(regCount);
-    for (int reg = 0; reg < regCount; ++reg)
-        _fixedRegisterRanges[reg] = createFixedInterval(reg, false, _info->calls().size());
+    _fixedRegisterRanges.reserve(regCount);
+    for (int reg = 0; reg < regCount; ++reg) {
+        LifeTimeInterval lti = cloneFixedInterval(reg, false, ltiWithCalls);
+        _fixedRegisterRanges.append(lti);
+        if (lti.isValid())
+            _active.append(lti);
+    }
 
     const int fpRegCount = _fpRegisters.size();
-    _fixedFPRegisterRanges.resize(fpRegCount);
+    _fixedFPRegisterRanges.reserve(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
-        _fixedFPRegisterRanges[fpReg] = createFixedInterval(fpReg, true, _info->calls().size());
+        LifeTimeInterval lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
+        _fixedFPRegisterRanges.append(lti);
+        if (lti.isValid())
+            _active.append(lti);
     }
-
-    foreach (int callPosition, _info->calls()) {
-        for (int reg = 0; reg < regCount; ++reg)
-            _fixedRegisterRanges[reg].addRange(callPosition, callPosition);
-        for (int fpReg = 0; fpReg < fpRegCount; ++fpReg)
-            _fixedFPRegisterRanges[fpReg].addRange(callPosition, callPosition);
-    }
-    for (int reg = 0; reg < regCount; ++reg)
-        if (_fixedRegisterRanges[reg].isValid())
-            _active.append(_fixedRegisterRanges[reg]);
-    for (int fpReg = 0; fpReg < fpRegCount; ++fpReg)
-        if (_fixedFPRegisterRanges[fpReg].isValid())
-            _active.append(_fixedFPRegisterRanges[fpReg]);
-
-    std::sort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
 }
 
 void RegisterAllocator::linearScan()
@@ -1442,8 +1451,8 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
         // make sure that current does not intersect with the fixed interval for reg
-        const LifeTimeInterval &fixedRegRange = needsFPReg ? _fixedFPRegisterRanges[reg]
-                                                           : _fixedRegisterRanges[reg];
+        const LifeTimeInterval &fixedRegRange = needsFPReg ? _fixedFPRegisterRanges.at(reg)
+                                                           : _fixedRegisterRanges.at(reg);
         int ni = nextIntersection(current, fixedRegRange, position);
         if (ni != -1) {
 #ifdef DEBUG_REGALLOC
