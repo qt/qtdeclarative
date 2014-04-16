@@ -61,13 +61,8 @@ int QParallelAnimationGroupJob::duration() const
 
     for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
         int currentDuration = animation->totalDuration();
-        //this takes care of the case where a parallel animation group has controlled and uncontrolled
-        //animations, and the uncontrolled stop before the controlled
-        if (currentDuration == -1)
-            currentDuration = uncontrolledAnimationFinishTime(animation);
         if (currentDuration == -1)
             return -1; // Undetermined length
-
         ret = qMax(ret, currentDuration);
     }
 
@@ -82,6 +77,16 @@ void QParallelAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
     if (m_currentLoop > m_previousLoop) {
         // simulate completion of the loop
         int dura = duration();
+        if (dura < 0) {
+            // For an uncontrolled parallel group, we need to simulate the end of running animations.
+            // As uncontrolled animation finish time is already reset for this next loop, we pick the
+            // longest of the known stop times.
+            for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
+                int currentDuration = animation->totalDuration();
+                if (currentDuration >= 0)
+                    dura = qMax(dura, currentDuration);
+            }
+        }
         if (dura > 0) {
             for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
                 if (!animation->isStopped())
