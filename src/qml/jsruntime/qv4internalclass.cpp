@@ -129,7 +129,7 @@ uint PropertyHash::lookup(const Identifier *identifier) const
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
     , prototype(0)
-    , vtable(&Managed::static_vtbl)
+    , vtable(&QV4::Managed::static_vtbl)
     , m_sealed(0)
     , m_frozen(0)
     , size(0)
@@ -138,7 +138,8 @@ InternalClass::InternalClass(ExecutionEngine *engine)
 
 
 InternalClass::InternalClass(const QV4::InternalClass &other)
-    : engine(other.engine)
+    : QQmlJS::Managed()
+    , engine(other.engine)
     , prototype(other.prototype)
     , vtable(other.vtable)
     , propertyTable(other.propertyTable)
@@ -455,17 +456,24 @@ void InternalClass::destroy()
     transitions.clear();
 }
 
-void InternalClass::markObjects()
+struct InternalClassPoolVisitor
 {
-    // all prototype changes are done on the empty class
-    Q_ASSERT(!prototype || this != engine->emptyClass);
+    ExecutionEngine *engine;
+    void operator()(InternalClass *klass)
+    {
+        // all prototype changes are done on the empty class
+        Q_ASSERT(!klass->prototype || klass != engine->emptyClass);
 
-    if (prototype)
-        prototype->mark(engine);
+        if (klass->prototype)
+            klass->prototype->mark(engine);
+    }
+};
 
-    for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
-         it != end; ++it)
-        it.value()->markObjects();
+void InternalClassPool::markObjects(ExecutionEngine *engine)
+{
+    InternalClassPoolVisitor v;
+    v.engine = engine;
+    visitManagedPool<InternalClass, InternalClassPoolVisitor>(v);
 }
 
 QT_END_NAMESPACE

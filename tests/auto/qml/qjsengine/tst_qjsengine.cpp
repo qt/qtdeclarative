@@ -153,6 +153,7 @@ private slots:
     void indexedAccesses();
 
     void prototypeChainGc();
+    void prototypeChainGc_QTBUG38299();
 
     void dynamicProperties();
 
@@ -2961,6 +2962,21 @@ void tst_QJSEngine::prototypeChainGc()
     QJSValue proto = getProto.call(QJSValueList() << obj);
     proto = getProto.call(QJSValueList() << proto);
     QVERIFY(proto.isObject());
+}
+
+void tst_QJSEngine::prototypeChainGc_QTBUG38299()
+{
+    QJSEngine engine;
+    engine.evaluate("var mapping = {"
+                    "'prop1': \"val1\",\n"
+                    "'prop2': \"val2\"\n"
+                    "}\n"
+                    "\n"
+                    "delete mapping.prop2\n"
+                    "delete mapping.prop1\n"
+                    "\n");
+    // Don't hang!
+    engine.collectGarbage();
 }
 
 void tst_QJSEngine::dynamicProperties()

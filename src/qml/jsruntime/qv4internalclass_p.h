@@ -44,6 +44,7 @@
 #include <QHash>
 #include <QVector>
 #include "qv4global_p.h"
+#include <private/qqmljsmemorypool_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -213,7 +214,7 @@ struct InternalClassTransition
 };
 uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 
-struct InternalClass {
+struct InternalClass : public QQmlJS::Managed {
     ExecutionEngine *engine;
     Object *prototype;
     const ManagedVTable *vtable;
@@ -247,13 +248,17 @@ struct InternalClass {
     InternalClass *frozen();
 
     void destroy();
-    void markObjects();
 
 private:
     InternalClass *addMemberImpl(String *string, PropertyAttributes data, uint *index);
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);
+};
+
+struct InternalClassPool : public QQmlJS::MemoryPool
+{
+    void markObjects(ExecutionEngine *engine);
 };
 
 }
