@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -50,7 +50,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
-#include <QtCore/QBuffer>
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <qv4runtime_p.h>
@@ -75,96 +74,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 void showMeTheCode(IR::Function *function)
 {
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
-    if (showCode) {
-        QVector<Stmt *> code;
-        QHash<Stmt *, BasicBlock *> leader;
-
-        foreach (BasicBlock *block, function->basicBlocks()) {
-            if (block->isRemoved() || block->isEmpty())
-                continue;
-            leader.insert(block->statements().first(), block);
-            foreach (Stmt *s, block->statements()) {
-                code.append(s);
-            }
-        }
-
-        QString name;
-        if (function->name && !function->name->isEmpty())
-            name = *function->name;
-        else
-            name.sprintf("%p", function);
-
-        qout << "function " << name << "(";
-        for (int i = 0; i < function->formals.size(); ++i) {
-            if (i != 0)
-                qout << ", ";
-            qout << *function->formals.at(i);
-        }
-        qout << ")" << endl
-             << "{" << endl;
-
-        foreach (const QString *local, function->locals) {
-            qout << "    var " << *local << ';' << endl;
-        }
-
-        for (int i = 0; i < code.size(); ++i) {
-            Stmt *s = code.at(i);
-            Q_ASSERT(s);
-
-            if (BasicBlock *bb = leader.value(s)) {
-                qout << endl;
-                QByteArray str;
-                str.append('L');
-                str.append(QByteArray::number(bb->index()));
-                str.append(':');
-                if (bb->catchBlock) {
-                    str.append(" (exception handler L");
-                    str.append(QByteArray::number(bb->catchBlock->index()));
-                    str.append(')');
-                }
-                for (int i = 66 - str.length(); i; --i)
-                    str.append(' ');
-                qout << str;
-                qout << "// predecessor blocks:";
-                foreach (BasicBlock *in, bb->in)
-                    qout << " L" << in->index();
-                if (bb->in.isEmpty())
-                    qout << "(none)";
-                if (BasicBlock *container = bb->containingGroup())
-                    qout << "; container block: L" << container->index();
-                if (bb->isGroupStart())
-                    qout << "; group start";
-                qout << endl;
-            }
-            Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
-
-            QByteArray str;
-            QBuffer buf(&str);
-            buf.open(QIODevice::WriteOnly);
-            QTextStream out(&buf);
-            if (s->id > 0)
-                out << s->id << ": ";
-            s->dump(out, Stmt::MIR);
-            if (s->location.isValid()) {
-                out.flush();
-                for (int i = 58 - str.length(); i > 0; --i)
-                    out << ' ';
-                out << "    // line: " << s->location.startLine << " column: " << s->location.startColumn;
-            }
-
-            out.flush();
-
-            qout << "    " << str;
-            qout << endl;
-
-            if (n && s->asCJump()) {
-                qout << "    else goto L" << s->asCJump()->iffalse->index() << ";" << endl;
-            }
-        }
-
-        qout << "}" << endl
-             << endl;
-    }
+    if (showCode)
+        IRPrinter(&qout).print(function);
 }
 
 class ProcessedBlocks
@@ -1403,14 +1314,15 @@ public:
 
     void dump() const
     {
+        IRPrinter printer(&qout);
         foreach (const UntypedTemp &var, _defUses.keys()) {
             const DefUse &du = _defUses[var];
-            var.temp.dump(qout);
+            printer.print(const_cast<Temp *>(&var.temp));
             qout<<" -> defined in block "<<du.blockOfStatement->index()<<", statement: ";
-            du.defStmt->dump(qout);
+            printer.print(du.defStmt);
             qout<<endl<<"     uses:"<<endl;
             foreach (Stmt *s, du.uses) {
-                qout<<"       ";s->dump(qout);qout<<endl;
+                qout<<"       ";printer.print(s);qout<<endl;
             }
         }
     }
@@ -3589,13 +3501,14 @@ public:
             qout << endl;
         }
 
+        IRPrinter printer(&qout);
         for (int i = 0, ei = _liveIn.size(); i != ei; ++i) {
             qout << "L" << i <<" live-in: ";
             QList<Temp> live = QList<Temp>::fromSet(_liveIn.at(i));
             std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
-                live[i].dump(qout);
+                printer.print(&live[i]);
             }
             qout << endl;
         }
@@ -3786,7 +3699,7 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
 }
 
 void LifeTimeInterval::dump(QTextStream &out) const {
-    _temp.dump(out);
+    IRPrinter(&out).print(const_cast<Temp *>(&_temp));
     out << ": ends at " << _end << " with ranges ";
     if (_ranges.isEmpty())
         out << "(none)";

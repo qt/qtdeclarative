@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -268,7 +268,6 @@ struct Q_AUTOTEST_EXPORT Expr {
     virtual New *asNew() { return 0; }
     virtual Subscript *asSubscript() { return 0; }
     virtual Member *asMember() { return 0; }
-    virtual void dump(QTextStream &out) const = 0;
 };
 
 struct ExprList {
@@ -295,8 +294,6 @@ struct Const: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitConst(this); }
     virtual Const *asConst() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct String: Expr {
@@ -309,9 +306,6 @@ struct String: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
     virtual String *asString() { return this; }
-
-    virtual void dump(QTextStream &out) const;
-    static QString escape(const QString &s);
 };
 
 struct RegExp: Expr {
@@ -333,8 +327,6 @@ struct RegExp: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitRegExp(this); }
     virtual RegExp *asRegExp() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Name: Expr {
@@ -376,8 +368,6 @@ struct Name: Expr {
     virtual void accept(ExprVisitor *v) { v->visitName(this); }
     virtual bool isLValue() { return true; }
     virtual Name *asName() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Q_AUTOTEST_EXPORT Temp: Expr {
@@ -415,8 +405,6 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
     virtual bool isLValue() { return !isReadOnly; }
     virtual Temp *asTemp() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
@@ -442,8 +430,6 @@ struct Closure: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitClosure(this); }
     virtual Closure *asClosure() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Convert: Expr {
@@ -457,8 +443,6 @@ struct Convert: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitConvert(this); }
     virtual Convert *asConvert() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Unop: Expr {
@@ -473,8 +457,6 @@ struct Unop: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitUnop(this); }
     virtual Unop *asUnop() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Binop: Expr {
@@ -491,8 +473,6 @@ struct Binop: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitBinop(this); }
     virtual Binop *asBinop() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Call: Expr {
@@ -513,8 +493,6 @@ struct Call: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitCall(this); }
     virtual Call *asCall() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct New: Expr {
@@ -535,8 +513,6 @@ struct New: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitNew(this); }
     virtual New *asNew() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Subscript: Expr {
@@ -552,8 +528,6 @@ struct Subscript: Expr {
     virtual void accept(ExprVisitor *v) { v->visitSubscript(this); }
     virtual bool isLValue() { return true; }
     virtual Subscript *asSubscript() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Member: Expr {
@@ -605,16 +579,9 @@ struct Member: Expr {
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
     virtual bool isLValue() { return true; }
     virtual Member *asMember() { return this; }
-
-    virtual void dump(QTextStream &out) const;
 };
 
 struct Stmt {
-    enum Mode {
-        HIR,
-        MIR
-    };
-
     struct Data {
         QVector<Expr *> incoming; // used by Phi nodes
     };
@@ -641,7 +608,6 @@ struct Stmt {
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
     virtual Phi *asPhi() { return 0; }
-    virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
 private: // For memory management in BasicBlock
     friend struct BasicBlock;
@@ -662,7 +628,6 @@ struct Exp: Stmt {
     virtual void accept(StmtVisitor *v) { v->visitExp(this); }
     virtual Exp *asExp() { return this; }
 
-    virtual void dump(QTextStream &out, Mode);
 };
 
 struct Move: Stmt {
@@ -680,7 +645,6 @@ struct Move: Stmt {
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
     virtual Move *asMove() { return this; }
 
-    virtual void dump(QTextStream &out, Mode mode = HIR);
 };
 
 struct Jump: Stmt {
@@ -695,8 +659,6 @@ struct Jump: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitJump(this); }
     virtual Jump *asJump() { return this; }
-
-    virtual void dump(QTextStream &out, Mode mode);
 };
 
 struct CJump: Stmt {
@@ -715,8 +677,6 @@ struct CJump: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitCJump(this); }
     virtual CJump *asCJump() { return this; }
-
-    virtual void dump(QTextStream &out, Mode mode);
 };
 
 struct Ret: Stmt {
@@ -731,8 +691,6 @@ struct Ret: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitRet(this); }
     virtual Ret *asRet() { return this; }
-
-    virtual void dump(QTextStream &out, Mode);
 };
 
 struct Phi: Stmt {
@@ -740,8 +698,6 @@ struct Phi: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
-
-    virtual void dump(QTextStream &out, Mode mode);
 };
 
 struct Q_QML_PRIVATE_EXPORT Module {
@@ -870,8 +826,6 @@ public:
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
-
-    void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
     BasicBlock *containingGroup() const
     {
@@ -1024,8 +978,6 @@ struct Function {
 
     int liveBasicBlocksCount() const;
 
-    void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
-
     void removeSharedExpressions();
 
     int indexOfArgument(const QStringRef &string) const;
@@ -1114,6 +1066,51 @@ protected:
 private:
     IR::BasicBlock *block;
     IR::Expr *cloned;
+};
+
+class IRPrinter: public StmtVisitor, public ExprVisitor
+{
+public:
+    IRPrinter(QTextStream *out);
+    virtual ~IRPrinter();
+
+    void print(Stmt *s);
+    void print(Expr *e);
+
+    virtual void print(Function *f);
+    virtual void print(BasicBlock *bb);
+
+    virtual void visitExp(Exp *s);
+    virtual void visitMove(Move *s);
+    virtual void visitJump(Jump *s);
+    virtual void visitCJump(CJump *s);
+    virtual void visitRet(Ret *s);
+    virtual void visitPhi(Phi *s);
+
+    virtual void visitConst(Const *e);
+    virtual void visitString(String *e);
+    virtual void visitRegExp(RegExp *e);
+    virtual void visitName(Name *e);
+    virtual void visitTemp(Temp *e);
+    virtual void visitClosure(Closure *e);
+    virtual void visitConvert(Convert *e);
+    virtual void visitUnop(Unop *e);
+    virtual void visitBinop(Binop *e);
+    virtual void visitCall(Call *e);
+    virtual void visitNew(New *e);
+    virtual void visitSubscript(Subscript *e);
+    virtual void visitMember(Member *e);
+
+    static QString escape(const QString &s);
+
+protected:
+    QString dumpStart(const Expr *e);
+    const char *dumpEnd(const Expr *e);
+    void printBlockStart(BasicBlock *bb);
+
+protected:
+    QTextStream *out;
+    bool printElse;
 };
 
 } // end of namespace IR

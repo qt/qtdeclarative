@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -226,7 +226,7 @@ void IRDecoder::visitMove(IR::Move *s)
 
     // For anything else...:
     Q_UNIMPLEMENTED();
-    s->dump(qout, IR::Stmt::MIR);
+    IRPrinter(&qout).print(s);
     qout << endl;
     Q_ASSERT(!"TODO");
 }
@@ -402,7 +402,7 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
     }
 
     Q_UNIMPLEMENTED();
-    call->dump(qout); qout << endl;
+    IRPrinter(&qout).print(call); qout << endl;
     Q_ASSERT(!"TODO!");
     Q_UNREACHABLE();
 }

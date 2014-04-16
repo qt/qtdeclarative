@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -45,6 +45,8 @@
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
 #endif
+
+#include <QtCore/QBuffer>
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qset.h>
@@ -275,104 +277,6 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     }
 };
 
-static QString dumpStart(const Expr *e) {
-    if (e->type == UnknownType)
-//        return QStringLiteral("**UNKNOWN**");
-        return QString();
-
-    QString result = typeName(e->type);
-#ifndef V4_BOOTSTRAP
-    const Temp *temp = const_cast<Expr*>(e)->asTemp();
-    if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
-        result += QLatin1Char('<');
-        result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
-        result += QLatin1Char('>');
-    }
-#endif
-    result += QLatin1Char('{');
-    return result;
-}
-
-static const char *dumpEnd(const Expr *e) {
-    if (e->type == UnknownType)
-        return "";
-    else
-        return "}";
-}
-
-void Const::dump(QTextStream &out) const
-{
-    if (type != UndefinedType && type != NullType)
-        out << dumpStart(this);
-    switch (type) {
-    case QV4::IR::UndefinedType:
-        out << "undefined";
-        break;
-    case QV4::IR::NullType:
-        out << "null";
-        break;
-    case QV4::IR::BoolType:
-        out << (value ? "true" : "false");
-        break;
-    case QV4::IR::MissingType:
-        out << "missing";
-        break;
-    default:
-        if (int(value) == 0 && int(value) == value) {
-            if (isNegative(value))
-                out << "-0";
-            else
-                out << "0";
-        } else {
-            out << QString::number(value, 'g', 16);
-        }
-        break;
-    }
-    if (type != UndefinedType && type != NullType)
-        out << dumpEnd(this);
-}
-
-void String::dump(QTextStream &out) const
-{
-    out << '"' << escape(*value) << '"';
-}
-
-QString String::escape(const QString &s)
-{
-    QString r;
-    for (int i = 0; i < s.length(); ++i) {
-        const QChar ch = s.at(i);
-        if (ch == QLatin1Char('\n'))
-            r += QStringLiteral("\\n");
-        else if (ch == QLatin1Char('\r'))
-            r += QStringLiteral("\\r");
-        else if (ch == QLatin1Char('\\'))
-            r += QStringLiteral("\\\\");
-        else if (ch == QLatin1Char('"'))
-            r += QStringLiteral("\\\"");
-        else if (ch == QLatin1Char('\''))
-            r += QStringLiteral("\\'");
-        else
-            r += ch;
-    }
-    return r;
-}
-
-void RegExp::dump(QTextStream &out) const
-{
-    char f[3];
-    int i = 0;
-    if (flags & RegExp_Global)
-        f[i++] = 'g';
-    if (flags & RegExp_IgnoreCase)
-        f[i++] = 'i';
-    if (flags & RegExp_Multiline)
-        f[i++] = 'm';
-    f[i] = 0;
-
-    out << '/' << *value << '/' << f;
-}
-
 void Name::initGlobal(const QString *id, quint32 line, quint32 column)
 {
     this->id = id;
@@ -453,33 +357,6 @@ static const char *builtin_to_string(Name::Builtin b)
     return "builtin_(###FIXME)";
 };
 
-void Name::dump(QTextStream &out) const
-{
-    if (id)
-        out << *id;
-    else
-        out << builtin_to_string(builtin);
-}
-
-void Temp::dump(QTextStream &out) const
-{
-    out << dumpStart(this);
-    switch (kind) {
-    case Formal:           out << '#' << index; break;
-    case ScopedFormal:     out << '#' << index
-                               << '@' << scope; break;
-    case Local:            out << '$' << index; break;
-    case ScopedLocal:      out << '$' << index
-                               << '@' << scope; break;
-    case VirtualRegister:  out << '%' << index; break;
-    case PhysicalRegister: out << (type == DoubleType ? "fp" : "r")
-                               << index; break;
-    case StackSlot:        out << '&' << index; break;
-    default:               out << "INVALID";
-    }
-    out << dumpEnd(this);
-}
-
 bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
 {
     if (t1.kind < t2.kind) return true;
@@ -487,151 +364,6 @@ bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
     if (t1.index < t2.index) return true;
     if (t1.index > t2.index) return false;
     return t1.scope < t2.scope;
-}
-
-void Closure::dump(QTextStream &out) const
-{
-    QString name = functionName ? *functionName : QString();
-    if (name.isEmpty())
-        name.sprintf("%x", value);
-    out << "closure(" << name << ')';
-}
-
-void Convert::dump(QTextStream &out) const
-{
-    out << dumpStart(this);
-    out << "convert(";
-    expr->dump(out);
-    out << ')' << dumpEnd(this);
-}
-
-void Unop::dump(QTextStream &out) const
-{
-    out << dumpStart(this) << opname(op);
-    expr->dump(out);
-    out << dumpEnd(this);
-}
-
-void Binop::dump(QTextStream &out) const
-{
-    out << dumpStart(this);
-    left->dump(out);
-    out << ' ' << opname(op) << ' ';
-    right->dump(out);
-    out << dumpEnd(this);
-}
-
-void Call::dump(QTextStream &out) const
-{
-    base->dump(out);
-    out << '(';
-    for (ExprList *it = args; it; it = it->next) {
-        if (it != args)
-            out << ", ";
-        it->expr->dump(out);
-    }
-    out << ')';
-}
-
-void New::dump(QTextStream &out) const
-{
-    out << "new ";
-    base->dump(out);
-    out << '(';
-    for (ExprList *it = args; it; it = it->next) {
-        if (it != args)
-            out << ", ";
-        it->expr->dump(out);
-    }
-    out << ')';
-}
-
-void Subscript::dump(QTextStream &out) const
-{
-    base->dump(out);
-    out << '[';
-    index->dump(out);
-    out << ']';
-}
-
-void Member::dump(QTextStream &out) const
-{
-    if (kind != MemberOfEnum && attachedPropertiesIdOrEnumValue != 0 && !base->asTemp())
-        out << "[[attached property from " << attachedPropertiesIdOrEnumValue << "]]";
-    else
-        base->dump(out);
-    out << '.' << *name;
-#ifndef V4_BOOTSTRAP
-    if (property)
-        out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
-#endif
-}
-
-void Exp::dump(QTextStream &out, Mode)
-{
-    out << "(void) ";
-    expr->dump(out);
-    out << ';';
-}
-
-void Move::dump(QTextStream &out, Mode mode)
-{
-    Q_UNUSED(mode);
-
-    target->dump(out);
-    out << ' ';
-    if (swap)
-        out << "<=> ";
-    else
-        out << "= ";
-//    if (source->type != target->type)
-//        out << typeName(source->type) << "_to_" << typeName(target->type) << '(';
-    source->dump(out);
-//    if (source->type != target->type)
-//        out << ')';
-    out << ';';
-}
-
-void Jump::dump(QTextStream &out, Mode mode)
-{
-    Q_UNUSED(mode);
-    out << "goto " << 'L' << target->index() << ';';
-}
-
-void CJump::dump(QTextStream &out, Mode mode)
-{
-    Q_UNUSED(mode);
-    out << "if (";
-    cond->dump(out);
-    if (mode == HIR)
-        out << ") goto " << 'L' << iftrue->index() << "; else goto " << 'L' << iffalse->index() << ';';
-    else
-        out << ") goto " << 'L' << iftrue->index() << ";";
-}
-
-void Ret::dump(QTextStream &out, Mode)
-{
-    out << "return";
-    if (expr) {
-        out << ' ';
-        expr->dump(out);
-    }
-    out << ';';
-}
-
-void Phi::dump(QTextStream &out, Stmt::Mode mode)
-{
-    Q_UNUSED(mode);
-
-    targetTemp->dump(out);
-    out << " = phi(";
-    for (int i = 0, ei = d->incoming.size(); i < ei; ++i) {
-        if (i > 0)
-            out << ", ";
-        if (d->incoming[i])
-            d->incoming[i]->dump(out);
-    }
-    out << ");";
 }
 
 Function *Module::newFunction(const QString &name, Function *outer)
@@ -732,21 +464,6 @@ int Function::liveBasicBlocksCount() const
         if (!bb->isRemoved())
             ++count;
     return count;
-}
-
-void Function::dump(QTextStream &out, Stmt::Mode mode)
-{
-    QString n = name ? *name : QString();
-    if (n.isEmpty())
-        n.sprintf("%p", this);
-    out << "function " << n << "() {" << endl;
-    foreach (const QString *formal, formals)
-        out << "\treceive " << *formal << ';' << endl;
-    foreach (const QString *local, locals)
-        out << "\tlocal " << *local << ';' << endl;
-    foreach (BasicBlock *bb, basicBlocks())
-        bb->dump(out, mode);
-    out << '}' << endl;
 }
 
 void Function::removeSharedExpressions()
@@ -1028,23 +745,6 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
-{
-    out << 'L' << index() << ':';
-    if (catchBlock)
-        out << " (catchBlock L" << catchBlock->index() << ")";
-    out << endl;
-    foreach (Stmt *s, statements()) {
-        out << '\t';
-        s->dump(out, mode);
-
-        if (s->location.isValid())
-            out << " // line: " << s->location.startLine << " ; column: " << s->location.startColumn;
-
-        out << endl;
-    }
-}
-
 void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
 {
     Q_ASSERT(!isRemoved());
@@ -1187,6 +887,382 @@ void CloneExpr::visitMember(Member *e)
 {
     Expr *clonedBase = clone(e->base);
     cloned = block->MEMBER(clonedBase, e->name, e->property, e->kind, e->attachedPropertiesIdOrEnumValue);
+}
+
+IRPrinter::IRPrinter(QTextStream *out)
+    : out(out)
+    , printElse(true)
+{
+}
+
+IRPrinter::~IRPrinter()
+{
+}
+
+void IRPrinter::print(Stmt *s)
+{
+    s->accept(this);
+}
+
+void IRPrinter::print(Expr *e)
+{
+    e->accept(this);
+}
+
+void IRPrinter::print(Function *f)
+{
+    QString n = f->name ? *f->name : QString();
+    if (n.isEmpty())
+        n.sprintf("%p", f);
+    *out << "function " << n << '(';
+
+    for (int i = 0; i < f->formals.size(); ++i) {
+        if (i != 0)
+            *out << ", ";
+        *out << *f->formals.at(i);
+    }
+    *out << ')' << endl
+        << '{' << endl;
+
+    foreach (const QString *local, f->locals)
+        *out << "    var " << *local << ';' << endl;
+
+    foreach (BasicBlock *bb, f->basicBlocks())
+        if (!bb->isRemoved())
+            print(bb);
+    *out << '}' << endl;
+}
+
+void IRPrinter::print(BasicBlock *bb)
+{
+    bool prevPrintElse = false;
+    std::swap(printElse, prevPrintElse);
+    printBlockStart(bb);
+
+    foreach (Stmt *s, bb->statements()) {
+        QByteArray str;
+        QBuffer buf(&str);
+        buf.open(QIODevice::WriteOnly);
+        QTextStream os(&buf);
+        QTextStream *prevOut = &os;
+        std::swap(out, prevOut);
+        if (s->id > 0)
+            *out << s->id << ": ";
+        s->accept(this);
+        if (s->location.isValid()) {
+            out->flush();
+            for (int i = 58 - str.length(); i > 0; --i)
+                *out << ' ';
+            *out << "    // line: " << s->location.startLine << " column: " << s->location.startColumn;
+        }
+
+        out->flush();
+        std::swap(out, prevOut);
+
+        *out << "    " << str;
+        *out << endl;
+
+        if (s->asCJump()) {
+            *out << "    else goto L" << s->asCJump()->iffalse->index() << ";" << endl;
+        }
+    }
+
+    std::swap(printElse, prevPrintElse);
+}
+
+void IRPrinter::visitExp(Exp *s)
+{
+    *out << "(void) ";
+    s->expr->accept(this);
+    *out << ';';
+}
+
+void IRPrinter::visitMove(Move *s)
+{
+    s->target->accept(this);
+    *out << ' ';
+    if (s->swap)
+        *out << "<=> ";
+    else
+        *out << "= ";
+    s->source->accept(this);
+    *out << ';';
+}
+
+void IRPrinter::visitJump(Jump *s)
+{
+    *out << "goto L" << s->target->index() << ';';
+}
+
+void IRPrinter::visitCJump(CJump *s)
+{
+    *out << "if (";
+    s->cond->accept(this);
+    *out << ") goto L" << s->iftrue->index() << ';';
+    if (printElse)
+        *out << " else goto L" << s->iffalse->index() << ';';
+}
+
+void IRPrinter::visitRet(Ret *s)
+{
+    *out << "return";
+    if (s->expr) {
+        *out << ' ';
+        s->expr->accept(this);
+    }
+    *out << ';';
+}
+
+void IRPrinter::visitPhi(Phi *s)
+{
+    s->targetTemp->accept(this);
+    *out << " = phi(";
+    for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
+        if (i > 0)
+            *out << ", ";
+        if (s->d->incoming[i])
+            s->d->incoming[i]->accept(this);
+    }
+    *out << ");";
+}
+
+void IRPrinter::visitConst(Const *e)
+{
+    if (e->type != UndefinedType && e->type != NullType)
+        *out << dumpStart(e);
+    switch (e->type) {
+    case QV4::IR::UndefinedType:
+        *out << "undefined";
+        break;
+    case QV4::IR::NullType:
+        *out << "null";
+        break;
+    case QV4::IR::BoolType:
+        *out << (e->value ? "true" : "false");
+        break;
+    case QV4::IR::MissingType:
+        *out << "missing";
+        break;
+    default:
+        if (int(e->value) == 0 && int(e->value) == e->value) {
+            if (isNegative(e->value))
+                *out << "-0";
+            else
+                *out << "0";
+        } else {
+            *out << QString::number(e->value, 'g', 16);
+        }
+        break;
+    }
+    if (e->type != UndefinedType && e->type != NullType)
+        *out << dumpEnd(e);
+}
+
+void IRPrinter::visitString(String *e)
+{
+    *out << '"' << escape(*e->value) << '"';
+}
+
+void IRPrinter::visitRegExp(RegExp *e)
+{
+    char f[3];
+    int i = 0;
+    if (e->flags & RegExp::RegExp_Global)
+        f[i++] = 'g';
+    if (e->flags & RegExp::RegExp_IgnoreCase)
+        f[i++] = 'i';
+    if (e->flags & RegExp::RegExp_Multiline)
+        f[i++] = 'm';
+    f[i] = 0;
+
+    *out << '/' << *e->value << '/' << f;
+}
+
+void IRPrinter::visitName(Name *e)
+{
+    if (e->id)
+        *out << *e->id;
+    else
+        *out << builtin_to_string(e->builtin);
+}
+
+void IRPrinter::visitTemp(Temp *e)
+{
+    *out << dumpStart(e);
+    switch (e->kind) {
+    case Temp::Formal:           *out << '#' << e->index; break;
+    case Temp::ScopedFormal:     *out << '#' << e->index
+                                     << '@' << e->scope; break;
+    case Temp::Local:            *out << '$' << e->index; break;
+    case Temp::ScopedLocal:      *out << '$' << e->index
+                                     << '@' << e->scope; break;
+    case Temp::VirtualRegister:  *out << '%' << e->index; break;
+    case Temp::PhysicalRegister: *out << (e->type == DoubleType ? "fp" : "r")
+                                     << e->index; break;
+    case Temp::StackSlot:        *out << '&' << e->index; break;
+    default:                     *out << "INVALID";
+    }
+    *out << dumpEnd(e);
+}
+
+void IRPrinter::visitClosure(Closure *e)
+{
+    QString name = e->functionName ? *e->functionName : QString();
+    if (name.isEmpty())
+        name.sprintf("%x", e->value);
+    *out << "closure(" << name << ')';
+}
+
+void IRPrinter::visitConvert(Convert *e)
+{
+    *out << dumpStart(e);
+    *out << "convert(";
+    e->expr->accept(this);
+    *out << ')' << dumpEnd(e);
+}
+
+void IRPrinter::visitUnop(Unop *e)
+{
+    *out << dumpStart(e) << opname(e->op);
+    e->expr->accept(this);
+    *out << dumpEnd(e);
+}
+
+void IRPrinter::visitBinop(Binop *e)
+{
+    *out << dumpStart(e);
+    e->left->accept(this);
+    *out << ' ' << opname(e->op) << ' ';
+    e->right->accept(this);
+    *out << dumpEnd(e);
+}
+
+void IRPrinter::visitCall(Call *e)
+{
+    e->base->accept(this);
+    *out << '(';
+    for (ExprList *it = e->args; it; it = it->next) {
+        if (it != e->args)
+            *out << ", ";
+        it->expr->accept(this);
+    }
+    *out << ')';
+}
+
+void IRPrinter::visitNew(New *e)
+{
+    *out << "new ";
+    e->base->accept(this);
+    *out << '(';
+    for (ExprList *it = e->args; it; it = it->next) {
+        if (it != e->args)
+            *out << ", ";
+        it->expr->accept(this);
+    }
+    *out << ')';
+}
+
+void IRPrinter::visitSubscript(Subscript *e)
+{
+    e->base->accept(this);
+    *out << '[';
+    e->index->accept(this);
+    *out << ']';
+}
+
+void IRPrinter::visitMember(Member *e)
+{
+    if (e->kind != Member::MemberOfEnum
+            && e->attachedPropertiesIdOrEnumValue != 0 && !e->base->asTemp())
+        *out << "[[attached property from " << e->attachedPropertiesIdOrEnumValue << "]]";
+    else
+        e->base->accept(this);
+    *out << '.' << *e->name;
+#ifndef V4_BOOTSTRAP
+    if (e->property)
+        *out << " (meta-property " << e->property->coreIndex
+            << " <" << QMetaType::typeName(e->property->propType)
+            << ">)";
+#endif
+}
+
+QString IRPrinter::escape(const QString &s)
+{
+    QString r;
+    for (int i = 0; i < s.length(); ++i) {
+        const QChar ch = s.at(i);
+        if (ch == QLatin1Char('\n'))
+            r += QStringLiteral("\\n");
+        else if (ch == QLatin1Char('\r'))
+            r += QStringLiteral("\\r");
+        else if (ch == QLatin1Char('\\'))
+            r += QStringLiteral("\\\\");
+        else if (ch == QLatin1Char('"'))
+            r += QStringLiteral("\\\"");
+        else if (ch == QLatin1Char('\''))
+            r += QStringLiteral("\\'");
+        else
+            r += ch;
+    }
+    return r;
+}
+
+QString IRPrinter::dumpStart(const Expr *e)
+{
+    if (e->type == UnknownType)
+        return QString();
+
+    QString result = typeName(e->type);
+#ifndef V4_BOOTSTRAP
+    const Temp *temp = const_cast<Expr*>(e)->asTemp();
+    if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
+        result += QLatin1Char('<');
+        result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
+        result += QLatin1Char('>');
+    }
+#endif
+    result += QLatin1Char('{');
+    return result;
+}
+
+const char *IRPrinter::dumpEnd(const Expr *e)
+{
+    if (e->type == UnknownType)
+        return "";
+    else
+        return "}";
+}
+
+void IRPrinter::printBlockStart(BasicBlock *bb)
+{
+    if (bb->isRemoved()) {
+        *out << "(block has been removed)";
+        return;
+    }
+
+    QByteArray str;
+    str.append('L');
+    str.append(QByteArray::number(bb->index()));
+    str.append(':');
+    if (bb->catchBlock) {
+        str.append(" (exception handler L");
+        str.append(QByteArray::number(bb->catchBlock->index()));
+        str.append(')');
+    }
+    for (int i = 66 - str.length(); i; --i)
+        str.append(' ');
+    *out << str;
+
+    *out << "// predecessor blocks:";
+    foreach (BasicBlock *in, bb->in)
+        *out << " L" << in->index();
+    if (bb->in.isEmpty())
+        *out << " (none)";
+    if (BasicBlock *container = bb->containingGroup())
+        *out << "; container block: L" << container->index();
+    if (bb->isGroupStart())
+        *out << "; group start";
+    *out << endl;
 }
 
 } // end of namespace IR
