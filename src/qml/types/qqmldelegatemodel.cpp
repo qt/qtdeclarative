@@ -1521,9 +1521,64 @@ void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelInd
         _q_itemsChanged(begin.row(), end.row() - begin.row() + 1, roles);
 }
 
-void QQmlDelegateModel::_q_layoutChanged()
+void QQmlDelegateModel::_q_layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
-    _q_modelReset();
+    Q_D(QQmlDelegateModel);
+    if (!d->m_complete)
+        return;
+
+    if (hint == QAbstractItemModel::VerticalSortHint) {
+        d->m_storedPersistentIndexes.clear();
+        if (!parents.contains(d->m_adaptorModel.rootIndex))
+            return;
+
+        for (int i = 0; i < d->m_count; ++i) {
+            const QModelIndex index = d->m_adaptorModel.aim()->index(i, 0, d->m_adaptorModel.rootIndex);
+            d->m_storedPersistentIndexes.append(index);
+        }
+    } else if (hint == QAbstractItemModel::HorizontalSortHint) {
+        // Ignored
+    } else {
+        // Triggers model reset, no preparations for that are needed
+    }
+}
+
+void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
+{
+    Q_D(QQmlDelegateModel);
+    if (!d->m_complete)
+        return;
+
+    if (hint == QAbstractItemModel::VerticalSortHint) {
+        if (!parents.contains(d->m_adaptorModel.rootIndex))
+            return;
+
+        for (int i = 0, c = d->m_storedPersistentIndexes.count(); i < c; ++i) {
+            const QPersistentModelIndex &index = d->m_storedPersistentIndexes.at(i);
+            if (i == index.row())
+                continue;
+
+            QVector<Compositor::Insert> inserts;
+            QVector<Compositor::Remove> removes;
+            d->m_compositor.listItemsMoved(&d->m_adaptorModel, i, index.row(), 1, &removes, &inserts);
+            if (!removes.isEmpty() || !inserts.isEmpty()) {
+                d->itemsMoved(removes, inserts);
+            }
+        }
+
+        d->m_storedPersistentIndexes.clear();
+
+        // layoutUpdate does not necessarily have any move changes, but it can
+        // also mean data changes. We can't detect what exactly has changed, so
+        // just emit it for all items
+        _q_itemsChanged(0, d->m_count, QVector<int>());
+
+    } else if (hint == QAbstractItemModel::HorizontalSortHint) {
+        // Ignored
+    } else {
+        // We don't know what's going on, so reset the model
+        _q_modelReset();
+    }
 }
 
 QQmlDelegateModelAttached *QQmlDelegateModel::qmlAttachedProperties(QObject *obj)
