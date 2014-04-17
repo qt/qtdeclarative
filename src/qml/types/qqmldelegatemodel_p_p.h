@@ -144,7 +144,7 @@ public:
     QQmlDelegateModelItemMetaType * const metaType;
     QQmlContextData *contextData;
     QObject *object;
-    QQmlDelegateModelAttached *attached;
+    QPointer<QQmlDelegateModelAttached> attached;
     QQDMIncubationTask *incubationTask;
     int objectRef;
     int scriptRef;
