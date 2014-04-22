@@ -633,7 +633,7 @@ static double getLocalTZA()
     time_t locl = mktime(&t);
     gmtime_r(&curr, &t);
     time_t globl = mktime(&t);
-    return double(locl - globl) * 1000.0;
+    return (double(locl) - double(globl)) * 1000.0;
 #else
     TIME_ZONE_INFORMATION tzInfo;
     GetTimeZoneInformation(&tzInfo);
