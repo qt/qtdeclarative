@@ -380,6 +380,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
         {
             // this ensures that the value is updated now that the animation is running
             if (oldState == Stopped) {
+                m_currentLoop = 0;
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
                     RETURN_IF_DELETED(QQmlAnimationTimer::ensureTimerUpdate());
