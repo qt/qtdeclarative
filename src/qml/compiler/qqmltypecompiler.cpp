@@ -1461,7 +1461,8 @@ bool QQmlComponentAndAliasResolver::resolve()
                 isExplicitComponent = true;
         }
         if (!isExplicitComponent) {
-            findAndRegisterImplicitComponents(obj, cache);
+            if (cache)
+                findAndRegisterImplicitComponents(obj, cache);
             continue;
         }
 
