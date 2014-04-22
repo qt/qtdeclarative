@@ -230,7 +230,7 @@ void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimatio
         maxDuration = qMax(maxDuration, job->totalDuration());
     }
 
-    setUncontrolledAnimationFinishTime(this, qMax(maxDuration, currentTime()));
+    setUncontrolledAnimationFinishTime(this, qMax(maxDuration + m_currentLoopStartTime, currentTime()));
 
     if (!running
             && ((m_direction == Forward && m_currentLoop == m_loopCount -1)
