@@ -694,7 +694,6 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
                 V4THROW_SQL2(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("SQL: database version mismatch"));
         } else {
             created = !QFile::exists(basename+QLatin1String(".sqlite"));
-            database = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"), dbid);
             if (created) {
                 ini.setValue(QLatin1String("Name"), dbname);
                 if (dbcreationCallback)
@@ -710,6 +709,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
                 }
                 version = ini.value(QLatin1String("Version")).toString();
             }
+            database = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"), dbid);
             database.setDatabaseName(basename+QLatin1String(".sqlite"));
         }
         if (!database.isOpen())
