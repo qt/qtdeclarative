@@ -236,6 +236,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyMirroredEnum mirroredEnumProperty READ mirroredEnumProperty WRITE setMirroredEnumProperty NOTIFY mirroredEnumPropertyChanged)
     Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
+    Q_PROPERTY(QByteArray byteArrayProperty READ byteArrayProperty WRITE setByteArrayProperty NOTIFY byteArrayPropertyChanged)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
     Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
@@ -355,6 +356,15 @@ public:
     void setStringProperty(const QString &v) {
         stringPropertyValue = v;
         emit stringPropertyChanged();
+    }
+
+    QByteArray byteArrayPropertyValue;
+    QByteArray byteArrayProperty() const {
+        return byteArrayPropertyValue;
+    }
+    void setByteArrayProperty(const QByteArray &v) {
+        byteArrayPropertyValue = v;
+        emit byteArrayPropertyChanged();
     }
 
     uint uintPropertyValue;
@@ -570,6 +580,7 @@ signals:
     void qtEnumPropertyChanged();
     void mirroredEnumPropertyChanged();
     void stringPropertyChanged();
+    void byteArrayPropertyChanged();
     void uintPropertyChanged();
     void intPropertyChanged();
     void realPropertyChanged();

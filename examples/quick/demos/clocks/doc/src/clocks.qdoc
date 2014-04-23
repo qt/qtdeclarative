@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,7 +29,13 @@
     \title Qt Quick Demo - Clocks
     \ingroup qtquickdemos
     \example demos/clocks
-    \brief An app that shows the current time in different cities.
+    \brief A QML application that shows the current time in different cities.
     \image qtquick-demo-clocks-small.png
-*/
 
+    \e Clocks demonstrates various QML and \l{Qt Quick} features such as
+    displaying custom components.
+
+    \include examples-run.qdocinc
+
+    \sa {QML Applications}
+*/

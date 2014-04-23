@@ -196,6 +196,8 @@ struct Unit
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const uint offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+        if (str->str.size == 0)
+            return QString();
         QStringDataPtr holder = { const_cast<QStringData *>(static_cast<const QStringData*>(&str->str)) };
         QString qstr(holder);
         if (flags & StaticData)

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,9 +29,14 @@
     \title Qt Quick Demo - Calqlatr
     \ingroup qtquickdemos
     \example demos/calqlatr
-    \brief A simple calculator app, designed for portrait devices.
+    \brief A simple QML calculator app, designed for portrait devices.
     \image qtquick-demo-calqlatr.png
 
-    This app has the logic implemented in JavaScript and the appearance implemented in QML.
-*/
+    \e{Calqlatr} demonstrates various QML and \l{Qt Quick} features such as
+    displaying custom components. The logic is implemented in JavaScript and the
+    appearance implemented in QML.
 
+    \include examples-run.qdocinc
+
+    \sa {QML Applications}
+*/

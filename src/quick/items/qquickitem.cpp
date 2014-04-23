@@ -1333,7 +1333,7 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->window()->sendEvent(i, event);
+                QCoreApplication::sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inPress = false;
                     return;
@@ -1375,7 +1375,7 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->window()->sendEvent(i, event);
+                QCoreApplication::sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inRelease = false;
                     return;
@@ -6391,10 +6391,12 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
         while (scope && !scope->isFocusScope() && scope->parentItem())
             scope = scope->parentItem();
         if (d->window) {
-            if (focus)
-                QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
-            else
-                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
+            if (reason != Qt::PopupFocusReason) {
+                if (focus)
+                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
+                else
+                    QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
+            }
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
             // unrelated to a window

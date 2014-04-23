@@ -1365,6 +1365,11 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
 
 QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) const
 {
+    return inputMethodQuery(property, QVariant());
+}
+
+QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
+{
     Q_D(const QQuickTextControl);
     QTextBlock block = d->cursor.block();
     switch (property) {
@@ -1382,6 +1387,47 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
         return QVariant(); // No limit.
     case Qt::ImAnchorPosition:
         return QVariant(d->cursor.anchor() - block.position());
+    case Qt::ImAbsolutePosition:
+        return QVariant(d->cursor.anchor());
+    case Qt::ImTextAfterCursor:
+    {
+        int maxLength = argument.isValid() ? argument.toInt() : 1024;
+        QTextCursor tmpCursor = d->cursor;
+        int localPos = d->cursor.position() - block.position();
+        QString result = block.text().mid(localPos);
+        while (result.length() < maxLength) {
+            int currentBlock = tmpCursor.blockNumber();
+            tmpCursor.movePosition(QTextCursor::NextBlock);
+            if (tmpCursor.blockNumber() == currentBlock)
+                break;
+            result += QLatin1Char('\n') + tmpCursor.block().text();
+        }
+        return QVariant(result);
+    }
+    case Qt::ImTextBeforeCursor:
+    {
+        int maxLength = argument.isValid() ? argument.toInt() : 1024;
+        QTextCursor tmpCursor = d->cursor;
+        int localPos = d->cursor.position() - block.position();
+        int numBlocks = 0;
+        int resultLen = localPos;
+        while (resultLen < maxLength) {
+            int currentBlock = tmpCursor.blockNumber();
+            tmpCursor.movePosition(QTextCursor::PreviousBlock);
+            if (tmpCursor.blockNumber() == currentBlock)
+                break;
+            numBlocks++;
+            resultLen += tmpCursor.block().length();
+        }
+        QString result;
+        while (numBlocks) {
+            result += tmpCursor.block().text() + QLatin1Char('\n');
+            tmpCursor.movePosition(QTextCursor::NextBlock);
+            --numBlocks;
+        }
+        result += block.text().mid(0,localPos);
+        return QVariant(result);
+    }
     default:
         return QVariant();
     }

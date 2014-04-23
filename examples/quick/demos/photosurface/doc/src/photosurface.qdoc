@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -32,6 +32,10 @@
     \brief A touch-based app for shuffling photos around a virtual surface.
     \image qtquick-demo-photosurface-small.png
 
-    This example demonstrates how to handle dragging, rotation and
-    pinch zooming within the same item using a PinchArea containing a MouseArea.
+    \e{Photo Surface} demonstrates how to handle dragging, rotation and pinch
+    zooming within the same item using a \l PinchArea containing a \l MouseArea.
+
+    \include examples-run.qdocinc
+
+    \sa {QML Applications}
 */

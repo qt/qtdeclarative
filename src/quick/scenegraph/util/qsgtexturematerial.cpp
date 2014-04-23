@@ -152,7 +152,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     : m_texture(0)
     , m_filtering(QSGTexture::Nearest)
-    , m_mipmap_filtering(QSGTexture::Nearest)
+    , m_mipmap_filtering(QSGTexture::None)
     , m_horizontal_wrap(QSGTexture::ClampToEdge)
     , m_vertical_wrap(QSGTexture::ClampToEdge)
 {

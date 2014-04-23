@@ -2212,8 +2212,6 @@ bool Codegen::visit(ForEachStatement *ast)
     IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, foreachin, foreachend, foreachin);
-
     int objectToIterateOn = _block->newTemp();
     move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
@@ -2222,6 +2220,7 @@ bool Codegen::visit(ForEachStatement *ast)
     int iterator = _block->newTemp();
     move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
+    enterLoop(ast, foreachin, foreachend, foreachin);
     _block->JUMP(foreachin);
 
     _block = foreachbody;
@@ -2352,8 +2351,6 @@ bool Codegen::visit(LocalForEachStatement *ast)
     IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, foreachin, foreachend, foreachin);
-
     variableDeclaration(ast->declaration);
 
     int iterator = _block->newTemp();
@@ -2363,6 +2360,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
     _block->JUMP(foreachin);
+    enterLoop(ast, foreachin, foreachend, foreachin);
 
     _block = foreachbody;
     int temp = _block->newTemp();
