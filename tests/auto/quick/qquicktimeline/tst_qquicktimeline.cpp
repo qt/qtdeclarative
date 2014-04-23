@@ -53,6 +53,12 @@ private slots:
 
 void tst_QQuickTimeLine::overflow()
 {
+    // Test ensures that time value used in QQuickTimeLine::accel methods is always positive.
+    // On platforms where casting qreal value infinity to int yields a positive value this is
+    // always the case and the test would fail. Strictly speaking, the cast is undefined behavior.
+    if (static_cast<int>(qInf()) > 0)
+        QSKIP("Test is not applicable on this platform");
+
     QQuickTimeLine timeline;
     QQuickTimeLineValue value;
 
