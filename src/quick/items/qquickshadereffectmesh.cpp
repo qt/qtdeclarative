@@ -70,7 +70,7 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
     connect(this, SIGNAL(resolutionChanged()), this, SIGNAL(geometryChanged()));
 }
 
-QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &dstRect)
+QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &dstRect)
 {
     int vmesh = m_resolution.height();
     int hmesh = m_resolution.width();
@@ -125,7 +125,6 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
 
     QSGGeometry::Point2D *vdata = static_cast<QSGGeometry::Point2D *>(geometry->vertexData());
 
-    QRectF srcRect(0, 0, 1, 1);
     for (int iy = 0; iy <= vmesh; ++iy) {
         float fy = iy / float(vmesh);
         float y = float(dstRect.top()) + fy * float(dstRect.height());

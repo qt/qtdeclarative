@@ -99,6 +99,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
     Q_PROPERTY(QString log READ log NOTIFY logChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 1)
     Q_ENUMS(CullMode)
     Q_ENUMS(Status)
 
@@ -138,6 +139,9 @@ public:
     QString log() const { return m_log; }
     Status status() const { return m_status; }
 
+    bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
+    void setSupportsAtlasTextures(bool supports);
+
     QString parseLog();
 
     virtual bool event(QEvent *);
@@ -150,6 +154,7 @@ Q_SIGNALS:
     void cullModeChanged();
     void logChanged();
     void statusChanged();
+    void supportsAtlasTexturesChanged();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
@@ -187,6 +192,8 @@ private:
     uint m_dirtyParseLog : 1;
     uint m_dirtyMesh : 1;
     uint m_dirtyGeometry : 1;
+    uint m_customVertexShader : 1;
+    uint m_supportsAtlasTextures : 1;
 };
 
 QT_END_NAMESPACE

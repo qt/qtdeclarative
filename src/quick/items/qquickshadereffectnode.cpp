@@ -41,7 +41,6 @@
 
 #include <private/qquickshadereffectnode_p.h>
 
-#include "qquickshadereffectmesh_p.h"
 #include "qquickshadereffect_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
@@ -67,7 +66,6 @@ protected:
 
     const QQuickShaderEffectMaterialKey m_key;
     QVector<const char *> m_attributeNames;
-    const QVector<QByteArray> m_attributes;
     QString m_log;
     bool m_compiled;
 
@@ -77,7 +75,6 @@ protected:
 
 QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
     : m_key(key)
-    , m_attributes(attributes)
     , m_compiled(false)
     , m_initialized(false)
 {
@@ -146,7 +143,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         if (loc >= 0) {
                             QRectF r = texture->normalizedTextureSubRect();
                             program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());
-                        } else if (texture->isAtlasTexture()) {
+                        } else if (texture->isAtlasTexture() && (idx != 0 || !material->supportsAtlasTextures)) {
                             texture = texture->removedFromAtlas();
                         }
                         texture->bind();
@@ -346,6 +343,7 @@ QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > QQuickSha
 
 QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
     : cullMode(NoCulling)
+    , supportsAtlasTextures(false)
     , m_node(node)
     , m_emittedLogChanged(false)
 {
@@ -362,9 +360,36 @@ QSGMaterialShader *QQuickShaderEffectMaterial::createShader() const
     return new QQuickCustomMaterialShader(m_source, attributes);
 }
 
-int QQuickShaderEffectMaterial::compare(const QSGMaterial *other) const
+bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &other) const
 {
-    return this - static_cast<const QQuickShaderEffectMaterial *>(other);
+    if (specialType != other.specialType)
+        return false;
+    if (name != other.name)
+        return false;
+
+    if (specialType == UniformData::Sampler) {
+        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(value));
+        QQuickItem *otherSource = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(other.value));
+        if (!source || !otherSource || !source->isTextureProvider() || !otherSource->isTextureProvider())
+            return false;
+        return source->textureProvider()->texture()->textureId() == otherSource->textureProvider()->texture()->textureId();
+    } else {
+        return value == other.value;
+    }
+}
+
+int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
+{
+    const QQuickShaderEffectMaterial *other = static_cast<const QQuickShaderEffectMaterial *>(o);
+    if (cullMode != other->cullMode)
+        return 1;
+    if (supportsAtlasTextures != other->supportsAtlasTextures)
+        return 1;
+    for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+        if (uniforms[shaderType] != other->uniforms[shaderType])
+            return 1;
+    }
+    return 0;
 }
 
 void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMaterialKey &source)

@@ -271,6 +271,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickItem, 2>(uri, 2, 4, "Item");
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
+    qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
 }
 
 static void initResources()

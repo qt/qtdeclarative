@@ -565,7 +565,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
        position (0, 0), the bottom-right (\l{Item::width}{width},
        \l{Item::height}{height}).
     \li attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
-       coordinate is (0, 0), the bottom-right (1, 1).
+       coordinate is (0, 0), the bottom-right (1, 1). If \l supportsAtlasTextures
+       is true, coordinates will be based on position in the atlas instead.
     \endlist
 
     In addition, any property that can be mapped to an OpenGL Shading Language
@@ -594,7 +595,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     it is by default copied from the texture atlas into a stand-alone texture
     so that the texture coordinates span from 0 to 1, and you get the expected
     wrap modes. However, this will increase the memory usage. To avoid the
-    texture copy, you can for each "uniform sampler2D <name>" declare a
+    texture copy, set \l supportsAtlasTextures for simple shaders using
+    qt_MultiTexCoord0, or for each "uniform sampler2D <name>" declare a
     "uniform vec4 qt_SubRect_<name>" which will be assigned the texture's
     normalized source rectangle. For stand-alone textures, the source rectangle
     is [0, 1]x[0, 1]. For textures in an atlas, the source rectangle corresponds
@@ -665,6 +667,8 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     , m_dirtyParseLog(true)
     , m_dirtyMesh(true)
     , m_dirtyGeometry(true)
+    , m_customVertexShader(false)
+    , m_supportsAtlasTextures(false)
 {
     setFlag(QQuickItem::ItemHasContents);
 }
@@ -718,6 +722,7 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
     m_common.source.sourceCode[Key::VertexShader] = code;
     m_dirtyProgram = true;
     m_dirtyParseLog = true;
+    m_customVertexShader = true;
 
     if (isComponentComplete())
         m_common.updateShader(this, Key::VertexShader);
@@ -826,6 +831,31 @@ void QQuickShaderEffect::setCullMode(CullMode face)
     m_cullMode = face;
     update();
     emit cullModeChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick::ShaderEffect::supportsAtlasTextures
+
+    Set this property true to indicate that the ShaderEffect is able to
+    use the default source texture without first removing it from an atlas.
+    In this case the range of qt_MultiTexCoord0 will based on the position of
+    the texture within the atlas, rather than (0,0) to (1,1).
+
+    Setting this to true may enable some optimizations.
+
+    The default value is false.
+
+    \since 5.4
+    \since QtQuick 2.4
+*/
+
+void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
+{
+    if (supports == m_supportsAtlasTextures)
+        return;
+    m_supportsAtlasTextures = supports;
+    updateGeometry();
+    emit supportsAtlasTexturesChanged();
 }
 
 QString QQuickShaderEffect::parseLog()
@@ -940,39 +970,6 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         connect(node, SIGNAL(logAndStatusChanged(QString,int)), this, SLOT(updateLogAndStatus(QString,int)));
     }
 
-    if (m_dirtyMesh) {
-        node->setGeometry(0);
-        m_dirtyMesh = false;
-        m_dirtyGeometry = true;
-    }
-
-    if (m_dirtyGeometry) {
-        node->setFlag(QSGNode::OwnsGeometry, false);
-        QSGGeometry *geometry = node->geometry();
-        QRectF rect(0, 0, width(), height());
-        QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
-
-        geometry = mesh->updateGeometry(geometry, m_common.attributes, rect);
-        if (!geometry) {
-            QString log = mesh->log();
-            if (!log.isNull()) {
-                m_log = parseLog();
-                m_log += QLatin1String("*** Mesh ***\n");
-                m_log += log;
-                m_status = Error;
-                emit logChanged();
-                emit statusChanged();
-            }
-            delete node;
-            return 0;
-        }
-
-        node->setGeometry(geometry);
-        node->setFlag(QSGNode::OwnsGeometry, true);
-
-        m_dirtyGeometry = false;
-    }
-
     QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(node->material());
 
     // Update blending
@@ -1012,6 +1009,60 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
                                 m_dirtyTextureProviders);
         node->markDirty(QSGNode::DirtyMaterial);
         m_dirtyUniforms = m_dirtyUniformValues = m_dirtyTextureProviders = false;
+    }
+
+    int textureCount = material->textureProviders.size();
+    bool preventBatching = m_customVertexShader || textureCount > 1 || (textureCount > 0 && !m_supportsAtlasTextures);
+
+    QRectF srcRect(0, 0, 1, 1);
+    if (m_supportsAtlasTextures && textureCount != 0) {
+        if (QSGTextureProvider *provider = material->textureProviders.at(0)) {
+            if (provider->texture())
+                srcRect = provider->texture()->normalizedTextureSubRect();
+        }
+    }
+
+    if (bool(material->flags() & QSGMaterial::RequiresFullMatrix) != preventBatching) {
+        material->setFlag(QSGMaterial::RequiresFullMatrix, preventBatching);
+        node->markDirty(QSGNode::DirtyMaterial);
+    }
+
+    if (material->supportsAtlasTextures != m_supportsAtlasTextures) {
+        material->supportsAtlasTextures = m_supportsAtlasTextures;
+        node->markDirty(QSGNode::DirtyMaterial);
+    }
+
+    if (m_dirtyMesh) {
+        node->setGeometry(0);
+        m_dirtyMesh = false;
+        m_dirtyGeometry = true;
+    }
+
+    if (m_dirtyGeometry) {
+        node->setFlag(QSGNode::OwnsGeometry, false);
+        QSGGeometry *geometry = node->geometry();
+        QRectF rect(0, 0, width(), height());
+        QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
+
+        geometry = mesh->updateGeometry(geometry, m_common.attributes, srcRect, rect);
+        if (!geometry) {
+            QString log = mesh->log();
+            if (!log.isNull()) {
+                m_log = parseLog();
+                m_log += QLatin1String("*** Mesh ***\n");
+                m_log += log;
+                m_status = Error;
+                emit logChanged();
+                emit statusChanged();
+            }
+            delete node;
+            return 0;
+        }
+
+        node->setGeometry(geometry);
+        node->setFlag(QSGNode::OwnsGeometry, true);
+
+        m_dirtyGeometry = false;
     }
 
     return node;

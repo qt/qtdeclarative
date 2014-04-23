@@ -82,6 +82,8 @@ public:
         QByteArray name;
         QVariant value;
         SpecialType specialType;
+
+        bool operator == (const UniformData &other) const;
     };
 
     enum CullMode
@@ -100,6 +102,7 @@ public:
     QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
     QVector<QSGTextureProvider *> textureProviders;
     CullMode cullMode;
+    bool supportsAtlasTextures;
 
     void setProgramSource(const QQuickShaderEffectMaterialKey &source);
     void updateTextures() const;
