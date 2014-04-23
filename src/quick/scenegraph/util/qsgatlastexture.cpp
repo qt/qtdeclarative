@@ -275,7 +275,7 @@ void Atlas::uploadBgra(Texture *texture)
     QImage image = texture->image();
 
     if (image.format() != QImage::Format_ARGB32_Premultiplied
-            || image.format() != QImage::Format_RGB32) {
+            && image.format() != QImage::Format_RGB32) {
         image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
     }
 
