@@ -2772,7 +2772,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
     \internal
     \since 5.1
 
-    \inmodule QtQuick.Window
+    \inmodule QtQuick
 
     \brief Notification that a \l QQuickWindow is about to be closed
 */
