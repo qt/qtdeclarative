@@ -48,6 +48,7 @@
 #include <qstandarditemmodel.h>
 #include <QtCore/qnumeric.h>
 #include <qqmlengine.h>
+#include <qqmlcomponent.h>
 #include <stdlib.h>
 #include <private/qv4alloca_p.h>
 
@@ -2964,11 +2965,34 @@ void tst_QJSEngine::prototypeChainGc()
 
 void tst_QJSEngine::dynamicProperties()
 {
-    QJSEngine engine;
-    QObject *obj = new QObject;
-    QJSValue wrapper = engine.newQObject(obj);
-    wrapper.setProperty("someRandomProperty", 42);
-    QCOMPARE(wrapper.property("someRandomProperty").toInt(), 42);
+    {
+        QJSEngine engine;
+        QObject *obj = new QObject;
+        QJSValue wrapper = engine.newQObject(obj);
+        wrapper.setProperty("someRandomProperty", 42);
+        QCOMPARE(wrapper.property("someRandomProperty").toInt(), 42);
+        QVERIFY(!qmlContext(obj));
+    }
+    {
+        QQmlEngine qmlEngine;
+        QQmlComponent component(&qmlEngine);
+        component.setData("import QtQml 2.0; QtObject { property QtObject subObject: QtObject {} }", QUrl());
+        QObject *root = component.create(0);
+        QVERIFY(root);
+        QVERIFY(qmlContext(root));
+
+        QJSValue wrapper = qmlEngine.newQObject(root);
+        wrapper.setProperty("someRandomProperty", 42);
+        QVERIFY(!wrapper.hasProperty("someRandomProperty"));
+
+        QObject *subObject = qvariant_cast<QObject*>(root->property("subObject"));
+        QVERIFY(subObject);
+        QVERIFY(qmlContext(subObject));
+
+        wrapper = qmlEngine.newQObject(subObject);
+        wrapper.setProperty("someRandomProperty", 42);
+        QVERIFY(!wrapper.hasProperty("someRandomProperty"));
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)

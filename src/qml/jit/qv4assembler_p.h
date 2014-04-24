@@ -219,12 +219,12 @@ public:
 #define ARGUMENTS_IN_REGISTERS
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 
-    static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
-    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
+    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp; // r13
+    static const RegisterID StackFrameRegister = JSC::ARMRegisters::fp; // r11
     static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
+    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
     static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
 

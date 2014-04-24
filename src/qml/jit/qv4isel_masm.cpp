@@ -258,10 +258,10 @@ static QVector<int> getIntRegisters()
     static const QVector<int> intRegisters = QVector<int>()
             << JSC::ARMRegisters::r1
             << JSC::ARMRegisters::r2
+            << JSC::ARMRegisters::r3
+            << JSC::ARMRegisters::r4
             << JSC::ARMRegisters::r8
-            << JSC::ARMRegisters::r9
-            << JSC::ARMRegisters::r10
-            << JSC::ARMRegisters::r11;
+            << JSC::ARMRegisters::r9;
     return intRegisters;
 }
 

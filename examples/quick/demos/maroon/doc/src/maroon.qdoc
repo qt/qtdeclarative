@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -32,5 +32,11 @@
     \brief A cute game designed for touchscreens.
     \image qtquick-demo-maroon-med-1.png
     \image qtquick-demo-maroon-med-2.png
-*/
 
+    \e{Maroon in Trouble} demonstrates various QML and \l{Qt Quick} features
+    such as displaying custom components and playing sound effects.
+
+    \include examples-run.qdocinc
+
+    \sa {QML Applications}
+*/

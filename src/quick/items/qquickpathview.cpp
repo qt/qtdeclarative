@@ -1242,6 +1242,8 @@ void QQuickPathView::setDelegate(QQmlComponent *delegate)
     if (!d->ownModel) {
         d->model = new QQmlDelegateModel(qmlContext(this));
         d->ownModel = true;
+        if (isComponentComplete())
+            static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
     }
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();

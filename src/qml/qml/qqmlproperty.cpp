@@ -1403,6 +1403,12 @@ bool QQmlPropertyPrivate::write(QObject *object,
             v = value;
             if (v.convert(propertyType)) {
                 ok = true;
+            } else if (v.isValid() && value.isNull()) {
+                // For historical reasons converting a null QVariant to another type will do the trick
+                // but return false anyway. This is caught with the above condition and considered a
+                // successful conversion.
+                Q_ASSERT(v.userType() == propertyType);
+                ok = true;
             } else if ((uint)propertyType >= QVariant::UserType && variantType == QVariant::String) {
                 QQmlMetaType::StringConverter con = QQmlMetaType::customStringConverter(propertyType);
                 if (con) {
