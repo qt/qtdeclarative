@@ -52,7 +52,7 @@
 
 namespace WTF {
 class PageAllocation;
-};
+}
 
 QT_BEGIN_NAMESPACE
 
