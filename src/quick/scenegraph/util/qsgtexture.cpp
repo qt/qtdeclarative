@@ -689,7 +689,7 @@ void QSGPlainTexture::bind()
 #ifdef QT_OPENGL_ES
         internalFormat = GL_BGRA;
 #else
-        if (context->isES())
+        if (context->isOpenGLES())
             internalFormat = GL_BGRA;
 #endif // QT_OPENGL_ES
     } else if (!wrongfullyReportsBgra8888Support

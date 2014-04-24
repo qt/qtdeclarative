@@ -198,7 +198,7 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
     if (!d->distanceFieldAntialiasingDecided) {
         d->distanceFieldAntialiasingDecided = true;
 #ifndef Q_OS_WIN
-        if (renderContext->openglContext()->isES())
+        if (renderContext->openglContext()->isOpenGLES())
             d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
 #endif
     }

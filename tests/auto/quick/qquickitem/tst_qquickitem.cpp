@@ -1190,7 +1190,7 @@ static inline QByteArray msgItem(const QQuickItem *item)
 void tst_qquickitem::mouseGrab()
 {
 #ifdef Q_OS_WIN
-    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::GLES2)
+    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
         QSKIP("Fails in the CI for ANGLE builds on Windows, QTBUG-32664");
 #endif
     QQuickWindow window;

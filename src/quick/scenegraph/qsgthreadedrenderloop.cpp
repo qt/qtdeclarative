@@ -954,7 +954,7 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
                 w->thread->gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
             w->thread->gl->setFormat(w->window->requestedFormat());
             if (!w->thread->gl->create()) {
-                const bool isEs = w->thread->gl->isES();
+                const bool isEs = w->thread->gl->isOpenGLES();
                 delete w->thread->gl;
                 w->thread->gl = 0;
                 handleContextCreationFailure(w->window, isEs);

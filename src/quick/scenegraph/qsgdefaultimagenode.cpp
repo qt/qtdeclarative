@@ -362,7 +362,7 @@ void QSGDefaultImageNode::updateGeometry()
 
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
 #ifndef QT_OPENGL_ES_2
-        if (ctx->isES())
+        if (ctx->isOpenGLES())
 #endif
         {
             bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);

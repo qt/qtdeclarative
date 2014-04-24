@@ -603,7 +603,7 @@ void QQuickWidgetPrivate::createContext()
     if (QOpenGLContextPrivate::globalShareContext())
         context->setShareContext(QOpenGLContextPrivate::globalShareContext());
     if (!context->create()) {
-        const bool isEs = context->isES();
+        const bool isEs = context->isOpenGLES();
         delete context;
         context = 0;
         handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
