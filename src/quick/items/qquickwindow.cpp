@@ -1291,9 +1291,11 @@ bool QQuickWindow::event(QEvent *e)
         QTouchEvent *touch = static_cast<QTouchEvent*>(e);
         d->translateTouchEvent(touch);
         d->deliverTouchEvent(touch);
-        // we consume all touch events ourselves to avoid duplicate
-        // mouse delivery by QtGui mouse synthesis
-        e->accept();
+        if (Q_LIKELY(qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+            // we consume all touch events ourselves to avoid duplicate
+            // mouse delivery by QtGui mouse synthesis
+            e->accept();
+        }
         return true;
     }
         break;
