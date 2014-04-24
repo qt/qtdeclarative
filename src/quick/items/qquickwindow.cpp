@@ -2149,9 +2149,27 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
         return false;
-
     QPointF p = item->mapFromScene(event->pos());
-    if (item->contains(p)) {
+    bool itemContained = item->contains(p);
+
+    if (!itemContained && itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
+        return false;
+    }
+
+    QDragEnterEvent enterEvent(
+            event->pos(),
+            event->possibleActions(),
+            event->mimeData(),
+            event->mouseButtons(),
+            event->keyboardModifiers());
+    QQuickDropEventEx::copyActions(&enterEvent, *event);
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
+            return true;
+    }
+
+    if (itemContained) {
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
             QDragMoveEvent translatedEvent(
                     p.toPoint(),
@@ -2171,21 +2189,6 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
                 accepted = true;
             }
         }
-    } else if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        return false;
-    }
-
-    QDragEnterEvent enterEvent(
-            event->pos(),
-            event->possibleActions(),
-            event->mimeData(),
-            event->mouseButtons(),
-            event->keyboardModifiers());
-    QQuickDropEventEx::copyActions(&enterEvent, *event);
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
-            return true;
     }
 
     return accepted;

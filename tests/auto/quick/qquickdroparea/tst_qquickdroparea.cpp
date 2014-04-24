@@ -84,6 +84,7 @@ private slots:
     void position_external();
     void drop_internal();
 //    void drop_external();
+    void competingDrags();
     void simultaneousDrags();
 
 private:
@@ -767,6 +768,50 @@ void tst_QQuickDropArea::drop_internal()
 //{
 //}
 
+void tst_QQuickDropArea::competingDrags()
+{
+    QQuickWindow window;
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.0\n"
+            "DropArea {\n"
+                "width: 100; height: 100\n"
+                "objectName: \"dropArea1\"\n"
+                "property string statuslol\n"
+                "onEntered: { statuslol = 'parent' }\n"
+                "DropArea {\n"
+                    "objectName: \"dropArea2\"\n"
+                    "width: 100; height: 100\n"
+                    "property bool acceptsEnters: true\n"
+                    "onEntered: { parent.statuslol = 'son'; drag.accepted = acceptsEnters; }\n"
+                "}\n"
+                "Item {\n"
+                    "objectName: \"dragItem\"\n"
+                    "x: 50; y: 50\n"
+                    "width: 10; height: 10\n"
+                "}\n"
+            "}\n", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *dropArea1 = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(dropArea1);
+    dropArea1->setParentItem(window.contentItem());
+
+    QQuickItem *dropArea2 = dropArea1->findChild<QQuickItem *>("dropArea2");
+    QVERIFY(dropArea2);
+
+    QQuickItem *dragItem = dropArea1->findChild<QQuickItem *>("dragItem");
+    QVERIFY(dragItem);
+
+    QCOMPARE(evaluate<QString>(dropArea1, "statuslol"), QStringLiteral(""));
+    evaluate<void>(dragItem, "Drag.active = true");
+    QCOMPARE(evaluate<QString>(dropArea1, "statuslol"), QStringLiteral("son"));
+    evaluate<void>(dragItem, "Drag.active = false");
+    evaluate<void>(dropArea2, "acceptsEnters = false");
+    evaluate<void>(dragItem, "Drag.active = true");
+    QCOMPARE(evaluate<QString>(dropArea1, "statuslol"), QStringLiteral("parent"));
+}
+
 void tst_QQuickDropArea::simultaneousDrags()
 {
     QQuickWindow window;
@@ -777,6 +822,7 @@ void tst_QQuickDropArea::simultaneousDrags()
                 "property int enterEvents: 0\n"
                 "property int exitEvents: 0\n"
                 "width: 100; height: 100\n"
+                "objectName: \"dropArea1\"\n"
                 "keys: [\"red\", \"text/x-red\"]\n"
                 "onEntered: {++enterEvents}\n"
                 "onExited: {++exitEvents}\n"
@@ -827,8 +873,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dragItem1, "Drag.active = true");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 1);
@@ -837,32 +883,33 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dragItem2, "Drag.active = true");
+    //DropArea discards events if already contains something being dragged in
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem2, "Drag.active = false");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem2, "Drag.active = true");
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem1, "Drag.active = false");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
@@ -873,7 +920,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dragItem2, "Drag.active = false");
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
@@ -882,8 +929,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dragItem1, "Drag.active = true");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 1);
@@ -892,32 +939,33 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    //Same as in the first case, dropArea2 already contains a drag, dropArea1 will get the event
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem1, "Drag.active = false");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
@@ -928,7 +976,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
@@ -937,8 +985,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 1);
@@ -948,31 +996,31 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dragItem2, "Drag.active = true");
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem2, "Drag.active = false");
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     evaluate<void>(dragItem2, "Drag.active = true");
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
     QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
-    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
-    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
+    QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
@@ -983,7 +1031,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     evaluate<void>(dragItem2, "Drag.active = false");
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
-    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
+    QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
     QCOMPARE(evaluate<bool>(dropArea2, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
