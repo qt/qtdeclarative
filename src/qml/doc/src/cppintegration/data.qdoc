@@ -94,9 +94,6 @@ when passed from C++ to QML and vice-versa:
         \li QDate
         \li \l date
     \row
-        \li QTime, QDateTime
-        \li \l time
-    \row
         \li QPoint, QPointF
         \li \l point
     \row
