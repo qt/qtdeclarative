@@ -54,7 +54,7 @@ Item {
               && !anims.running && !animr.running
               && !animo.running;
         function test_endresult() {
-            tryCompare(box.xChangeCounter, 1);
+            tryCompare(box, 'xChangeCounter', 1);
             compare(box.yChangeCounter, 1);
             compare(box.scaleChangeCounter, 1);
             compare(box.rotationChangeCounter, 1);
