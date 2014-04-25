@@ -67,6 +67,12 @@ class Updater;
 class Renderer;
 class ShaderManager;
 
+inline bool hasMaterialWithBlending(QSGGeometryNode *n)
+{
+    return (n->opaqueMaterial() ? n->opaqueMaterial()->flags() & QSGMaterial::Blending
+                                : n->material()->flags() & QSGMaterial::Blending);
+}
+
 struct Pt {
     float x, y;
 
@@ -163,6 +169,7 @@ struct Element {
         , removed(false)
         , orphaned(false)
         , isRenderNode(false)
+        , isMaterialBlended(n ? hasMaterialWithBlending(n) : false)
     {
     }
 
@@ -187,6 +194,7 @@ struct Element {
     uint removed : 1;
     uint orphaned : 1;
     uint isRenderNode : 1;
+    uint isMaterialBlended : 1;
 };
 
 struct RenderNodeElement : public Element {
@@ -233,7 +241,6 @@ struct DrawSet
 
 enum BatchCompatibility
 {
-    BatchBreaksOnBlending,
     BatchBreaksOnCompare,
     BatchIsCompatible
 };
