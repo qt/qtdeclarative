@@ -289,10 +289,22 @@ void QSGDefaultRectangleNode::update()
     if (m_dirty_geometry) {
         updateGeometry();
         m_dirty_geometry = false;
+
+        QSGNode::DirtyState state = QSGNode::DirtyGeometry;
+        // smoothed material is always blended, so no change in material state
+        if (material() == &m_material) {
+            bool wasBlending = (m_material.flags() & QSGMaterial::Blending);
+            bool isBlending = (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
+                               || (m_color.alpha() < 255 && m_color.alpha() != 0)
+                               || (m_pen_width > 0 && m_border_color.alpha() < 255);
+            if (wasBlending != isBlending) {
+                m_material.setFlag(QSGMaterial::Blending, isBlending);
+                state |= QSGNode::DirtyMaterial;
+            }
+        }
+
+        markDirty(state);
     }
-    m_material.setFlag(QSGMaterial::Blending, (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
-                                               || (m_color.alpha() < 255 && m_color.alpha() != 0)
-                                               || (m_pen_width > 0 && m_border_color.alpha() < 255));
 }
 
 void QSGDefaultRectangleNode::updateGeometry()
@@ -770,8 +782,6 @@ void QSGDefaultRectangleNode::updateGeometry()
             Q_ASSERT(outerAATail == indexCount);
         }
     }
-
-    markDirty(DirtyGeometry);
 }
 
 
