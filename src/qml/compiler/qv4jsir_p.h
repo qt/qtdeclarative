@@ -1076,6 +1076,7 @@ public:
 
     void print(Stmt *s);
     void print(Expr *e);
+    void print(const Expr &e);
 
     virtual void print(Function *f);
     virtual void print(BasicBlock *bb);

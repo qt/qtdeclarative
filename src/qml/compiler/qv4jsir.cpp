@@ -904,6 +904,11 @@ void IRPrinter::print(Stmt *s)
     s->accept(this);
 }
 
+void IRPrinter::print(const Expr &e)
+{
+    const_cast<Expr *>(&e)->accept(this);
+}
+
 void IRPrinter::print(Expr *e)
 {
     e->accept(this);
