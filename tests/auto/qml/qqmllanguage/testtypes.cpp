@@ -40,6 +40,8 @@
 ****************************************************************************/
 #include "testtypes.h"
 
+#include <private/qqmlcompiler_p.h>
+
 void registerTypes()
 {
     qmlRegisterInterface<MyInterface>("MyInterface");
@@ -105,105 +107,70 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
-{
-    QByteArray result;
-    QDataStream ds(&result, QIODevice::WriteOnly);
-
-    ds << bindings.count();
-    for (int i = 0; i < bindings.count(); ++i) {
-        const QV4::CompiledData::Binding *binding = bindings.at(i);
-        ds << qmlUnit->header.stringAt(binding->propertyNameIndex);
-
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
-        int bindingId = bindingIdentifier(binding);
-        ds << bindingId;
-
-        ds << binding->location.line;
-    }
-
-    return result;
-}
-
-void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
+void CustomBindingParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
-    customBinding->m_bindingData = data;
+    customBinding->cdata = cdata;
+    customBinding->bindings = bindings;
 }
 
 void CustomBinding::componentComplete()
 {
     Q_ASSERT(m_target);
 
-    QDataStream ds(m_bindingData);
-    int count;
-    ds >> count;
-    for (int i = 0; i < count; ++i) {
-        QString name;
-        ds >> name;
+    foreach (const QV4::CompiledData::Binding *binding, bindings) {
+        QString name = cdata->compilationUnit->data->stringAt(binding->propertyNameIndex);
 
-        int bindingId;
-        ds >> bindingId;
+        int bindingId = binding->value.compiledScriptIndex;
 
-        int line;
-        ds >> line;
+        QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
-        QQmlBinding *binding = QQmlBinding::createBinding(QQmlBinding::Identifier(bindingId), m_target, qmlContext(this));
+        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+        QV4::ScopedValue function(scope, QV4::QmlBindingWrapper::createQmlCallableForFunction(context, m_target, cdata->compilationUnit->runtimeFunctions[bindingId]));
+        QQmlBinding *qmlBinding = new QQmlBinding(function, m_target, context);
 
         QQmlProperty property(m_target, name, qmlContext(this));
-        binding->setTarget(property);
-        QQmlPropertyPrivate::setBinding(property, binding);
+        qmlBinding->setTarget(property);
+        QQmlPropertyPrivate::setBinding(property, qmlBinding);
     }
 }
 
-QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
-    Q_UNUSED(qmlUnit)
-
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
-        return QByteArray();
+        return;
     }
 
     const QV4::CompiledData::Binding *binding = bindings.first();
     if (qmlUnit->header.stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property name"));
-        return QByteArray();
+        return;
     }
 
     if (binding->type != QV4::CompiledData::Binding::Type_Script) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
-        return QByteArray();
+        return;
     }
     QByteArray script = qmlUnit->header.stringAt(binding->stringIndex).toUtf8();
     bool ok;
     int v = evaluateEnum(script, &ok);
     if (!ok) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Script did not evaluate to enum"));
-        return QByteArray();
+        return;
     }
     if (v != MyEnum1Class::A_13) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Enum value is not the expected value."));
-        return QByteArray();
+        return;
     }
-
-    return QByteArray();
 }
 
-
-QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SimpleObjectCustomParser::applyBindings(QObject *object, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
-    return QByteArray::number(bindings.count());
-}
-
-void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
-{
-   SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
-   Q_ASSERT(o);
-   bool ok = false;
-   o->setCustomBindingsCount(data.toInt(&ok));
-   Q_ASSERT(ok);
+    SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
+    Q_ASSERT(o);
+    o->setCustomBindingsCount(bindings.count());
 }
 
 

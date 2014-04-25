@@ -44,7 +44,7 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
-
+#include <private/qqmlcompiler_p.h>
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>
@@ -1430,11 +1430,6 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     }
 }
 
-QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instructions() const
-{
-    return (QQmlListModelParser::ListInstruction *)((char *)this + sizeof(ListModelData));
-}
-
 /*!
     \qmltype ListModel
     \instantiates QQmlListModel
@@ -2254,7 +2249,7 @@ void QQmlListModel::sync()
     qmlInfo(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<QQmlListModelParser::ListInstruction> &instr, QByteArray &data)
+bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
@@ -2269,13 +2264,6 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
             listElementTypeName = objName; // cache right name for next time
         }
 
-        {
-            ListInstruction li;
-            li.type = ListInstruction::Push;
-            li.dataIdx = -1;
-            instr << li;
-        }
-
         if (!qmlUnit->header.stringAt(target->idIndex).isEmpty()) {
             error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
@@ -2288,208 +2276,116 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
                 error(binding, QQmlListModel::tr("ListElement: cannot contain nested elements"));
                 return false;
             }
-            ListInstruction li;
-            int ref = data.count();
-            data.append(propName.toUtf8());
-            data.append('\0');
-            li.type = ListInstruction::Set;
-            li.dataIdx = ref;
-            instr << li;
-
-            if (!compileProperty(qmlUnit, binding, instr, data))
+            if (!verifyProperty(qmlUnit, binding))
                 return false;
-
-            li.type = ListInstruction::Pop;
-            li.dataIdx = -1;
-            instr << li;
         }
-
-        {
-            ListInstruction li;
-            li.type = ListInstruction::Pop;
-            li.dataIdx = -1;
-            instr << li;
-        }
-
-    } else {
-        int ref = data.count();
-
-        QByteArray d;
-
-        if (binding->type == QV4::CompiledData::Binding::Type_String) {
-            d += char(String);
-            d += binding->valueAsString(&qmlUnit->header).toUtf8();
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            d += char(Number);
-            d += QByteArray::number(binding->valueAsNumber(),'g',20);
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
-            d += char(Boolean);
-            d += char(binding->valueAsBoolean());
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Translation
-                   || binding->type == QV4::CompiledData::Binding::Type_TranslationById) {
-            error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
-            return false;
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-            QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
-            if (definesEmptyList(scriptStr)) {
-                d[0] = char(Invalid); // marks empty list
-            } else {
-                QByteArray script = scriptStr.toUtf8();
-                bool ok;
-                int v = evaluateEnum(script, &ok);
-                if (!ok) {
-                    error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
-                    return false;
-                } else {
-                    d[0] = char(Number);
-                    d += QByteArray::number(v);
-                }
+    } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
+        QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+        if (!definesEmptyList(scriptStr)) {
+            QByteArray script = scriptStr.toUtf8();
+            bool ok;
+            evaluateEnum(script, &ok);
+            if (!ok) {
+                error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
+                return false;
             }
-        } else {
-            Q_UNREACHABLE();
         }
-
-        d.append('\0');
-        data.append(d);
-
-        ListInstruction li;
-        li.type = ListInstruction::Value;
-        li.dataIdx = ref;
-        instr << li;
     }
 
     return true;
 }
 
-QByteArray QQmlListModelParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
-    QList<ListInstruction> instr;
-    QByteArray data;
+    const QString elementName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+
+    bool roleSet = false;
+    if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+        const quint32 targetObjectIndex = binding->value.objectIndex;
+        const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
+
+        ListModel *subModel = 0;
+        if (outterElementIndex == -1) {
+            subModel = model;
+        } else {
+            const ListLayout::Role &role = model->getOrCreateListRole(elementName);
+            if (role.type == ListLayout::Role::List) {
+                subModel = model->getListProperty(outterElementIndex, role);
+                if (subModel == 0) {
+                    subModel = new ListModel(role.subLayout, 0, -1);
+                    QVariant vModel = QVariant::fromValue(subModel);
+                    model->setOrCreateProperty(outterElementIndex, elementName, vModel);
+                }
+            }
+        }
+
+        int elementIndex = subModel ? subModel->appendElement() : -1;
+
+        const QV4::CompiledData::Binding *subBinding = target->bindingTable();
+        for (quint32 i = 0; i < target->nBindings; ++i, ++subBinding) {
+            roleSet |= applyProperty(qmlUnit, subBinding, subModel, elementIndex);
+        }
+
+    } else {
+        QVariant value;
+
+        if (binding->evaluatesToString()) {
+            value = binding->valueAsString(&qmlUnit->header);
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            value = binding->valueAsNumber();
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+            value = binding->valueAsBoolean();
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
+            QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+            if (definesEmptyList(scriptStr)) {
+                const ListLayout::Role &role = model->getOrCreateListRole(elementName);
+                ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
+                value = QVariant::fromValue(emptyModel);
+            } else {
+                QByteArray script = scriptStr.toUtf8();
+                bool ok;
+                value = evaluateEnum(script, &ok);
+            }
+        } else {
+            Q_UNREACHABLE();
+        }
+
+        model->setOrCreateProperty(outterElementIndex, elementName, value);
+        roleSet = true;
+    }
+    return roleSet;
+}
+
+void QQmlListModelParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
     listElementTypeName = QString(); // unknown
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
         QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
         if (!propName.isEmpty()) { // isn't default property
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
-            return QByteArray();
+            return;
         }
-        if (!compileProperty(qmlUnit, binding, instr, data))
-            return QByteArray();
+        if (!verifyProperty(qmlUnit, binding))
+            return;
     }
-
-    int size = sizeof(ListModelData) +
-               instr.count() * sizeof(ListInstruction) +
-               data.count();
-
-    QByteArray rv;
-    rv.resize(size);
-
-    ListModelData *lmd = (ListModelData *)rv.data();
-    lmd->dataOffset = sizeof(ListModelData) +
-                     instr.count() * sizeof(ListInstruction);
-    lmd->instrCount = instr.count();
-    for (int ii = 0; ii < instr.count(); ++ii)
-        lmd->instructions()[ii] = instr.at(ii);
-    ::memcpy(rv.data() + lmd->dataOffset, data.constData(), data.count());
-
-    return rv;
 }
 
-void QQmlListModelParser::setCustomData(QObject *obj, const QByteArray &d, QQmlCompiledData *)
+void QQmlListModelParser::applyBindings(QObject *obj, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(qmlEngine(rv));
     rv->m_engine = engine;
 
-    const ListModelData *lmd = (const ListModelData *)d.constData();
-    const char *data = ((const char *)lmd) + lmd->dataOffset;
+    const QV4::CompiledData::QmlUnit *qmlUnit = cdata->qmlUnit;
 
     bool setRoles = false;
 
-    QStack<DataStackElement> stack;
-
-    for (int ii = 0; ii < lmd->instrCount; ++ii) {
-        const ListInstruction &instr = lmd->instructions()[ii];
-
-        switch(instr.type) {
-        case ListInstruction::Push:
-            {
-                Q_ASSERT(!rv->m_dynamicRoles);
-
-                ListModel *subModel = 0;
-
-                if (stack.count() == 0) {
-                    subModel = rv->m_listModel;
-                } else {
-                    const DataStackElement &e0 = stack.at(stack.size() - 1);
-                    DataStackElement &e1 = stack[stack.size() - 2];
-
-                    const ListLayout::Role &role = e1.model->getOrCreateListRole(e0.name);
-                    if (role.type == ListLayout::Role::List) {
-                        subModel = e1.model->getListProperty(e1.elementIndex, role);
-
-                        if (subModel == 0) {
-                            subModel = new ListModel(role.subLayout, 0, -1);
-                            QVariant vModel = QVariant::fromValue(subModel);
-                            e1.model->setOrCreateProperty(e1.elementIndex, e0.name, vModel);
-                        }
-                    }
-                }
-
-                DataStackElement e;
-                e.model = subModel;
-                e.elementIndex = subModel ? subModel->appendElement() : -1;
-                stack.push(e);
-            }
-            break;
-
-        case ListInstruction::Pop:
-            stack.pop();
-            break;
-
-        case ListInstruction::Value:
-            {
-                const DataStackElement &e0 = stack.at(stack.size() - 1);
-                DataStackElement &e1 = stack[stack.size() - 2];
-
-                QString name = e0.name;
-                QVariant value;
-
-                switch (PropertyType(data[instr.dataIdx])) {
-                    case Invalid:
-                        {
-                            const ListLayout::Role &role = e1.model->getOrCreateListRole(e0.name);
-                            ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
-                            value = QVariant::fromValue(emptyModel);
-                        }
-                        break;
-                    case Boolean:
-                        value = bool(data[1 + instr.dataIdx]);
-                        break;
-                    case Number:
-                        value = QByteArray(data + 1 + instr.dataIdx).toDouble();
-                        break;
-                    case String:
-                        value = QString::fromUtf8(data + 1 + instr.dataIdx);
-                        break;
-                    default:
-                        Q_ASSERT("Format error in ListInstruction");
-                }
-
-                e1.model->setOrCreateProperty(e1.elementIndex, name, value);
-                setRoles = true;
-            }
-            break;
-
-        case ListInstruction::Set:
-            {
-                DataStackElement e;
-                e.name = QString::fromUtf8(data + instr.dataIdx);
-                stack.push(e);
-            }
-            break;
-        }
+    foreach (const QV4::CompiledData::Binding *binding, bindings) {
+        if (binding->type != QV4::CompiledData::Binding::Type_Object)
+            continue;
+        setRoles |= applyProperty(qmlUnit, binding, rv->m_listModel, /*outter element index*/-1);
     }
 
     if (setRoles == false)

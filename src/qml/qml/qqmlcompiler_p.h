@@ -136,13 +136,8 @@ public:
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
-    // hash key is object index
-    struct CustomParserData {
-        QByteArray compilationArtifact; // produced by custom parser
-        QBitArray bindings; // bindings covered by the custom parser
-    };
-    QHash<int, CustomParserData> customParserData;
-    QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
+    // hash key is object index, value is indicies of bindings covered by custom parser
+    QHash<int, QBitArray> customParserBindings;
     QHash<int, QBitArray> deferredBindingsPerObject; // index is object index
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
@@ -153,9 +148,6 @@ public:
 
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
-
-    QV4::Function *functionForBindingId(int bindingId) const
-    { return compilationUnit->runtimeFunctions[customParserBindings[bindingId]]; }
 
 protected:
     virtual void destroy(); // From QQmlRefCount

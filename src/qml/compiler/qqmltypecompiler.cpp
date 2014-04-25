@@ -378,9 +378,9 @@ QHash<int, QHash<int, int> > *QQmlTypeCompiler::objectIndexToIdPerComponent()
     return &compiledData->objectIndexToIdPerComponent;
 }
 
-QHash<int, QQmlCompiledData::CustomParserData> *QQmlTypeCompiler::customParserData()
+QHash<int, QBitArray> *QQmlTypeCompiler::customParserBindings()
 {
-    return &compiledData->customParserData;
+    return &compiledData->customParserBindings;
 }
 
 QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
@@ -396,11 +396,6 @@ QStringRef QQmlTypeCompiler::newStringRef(const QString &string)
 const QV4::Compiler::StringTableGenerator *QQmlTypeCompiler::stringPool() const
 {
     return &document->jsGenerator.stringTable;
-}
-
-void QQmlTypeCompiler::setCustomParserBindings(const QVector<int> &bindings)
-{
-    compiledData->customParserBindings = bindings;
 }
 
 void QQmlTypeCompiler::setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject)
@@ -1720,7 +1715,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
     , customParsers(typeCompiler->customParserCache())
     , propertyCaches(typeCompiler->propertyCaches())
     , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
-    , customParserData(typeCompiler->customParserData())
+    , customParserBindingsPerObject(typeCompiler->customParserBindings())
     , _seenObjectWithId(false)
 {
 }
@@ -1729,7 +1724,6 @@ bool QQmlPropertyValidator::validate()
 {
     if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
         return false;
-    compiler->setCustomParserBindings(customParserBindings);
     compiler->setDeferredBindingsPerObject(deferredBindingsPerObject);
     return true;
 }
@@ -1737,13 +1731,6 @@ bool QQmlPropertyValidator::validate()
 const QQmlImports &QQmlPropertyValidator::imports() const
 {
     return *compiler->imports();
-}
-
-QQmlBinding::Identifier QQmlPropertyValidator::bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *)
-{
-    const int id = customParserBindings.count();
-    customParserBindings.append(binding->value.compiledScriptIndex);
-    return id;
 }
 
 QString QQmlPropertyValidator::bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const
@@ -2005,11 +1992,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     if (customParser && !customBindings.isEmpty()) {
         customParser->clearErrors();
         customParser->compiler = this;
-        QQmlCompiledData::CustomParserData data;
-        data.bindings = customParserBindings;
-        data.compilationArtifact = customParser->compile(qmlUnit, customBindings);
+        customParser->imports = compiler->imports();
+        customParser->verifyBindings(qmlUnit, customBindings);
         customParser->compiler = 0;
-        customParserData->insert(objectIndex, data);
+        customParser->imports = (QQmlImports*)0;
+        customParserBindingsPerObject->insert(objectIndex, customParserBindings);
         const QList<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty()) {
             foreach (QQmlError error, parserErrors)

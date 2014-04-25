@@ -55,7 +55,7 @@ namespace QV4 {
 
 struct ExecutionContext;
 
-struct QmlBindingWrapper : FunctionObject {
+struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     V4_OBJECT
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);

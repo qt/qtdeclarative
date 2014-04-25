@@ -112,8 +112,6 @@ public:
     typedef int Identifier;
     static Identifier Invalid;
 
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *);
-
     QVariant evaluate();
 
     static QString expressionIdentifier(QQmlJavaScriptExpression *);

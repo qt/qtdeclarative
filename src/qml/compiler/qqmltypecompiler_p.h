@@ -96,11 +96,10 @@ public:
     QVector<QByteArray> *vmeMetaObjects() const;
     QHash<int, int> *objectIndexToIdForRoot();
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
-    QHash<int, QQmlCompiledData::CustomParserData> *customParserData();
+    QHash<int, QBitArray> *customParserBindings();
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
-    void setCustomParserBindings(const QVector<int> &bindings);
     void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
@@ -282,7 +281,6 @@ public:
 
     // Re-implemented for QQmlCustomParser
     virtual const QQmlImports &imports() const;
-    virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding, QQmlCustomParser *parser);
     virtual QString bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const;
 
 private:
@@ -300,8 +298,7 @@ private:
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
-    QHash<int, QQmlCompiledData::CustomParserData> *customParserData;
-    QVector<int> customParserBindings;
+    QHash<int, QBitArray> *customParserBindingsPerObject;
     QHash<int, QBitArray> deferredBindingsPerObject;
 
     bool _seenObjectWithId;

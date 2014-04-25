@@ -168,40 +168,19 @@ public:
 
 
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
-    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData *);
+
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    virtual void applyBindings(QObject *obj, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings);
 
 private:
-    struct ListInstruction
-    {
-        enum { Push, Pop, Value, Set } type;
-        int dataIdx;
-    };
-    struct ListModelData
-    {
-        int dataOffset;
-        int instrCount;
-        ListInstruction *instructions() const;
-    };
-    bool compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<ListInstruction> &instr, QByteArray &data);
+    bool verifyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding);
+    // returns true if a role was set
+    bool applyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
 
     bool definesEmptyList(const QString &);
 
     QString listElementTypeName;
-
-    struct DataStackElement
-    {
-        DataStackElement() : model(0), elementIndex(0) {}
-
-        QString name;
-        ListModel *model;
-        int elementIndex;
-    };
-
-    friend class QTypeInfo<QQmlListModelParser::ListInstruction>;
 };
-
-Q_DECLARE_TYPEINFO(QQmlListModelParser::ListInstruction, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

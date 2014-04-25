@@ -71,8 +71,6 @@ struct QQmlCustomParserCompilerBackend
 
     int evaluateEnum(const QString &scope, const QByteArray& enumValue, bool *ok) const;
     const QMetaObject *resolveType(const QString& name) const;
-
-    virtual QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *, QQmlCustomParser *) { return QQmlBinding::Invalid; }
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlCustomParser
@@ -92,8 +90,8 @@ public:
     void clearErrors();
     Flags flags() const { return m_flags; }
 
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings) = 0;
-    virtual void setCustomData(QObject *, const QByteArray &, QQmlCompiledData *cdata) = 0;
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
     QList<QQmlError> errors() const { return exceptions; }
 
@@ -108,13 +106,13 @@ protected:
 
     const QMetaObject *resolveType(const QString&) const;
 
-    QQmlBinding::Identifier bindingIdentifier(const QV4::CompiledData::Binding *binding);
-
 private:
     QList<QQmlError> exceptions;
     QQmlCustomParserCompilerBackend *compiler;
     Flags m_flags;
+    QBiPointer<const QQmlImports, QQmlTypeNameCache> imports;
     friend class QQmlPropertyValidator;
+    friend class QQmlObjectCreator;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
 

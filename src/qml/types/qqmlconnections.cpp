@@ -68,8 +68,8 @@ public:
     bool ignoreUnknownSignals;
     bool componentcomplete;
 
-    QByteArray data;
     QQmlRefPointer<QQmlCompiledData> cdata;
+    QList<const QV4::CompiledData::Binding *> bindings;
 };
 
 /*!
@@ -205,18 +205,15 @@ void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
     d->ignoreUnknownSignals = ignore;
 }
 
-QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
-    QByteArray rv;
-    QDataStream ds(&rv, QIODevice::WriteOnly);
-
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
         QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
 
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
-            return QByteArray();
+            return;
         }
 
 
@@ -226,27 +223,21 @@ QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlU
                 error(binding, QQmlConnections::tr("Connections: nested objects not allowed"));
             else
                 error(binding, QQmlConnections::tr("Connections: syntax error"));
-            return QByteArray();
+            return;
         } if (binding->type != QV4::CompiledData::Binding::Type_Script) {
             error(binding, QQmlConnections::tr("Connections: script expected"));
-            return QByteArray();
-        } else {
-            ds << propName;
-            ds << bindingIdentifier(binding);
+            return;
         }
     }
-
-    return rv;
 }
 
-void QQmlConnectionsParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *cdata)
+void QQmlConnectionsParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlConnectionsPrivate *p =
         static_cast<QQmlConnectionsPrivate *>(QObjectPrivate::get(object));
-    p->data = data;
     p->cdata = cdata;
+    p->bindings = bindings;
 }
-
 
 void QQmlConnections::connectSignals()
 {
@@ -254,28 +245,26 @@ void QQmlConnections::connectSignals()
     if (!d->componentcomplete || (d->targetSet && !target()))
         return;
 
-    QDataStream ds(d->data);
-    while (!ds.atEnd()) {
-        QString propName;
-        ds >> propName;
-        int bindingId;
-        ds >> bindingId;
+    if (d->bindings.isEmpty())
+        return;
+    QObject *target = this->target();
+    QQmlData *ddata = QQmlData::get(this);
+    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
 
-        QQmlProperty prop(target(), propName);
+    const QV4::CompiledData::QmlUnit *qmlUnit = d->cdata->qmlUnit;
+    foreach (const QV4::CompiledData::Binding *binding, d->bindings) {
+        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
+        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+
+        QQmlProperty prop(target, propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {
             int signalIndex = QQmlPropertyPrivate::get(prop)->signalIndex();
             QQmlBoundSignal *signal =
-                new QQmlBoundSignal(target(), signalIndex, this, qmlEngine(this));
-
-            QQmlContextData *ctxtdata = 0;
-            QQmlData *ddata = QQmlData::get(this);
-            if (ddata) {
-                ctxtdata = ddata->outerContext;
-            }
+                new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
-                new QQmlBoundSignalExpression(target(), signalIndex,
-                                              ctxtdata, this, d->cdata->functionForBindingId(bindingId)) : 0;
+                new QQmlBoundSignalExpression(target, signalIndex,
+                                              ctxtdata, this, d->cdata->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

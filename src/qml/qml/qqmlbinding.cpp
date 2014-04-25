@@ -71,34 +71,6 @@ QQmlAbstractBinding::VTable QQmlBinding_vtable = {
 
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
-QQmlBinding *
-QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt)
-{
-    if (id < 0)
-        return 0;
-
-    QQmlBinding *rv = 0;
-
-    QQmlContextData *ctxtdata = QQmlContextData::get(ctxt);
-    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(ctxt->engine());
-    if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-        QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
-        Q_ASSERT(typeData);
-
-        if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            QV4::ExecutionEngine *v4 = engine->v4engine();
-            QV4::Scope valueScope(v4);
-            QV4::Function *runtimeFunction = cdata->compilationUnit->runtimeFunctions[cdata->customParserBindings[id]];
-            QV4::ScopedValue function(valueScope, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, obj, runtimeFunction));
-            rv = new QQmlBinding(function, obj, ctxtdata);
-        }
-
-        typeData->release();
-    }
-
-    return rv;
-}
-
 static QQmlJavaScriptExpression::VTable QQmlBinding_jsvtable = {
     QQmlBinding::expressionIdentifier,
     QQmlBinding::expressionChanged

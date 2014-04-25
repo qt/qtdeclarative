@@ -54,7 +54,7 @@
 #include <QtQml/qqmlpropertyvaluesource.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlproperty.h>
-
+#include <private/qqmlcompiler_p.h>
 #include <private/qqmlcustomparser_p.h>
 
 QVariant myCustomVariantTypeConverter(const QString &data);
@@ -739,15 +739,15 @@ class MyCustomParserType : public QObject
 class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
-    QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) { return QByteArray(); }
-    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &) {}
 };
 
 class EnumSupportingCustomParser : public QQmlCustomParser
 {
 public:
-    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &);
+    virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &) {}
 };
 
 class MyParserStatus : public QObject, public QQmlParserStatus
@@ -1112,13 +1112,15 @@ public:
     void setTarget(QObject *newTarget) { m_target = newTarget; }
 
     QPointer<QObject> m_target;
+    QQmlRefPointer<QQmlCompiledData> cdata;
+    QList<const QV4::CompiledData::Binding*> bindings;
     QByteArray m_bindingData;
 };
 
 class CustomBindingParser : public QQmlCustomParser
 {
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
-    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &);
 };
 
 class SimpleObjectWithCustomParser : public QObject
@@ -1144,8 +1146,8 @@ private:
 
 class SimpleObjectCustomParser : public QQmlCustomParser
 {
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings);
-    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
+    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &);
 };
 
 class RootObjectInCreationTester : public QObject

@@ -352,12 +352,12 @@ void tst_qqmllistmodel::dynamic_i18n_data()
     QTest::newRow("qsTr")
         << QString::fromUtf8("ListElement { foo: qsTr(\"test\") }")
         << QVariant(QString::fromUtf8("test"))
-        << QString("ListElement: cannot use script for property value");
+        << QString();
 
     QTest::newRow("qsTrId")
         << "ListElement { foo: qsTrId(\"qtn_test\") }"
         << QVariant(QString("qtn_test"))
-        << QString("ListElement: cannot use script for property value");
+        << QString();
 }
 
 void tst_qqmllistmodel::dynamic_i18n()

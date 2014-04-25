@@ -109,6 +109,12 @@ void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const 
     exceptions << error;
 }
 
+struct StaticQtMetaObject : public QObject
+{
+    static const QMetaObject *get()
+        { return &staticQtMetaObject; }
+};
+
 /*!
     If \a script is a simple enumeration expression (eg. Text.AlignLeft),
     returns the integer equivalent (eg. 1), and sets \a ok to true.
@@ -125,7 +131,34 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
     if (dot == -1)
         return -1;
 
-    return compiler->evaluateEnum(QString::fromUtf8(script.left(dot)), script.mid(dot+1), ok);
+
+    QString scope = QString::fromUtf8(script.left(dot));
+    QByteArray enumValue = script.mid(dot+1);
+
+    if (scope != QLatin1String("Qt")) {
+        if (imports.isNull())
+            return -1;
+        QQmlType *type = 0;
+
+        if (imports.isT1()) {
+            imports.asT1()->resolveType(scope, &type, 0, 0, 0);
+        } else {
+            QQmlTypeNameCache::Result result = imports.asT2()->query(scope);
+            if (result.isValid())
+                type = result.type;
+        }
+
+        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+    }
+
+    const QMetaObject *mo = StaticQtMetaObject::get();
+    int i = mo->enumeratorCount();
+    while (i--) {
+        int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);
+        if (*ok)
+            return v;
+    }
+    return -1;
 }
 
 /*!
@@ -136,17 +169,6 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 {
     return compiler->resolveType(name);
 }
-
-QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledData::Binding *binding)
-{
-    return compiler->bindingIdentifier(binding, this);
-}
-
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
 
 int QQmlCustomParserCompilerBackend::evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const
 {

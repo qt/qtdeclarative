@@ -1123,10 +1123,19 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     QBitArray bindingsToSkip;
     if (customParser) {
-        QHash<int, QQmlCompiledData::CustomParserData>::ConstIterator entry = compiledData->customParserData.find(index);
-        if (entry != compiledData->customParserData.constEnd()) {
-            customParser->setCustomData(instance, entry->compilationArtifact, compiledData);
-            bindingsToSkip = entry->bindings;
+        QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.find(index);
+        if (customParserBindings != compiledData->customParserBindings.constEnd()) {
+            customParser->imports = compiledData->importCache;
+
+            QList<const QV4::CompiledData::Binding *> bindings;
+            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+            for (int i = 0; i < customParserBindings->count(); ++i)
+                if (customParserBindings->testBit(i))
+                    bindings << obj->bindingTable() + i;
+            customParser->applyBindings(instance, compiledData, bindings);
+
+            customParser->imports = (QQmlTypeNameCache*)0;
+            bindingsToSkip = *customParserBindings;
         }
     }
 
