@@ -272,12 +272,11 @@ QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit
     ds << data.count();
     for (int ii = 0; ii < data.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = data.at(ii).second;
+        ds << data.at(ii).first << int(binding->type);
         QVariant var;
-        bool isScript = binding->type == QV4::CompiledData::Binding::Type_Script;
-        QQmlBinding::Identifier id = QQmlBinding::Invalid;
         switch (binding->type) {
         case QV4::CompiledData::Binding::Type_Script:
-            id = bindingIdentifier(binding);
+            ds << bindingIdentifier(binding);
             // Fall through as we also need the expression string.
             // Signal handlers still need to be constructed by string ;(
         case QV4::CompiledData::Binding::Type_String:
@@ -291,13 +290,12 @@ QByteArray QQuickPropertyChangesParser::compile(const QV4::CompiledData::QmlUnit
             break;
         case QV4::CompiledData::Binding::Type_Translation:
         case QV4::CompiledData::Binding::Type_TranslationById:
-            Q_UNREACHABLE();
+            ds << binding->value.translationData.commentIndex << binding->value.translationData.number;
+            var = binding->stringIndex;
         default:
             break;
         }
-        ds << data.at(ii).first << isScript << var;
-        if (isScript)
-            ds << id;
+        ds << var;
     }
 
     return rv;
@@ -315,14 +313,21 @@ void QQuickPropertyChangesPrivate::decode()
     ds >> count;
     for (int ii = 0; ii < count; ++ii) {
         QString name;
-        bool isScript;
+        int type;
         QVariant data;
         QQmlBinding::Identifier id = QQmlBinding::Invalid;
+        QV4::CompiledData::TranslationData tsd;
         ds >> name;
-        ds >> isScript;
-        ds >> data;
-        if (isScript)
+        ds >> type;
+
+        if (type == QV4::CompiledData::Binding::Type_Script) {
             ds >> id;
+        } else if (type == QV4::CompiledData::Binding::Type_Translation
+                   || type == QV4::CompiledData::Binding::Type_TranslationById) {
+            ds >> tsd.commentIndex >> tsd.number;
+        }
+
+        ds >> data;
 
         QQmlProperty prop = property(name);      //### better way to check for signal property?
         if (prop.type() & QQmlProperty::SignalProperty) {
@@ -331,7 +336,7 @@ void QQuickPropertyChangesPrivate::decode()
             handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
                                                                    QQmlContextData::get(qmlContext(q)), object, cdata->functionForBindingId(id)));
             signalReplacements << handler;
-        } else if (isScript) { // binding
+        } else if (type == QV4::CompiledData::Binding::Type_Script) { // binding
             QString expression = data.toString();
             QUrl url = QUrl();
             int line = -1;
@@ -346,6 +351,14 @@ void QQuickPropertyChangesPrivate::decode()
 
             expressions << ExpressionChange(name, id, expression, url, line, column);
         } else {
+            if (type == QV4::CompiledData::Binding::Type_Translation
+                || type == QV4::CompiledData::Binding::Type_TranslationById) {
+                QV4::CompiledData::Binding tmpBinding;
+                tmpBinding.type = type;
+                tmpBinding.stringIndex = data.toInt();
+                tmpBinding.value.translationData = tsd;
+                data = tmpBinding.valueAsString(&cdata->qmlUnit->header);
+            }
             properties << qMakePair(name, data);
         }
     }

@@ -101,6 +101,8 @@ private slots:
     void static_types_data();
     void static_i18n();
     void static_i18n_data();
+    void dynamic_i18n();
+    void dynamic_i18n_data();
     void static_nestedElements();
     void static_nestedElements_data();
     void dynamic_data();
@@ -341,6 +343,54 @@ void tst_qqmllistmodel::static_i18n()
     delete obj;
 }
 
+void tst_qqmllistmodel::dynamic_i18n_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QVariant>("value");
+    QTest::addColumn<QString>("error");
+
+    QTest::newRow("qsTr")
+        << QString::fromUtf8("ListElement { foo: qsTr(\"test\") }")
+        << QVariant(QString::fromUtf8("test"))
+        << QString("ListElement: cannot use script for property value");
+
+    QTest::newRow("qsTrId")
+        << "ListElement { foo: qsTrId(\"qtn_test\") }"
+        << QVariant(QString("qtn_test"))
+        << QString("ListElement: cannot use script for property value");
+}
+
+void tst_qqmllistmodel::dynamic_i18n()
+{
+    QFETCH(QString, qml);
+    QFETCH(QVariant, value);
+    QFETCH(QString, error);
+
+    qml = "import QtQuick 2.0\nItem { property variant test: model.get(0).foo; ListModel { id: model; " + qml + " } }";
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(qml.toUtf8(),
+                      QUrl::fromLocalFile(QString("dummy.qml")));
+
+    if (!error.isEmpty()) {
+        QVERIFY(component.isError());
+        QCOMPARE(component.errors().at(0).description(), error);
+        return;
+    }
+
+    QVERIFY(!component.isError());
+
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+
+    QVariant actual = obj->property("test");
+
+    QCOMPARE(actual, value);
+    QCOMPARE(actual.toString(), value.toString());
+
+    delete obj;
+}
 void tst_qqmllistmodel::static_nestedElements()
 {
     QFETCH(int, elementCount);

@@ -2325,6 +2325,10 @@ bool QQmlListModelParser::compileProperty(const QV4::CompiledData::QmlUnit *qmlU
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             d += char(Boolean);
             d += char(binding->valueAsBoolean());
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Translation
+                   || binding->type == QV4::CompiledData::Binding::Type_TranslationById) {
+            error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
+            return false;
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
             QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
             if (definesEmptyList(scriptStr)) {
