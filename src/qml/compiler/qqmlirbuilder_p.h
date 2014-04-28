@@ -231,7 +231,7 @@ struct Function
     Function *next;
 };
 
-struct Q_QML_EXPORT CompiledFunctionOrExpression
+struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
         : node(0)
