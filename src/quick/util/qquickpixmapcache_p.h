@@ -78,6 +78,7 @@ public:
     QQuickPixmap();
     QQuickPixmap(QQmlEngine *, const QUrl &);
     QQuickPixmap(QQmlEngine *, const QUrl &, const QSize &);
+    QQuickPixmap(const QUrl &, const QImage &image);
     ~QQuickPixmap();
 
     enum Status { Null, Ready, Error, Loading };

@@ -43,6 +43,7 @@
 #define QQUICKITEM_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qquickitemgrabresult.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlcomponent.h>
 
@@ -51,6 +52,7 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
 #include <QtGui/qaccessible.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -92,6 +94,7 @@ class QTouchEvent;
 class QSGNode;
 class QSGTransformNode;
 class QSGTextureProvider;
+class QQuickItemGrabResult;
 
 class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 {
@@ -309,6 +312,10 @@ public:
     void ungrabTouchPoints();
     bool keepTouchGrab() const;
     void setKeepTouchGrab(bool);
+
+    // implemented in qquickitemgrabresult.cpp
+    Q_REVISION(4) Q_INVOKABLE bool grabToImage(const QJSValue &callback, const QSize &targetSize = QSize());
+    QSharedPointer<QQuickItemGrabResult> grabToImage(const QSize &targetSize = QSize());
 
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
 

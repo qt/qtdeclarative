@@ -1084,6 +1084,12 @@ QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QSize &siz
     load(engine, url, size);
 }
 
+QQuickPixmap::QQuickPixmap(const QUrl &url, const QImage &image)
+{
+    d = new QQuickPixmapData(this, url, new QQuickDefaultTextureFactory(image), image.size(), QSize());
+    d->addToCache();
+}
+
 QQuickPixmap::~QQuickPixmap()
 {
     if (d) {

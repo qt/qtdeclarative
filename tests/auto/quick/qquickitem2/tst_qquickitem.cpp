@@ -117,6 +117,8 @@ private slots:
     void contains();
     void childAt();
 
+    void grab();
+
 private:
     QQmlEngine engine;
     bool qt_tab_all_widgets() {
@@ -2526,6 +2528,41 @@ void tst_QQuickItem::childAt()
     QCOMPARE(parent.childAt(25, 200), &child3);
     QCOMPARE(parent.childAt(0, 150), static_cast<QQuickItem *>(0));
     QCOMPARE(parent.childAt(300, 300), static_cast<QQuickItem *>(0));
+}
+
+void tst_QQuickItem::grab()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("grabToImage.qml"));
+    view.show();
+    QTest::qWaitForWindowExposed(&view);
+
+    QQuickItem *root = qobject_cast<QQuickItem *>(view.rootObject());
+    QVERIFY(root);
+    QQuickItem *item = root->findChild<QQuickItem *>("myItem");
+    QVERIFY(item);
+
+    { // Default size (item is 100x100)
+        QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
+        QSignalSpy spy(result.data(), SIGNAL(ready()));
+        QTRY_VERIFY(spy.size() > 0);
+        QVERIFY(!result->url().isEmpty());
+        QImage image = result->image();
+        QCOMPARE(image.pixel(0, 0), qRgb(255, 0, 0));
+        QCOMPARE(image.pixel(99, 99), qRgb(0, 0, 255));
+    }
+
+    { // Smaller size
+        QSharedPointer<QQuickItemGrabResult> result = item->grabToImage(QSize(50, 50));
+        QVERIFY(!result.isNull());
+        QSignalSpy spy(result.data(), SIGNAL(ready()));
+        QTRY_VERIFY(spy.size() > 0);
+        QVERIFY(!result->url().isEmpty());
+        QImage image = result->image();
+        QCOMPARE(image.pixel(0, 0), qRgb(255, 0, 0));
+        QCOMPARE(image.pixel(49, 49), qRgb(0, 0, 255));
+    }
+
 }
 
 
