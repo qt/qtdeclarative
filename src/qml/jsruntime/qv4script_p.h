@@ -56,7 +56,16 @@ namespace QV4 {
 struct ExecutionContext;
 
 struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
-    V4_OBJECT
+    struct Data : FunctionObject::Data {
+        Object *qml;
+        CallContext *qmlContext;
+    };
+    struct {
+        Object *qml;
+        CallContext *qmlContext;
+    } __data;
+
+    V4_OBJECT_NEW
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
@@ -65,13 +74,12 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m, ExecutionEngine *e);
 
-    CallContext *context() const { return qmlContext; }
+    CallContext *context() const { return d()->qmlContext; }
 
-    static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction, const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
+    static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
+                                                                  const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
 private:
-    Object *qml;
-    CallContext *qmlContext;
 };
 
 struct Q_QML_EXPORT Script {

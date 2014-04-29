@@ -63,9 +63,9 @@ using namespace QV4;
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
     : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
-    , qml(qml)
-    , qmlContext(0)
 {
+    d()->qml = qml;
+
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
@@ -79,15 +79,15 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
-    qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
+    d()->qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
     scope->engine->popContext();
 }
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
     : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
-    , qml(qml)
-    , qmlContext(0)
 {
+    d()->qml = qml;
+
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
@@ -98,7 +98,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
-    qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
+    d()->qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
     scope->engine->popContext();
 }
 
@@ -112,7 +112,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     if (!This->function())
         return QV4::Encode::undefined();
 
-    CallContext *ctx = This->qmlContext;
+    CallContext *ctx = This->d()->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
     ScopedValue result(scope, This->function()->code(ctx, This->function()->codeData));
@@ -124,11 +124,11 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
 {
     QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
-    if (wrapper->qml)
-        wrapper->qml->mark(e);
+    if (wrapper->d()->qml)
+        wrapper->d()->qml->mark(e);
     FunctionObject::markObjects(m, e);
-    if (wrapper->qmlContext)
-        wrapper->qmlContext->mark(e);
+    if (wrapper->d()->qmlContext)
+        wrapper->d()->qmlContext->mark(e);
 }
 
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
@@ -165,20 +165,27 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
 
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 
-struct CompilationUnitHolder : public QV4::Object
+struct CompilationUnitHolder : public Object
 {
-    V4_OBJECT
+    struct Data : Object::Data {
+        QV4::CompiledData::CompilationUnit *unit;
+    };
+    struct {
+        QV4::CompiledData::CompilationUnit *unit;
+    } __data;
+
+    V4_OBJECT_NEW
 
     CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
         : Object(engine)
-        , unit(unit)
     {
-        unit->ref();
+        d()->unit = unit;
+        d()->unit->ref();
         setVTable(staticVTable());
     }
     ~CompilationUnitHolder()
     {
-        unit->deref();
+        d()->unit->deref();
     }
 
     static void destroy(Managed *that)
@@ -186,7 +193,6 @@ struct CompilationUnitHolder : public QV4::Object
         static_cast<CompilationUnitHolder*>(that)->~CompilationUnitHolder();
     }
 
-    QV4::CompiledData::CompilationUnit *unit;
 };
 
 DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
