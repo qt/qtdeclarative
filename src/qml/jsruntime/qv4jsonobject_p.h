@@ -52,7 +52,7 @@ namespace QV4 {
 
 struct JsonObject : Object {
     Q_MANAGED_TYPE(JsonObject)
-    V4_OBJECT
+    V4_OBJECT_NEW
 private:
     typedef QSet<QV4::Object *> V4ObjectSet;
 public:

@@ -50,7 +50,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     EvalFunction(ExecutionContext *scope);
 
     ReturnedValue evalCall(CallData *callData, bool directCall);
