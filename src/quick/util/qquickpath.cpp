@@ -320,8 +320,6 @@ void QQuickPath::endpoint(QList<AttributePoint> &attributePoints, const QString 
     }
 }
 
-static QString percentString(QLatin1String("_qfx_percent"));
-
 void QQuickPath::processPath()
 {
     Q_D(QQuickPath);
@@ -357,6 +355,8 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
     qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
     qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
     path.moveTo(startX, startY);
+
+    const QString percentString = QStringLiteral("_qfx_percent");
 
     bool usesPercent = false;
     int index = 0;
