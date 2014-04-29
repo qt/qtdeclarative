@@ -85,9 +85,9 @@ StringObject::StringObject(InternalClass *ic)
     Scope scope(engine());
     ScopedObject protectThis(scope, this);
 
-    value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
+    d()->value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
 
-    tmpProperty.value = Primitive::undefinedValue();
+    d()->tmpProperty.value = Primitive::undefinedValue();
 
     defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
@@ -100,21 +100,21 @@ StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
 
-    value = *val;
+    d()->value = *val;
 
-    tmpProperty.value = Primitive::undefinedValue();
+    d()->tmpProperty.value = Primitive::undefinedValue();
 
-    assert(value.isString());
-    defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(value.stringValue()->toQString().length()));
+    assert(d()->value.isString());
+    defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(d()->value.stringValue()->toQString().length()));
 }
 
 Property *StringObject::getIndex(uint index) const
 {
-    QString str = value.stringValue()->toQString();
+    QString str = d()->value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    tmpProperty.value = Encode(internalClass()->engine->newString(str.mid(index, 1)));
-    return &tmpProperty;
+    d()->tmpProperty.value = Encode(internalClass()->engine->newString(str.mid(index, 1)));
+    return &d()->tmpProperty;
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
@@ -127,7 +127,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
         return false;
     }
 
-    if (index < static_cast<uint>(o->value.stringValue()->toQString().length())) {
+    if (index < static_cast<uint>(o->d()->value.stringValue()->toQString().length())) {
         if (v4->currentContext()->strictMode)
             v4->currentContext()->throwTypeError();
         return false;
@@ -139,7 +139,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef nam
 {
     name = (String *)0;
     StringObject *s = static_cast<StringObject *>(m);
-    uint slen = s->value.stringValue()->toQString().length();
+    uint slen = s->d()->value.stringValue()->toQString().length();
     if (it->arrayIndex <= slen) {
         while (it->arrayIndex < slen) {
             *index = it->arrayIndex;
@@ -166,8 +166,8 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRef nam
 void StringObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     StringObject *o = static_cast<StringObject *>(that);
-    o->value.stringValue()->mark(e);
-    o->tmpProperty.value.mark(e);
+    o->d()->value.stringValue()->mark(e);
+    o->d()->tmpProperty.value.mark(e);
     Object::markObjects(that, e);
 }
 
@@ -242,7 +242,7 @@ static QString getThisString(ExecutionContext *ctx)
     if (t->isString())
         return t->stringValue()->toQString();
     if (StringObject *thisString = t->asStringObject())
-        return thisString->value.stringValue()->toQString();
+        return thisString->d()->value.stringValue()->toQString();
     if (t->isUndefined() || t->isNull()) {
         ctx->throwTypeError();
         return QString();
@@ -258,7 +258,7 @@ ReturnedValue StringPrototype::method_toString(CallContext *context)
     StringObject *o = context->callData->thisObject.asStringObject();
     if (!o)
         return context->throwTypeError();
-    return o->value.asReturnedValue();
+    return o->d()->value.asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_charAt(CallContext *context)
@@ -492,7 +492,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->callData->thisObject.asStringObject())
-        string = thisString->value.stringValue()->toQString();
+        string = thisString->d()->value.stringValue()->toQString();
     else
         string = ctx->callData->thisObject.toString(ctx)->toQString();
 
@@ -526,7 +526,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
                 break;
             }
             nMatchOffsets += re->captureCount() * 2;
-            if (!regExp->global)
+            if (!regExp->d()->global)
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }

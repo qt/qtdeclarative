@@ -50,11 +50,18 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct StringObject: Object {
-    V4_OBJECT
+    struct Data : Object::Data {
+        Value value;
+        // ### get rid of tmpProperty
+        mutable Property tmpProperty;
+    };
+    struct {
+        Value value;
+        mutable Property tmpProperty;
+    } __data;
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(StringObject)
 
-    Value value;
-    mutable Property tmpProperty;
     StringObject(ExecutionEngine *engine, const ValueRef value);
 
     Property *getIndex(uint index) const;
@@ -69,7 +76,7 @@ protected:
 
 struct StringCtor: FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     StringCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
