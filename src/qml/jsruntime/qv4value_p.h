@@ -241,8 +241,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     static inline bool bothDouble(Value a, Value b) {
         return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
     }
-    double doubleValue() const { return dbl; }
-    void setDouble(double d) { dbl = d; }
+    double doubleValue() const { Q_ASSERT(isDouble()); return dbl; }
+    void setDouble(double d) { dbl = d; Q_ASSERT(isDouble()); }
     bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
     inline bool isString() const;
