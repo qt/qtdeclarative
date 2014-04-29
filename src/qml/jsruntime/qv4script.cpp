@@ -69,7 +69,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    data.function = f;
+    d()->function = f;
     if (function())
         function()->compilationUnit->ref();
     managedData()->needsActivation = function() ? function()->needsActivation() : false;

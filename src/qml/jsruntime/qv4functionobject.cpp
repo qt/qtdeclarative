@@ -77,16 +77,16 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(scope->engine->functionClass)
 {
-    data.scope = scope;
-    data.function = 0;
+    d()->scope = scope;
+    d()->function = 0;
     init(name, createProto);
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
     : Object(scope->engine->functionClass)
 {
-    data.scope = scope;
-    data.function = 0;
+    d()->scope = scope;
+    d()->function = 0;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -97,8 +97,8 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
 FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
     : Object(scope->engine->functionClass)
 {
-    data.scope = scope;
-    data.function = 0;
+    d()->scope = scope;
+    d()->function = 0;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -109,8 +109,8 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name
 FunctionObject::FunctionObject(InternalClass *ic)
     : Object(ic)
 {
-    data.scope = ic->engine->rootContext;
-    data.function = 0;
+    d()->scope = ic->engine->rootContext;
+    d()->function = 0;
 
     managedData()->needsActivation = false;
     managedData()->strictMode = false;
@@ -439,8 +439,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    data.function = function;
-    data.function->compilationUnit->ref();
+    d()->function = function;
+    d()->function->compilationUnit->ref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 
@@ -558,7 +558,7 @@ DEFINE_OBJECT_VTABLE(BuiltinFunction);
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
 {
-    data.code = code;
+    d()->code = code;
     setVTable(staticVTable());
 }
 
@@ -583,7 +583,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    return f->data.code(&ctx);
+    return f->d()->code(&ctx);
 }
 
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
@@ -602,7 +602,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    return f->data.code(&ctx, f->data.index);
+    return f->d()->code(&ctx, f->d()->index);
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
@@ -612,9 +612,9 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
 {
-    data.target = target;
-    data.boundThis = boundThis;
-    data.boundArgs = boundArgs;
+    d()->target = target;
+    d()->boundThis = boundThis;
+    d()->boundArgs = boundArgs;
 
     setVTable(staticVTable());
     setSubtype(FunctionObject::BoundFunction);

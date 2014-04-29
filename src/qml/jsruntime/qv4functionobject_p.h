@@ -94,7 +94,17 @@ struct InternalClass;
 struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
-    V4_OBJECT
+    struct Data : Object::Data {
+        ExecutionContext *scope;
+        Function *function;
+
+    };
+    struct {
+        ExecutionContext *scope;
+        Function *function;
+
+    } __data;
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(FunctionObject)
     enum {
         IsFunctionObject = true
@@ -111,16 +121,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
         Index_ProtoConstructor = 0
     };
 
-    struct Data {
-        ExecutionContext *scope;
-        Function *function;
 
-    };
-    Data data;
-
-
-    ExecutionContext *scope() { return data.scope; }
-    Function *function() { return data.function; }
+    ExecutionContext *scope() { return d()->scope; }
+    Function *function() { return d()->function; }
 
     ReturnedValue name();
     unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
@@ -167,7 +170,7 @@ DEFINE_REF(FunctionObject, Object);
 
 struct FunctionCtor: FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     FunctionCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);
@@ -186,11 +189,13 @@ struct FunctionPrototype: FunctionObject
 };
 
 struct BuiltinFunction: FunctionObject {
-    V4_OBJECT
-    struct Data {
+    struct Data : FunctionObject::Data {
         ReturnedValue (*code)(CallContext *);
     };
-    Data data;
+    struct {
+        ReturnedValue (*code)(CallContext *);
+    } __data;
+    V4_OBJECT_NEW
 
     BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
 
@@ -200,19 +205,21 @@ struct BuiltinFunction: FunctionObject {
 
 struct IndexedBuiltinFunction: FunctionObject
 {
-    V4_OBJECT
-
-    struct Data {
-        ReturnedValue (*code)(CallContext *ctx, uint index);
+    struct Data : FunctionObject::Data {
+        ReturnedValue (*code)(CallContext *, uint index);
         uint index;
     };
-    Data data;
+    struct {
+        ReturnedValue (*code)(CallContext *, uint index);
+        uint index;
+    } __data;
+    V4_OBJECT_NEW
 
     IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
         : FunctionObject(scope)
     {
-        data.code = code;
-        data.index = index;
+        d()->code = code;
+        d()->index = index;
         setVTable(staticVTable());
     }
 
@@ -226,7 +233,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
 
 struct SimpleScriptFunction: FunctionObject {
-    V4_OBJECT
+    V4_OBJECT_NEW
     SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -236,7 +243,7 @@ struct SimpleScriptFunction: FunctionObject {
 };
 
 struct ScriptFunction: SimpleScriptFunction {
-    V4_OBJECT
+    V4_OBJECT_NEW
     ScriptFunction(ExecutionContext *scope, Function *function);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -245,22 +252,24 @@ struct ScriptFunction: SimpleScriptFunction {
 
 
 struct BoundFunction: FunctionObject {
-    V4_OBJECT
-
-    struct Data {
+    struct Data : FunctionObject::Data {
         FunctionObject *target;
         Value boundThis;
         Members boundArgs;
     };
-    Data data;
+    struct {
+        FunctionObject *target;
+        Value boundThis;
+        Members boundArgs;
+    } __data;
+    V4_OBJECT_NEW
 
-    FunctionObject *target() { return data.target; }
-    Value boundThis() const { return data.boundThis; }
-    Members boundArgs() const { return data.boundArgs; }
+    FunctionObject *target() { return d()->target; }
+    Value boundThis() const { return d()->boundThis; }
+    Members boundArgs() const { return d()->boundArgs; }
 
     BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs);
     ~BoundFunction() {}
-
 
     static ReturnedValue construct(Managed *, CallData *d);
     static ReturnedValue call(Managed *that, CallData *dd);
