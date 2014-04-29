@@ -49,8 +49,8 @@ DEFINE_OBJECT_VTABLE(ArgumentsObject);
 ArgumentsObject::ArgumentsObject(CallContext *context)
     : Object(context->strictMode ? context->engine->strictArgumentsObjectClass : context->engine->argumentsObjectClass)
 {
-    data.context = context;
-    data.fullyCreated = false;
+    d()->context = context;
+    d()->fullyCreated = false;
 
     ExecutionEngine *v4 = context->engine;
     Scope scope(v4);
@@ -68,7 +68,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
 
         arrayReserve(context->callData->argc);
         arrayPut(0, context->callData->args, context->callData->argc);
-        data.fullyCreated = true;
+        d()->fullyCreated = true;
     } else {
         setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == internalClass()->find(context->engine->id_callee));
@@ -98,7 +98,7 @@ void ArgumentsObject::fullyCreate()
     for (uint i = numAccessors; i < argCount; ++i)
         setArrayAttributes(i, Attr_Data);
 
-    data.fullyCreated = true;
+    d()->fullyCreated = true;
 }
 
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)

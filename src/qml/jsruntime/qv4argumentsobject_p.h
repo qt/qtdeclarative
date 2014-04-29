@@ -50,18 +50,20 @@ namespace QV4 {
 
 struct ArgumentsGetterFunction: FunctionObject
 {
-    V4_OBJECT
-    struct Data {
+    struct Data : FunctionObject::Data {
         uint index;
     };
-    Data data;
+    struct {
+        uint index;
+    } __data;
+    V4_OBJECT_NEW
 
-    uint index() const { return data.index; }
+    uint index() const { return d()->index; }
 
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope)
     {
-        data.index = index;
+        d()->index = index;
         setVTable(staticVTable());
     }
 
@@ -70,18 +72,20 @@ struct ArgumentsGetterFunction: FunctionObject
 
 struct ArgumentsSetterFunction: FunctionObject
 {
-    V4_OBJECT
-    struct Data {
+    struct Data : FunctionObject::Data {
         uint index;
     };
-    Data data;
+    struct {
+        uint index;
+    } __data;
+    V4_OBJECT_NEW
 
-    uint index() const { return data.index; }
+    uint index() const { return d()->index; }
 
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope)
     {
-        data.index = index;
+        d()->index = index;
         setVTable(staticVTable());
     }
 
@@ -90,18 +94,22 @@ struct ArgumentsSetterFunction: FunctionObject
 
 
 struct ArgumentsObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(ArgumentsObject)
-    struct Data {
+    struct Data : Object::Data {
         CallContext *context;
         bool fullyCreated;
         Members mappedArguments;
     };
-    Data data;
+    struct {
+        CallContext *context;
+        bool fullyCreated;
+        Members mappedArguments;
+    } __data;
+    V4_OBJECT_NEW
+    Q_MANAGED_TYPE(ArgumentsObject)
 
-    CallContext *context() const { return data.context; }
-    bool fullyCreated() const { return data.fullyCreated; }
-    Members mappedArguments() const { return data.mappedArguments; }
+    CallContext *context() const { return d()->context; }
+    bool fullyCreated() const { return d()->fullyCreated; }
+    Members &mappedArguments() { return d()->mappedArguments; }
 
     ArgumentsObject(CallContext *context);
 
