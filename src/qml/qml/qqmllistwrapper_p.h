@@ -69,7 +69,20 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
-    V4_OBJECT
+    struct Data : Object::Data {
+        QV8Engine *v8;
+        QPointer<QObject> object;
+        QQmlListProperty<QObject> property;
+        int propertyType;
+    };
+    struct {
+        QV8Engine *v8;
+        QPointer<QObject> object;
+        QQmlListProperty<QObject> property;
+        int propertyType;
+    } __data;
+
+    V4_OBJECT_NEW
 protected:
     QmlListWrapper(QV8Engine *engine);
     ~QmlListWrapper();
@@ -86,13 +99,6 @@ public:
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
     static void destroy(Managed *that);
-
-private:
-    QV8Engine *v8;
-    QPointer<QObject> object;
-    QQmlListProperty<QObject> property;
-    int propertyType;
-
 };
 
 }
