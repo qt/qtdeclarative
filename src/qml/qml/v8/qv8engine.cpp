@@ -398,7 +398,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
     if (value->isString())
         return value->stringValue()->toQString();
     if (QQmlLocaleData *ld = value->as<QQmlLocaleData>())
-        return ld->locale;
+        return ld->d()->locale;
     if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!

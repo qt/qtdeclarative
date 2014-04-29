@@ -131,7 +131,14 @@ private:
 
 class QQmlLocaleData : public QV4::Object
 {
-    V4_OBJECT
+    struct Data : QV4::Object::Data {
+        QLocale locale;
+    };
+    struct {
+        QLocale locale;
+    } __data;
+
+    V4_OBJECT_NEW
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -139,7 +146,6 @@ public:
         setVTable(staticVTable());
     }
 
-    QLocale locale;
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {
         QQmlLocaleData *thisObject = ctx->callData->thisObject.asObject()->as<QQmlLocaleData>();
@@ -147,7 +153,7 @@ public:
             ctx->throwTypeError();
             return 0;
         }
-        return &thisObject->locale;
+        return &thisObject->d()->locale;
     }
 
     static QV4::ReturnedValue method_currencySymbol(QV4::CallContext *ctx);

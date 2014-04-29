@@ -109,16 +109,16 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::CallContext *ct
     if (ctx->callData->argc == 2) {
         if (ctx->callData->args[1].isString()) {
             QString format = ctx->callData->args[1].stringValue()->toQString();
-            formattedDt = r->locale.toString(dt, format);
+            formattedDt = r->d()->locale.toString(dt, format);
         } else if (ctx->callData->args[1].isNumber()) {
             quint32 intFormat = ctx->callData->args[1].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            formattedDt = r->locale.toString(dt, format);
+            formattedDt = r->d()->locale.toString(dt, format);
         } else {
             V4THROW_ERROR("Locale: Date.toLocaleString(): Invalid datetime format");
         }
     } else {
-         formattedDt = r->locale.toString(dt, enumFormat);
+         formattedDt = r->d()->locale.toString(dt, enumFormat);
     }
 
     return ctx->engine->newString(formattedDt)->asReturnedValue();
@@ -154,16 +154,16 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleTimeString(QV4::CallContext
     if (ctx->callData->argc == 2) {
         if (ctx->callData->args[1].isString()) {
             QString format = ctx->callData->args[1].stringValue()->toQString();
-            formattedTime = r->locale.toString(time, format);
+            formattedTime = r->d()->locale.toString(time, format);
         } else if (ctx->callData->args[1].isNumber()) {
             quint32 intFormat = ctx->callData->args[1].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            formattedTime = r->locale.toString(time, format);
+            formattedTime = r->d()->locale.toString(time, format);
         } else {
             V4THROW_ERROR("Locale: Date.toLocaleTimeString(): Invalid time format");
         }
     } else {
-         formattedTime = r->locale.toString(time, enumFormat);
+         formattedTime = r->d()->locale.toString(time, enumFormat);
     }
 
     return ctx->engine->newString(formattedTime)->asReturnedValue();
@@ -199,16 +199,16 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleDateString(QV4::CallContext
     if (ctx->callData->argc == 2) {
         if (ctx->callData->args[1].isString()) {
             QString format = ctx->callData->args[1].stringValue()->toQString();
-            formattedDate = r->locale.toString(date, format);
+            formattedDate = r->d()->locale.toString(date, format);
         } else if (ctx->callData->args[1].isNumber()) {
             quint32 intFormat = ctx->callData->args[1].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            formattedDate = r->locale.toString(date, format);
+            formattedDate = r->d()->locale.toString(date, format);
         } else {
             V4THROW_ERROR("Locale: Date.loLocaleDateString(): Invalid date format");
         }
     } else {
-         formattedDate = r->locale.toString(date, enumFormat);
+         formattedDate = r->d()->locale.toString(date, enumFormat);
     }
 
     return ctx->engine->newString(formattedDate)->asReturnedValue();
@@ -237,16 +237,16 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::CallContext *
     if (ctx->callData->argc == 3) {
         if (ctx->callData->args[2].isString()) {
             QString format = ctx->callData->args[2].stringValue()->toQString();
-            dt = r->locale.toDateTime(dateString, format);
+            dt = r->d()->locale.toDateTime(dateString, format);
         } else if (ctx->callData->args[2].isNumber()) {
             quint32 intFormat = ctx->callData->args[2].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            dt = r->locale.toDateTime(dateString, format);
+            dt = r->d()->locale.toDateTime(dateString, format);
         } else {
             V4THROW_ERROR("Locale: Date.fromLocaleString(): Invalid datetime format");
         }
     } else {
-        dt = r->locale.toDateTime(dateString, enumFormat);
+        dt = r->d()->locale.toDateTime(dateString, enumFormat);
     }
 
     return QV4::Encode(engine->newDateObject(dt));
@@ -278,16 +278,16 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::CallConte
     if (ctx->callData->argc == 3) {
         if (ctx->callData->args[2].isString()) {
             QString format = ctx->callData->args[2].stringValue()->toQString();
-            tm = r->locale.toTime(dateString, format);
+            tm = r->d()->locale.toTime(dateString, format);
         } else if (ctx->callData->args[2].isNumber()) {
             quint32 intFormat = ctx->callData->args[2].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            tm = r->locale.toTime(dateString, format);
+            tm = r->d()->locale.toTime(dateString, format);
         } else {
             V4THROW_ERROR("Locale: Date.fromLocaleTimeString(): Invalid datetime format");
         }
     } else {
-        tm = r->locale.toTime(dateString, enumFormat);
+        tm = r->d()->locale.toTime(dateString, enumFormat);
     }
 
     QDateTime dt;
@@ -323,16 +323,16 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::CallConte
     if (ctx->callData->argc == 3) {
         if (ctx->callData->args[2].isString()) {
             QString format = ctx->callData->args[2].stringValue()->toQString();
-            dt = r->locale.toDate(dateString, format);
+            dt = r->d()->locale.toDate(dateString, format);
         } else if (ctx->callData->args[2].isNumber()) {
             quint32 intFormat = ctx->callData->args[2].toNumber();
             QLocale::FormatType format = QLocale::FormatType(intFormat);
-            dt = r->locale.toDate(dateString, format);
+            dt = r->d()->locale.toDate(dateString, format);
         } else {
             V4THROW_ERROR("Locale: Date.fromLocaleDateString(): Invalid datetime format");
         }
     } else {
-        dt = r->locale.toDate(dateString, enumFormat);
+        dt = r->d()->locale.toDate(dateString, enumFormat);
     }
 
     return QV4::Encode(engine->newDateObject(QDateTime(dt)));
@@ -393,7 +393,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(QV4::CallContext *
          prec = ctx->callData->args[2].toInt32();
     }
 
-    return ctx->engine->newString(r->locale.toString(number, (char)format, prec))->asReturnedValue();
+    return ctx->engine->newString(r->d()->locale.toString(number, (char)format, prec))->asReturnedValue();
 }
 
 QV4::ReturnedValue QQmlNumberExtension::method_toLocaleCurrencyString(QV4::CallContext *ctx)
@@ -423,7 +423,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleCurrencyString(QV4::CallC
         symbol = ctx->callData->args[1].toQStringNoThrow();
     }
 
-    return ctx->engine->newString(r->locale.toCurrencyString(number, symbol))->asReturnedValue();
+    return ctx->engine->newString(r->d()->locale.toCurrencyString(number, symbol))->asReturnedValue();
 }
 
 QV4::ReturnedValue QQmlNumberExtension::method_fromLocaleString(QV4::CallContext *ctx)
@@ -441,7 +441,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_fromLocaleString(QV4::CallContext
             V4THROW_ERROR("Locale: Number.fromLocaleString(): Invalid arguments");
 
         GET_LOCALE_DATA_RESOURCE(ctx->callData->args[0]);
-        locale = r->locale;
+        locale = r->d()->locale;
 
         numberIdx = 1;
     }
@@ -815,7 +815,7 @@ QV4::ReturnedValue QQmlLocale::wrap(QV8Engine *engine, const QLocale &locale)
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4::Scoped<QQmlLocaleData> wrapper(scope, new (v4->memoryManager) QQmlLocaleData(v4));
-    wrapper->locale = locale;
+    wrapper->d()->locale = locale;
     QV4::ScopedObject p(scope, d->prototype.value());
     wrapper->setPrototype(p.getPointer());
     return wrapper.asReturnedValue();
