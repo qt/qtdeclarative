@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -127,7 +127,7 @@ Rectangle {
                     "value": "Qt Quick is a collection of technologies that are designed to help developers create the kind of intuitive, "+
                     "modern, fluid user interfaces that are increasingly used on mobile phones, media players, set-top boxes and other "+
                     "portable devices."+texteditelement.newline+
-                    "Qt Quick consists of a rich set of user interface elements, a declarative language for describing user interfaces "+
+                    "Qt Quick consists of a rich set of user interface elements, a language for describing user interfaces "+
                     "and a language runtime.\n"+
                     "A collection of C++ APIs is used to integrate these high level features with classic Qt applications."});
                     textmodel.append({ "name": "Short",
@@ -140,7 +140,7 @@ Rectangle {
                     "value": "<b>Qt Quick</b> is a collection of technologies that are designed to help developers create the kind of <i>intuitive, "+
                     "modern, fluid</i> user interfaces that are increasingly used on mobile phones, media players, set-top boxes and other "+
                     "portable devices.<br>"+
-                    "Qt Quick consists of a rich set of user interface elements, a declarative language for describing user interfaces "+
+                    "Qt Quick consists of a rich set of user interface elements, a language for describing user interfaces "+
                     "and a language runtime. "+
                     "A collection of C++ APIs is used to integrate these high level features with classic Qt applications."});
                     textmodel.append({ "name": "Links",

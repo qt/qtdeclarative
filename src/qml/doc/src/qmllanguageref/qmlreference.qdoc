@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -28,14 +28,14 @@
 /*!
 \page qmlreference.html
 \title The QML Reference
-\brief A declarative language for application development
+\brief A multi-paradigm language for application development
 
-QML is a declarative language for creating highly dynamic applications. With
+QML is a multi-paradigm language for creating highly dynamic applications. With
 QML, application building blocks such as UI components are \e declared and
-various properties set to define the application behavior. When coupled with
-JavaScript, application behavior becomes scriptable. In addition, QML heavily
-uses Qt, which allows types and other Qt features to be accessible directly from
-QML applications.
+various properties set to define the application behavior. Application behavior
+can be further scripted through JavaScript, which is a subset of the language.
+In addition, QML heavily uses Qt, which allows types and other Qt features to
+be accessible directly from QML applications.
 
 This reference guide describes the features of  the QML language. Many of the
 QML types in the guide originate from the \l{Qt QML} or \l{Qt Quick}
