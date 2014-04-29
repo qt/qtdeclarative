@@ -366,7 +366,7 @@ protected:
 };
 
 struct ArrayObject: Object {
-    V4_OBJECT
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(ArrayObject)
     enum {
         LengthPropertyIndex = 0
