@@ -69,8 +69,8 @@ public:
     String *insertString(const QString &s);
 
     Identifier *identifier(const String *str) {
-        if (str->stringData()->identifier)
-            return str->stringData()->identifier;
+        if (str->d()->identifier)
+            return str->d()->identifier;
         return identifierImpl(str);
     }
 

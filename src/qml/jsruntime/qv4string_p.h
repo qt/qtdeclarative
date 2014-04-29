@@ -53,8 +53,34 @@ struct Identifier;
 
 struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
+    struct Data : Managed::Data {
+        union {
+            mutable QStringData *text;
+            mutable String *left;
+        };
+        union {
+            mutable Identifier *identifier;
+            mutable String *right;
+        };
+        mutable uint stringHash;
+        mutable uint largestSubLength;
+        uint len;
+    };
+    struct {
+        union {
+            mutable QStringData *text;
+            mutable String *left;
+        };
+        union {
+            mutable Identifier *identifier;
+            mutable String *right;
+        };
+        mutable uint stringHash;
+        mutable uint largestSubLength;
+        uint len;
+    } __data;
     // ### FIXME: Should this be a V4_OBJECT
-    V4_OBJECT
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(String)
     enum {
         IsString = true
@@ -70,8 +96,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {
-        if (!stringData()->largestSubLength && !stringData()->text->ref.deref())
-            QStringData::deallocate(stringData()->text);
+        if (!d()->largestSubLength && !d()->text->ref.deref())
+            QStringData::deallocate(d()->text);
     }
 
     bool equals(const StringRef other) const;
@@ -80,8 +106,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        Q_ASSERT(!stringData()->largestSubLength);
-        if (stringData()->identifier && stringData()->identifier == other->stringData()->identifier)
+        Q_ASSERT(!d()->largestSubLength);
+        if (d()->identifier && d()->identifier == other->d()->identifier)
             return true;
         if (subtype() >= StringType_UInt && subtype() == other->subtype())
             return true;
@@ -94,10 +120,10 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
 
     inline QString toQString() const {
-        if (stringData()->largestSubLength)
+        if (d()->largestSubLength)
             simplifyString();
-        QStringDataPtr ptr = { stringData()->text };
-        stringData()->text->ref.ref();
+        QStringDataPtr ptr = { d()->text };
+        d()->text->ref.ref();
         return QString(ptr);
     }
 
@@ -106,22 +132,22 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     inline unsigned hashValue() const {
         if (subtype() == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!stringData()->largestSubLength);
+        Q_ASSERT(!d()->largestSubLength);
 
-        return stringData()->stringHash;
+        return d()->stringHash;
     }
     uint asArrayIndex() const {
         if (subtype() == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!stringData()->largestSubLength);
+        Q_ASSERT(!d()->largestSubLength);
         if (subtype() == StringType_ArrayIndex)
-            return stringData()->stringHash;
+            return d()->stringHash;
         return UINT_MAX;
     }
     uint toUInt(bool *ok) const;
 
     void makeIdentifier() const {
-        if (stringData()->identifier)
+        if (d()->identifier)
             return;
         makeIdentifierImpl();
     }
@@ -134,36 +160,18 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     bool startsWithUpper() const {
         const String *l = this;
-        while (l->stringData()->largestSubLength)
-            l = l->stringData()->left;
-        return l->stringData()->text->size && QChar::isUpper(l->stringData()->text->data()[0]);
+        while (l->d()->largestSubLength)
+            l = l->d()->left;
+        return l->d()->text->size && QChar::isUpper(l->d()->text->data()[0]);
     }
     int length() const {
-        Q_ASSERT((stringData()->largestSubLength &&
-                  (stringData()->len == stringData()->left->stringData()->len + stringData()->right->stringData()->len)) ||
-                 stringData()->len == (uint)stringData()->text->size);
-        return stringData()->len;
+        Q_ASSERT((d()->largestSubLength &&
+                  (d()->len == d()->left->d()->len + d()->right->d()->len)) ||
+                 d()->len == (uint)d()->text->size);
+        return d()->len;
     }
 
-    struct Data {
-        union {
-            mutable QStringData *text;
-            mutable String *left;
-        };
-        union {
-            mutable Identifier *identifier;
-            mutable String *right;
-        };
-        mutable uint stringHash;
-        mutable uint largestSubLength;
-        uint len;
-    };
-    Data data;
-
-    const Data *stringData() const { return &data; }
-    Data *stringData() { return &data; }
-
-    Identifier *identifier() const { return stringData()->identifier; }
+    Identifier *identifier() const { return d()->identifier; }
 
 protected:
     static void destroy(Managed *);

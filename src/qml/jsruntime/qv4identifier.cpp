@@ -149,8 +149,8 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(String *str) const
 {
     if (!d)
         return 0;
-    if (str->stringData()->identifier)
-        return lookup(str->stringData()->identifier);
+    if (str->d()->identifier)
+        return lookup(str->d()->identifier);
     return lookup(str->toQString());
 }
 
