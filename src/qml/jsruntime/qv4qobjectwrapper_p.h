@@ -77,13 +77,20 @@ struct QObjectSlotDispatcher;
 
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
-    V4_OBJECT
+    struct Data : QV4::Object::Data {
+        QPointer<QObject> object;
+    };
+    struct {
+        QPointer<QObject> object;
+    } __data;
+
+    V4_OBJECT_NEW
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 
     static void initializeBindings(ExecutionEngine *engine);
 
-    QObject *object() const { return m_object.data(); }
+    QObject *object() const { return d()->object.data(); }
 
     ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
     static ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
@@ -110,8 +117,6 @@ private:
 
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    QPointer<QObject> m_object;
-
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static PropertyAttributes query(const Managed *, StringRef name);
@@ -125,24 +130,31 @@ private:
 
 struct QObjectMethod : public QV4::FunctionObject
 {
-    V4_OBJECT
+    struct Data : QV4::FunctionObject::Data {
+        QPointer<QObject> object;
+        int index;
+        QV4::PersistentValue qmlGlobal;
+    };
+    struct {
+        QPointer<QObject> object;
+        int index;
+        QV4::PersistentValue qmlGlobal;
+    } __data;
+
+    V4_OBJECT_NEW
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
     static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
 
-    int methodIndex() const { return m_index; }
-    QObject *object() const { return m_object.data(); }
+    int methodIndex() const { return d()->index; }
+    QObject *object() const { return d()->object.data(); }
 
 private:
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
 
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
     QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const ValueRef args, int argc);
-
-    QPointer<QObject> m_object;
-    int m_index;
-    QV4::PersistentValue m_qmlGlobal;
 
     static ReturnedValue call(Managed *, CallData *callData);
 
@@ -156,16 +168,23 @@ private:
 
 struct QmlSignalHandler : public QV4::Object
 {
-    V4_OBJECT
+    struct Data : QV4::Object::Data {
+        QPointer<QObject> object;
+        int signalIndex;
+    };
+    struct {
+        QPointer<QObject> object;
+        int signalIndex;
+    } __data;
+
+    V4_OBJECT_NEW
 
     QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex);
 
-    int signalIndex() const { return m_signalIndex; }
-    QObject *object() const { return m_object.data(); }
+    int signalIndex() const { return d()->signalIndex; }
+    QObject *object() const { return d()->object.data(); }
 
 private:
-    QPointer<QObject> m_object;
-    int m_signalIndex;
 
     static void destroy(Managed *that)
     {
