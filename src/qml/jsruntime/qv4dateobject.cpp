@@ -647,7 +647,7 @@ DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine->dateClass)
 {
     setVTable(staticVTable());
-    data.value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
+    d()->value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
 
 QDateTime DateObject::toQDateTime() const

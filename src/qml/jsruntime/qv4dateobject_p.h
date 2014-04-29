@@ -52,17 +52,19 @@ class QDateTime;
 namespace QV4 {
 
 struct DateObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(DateObject)
-
-    struct Data {
+    struct Data : Object::Data {
         Value value;
     };
-    Data data;
+    struct {
+        Value value;
+    } __data;
+    V4_OBJECT_NEW
+    Q_MANAGED_TYPE(DateObject)
 
-    Value date() const { return data.value; }
-    Value &date() { return data.value; }
-    void setDate(const ValueRef d) { data.value = d; }
+
+    Value date() const { return d()->value; }
+    Value &date() { return d()->value; }
+    void setDate(const ValueRef date) { d()->value = date; }
 
     DateObject(ExecutionEngine *engine, const ValueRef date)
         : Object(engine->dateClass)
@@ -76,13 +78,13 @@ struct DateObject: Object {
 protected:
     DateObject(InternalClass *ic): Object(ic) {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        data.value = Primitive::fromDouble(qSNaN());
+        d()->value = Primitive::fromDouble(qSNaN());
     }
 };
 
 struct DateCtor: FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     DateCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);
