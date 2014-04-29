@@ -51,7 +51,7 @@ namespace QV4 {
 
 struct NumberCtor: FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     NumberCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);

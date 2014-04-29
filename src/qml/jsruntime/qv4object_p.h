@@ -316,50 +316,52 @@ private:
 };
 
 struct BooleanObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(BooleanObject)
-
-    struct Data {
+    struct Data : Object::Data {
         Value value;
     };
-    Data data;
+    struct {
+        Value value;
+    } __data;
+    V4_OBJECT_NEW
+    Q_MANAGED_TYPE(BooleanObject)
 
-    Value value() const { return data.value; }
+    Value value() const { return d()->value; }
 
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass)
     {
-        data.value = val;
+        d()->value = val;
     }
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic)
     {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        data.value = Encode(false);
+        d()->value = Encode(false);
     }
 };
 
 struct NumberObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(NumberObject)
-
-    struct Data {
+    struct Data : Object::Data {
         Value value;
     };
-    Data data;
+    struct {
+        Value value;
+    } __data;
+    V4_OBJECT_NEW
+    Q_MANAGED_TYPE(NumberObject)
 
-    Value value() const { return data.value; }
+    Value value() const { return d()->value; }
 
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
-        data.value = val;
+        d()->value = val;
     }
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
         Q_ASSERT(internalClass()->vtable == staticVTable());
-        data.value = Encode((int)0);
+        d()->value = Encode((int)0);
     }
 };
 
