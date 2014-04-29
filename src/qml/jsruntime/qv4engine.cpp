@@ -930,7 +930,7 @@ ReturnedValue ExecutionEngine::throwException(const ValueRef value)
     QV4::Scope scope(this);
     QV4::Scoped<ErrorObject> error(scope, value);
     if (!!error)
-        exceptionStackTrace = error->stackTrace;
+        exceptionStackTrace = error->d()->stackTrace;
     else
         exceptionStackTrace = stackTrace();
 

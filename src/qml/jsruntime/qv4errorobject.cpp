@@ -73,7 +73,6 @@ using namespace QV4;
 
 ErrorObject::ErrorObject(InternalClass *ic)
     : Object(ic)
-    , stack(0)
 {
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
@@ -84,7 +83,6 @@ ErrorObject::ErrorObject(InternalClass *ic)
 
 ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     : Object(ic)
-    , stack(0)
 {
     setSubtype(t);
 
@@ -98,16 +96,15 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     ScopedString s(scope);
     defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
-    stackTrace = ic->engine->stackTrace();
-    if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
-        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
+    d()->stackTrace = ic->engine->stackTrace();
+    if (!d()->stackTrace.isEmpty()) {
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(d()->stackTrace.at(0).source)));
+        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(d()->stackTrace.at(0).line));
     }
 }
 
 ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject::ErrorType t)
     : Object(ic)
-    , stack(0)
 {
     setSubtype(t);
 
@@ -121,16 +118,15 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
     defineDefaultProperty(QStringLiteral("message"), v);
     defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
-    stackTrace = ic->engine->stackTrace();
-    if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
-        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
+    d()->stackTrace = ic->engine->stackTrace();
+    if (!d()->stackTrace.isEmpty()) {
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(d()->stackTrace.at(0).source)));
+        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(d()->stackTrace.at(0).line));
     }
 }
 
 ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
     : Object(ic)
-    , stack(0)
 {
     setSubtype(t);
 
@@ -141,16 +137,16 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
     defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
-    stackTrace = ic->engine->stackTrace();
+    d()->stackTrace = ic->engine->stackTrace();
     StackFrame frame;
     frame.source = fileName;
     frame.line = line;
     frame.column = column;
-    stackTrace.prepend(frame);
+    d()->stackTrace.prepend(frame);
 
-    if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
-        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
+    if (!d()->stackTrace.isEmpty()) {
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(d()->stackTrace.at(0).source)));
+        defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(d()->stackTrace.at(0).line));
     }
 
     ScopedValue v(scope, ic->engine->newString(message));
@@ -163,12 +159,12 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
     Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
     if (!This)
         return ctx->throwTypeError();
-    if (!This->stack) {
+    if (!This->d()->stack) {
         QString trace;
-        for (int i = 0; i < This->stackTrace.count(); ++i) {
+        for (int i = 0; i < This->d()->stackTrace.count(); ++i) {
             if (i > 0)
                 trace += QLatin1Char('\n');
-            const StackFrame &frame = This->stackTrace[i];
+            const StackFrame &frame = This->d()->stackTrace[i];
             trace += frame.function;
             trace += QLatin1Char('@');
             trace += frame.source;
@@ -177,16 +173,16 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
                 trace += QString::number(frame.line);
             }
         }
-        This->stack = ctx->engine->newString(trace)->getPointer();
+        This->d()->stack = ctx->engine->newString(trace)->getPointer();
     }
-    return This->stack->asReturnedValue();
+    return This->d()->stack->asReturnedValue();
 }
 
 void ErrorObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ErrorObject *This = that->asErrorObject();
-    if (This->stack)
-        This->stack->mark(e);
+    if (This->d()->stack)
+        This->d()->stack->mark(e);
     Object::markObjects(that, e);
 }
 

@@ -51,7 +51,16 @@ namespace QV4 {
 struct SyntaxErrorObject;
 
 struct ErrorObject: Object {
-    V4_OBJECT
+    struct Data : Object::Data {
+        StackTrace stackTrace;
+        String *stack;
+    };
+    struct {
+        StackTrace stackTrace;
+        String *stack;
+    } __data;
+
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(ErrorObject)
     enum {
         IsErrorObject = true
@@ -73,9 +82,6 @@ struct ErrorObject: Object {
     ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
-
-    StackTrace stackTrace;
-    String *stack;
 
     static ReturnedValue method_get_stack(CallContext *ctx);
     static void markObjects(Managed *that, ExecutionEngine *e);
@@ -103,7 +109,7 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    V4_OBJECT
+    V4_OBJECT_NEW
     SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
@@ -119,7 +125,7 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, const QString &name);
 
@@ -129,7 +135,8 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
+
     EvalErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -137,7 +144,7 @@ struct EvalErrorCtor: ErrorCtor
 
 struct RangeErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     RangeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -145,7 +152,7 @@ struct RangeErrorCtor: ErrorCtor
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     ReferenceErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -153,7 +160,7 @@ struct ReferenceErrorCtor: ErrorCtor
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     SyntaxErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -161,7 +168,7 @@ struct SyntaxErrorCtor: ErrorCtor
 
 struct TypeErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     TypeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -169,7 +176,7 @@ struct TypeErrorCtor: ErrorCtor
 
 struct URIErrorCtor: ErrorCtor
 {
-    V4_OBJECT
+    V4_OBJECT_NEW
     URIErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
