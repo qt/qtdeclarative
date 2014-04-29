@@ -83,29 +83,31 @@ struct Q_QML_EXPORT ObjectIterator
 };
 
 struct ForEachIteratorObject: Object {
-    V4_OBJECT
-    Q_MANAGED_TYPE(ForeachIteratorObject)
-    struct Data {
-        Data(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags)
-            : it(scratch1, scratch2, o, flags) {}
-        Data(Scope &scope, const ObjectRef o, uint flags)
-            : it (scope, o, flags) {}
+    struct Data : Object::Data {
+        Data(const ObjectRef o, uint flags)
+            : it(workArea, workArea + 1, o, flags) {}
         ObjectIterator it;
+        Value workArea[2];
     };
-    Data data;
+    struct _Data {
+        _Data(const ObjectRef o, uint flags)
+            : it(workArea, workArea + 1, o, flags) {}
+        ObjectIterator it;
+        Value workArea[2];
+    } __data;
+    V4_OBJECT_NEW
+    Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
-        : Object(ctx->engine), data(workArea, workArea + 1,
-                                    o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
+        : Object(ctx->engine)
+        , __data(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
         setVTable(staticVTable());
     }
 
-    ReturnedValue nextPropertyName() { return data.it.nextPropertyNameAsString(); }
+    ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }
 
 protected:
     static void markObjects(Managed *that, ExecutionEngine *e);
-
-    Value workArea[2];
 };
 
 
