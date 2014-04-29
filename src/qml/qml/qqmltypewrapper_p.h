@@ -68,13 +68,33 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
-    V4_OBJECT
+    enum TypeNameMode { IncludeEnums, ExcludeEnums };
+
+    struct Data : Object::Data {
+        QV8Engine *v8;
+        TypeNameMode mode;
+        QPointer<QObject> object;
+
+        QQmlType *type;
+        QQmlTypeNameCache *typeNamespace;
+        const void *importNamespace;
+    };
+    struct {
+        QV8Engine *v8;
+        TypeNameMode mode;
+        QPointer<QObject> object;
+
+        QQmlType *type;
+        QQmlTypeNameCache *typeNamespace;
+        const void *importNamespace;
+    } __data;
+
+    V4_OBJECT_NEW
 private:
     QmlTypeWrapper(QV8Engine *engine);
     ~QmlTypeWrapper();
 
 public:
-    enum TypeNameMode { IncludeEnums, ExcludeEnums };
 
     bool isSingleton() const;
 
@@ -89,17 +109,8 @@ public:
     static PropertyAttributes query(const Managed *, StringRef name);
     static void destroy(Managed *that);
 
-protected:
     static bool isEqualTo(Managed *that, Managed *o);
 
-private:
-    QV8Engine *v8;
-    TypeNameMode mode;
-    QPointer<QObject> object;
-
-    QQmlType *type;
-    QQmlTypeNameCache *typeNamespace;
-    const void *importNamespace;
 };
 
 }
