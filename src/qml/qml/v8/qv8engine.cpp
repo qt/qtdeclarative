@@ -130,7 +130,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
     QV4::Scope scope(m_v4Engine);
 
     if (QV4::VariantObject *v = value->as<QV4::VariantObject>())
-        return v->QV4::ExecutionEngine::ScarceResourceData::data;
+        return v->d()->data;
 
     if (typeHint == QVariant::Bool)
         return QVariant(value->toBoolean());
@@ -882,7 +882,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
         return true;
     if (value->as<QV4::VariantObject>() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = value->as<QV4::VariantObject>()->QV4::ExecutionEngine::ScarceResourceData::data;
+        QVariant &var = value->as<QV4::VariantObject>()->d()->data;
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -893,7 +893,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
-                    const QVariant &v = vo->QV4::ExecutionEngine::ScarceResourceData::data;
+                    const QVariant &v = vo->d()->data;
                     canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
@@ -969,7 +969,7 @@ QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
     if (QV4::RegExpObject *re = value->as<QV4::RegExpObject>())
         return re->toQRegExp();
     if (QV4::VariantObject *v = value->as<QV4::VariantObject>())
-        return v->QV4::ExecutionEngine::ScarceResourceData::data;
+        return v->d()->data;
     if (value->as<QV4::QObjectWrapper>())
         return qVariantFromValue(qtObjectFromJS(value));
     if (QV4::QmlValueTypeWrapper *v = value->as<QV4::QmlValueTypeWrapper>())
@@ -1003,7 +1003,7 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::ValueRef value)
     QV4::Scoped<QV4::VariantObject> v(scope, value);
 
     if (v) {
-        QVariant variant = v->QV4::ExecutionEngine::ScarceResourceData::data;
+        QVariant variant = v->d()->data;
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());

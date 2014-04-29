@@ -286,7 +286,7 @@ public:
     // calling preserve() on the object which removes it from this scarceResource list.
     class ScarceResourceData {
     public:
-        ScarceResourceData(const QVariant &data) : data(data) {}
+        ScarceResourceData(const QVariant &data = QVariant()) : data(data) {}
         QVariant data;
         QIntrusiveListNode node;
     };

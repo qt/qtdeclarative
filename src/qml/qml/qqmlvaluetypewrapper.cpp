@@ -197,7 +197,7 @@ bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     assert(lv);
 
     if (QV4::VariantObject *rv = other->as<VariantObject>())
-        return lv->isEqual(rv->ExecutionEngine::ScarceResourceData::data);
+        return lv->isEqual(rv->d()->data);
 
     if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
         return lv->isEqual(v->toVariant());

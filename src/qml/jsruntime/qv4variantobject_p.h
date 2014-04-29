@@ -64,10 +64,19 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
+struct VariantObject : Object
 {
-    V4_OBJECT
-public:
+    struct Data : Object::Data, public ExecutionEngine::ScarceResourceData
+    {
+        int vmePropertyReferenceCount;
+    };
+    struct __Data : public ExecutionEngine::ScarceResourceData
+    {
+        int vmePropertyReferenceCount;
+    } __data;
+
+    V4_OBJECT_NEW
+
     VariantObject(InternalClass *ic);
     VariantObject(ExecutionEngine *engine, const QVariant &value);
 
@@ -76,7 +85,6 @@ public:
     void addVmePropertyReference();
     void removeVmePropertyReference();
     bool isScarce() const;
-    int m_vmePropertyReferenceCount;
 
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
