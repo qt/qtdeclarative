@@ -62,17 +62,21 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
 QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : Object(QV8Engine::getV4(engine)),
-      readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
-      context(context), scopeObject(scopeObject), idObjectsWrapper(0)
+    : Object(QV8Engine::getV4(engine))
 {
     setVTable(staticVTable());
+
+    d()->readOnly = true;
+    d()->ownsContext = ownsContext;
+    d()->isNullWrapper = false;
+    d()->context = context;
+    d()->scopeObject = scopeObject;
 }
 
 QmlContextWrapper::~QmlContextWrapper()
 {
-    if (context && ownsContext)
-        context->destroy();
+    if (d()->context && d()->ownsContext)
+        d()->context->destroy();
 }
 
 ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
@@ -95,7 +99,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isJSContext = true;
 
     Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0, true));
-    w->isNullWrapper = true;
+    w->d()->isNullWrapper = true;
     return w.asReturnedValue();
 }
 
@@ -127,7 +131,7 @@ void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
     Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> c(scope, qmlglobal);
     Q_ASSERT(c);
-    c->ownsContext = true;
+    c->d()->ownsContext = true;
 }
 
 
@@ -149,10 +153,10 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
         return result.asReturnedValue();
     }
 
-    if (resource->isNullWrapper)
+    if (resource->d()->isNullWrapper)
         return Object::get(m, name, hasProperty);
 
-    if (QV4::QmlContextWrapper::callingContext(v4) != resource->context)
+    if (QV4::QmlContextWrapper::callingContext(v4) != resource->d()->context)
         return Object::get(m, name, hasProperty);
 
     result = Object::get(m, name, &hasProp);
@@ -295,8 +299,8 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         return;
     }
 
-    if (wrapper->isNullWrapper) {
-        if (wrapper && wrapper->readOnly) {
+    if (wrapper->d()->isNullWrapper) {
+        if (wrapper && wrapper->d()->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
             Scoped<String> e(scope, v4->currentContext()->engine->newString(error));
@@ -341,7 +345,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 
     expressionContext->unresolvedNames = true;
 
-    if (wrapper->readOnly) {
+    if (wrapper->d()->readOnly) {
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
         v4->currentContext()->throwError(error);
@@ -359,8 +363,8 @@ void QmlContextWrapper::destroy(Managed *that)
 void QmlContextWrapper::markObjects(Managed *m, ExecutionEngine *engine)
 {
     QmlContextWrapper *This = static_cast<QmlContextWrapper*>(m);
-    if (This->idObjectsWrapper)
-        This->idObjectsWrapper->mark(engine);
+    if (This->d()->idObjectsWrapper)
+        This->d()->idObjectsWrapper->mark(engine);
     Object::markObjects(m, engine);
 }
 
@@ -409,19 +413,19 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
 
 ReturnedValue QmlContextWrapper::idObjectsArray()
 {
-    if (!idObjectsWrapper) {
+    if (!d()->idObjectsWrapper) {
         ExecutionEngine *v4 = engine();
-        idObjectsWrapper = new (v4->memoryManager) QQmlIdObjectsArray(v4, this);
+        d()->idObjectsWrapper = new (v4->memoryManager) QQmlIdObjectsArray(v4, this);
     }
-    return idObjectsWrapper->asReturnedValue();
+    return d()->idObjectsWrapper->asReturnedValue();
 }
 
 ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, const StringRef &name)
 {
-    if (!context->imports)
+    if (!d()->context->imports)
         return Encode::undefined();
     // Search for attached properties, enums and imported scripts
-    QQmlTypeNameCache::Result r = context->imports->query(name);
+    QQmlTypeNameCache::Result r = d()->context->imports->query(name);
 
     Q_ASSERT(r.isValid());
     Q_ASSERT(r.type);
@@ -441,15 +445,16 @@ DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
 QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
     : Object(engine)
-    , contextWrapper(contextWrapper)
 {
     setVTable(staticVTable());
+
+    d()->contextWrapper = contextWrapper;
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QQmlIdObjectsArray *This = static_cast<QQmlIdObjectsArray*>(m);
-    QQmlContextData *context = This->contextWrapper->getContext();
+    QQmlContextData *context = This->d()->contextWrapper->getContext();
     if (!context) {
         if (hasProperty)
             *hasProperty = false;
@@ -475,7 +480,7 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
 void QQmlIdObjectsArray::markObjects(Managed *that, ExecutionEngine *engine)
 {
     QQmlIdObjectsArray *This = static_cast<QQmlIdObjectsArray*>(that);
-    This->contextWrapper->mark(engine);
+    This->d()->contextWrapper->mark(engine);
     Object::markObjects(that, engine);
 }
 

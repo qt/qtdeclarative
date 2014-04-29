@@ -73,7 +73,26 @@ struct QQmlIdObjectsArray;
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-    V4_OBJECT
+    struct Data : Object::Data {
+        bool readOnly;
+        bool ownsContext;
+        bool isNullWrapper;
+
+        QQmlGuardedContextData context;
+        QPointer<QObject> scopeObject;
+        QQmlIdObjectsArray *idObjectsWrapper;
+    };
+    struct {
+        bool readOnly;
+        bool ownsContext;
+        bool isNullWrapper;
+
+        QQmlGuardedContextData context;
+        QPointer<QObject> scopeObject;
+        QQmlIdObjectsArray *idObjectsWrapper;
+    } __data;
+
+    V4_OBJECT_NEW
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
 
@@ -83,11 +102,11 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static QQmlContextData *callingContext(ExecutionEngine *v4);
     static void takeContextOwnership(const ValueRef qmlglobal);
 
-    inline QObject *getScopeObject() const { return scopeObject; }
-    inline QQmlContextData *getContext() const { return context; }
+    inline QObject *getScopeObject() const { return d()->scopeObject; }
+    inline QQmlContextData *getContext() const { return d()->context; }
     static QQmlContextData *getContext(const ValueRef value);
 
-    void setReadOnly(bool b) { readOnly = b; }
+    void setReadOnly(bool b) { d()->readOnly = b; }
 
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
@@ -99,25 +118,23 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     ReturnedValue idObjectsArray();
     ReturnedValue qmlSingletonWrapper(QV8Engine *e, const StringRef &name);
 
-    bool readOnly;
-    bool ownsContext;
-    bool isNullWrapper;
-
-    QQmlGuardedContextData context;
-    QPointer<QObject> scopeObject;
-private:
-    QQmlIdObjectsArray *idObjectsWrapper;
 };
 
 struct QQmlIdObjectsArray : public Object
 {
-    V4_OBJECT
+    struct Data : Object::Data {
+        QmlContextWrapper *contextWrapper;
+    };
+    struct {
+        QmlContextWrapper *contextWrapper;
+    } __data;
+
+    V4_OBJECT_NEW
     QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void markObjects(Managed *that, ExecutionEngine *engine);
 
-    QmlContextWrapper *contextWrapper;
 };
 
 }
