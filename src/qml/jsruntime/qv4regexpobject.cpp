@@ -74,8 +74,8 @@ DEFINE_OBJECT_VTABLE(RegExpObject);
 RegExpObject::RegExpObject(InternalClass *ic)
     : Object(ic)
 {
-    data.value = RegExp::create(ic->engine, QString(), false, false);
-    data.global = false;
+    d()->value = RegExp::create(ic->engine, QString(), false, false);
+    d()->global = false;
     Q_ASSERT(internalClass()->vtable == staticVTable());
     init(ic->engine);
 }
@@ -83,8 +83,8 @@ RegExpObject::RegExpObject(InternalClass *ic)
 RegExpObject::RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global)
     : Object(engine->regExpClass)
 {
-    data.value = value;
-    data.global = global;
+    d()->value = value;
+    d()->global = global;
     init(engine);
 }
 
@@ -94,8 +94,8 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global
 RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     : Object(engine->regExpClass)
 {
-    data.value = 0;
-    data.global = false;
+    d()->value = 0;
+    d()->global = false;
 
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
@@ -137,7 +137,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
 
-    data.value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+    d()->value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
 
     init(engine);
 }
@@ -238,10 +238,10 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 
 void RegExpCtor::clearLastMatch()
 {
-    data.lastMatch = Primitive::nullValue();
-    data.lastInput = engine()->id_empty;
-    data.lastMatchStart = 0;
-    data.lastMatchEnd = 0;
+    d()->lastMatch = Primitive::nullValue();
+    d()->lastInput = engine()->id_empty;
+    d()->lastMatchStart = 0;
+    d()->lastMatchEnd = 0;
 }
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
@@ -393,11 +393,11 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     array->memberData()[Index_ArrayIndex] = Primitive::fromInt32(result);
     array->memberData()[Index_ArrayInput] = arg.asReturnedValue();
 
-    RegExpCtor::Data *d = &regExpCtor->data;
-    d->lastMatch = array;
-    d->lastInput = arg->stringValue();
-    d->lastMatchStart = matchOffsets[0];
-    d->lastMatchEnd = matchOffsets[1];
+    RegExpCtor::Data *dd = regExpCtor->d();
+    dd->lastMatch = array;
+    dd->lastInput = arg->stringValue();
+    dd->lastMatchStart = matchOffsets[0];
+    dd->lastMatchEnd = matchOffsets[1];
 
     if (r->global())
         r->lastIndexProperty(ctx)->value = Primitive::fromInt32(matchOffsets[1]);
@@ -434,8 +434,8 @@ ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
 
     Scoped<RegExpObject> re(scope, ctx->engine->regExpCtor.asFunctionObject()->construct(callData));
 
-    r->data.value = re->value();
-    r->data.global = re->global();
+    r->d()->value = re->value();
+    r->d()->global = re->global();
     return Encode::undefined();
 }
 

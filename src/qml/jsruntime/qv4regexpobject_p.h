@@ -66,8 +66,18 @@ namespace QV4 {
 class RegExp;
 
 struct RegExpObject: Object {
-    V4_OBJECT
+    struct Data : Object::Data {
+        RegExp* value;
+        bool global;
+    };
+    struct {
+        RegExp* value;
+        bool global;
+    } __data;
+
+    V4_OBJECT_NEW
     Q_MANAGED_TYPE(RegExpObject)
+
     // needs to be compatible with the flags in qv4jsir_p.h
     enum Flags {
         RegExp_Global     = 0x01,
@@ -80,14 +90,8 @@ struct RegExpObject: Object {
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
-    struct Data {
-        RegExp* value;
-        bool global;
-    };
-    Data data;
-
-    RegExp* value() const { return data.value; }
-    bool global() const { return data.global; }
+    RegExp *value() const { return d()->value; }
+    bool global() const { return d()->global; }
 
     RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
@@ -109,21 +113,26 @@ DEFINE_REF(RegExp, Object);
 
 struct RegExpCtor: FunctionObject
 {
-    V4_OBJECT
-    RegExpCtor(ExecutionContext *scope);
-
-    struct Data {
+    struct Data : FunctionObject::Data {
         Value lastMatch;
         StringValue lastInput;
         int lastMatchStart;
         int lastMatchEnd;
     };
-    Data data;
+    struct {
+        Value lastMatch;
+        StringValue lastInput;
+        int lastMatchStart;
+        int lastMatchEnd;
+    } __data;
 
-    Value lastMatch() { return data.lastMatch; }
-    StringValue lastInput() { return data.lastInput; }
-    int lastMatchStart() { return data.lastMatchStart; }
-    int lastMatchEnd() { return data.lastMatchEnd; }
+    V4_OBJECT_NEW
+    RegExpCtor(ExecutionContext *scope);
+
+    Value lastMatch() { return d()->lastMatch; }
+    StringValue lastInput() { return d()->lastInput; }
+    int lastMatchStart() { return d()->lastMatchStart; }
+    int lastMatchEnd() { return d()->lastMatchEnd; }
     void clearLastMatch();
 
     static ReturnedValue construct(Managed *m, CallData *callData);
