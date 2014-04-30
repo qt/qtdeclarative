@@ -68,9 +68,20 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
-    V4_OBJECT
-protected:
     enum ObjectType { Reference, Copy };
+    struct Data : Object::Data {
+        QV8Engine *v8;
+        ObjectType objectType;
+        mutable QQmlValueType *type;
+    };
+    struct {
+        QV8Engine *v8;
+        ObjectType objectType;
+        mutable QQmlValueType *type;
+    } __data;
+
+    V4_OBJECT_NEW
+protected:
     QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
     ~QmlValueTypeWrapper();
 
@@ -82,7 +93,6 @@ public:
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);
 
-
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void destroy(Managed *that);
@@ -90,10 +100,6 @@ public:
     static PropertyAttributes query(const Managed *, StringRef name);
 
     static QV4::ReturnedValue method_toString(CallContext *ctx);
-
-    QV8Engine *v8;
-    ObjectType objectType;
-    mutable QQmlValueType *type;
 
     static void initProto(ExecutionEngine *v4);
 };
