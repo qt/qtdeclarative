@@ -328,6 +328,7 @@ private slots:
     void animationsWhileHidden();
 
     void focusObject();
+    void focusReason();
 
     void ignoreUnhandledMouseEvents();
 
@@ -1251,6 +1252,33 @@ void tst_qquickwindow::focusObject()
     item3->setFocus(true);
     QCOMPARE(item2, window->focusObject());
     QCOMPARE(focusObjectSpy.count(), 3);
+}
+
+void tst_qquickwindow::focusReason()
+{
+    QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+    window->resize(200, 200);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *firstItem = new QQuickItem;
+    firstItem->setSize(QSizeF(100, 100));
+    firstItem->setParentItem(window->contentItem());
+
+    QQuickItem *secondItem = new QQuickItem;
+    secondItem->setSize(QSizeF(100, 100));
+    secondItem->setParentItem(window->contentItem());
+
+    firstItem->forceActiveFocus(Qt::OtherFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::OtherFocusReason);
+
+    secondItem->forceActiveFocus(Qt::TabFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::TabFocusReason);
+
+    firstItem->forceActiveFocus(Qt::BacktabFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::BacktabFocusReason);
+
 }
 
 void tst_qquickwindow::ignoreUnhandledMouseEvents()

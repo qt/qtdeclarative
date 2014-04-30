@@ -407,6 +407,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
     , componentCompleted(true)
+    , lastFocusReason(Qt::OtherFocusReason)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -710,6 +711,8 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     QQuickItem *currentActiveFocusItem = activeFocusItem;
     QQuickItem *newActiveFocusItem = 0;
 
+    lastFocusReason = reason;
+
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
@@ -813,6 +816,8 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     QQuickItem *currentActiveFocusItem = activeFocusItem;
     QQuickItem *oldActiveFocusItem = 0;
     QQuickItem *newActiveFocusItem = 0;
+
+    lastFocusReason = reason;
 
     QVarLengthArray<QQuickItem *, 20> changed;
 

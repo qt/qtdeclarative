@@ -227,6 +227,8 @@ public:
     uint lastWheelEventAccepted : 1;
     bool componentCompleted : 1;
 
+    Qt::FocusReason lastFocusReason;
+
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
     QSize renderTargetSize;
