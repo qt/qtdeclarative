@@ -59,7 +59,7 @@ struct StringObject: Object {
         Value value;
         mutable Property tmpProperty;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(StringObject)
 
     StringObject(ExecutionEngine *engine, const ValueRef value);
@@ -76,7 +76,7 @@ protected:
 
 struct StringCtor: FunctionObject
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     StringCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);

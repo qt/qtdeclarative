@@ -104,7 +104,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         Function *function;
 
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(FunctionObject)
     enum {
         IsFunctionObject = true
@@ -170,7 +170,7 @@ DEFINE_REF(FunctionObject, Object);
 
 struct FunctionCtor: FunctionObject
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     FunctionCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);
@@ -195,7 +195,7 @@ struct BuiltinFunction: FunctionObject {
     struct {
         ReturnedValue (*code)(CallContext *);
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
 
@@ -213,7 +213,7 @@ struct IndexedBuiltinFunction: FunctionObject
         ReturnedValue (*code)(CallContext *, uint index);
         uint index;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
         : FunctionObject(scope)
@@ -233,7 +233,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
 
 struct SimpleScriptFunction: FunctionObject {
-    V4_OBJECT_NEW
+    V4_OBJECT
     SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -243,7 +243,7 @@ struct SimpleScriptFunction: FunctionObject {
 };
 
 struct ScriptFunction: SimpleScriptFunction {
-    V4_OBJECT_NEW
+    V4_OBJECT
     ScriptFunction(ExecutionContext *scope, Function *function);
 
     static ReturnedValue construct(Managed *, CallData *callData);
@@ -262,7 +262,7 @@ struct BoundFunction: FunctionObject {
         Value boundThis;
         Members boundArgs;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     FunctionObject *target() { return d()->target; }
     Value boundThis() const { return d()->boundThis; }

@@ -485,7 +485,7 @@ class QQuickJSContext2D : public QV4::Object
     struct {
         QQuickContext2D* context;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -540,7 +540,7 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
 
 struct QQuickJSContext2DPrototype : public QV4::Object
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -657,7 +657,7 @@ class QQuickContext2DStyle : public QV4::Object
         bool patternRepeatY:1;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     QQuickContext2DStyle(QV4::ExecutionEngine *e)
       : QV4::Object(e)
@@ -881,7 +881,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
         QImage image;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
@@ -911,7 +911,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     struct {
         QV4::Value pixelData;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)

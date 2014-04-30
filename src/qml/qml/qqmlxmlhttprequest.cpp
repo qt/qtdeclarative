@@ -195,7 +195,7 @@ public:
         NodeImpl *d;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
         : Object(engine)
@@ -234,7 +234,7 @@ class NodeList : public Object
         NodeImpl *d;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     NodeList(ExecutionEngine *engine, NodeImpl *data)
         : Object(engine)
@@ -266,7 +266,7 @@ DEFINE_OBJECT_VTABLE(NodeList);
 
 class NodePrototype : public Object
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     NodePrototype(ExecutionEngine *engine)
         : Object(engine)
@@ -325,7 +325,7 @@ class Node : public Object
     struct {
         NodeImpl *d;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     Node(ExecutionEngine *engine, NodeImpl *data)
         : Object(engine)
@@ -1632,7 +1632,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
         QQmlXMLHttpRequest *request;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
         : Object(engine)
     {
@@ -1659,7 +1659,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Object *proto;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
         : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
     {

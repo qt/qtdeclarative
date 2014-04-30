@@ -138,7 +138,7 @@ class QQmlLocaleData : public QV4::Object
         QLocale locale;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)

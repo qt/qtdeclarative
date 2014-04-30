@@ -80,7 +80,7 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
         mutable QQmlValueType *type;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 protected:
     QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
     ~QmlValueTypeWrapper();

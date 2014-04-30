@@ -111,7 +111,7 @@ struct Q_QML_EXPORT Object: Managed {
         Members memberData;
         ArrayData *arrayData;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(Object)
 
     enum {
@@ -322,7 +322,7 @@ struct BooleanObject: Object {
     struct {
         Value value;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(BooleanObject)
 
     Value value() const { return d()->value; }
@@ -348,7 +348,7 @@ struct NumberObject: Object {
     struct {
         Value value;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(NumberObject)
 
     Value value() const { return d()->value; }
@@ -366,7 +366,7 @@ protected:
 };
 
 struct ArrayObject: Object {
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(ArrayObject)
     enum {
         LengthPropertyIndex = 0

@@ -95,7 +95,7 @@ struct ForEachIteratorObject: Object {
         ObjectIterator it;
         Value workArea[2];
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)

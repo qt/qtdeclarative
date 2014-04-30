@@ -1093,7 +1093,7 @@ class QmlIncubatorObject : public QV4::Object
         QV4::Value statusChanged;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 public:
     QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
 

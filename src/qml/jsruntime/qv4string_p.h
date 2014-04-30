@@ -80,7 +80,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         uint len;
     } __data;
     // ### FIXME: Should this be a V4_OBJECT
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(String)
     enum {
         IsString = true

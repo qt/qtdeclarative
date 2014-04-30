@@ -82,7 +82,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
         int propertyType;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 protected:
     QmlListWrapper(QV8Engine *engine);
     ~QmlListWrapper();

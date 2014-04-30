@@ -75,7 +75,7 @@ struct VariantObject : Object
         int vmePropertyReferenceCount;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     VariantObject(InternalClass *ic);
     VariantObject(ExecutionEngine *engine, const QVariant &value);

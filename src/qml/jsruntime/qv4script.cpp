@@ -174,7 +174,7 @@ struct CompilationUnitHolder : public Object
         QV4::CompiledData::CompilationUnit *unit;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
         : Object(engine)

@@ -75,7 +75,7 @@ struct RegExpObject: Object {
         bool global;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(RegExpObject)
 
     // needs to be compatible with the flags in qv4jsir_p.h
@@ -126,7 +126,7 @@ struct RegExpCtor: FunctionObject
         int lastMatchEnd;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     RegExpCtor(ExecutionContext *scope);
 
     Value lastMatch() { return d()->lastMatch; }

@@ -65,7 +65,7 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
         CallContext *qmlContext;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!

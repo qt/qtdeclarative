@@ -280,7 +280,7 @@ struct QV4ParticleData : public QV4::Object
         QQuickParticleData* datum;//TODO: Guard needed?
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QV4ParticleData(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
         : Object(engine)
     {

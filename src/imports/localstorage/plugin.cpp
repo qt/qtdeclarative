@@ -128,7 +128,7 @@ public:
         bool forwardOnly; // type == Rows
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     QQmlSqlDatabaseWrapper(QV8Engine *e)
         : Object(QV8Engine::getV4(e))

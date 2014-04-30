@@ -178,7 +178,7 @@ class QQmlSequence : public QV4::Object
         bool isReference;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(QmlSequence)
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)

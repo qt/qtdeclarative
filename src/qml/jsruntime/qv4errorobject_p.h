@@ -60,7 +60,7 @@ struct ErrorObject: Object {
         String *stack;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(ErrorObject)
     enum {
         IsErrorObject = true
@@ -109,7 +109,7 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    V4_OBJECT_NEW
+    V4_OBJECT
     SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
@@ -125,7 +125,7 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, const QString &name);
 
@@ -135,7 +135,7 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     EvalErrorCtor(ExecutionContext *scope);
 
@@ -144,7 +144,7 @@ struct EvalErrorCtor: ErrorCtor
 
 struct RangeErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     RangeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -152,7 +152,7 @@ struct RangeErrorCtor: ErrorCtor
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     ReferenceErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -160,7 +160,7 @@ struct ReferenceErrorCtor: ErrorCtor
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     SyntaxErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -168,7 +168,7 @@ struct SyntaxErrorCtor: ErrorCtor
 
 struct TypeErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     TypeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
@@ -176,7 +176,7 @@ struct TypeErrorCtor: ErrorCtor
 
 struct URIErrorCtor: ErrorCtor
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     URIErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);

@@ -58,7 +58,7 @@ struct DateObject: Object {
     struct {
         Value value;
     } __data;
-    V4_OBJECT_NEW
+    V4_OBJECT
     Q_MANAGED_TYPE(DateObject)
 
 
@@ -84,7 +84,7 @@ protected:
 
 struct DateCtor: FunctionObject
 {
-    V4_OBJECT_NEW
+    V4_OBJECT
     DateCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);

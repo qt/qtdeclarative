@@ -92,7 +92,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
         QQmlIdObjectsArray *idObjectsWrapper;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
 
@@ -129,7 +129,7 @@ struct QQmlIdObjectsArray : public Object
         QmlContextWrapper *contextWrapper;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
     QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);

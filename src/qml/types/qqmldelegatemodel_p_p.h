@@ -168,7 +168,7 @@ struct QQmlDelegateModelItemObject : QV4::Object
         QQmlDelegateModelItem *item;
     } __data;
 
-    V4_OBJECT_NEW
+    V4_OBJECT
 
     QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
         : Object(engine)
