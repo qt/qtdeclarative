@@ -107,7 +107,7 @@ public:
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
 
-    virtual bool applyInsertionChange(const QQmlChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
 
     virtual void updateSectionCriteria();
@@ -2942,7 +2942,7 @@ void QQuickListViewPrivate::updateSectionCriteria()
     }
 }
 
-bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
+bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     int modelIndex = change.index;
     int count = change.count;

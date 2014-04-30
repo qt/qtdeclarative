@@ -90,29 +90,14 @@ public:
         int end() const { return index + count; }
     };
 
-
-    struct Insert : public Change
-    {
-        Insert() {}
-        Insert(int index, int count, int moveId = -1, int offset = 0)
-            : Change(index, count, moveId, offset) {}
-    };
-
-    struct Remove : public Change
-    {
-        Remove() {}
-        Remove(int index, int count, int moveId = -1, int offset = 0)
-            : Change(index, count, moveId, offset) {}
-    };
-
     QQmlChangeSet();
     QQmlChangeSet(const QQmlChangeSet &changeSet);
     ~QQmlChangeSet();
 
     QQmlChangeSet &operator =(const QQmlChangeSet &changeSet);
 
-    const QVector<Remove> &removes() const { return m_removes; }
-    const QVector<Insert> &inserts() const { return m_inserts; }
+    const QVector<Change> &removes() const { return m_removes; }
+    const QVector<Change> &inserts() const { return m_inserts; }
     const QVector<Change> &changes() const { return m_changes; }
 
     void insert(int index, int count);
@@ -120,9 +105,9 @@ public:
     void move(int from, int to, int count, int moveId);
     void change(int index, int count);
 
-    void insert(const QVector<Insert> &inserts);
-    void remove(const QVector<Remove> &removes, QVector<Insert> *inserts = 0);
-    void move(const QVector<Remove> &removes, const QVector<Insert> &inserts);
+    void insert(const QVector<Change> &inserts);
+    void remove(const QVector<Change> &removes, QVector<Change> *inserts = 0);
+    void move(const QVector<Change> &removes, const QVector<Change> &inserts);
     void change(const QVector<Change> &changes);
     void apply(const QQmlChangeSet &changeSet);
 
@@ -139,26 +124,22 @@ public:
     int difference() const { return m_difference; }
 
 private:
-    void remove(QVector<Remove> *removes, QVector<Insert> *inserts);
+    void remove(QVector<Change> *removes, QVector<Change> *inserts);
     void change(QVector<Change> *changes);
 
-    QVector<Remove> m_removes;
-    QVector<Insert> m_inserts;
+    QVector<Change> m_removes;
+    QVector<Change> m_inserts;
     QVector<Change> m_changes;
     int m_difference;
 };
 
 Q_DECLARE_TYPEINFO(QQmlChangeSet::Change, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQmlChangeSet::Remove, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQmlChangeSet::Insert, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
 
 inline uint qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
 inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
-Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Remove &remove);
-Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Insert &insert);
 Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
 Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
 

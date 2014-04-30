@@ -209,8 +209,8 @@ public:
 
     void applyPendingChanges();
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);
-    bool applyRemovalChange(const QQmlChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
-    void removeItem(FxViewItem *item, const QQmlChangeSet::Remove &removal, ChangeResult *removeResult);
+    bool applyRemovalChange(const QQmlChangeSet::Change &removal, ChangeResult *changeResult, int *removedCount);
+    void removeItem(FxViewItem *item, const QQmlChangeSet::Change &removal, ChangeResult *removeResult);
     virtual void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult);
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
             FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
@@ -221,7 +221,7 @@ public:
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
     virtual void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item);
 
-    int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Remove> &changes) const;
+    int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const;
 
     void checkVisible() const;
     void showVisibleItems() const;
@@ -350,7 +350,7 @@ protected:
     virtual void layoutVisibleItems(int fromModelIndex = 0) = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
 
-    virtual bool applyInsertionChange(const QQmlChangeSet::Insert &insert, ChangeResult *changeResult,
+    virtual bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult,
                 QList<FxViewItem *> *newItems, QList<MovedItem> *movingIntoView) = 0;
 
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }

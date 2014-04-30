@@ -70,7 +70,7 @@ static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
     if (!o)
         return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-    return QV4::Encode(o->item->index);
+    return QV4::Encode(o->d()->item->index);
 }
 
 template <typename T, typename M> static void setModelDataType(QMetaObjectBuilder *builder, M *metaType)
@@ -202,10 +202,10 @@ public:
         if (!o)
             return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->item)->type->model;
-        if (o->item->index >= 0 && *model) {
+        const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->d()->item)->type->model;
+        if (o->d()->item->index >= 0 && *model) {
             const QAbstractItemModel * const aim = model->aim();
-            return QV4::Encode(aim->hasChildren(aim->index(o->item->index, 0, model->rootIndex)));
+            return QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex)));
         } else {
             return QV4::Encode(false);
         }
@@ -347,8 +347,8 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, ui
     if (!o)
         return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-    QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->item);
-    if (o->item->index == -1) {
+    QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
+    if (o->d()->item->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
             return ctx->engine->v8Engine->fromVariant(
                     modelData->cachedData.at(modelData->type->hasModelData ? 0 : propertyId));
@@ -369,16 +369,16 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, ui
     if (!ctx->callData->argc)
         return ctx->throwTypeError();
 
-    if (o->item->index == -1) {
-        QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->item);
+    if (o->d()->item->index == -1) {
+        QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
                 modelData->cachedData[propertyId] = ctx->engine->v8Engine->toVariant(ctx->callData->args[0], QVariant::Invalid);
-                QMetaObject::activate(o->item, o->item->metaObject(), propertyId, 0);
+                QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
                 modelData->cachedData[0] = ctx->engine->v8Engine->toVariant(ctx->callData->args[0], QVariant::Invalid);
-                QMetaObject::activate(o->item, o->item->metaObject(), 0, 0);
-                QMetaObject::activate(o->item, o->item->metaObject(), 1, 0);
+                QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 0, 0);
+                QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 1, 0);
             }
         }
     }
@@ -589,7 +589,7 @@ public:
         if (!o)
             return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->item)->cachedData);
+        return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
     }
 
     static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
@@ -601,7 +601,7 @@ public:
         if (!ctx->callData->argc)
             return ctx->throwTypeError();
 
-        static_cast<QQmlDMListAccessorData *>(o->item)->setModelData(ctx->engine->v8Engine->toVariant(ctx->callData->args[0], QVariant::Invalid));
+        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(ctx->engine->v8Engine->toVariant(ctx->callData->args[0], QVariant::Invalid));
         return QV4::Encode::undefined();
     }
 

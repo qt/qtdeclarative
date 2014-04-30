@@ -263,8 +263,8 @@ public:
     void transition(
             Group from,
             Group to,
-            QVector<QQmlChangeSet::Remove> *removes,
-            QVector<QQmlChangeSet::Insert> *inserts);
+            QVector<QQmlChangeSet::Change> *removes,
+            QVector<QQmlChangeSet::Change> *inserts);
 
 private:
     Range m_ranges;
@@ -290,13 +290,13 @@ private:
     void listItemsRemoved(
             QVector<Remove> *translatedRemovals,
             void *list,
-            QVector<QQmlChangeSet::Remove> *removals,
-            QVector<QQmlChangeSet::Insert> *insertions = 0,
+            QVector<QQmlChangeSet::Change> *removals,
+            QVector<QQmlChangeSet::Change> *insertions = 0,
             QVector<MovedFlags> *movedFlags = 0);
     void listItemsInserted(
             QVector<Insert> *translatedInsertions,
             void *list,
-            const QVector<QQmlChangeSet::Insert> &insertions,
+            const QVector<QQmlChangeSet::Change> &insertions,
             const QVector<MovedFlags> *movedFlags = 0);
     void listItemsChanged(
             QVector<Change> *translatedChanges,

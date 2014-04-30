@@ -198,7 +198,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
-    virtual bool applyInsertionChange(const QQmlChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
     virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
@@ -2325,7 +2325,7 @@ void QQuickGridView::moveCurrentIndexRight()
     }
 }
 
-bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
+bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     Q_Q(QQuickGridView);
 

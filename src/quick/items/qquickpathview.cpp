@@ -2033,7 +2033,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     int moveOffset = 0;
     bool currentChanged = false;
     bool changedOffset = false;
-    foreach (const QQmlChangeSet::Remove &r, changeSet.removes()) {
+    foreach (const QQmlChangeSet::Change &r, changeSet.removes()) {
         if (moveId == -1 && d->currentIndex >= r.index + r.count) {
             d->currentIndex -= r.count;
             currentChanged = true;
@@ -2059,7 +2059,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         }
         d->modelCount -= r.count;
     }
-    foreach (const QQmlChangeSet::Insert &i, changeSet.inserts()) {
+    foreach (const QQmlChangeSet::Change &i, changeSet.inserts()) {
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;

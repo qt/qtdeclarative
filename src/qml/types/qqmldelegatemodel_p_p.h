@@ -161,16 +161,24 @@ protected:
 
 struct QQmlDelegateModelItemObject : QV4::Object
 {
-    V4_OBJECT;
+    struct Data : QV4::Object::Data {
+        QQmlDelegateModelItem *item;
+    };
+    struct {
+        QQmlDelegateModelItem *item;
+    } __data;
+
+    V4_OBJECT_NEW
+
     QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
         : Object(engine)
-        , item(item)
-    { setVTable(staticVTable()); }
+    {
+        setVTable(staticVTable());
+        d()->item = item;
+    }
     ~QQmlDelegateModelItemObject();
 
     static void destroy(Managed *that);
-
-    QQmlDelegateModelItem *item;
 };
 
 
@@ -275,12 +283,12 @@ public:
 
     void itemsInserted(
             const QVector<Compositor::Insert> &inserts,
-            QVarLengthArray<QVector<QQmlChangeSet::Insert>, Compositor::MaximumGroupCount> *translatedInserts,
+            QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
             QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = 0);
     void itemsInserted(const QVector<Compositor::Insert> &inserts);
     void itemsRemoved(
             const QVector<Compositor::Remove> &removes,
-            QVarLengthArray<QVector<QQmlChangeSet::Remove>, Compositor::MaximumGroupCount> *translatedRemoves,
+            QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
             QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = 0);
     void itemsRemoved(const QVector<Compositor::Remove> &removes);
     void itemsMoved(

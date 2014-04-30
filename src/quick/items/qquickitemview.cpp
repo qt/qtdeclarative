@@ -176,7 +176,7 @@ void QQuickItemViewChangeSet::applyChanges(const QQmlChangeSet &changeSet)
     int moveId = -1;
     int moveOffset = 0;
 
-    foreach (const QQmlChangeSet::Remove &r, changeSet.removes()) {
+    foreach (const QQmlChangeSet::Change &r, changeSet.removes()) {
         itemCount -= r.count;
         if (moveId == -1 && newCurrentIndex >= r.index + r.count) {
             newCurrentIndex -= r.count;
@@ -195,7 +195,7 @@ void QQuickItemViewChangeSet::applyChanges(const QQmlChangeSet &changeSet)
             currentChanged = true;
         }
     }
-    foreach (const QQmlChangeSet::Insert &i, changeSet.inserts()) {
+    foreach (const QQmlChangeSet::Change &i, changeSet.inserts()) {
         if (moveId == -1) {
             if (itemCount && newCurrentIndex >= i.index) {
                 newCurrentIndex += i.count;
@@ -1038,7 +1038,7 @@ void QQuickItemViewPrivate::applyPendingChanges()
         layout();
 }
 
-int QQuickItemViewPrivate::findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Remove> &changes) const
+int QQuickItemViewPrivate::findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const
 {
     for (int i=0; i<changes.count(); i++) {
         for (int j=changes[i].index; j<changes[i].index + changes[i].count; j++) {
@@ -1943,8 +1943,8 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     totalInsertionResult->visiblePos = prevViewPos;
     totalRemovalResult->visiblePos = prevViewPos;
 
-    const QVector<QQmlChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
-    const QVector<QQmlChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
+    const QVector<QQmlChangeSet::Change> &removals = currentChanges.pendingChanges.removes();
+    const QVector<QQmlChangeSet::Change> &insertions = currentChanges.pendingChanges.inserts();
     ChangeResult insertionResult(prevViewPos);
     ChangeResult removalResult(prevViewPos);
 
@@ -1964,7 +1964,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         }
     }
     if (runDelayedRemoveTransition) {
-        QQmlChangeSet::Remove removal;
+        QQmlChangeSet::Change removal;
         for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end();) {
             FxViewItem *item = *it;
             if (item->index == -1 && !item->attached->delayRemove()) {
@@ -2061,7 +2061,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     return visibleAffected;
 }
 
-bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Remove &removal, ChangeResult *removeResult, int *removedCount)
+bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Change &removal, ChangeResult *removeResult, int *removedCount)
 {
     Q_Q(QQuickItemView);
     bool visibleAffected = false;
@@ -2111,7 +2111,7 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Remove &remo
     return visibleAffected;
 }
 
-void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Remove &removal, ChangeResult *removeResult)
+void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Change &removal, ChangeResult *removeResult)
 {
     if (removeResult->visiblePos.isValid()) {
         if (item->position() < removeResult->visiblePos)

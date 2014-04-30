@@ -111,7 +111,7 @@ QQmlChangeSet &QQmlChangeSet::operator =(const QQmlChangeSet &changeSet)
 
 void QQmlChangeSet::insert(int index, int count)
 {
-    insert(QVector<Insert>() << Insert(index, count));
+    insert(QVector<Change>() << Change(index, count));
 }
 
 /*!
@@ -120,8 +120,8 @@ void QQmlChangeSet::insert(int index, int count)
 
 void QQmlChangeSet::remove(int index, int count)
 {
-    QVector<Remove> removes;
-    removes.append(Remove(index, count));
+    QVector<Change> removes;
+    removes.append(Change(index, count));
     remove(&removes, 0);
 }
 
@@ -134,10 +134,10 @@ void QQmlChangeSet::remove(int index, int count)
 
 void QQmlChangeSet::move(int from, int to, int count, int moveId)
 {
-    QVector<Remove> removes;
-    removes.append(Remove(from, count, moveId));
-    QVector<Insert> inserts;
-    inserts.append(Insert(to, count, moveId));
+    QVector<Change> removes;
+    removes.append(Change(from, count, moveId));
+    QVector<Change> inserts;
+    inserts.append(Change(to, count, moveId));
     remove(&removes, &inserts);
     insert(inserts);
 }
@@ -159,8 +159,8 @@ void QQmlChangeSet::change(int index, int count)
 
 void QQmlChangeSet::apply(const QQmlChangeSet &changeSet)
 {
-    QVector<Remove> r = changeSet.m_removes;
-    QVector<Insert> i = changeSet.m_inserts;
+    QVector<Change> r = changeSet.m_removes;
+    QVector<Change> i = changeSet.m_inserts;
     QVector<Change> c = changeSet.m_changes;
     remove(&r, &i);
     insert(i);
@@ -174,19 +174,19 @@ void QQmlChangeSet::apply(const QQmlChangeSet &changeSet)
     corresponding intersection in the optional \a inserts list.
 */
 
-void QQmlChangeSet::remove(const QVector<Remove> &removes, QVector<Insert> *inserts)
+void QQmlChangeSet::remove(const QVector<Change> &removes, QVector<Change> *inserts)
 {
-    QVector<Remove> r = removes;
+    QVector<Change> r = removes;
     remove(&r, inserts);
 }
 
-void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
+void QQmlChangeSet::remove(QVector<Change> *removes, QVector<Change> *inserts)
 {
     int removeCount = 0;
     int insertCount = 0;
-    QVector<Insert>::iterator insert = m_inserts.begin();
+    QVector<Change>::iterator insert = m_inserts.begin();
     QVector<Change>::iterator change = m_changes.begin();
-    QVector<Remove>::iterator rit = removes->begin();
+    QVector<Change>::iterator rit = removes->begin();
     for (; rit != removes->end(); ++rit) {
         int index = rit->index + removeCount;
         int count = rit->count;
@@ -223,7 +223,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
             // a new delta for that portion and subtract the size of that delta from the current
             // one.
             if (offset < 0 && rit->moveId != -1) {
-                rit = removes->insert(rit, Remove(
+                rit = removes->insert(rit, Change(
                         rit->index, -offset, rit->moveId, rit->offset));
                 ++rit;
                 rit->count -= -offset;
@@ -233,7 +233,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
                 removeCount += -offset;
                 offset = 0;
             } else if (offset > 0 && insert->moveId != -1) {
-                insert = m_inserts.insert(insert, Insert(
+                insert = m_inserts.insert(insert, Change(
                         insert->index - removeCount, offset, insert->moveId, insert->offset));
                 ++insert;
                 insert->index += offset;
@@ -246,7 +246,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
             // If the current remove has a move id, find any inserts with the same move id and
             // replace the corresponding sections with the insert removed from the change set.
             if (rit->moveId != -1 && difference > 0 && inserts) {
-                for (QVector<Insert>::iterator iit = inserts->begin(); iit != inserts->end(); ++iit) {
+                for (QVector<Change>::iterator iit = inserts->begin(); iit != inserts->end(); ++iit) {
                     if (iit->moveId != rit->moveId
                             || rit->offset > iit->offset + iit->count
                             || iit->offset > rit->offset + difference) {
@@ -256,7 +256,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
                     // a new insert for the portion prior to the replacement insert.
                     const int overlapOffset = rit->offset - iit->offset;
                     if (overlapOffset > 0) {
-                        iit = inserts->insert(iit, Insert(
+                        iit = inserts->insert(iit, Change(
                                 iit->index, overlapOffset, iit->moveId, iit->offset));
                         ++iit;
                         iit->index += overlapOffset;
@@ -275,7 +275,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
                         const int count
                                 = qMin(iit->offset + iit->count, rit->offset + difference)
                                 - qMax(iit->offset, rit->offset);
-                        iit = inserts->insert(iit, Insert(
+                        iit = inserts->insert(iit, Change(
                                 iit->index,
                                 count,
                                 insert->moveId,
@@ -316,12 +316,12 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
         insert->index -= removeCount;
 
     removeCount = 0;
-    QVector<Remove>::iterator remove = m_removes.begin();
+    QVector<Change>::iterator remove = m_removes.begin();
     for (rit = removes->begin(); rit != removes->end(); ++rit) {
         if (rit->count == 0)
             continue;
         // Accumulate consecutive removes into a single delta before attempting to apply.
-        for (QVector<Remove>::iterator next = rit + 1; next != removes->end()
+        for (QVector<Change>::iterator next = rit + 1; next != removes->end()
                 && next->index == rit->index
                 && next->moveId == -1
                 && rit->moveId == -1; ++next) {
@@ -336,7 +336,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
         while (remove != m_removes.end() && index + rit->count >= remove->index) {
             int count = 0;
             const int offset = remove->index - index;
-            QVector<Remove>::iterator rend = remove;
+            QVector<Change>::iterator rend = remove;
             for (; rend != m_removes.end()
                     && rit->moveId == -1
                     && rend->moveId == -1
@@ -366,7 +366,7 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
                 // Insert a remove for the portion of the unmergable current remove prior to the
                 // point of intersection.
                 if (offset > 0) {
-                    remove = m_removes.insert(remove, Remove(
+                    remove = m_removes.insert(remove, Change(
                             rit->index, offset, rit->moveId, rit->offset));
                     ++remove;
                     rit->count -= offset;
@@ -395,19 +395,19 @@ void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
     Applies a list of \a inserts to a change set.
 */
 
-void QQmlChangeSet::insert(const QVector<Insert> &inserts)
+void QQmlChangeSet::insert(const QVector<Change> &inserts)
 {
     int insertCount = 0;
-    QVector<Insert>::iterator insert = m_inserts.begin();
+    QVector<Change>::iterator insert = m_inserts.begin();
     QVector<Change>::iterator change = m_changes.begin();
-    for (QVector<Insert>::const_iterator iit = inserts.begin(); iit != inserts.end(); ++iit) {
+    for (QVector<Change>::const_iterator iit = inserts.begin(); iit != inserts.end(); ++iit) {
         if (iit->count == 0)
             continue;
         int index = iit->index - insertCount;
 
-        Insert current = *iit;
+        Change current = *iit;
         // Accumulate consecutive inserts into a single delta before attempting to insert.
-        for (QVector<Insert>::const_iterator next = iit + 1; next != inserts.end()
+        for (QVector<Change>::const_iterator next = iit + 1; next != inserts.end()
                 && next->index == iit->index + iit->count
                 && next->moveId == -1
                 && iit->moveId == -1; ++next) {
@@ -459,7 +459,7 @@ void QQmlChangeSet::insert(const QVector<Insert> &inserts)
                 // If either insert has a moveId then split the existing insert and insert the
                 // current one in the middle.
                 if (offset > 0) {
-                    insert = m_inserts.insert(insert, Insert(
+                    insert = m_inserts.insert(insert, Change(
                             insert->index + insertCount, offset, insert->moveId, insert->offset));
                     ++insert;
                     insert->index += offset;
@@ -487,10 +487,10 @@ void QQmlChangeSet::insert(const QVector<Insert> &inserts)
     calling \l remove() followed by \l insert() with the same lists.
 */
 
-void QQmlChangeSet::move(const QVector<Remove> &removes, const QVector<Insert> &inserts)
+void QQmlChangeSet::move(const QVector<Change> &removes, const QVector<Change> &inserts)
 {
-    QVector<Remove> r = removes;
-    QVector<Insert> i = inserts;
+    QVector<Change> r = removes;
+    QVector<Change> i = inserts;
     remove(&r, &i);
     insert(i);
 }
@@ -507,7 +507,7 @@ void QQmlChangeSet::change(const QVector<Change> &changes)
 
 void QQmlChangeSet::change(QVector<Change> *changes)
 {
-    QVector<Insert>::iterator insert = m_inserts.begin();
+    QVector<Change>::iterator insert = m_inserts.begin();
     QVector<Change>::iterator change = m_changes.begin();
     for (QVector<Change>::iterator cit = changes->begin(); cit != changes->end(); ++cit) {
         for (; insert != m_inserts.end() && insert->end() < cit->index; ++insert) {}
@@ -560,52 +560,10 @@ void QQmlChangeSet::change(QVector<Change> *changes)
 QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 {
     debug.nospace() << "QQmlChangeSet(";
-    foreach (const QQmlChangeSet::Remove &remove, set.removes()) debug << remove;
-    foreach (const QQmlChangeSet::Insert &insert, set.inserts()) debug << insert;
+    foreach (const QQmlChangeSet::Change &remove, set.removes()) debug << remove;
+    foreach (const QQmlChangeSet::Change &insert, set.inserts()) debug << insert;
     foreach (const QQmlChangeSet::Change &change, set.changes()) debug << change;
     return debug.nospace() << ')';
-}
-
-/*!
-    Prints a \a remove to the \a debug stream.
-*/
-
-QDebug operator <<(QDebug debug, const QQmlChangeSet::Remove &remove)
-{
-    if (remove.moveId == -1) {
-        return (debug.nospace()
-                << "Remove(" << remove.index
-                << ',' << remove.count
-                << ')').space();
-    } else {
-        return (debug.nospace()
-                << "Remove(" << remove.index
-                << ',' << remove.count
-                << ',' << remove.moveId
-                << ',' << remove.offset
-                << ')').space();
-    }
-}
-
-/*!
-    Prints an \a insert to the \a debug stream.
-*/
-
-QDebug operator <<(QDebug debug, const QQmlChangeSet::Insert &insert)
-{
-    if (insert.moveId == -1) {
-        return (debug.nospace()
-                << "Insert(" << insert.index
-                << ',' << insert.count
-                << ')').space();
-    } else {
-        return (debug.nospace()
-                << "Insert(" << insert.index
-                << ',' << insert.count
-                << ',' << insert.moveId
-                << ',' << insert.offset
-                << ')').space();
-    }
 }
 
 /*!
