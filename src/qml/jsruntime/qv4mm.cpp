@@ -363,7 +363,7 @@ void MemoryManager::sweep(bool lastSweep)
         Managed *m = i->managed();
         Q_ASSERT(m->inUse());
         if (m->markBit()) {
-            m->managedData()->markBit = 0;
+            m->d()->markBit = 0;
             last = &i->next;
             i = i->next;
             continue;
@@ -404,7 +404,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 
         if (m->inUse()) {
             if (m->markBit()) {
-                m->managedData()->markBit = 0;
+                m->d()->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << *f << m->nextFree();
 #ifdef V4_USE_VALGRIND

@@ -382,7 +382,7 @@ void Managed::mark(QV4::ExecutionEngine *engine)
     Q_ASSERT(inUse());
     if (markBit())
         return;
-    managedData()->markBit = 1;
+    d()->markBit = 1;
     engine->pushForGC(this);
 }
 

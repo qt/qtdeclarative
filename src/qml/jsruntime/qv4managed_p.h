@@ -193,10 +193,10 @@ protected:
     Managed(InternalClass *internal)
     {
         Q_ASSERT(internal && internal->vtable);
-        managedData()->internalClass = internal;
-        managedData()->_data = 0;
-        managedData()->inUse = 1;
-        managedData()->extensible = 1;
+        d()->internalClass = internal;
+        d()->_data = 0;
+        d()->inUse = 1;
+        d()->extensible = 1;
     }
 
 public:
@@ -310,17 +310,17 @@ public:
     };
     Data data;
 
-    Data *managedData() { return &data; }
-    const Data *managedData() const { return &data; }
+    Data *d() { return &data; }
+    const Data *d() const { return &data; }
 
-    InternalClass *internalClass() const { return managedData()->internalClass; }
-    void setInternalClass(InternalClass *ic) { managedData()->internalClass = ic; }
+    InternalClass *internalClass() const { return d()->internalClass; }
+    void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
-    uchar subtype() const { return managedData()->subtype; }
-    void setSubtype(uchar subtype) const { managedData()->subtype = subtype; }
+    uchar subtype() const { return d()->subtype; }
+    void setSubtype(uchar subtype) const { d()->subtype = subtype; }
 
-    bool inUse() const { return managedData()->inUse; }
-    bool markBit() const { return managedData()->markBit; }
+    bool inUse() const { return d()->inUse; }
+    bool markBit() const { return d()->markBit; }
 
     static void destroy(Managed *) {}
 private:

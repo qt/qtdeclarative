@@ -84,7 +84,7 @@ public:
             String *entry = entries[i];
             if (!entry || entry->markBit())
                 continue;
-            entry->managedData()->markBit = 1;
+            entry->d()->markBit = 1;
             Q_ASSERT(entry->internalClass()->vtable->markObjects);
             entry->internalClass()->vtable->markObjects(entry, e);
         }

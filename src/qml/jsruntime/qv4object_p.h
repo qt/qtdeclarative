@@ -186,11 +186,11 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
-    inline bool hasAccessorProperty() const { return managedData()->hasAccessorProperty; }
-    inline void setHasAccessorProperty() { managedData()->hasAccessorProperty = true; }
+    inline bool hasAccessorProperty() const { return d()->hasAccessorProperty; }
+    inline void setHasAccessorProperty() { d()->hasAccessorProperty = true; }
 
-    bool isExtensible() const { return managedData()->extensible; }
-    void setExtensible(bool b) { managedData()->extensible = b; }
+    bool isExtensible() const { return d()->extensible; }
+    void setExtensible(bool b) { d()->extensible = b; }
 
     // Array handling
 

@@ -72,7 +72,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     d()->function = f;
     if (function())
         function()->compilationUnit->ref();
-    managedData()->needsActivation = function() ? function()->needsActivation() : false;
+    d()->needsActivation = function() ? function()->needsActivation() : false;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -91,7 +91,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    managedData()->needsActivation = false;
+    d()->needsActivation = false;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);

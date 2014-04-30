@@ -409,9 +409,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     if (!function)
         return Encode::undefined();
 
-    managedData()->strictMode = function->isStrict() || (ctx->strictMode);
+    d()->strictMode = function->isStrict() || (ctx->strictMode);
 
-    managedData()->needsActivation = function->needsActivation();
+    d()->needsActivation = function->needsActivation();
 
     if (strictMode()) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));

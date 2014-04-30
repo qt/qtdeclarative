@@ -151,9 +151,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ReturnedValue protoProperty() { return memberData()[Index_Prototype].asReturnedValue(); }
 
-    bool needsActivation() const { return managedData()->needsActivation; }
-    bool strictMode() const { return managedData()->strictMode; }
-    bool bindingKeyFlag() const { return managedData()->bindingKeyFlag; }
+    bool needsActivation() const { return d()->needsActivation; }
+    bool strictMode() const { return d()->strictMode; }
+    bool bindingKeyFlag() const { return d()->bindingKeyFlag; }
 
 protected:
     FunctionObject(InternalClass *ic);

@@ -112,8 +112,8 @@ FunctionObject::FunctionObject(InternalClass *ic)
     d()->scope = ic->engine->rootContext;
     d()->function = 0;
 
-    managedData()->needsActivation = false;
-    managedData()->strictMode = false;
+    d()->needsActivation = false;
+    d()->strictMode = false;
     memberData()[Index_Prototype] = Encode::undefined();
 }
 
@@ -128,8 +128,8 @@ void FunctionObject::init(const StringRef n, bool createProto)
     Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
 
-    managedData()->needsActivation = true;
-    managedData()->strictMode = false;
+    d()->needsActivation = true;
+    d()->strictMode = false;
 
     if (createProto) {
         Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
@@ -366,8 +366,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    managedData()->needsActivation = function->needsActivation();
-    managedData()->strictMode = function->isStrict();
+    d()->needsActivation = function->needsActivation();
+    d()->strictMode = function->isStrict();
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
@@ -450,8 +450,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
     ExecutionEngine *v4 = scope->engine;
 
-    managedData()->needsActivation = function->needsActivation();
-    managedData()->strictMode = function->isStrict();
+    d()->needsActivation = function->needsActivation();
+    d()->strictMode = function->isStrict();
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 

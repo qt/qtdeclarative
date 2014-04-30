@@ -161,7 +161,7 @@ QString Managed::className() const
 void Managed::setVTable(const ManagedVTable *vt)
 {
     Q_ASSERT(internalClass());
-    managedData()->internalClass = internalClass()->changeVTable(vt);
+    d()->internalClass = internalClass()->changeVTable(vt);
 }
 
 bool Managed::isEqualTo(Managed *, Managed *)
