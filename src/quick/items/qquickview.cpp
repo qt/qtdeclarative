@@ -60,14 +60,14 @@ DEFINE_OBJECT_VTABLE(QQuickRootItemMarker);
 
 QQuickRootItemMarker::QQuickRootItemMarker(QQmlEngine *engine, QQuickWindow *window)
     : QV4::Object(QQmlEnginePrivate::getV4Engine(engine))
-    , window(window)
 {
+    d()->window = window;
     setVTable(staticVTable());
 }
 
 void QQuickRootItemMarker::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
 {
-    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->window->contentItem();
+    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->d()->window->contentItem();
     if (root) {
         QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
         rootPrivate->markObjects(e);

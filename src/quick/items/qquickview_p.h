@@ -104,7 +104,14 @@ public:
 
 struct QQuickRootItemMarker : public QV4::Object
 {
-    V4_OBJECT
+    struct Data : QV4::Object::Data {
+        QQuickWindow *window;
+    };
+    struct {
+        QQuickWindow *window;
+    } __data;
+
+    V4_OBJECT_NEW
 
     QQuickRootItemMarker(QQmlEngine *engine, QQuickWindow *window);
 
@@ -115,7 +122,6 @@ struct QQuickRootItemMarker : public QV4::Object
 
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 
-    QQuickWindow *window;
 };
 
 QT_END_NAMESPACE
