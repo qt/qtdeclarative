@@ -76,54 +76,54 @@ public:
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
-    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
-    virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index, IR::Temp *result);
-    virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinTypeofValue(IR::Expr *value, IR::Temp *result);
-    virtual void callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Expr *index, IR::Temp *result);
-    virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinDeleteValue(IR::Temp *result);
+    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result);
+    virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Expr *result);
+    virtual void callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index, IR::Expr *result);
+    virtual void callBuiltinTypeofName(const QString &name, IR::Expr *result);
+    virtual void callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result);
+    virtual void callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result);
+    virtual void callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index, IR::Expr *result);
+    virtual void callBuiltinDeleteName(const QString &name, IR::Expr *result);
+    virtual void callBuiltinDeleteValue(IR::Expr *result);
     virtual void callBuiltinThrow(IR::Expr *arg);
     virtual void callBuiltinReThrow();
-    virtual void callBuiltinUnwindException(IR::Temp *);
+    virtual void callBuiltinUnwindException(IR::Expr *);
     virtual void callBuiltinPushCatchScope(const QString &exceptionName);
-    virtual void callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result);
-    virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
-    virtual void callBuiltinPushWithScope(IR::Temp *arg);
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result);
+    virtual void callBuiltinForeachNextPropertyname(IR::Expr *arg, IR::Expr *result);
+    virtual void callBuiltinPushWithScope(IR::Expr *arg);
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
-    virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray);
-    virtual void callBuiltinSetupArgumentObject(IR::Temp *result);
+    virtual void callBuiltinDefineArray(IR::Expr *result, IR::ExprList *args);
+    virtual void callBuiltinDefineObjectLiteral(IR::Expr *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray);
+    virtual void callBuiltinSetupArgumentObject(IR::Expr *result);
     virtual void callBuiltinConvertThisToObject();
-    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
-    virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Temp *result);
-    virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args, IR::Temp *result);
-    virtual void convertType(IR::Temp *source, IR::Temp *target);
-    virtual void loadThisObject(IR::Temp *temp);
-    virtual void loadQmlIdArray(IR::Temp *temp);
-    virtual void loadQmlImportedScripts(IR::Temp *temp);
-    virtual void loadQmlContextObject(IR::Temp *temp);
-    virtual void loadQmlScopeObject(IR::Temp *temp);
-    virtual void loadQmlSingleton(const QString &name, IR::Temp *temp);
-    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
-    virtual void loadString(const QString &str, IR::Temp *targetTemp);
-    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
-    virtual void getActivationProperty(const IR::Name *name, IR::Temp *temp);
+    virtual void callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result);
+    virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr *result);
+    virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args, IR::Expr *result);
+    virtual void convertType(IR::Expr *source, IR::Expr *target);
+    virtual void loadThisObject(IR::Expr *temp);
+    virtual void loadQmlIdArray(IR::Expr *target);
+    virtual void loadQmlImportedScripts(IR::Expr *target);
+    virtual void loadQmlContextObject(IR::Expr *target);
+    virtual void loadQmlScopeObject(IR::Expr *target);
+    virtual void loadQmlSingleton(const QString &name, IR::Expr *target);
+    virtual void loadConst(IR::Const *sourceConst, IR::Expr *target);
+    virtual void loadString(const QString &str, IR::Expr *target);
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target);
+    virtual void getActivationProperty(const IR::Name *name, IR::Expr *target);
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
-    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
-    virtual void getProperty(IR::Expr *base, const QString &name, IR::Temp *target);
+    virtual void initClosure(IR::Closure *closure, IR::Expr *target);
+    virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target);
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target);
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex);
-    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Temp *target);
-    virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target);
+    virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target);
     virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex);
-    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
-    virtual void swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp);
-    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
-    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    virtual void copyValue(IR::Expr *source, IR::Expr *target);
+    virtual void swapValues(IR::Expr *source, IR::Expr *target);
+    virtual void unop(IR::AluOp oper, IR::Expr *sourceTemp, IR::Expr *target);
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
 
     typedef Assembler::Address Address;
     typedef Assembler::Pointer Pointer;
@@ -148,9 +148,9 @@ protected:
         return _as->stackLayout().callDataAddress();
     }
 
-    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
-    virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
-    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
+    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Expr *result);
+    virtual void constructProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr*result);
+    virtual void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result);
 
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
@@ -167,44 +167,51 @@ protected:
     void visitCJumpEqual(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
 
 private:
-    void convertTypeSlowPath(IR::Temp *source, IR::Temp *target);
-    void convertTypeToDouble(IR::Temp *source, IR::Temp *target);
-    void convertTypeToBool(IR::Temp *source, IR::Temp *target);
-    void convertTypeToSInt32(IR::Temp *source, IR::Temp *target);
-    void convertTypeToUInt32(IR::Temp *source, IR::Temp *target);
+    void convertTypeSlowPath(IR::Expr *source, IR::Expr *target);
+    void convertTypeToDouble(IR::Expr *source, IR::Expr *target);
+    void convertTypeToBool(IR::Expr *source, IR::Expr *target);
+    void convertTypeToSInt32(IR::Expr *source, IR::Expr *target);
+    void convertTypeToUInt32(IR::Expr *source, IR::Expr *target);
 
-    void convertIntToDouble(IR::Temp *source, IR::Temp *target)
+    void convertIntToDouble(IR::Expr *source, IR::Expr *target)
     {
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                      (Assembler::FPRegisterID) target->index);
-        } else {
-            _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                      Assembler::FPGpr0);
-            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+        if (IR::Temp *targetTemp = target->asTemp()) {
+            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                          (Assembler::FPRegisterID) targetTemp->index);
+                return;
+            }
         }
+
+        _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                  Assembler::FPGpr0);
+        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ScratchRegister, target));
     }
 
-    void convertUIntToDouble(IR::Temp *source, IR::Temp *target)
+    void convertUIntToDouble(IR::Expr *source, IR::Expr *target)
     {
         Assembler::RegisterID tmpReg = Assembler::ScratchRegister;
         Assembler::RegisterID reg = _as->toInt32Register(source, tmpReg);
 
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            _as->convertUInt32ToDouble(reg, (Assembler::FPRegisterID) target->index, tmpReg);
-        } else {
-            _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
-                                      Assembler::FPGpr0, tmpReg);
-            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+        if (IR::Temp *targetTemp = target->asTemp()) {
+            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                _as->convertUInt32ToDouble(reg, (Assembler::FPRegisterID) targetTemp->index, tmpReg);
+                return;
+            }
         }
+
+        _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
+                                   Assembler::FPGpr0, tmpReg);
+        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(tmpReg, target));
     }
 
-    void convertIntToBool(IR::Temp *source, IR::Temp *target)
+    void convertIntToBool(IR::Expr *source, IR::Expr *target)
     {
-        Assembler::RegisterID reg = target->kind == IR::Temp::PhysicalRegister
-                ? (Assembler::RegisterID) target->index
-                : Assembler::ScratchRegister;
+        Assembler::RegisterID reg = Assembler::ScratchRegister;
 
+        if (IR::Temp *targetTemp = target->asTemp())
+            if (targetTemp->kind == IR::Temp::PhysicalRegister)
+                reg = (Assembler::RegisterID) targetTemp->index;
         _as->move(_as->toInt32Register(source, reg), reg);
         _as->compare32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0), reg);
         _as->storeBool(reg, target);

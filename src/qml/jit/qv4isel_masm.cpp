@@ -389,7 +389,7 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
     return compilationUnit;
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)
 {
     prepareCallData(args, 0);
 
@@ -408,52 +408,52 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
 }
 
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
-                                                   IR::Temp *result)
+                                                   IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::typeofMember, Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index,
-                                                      IR::Temp *result)
+                                                      IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::typeofElement,
                          Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
-void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::typeofName, Assembler::ContextRegister,
                          Assembler::PointerToString(name));
 }
 
-void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::typeofValue, Assembler::ContextRegister,
                          Assembler::PointerToValue(value));
 }
 
-void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::deleteMember, Assembler::ContextRegister,
                          Assembler::Reference(base), Assembler::PointerToString(name));
 }
 
-void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Expr *index,
-                                                      IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index,
+                                                      IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::deleteElement, Assembler::ContextRegister,
                          Assembler::Reference(base), Assembler::PointerToValue(index));
 }
 
-void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::deleteName, Assembler::ContextRegister,
                          Assembler::PointerToString(name));
 }
 
-void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
 {
     _as->storeValue(Primitive::fromBoolean(false), result);
 }
@@ -469,7 +469,7 @@ void InstructionSelection::callBuiltinReThrow()
     _as->jumpToExceptionHandler();
 }
 
-void InstructionSelection::callBuiltinUnwindException(IR::Temp *result)
+void InstructionSelection::callBuiltinUnwindException(IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::unwindException, Assembler::ContextRegister);
 
@@ -481,7 +481,7 @@ void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionNam
     generateFunctionCall(Assembler::ContextRegister, Runtime::pushCatchScope, Assembler::ContextRegister, s);
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result)
 {
     Q_ASSERT(arg);
     Q_ASSERT(result);
@@ -489,7 +489,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::T
     generateFunctionCall(result, Runtime::foreachIterator, Assembler::ContextRegister, Assembler::PointerToValue(arg));
 }
 
-void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR::Expr *result)
 {
     Q_ASSERT(arg);
     Q_ASSERT(result);
@@ -497,7 +497,7 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     generateFunctionCall(result, Runtime::foreachNextPropertyName, Assembler::Reference(arg));
 }
 
-void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(IR::Expr *arg)
 {
     Q_ASSERT(arg);
 
@@ -515,7 +515,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
                          Assembler::TrustedImm32(deletable), Assembler::PointerToString(name));
 }
 
-void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineArray(IR::Expr *result, IR::ExprList *args)
 {
     Q_ASSERT(result);
 
@@ -524,7 +524,7 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
                          baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
 {
     Q_ASSERT(result);
 
@@ -605,7 +605,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
                          Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
 }
 
-void InstructionSelection::callBuiltinSetupArgumentObject(IR::Temp *result)
+void InstructionSelection::callBuiltinSetupArgumentObject(IR::Expr *result)
 {
     generateFunctionCall(result, Runtime::setupArgumentsObject, Assembler::ContextRegister);
 }
@@ -615,7 +615,7 @@ void InstructionSelection::callBuiltinConvertThisToObject()
     generateFunctionCall(Assembler::Void, Runtime::convertThisToObject, Assembler::ContextRegister);
 }
 
-void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
 {
     Q_ASSERT(value);
 
@@ -625,7 +625,7 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
                          baseAddressForCallData());
 }
 
-void InstructionSelection::loadThisObject(IR::Temp *temp)
+void InstructionSelection::loadThisObject(IR::Expr *temp)
 {
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, callData)), Assembler::ScratchRegister);
 #if defined(VALUE_FITS_IN_REGISTER)
@@ -637,60 +637,63 @@ void InstructionSelection::loadThisObject(IR::Temp *temp)
 #endif
 }
 
-void InstructionSelection::loadQmlIdArray(IR::Temp *temp)
+void InstructionSelection::loadQmlIdArray(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlIdArray, Assembler::ContextRegister);
 }
 
-void InstructionSelection::loadQmlImportedScripts(IR::Temp *temp)
+void InstructionSelection::loadQmlImportedScripts(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlImportedScripts, Assembler::ContextRegister);
 }
 
-void InstructionSelection::loadQmlContextObject(IR::Temp *temp)
+void InstructionSelection::loadQmlContextObject(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlContextObject, Assembler::ContextRegister);
 }
 
-void InstructionSelection::loadQmlScopeObject(IR::Temp *temp)
+void InstructionSelection::loadQmlScopeObject(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlScopeObject, Assembler::ContextRegister);
 }
 
-void InstructionSelection::loadQmlSingleton(const QString &name, IR::Temp *temp)
+void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlSingleton, Assembler::ContextRegister, Assembler::PointerToString(name));
 }
 
-void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
 {
-    if (targetTemp->kind == IR::Temp::PhysicalRegister) {
-        if (targetTemp->type == IR::DoubleType) {
-            Q_ASSERT(sourceConst->type == IR::DoubleType);
-            _as->toDoubleRegister(sourceConst, (Assembler::FPRegisterID) targetTemp->index);
-        } else if (targetTemp->type == IR::SInt32Type) {
-            Q_ASSERT(sourceConst->type == IR::SInt32Type);
-            _as->toInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
-        } else if (targetTemp->type == IR::UInt32Type) {
-            Q_ASSERT(sourceConst->type == IR::UInt32Type);
-            _as->toUInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
-        } else if (targetTemp->type == IR::BoolType) {
-            Q_ASSERT(sourceConst->type == IR::BoolType);
-            _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32),
-                      (Assembler::RegisterID) targetTemp->index);
-        } else {
-            Q_UNREACHABLE();
+    if (IR::Temp *targetTemp = target->asTemp()) {
+        if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+            if (targetTemp->type == IR::DoubleType) {
+                Q_ASSERT(sourceConst->type == IR::DoubleType);
+                _as->toDoubleRegister(sourceConst, (Assembler::FPRegisterID) targetTemp->index);
+            } else if (targetTemp->type == IR::SInt32Type) {
+                Q_ASSERT(sourceConst->type == IR::SInt32Type);
+                _as->toInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
+            } else if (targetTemp->type == IR::UInt32Type) {
+                Q_ASSERT(sourceConst->type == IR::UInt32Type);
+                _as->toUInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
+            } else if (targetTemp->type == IR::BoolType) {
+                Q_ASSERT(sourceConst->type == IR::BoolType);
+                _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32),
+                          (Assembler::RegisterID) targetTemp->index);
+            } else {
+                Q_UNREACHABLE();
+            }
+            return;
         }
-    } else {
-        _as->storeValue(convertToValue(sourceConst), targetTemp);
     }
+
+    _as->storeValue(convertToValue(sourceConst), target);
 }
 
-void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+void InstructionSelection::loadString(const QString &str, IR::Expr *target)
 {
     Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
     _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
-    Pointer destAddr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
+    Pointer destAddr = _as->loadAddress(Assembler::ScratchRegister, target);
 #if QT_POINTER_SIZE == 8
     _as->store64(Assembler::ReturnValueRegister, destAddr);
 #else
@@ -700,20 +703,20 @@ void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 #endif
 }
 
-void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target)
 {
     int id = registerRegExp(sourceRegexp);
-    generateFunctionCall(targetTemp, Runtime::regexpLiteral, Assembler::ContextRegister, Assembler::TrustedImm32(id));
+    generateFunctionCall(target, Runtime::regexpLiteral, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 
-void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr *target)
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(temp, index, qOffsetOf(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
+        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
         return;
     }
-    generateFunctionCall(temp, Runtime::getActivationProperty, Assembler::ContextRegister, Assembler::PointerToString(*name->id));
+    generateFunctionCall(target, Runtime::getActivationProperty, Assembler::ContextRegister, Assembler::PointerToString(*name->id));
 }
 
 void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
@@ -723,13 +726,13 @@ void InstructionSelection::setActivationProperty(IR::Expr *source, const QString
                          Assembler::ContextRegister, Assembler::PointerToString(targetName), Assembler::PointerToValue(source));
 }
 
-void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+void InstructionSelection::initClosure(IR::Closure *closure, IR::Expr *target)
 {
     int id = closure->value;
     generateFunctionCall(target, Runtime::closure, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 
-void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Temp *target)
+void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Expr *target)
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
@@ -740,7 +743,7 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Temp *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
         generateFunctionCall(target, Runtime::getQmlAttachedProperty, Assembler::ContextRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
@@ -770,7 +773,7 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
                          Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
 }
 
-void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target)
+void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
     if (useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
@@ -798,13 +801,20 @@ void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase, IR
                          Assembler::PointerToValue(source));
 }
 
-void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
 {
-    if (*sourceTemp == *targetTemp)
-        return;
+    IR::Temp *sourceTemp = source->asTemp();
+    IR::Temp *targetTemp = target->asTemp();
 
-    if (sourceTemp->kind == IR::Temp::PhysicalRegister) {
-        if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+    if (sourceTemp && targetTemp && *sourceTemp == *targetTemp)
+        return;
+    if (IR::ArgLocal *sal = source->asArgLocal())
+        if (IR::ArgLocal *tal = target->asArgLocal())
+            if (*sal == *tal)
+                return;
+
+    if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister) {
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
             if (sourceTemp->type == IR::DoubleType)
                 _as->moveDouble((Assembler::FPRegisterID) sourceTemp->index,
                                 (Assembler::FPRegisterID) targetTemp->index);
@@ -815,16 +825,16 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
         } else {
             switch (sourceTemp->type) {
             case IR::DoubleType:
-                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, targetTemp);
+                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, target);
                 break;
             case IR::SInt32Type:
-                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
+                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, target);
                 break;
             case IR::UInt32Type:
-                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
+                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, target);
                 break;
             case IR::BoolType:
-                _as->storeBool((Assembler::RegisterID) sourceTemp->index, targetTemp);
+                _as->storeBool((Assembler::RegisterID) sourceTemp->index, target);
                 break;
             default:
                 Q_ASSERT(!"Unreachable");
@@ -832,23 +842,23 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
             }
             return;
         }
-    } else if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+    } else if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
         switch (targetTemp->type) {
         case IR::DoubleType:
-            Q_ASSERT(sourceTemp->type == IR::DoubleType);
-            _as->toDoubleRegister(sourceTemp, (Assembler::FPRegisterID) targetTemp->index);
+            Q_ASSERT(source->type == IR::DoubleType);
+            _as->toDoubleRegister(source, (Assembler::FPRegisterID) targetTemp->index);
             return;
         case IR::BoolType:
-            Q_ASSERT(sourceTemp->type == IR::BoolType);
-            _as->toInt32Register(sourceTemp, (Assembler::RegisterID) targetTemp->index);
+            Q_ASSERT(source->type == IR::BoolType);
+            _as->toInt32Register(source, (Assembler::RegisterID) targetTemp->index);
             return;
         case IR::SInt32Type:
-            Q_ASSERT(sourceTemp->type == IR::SInt32Type);
-            _as->toInt32Register(sourceTemp, (Assembler::RegisterID) targetTemp->index);
+            Q_ASSERT(source->type == IR::SInt32Type);
+            _as->toInt32Register(source, (Assembler::RegisterID) targetTemp->index);
             return;
         case IR::UInt32Type:
-            Q_ASSERT(sourceTemp->type == IR::UInt32Type);
-            _as->toUInt32Register(sourceTemp, (Assembler::RegisterID) targetTemp->index);
+            Q_ASSERT(source->type == IR::UInt32Type);
+            _as->toUInt32Register(source, (Assembler::RegisterID) targetTemp->index);
             return;
         default:
             Q_ASSERT(!"Unreachable");
@@ -857,14 +867,16 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
     }
 
     // The target is not a physical register, nor is the source. So we can do a memory-to-memory copy:
-    _as->memcopyValue(_as->loadTempAddress(Assembler::ReturnValueRegister, targetTemp), sourceTemp,
-                      Assembler::ScratchRegister);
+    _as->memcopyValue(_as->loadAddress(Assembler::ReturnValueRegister, target), source, Assembler::ScratchRegister);
 }
 
-void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 {
-    if (sourceTemp->kind == IR::Temp::PhysicalRegister) {
-        if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+    IR::Temp *sourceTemp = source->asTemp();
+    IR::Temp *targetTemp = target->asTemp();
+
+    if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister) {
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
             Q_ASSERT(sourceTemp->type == targetTemp->type);
 
             if (sourceTemp->type == IR::DoubleType) {
@@ -878,11 +890,11 @@ void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp
             }
             return;
         }
-    } else if (sourceTemp->kind == IR::Temp::StackSlot) {
-        if (targetTemp->kind == IR::Temp::StackSlot) {
+    } else if (!sourceTemp || sourceTemp->kind == IR::Temp::StackSlot) {
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             // Note: a swap for two stack-slots can involve different types.
-            Assembler::Pointer sAddr = _as->stackSlotPointer(sourceTemp);
-            Assembler::Pointer tAddr = _as->stackSlotPointer(targetTemp);
+            Assembler::Pointer sAddr = _as->loadAddress(Assembler::ScratchRegister, source);
+            Assembler::Pointer tAddr = _as->loadAddress(Assembler::ReturnValueRegister, target);
             // use the implementation in JSC::MacroAssembler, as it doesn't do bit swizzling
             _as->JSC::MacroAssembler::loadDouble(sAddr, Assembler::FPGpr0);
             _as->JSC::MacroAssembler::loadDouble(tAddr, Assembler::FPGpr1);
@@ -892,25 +904,28 @@ void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp
         }
     }
 
-    IR::Temp *stackTemp = sourceTemp->kind == IR::Temp::StackSlot ? sourceTemp : targetTemp;
-    IR::Temp *registerTemp = sourceTemp->kind == IR::Temp::PhysicalRegister ? sourceTemp
-                                                                                : targetTemp;
-    Assembler::Pointer addr = _as->stackSlotPointer(stackTemp);
-    if (registerTemp->type == IR::DoubleType) {
+    IR::Expr *memExpr = !sourceTemp || sourceTemp->kind == IR::Temp::StackSlot ? source : target;
+    IR::Temp *regTemp = sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister ? sourceTemp
+                                                                                     : targetTemp;
+    Q_ASSERT(memExpr);
+    Q_ASSERT(regTemp);
+
+    Assembler::Pointer addr = _as->loadAddress(Assembler::ReturnValueRegister, memExpr);
+    if (regTemp->type == IR::DoubleType) {
         _as->loadDouble(addr, Assembler::FPGpr0);
-        _as->storeDouble((Assembler::FPRegisterID) registerTemp->index, addr);
-        _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) registerTemp->index);
-    } else if (registerTemp->type == IR::UInt32Type) {
+        _as->storeDouble((Assembler::FPRegisterID) regTemp->index, addr);
+        _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) regTemp->index);
+    } else if (regTemp->type == IR::UInt32Type) {
         _as->toUInt32Register(addr, Assembler::ScratchRegister);
-        _as->storeUInt32((Assembler::RegisterID) registerTemp->index, addr);
-        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
+        _as->storeUInt32((Assembler::RegisterID) regTemp->index, addr);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) regTemp->index);
     } else {
         _as->load32(addr, Assembler::ScratchRegister);
-        _as->store32((Assembler::RegisterID) registerTemp->index, addr);
-        if (registerTemp->type != stackTemp->type) {
+        _as->store32((Assembler::RegisterID) regTemp->index, addr);
+        if (regTemp->type != memExpr->type) {
             addr.offset += 4;
             quint32 tag;
-            switch (registerTemp->type) {
+            switch (regTemp->type) {
             case IR::BoolType:
                 tag = QV4::Value::_Boolean_Type;
                 break;
@@ -923,7 +938,7 @@ void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp
             }
             _as->store32(Assembler::TrustedImm32(tag), addr);
         }
-        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) regTemp->index);
     }
 }
 
@@ -932,21 +947,21 @@ void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp
 #define setOpContext(op, opName, operation) \
     do { opContext = operation; opName = isel_stringIfy(operation); } while (0)
 
-void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
     QV4::JIT::Unop unop(_as, oper);
-    unop.generate(sourceTemp, targetTemp);
+    unop.generate(source, target);
 }
 
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
     QV4::JIT::Binop binop(_as, oper);
     binop.generate(leftSource, rightSource, target);
 }
 
 void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
-                                        IR::Temp *result)
+                                        IR::Expr *result)
 {
     Q_ASSERT(base != 0);
 
@@ -966,7 +981,7 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
 }
 
 void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
-                                         IR::Temp *result)
+                                         IR::Expr *result)
 {
     Q_ASSERT(base != 0);
 
@@ -976,7 +991,7 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
                          baseAddressForCallData());
 }
 
-void InstructionSelection::convertType(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertType(IR::Expr *source, IR::Expr *target)
 {
     switch (target->type) {
     case IR::DoubleType:
@@ -997,7 +1012,7 @@ void InstructionSelection::convertType(IR::Temp *source, IR::Temp *target)
     }
 }
 
-void InstructionSelection::convertTypeSlowPath(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertTypeSlowPath(IR::Expr *source, IR::Expr *target)
 {
     Q_ASSERT(target->type != IR::BoolType);
 
@@ -1007,7 +1022,7 @@ void InstructionSelection::convertTypeSlowPath(IR::Temp *source, IR::Temp *targe
         copyValue(source, target);
 }
 
-void InstructionSelection::convertTypeToDouble(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *target)
 {
     switch (source->type) {
     case IR::SInt32Type:
@@ -1019,13 +1034,13 @@ void InstructionSelection::convertTypeToDouble(IR::Temp *source, IR::Temp *targe
         convertUIntToDouble(source, target);
         break;
     case IR::UndefinedType:
-        _as->loadDouble(_as->loadTempAddress(Assembler::ScratchRegister, source), Assembler::FPGpr0);
+        _as->loadDouble(_as->loadAddress(Assembler::ScratchRegister, source), Assembler::FPGpr0);
         _as->storeDouble(Assembler::FPGpr0, target);
         break;
     case IR::StringType:
     case IR::VarType: {
         // load the tag:
-        Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, source);
         tagAddr.offset += 4;
         _as->load32(tagAddr, Assembler::ScratchRegister);
 
@@ -1052,17 +1067,18 @@ void InstructionSelection::convertTypeToDouble(IR::Temp *source, IR::Temp *targe
 
         // it is a double:
         isDbl.link(_as);
-        Assembler::Pointer addr2 = _as->loadTempAddress(Assembler::ScratchRegister, source);
-        if (target->kind == IR::Temp::StackSlot) {
+        Assembler::Pointer addr2 = _as->loadAddress(Assembler::ScratchRegister, source);
+        IR::Temp *targetTemp = target->asTemp();
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
 #if QT_POINTER_SIZE == 8
             _as->load64(addr2, Assembler::ScratchRegister);
-            _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(target));
+            _as->store64(Assembler::ScratchRegister, _as->loadAddress(Assembler::ReturnValueRegister, target));
 #else
             _as->loadDouble(addr2, Assembler::FPGpr0);
-            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+            _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ReturnValueRegister, target));
 #endif
         } else {
-            _as->loadDouble(addr2, (Assembler::FPRegisterID) target->index);
+            _as->loadDouble(addr2, (Assembler::FPRegisterID) targetTemp->index);
         }
 
         noDoubleDone.link(_as);
@@ -1074,8 +1090,9 @@ void InstructionSelection::convertTypeToDouble(IR::Temp *source, IR::Temp *targe
     }
 }
 
-void InstructionSelection::convertTypeToBool(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
 {
+    IR::Temp *sourceTemp = source->asTemp();
     switch (source->type) {
     case IR::SInt32Type:
     case IR::UInt32Type:
@@ -1086,8 +1103,8 @@ void InstructionSelection::convertTypeToBool(IR::Temp *source, IR::Temp *target)
         // allocator was not used, then that means that we can use any register for to
         // load the double into.
         Assembler::FPRegisterID reg;
-        if (source->kind == IR::Temp::PhysicalRegister)
-            reg = (Assembler::FPRegisterID) source->index;
+        if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister)
+            reg = (Assembler::FPRegisterID) sourceTemp->index;
         else
             reg = _as->toDoubleRegister(source, (Assembler::FPRegisterID) 1);
         Assembler::Jump nonZero = _as->branchDoubleNonZero(reg, Assembler::FPGpr0);
@@ -1117,13 +1134,13 @@ void InstructionSelection::convertTypeToBool(IR::Temp *source, IR::Temp *target)
     }
 }
 
-void InstructionSelection::convertTypeToSInt32(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *target)
 {
     switch (source->type) {
     case IR::VarType: {
 
 #if QT_POINTER_SIZE == 8
-        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         _as->load64(addr, Assembler::ScratchRegister);
         _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
 
@@ -1143,12 +1160,13 @@ void InstructionSelection::convertTypeToSInt32(IR::Temp *source, IR::Temp *targe
         // not an int:
         fallback.link(_as);
         generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
-                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+                             _as->loadAddress(Assembler::ScratchRegister, source));
 
         isInt.link(_as);
         success.link(_as);
-        if (target->kind == IR::Temp::StackSlot) {
-            Assembler::Pointer targetAddr = _as->stackSlotPointer(target);
+        IR::Temp *targetTemp = target->asTemp();
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
+            Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
             _as->store32(Assembler::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             _as->store32(Assembler::TrustedImm32(Value::_Integer_Type), targetAddr);
@@ -1157,7 +1175,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Temp *source, IR::Temp *targe
         }
 #else
         // load the tag:
-        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         Assembler::Pointer tagAddr = addr;
         tagAddr.offset += 4;
         _as->load32(tagAddr, Assembler::ReturnValueRegister);
@@ -1165,21 +1183,22 @@ void InstructionSelection::convertTypeToSInt32(IR::Temp *source, IR::Temp *targe
         // check if it's an int32:
         Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
                                                 Assembler::TrustedImm32(Value::_Integer_Type));
-        if (target->kind == IR::Temp::StackSlot) {
-            _as->load32(addr, Assembler::ScratchRegister);
-            Assembler::Pointer targetAddr = _as->stackSlotPointer(target);
-            _as->store32(Assembler::ScratchRegister, targetAddr);
+        IR::Temp *targetTemp = target->asTemp();
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
+            _as->load32(addr, Assembler::ReturnValueRegister);
+            Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
+            _as->store32(Assembler::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             _as->store32(Assembler::TrustedImm32(Value::_Integer_Type), targetAddr);
         } else {
-            _as->load32(addr, (Assembler::RegisterID) target->index);
+            _as->load32(addr, (Assembler::RegisterID) targetTemp->index);
         }
         Assembler::Jump intDone = _as->jump();
 
         // not an int:
         fallback.link(_as);
         generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
-                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+                             _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
 
         intDone.link(_as);
@@ -1210,32 +1229,32 @@ void InstructionSelection::convertTypeToSInt32(IR::Temp *source, IR::Temp *targe
     case IR::StringType:
     default:
         generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
-                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+                             _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
         break;
     } // switch (source->type)
 }
 
-void InstructionSelection::convertTypeToUInt32(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *target)
 {
     switch (source->type) {
     case IR::VarType: {
         // load the tag:
-        Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, source);
         tagAddr.offset += 4;
         _as->load32(tagAddr, Assembler::ScratchRegister);
 
         // check if it's an int32:
         Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                                 Assembler::TrustedImm32(Value::_Integer_Type));
-        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         _as->storeUInt32(_as->toInt32Register(addr, Assembler::ScratchRegister), target);
         Assembler::Jump intDone = _as->jump();
 
         // not an int:
         isNoInt.link(_as);
         generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toUInt,
-                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+                             _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
 
         intDone.link(_as);
@@ -1269,7 +1288,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Temp *source, IR::Temp *targe
     } // switch (source->type)
 }
 
-void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Expr *result)
 {
     Q_ASSERT(func != 0);
     prepareCallData(args, 0);
@@ -1289,7 +1308,7 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
 }
 
 
-void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr *result)
 {
     prepareCallData(args, base);
     if (useFastLookups) {
@@ -1306,7 +1325,7 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
                          baseAddressForCallData());
 }
 
-void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
 {
     Q_ASSERT(value != 0);
 
@@ -1325,16 +1344,17 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
-    if (IR::Temp *t = s->cond->asTemp()) {
+    IR::Temp *t = s->cond->asTemp();
+    if (t || s->cond->asArgLocal()) {
         Assembler::RegisterID reg;
-        if (t->kind == IR::Temp::PhysicalRegister) {
+        if (t && t->kind == IR::Temp::PhysicalRegister) {
             Q_ASSERT(t->type == IR::BoolType);
             reg = (Assembler::RegisterID) t->index;
-        } else if (t->kind == IR::Temp::StackSlot && t->type == IR::BoolType) {
+        } else if (t && t->kind == IR::Temp::StackSlot && t->type == IR::BoolType) {
             reg = Assembler::ReturnValueRegister;
             _as->toInt32Register(t, reg);
         } else {
-            Address temp = _as->loadTempAddress(Assembler::ScratchRegister, t);
+            Address temp = _as->loadAddress(Assembler::ScratchRegister, s->cond);
             Address tag = temp;
             tag.offset += qOffsetOf(QV4::Value, tag);
             Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type));
@@ -1346,7 +1366,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
             booleanConversion.link(_as);
             reg = Assembler::ReturnValueRegister;
-            generateFunctionCall(reg, Runtime::toBoolean, Assembler::Reference(t));
+            generateFunctionCall(reg, Runtime::toBoolean, Assembler::Reference(s->cond));
 
             testBoolean.link(_as);
         }
@@ -1456,7 +1476,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
                 Q_UNREACHABLE();
             }
         } else {
-            Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+            Pointer addr = _as->loadAddress(Assembler::ScratchRegister, t);
             _as->load32(addr, lowReg);
             addr.offset += 4;
             _as->load32(addr, highReg);
@@ -1693,10 +1713,7 @@ bool InstructionSelection::visitCJumpStrictNullUndefined(IR::Type nullOrUndef, I
         return true;
     }
 
-    IR::Temp *t = varSrc->asTemp();
-    Q_ASSERT(t);
-
-    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     tagAddr.offset += 4;
     const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
     _as->load32(tagAddr, tagReg);
@@ -1739,11 +1756,7 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
         return true;
     }
 
-    IR::Temp *otherTemp = otherSrc->asTemp();
-    Q_ASSERT(otherTemp); // constants cannot have "var" type
-    Q_ASSERT(otherTemp->kind != IR::Temp::PhysicalRegister);
-
-    Assembler::Pointer otherAddr = _as->loadTempAddress(Assembler::ReturnValueRegister, otherTemp);
+    Assembler::Pointer otherAddr = _as->loadAddress(Assembler::ReturnValueRegister, otherSrc);
     otherAddr.offset += 4; // tag address
 
     // check if the tag of the var operand is indicates 'boolean'
@@ -1791,10 +1804,7 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
         return true;
     }
 
-    IR::Temp *t = varSrc->asTemp();
-    Q_ASSERT(t);
-
-    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     tagAddr.offset += 4;
     const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
     _as->load32(tagAddr, tagReg);

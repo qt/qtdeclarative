@@ -112,7 +112,7 @@ const Binop::OpInfo Binop::operations[IR::LastAluOp + 1] = {
 
 
 
-void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
+void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 {
     if (op != IR::OpMod
             && lhs->type == IR::DoubleType && rhs->type == IR::DoubleType
@@ -156,14 +156,15 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
 
 }
 
-void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
+void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 {
     Q_ASSERT(lhs->asConst() == 0 || rhs->asConst() == 0);
     Q_ASSERT(isPregOrConst(lhs));
     Q_ASSERT(isPregOrConst(rhs));
+    IR::Temp *targetTemp = target->asTemp();
     Assembler::FPRegisterID targetReg;
-    if (target->kind == IR::Temp::PhysicalRegister)
-        targetReg = (Assembler::FPRegisterID) target->index;
+    if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
+        targetReg = (Assembler::FPRegisterID) targetTemp->index;
     else
         targetReg = Assembler::FPGpr0;
 
@@ -232,31 +233,33 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
     } return;
     }
 
-    if (target->kind != IR::Temp::PhysicalRegister)
+    if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
         as->storeDouble(Assembler::FPGpr0, target);
 }
 
 
-bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
     Q_ASSERT(leftSource->type == IR::SInt32Type);
+    IR::Temp *targetTemp = target->asTemp();
     Assembler::RegisterID targetReg = Assembler::ReturnValueRegister;
-    if (target->kind == IR::Temp::PhysicalRegister) {
+    if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
         // We try to load leftSource into the target's register, but we can't do that if
         // the target register is the same as rightSource.
         IR::Temp *rhs = rightSource->asTemp();
-        if (!rhs || rhs->kind != IR::Temp::PhysicalRegister || rhs->index != target->index)
-            targetReg = (Assembler::RegisterID) target->index;
+        if (!rhs || rhs->kind != IR::Temp::PhysicalRegister || rhs->index != targetTemp->index)
+            targetReg = (Assembler::RegisterID) targetTemp->index;
     }
 
     switch (op) {
     case IR::OpBitAnd: {
         Q_ASSERT(rightSource->type == IR::SInt32Type);
         if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
-                && target->kind == IR::Temp::PhysicalRegister
-                && target->index == rightSource->asTemp()->index) {
+                && targetTemp
+                && targetTemp->kind == IR::Temp::PhysicalRegister
+                && targetTemp->index == rightSource->asTemp()->index) {
             as->and32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
-                       (Assembler::RegisterID) target->index);
+                       (Assembler::RegisterID) targetTemp->index);
             return true;
         }
 
@@ -268,10 +271,11 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
     case IR::OpBitOr: {
         Q_ASSERT(rightSource->type == IR::SInt32Type);
         if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
-                && target->kind == IR::Temp::PhysicalRegister
-                && target->index == rightSource->asTemp()->index) {
+                && targetTemp
+                && targetTemp->kind == IR::Temp::PhysicalRegister
+                && targetTemp->index == rightSource->asTemp()->index) {
             as->or32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
-                       (Assembler::RegisterID) target->index);
+                       (Assembler::RegisterID) targetTemp->index);
             return true;
         }
 
@@ -283,10 +287,11 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
     case IR::OpBitXor: {
         Q_ASSERT(rightSource->type == IR::SInt32Type);
         if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
-                && target->kind == IR::Temp::PhysicalRegister
-                && target->index == rightSource->asTemp()->index) {
+                && targetTemp
+                && targetTemp->kind == IR::Temp::PhysicalRegister
+                && targetTemp->index == rightSource->asTemp()->index) {
             as->xor32(as->toInt32Register(leftSource, Assembler::ScratchRegister),
-                       (Assembler::RegisterID) target->index);
+                       (Assembler::RegisterID) targetTemp->index);
             return true;
         }
 
@@ -370,9 +375,10 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
-                && target->kind == IR::Temp::PhysicalRegister
-                && target->index == rightSource->asTemp()->index) {
-            Assembler::RegisterID targetReg = (Assembler::RegisterID) target->index;
+                && targetTemp
+                && targetTemp->kind == IR::Temp::PhysicalRegister
+                && targetTemp->index == rightSource->asTemp()->index) {
+            Assembler::RegisterID targetReg = (Assembler::RegisterID) targetTemp->index;
             as->move(targetReg, Assembler::ScratchRegister);
             as->move(as->toInt32Register(leftSource, targetReg), targetReg);
             as->sub32(Assembler::ScratchRegister, targetReg);
@@ -407,7 +413,7 @@ static inline Assembler::FPRegisterID getFreeFPReg(IR::Expr *shouldNotOverlap, u
     return Assembler::FPRegisterID(hint);
 }
 
-Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
     Assembler::Jump done;
 

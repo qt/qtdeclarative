@@ -51,7 +51,7 @@ using namespace JIT;
 #define setOp(operation) \
     do { call = operation; name = stringIfy(operation); } while (0)
 
-void Unop::generate(IR::Temp *source, IR::Temp *target)
+void Unop::generate(IR::Expr *source, IR::Expr *target)
 {
     Runtime::UnaryOperation call = 0;
     const char *name = 0;
@@ -77,16 +77,17 @@ void Unop::generate(IR::Temp *source, IR::Temp *target)
     }
 }
 
-void Unop::generateUMinus(IR::Temp *source, IR::Temp *target)
+void Unop::generateUMinus(IR::Expr *source, IR::Expr *target)
 {
+    IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) target->index;
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
+            tReg = (Assembler::RegisterID) targetTemp->index;
         Assembler::RegisterID sReg = as->toInt32Register(source, tReg);
         as->move(sReg, tReg);
         as->neg32(tReg);
-        if (target->kind != IR::Temp::PhysicalRegister)
+        if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             as->storeInt32(tReg, target);
         return;
     }
@@ -94,24 +95,25 @@ void Unop::generateUMinus(IR::Temp *source, IR::Temp *target)
     as->generateFunctionCallImp(target, "Runtime::uMinus", Runtime::uMinus, Assembler::PointerToValue(source));
 }
 
-void Unop::generateNot(IR::Temp *source, IR::Temp *target)
+void Unop::generateNot(IR::Expr *source, IR::Expr *target)
 {
+    IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::BoolType) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) target->index;
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
+            tReg = (Assembler::RegisterID) targetTemp->index;
         as->xor32(Assembler::TrustedImm32(0x1), as->toInt32Register(source, tReg), tReg);
-        if (target->kind != IR::Temp::PhysicalRegister)
+        if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             as->storeBool(tReg, target);
         return;
     } else if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) target->index;
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
+            tReg = (Assembler::RegisterID) targetTemp->index;
         as->compare32(Assembler::Equal,
                       as->toInt32Register(source, Assembler::ScratchRegister), Assembler::TrustedImm32(0),
                       tReg);
-        if (target->kind != IR::Temp::PhysicalRegister)
+        if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             as->storeBool(tReg, target);
         return;
     } else if (source->type == IR::DoubleType) {
@@ -122,14 +124,15 @@ void Unop::generateNot(IR::Temp *source, IR::Temp *target)
     as->generateFunctionCallImp(target, "Runtime::uNot", Runtime::uNot, Assembler::PointerToValue(source));
 }
 
-void Unop::generateCompl(IR::Temp *source, IR::Temp *target)
+void Unop::generateCompl(IR::Expr *source, IR::Expr *target)
 {
+    IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::SInt32Type) {
         Assembler::RegisterID tReg = Assembler::ScratchRegister;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) target->index;
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
+            tReg = (Assembler::RegisterID) targetTemp->index;
         as->xor32(Assembler::TrustedImm32(0xffffffff), as->toInt32Register(source, tReg), tReg);
-        if (target->kind != IR::Temp::PhysicalRegister)
+        if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             as->storeInt32(tReg, target);
         return;
     }

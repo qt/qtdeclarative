@@ -153,6 +153,7 @@ protected:
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(IR::Name *) {}
     virtual void visitTemp(IR::Temp *e) { renumber(e); }
+    virtual void visitArgLocal(IR::ArgLocal *) {}
     virtual void visitClosure(IR::Closure *) {}
     virtual void visitConvert(IR::Convert *e) { e->expr->accept(this); }
     virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }

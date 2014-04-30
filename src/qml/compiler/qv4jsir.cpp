@@ -233,6 +233,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitRegExp(RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
 
     virtual void visitConvert(Convert *e)
@@ -361,9 +362,7 @@ bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
 {
     if (t1.kind < t2.kind) return true;
     if (t1.kind > t2.kind) return false;
-    if (t1.index < t2.index) return true;
-    if (t1.index > t2.index) return false;
-    return t1.scope < t2.scope;
+    return t1.index < t2.index;
 }
 
 Function *Module::newFunction(const QString &name, Function *outer)
@@ -510,23 +509,23 @@ Temp *BasicBlock::TEMP(unsigned index)
 {
     Q_ASSERT(!isRemoved());
     Temp *e = function->New<Temp>();
-    e->init(Temp::VirtualRegister, index, 0);
+    e->init(Temp::VirtualRegister, index);
     return e;
 }
 
-Temp *BasicBlock::ARG(unsigned index, unsigned scope)
+ArgLocal *BasicBlock::ARG(unsigned index, unsigned scope)
 {
     Q_ASSERT(!isRemoved());
-    Temp *e = function->New<Temp>();
-    e->init(scope ? Temp::ScopedFormal : Temp::Formal, index, scope);
+    ArgLocal *e = function->New<ArgLocal>();
+    e->init(scope ? ArgLocal::ScopedFormal : ArgLocal::Formal, index, scope);
     return e;
 }
 
-Temp *BasicBlock::LOCAL(unsigned index, unsigned scope)
+ArgLocal *BasicBlock::LOCAL(unsigned index, unsigned scope)
 {
     Q_ASSERT(!isRemoved());
-    Temp *e = function->New<Temp>();
-    e->init(scope ? Temp::ScopedLocal : Temp::Local, index, scope);
+    ArgLocal *e = function->New<ArgLocal>();
+    e->init(scope ? ArgLocal::ScopedLocal : ArgLocal::Local, index, scope);
     return e;
 }
 
@@ -848,6 +847,11 @@ void CloneExpr::visitTemp(Temp *e)
     cloned = cloneTemp(e, block->function);
 }
 
+void CloneExpr::visitArgLocal(ArgLocal *e)
+{
+    cloned = cloneArgLocal(e, block->function);
+}
+
 void CloneExpr::visitClosure(Closure *e)
 {
     cloned = block->CLOSURE(e->value);
@@ -1095,16 +1099,25 @@ void IRPrinter::visitTemp(Temp *e)
 {
     *out << dumpStart(e);
     switch (e->kind) {
-    case Temp::Formal:           *out << '#' << e->index; break;
-    case Temp::ScopedFormal:     *out << '#' << e->index
-                                     << '@' << e->scope; break;
-    case Temp::Local:            *out << '$' << e->index; break;
-    case Temp::ScopedLocal:      *out << '$' << e->index
-                                     << '@' << e->scope; break;
     case Temp::VirtualRegister:  *out << '%' << e->index; break;
     case Temp::PhysicalRegister: *out << (e->type == DoubleType ? "fp" : "r")
                                      << e->index; break;
     case Temp::StackSlot:        *out << '&' << e->index; break;
+    default:                     *out << "INVALID";
+    }
+    *out << dumpEnd(e);
+}
+
+void IRPrinter::visitArgLocal(ArgLocal *e)
+{
+    *out << dumpStart(e);
+    switch (e->kind) {
+    case ArgLocal::Formal:           *out << '#' << e->index; break;
+    case ArgLocal::ScopedFormal:     *out << '#' << e->index
+                                     << '@' << e->scope; break;
+    case ArgLocal::Local:            *out << '$' << e->index; break;
+    case ArgLocal::ScopedLocal:      *out << '$' << e->index
+                                     << '@' << e->scope; break;
     default:                     *out << "INVALID";
     }
     *out << dumpEnd(e);

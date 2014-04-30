@@ -59,11 +59,11 @@ struct Unop {
         , op(operation)
     {}
 
-    void generate(IR::Temp *source, IR::Temp *target);
+    void generate(IR::Expr *source, IR::Expr *target);
 
-    void generateUMinus(IR::Temp *source, IR::Temp *target);
-    void generateNot(IR::Temp *source, IR::Temp *target);
-    void generateCompl(IR::Temp *source, IR::Temp *target);
+    void generateUMinus(IR::Expr *source, IR::Expr *target);
+    void generateNot(IR::Expr *source, IR::Expr *target);
+    void generateCompl(IR::Expr *source, IR::Expr *target);
 
     Assembler *as;
     IR::AluOp op;

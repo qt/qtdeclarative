@@ -509,8 +509,8 @@ IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
     if (hasError)
         return 0;
 
-    if (base->asTemp() /*|| base->asName()*/)
-        return _block->MEMBER(base->asTemp(), name);
+    if (base->asTemp() || base->asArgLocal())
+        return _block->MEMBER(base, name);
     else {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), base);
@@ -523,25 +523,26 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
     if (hasError)
         return 0;
 
-    if (! base->asTemp()) {
+    if (! base->asTemp() || base->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), base);
         base = _block->TEMP(t);
     }
 
-    if (! index->asTemp()) {
+    if (! index->asTemp() || index->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), index);
         index = _block->TEMP(t);
     }
 
-    Q_ASSERT(base->asTemp() && index->asTemp());
+    Q_ASSERT(base->asTemp() || base->asArgLocal());
+    Q_ASSERT(index->asTemp() || index->asArgLocal());
     return _block->SUBSCRIPT(base->asTemp(), index->asTemp());
 }
 
 IR::Expr *Codegen::argument(IR::Expr *expr)
 {
-    if (expr && ! expr->asTemp()) {
+    if (expr && !expr->asTemp() && !expr->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
@@ -555,7 +556,7 @@ IR::Expr *Codegen::reference(IR::Expr *expr)
     if (hasError)
         return 0;
 
-    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
+    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
@@ -591,13 +592,13 @@ IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
             }
         }
     }
-    if (! expr->asTemp()) {
+    if (!expr->asTemp() && !expr->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
     }
-    Q_ASSERT(expr->asTemp());
-    return _block->UNOP(op, expr->asTemp());
+    Q_ASSERT(expr->asTemp() || expr->asArgLocal());
+    return _block->UNOP(op, expr);
 }
 
 IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
@@ -655,20 +656,20 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
         }
     }
 
-    if (!left->asTemp()) {
+    if (!left->asTemp() && !left->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), left);
         left = _block->TEMP(t);
     }
 
-    if (!right->asTemp()) {
+    if (!right->asTemp() && !right->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), right);
         right = _block->TEMP(t);
     }
 
-    Q_ASSERT(left->asTemp());
-    Q_ASSERT(right->asTemp());
+    Q_ASSERT(left->asTemp() || left->asArgLocal());
+    Q_ASSERT(right->asTemp() || right->asArgLocal());
 
     return _block->BINOP(op, left, right);
 }
@@ -693,12 +694,12 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
         return;
     }
 
-    if (!source->asTemp() && !source->asConst() && !target->asTemp()) {
+    if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
-    if (source->asConst() && !target->asTemp()) {
+    if (source->asConst() && !target->asTemp() && !target->asArgLocal()) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
@@ -749,7 +750,7 @@ void Codegen::statement(ExpressionNode *ast)
         if (r.format == ex) {
             if (r->asCall()) {
                 _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
-            } else if (r->asTemp()) {
+            } else if (r->asTemp() || r->asArgLocal()) {
                 // there is nothing to do
             } else {
                 unsigned t = _block->newTemp();
@@ -1065,7 +1066,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         current = arg;
 
         IR::Expr *exp = *expr;
-        if (exp->asTemp() || exp->asConst()) {
+        if (exp->asTemp() || expr->asArgLocal() || exp->asConst()) {
             current->expr = exp;
         } else {
             unsigned value = _block->newTemp();
@@ -1236,7 +1237,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Lt:
     case QSOperator::StrictEqual:
     case QSOperator::StrictNotEqual: {
-        if (!left->asTemp() && !left->asConst()) {
+        if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
             const unsigned t = _block->newTemp();
             move(_block->TEMP(t), left);
             left = _block->TEMP(t);
@@ -1270,7 +1271,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::RShift:
     case QSOperator::Sub:
     case QSOperator::URShift: {
-        if (!left->asTemp() && !left->asConst()) {
+        if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
             const unsigned t = _block->newTemp();
             move(_block->TEMP(t), left);
             left = _block->TEMP(t);
@@ -1347,8 +1348,8 @@ bool Codegen::visit(DeleteExpression *ast)
 
     IR::Expr* expr = *expression(ast->expression);
     // Temporaries cannot be deleted
-    IR::Temp *t = expr->asTemp();
-    if (t && t->index < static_cast<unsigned>(_env->members.size())) {
+    IR::ArgLocal *al = expr->asArgLocal();
+    if (al && al->index < static_cast<unsigned>(_env->members.size())) {
         // Trying to delete a function argument might throw.
         if (_function->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
@@ -1375,7 +1376,9 @@ bool Codegen::visit(DeleteExpression *ast)
         _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
-    if (expr->asTemp() && expr->asTemp()->index >=  static_cast<unsigned>(_env->members.size())) {
+    if (expr->asTemp() ||
+            (expr->asArgLocal() &&
+             expr->asArgLocal()->index >= static_cast<unsigned>(_env->members.size()))) {
         _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
@@ -1435,10 +1438,10 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         int index = e->findMember(name);
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
-            IR::Temp *t = _block->LOCAL(index, scope);
+            IR::ArgLocal *al = _block->LOCAL(index, scope);
             if (name == QStringLiteral("arguments") || name == QStringLiteral("eval"))
-                t->isArgumentsOrEval = true;
-            return t;
+                al->isArgumentsOrEval = true;
+            return al;
         }
         const int argIdx = f->indexOfArgument(&name);
         if (argIdx != -1)
@@ -1497,7 +1500,7 @@ bool Codegen::visit(NewExpression *ast)
 
     Result base = expression(ast->expression);
     IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
+    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
@@ -1513,7 +1516,7 @@ bool Codegen::visit(NewMemberExpression *ast)
 
     Result base = expression(ast->base);
     IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
+    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
@@ -2798,8 +2801,8 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr *expr, cons
     if (IR::Name *n = expr->asName()) {
         if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
             return false;
-    } else if (IR::Temp *t = expr->asTemp()) {
-        if (!t->isArgumentsOrEval)
+    } else if (IR::ArgLocal *al = expr->asArgLocal()) {
+        if (!al->isArgumentsOrEval)
             return false;
     } else {
         return false;

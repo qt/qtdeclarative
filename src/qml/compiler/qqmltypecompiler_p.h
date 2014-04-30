@@ -394,6 +394,7 @@ private:
     virtual void visitClosure(QV4::IR::Closure *closure);
 
     virtual void visitTemp(QV4::IR::Temp *) {}
+    virtual void visitArgLocal(QV4::IR::ArgLocal *) {}
 
     virtual void visitMove(QV4::IR::Move *s) {
         s->source->accept(this);

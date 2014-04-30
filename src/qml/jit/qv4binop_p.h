@@ -58,10 +58,10 @@ struct Binop {
         , op(operation)
     {}
 
-    void generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target);
-    void doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target);
-    bool int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
-    Assembler::Jump genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    void generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
+    void doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
+    bool int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
+    Assembler::Jump genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
 
     typedef Assembler::Jump (Binop::*MemRegOp)(Assembler::Address, Assembler::RegisterID);
     typedef Assembler::Jump (Binop::*ImmRegOp)(Assembler::TrustedImm32, Assembler::RegisterID);

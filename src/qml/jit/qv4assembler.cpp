@@ -223,10 +223,27 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left
     }
 }
 
-Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, IR::Temp *t)
+Assembler::Pointer Assembler::loadAddress(RegisterID tmp, IR::Expr *e)
+{
+    IR::Temp *t = e->asTemp();
+    if (t)
+        return loadTempAddress(t);
+    else
+        return loadArgLocalAddress(tmp, e->asArgLocal());
+}
+
+Assembler::Pointer Assembler::loadTempAddress(IR::Temp *t)
+{
+    if (t->kind == IR::Temp::StackSlot)
+        return stackSlotPointer(t);
+    else
+        Q_UNREACHABLE();
+}
+
+Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al)
 {
     int32_t offset = 0;
-    int scope = t->scope;
+    int scope = al->scope;
     RegisterID context = ContextRegister;
     if (scope) {
         loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext, outer)), baseReg);
@@ -237,19 +254,16 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, IR::Temp *t)
             --scope;
         }
     }
-    switch (t->kind) {
-    case IR::Temp::Formal:
-    case IR::Temp::ScopedFormal: {
+    switch (al->kind) {
+    case IR::ArgLocal::Formal:
+    case IR::ArgLocal::ScopedFormal: {
         loadPtr(Address(context, qOffsetOf(ExecutionContext, callData)), baseReg);
-        offset = sizeof(CallData) + (t->index - 1) * sizeof(Value);
+        offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
     } break;
-    case IR::Temp::Local:
-    case IR::Temp::ScopedLocal: {
+    case IR::ArgLocal::Local:
+    case IR::ArgLocal::ScopedLocal: {
         loadPtr(Address(context, qOffsetOf(CallContext, locals)), baseReg);
-        offset = t->index * sizeof(Value);
-    } break;
-    case IR::Temp::StackSlot: {
-        return stackSlotPointer(t);
+        offset = al->index * sizeof(Value);
     } break;
     default:
         Q_UNREACHABLE();
@@ -273,9 +287,9 @@ void Assembler::loadStringRef(RegisterID reg, const QString &string)
     addPtr(TrustedImmPtr(id * sizeof(QV4::StringValue)), reg);
 }
 
-void Assembler::storeValue(QV4::Primitive value, IR::Temp* destination)
+void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
 {
-    Address addr = loadTempAddress(ScratchRegister, destination);
+    Address addr = loadAddress(ScratchRegister, destination);
     storeValue(value, addr);
 }
 
@@ -347,13 +361,12 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
         break;
     }
 
-    IR::Temp *sourceTemp = src->asTemp();
-    Q_ASSERT(sourceTemp);
+    Q_ASSERT(src->asTemp() || src->asArgLocal());
 
     // It's not a number type, so it cannot be in a register.
-    Q_ASSERT(sourceTemp->kind != IR::Temp::PhysicalRegister || sourceTemp->type == IR::BoolType);
+    Q_ASSERT(src->asArgLocal() || src->asTemp()->kind != IR::Temp::PhysicalRegister || src->type == IR::BoolType);
 
-    Assembler::Pointer tagAddr = loadTempAddress(Assembler::ScratchRegister, sourceTemp);
+    Assembler::Pointer tagAddr = loadAddress(Assembler::ScratchRegister, src);
     tagAddr.offset += 4;
     load32(tagAddr, Assembler::ScratchRegister);
 

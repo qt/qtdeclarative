@@ -139,7 +139,7 @@ public:
     void addHint(const Temp &t, int physicalRegister)
     {
         Temp hint;
-        hint.init(Temp::PhysicalRegister, physicalRegister, 0);
+        hint.init(Temp::PhysicalRegister, physicalRegister);
         _hints[t].append(hint);
     }
 
@@ -196,40 +196,41 @@ public:
     }
 
 protected: // IRDecoder
-    virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Temp *) {}
-    virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Temp *) {}
-    virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Temp *) {}
-    virtual void callBuiltinTypeofName(const QString &, IR::Temp *) {}
-    virtual void callBuiltinTypeofValue(IR::Expr *, IR::Temp *) {}
-    virtual void callBuiltinDeleteMember(IR::Temp *, const QString &, IR::Temp *) {}
-    virtual void callBuiltinDeleteSubscript(IR::Temp *, IR::Expr *, IR::Temp *) {}
-    virtual void callBuiltinDeleteName(const QString &, IR::Temp *) {}
-    virtual void callBuiltinDeleteValue(IR::Temp *) {}
+    virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Expr *) {}
+    virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Expr *) {}
+    virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
+    virtual void callBuiltinTypeofName(const QString &, IR::Expr *) {}
+    virtual void callBuiltinTypeofValue(IR::Expr *, IR::Expr *) {}
+    virtual void callBuiltinDeleteMember(IR::Expr *, const QString &, IR::Expr *) {}
+    virtual void callBuiltinDeleteSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
+    virtual void callBuiltinDeleteName(const QString &, IR::Expr *) {}
+    virtual void callBuiltinDeleteValue(IR::Expr *) {}
     virtual void callBuiltinThrow(IR::Expr *) {}
     virtual void callBuiltinReThrow() {}
-    virtual void callBuiltinUnwindException(IR::Temp *) {}
+    virtual void callBuiltinUnwindException(IR::Expr *) {}
     virtual void callBuiltinPushCatchScope(const QString &) {};
-    virtual void callBuiltinForeachIteratorObject(IR::Expr *, IR::Temp *) {}
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *, IR::Expr *) {}
     virtual void callBuiltinForeachNextProperty(IR::Temp *, IR::Temp *) {}
-    virtual void callBuiltinForeachNextPropertyname(IR::Temp *, IR::Temp *) {}
-    virtual void callBuiltinPushWithScope(IR::Temp *) {}
+    virtual void callBuiltinForeachNextPropertyname(IR::Expr *, IR::Expr *) {}
+    virtual void callBuiltinPushWithScope(IR::Expr *) {}
     virtual void callBuiltinPopScope() {}
     virtual void callBuiltinDeclareVar(bool , const QString &) {}
-    virtual void callBuiltinDefineArray(IR::Temp *, IR::ExprList *) {}
-    virtual void callBuiltinDefineObjectLiteral(IR::Temp *, int, IR::ExprList *, IR::ExprList *, bool) {}
-    virtual void callBuiltinSetupArgumentObject(IR::Temp *) {}
+    virtual void callBuiltinDefineArray(IR::Expr *, IR::ExprList *) {}
+    virtual void callBuiltinDefineObjectLiteral(IR::Expr *, int, IR::ExprList *, IR::ExprList *, bool) {}
+    virtual void callBuiltinSetupArgumentObject(IR::Expr *) {}
     virtual void callBuiltinConvertThisToObject() {}
 
-    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+    virtual void callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
     {
         addDef(result);
-        addUses(value, Use::CouldHaveRegister);
+        if (IR::Temp *tempValue = value->asTemp())
+            addUses(tempValue, Use::CouldHaveRegister);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
 
     virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
-                              IR::Temp *result)
+                              IR::Expr *result)
     {
         Q_UNUSED(name)
 
@@ -240,7 +241,7 @@ protected: // IRDecoder
     }
 
     virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
-                               IR::Temp *result)
+                               IR::Expr *result)
     {
         addDef(result);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -249,7 +250,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void convertType(IR::Temp *source, IR::Temp *target)
+    virtual void convertType(IR::Expr *source, IR::Expr *target)
     {
         addDef(target);
 
@@ -312,22 +313,24 @@ protected: // IRDecoder
             break;
         }
 
-        addUses(source, sourceReg);
+        Temp *sourceTemp = source->asTemp();
+        if (sourceTemp)
+            addUses(sourceTemp, sourceReg);
 
         if (needsCall)
             addCall();
-        else
-            addHint(target, source);
+        else if (target->asTemp())
+            addHint(target->asTemp(), sourceTemp);
     }
 
-    virtual void constructActivationProperty(IR::Name *, IR::ExprList *args, IR::Temp *result)
+    virtual void constructActivationProperty(IR::Name *, IR::ExprList *args, IR::Expr *result)
     {
         addDef(result);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void constructProperty(IR::Temp *base, const QString &, IR::ExprList *args, IR::Temp *result)
+    virtual void constructProperty(IR::Expr *base, const QString &, IR::ExprList *args, IR::Expr *result)
     {
         addDef(result);
         addUses(base, Use::CouldHaveRegister);
@@ -335,7 +338,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+    virtual void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
     {
         addDef(result);
         addUses(value, Use::CouldHaveRegister);
@@ -343,30 +346,30 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadThisObject(IR::Temp *temp)
+    virtual void loadThisObject(IR::Expr *temp)
     {
         addDef(temp);
     }
 
-    virtual void loadQmlIdArray(IR::Temp *temp)
-    {
-        addDef(temp);
-        addCall();
-    }
-
-    virtual void loadQmlImportedScripts(IR::Temp *temp)
+    virtual void loadQmlIdArray(IR::Expr *temp)
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void loadQmlContextObject(Temp *temp)
+    virtual void loadQmlImportedScripts(IR::Expr *temp)
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void loadQmlScopeObject(Temp *temp)
+    virtual void loadQmlContextObject(Expr *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlScopeObject(Expr *temp)
     {
         Q_UNUSED(temp);
 
@@ -374,7 +377,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadQmlSingleton(const QString &/*name*/, Temp *temp)
+    virtual void loadQmlSingleton(const QString &/*name*/, Expr *temp)
     {
         Q_UNUSED(temp);
 
@@ -382,21 +385,21 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+    virtual void loadConst(IR::Const *sourceConst, Expr *targetTemp)
     {
         Q_UNUSED(sourceConst);
 
         addDef(targetTemp);
     }
 
-    virtual void loadString(const QString &str, IR::Temp *targetTemp)
+    virtual void loadString(const QString &str, Expr *targetTemp)
     {
         Q_UNUSED(str);
 
         addDef(targetTemp);
     }
 
-    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, Expr *targetTemp)
     {
         Q_UNUSED(sourceRegexp);
 
@@ -404,7 +407,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getActivationProperty(const IR::Name *, IR::Temp *temp)
+    virtual void getActivationProperty(const IR::Name *, Expr *temp)
     {
         addDef(temp);
         addCall();
@@ -416,7 +419,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void initClosure(IR::Closure *closure, IR::Temp *target)
+    virtual void initClosure(IR::Closure *closure, Expr *target)
     {
         Q_UNUSED(closure);
 
@@ -424,7 +427,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getProperty(IR::Expr *base, const QString &, IR::Temp *target)
+    virtual void getProperty(IR::Expr *base, const QString &, Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -445,14 +448,14 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, int /*attachedPropertiesId*/, IR::Temp *target)
+    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, int /*attachedPropertiesId*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target)
+    virtual void getElement(IR::Expr *base, IR::Expr *index, Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -468,25 +471,30 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+    virtual void copyValue(Expr *source, Expr *target)
     {
-        addDef(targetTemp);
+        addDef(target);
+        Temp *sourceTemp = source->asTemp();
+        if (!sourceTemp)
+            return;
         addUses(sourceTemp, Use::CouldHaveRegister);
-        addHint(targetTemp, sourceTemp);
+        Temp *targetTemp = target->asTemp();
+        if (targetTemp)
+            addHint(targetTemp, sourceTemp);
     }
 
-    virtual void swapValues(IR::Temp *, IR::Temp *)
+    virtual void swapValues(Expr *, Expr *)
     {
         // Inserted by the register allocator, so it cannot occur here.
         Q_UNREACHABLE();
     }
 
-    virtual void unop(AluOp oper, Temp *sourceTemp, Temp *targetTemp)
+    virtual void unop(AluOp oper, Expr *source, Expr *target)
     {
-        addDef(targetTemp);
+        addDef(target);
 
         bool needsCall = true;
-        if (oper == OpNot && sourceTemp->type == IR::BoolType && targetTemp->type == IR::BoolType)
+        if (oper == OpNot && source->type == IR::BoolType && target->type == IR::BoolType)
             needsCall = false;
 
 #if 0 // TODO: change masm to generate code
@@ -506,15 +514,18 @@ protected: // IRDecoder
         }
 #endif
 
+        IR::Temp *sourceTemp = source->asTemp();
         if (needsCall) {
-            addUses(sourceTemp, Use::CouldHaveRegister);
+            if (sourceTemp)
+                addUses(sourceTemp, Use::CouldHaveRegister);
             addCall();
         } else {
-            addUses(sourceTemp, Use::MustHaveRegister);
+            if (sourceTemp)
+                addUses(sourceTemp, Use::MustHaveRegister);
         }
     }
 
-    virtual void binop(AluOp oper, Expr *leftSource, Expr *rightSource, Temp *target)
+    virtual void binop(AluOp oper, Expr *leftSource, Expr *rightSource, Expr *target)
     {
         bool needsCall = true;
 
@@ -597,17 +608,22 @@ protected: // IRDecoder
     }
 
 protected:
-    virtual void callBuiltin(IR::Call *c, IR::Temp *result)
+    virtual void callBuiltin(IR::Call *c, IR::Expr *result)
     {
         addDef(result);
-        addUses(c->base->asTemp(), Use::CouldHaveRegister);
+        addUses(c->base, Use::CouldHaveRegister);
         addUses(c->args, Use::CouldHaveRegister);
         addCall();
     }
 
 private:
-    void addDef(Temp *t, bool isPhiTarget = false)
+    void addDef(Expr *e, bool isPhiTarget = false)
     {
+        if (!e)
+            return;
+        Temp *t = e->asTemp();
+        if (!t)
+            return;
         if (!t || t->kind != Temp::VirtualRegister)
             return;
         Q_ASSERT(!_defs.contains(*t));
@@ -627,9 +643,14 @@ private:
         _defs[*t] = Def(_currentStmt->id, canHaveReg, isPhiTarget);
     }
 
-    void addUses(Temp *t, Use::RegisterFlag flag)
+    void addUses(Expr *e, Use::RegisterFlag flag)
     {
         Q_ASSERT(_currentStmt->id > 0);
+        if (!e)
+            return;
+        Temp *t = e->asTemp();
+        if (!t)
+            return;
         if (t && t->kind == Temp::VirtualRegister)
             _uses[*t].append(Use(_currentStmt->id, flag));
     }
@@ -637,12 +658,19 @@ private:
     void addUses(ExprList *l, Use::RegisterFlag flag)
     {
         for (ExprList *it = l; it; it = it->next)
-            addUses(it->expr->asTemp(), flag);
+            addUses(it->expr, flag);
     }
 
     void addCall()
     {
         _calls.append(_currentStmt->id);
+    }
+
+    void addHint(Expr *hinted, Temp *hint1, Temp *hint2 = 0)
+    {
+        if (hinted)
+            if (Temp *hintedTemp = hinted->asTemp())
+                addHint(hintedTemp, hint1, hint2);
     }
 
     void addHint(Temp *hinted, Temp *hint1, Temp *hint2 = 0)
@@ -986,7 +1014,7 @@ private:
     {
         Q_ASSERT(index >= 0);
         Temp *t = _function->New<Temp>();
-        t->init(kind, index, 0);
+        t->init(kind, index);
         t->type = type;
         return t;
     }
@@ -1040,6 +1068,7 @@ protected:
         }
     }
 
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitConst(Const *) {}
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
@@ -1140,7 +1169,7 @@ static inline LifeTimeInterval createFixedInterval(int rangeCount)
     i.setReg(0);
 
     Temp t;
-    t.init(Temp::PhysicalRegister, 0, 0);
+    t.init(Temp::PhysicalRegister, 0);
     t.type = IR::SInt32Type;
     i.setTemp(t);
 
@@ -1153,7 +1182,7 @@ static inline LifeTimeInterval cloneFixedInterval(int reg, bool isFP, LifeTimeIn
     lti.setFixedInterval(true);
 
     Temp t;
-    t.init(Temp::PhysicalRegister, reg, 0);
+    t.init(Temp::PhysicalRegister, reg);
     t.type = isFP ? IR::DoubleType : IR::SInt32Type;
     lti.setTemp(t);
 

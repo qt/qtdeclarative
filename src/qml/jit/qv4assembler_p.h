@@ -460,8 +460,10 @@ public:
         QString string;
     };
     struct Reference {
-        Reference(IR::Temp *value) : value(value) {}
-        IR::Temp *value;
+        Reference(IR::Expr *value) : value(value) {
+            Q_ASSERT(value->asTemp() || value->asArgLocal());
+        }
+        IR::Expr *value;
     };
 
     struct ReentryBlock {
@@ -504,13 +506,14 @@ public:
     Jump genTryDoubleConversion(IR::Expr *src, Assembler::FPRegisterID dest);
     Assembler::Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
 
-    Pointer loadTempAddress(RegisterID baseReg, IR::Temp *t);
+    Pointer loadAddress(RegisterID tmp, IR::Expr *t);
+    Pointer loadTempAddress(IR::Temp *t);
+    Pointer loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(IR::Temp *t) const
     {
         Q_ASSERT(t->kind == IR::Temp::StackSlot);
-        Q_ASSERT(t->scope == 0);
 
         return Pointer(_stackLayout.stackSlotPointer(t->index));
     }
@@ -585,7 +588,7 @@ public:
     void loadArgumentInRegister(Reference temp, RegisterID dest, int argumentNumber)
     {
         Q_ASSERT(temp.value);
-        Pointer addr = loadTempAddress(dest, temp.value);
+        Pointer addr = loadAddress(dest, temp.value);
         loadArgumentInRegister(addr, dest, argumentNumber);
     }
 
@@ -603,12 +606,25 @@ public:
     {
         Q_UNUSED(argumentNumber);
 
-        if (!temp) {
+        if (temp) {
+            Pointer addr = loadTempAddress(temp);
+            load64(addr, dest);
+        } else {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
-        } else {
-            Pointer addr = loadTempAddress(dest, temp);
+        }
+    }
+
+    void loadArgumentInRegister(IR::ArgLocal* al, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
+        if (al) {
+            Pointer addr = loadArgLocalAddress(dest, al);
             load64(addr, dest);
+        } else {
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            move(TrustedImm64(undefined.val), dest);
         }
     }
 
@@ -627,10 +643,12 @@ public:
         if (!expr) {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
-        } else if (expr->asTemp()){
-            loadArgumentInRegister(expr->asTemp(), dest, argumentNumber);
-        } else if (expr->asConst()) {
-            loadArgumentInRegister(expr->asConst(), dest, argumentNumber);
+        } else if (IR::Temp *t = expr->asTemp()){
+            loadArgumentInRegister(t, dest, argumentNumber);
+        } else if (IR::ArgLocal *al = expr->asArgLocal()) {
+            loadArgumentInRegister(al, dest, argumentNumber);
+        } else if (IR::Const *c = expr->asConst()) {
+            loadArgumentInRegister(c, dest, argumentNumber);
         } else {
             Q_ASSERT(!"unimplemented expression type in loadArgument");
         }
@@ -704,20 +722,26 @@ public:
     }
 #endif
 
-    void storeReturnValue(IR::Temp *temp)
+    void storeReturnValue(IR::Expr *target)
     {
-        if (!temp)
+        if (!target)
             return;
 
-        if (temp->kind == IR::Temp::PhysicalRegister) {
-            if (temp->type == IR::DoubleType)
-                storeReturnValue((FPRegisterID) temp->index);
-            else if (temp->type == IR::UInt32Type)
-                storeUInt32ReturnValue((RegisterID) temp->index);
-            else
-                storeReturnValue((RegisterID) temp->index);
-        } else {
-            Pointer addr = loadTempAddress(ScratchRegister, temp);
+        if (IR::Temp *temp = target->asTemp()) {
+            if (temp->kind == IR::Temp::PhysicalRegister) {
+                if (temp->type == IR::DoubleType)
+                    storeReturnValue((FPRegisterID) temp->index);
+                else if (temp->type == IR::UInt32Type)
+                    storeUInt32ReturnValue((RegisterID) temp->index);
+                else
+                    storeReturnValue((RegisterID) temp->index);
+                return;
+            } else {
+                Pointer addr = loadTempAddress(temp);
+                storeReturnValue(addr);
+            }
+        } else if (IR::ArgLocal *al = target->asArgLocal()) {
+            Pointer addr = loadArgLocalAddress(ScratchRegister, al);
             storeReturnValue(addr);
         }
     }
@@ -775,7 +799,7 @@ public:
     {
         Q_ASSERT (temp.value);
 
-        Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
+        Pointer ptr = loadAddress(ScratchRegister, temp.value);
         loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
     }
 
@@ -807,30 +831,32 @@ public:
         poke(TrustedImmPtr(name), StackSlot);
     }
 
-    void loadDouble(IR::Temp* temp, FPRegisterID dest)
+    void loadDouble(IR::Expr *source, FPRegisterID dest)
     {
-        if (temp->kind == IR::Temp::PhysicalRegister) {
-            moveDouble((FPRegisterID) temp->index, dest);
+        IR::Temp *sourceTemp = source->asTemp();
+        if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister) {
+            moveDouble((FPRegisterID) sourceTemp->index, dest);
             return;
         }
-        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        Pointer ptr = loadAddress(ScratchRegister, source);
         loadDouble(ptr, dest);
     }
 
-    void storeDouble(FPRegisterID source, IR::Temp* temp)
+    void storeDouble(FPRegisterID source, IR::Expr* target)
     {
-        if (temp->kind == IR::Temp::PhysicalRegister) {
-            moveDouble(source, (FPRegisterID) temp->index);
+        IR::Temp *targetTemp = target->asTemp();
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
+            moveDouble(source, (FPRegisterID) targetTemp->index);
             return;
         }
 #if QT_POINTER_SIZE == 8
         moveDoubleTo64(source, ReturnValueRegister);
         move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
         xor64(ScratchRegister, ReturnValueRegister);
-        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        Pointer ptr = loadAddress(ScratchRegister, target);
         store64(ReturnValueRegister, ptr);
 #else
-        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        Pointer ptr = loadAddress(ScratchRegister, target);
         storeDouble(source, ptr);
 #endif
     }
@@ -862,11 +888,11 @@ public:
     void copyValue(Result result, IR::Expr* source);
 
     // The scratch register is used to calculate the temp address for the source.
-    void memcopyValue(Pointer target, IR::Temp *sourceTemp, RegisterID scratchRegister)
+    void memcopyValue(Pointer target, IR::Expr *source, RegisterID scratchRegister)
     {
-        Q_ASSERT(sourceTemp->kind != IR::Temp::PhysicalRegister);
+        Q_ASSERT(!source->asTemp() || source->asTemp()->kind != IR::Temp::PhysicalRegister);
         Q_ASSERT(target.base != scratchRegister);
-        JSC::MacroAssembler::loadDouble(loadTempAddress(scratchRegister, sourceTemp), FPGpr0);
+        JSC::MacroAssembler::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
         JSC::MacroAssembler::storeDouble(FPGpr0, target);
     }
 
@@ -888,7 +914,7 @@ public:
 #endif
     }
 
-    void storeValue(QV4::Primitive value, IR::Temp* temp);
+    void storeValue(QV4::Primitive value, IR::Expr* temp);
 
     void enterStandardStackFrame();
     void leaveStandardStackFrame();
@@ -1050,13 +1076,11 @@ public:
             return Pointer(addr);
         }
 
-        IR::Temp *t = e->asTemp();
-        Q_ASSERT(t);
-        if (t->kind != IR::Temp::PhysicalRegister)
-            return loadTempAddress(tmpReg, t);
+        if (IR::Temp *t = e->asTemp())
+            if (t->kind == IR::Temp::PhysicalRegister)
+                return Pointer(_stackLayout.savedRegPointer(offset));
 
-
-        return Pointer(_stackLayout.savedRegPointer(offset));
+        return loadAddress(tmpReg, e);
     }
 
     void storeBool(RegisterID reg, Pointer addr)
@@ -1071,24 +1095,31 @@ public:
         move(src, dest);
     }
 
-    void storeBool(RegisterID reg, IR::Temp *target)
+    void storeBool(RegisterID reg, IR::Expr *target)
     {
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            move(reg, (RegisterID) target->index);
-        } else {
-            Pointer addr = loadTempAddress(ScratchRegister, target);
-            storeBool(reg, addr);
+        if (IR::Temp *targetTemp = target->asTemp()) {
+            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                move(reg, (RegisterID) targetTemp->index);
+                return;
+            }
         }
+
+        Pointer addr = loadAddress(ScratchRegister, target);
+        storeBool(reg, addr);
     }
 
-    void storeBool(bool value, IR::Temp *target) {
+    void storeBool(bool value, IR::Expr *target) {
         TrustedImm32 trustedValue(value ? 1 : 0);
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            move(trustedValue, (RegisterID) target->index);
-        } else {
-            move(trustedValue, ScratchRegister);
-            storeBool(ScratchRegister, target);
+
+        if (IR::Temp *targetTemp = target->asTemp()) {
+            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                move(trustedValue, (RegisterID) targetTemp->index);
+                return;
+            }
         }
+
+        move(trustedValue, ScratchRegister);
+        storeBool(ScratchRegister, target);
     }
 
     void storeInt32(RegisterID src, RegisterID dest)
@@ -1103,12 +1134,17 @@ public:
         store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag), addr);
     }
 
-    void storeInt32(RegisterID reg, IR::Temp *target)
+    void storeInt32(RegisterID reg, IR::Expr *target)
     {
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            move(reg, (RegisterID) target->index);
-        } else {
-            Pointer addr = loadTempAddress(ScratchRegister, target);
+        if (IR::Temp *targetTemp = target->asTemp()) {
+            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                move(reg, (RegisterID) targetTemp->index);
+            } else {
+                Pointer addr = loadTempAddress(targetTemp);
+                storeInt32(reg, addr);
+            }
+        } else if (IR::ArgLocal *al = target->asArgLocal()) {
+            Pointer addr = loadArgLocalAddress(ScratchRegister, al);
             storeInt32(reg, addr);
         }
     }
@@ -1130,12 +1166,13 @@ public:
         done.link(this);
     }
 
-    void storeUInt32(RegisterID reg, IR::Temp *target)
+    void storeUInt32(RegisterID reg, IR::Expr *target)
     {
-        if (target->kind == IR::Temp::PhysicalRegister) {
-            move(reg, (RegisterID) target->index);
+        IR::Temp *targetTemp = target->asTemp();
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) targetTemp->index);
         } else {
-            Pointer addr = loadTempAddress(ScratchRegister, target);
+            Pointer addr = loadAddress(ScratchRegister, target);
             storeUInt32(reg, addr);
         }
     }
@@ -1157,12 +1194,11 @@ public:
             return target;
         }
 
-        IR::Temp *t = e->asTemp();
-        Q_ASSERT(t);
-        if (t->kind == IR::Temp::PhysicalRegister)
-            return (FPRegisterID) t->index;
+        if (IR::Temp *t = e->asTemp())
+            if (t->kind == IR::Temp::PhysicalRegister)
+                return (FPRegisterID) t->index;
 
-        loadDouble(t, target);
+        loadDouble(e, target);
         return target;
     }
 
@@ -1178,12 +1214,11 @@ public:
             return scratchReg;
         }
 
-        IR::Temp *t = e->asTemp();
-        Q_ASSERT(t);
-        if (t->kind == IR::Temp::PhysicalRegister)
-            return (RegisterID) t->index;
+        if (IR::Temp *t = e->asTemp())
+            if (t->kind == IR::Temp::PhysicalRegister)
+                return (RegisterID) t->index;
 
-        return toInt32Register(loadTempAddress(scratchReg, t), scratchReg);
+        return toInt32Register(loadAddress(scratchReg, e), scratchReg);
     }
 
     RegisterID toInt32Register(Pointer addr, RegisterID scratchReg)
@@ -1199,12 +1234,11 @@ public:
             return scratchReg;
         }
 
-        IR::Temp *t = e->asTemp();
-        Q_ASSERT(t);
-        if (t->kind == IR::Temp::PhysicalRegister)
-            return (RegisterID) t->index;
+        if (IR::Temp *t = e->asTemp())
+            if (t->kind == IR::Temp::PhysicalRegister)
+                return (RegisterID) t->index;
 
-        return toUInt32Register(loadTempAddress(scratchReg, t), scratchReg);
+        return toUInt32Register(loadAddress(scratchReg, e), scratchReg);
     }
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
@@ -1291,17 +1325,15 @@ void Assembler::copyValue(Result result, IR::Expr* source)
         storeUInt32(reg, result);
     } else if (source->type == IR::DoubleType) {
         storeDouble(toDoubleRegister(source), result);
-    } else if (IR::Temp *temp = source->asTemp()) {
+    } else if (source->asTemp() || source->asArgLocal()) {
 #ifdef VALUE_FITS_IN_REGISTER
-        Q_UNUSED(temp);
-
-        // Use ReturnValueRegister as "scratch" register because loadArgument
-        // and storeArgument are functions that may need a scratch register themselves.
-        loadArgumentInRegister(source, ReturnValueRegister, 0);
-        storeReturnValue(result);
+            // Use ReturnValueRegister as "scratch" register because loadArgument
+            // and storeArgument are functions that may need a scratch register themselves.
+            loadArgumentInRegister(source, ReturnValueRegister, 0);
+            storeReturnValue(result);
 #else
-        loadDouble(temp, FPGpr0);
-        storeDouble(FPGpr0, result);
+            loadDouble(source, FPGpr0);
+            storeDouble(FPGpr0, result);
 #endif
     } else if (IR::Const *c = source->asConst()) {
         QV4::Primitive v = convertToValue(c);

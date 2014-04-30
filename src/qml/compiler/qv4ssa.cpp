@@ -101,29 +101,6 @@ public:
     }
 };
 
-inline bool unescapableTemp(Temp *t, IR::Function *f)
-{
-    switch (t->kind) {
-    case Temp::Formal:
-    case Temp::ScopedFormal:
-    case Temp::ScopedLocal:
-        return false;
-    case Temp::Local:
-        return !f->variablesCanEscape();
-    default:
-        return true;
-    }
-}
-
-inline Temp *unescapableTemp(Expr *e, IR::Function *f)
-{
-    Temp *t = e->asTemp();
-    if (!t)
-        return 0;
-
-    return unescapableTemp(t, f) ? t : 0;
-}
-
 class BasicBlockSet
 {
     typedef std::vector<int> Numbers;
@@ -625,16 +602,15 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     QSet<Temp> killed;
 
     BasicBlock *currentBB;
-    IR::Function *function;
     bool isCollectable(Temp *t) const
     {
+        Q_UNUSED(t);
         Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
-        return unescapableTemp(t, function);
+        return true;
     }
 
 public:
     VariableCollector(IR::Function *function)
-        : function(function)
     {
         _defsites.reserve(function->tempCount);
         A_orig.resize(function->basicBlockCount());
@@ -691,6 +667,7 @@ protected:
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
     virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
@@ -760,13 +737,13 @@ void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
     Phi *phiNode = f->New<Phi>();
     phiNode->d = new Stmt::Data;
     phiNode->targetTemp = f->New<Temp>();
-    phiNode->targetTemp->init(a.kind, a.index, 0);
+    phiNode->targetTemp->init(a.kind, a.index);
     y->prependStatement(phiNode);
 
     phiNode->d->incoming.resize(y->in.size());
     for (int i = 0, ei = y->in.size(); i < ei; ++i) {
         Temp *t = f->New<Temp>();
-        t->init(a.kind, a.index, 0);
+        t->init(a.kind, a.index);
         phiNode->d->incoming[i] = t;
     }
 }
@@ -846,18 +823,18 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
 
     typedef QHash<unsigned, int> Mapping; // maps from existing/old temp number to the new and unique temp number.
     enum { Absent = -1 };
-    Mapping localMapping;
     Mapping vregMapping;
     ProcessedBlocks processed;
 
     bool isRenamable(Temp *t) const
     {
+        Q_UNUSED(t);
         Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
-        return unescapableTemp(t, function);
+        return true;
     }
 
     struct TodoAction {
-        enum { RestoreLocal, RestoreVReg, Rename } action;
+        enum { RestoreVReg, Rename } action;
         union {
             struct {
                 unsigned temp;
@@ -878,9 +855,9 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
 
         TodoAction(const Temp &t, int prev)
         {
-            Q_ASSERT(t.kind == Temp::Local || t.kind == Temp::VirtualRegister);
+            Q_ASSERT(t.kind == Temp::VirtualRegister);
 
-            action = t.kind == Temp::Local ? RestoreLocal : RestoreVReg;
+            action = RestoreVReg;
             restoreData.temp = t.index;
             restoreData.previous = prev;
         }
@@ -902,7 +879,6 @@ public:
         , tempCount(0)
         , processed(f)
     {
-        localMapping.reserve(f->tempCount);
         vregMapping.reserve(f->tempCount);
         todo.reserve(f->basicBlockCount());
     }
@@ -918,9 +894,6 @@ public:
             switch (todoAction.action) {
             case TodoAction::Rename:
                 rename(todoAction.renameData.basicBlock);
-                break;
-            case TodoAction::RestoreLocal:
-                restore(localMapping, todoAction.restoreData.temp, todoAction.restoreData.previous);
                 break;
             case TodoAction::RestoreVReg:
                 restore(vregMapping, todoAction.restoreData.temp, todoAction.restoreData.previous);
@@ -987,9 +960,6 @@ private:
     {
         int nr = Absent;
         switch (t.kind) {
-        case Temp::Local:
-            nr = localMapping.value(t.index, Absent);
-            break;
         case Temp::VirtualRegister:
             nr = vregMapping.value(t.index, Absent);
             break;
@@ -1018,10 +988,6 @@ private:
         int oldIndex = Absent;
 
         switch (t.kind) {
-        case Temp::Local:
-            oldIndex = localMapping.value(t.index, Absent);
-            localMapping.insert(t.index, newIndex);
-            break;
         case Temp::VirtualRegister:
             oldIndex = vregMapping.value(t.index, Absent);
             vregMapping.insert(t.index, newIndex);
@@ -1077,6 +1043,7 @@ protected:
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
     virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
@@ -1158,9 +1125,9 @@ struct UntypedTemp {
     UntypedTemp(const Temp &t): temp(t) {}
 };
 inline uint qHash(const UntypedTemp &t, uint seed = 0) Q_DECL_NOTHROW
-{ return t.temp.index ^ (t.temp.kind | (t.temp.scope << 3)) ^ seed; }
+{ return t.temp.index ^ t.temp.kind ^ seed; }
 inline bool operator==(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
-{ return t1.temp.index == t2.temp.index && t1.temp.scope == t2.temp.scope && t1.temp.kind == t2.temp.kind; }
+{ return t1.temp.index == t2.temp.index && t1.temp.kind == t2.temp.kind; }
 inline bool operator!=(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
 { return !(t1 == t2); }
 
@@ -1177,7 +1144,6 @@ public:
     };
 
 private:
-    IR::Function *function;
     typedef QHash<UntypedTemp, DefUse> DefUses;
     DefUses _defUses;
     class Temps: public QVector<Temp> {
@@ -1190,8 +1156,9 @@ private:
     Stmt *_stmt;
 
     bool isCollectible(Temp *t) const {
+        Q_UNUSED(t);
         Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
-        return unescapableTemp(t, function);
+        return true;
     }
 
     void addUse(Temp *t) {
@@ -1216,7 +1183,6 @@ private:
 
 public:
     DefUsesCalculator(IR::Function *function)
-        : function(function)
     {
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
@@ -1369,6 +1335,7 @@ protected:
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -1572,15 +1539,13 @@ public:
 class EliminateDeadCode: public ExprVisitor {
     DefUsesCalculator &_defUses;
     StatementWorklist &_worklist;
-    IR::Function *function;
     bool _sideEffect;
     QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist, IR::Function *function)
+    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist)
         : _defUses(defUses)
         , _worklist(worklist)
-        , function(function)
     {
         _collectedTemps.reserve(8);
     }
@@ -1611,11 +1576,6 @@ private:
         _collectedTemps.clear();
     }
 
-    bool isCollectable(Temp *t) const
-    {
-        return unescapableTemp(t, function);
-    }
-
 protected:
     virtual void visitConst(Const *) {}
     virtual void visitString(IR::String *) {}
@@ -1633,9 +1593,10 @@ protected:
 
     virtual void visitTemp(Temp *e)
     {
-        if (isCollectable(e))
-            _collectedTemps.append(e);
+        _collectedTemps.append(e);
     }
+
+    virtual void visitArgLocal(ArgLocal *) {}
 
     virtual void visitClosure(Closure *)
     {
@@ -1764,6 +1725,7 @@ protected:
             e->memberResolver = newType.memberResolver;
         }
     }
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -1939,20 +1901,11 @@ private:
         return ty;
     }
 
-    bool isAlwaysVar(Temp *t) {
-        if (unescapableTemp(t, function))
-            return false;
-        t->type = VarType;
-        return true;
-    }
-
     void setType(Expr *e, DiscoveredType ty) {
         if (Temp *t = e->asTemp()) {
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
-            if (isAlwaysVar(t))
-                ty = DiscoveredType(VarType);
             TempTypes::iterator it = _tempTypes.find(*t);
             if (it == _tempTypes.end())
                 it = _tempTypes.insert(*t, DiscoveredType());
@@ -1990,14 +1943,17 @@ protected:
     virtual void visitRegExp(IR::RegExp *) { _ty = TypingResult(VarType); }
     virtual void visitName(Name *) { _ty = TypingResult(VarType); }
     virtual void visitTemp(Temp *e) {
-        if (isAlwaysVar(e))
-            _ty = TypingResult(VarType);
-        else if (e->memberResolver.isValid())
+        if (e->memberResolver.isValid())
             _ty = TypingResult(e->memberResolver);
         else
             _ty = TypingResult(_tempTypes.value(*e));
         setType(e, _ty.type);
     }
+    virtual void visitArgLocal(ArgLocal *e) {
+        _ty = TypingResult(VarType);
+        setType(e, _ty.type);
+    }
+
     virtual void visitClosure(Closure *) { _ty = TypingResult(VarType); }
     virtual void visitConvert(Convert *e) {
         _ty = TypingResult(e->type);
@@ -2178,6 +2134,8 @@ public:
 
     void run(IR::Function *f)
     {
+        Q_UNUSED(f);
+
         QVector<UntypedTemp> knownOk;
         QList<UntypedTemp> candidates = _defUses.defsUntyped();
         while (!candidates.isEmpty()) {
@@ -2220,13 +2178,13 @@ public:
                 default:
                     continue;
                 }
-                if (Temp *lt = unescapableTemp(b->left, f))
+                if (Temp *lt = b->left->asTemp())
                     candidates.append(*lt);
-                if (Temp *rt = unescapableTemp(b->right, f))
+                if (Temp *rt = b->right->asTemp())
                     candidates.append(*rt);
             } else if (Unop *u = m->source->asUnop()) {
                 if (u->op == OpCompl || u->op == OpUPlus) {
-                    if (Temp *t = unescapableTemp(u->expr, f))
+                    if (Temp *t = u->expr->asTemp())
                         candidates.append(*t);
                 }
             } else {
@@ -2406,6 +2364,26 @@ public:
                     *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
                 } else if (Const *c = (*conversion.expr)->asConst()) {
                     convertConst(c, conversion.targetType);
+                } else if (ArgLocal *al = (*conversion.expr)->asArgLocal()) {
+                    Temp *target = bb->TEMP(bb->newTemp());
+                    target->type = conversion.targetType;
+                    Expr *convert = bb->CONVERT(al, conversion.targetType);
+                    Move *convCall = f->New<Move>();
+                    convCall->init(target, convert);
+                    _defUses.addTemp(target, convCall, bb);
+
+                    Temp *source = bb->TEMP(target->index);
+                    source->type = conversion.targetType;
+                    _defUses.addUse(*source, conversion.stmt);
+
+                    if (conversion.stmt->asPhi()) {
+                        // Only temps can be used as arguments to phi nodes, so this is a sanity check...:
+                        Q_UNREACHABLE();
+                    } else {
+                        bb->insertStatementBefore(conversion.stmt, convCall);
+                    }
+
+                    *conversion.expr = source;
                 } else if (Temp *t = (*conversion.expr)->asTemp()) {
                     Temp *target = bb->TEMP(bb->newTemp());
                     target->type = conversion.targetType;
@@ -2472,6 +2450,7 @@ protected:
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { run(e->expr, e->type); }
     virtual void visitUnop(Unop *e) { run(e->expr, e->type); }
@@ -2945,6 +2924,7 @@ protected:
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { check(e->expr); }
     virtual void visitUnop(Unop *e) { check(e->expr); }
@@ -3212,10 +3192,10 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 }
             }
 
-            if (Temp *targetTemp = unescapableTemp(m->target, function)) {
+            if (Temp *targetTemp = m->target->asTemp()) {
                 // dead code elimination:
                 if (defUses.useCount(*targetTemp) == 0) {
-                    EliminateDeadCode(defUses, W, function).run(m->source, s);
+                    EliminateDeadCode(defUses, W).run(m->source, s);
                     if (!m->source)
                         W.clear(s);
                     continue;
@@ -3250,7 +3230,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 }
 
                 // copy propagation:
-                if (Temp *sourceTemp = unescapableTemp(m->source, function)) {
+                if (Temp *sourceTemp = m->source->asTemp()) {
                     QVector<Stmt *> newT2Uses;
                     replaceUses(targetTemp, sourceTemp, W, &newT2Uses);
                     defUses.removeUse(s, *sourceTemp);
@@ -3445,13 +3425,9 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
-    IR::Function *function;
-
 public:
     QList<Temp> inputs;
     QList<Temp> outputs;
-
-    InputOutputCollector(IR::Function *f): function(f) {}
 
     void collect(Stmt *s) {
         inputs.clear();
@@ -3465,9 +3441,9 @@ protected:
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *e) {
-        if (unescapableTemp(e, function))
-            inputs.append(*e);
+        inputs.append(*e);
     }
+    virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -3488,10 +3464,7 @@ protected:
     virtual void visitMove(Move *s) {
         s->source->accept(this);
         if (Temp *t = s->target->asTemp()) {
-            if (unescapableTemp(t, function))
-                outputs.append(*t);
-            else
-                s->target->accept(this);
+            outputs.append(*t);
         } else {
             s->target->accept(this);
         }
@@ -3541,7 +3514,7 @@ public:
 
         for (int i = function->basicBlockCount() - 1; i >= 0; --i) {
             BasicBlock *bb = function->basicBlock(i);
-            buildIntervals(bb, startEndLoops.value(bb, 0), function);
+            buildIntervals(bb, startEndLoops.value(bb, 0));
         }
 
         _sortedIntervals.reserve(_intervals.size());
@@ -3578,7 +3551,7 @@ public:
     }
 
 private:
-    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, IR::Function *function)
+    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd)
     {
         LiveRegs live;
         foreach (BasicBlock *successor, bb->out) {
@@ -3601,7 +3574,7 @@ private:
         foreach (const Temp &opd, live)
             _intervals[opd].addRange(statements.first()->id, statements.last()->id);
 
-        InputOutputCollector collector(function);
+        InputOutputCollector collector;
         for (int i = statements.size() - 1; i >= 0; --i) {
             Stmt *s = statements[i];
             if (Phi *phi = s->asPhi()) {
@@ -3990,8 +3963,6 @@ static inline bool overlappingStorage(const Temp &t1, const Temp &t2)
     // This is the same as the operator==, but for one detail: memory locations are not sensitive
     // to types, and neither are general-purpose registers.
 
-    if (t1.scope != t2.scope)
-        return false;
     if (t1.index != t2.index)
         return false; // different position, where-ever that may (physically) be.
     if (t1.kind != t2.kind)

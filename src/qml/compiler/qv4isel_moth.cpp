@@ -456,7 +456,7 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
     return compilationUnit;
 }
 
-void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
 {
     Instruction::CallValue call;
     prepareCallArgs(args, call.argc);
@@ -467,7 +467,7 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 }
 
 void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
-                                        IR::Temp *result)
+                                        IR::Expr *result)
 {
     if (useFastLookups) {
         Instruction::CallPropertyLookup call;
@@ -490,7 +490,7 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
 }
 
 void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
-                                         IR::Temp *result)
+                                         IR::Expr *result)
 {
     // call the property on the loaded base
     Instruction::CallElement call;
@@ -502,7 +502,7 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
     addInstruction(call);
 }
 
-void InstructionSelection::convertType(IR::Temp *source, IR::Temp *target)
+void InstructionSelection::convertType(IR::Expr *source, IR::Expr *target)
 {
     // FIXME: do something more useful with this info
     if (target->type & IR::NumberType && !(source->type & IR::NumberType))
@@ -513,14 +513,14 @@ void InstructionSelection::convertType(IR::Temp *source, IR::Temp *target)
 
 void InstructionSelection::constructActivationProperty(IR::Name *func,
                                                        IR::ExprList *args,
-                                                       IR::Temp *result)
+                                                       IR::Expr *target)
 {
     if (useFastLookups && func->global) {
         Instruction::ConstructGlobalLookup call;
         call.index = registerGlobalGetterLookup(*func->id);
         prepareCallArgs(args, call.argc);
         call.callData = callDataStart();
-        call.result = getResultParam(result);
+        call.result = getResultParam(target);
         addInstruction(call);
         return;
     }
@@ -528,11 +528,11 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
     create.name = registerString(*func->id);
     prepareCallArgs(args, create.argc);
     create.callData = callDataStart();
-    create.result = getResultParam(result);
+    create.result = getResultParam(target);
     addInstruction(create);
 }
 
-void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr *target)
 {
     if (useFastLookups) {
         Instruction::ConstructPropertyLookup call;
@@ -540,7 +540,7 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
         call.index = registerGetterLookup(name);
         prepareCallArgs(args, call.argc);
         call.callData = callDataStart();
-        call.result = getResultParam(result);
+        call.result = getResultParam(target);
         addInstruction(call);
         return;
     }
@@ -549,101 +549,101 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
     create.name = registerString(name);
     prepareCallArgs(args, create.argc);
     create.callData = callDataStart();
-    create.result = getResultParam(result);
+    create.result = getResultParam(target);
     addInstruction(create);
 }
 
-void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *target)
 {
     Instruction::CreateValue create;
     create.func = getParam(value);
     prepareCallArgs(args, create.argc);
     create.callData = callDataStart();
-    create.result = getResultParam(result);
+    create.result = getResultParam(target);
     addInstruction(create);
 }
 
-void InstructionSelection::loadThisObject(IR::Temp *temp)
+void InstructionSelection::loadThisObject(IR::Expr *e)
 {
     Instruction::LoadThis load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlIdArray(IR::Temp *temp)
+void InstructionSelection::loadQmlIdArray(IR::Expr *e)
 {
     Instruction::LoadQmlIdArray load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlImportedScripts(IR::Temp *temp)
+void InstructionSelection::loadQmlImportedScripts(IR::Expr *e)
 {
     Instruction::LoadQmlImportedScripts load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlContextObject(IR::Temp *temp)
+void InstructionSelection::loadQmlContextObject(IR::Expr *e)
 {
     Instruction::LoadQmlContextObject load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlScopeObject(IR::Temp *temp)
+void InstructionSelection::loadQmlScopeObject(IR::Expr *e)
 {
     Instruction::LoadQmlScopeObject load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlSingleton(const QString &name, IR::Temp *temp)
+void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *e)
 {
     Instruction::LoadQmlSingleton load;
-    load.result = getResultParam(temp);
+    load.result = getResultParam(e);
     load.name = registerString(name);
     addInstruction(load);
 }
 
-void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *e)
 {
     Q_ASSERT(sourceConst);
 
     Instruction::MoveConst move;
     move.source = convertToValue(sourceConst).asReturnedValue();
-    move.result = getResultParam(targetTemp);
+    move.result = getResultParam(e);
     addInstruction(move);
 }
 
-void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+void InstructionSelection::loadString(const QString &str, IR::Expr *target)
 {
     Instruction::LoadRuntimeString load;
     load.stringId = registerString(str);
-    load.result = getResultParam(targetTemp);
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
-void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target)
 {
     Instruction::LoadRegExp load;
     load.regExpId = registerRegExp(sourceRegexp);
-    load.result = getResultParam(targetTemp);
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
-void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr *target)
 {
     if (useFastLookups && name->global) {
         Instruction::GetGlobalLookup load;
         load.index = registerGlobalGetterLookup(*name->id);
-        load.result = getResultParam(temp);
+        load.result = getResultParam(target);
         addInstruction(load);
         return;
     }
     Instruction::LoadName load;
     load.name = registerString(*name->id);
-    load.result = getResultParam(temp);
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
@@ -655,7 +655,7 @@ void InstructionSelection::setActivationProperty(IR::Expr *source, const QString
     addInstruction(store);
 }
 
-void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+void InstructionSelection::initClosure(IR::Closure *closure, IR::Expr *target)
 {
     int id = closure->value;
     Instruction::LoadClosure load;
@@ -664,7 +664,7 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
     addInstruction(load);
 }
 
-void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Temp *target)
+void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Expr *target)
 {
     if (useFastLookups) {
         Instruction::GetLookup load;
@@ -708,7 +708,7 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     addInstruction(store);
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Temp *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0) {
         Instruction::LoadAttachedQObjectProperty load;
@@ -726,7 +726,7 @@ void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex,
     }
 }
 
-void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Temp *target)
+void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
     if (useFastLookups) {
         Instruction::LoadElementLookup load;
@@ -763,92 +763,92 @@ void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase,
     addInstruction(store);
 }
 
-void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
 {
     Instruction::Move move;
-    move.source = getParam(sourceTemp);
-    move.result = getResultParam(targetTemp);
+    move.source = getParam(source);
+    move.result = getResultParam(target);
     if (move.source != move.result)
         addInstruction(move);
 }
 
-void InstructionSelection::swapValues(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 {
     Instruction::SwapTemps swap;
-    swap.left = getParam(sourceTemp);
-    swap.right = getParam(targetTemp);
+    swap.left = getParam(source);
+    swap.right = getParam(target);
     addInstruction(swap);
 }
 
-void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
     switch (oper) {
     case IR::OpIfTrue:
         Q_ASSERT(!"unreachable"); break;
     case IR::OpNot: {
         // ### enabling this fails in some cases, where apparently the value is not a bool at runtime
-        if (0 && isBoolType(sourceTemp)) {
+        if (0 && isBoolType(source)) {
             Instruction::UNotBool unot;
-            unot.source = getParam(sourceTemp);
-            unot.result = getResultParam(targetTemp);
+            unot.source = getParam(source);
+            unot.result = getResultParam(target);
             addInstruction(unot);
             return;
         }
         Instruction::UNot unot;
-        unot.source = getParam(sourceTemp);
-        unot.result = getResultParam(targetTemp);
+        unot.source = getParam(source);
+        unot.result = getResultParam(target);
         addInstruction(unot);
         return;
     }
     case IR::OpUMinus: {
         Instruction::UMinus uminus;
-        uminus.source = getParam(sourceTemp);
-        uminus.result = getResultParam(targetTemp);
+        uminus.source = getParam(source);
+        uminus.result = getResultParam(target);
         addInstruction(uminus);
         return;
     }
     case IR::OpUPlus: {
-        if (isNumberType(sourceTemp)) {
+        if (isNumberType(source)) {
             // use a move
             Instruction::Move move;
-            move.source = getParam(sourceTemp);
-            move.result = getResultParam(targetTemp);
+            move.source = getParam(source);
+            move.result = getResultParam(target);
             if (move.source != move.result)
                 addInstruction(move);
             return;
         }
         Instruction::UPlus uplus;
-        uplus.source = getParam(sourceTemp);
-        uplus.result = getResultParam(targetTemp);
+        uplus.source = getParam(source);
+        uplus.result = getResultParam(target);
         addInstruction(uplus);
         return;
     }
     case IR::OpCompl: {
         // ### enabling this fails in some cases, where apparently the value is not a int at runtime
-        if (0 && isIntegerType(sourceTemp)) {
+        if (0 && isIntegerType(source)) {
             Instruction::UComplInt unot;
-            unot.source = getParam(sourceTemp);
-            unot.result = getResultParam(targetTemp);
+            unot.source = getParam(source);
+            unot.result = getResultParam(target);
             addInstruction(unot);
             return;
         }
         Instruction::UCompl ucompl;
-        ucompl.source = getParam(sourceTemp);
-        ucompl.result = getResultParam(targetTemp);
+        ucompl.source = getParam(source);
+        ucompl.result = getResultParam(target);
         addInstruction(ucompl);
         return;
     }
     case IR::OpIncrement: {
         Instruction::Increment inc;
-        inc.source = getParam(sourceTemp);
-        inc.result = getResultParam(targetTemp);
+        inc.source = getParam(source);
+        inc.result = getResultParam(target);
         addInstruction(inc);
         return;
     }
     case IR::OpDecrement: {
         Instruction::Decrement dec;
-        dec.source = getParam(sourceTemp);
-        dec.result = getResultParam(targetTemp);
+        dec.source = getParam(source);
+        dec.result = getResultParam(target);
         addInstruction(dec);
         return;
     }
@@ -858,12 +858,12 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     Q_ASSERT(!"unreachable");
 }
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
     binopHelper(oper, leftSource, rightSource, target);
 }
 
-Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
     if (oper == IR::OpAdd) {
         Instruction::Add add;
@@ -1103,7 +1103,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     addInstruction(ret);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)
 {
     if (useFastLookups && func->global) {
         Instruction::CallGlobalLookup call;
@@ -1123,7 +1123,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
 }
 
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
-                                                   IR::Temp *result)
+                                                   IR::Expr *result)
 {
     Instruction::CallBuiltinTypeofMember call;
     call.base = getParam(base);
@@ -1133,7 +1133,7 @@ void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index,
-                                                      IR::Temp *result)
+                                                      IR::Expr *result)
 {
     Instruction::CallBuiltinTypeofSubscript call;
     call.base = getParam(base);
@@ -1142,7 +1142,7 @@ void InstructionSelection::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Expr *result)
 {
     Instruction::CallBuiltinTypeofName call;
     call.name = registerString(name);
@@ -1150,7 +1150,7 @@ void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result)
 {
     Instruction::CallBuiltinTypeofValue call;
     call.value = getParam(value);
@@ -1158,7 +1158,7 @@ void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Temp *res
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result)
 {
     Instruction::CallBuiltinDeleteMember call;
     call.base = getParam(base);
@@ -1167,8 +1167,8 @@ void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Expr *index,
-                                                      IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index,
+                                                      IR::Expr *result)
 {
     Instruction::CallBuiltinDeleteSubscript call;
     call.base = getParam(base);
@@ -1177,7 +1177,7 @@ void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Expr *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Expr *result)
 {
     Instruction::CallBuiltinDeleteName call;
     call.name = registerString(name);
@@ -1185,7 +1185,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
 {
     Instruction::MoveConst move;
     move.source = QV4::Encode(false);
@@ -1217,7 +1217,7 @@ void InstructionSelection::callBuiltinReThrow()
     }
 }
 
-void InstructionSelection::callBuiltinUnwindException(IR::Temp *result)
+void InstructionSelection::callBuiltinUnwindException(IR::Expr *result)
 {
     Instruction::CallBuiltinUnwindException call;
     call.result = getResultParam(result);
@@ -1232,7 +1232,7 @@ void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionNam
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result)
 {
     Instruction::CallBuiltinForeachIteratorObject call;
     call.arg = getParam(arg);
@@ -1240,7 +1240,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::T
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR::Expr *result)
 {
     Instruction::CallBuiltinForeachNextPropertyName call;
     call.arg = getParam(arg);
@@ -1248,7 +1248,7 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(IR::Expr *arg)
 {
     Instruction::CallBuiltinPushScope call;
     call.arg = getParam(arg);
@@ -1269,7 +1269,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineArray(IR::Expr *result, IR::ExprList *args)
 {
     Instruction::CallBuiltinDefineArray call;
     prepareCallArgs(args, call.argc, &call.args);
@@ -1277,7 +1277,7 @@ void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
+void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
 {
     int argLocation = outgoingArgumentTempStart();
 
@@ -1397,7 +1397,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Temp *result, int 
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinSetupArgumentObject(IR::Temp *result)
+void InstructionSelection::callBuiltinSetupArgumentObject(IR::Expr *result)
 {
     Instruction::CallBuiltinSetupArgumentsObject call;
     call.result = getResultParam(result);
@@ -1475,12 +1475,18 @@ Param InstructionSelection::getParam(IR::Expr *e) {
         return Param::createConstant(idx);
     } else if (IR::Temp *t = e->asTemp()) {
         switch (t->kind) {
-        case IR::Temp::Formal:
-        case IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
-        case IR::Temp::Local: return Param::createLocal(t->index);
-        case IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
         case IR::Temp::StackSlot:
             return Param::createTemp(t->index);
+        default:
+            Q_UNREACHABLE();
+            return Param();
+        }
+    } else if (IR::ArgLocal *al = e->asArgLocal()) {
+        switch (al->kind) {
+        case IR::ArgLocal::Formal:
+        case IR::ArgLocal::ScopedFormal: return Param::createArgument(al->index, al->scope);
+        case IR::ArgLocal::Local: return Param::createLocal(al->index);
+        case IR::ArgLocal::ScopedLocal: return Param::createScopedLocal(al->index, al->scope);
         default:
             Q_UNREACHABLE();
             return Param();

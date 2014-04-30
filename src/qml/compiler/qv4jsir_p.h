@@ -108,6 +108,7 @@ struct String;
 struct RegExp;
 struct Name;
 struct Temp;
+struct ArgLocal;
 struct Closure;
 struct Convert;
 struct Unop;
@@ -210,6 +211,7 @@ struct ExprVisitor {
     virtual void visitRegExp(RegExp *) = 0;
     virtual void visitName(Name *) = 0;
     virtual void visitTemp(Temp *) = 0;
+    virtual void visitArgLocal(ArgLocal *) = 0;
     virtual void visitClosure(Closure *) = 0;
     virtual void visitConvert(Convert *) = 0;
     virtual void visitUnop(Unop *) = 0;
@@ -260,6 +262,7 @@ struct Q_AUTOTEST_EXPORT Expr {
     virtual RegExp *asRegExp() { return 0; }
     virtual Name *asName() { return 0; }
     virtual Temp *asTemp() { return 0; }
+    virtual ArgLocal *asArgLocal() { return 0; }
     virtual Closure *asClosure() { return 0; }
     virtual Convert *asConvert() { return 0; }
     virtual Unop *asUnop() { return 0; }
@@ -372,22 +375,52 @@ struct Name: Expr {
 
 struct Q_AUTOTEST_EXPORT Temp: Expr {
     enum Kind {
-        Formal = 0,
-        ScopedFormal,
-        Local,
-        ScopedLocal,
-        VirtualRegister,
+        VirtualRegister = 0,
         PhysicalRegister,
         StackSlot
     };
 
-    unsigned index;
-    unsigned scope : 27; // how many scopes outside the current one?
-    unsigned kind  : 3;
-    unsigned isArgumentsOrEval : 1;
-    unsigned isReadOnly : 1;
+    unsigned index      : 28;
+    unsigned kind       :  3;
+    unsigned isReadOnly :  1;
     // Used when temp is used as base in member expression
     MemberExpressionResolver memberResolver;
+
+    void init(unsigned kind, unsigned index)
+    {
+        this->kind = kind;
+        this->index = index;
+        this->isReadOnly = false;
+    }
+
+    virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
+    virtual bool isLValue() { return !isReadOnly; }
+    virtual Temp *asTemp() { return this; }
+};
+
+inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
+{ return t1.index == t2.index && t1.kind == t2.kind && t1.type == t2.type; }
+
+inline bool operator!=(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
+{ return !(t1 == t2); }
+
+inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
+{ return t.index ^ t.kind ^ seed; }
+
+bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW;
+
+struct Q_AUTOTEST_EXPORT ArgLocal: Expr {
+    enum Kind {
+        Formal = 0,
+        ScopedFormal,
+        Local,
+        ScopedLocal
+    };
+
+    unsigned index;
+    unsigned scope             : 29; // how many scopes outside the current one?
+    unsigned kind              :  2;
+    unsigned isArgumentsOrEval :  1;
 
     void init(unsigned kind, unsigned index, unsigned scope)
     {
@@ -399,24 +432,15 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
         this->index = index;
         this->scope = scope;
         this->isArgumentsOrEval = false;
-        this->isReadOnly = false;
     }
 
-    virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
-    virtual bool isLValue() { return !isReadOnly; }
-    virtual Temp *asTemp() { return this; }
+    virtual void accept(ExprVisitor *v) { v->visitArgLocal(this); }
+    virtual bool isLValue() { return true; }
+    virtual ArgLocal *asArgLocal() { return this; }
+
+    bool operator==(const ArgLocal &other) const
+    { return index == other.index && scope == other.scope && kind == other.kind; }
 };
-
-inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
-{ return t1.index == t2.index && t1.scope == t2.scope && t1.kind == t2.kind && t1.type == t2.type; }
-
-inline bool operator!=(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
-{ return !(t1 == t2); }
-
-inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
-{ return t.index ^ (t.kind | (t.scope << 3)) ^ seed; }
-
-bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW;
 
 struct Closure: Expr {
     int value; // index in _module->functions
@@ -797,8 +821,8 @@ public:
     unsigned newTemp();
 
     Temp *TEMP(unsigned kind);
-    Temp *ARG(unsigned index, unsigned scope);
-    Temp *LOCAL(unsigned index, unsigned scope);
+    ArgLocal *ARG(unsigned index, unsigned scope);
+    ArgLocal *LOCAL(unsigned index, unsigned scope);
 
     Expr *CONST(Type type, double value);
     Expr *STRING(const QString *value);
@@ -1040,10 +1064,18 @@ public:
     static Temp *cloneTemp(Temp *t, Function *f)
     {
         Temp *newTemp = f->New<Temp>();
-        newTemp->init(t->kind, t->index, t->scope);
+        newTemp->init(t->kind, t->index);
         newTemp->type = t->type;
         newTemp->memberResolver = t->memberResolver;
         return newTemp;
+    }
+
+    static ArgLocal *cloneArgLocal(ArgLocal *argLocal, Function *f)
+    {
+        ArgLocal *newArgLocal = f->New<ArgLocal>();
+        newArgLocal->init(argLocal->kind, argLocal->index, argLocal->scope);
+        newArgLocal->type = argLocal->type;
+        return newArgLocal;
     }
 
 protected:
@@ -1054,6 +1086,7 @@ protected:
     virtual void visitRegExp(RegExp *);
     virtual void visitName(Name *);
     virtual void visitTemp(Temp *);
+    virtual void visitArgLocal(ArgLocal *);
     virtual void visitClosure(Closure *);
     virtual void visitConvert(Convert *);
     virtual void visitUnop(Unop *);
@@ -1093,6 +1126,7 @@ public:
     virtual void visitRegExp(RegExp *e);
     virtual void visitName(Name *e);
     virtual void visitTemp(Temp *e);
+    virtual void visitArgLocal(ArgLocal *e);
     virtual void visitClosure(Closure *e);
     virtual void visitConvert(Convert *e);
     virtual void visitUnop(Unop *e);
