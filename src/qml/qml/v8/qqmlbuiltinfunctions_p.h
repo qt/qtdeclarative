@@ -65,7 +65,17 @@ namespace QV4 {
 
 struct QtObject : Object
 {
-    V4_OBJECT
+    struct Data : Object::Data {
+        QObject *platform;
+        QObject *application;
+    };
+    struct {
+        QObject *platform;
+        QObject *application;
+    } __data;
+
+    V4_OBJECT_NEW
+
     QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
 
     static ReturnedValue method_isQtObject(CallContext *ctx);
@@ -104,9 +114,6 @@ struct QtObject : Object
 #ifndef QT_NO_IM
     static ReturnedValue method_get_inputMethod(CallContext *ctx);
 #endif
-
-    QObject *m_platform;
-    QObject *m_application;
 };
 
 struct ConsoleObject : Object
@@ -147,7 +154,17 @@ struct GlobalExtensions {
 
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
-    V4_OBJECT
+    struct Data : FunctionObject::Data {
+        QV4::FunctionObject *originalFunction;
+        // Set when the binding is created later
+        QQmlSourceLocation bindingLocation;
+    };
+    struct {
+        QV4::FunctionObject *originalFunction;
+        QQmlSourceLocation bindingLocation;
+    } __data;
+
+    V4_OBJECT_NEW
     QQmlBindingFunction(FunctionObject *originalFunction);
 
     void initBindingLocation(); // from caller stack trace
@@ -159,9 +176,6 @@ struct QQmlBindingFunction : public QV4::FunctionObject
         static_cast<QQmlBindingFunction *>(that)->~QQmlBindingFunction();
     }
 
-    QV4::FunctionObject *originalFunction;
-    // Set when the binding is created later
-    QQmlSourceLocation bindingLocation;
 };
 
 }

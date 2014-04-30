@@ -88,8 +88,6 @@ struct StaticQtMetaObject : public QObject
 
 QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     : Object(v4)
-    , m_platform(0)
-    , m_application(0)
 {
     setVTable(staticVTable());
 
@@ -1178,8 +1176,8 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 QQmlBindingFunction::QQmlBindingFunction(FunctionObject *originalFunction)
     : QV4::FunctionObject(originalFunction->scope(), originalFunction->name())
-    , originalFunction(originalFunction)
 {
+    d()->originalFunction = originalFunction;
     setVTable(staticVTable());
     managedData()->bindingKeyFlag = true;
 }
@@ -1187,20 +1185,20 @@ QQmlBindingFunction::QQmlBindingFunction(FunctionObject *originalFunction)
 void QQmlBindingFunction::initBindingLocation()
 {
     QV4::StackFrame frame = engine()->currentStackFrame();
-    bindingLocation.sourceFile = frame.source;
-    bindingLocation.line = frame.line;
+    d()->bindingLocation.sourceFile = frame.source;
+    d()->bindingLocation.line = frame.line;
 }
 
 ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
 {
     QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
-    return This->originalFunction->call(callData);
+    return This->d()->originalFunction->call(callData);
 }
 
 void QQmlBindingFunction::markObjects(Managed *that, ExecutionEngine *e)
 {
     QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
-    This->originalFunction->mark(e);
+    This->d()->originalFunction->mark(e);
     QV4::FunctionObject::markObjects(that, e);
 }
 
@@ -1272,11 +1270,11 @@ ReturnedValue QtObject::method_get_platform(CallContext *ctx)
     if (!qt)
         return ctx->throwTypeError();
 
-    if (!qt->m_platform)
+    if (!qt->d()->platform)
         // Only allocate a platform object once
-        qt->m_platform = new QQmlPlatform(ctx->engine->v8Engine->publicEngine());
+        qt->d()->platform = new QQmlPlatform(ctx->engine->v8Engine->publicEngine());
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_platform);
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->d()->platform);
 }
 
 ReturnedValue QtObject::method_get_application(CallContext *ctx)
@@ -1289,11 +1287,11 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
     if (!qt)
         return ctx->throwTypeError();
 
-    if (!qt->m_application)
+    if (!qt->d()->application)
         // Only allocate an application object once
-        qt->m_application = QQml_guiProvider()->application(ctx->engine->v8Engine->publicEngine());
+        qt->d()->application = QQml_guiProvider()->application(ctx->engine->v8Engine->publicEngine());
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_application);
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->d()->application);
 }
 
 #ifndef QT_NO_IM
