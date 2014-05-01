@@ -60,6 +60,7 @@ private slots:
     void state();
     void layoutDirection();
     void inputMethod();
+    void cleanup();
 
 private:
     QQmlEngine engine;
@@ -67,6 +68,14 @@ private:
 
 tst_qquickapplication::tst_qquickapplication()
 {
+}
+
+void tst_qquickapplication::cleanup()
+{
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
+        QTest::waitForEvents();
+    }
 }
 
 void tst_qquickapplication::active()
@@ -98,12 +107,19 @@ void tst_qquickapplication::active()
     QVERIFY(item->property("active").toBool());
     QVERIFY(item->property("active2").toBool());
 
-    // not active again
     QWindowSystemInterface::handleWindowActivated(0);
 
+#ifdef Q_OS_OSX
+    // OS X has the concept of "reactivation"
+    QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
+    QVERIFY(item->property("active").toBool());
+    QVERIFY(item->property("active2").toBool());
+#else
+    // not active again
     QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
+#endif
 }
 
 void tst_qquickapplication::state()
@@ -117,6 +133,7 @@ void tst_qquickapplication::state()
                       "        target: Qt.application; "
                       "        onStateChanged: state2 = Qt.application.state; "
                       "    } "
+                      "    Component.onCompleted: state2 = Qt.application.state; "
                       "}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
