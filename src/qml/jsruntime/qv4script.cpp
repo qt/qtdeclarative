@@ -385,10 +385,10 @@ QV4::CompiledData::CompilationUnit *Script::precompile(IR::Module *module, Compi
 
     QQmlJS::Codegen cg(/*strict mode*/false);
     cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::Codegen::EvalCode);
-    errors = cg.errors();
+    errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)
-            *reportedErrors << cg.errors();
+            *reportedErrors << errors;
         return 0;
     }
 

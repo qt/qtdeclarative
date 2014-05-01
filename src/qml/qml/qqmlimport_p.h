@@ -48,6 +48,7 @@
 #include <QtCore/qstringlist.h>
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qhashedstring_p.h>
 
 //
 //  W A R N I N G

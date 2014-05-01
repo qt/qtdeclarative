@@ -45,9 +45,12 @@
 #include "qv4jsir_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmljsengine_p.h>
 #include <QtCore/QStringList>
 #include <QStack>
+#ifndef V4_BOOTSTRAP
 #include <qqmlerror.h>
+#endif
 #include <private/qv4util_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -62,7 +65,7 @@ class UiParameterList;
 }
 
 
-class Q_QML_EXPORT Codegen: protected AST::Visitor
+class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
 {
 public:
     Codegen(bool strict);
@@ -434,7 +437,10 @@ protected:
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
 public:
-    QList<QQmlError> errors() const;
+    QList<DiagnosticMessage> errors() const;
+#ifndef V4_BOOTSTRAP
+    QList<QQmlError> qmlErrors() const;
+#endif
 
 protected:
     Result _expr;
@@ -456,7 +462,7 @@ protected:
 
     bool _fileNameIsUrl;
     bool hasError;
-    QList<QQmlError> _errors;
+    QList<QQmlJS::DiagnosticMessage> _errors;
 
     class ScanFunctions: protected Visitor
     {
@@ -532,6 +538,7 @@ protected:
 
 };
 
+#ifndef V4_BOOTSTRAP
 class RuntimeCodegen : public Codegen
 {
 public:
@@ -545,6 +552,7 @@ public:
 private:
     QV4::ExecutionContext *context;
 };
+#endif // V4_BOOTSTRAP
 
 }
 

@@ -147,7 +147,7 @@ Atlas::Atlas(const QSize &size)
     m_externalFormat = GL_BGRA;
 
 #ifndef QT_OPENGL_ES
-    if (QOpenGLContext::currentContext()->isES()) {
+    if (QOpenGLContext::currentContext()->isOpenGLES()) {
 #endif
 
 #if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_NO_SDK)
@@ -334,7 +334,7 @@ void Atlas::bind(QSGTexture::Filtering filtering)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
-        if (!QOpenGLContext::currentContext()->isES())
+        if (!QOpenGLContext::currentContext()->isOpenGLES())
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
         glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);

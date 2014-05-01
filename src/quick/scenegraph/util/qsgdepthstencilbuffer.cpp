@@ -115,7 +115,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
         m_functions.glGenRenderbuffers(1, &m_depthBuffer);
         m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
         GLenum internalFormat = GL_DEPTH_COMPONENT;
-        if (context->isES())
+        if (context->isOpenGLES())
             internalFormat = m_functions.hasOpenGLExtension(QOpenGLExtensions::Depth24)
                 ? GL_DEPTH_COMPONENT24_OES : GL_DEPTH_COMPONENT16;
         if (format.samples && m_functions.hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)) {
@@ -131,7 +131,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
 #ifdef QT_OPENGL_ES
         const GLenum internalFormat = GL_STENCIL_INDEX8;
 #else
-        const GLenum internalFormat = context->isES() ? GL_STENCIL_INDEX8 : GL_STENCIL_INDEX;
+        const GLenum internalFormat = context->isOpenGLES() ? GL_STENCIL_INDEX8 : GL_STENCIL_INDEX;
 #endif
         if (format.samples && m_functions.hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)) {
             m_functions.glRenderbufferStorageMultisample(GL_RENDERBUFFER, format.samples,

@@ -39,14 +39,13 @@
 **
 ****************************************************************************/
 
-#include "qv4debugging_p.h"
-#include "qv4engine_p.h"
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4function_p.h"
+#include <private/qv4value_inl_p.h>
+#ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
+#endif
 
 #include <QString>
 
@@ -68,7 +67,9 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *exe
         ownJSGenerator.reset(jsGenerator);
     }
     this->jsGenerator = jsGenerator;
+#ifndef V4_BOOTSTRAP
     Q_ASSERT(execAllocator);
+#endif
     Q_ASSERT(module);
 }
 
@@ -144,6 +145,9 @@ void IRDecoder::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->source->asMember()) {
             if (m->property) {
+#ifdef V4_BOOTSTRAP
+                Q_UNIMPLEMENTED();
+#else
                 bool captureRequired = true;
 
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
@@ -159,6 +163,7 @@ void IRDecoder::visitMove(IR::Move *s)
                     }
                 }
                 getQObjectProperty(m->base, m->property->coreIndex, captureRequired, attachedPropertiesId, t);
+#endif // V4_BOOTSTRAP
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
@@ -200,7 +205,11 @@ void IRDecoder::visitMove(IR::Move *s)
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
                 const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
                 if (m->property && attachedPropertiesId == 0) {
+#ifdef V4_BOOTSTRAP
+                    Q_UNIMPLEMENTED();
+#else
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
+#endif
                     return;
                 } else {
                     setProperty(s->source, m->base, *m->name);

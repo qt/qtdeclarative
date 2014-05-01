@@ -332,7 +332,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (QOpenGLContextPrivate::globalShareContext())
             gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
         if (!gl->create()) {
-            const bool isEs = gl->isES();
+            const bool isEs = gl->isOpenGLES();
             delete gl;
             gl = 0;
             handleContextCreationFailure(window, isEs);

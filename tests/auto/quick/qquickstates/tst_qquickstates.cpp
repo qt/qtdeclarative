@@ -148,6 +148,7 @@ private slots:
     void QTBUG_14830();
     void avoidFastForward();
     void revertListBug();
+    void QTBUG_38492();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1624,6 +1625,21 @@ void tst_qquickstates::revertListBug()
 
     QCOMPARE(rect1->parentItem(), origParent1);
     QCOMPARE(rect2->parentItem(), origParent2); //QTBUG-22583 causes rect2's parent item to be origParent1
+}
+
+void tst_qquickstates::QTBUG_38492()
+{
+    QQmlEngine engine;
+
+    QQmlComponent rectComponent(&engine, testFileUrl("QTBUG-38492.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(rectComponent.create());
+    QVERIFY(item != 0);
+
+    QQuickItemPrivate::get(item)->setState("apply");
+
+    QCOMPARE(item->property("text").toString(), QString("Test"));
+
+    delete item;
 }
 
 QTEST_MAIN(tst_qquickstates)

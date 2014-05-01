@@ -59,7 +59,7 @@ struct JSClassMember;
 
 namespace Compiler {
 
-struct Q_QML_EXPORT StringTableGenerator {
+struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     StringTableGenerator();
 
     int registerString(const QString &str);
@@ -79,7 +79,7 @@ private:
     uint stringDataSize;
 };
 
-struct Q_QML_EXPORT JSUnitGenerator {
+struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     JSUnitGenerator(IR::Module *module, int headerSize = -1);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }

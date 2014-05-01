@@ -150,7 +150,6 @@ struct JSClass
 
 struct String
 {
-    quint32 hash;
     quint32 flags; // isArrayIndex
     QArrayData str;
     // uint16 strdata[]
@@ -295,7 +294,7 @@ struct Q_QML_EXPORT TranslationData {
     int number;
 };
 
-struct Q_QML_EXPORT Binding
+struct Q_QML_PRIVATE_EXPORT Binding
 {
     quint32 propertyNameIndex;
 
@@ -561,26 +560,38 @@ struct QmlUnit
 //    CompilationUnit * (for functions that need to clean up)
 //    CompiledData::Function *compiledFunction
 
-struct Q_QML_EXPORT CompilationUnit
+struct Q_QML_PRIVATE_EXPORT CompilationUnit
 {
+#ifdef V4_BOOTSTRAP
     CompilationUnit()
         : refCount(0)
-        , engine(0)
         , data(0)
+    {}
+    virtual ~CompilationUnit() {}
+#else
+    CompilationUnit()
+        : refCount(0)
+        , data(0)
+        , engine(0)
         , runtimeStrings(0)
         , runtimeLookups(0)
         , runtimeRegularExpressions(0)
         , runtimeClasses(0)
     {}
     virtual ~CompilationUnit();
+#endif
 
     void ref() { ++refCount; }
     void deref() { if (!--refCount) delete this; }
 
     int refCount;
-    ExecutionEngine *engine;
     Unit *data;
 
+    // Called only when building QML, when we build the header for JS first and append QML data
+    virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
+
+#ifndef V4_BOOTSTRAP
+    ExecutionEngine *engine;
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 
     QV4::StringValue *runtimeStrings; // Array
@@ -588,9 +599,6 @@ struct Q_QML_EXPORT CompilationUnit
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
-
-    // Called only when building QML, when we build the header for JS first and append QML data
-    virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
@@ -601,6 +609,7 @@ struct Q_QML_EXPORT CompilationUnit
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
+#endif // V4_BOOTSTRAP
 };
 
 }

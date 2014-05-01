@@ -187,7 +187,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 }
 
 
-struct Q_QML_EXPORT Managed
+struct Q_QML_PRIVATE_EXPORT Managed
 {
     V4_MANAGED
     enum {

@@ -66,9 +66,28 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
+class QQuickWidgetRenderControl : public QQuickRenderControl
+{
+public:
+    QQuickWidgetRenderControl(QQuickWidget *quickwidget) : m_quickWidget(quickwidget) {}
+    QWindow *renderWindow(QPoint *offset) {
+        if (offset)
+            *offset = m_quickWidget->mapTo(m_quickWidget->window(), QPoint());
+        return m_quickWidget->window()->windowHandle();
+    }
+private:
+    QQuickWidget *m_quickWidget;
+};
+
 void QQuickWidgetPrivate::init(QQmlEngine* e)
 {
     Q_Q(QQuickWidget);
+
+    renderControl = new QQuickWidgetRenderControl(q);
+    offscreenWindow = new QQuickWindow(renderControl);
+    offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
+    // Do not call create() on offscreenWindow.
+    createOffscreenSurface();
 
     setRenderToTexture();
     engine = e;
@@ -108,11 +127,6 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , updatePending(false)
     , fakeHidden(false)
 {
-    renderControl = new QQuickRenderControl;
-    offscreenWindow = new QQuickWindow(renderControl);
-    offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
-    // Do not call create() on offscreenWindow.
-    createOffscreenSurface();
 }
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
@@ -589,7 +603,7 @@ void QQuickWidgetPrivate::createContext()
     if (QOpenGLContextPrivate::globalShareContext())
         context->setShareContext(QOpenGLContextPrivate::globalShareContext());
     if (!context->create()) {
-        const bool isEs = context->isES();
+        const bool isEs = context->isOpenGLES();
         delete context;
         context = 0;
         handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);

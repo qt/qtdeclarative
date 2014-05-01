@@ -215,7 +215,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     identifierTable = new IdentifierTable(this);
 
-    emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
+    classPool = new InternalClassPool;
+
+    emptyClass =  new (classPool) InternalClass(this);
     executionContextClass = InternalClass::create(this, ExecutionContext::staticVTable(), 0);
     constructClass = InternalClass::create(this, Object::staticVTable(), 0);
     stringClass = InternalClass::create(this, String::staticVTable(), 0);
@@ -429,6 +431,7 @@ ExecutionEngine::~ExecutionEngine()
 
     delete m_qmlExtensions;
     emptyClass->destroy();
+    delete classPool;
     delete bumperPointerAllocator;
     delete regExpCache;
     delete regExpAllocator;
@@ -464,7 +467,7 @@ void ExecutionEngine::initRootContext()
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 {
-    return new (classPool.allocate(sizeof(InternalClass))) InternalClass(other);
+    return new (classPool) InternalClass(other);
 }
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
@@ -897,7 +900,7 @@ void ExecutionEngine::markObjects()
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects(this);
 
-    emptyClass->markObjects();
+    classPool->markObjects(this);
 
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
          it != end; ++it)

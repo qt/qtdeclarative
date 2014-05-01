@@ -410,11 +410,13 @@ inline ArrayObject *value_cast(const Value &v) {
     return v.asArrayObject();
 }
 
+#ifndef V4_BOOTSTRAP
 template<>
 inline ReturnedValue value_convert<Object>(ExecutionEngine *e, const Value &v)
 {
     return v.toObject(e->currentContext())->asReturnedValue();
 }
+#endif
 
 struct ObjectRef : public ManagedRef
 {

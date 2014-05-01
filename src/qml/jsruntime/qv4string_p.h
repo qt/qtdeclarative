@@ -51,7 +51,8 @@ namespace QV4 {
 struct ExecutionEngine;
 struct Identifier;
 
-struct Q_QML_EXPORT String : public Managed {
+struct Q_QML_PRIVATE_EXPORT String : public Managed {
+#ifndef V4_BOOTSTRAP
     // ### FIXME: Should this be a V4_OBJECT
     V4_OBJECT
     Q_MANAGED_TYPE(String)
@@ -143,8 +144,6 @@ struct Q_QML_EXPORT String : public Managed {
         return len;
     }
 
-    static uint toArrayIndex(const QString &str);
-
     union {
         mutable QStringData *_text;
         mutable String *left;
@@ -174,8 +173,13 @@ protected:
 
 private:
     QChar *recursiveAppend(QChar *ch) const;
+#endif
+
+public:
+    static uint toArrayIndex(const QString &str);
 };
 
+#ifndef V4_BOOTSTRAP
 template<>
 inline String *value_cast(const Value &v) {
     return v.asString();
@@ -188,6 +192,7 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 }
 
 DEFINE_REF(String, Managed);
+#endif
 
 }
 

@@ -40,10 +40,13 @@
 ****************************************************************************/
 
 #include "qv4string_p.h"
+#include "qv4value_inl_p.h"
+#ifndef V4_BOOTSTRAP
 #include "qv4identifiertable_p.h"
 #include "qv4runtime_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
+#endif
 #include <QtCore/QHash>
 
 using namespace QV4;
@@ -73,6 +76,8 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
     *ok = true;
     return i;
 }
+
+#ifndef V4_BOOTSTRAP
 
 static uint toArrayIndex(const char *ch, const char *end, bool *ok)
 {
@@ -407,13 +412,16 @@ uint String::createHashValue(const char *ch, int length)
     return h;
 }
 
+uint String::getLength(const Managed *m)
+{
+    return static_cast<const String *>(m)->length();
+}
+
+#endif // V4_BOOTSTRAP
+
 uint String::toArrayIndex(const QString &str)
 {
     bool ok;
     return ::toArrayIndex(str.constData(), str.constData() + str.length(), &ok);
 }
 
-uint String::getLength(const Managed *m)
-{
-    return static_cast<const String *>(m)->length();
-}

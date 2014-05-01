@@ -245,4 +245,34 @@ QQuickWindow *QQuickRenderControl::window() const
     return d->window;
 }
 
+/*!
+  \fn QWindow *QQuickRenderControl::renderWindow(QPoint *offset)
+
+  Reimplemented in subclasses to return the real window this render control
+  is rendering into.
+
+  If \a offset in non-null, it is set to the offset of the control
+  inside the window.
+*/
+
+/*!
+  Returns the real window that \a win is being rendered to, if any.
+
+  If \a offset in non-null, it is set to the offset of the rendering
+  inside its window.
+
+ */
+
+QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
+{
+    if (!win)
+        return 0;
+    QQuickRenderControl *rc = QQuickWindowPrivate::get(win)->renderControl;
+    if (rc)
+        return rc->renderWindow(offset);
+    return 0;
+}
+
+
+
 QT_END_NAMESPACE

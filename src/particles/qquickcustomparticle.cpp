@@ -269,7 +269,7 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
         return 0;
 
     if (m_dirtyProgram) {
-        const bool isES = QOpenGLContext::currentContext()->isES();
+        const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(rootNode->material());
         Q_ASSERT(material);
@@ -311,7 +311,7 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
 
 QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
 {
-    if (QOpenGLContext::currentContext()->isES() && m_count * 4 > 0xffff) {
+    if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
         printf("CustomParticle: Too many particles... \n");
         return 0;
     }

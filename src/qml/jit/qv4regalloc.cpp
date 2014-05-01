@@ -1233,6 +1233,10 @@ void RegisterAllocator::linearScan()
 
         Q_ASSERT(!current.isFixedInterval());
 
+#ifdef DEBUG_REGALLOC
+        qDebug() << "** Position" << position;
+#endif // DEBUG_REGALLOC
+
         if (_info->canHaveRegister(current.temp())) {
             tryAllocateFreeReg(current, position);
             if (current.reg() == LifeTimeInterval::Invalid)
@@ -1385,11 +1389,15 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     QVector<LifeTimeInterval *> nextUseRangeForReg(nextUsePos.size(), 0);
     Q_ASSERT(nextUsePos.size() > 0);
 
+    const bool definedAtCurrentPosition = !current.isSplitFromInterval() && current.start() == position;
+
     for (int i = 0, ei = _active.size(); i != ei; ++i) {
         LifeTimeInterval &it = _active[i];
         if (it.isFP() == needsFPReg) {
             int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
-            if (nu != -1 && nu < nextUsePos[it.reg()]) {
+            if (nu == position && !definedAtCurrentPosition) {
+                nextUsePos[it.reg()] = 0;
+            } else if (nu != -1 && nu < nextUsePos[it.reg()]) {
                 nextUsePos[it.reg()] = nu;
                 nextUseRangeForReg[it.reg()] = &it;
             } else if (nu == -1 && nextUsePos[it.reg()] == INT_MAX) {

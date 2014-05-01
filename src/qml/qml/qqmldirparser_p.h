@@ -56,13 +56,14 @@
 #include <QtCore/QUrl>
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
-#include <private/qhashedstring_p.h>
+#include <private/qqmljsengine_p.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlError;
 class QQmlEngine;
-class Q_AUTOTEST_EXPORT QQmlDirParser
+class Q_QML_PRIVATE_EXPORT QQmlDirParser
 {
     Q_DISABLE_COPY(QQmlDirParser)
 
@@ -73,8 +74,12 @@ public:
     bool parse(const QString &source);
 
     bool hasError() const;
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+    QList<QQmlJS::DiagnosticMessage> errors(const QString &uri) const;
+#else
     void setError(const QQmlError &);
     QList<QQmlError> errors(const QString &uri) const;
+#endif
 
     QString typeNamespace() const;
     void setTypeNamespace(const QString &s);
@@ -121,7 +126,7 @@ public:
         int minorVersion;
     };
 
-    QHash<QHashedStringRef,Component> components() const;
+    QHash<QString,Component> components() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
 
@@ -142,9 +147,9 @@ private:
     void reportError(quint16 line, quint16 column, const QString &message);
 
 private:
-    QList<QQmlError> _errors;
+    QList<QQmlJS::DiagnosticMessage> _errors;
     QString _typeNamespace;
-    QHash<QHashedStringRef,Component> _components; // multi hash
+    QHash<QString,Component> _components; // multi hash
     QList<Script> _scripts;
     QList<Plugin> _plugins;
 #ifdef QT_CREATOR
@@ -152,7 +157,7 @@ private:
 #endif
 };
 
-typedef QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirComponents;
+typedef QHash<QString,QQmlDirParser::Component> QQmlDirComponents;
 typedef QList<QQmlDirParser::Script> QQmlDirScripts;
 typedef QList<QQmlDirParser::Plugin> QQmlDirPlugins;
 

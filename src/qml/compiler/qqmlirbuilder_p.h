@@ -49,12 +49,16 @@
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qv4compiler_p.h>
-#include <private/qqmlpropertycache_p.h>
 #include <QTextStream>
 #include <QCoreApplication>
 
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlpropertycache_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyCache;
 class QQmlContextData;
 class QQmlTypeNameCache;
 
@@ -227,7 +231,7 @@ struct Function
     Function *next;
 };
 
-struct Q_QML_EXPORT CompiledFunctionOrExpression
+struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
         : node(0)
@@ -247,7 +251,7 @@ struct Q_QML_EXPORT CompiledFunctionOrExpression
     CompiledFunctionOrExpression *next;
 };
 
-struct Q_QML_EXPORT Object
+struct Q_QML_PRIVATE_EXPORT Object
 {
     Q_DECLARE_TR_FUNCTIONS(Object)
 public:
@@ -297,7 +301,7 @@ private:
     PoolList<Function> *functions;
 };
 
-struct Q_QML_EXPORT Pragma
+struct Q_QML_PRIVATE_EXPORT Pragma
 {
     enum PragmaType {
         PragmaSingleton = 0x1
@@ -307,7 +311,7 @@ struct Q_QML_EXPORT Pragma
     QV4::CompiledData::Location location;
 };
 
-struct Q_QML_EXPORT Document
+struct Q_QML_PRIVATE_EXPORT Document
 {
     Document(bool debugMode);
     QString code;
@@ -330,16 +334,16 @@ struct Q_QML_EXPORT Document
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
 
-    void extractScriptMetaData(QString &script, QQmlError *error);
+    void extractScriptMetaData(QString &script, QQmlJS::DiagnosticMessage *error);
     static void removeScriptPragmas(QString &script);
 };
 
-struct Q_QML_EXPORT IRBuilder : public QQmlJS::AST::Visitor
+struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
     IRBuilder(const QSet<QString> &illegalNames);
-    bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, Document *output);
+    bool generateFromQml(const QString &code, const QString &url, const QString &urlString, Document *output);
 
     static bool isSignalPropertyName(const QString &name);
 
@@ -401,7 +405,7 @@ public:
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
 
-    QList<QQmlError> errors;
+    QList<QQmlJS::DiagnosticMessage> errors;
 
     QSet<QString> illegalNames;
 
@@ -416,11 +420,11 @@ public:
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
-    QUrl url;
+    QString url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
 };
 
-struct Q_QML_EXPORT QmlUnitGenerator
+struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
     QV4::CompiledData::QmlUnit *generate(Document &output);
 
@@ -429,6 +433,7 @@ private:
     char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
 };
 
+#ifndef V4_BOOTSTRAP
 struct Q_QML_EXPORT PropertyResolver
 {
     PropertyResolver(QQmlPropertyCache *cache)
@@ -447,8 +452,9 @@ struct Q_QML_EXPORT PropertyResolver
 
     QQmlPropertyCache *cache;
 };
+#endif
 
-struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
+struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
     JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,

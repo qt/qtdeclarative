@@ -39,9 +39,11 @@
 **
 ****************************************************************************/
 #include <qv4engine_p.h>
+#ifndef V4_BOOTSTRAP
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include "qv4mm_p.h"
+#endif
 
 #include <wtf/MathExtras.h>
 
@@ -87,6 +89,9 @@ double Value::toNumberImpl() const
     case QV4::Value::Undefined_Type:
         return std::numeric_limits<double>::quiet_NaN();
     case QV4::Value::Managed_Type:
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         if (isString())
             return RuntimeHelpers::stringToNumber(stringValue()->toQString());
         {
@@ -95,6 +100,7 @@ double Value::toNumberImpl() const
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), NUMBER_HINT));
             return prim->toNumber();
         }
+#endif
     case QV4::Value::Null_Type:
     case QV4::Value::Boolean_Type:
     case QV4::Value::Integer_Type:
@@ -104,6 +110,7 @@ double Value::toNumberImpl() const
     }
 }
 
+#ifndef V4_BOOTSTRAP
 QString Value::toQStringNoThrow() const
 {
     switch (type()) {
@@ -192,6 +199,7 @@ QString Value::toQString() const
     }
     } // switch
 }
+#endif // V4_BOOTSTRAP
 
 bool Value::sameValue(Value other) const {
     if (val == other.val)
@@ -263,6 +271,7 @@ double Primitive::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
+#ifndef V4_BOOTSTRAP
 String *Value::toString(ExecutionEngine *e) const
 {
     return toString(e->currentContext());
@@ -282,3 +291,4 @@ Object *Value::toObject(ExecutionContext *ctx) const
     return RuntimeHelpers::convertToObject(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
+#endif // V4_BOOTSTRAP

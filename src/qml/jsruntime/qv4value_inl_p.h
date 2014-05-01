@@ -180,14 +180,19 @@ inline bool Value::toBoolean() const
     case Value::Integer_Type:
         return (bool)int_32;
     case Value::Managed_Type:
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         if (isString())
             return stringValue()->toQString().length() > 0;
+#endif
         return true;
     default: // double
         return doubleValue() && !std::isnan(doubleValue());
     }
 }
 
+#ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
 #if QT_POINTER_SIZE == 8
@@ -277,6 +282,8 @@ inline ErrorObject *Value::asErrorObject() const
 
 template<typename T>
 inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
+
+#endif
 
 } // namespace QV4
 

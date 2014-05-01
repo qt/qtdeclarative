@@ -103,7 +103,7 @@ struct NoThrowContext : public ExecutionContext
 {
 };
 
-struct Q_QML_EXPORT Runtime {
+struct Q_QML_PRIVATE_EXPORT Runtime {
     // call
     static ReturnedValue callGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData);
     static ReturnedValue callActivationProperty(ExecutionContext *, const StringRef name, CallDataRef callData);
@@ -232,7 +232,7 @@ struct Q_QML_EXPORT Runtime {
     static void setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
 };
 
-struct Q_QML_EXPORT RuntimeHelpers {
+struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue objectDefaultValue(Object *object, int typeHint);
     static ReturnedValue toPrimitive(const ValueRef value, int typeHint);
 
@@ -255,6 +255,7 @@ struct Q_QML_EXPORT RuntimeHelpers {
 
 
 // type conversion and testing
+#ifndef V4_BOOTSTRAP
 inline ReturnedValue RuntimeHelpers::toPrimitive(const ValueRef value, int typeHint)
 {
     Object *o = value->asObject();
@@ -262,6 +263,7 @@ inline ReturnedValue RuntimeHelpers::toPrimitive(const ValueRef value, int typeH
         return value.asReturnedValue();
     return RuntimeHelpers::objectDefaultValue(o, typeHint);
 }
+#endif
 
 inline double RuntimeHelpers::toNumber(const ValueRef value)
 {
@@ -338,6 +340,7 @@ inline ReturnedValue Runtime::bitAnd(const ValueRef left, const ValueRef right)
     return Encode(lval & rval);
 }
 
+#ifndef V4_BOOTSTRAP
 inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
@@ -349,6 +352,7 @@ inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, co
 
     return RuntimeHelpers::addHelper(ctx, left, right);
 }
+#endif // V4_BOOTSTRAP
 
 inline ReturnedValue Runtime::sub(const ValueRef left, const ValueRef right)
 {
@@ -532,6 +536,7 @@ inline Bool Runtime::compareStrictNotEqual(const ValueRef left, const ValueRef r
     return ! RuntimeHelpers::strictEqual(left, right);
 }
 
+#ifndef V4_BOOTSTRAP
 inline Bool Runtime::compareInstanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
@@ -548,6 +553,13 @@ inline uint Runtime::compareIn(ExecutionContext *ctx, const ValueRef left, const
     Scope scope(ctx);
     ScopedValue v(scope, Runtime::in(ctx, left, right));
     return v->booleanValue();
+}
+
+#endif // V4_BOOTSTRAP
+
+inline Bool Runtime::toBoolean(const ValueRef value)
+{
+    return value->toBoolean();
 }
 
 } // namespace QV4
