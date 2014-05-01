@@ -24,6 +24,7 @@ Module {
         name: "QQuickScreen"
         prototype: "QObject"
         exports: ["QtQuick.Window/Screen 2.0"]
+        isCreatable: false
         exportMetaObjectRevisions: [0]
         attachedType: "QQuickScreenAttached"
     }
@@ -56,6 +57,12 @@ Module {
         prototype: "QWindow"
         exports: ["QtQuick.Window/Window 2.0"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "SceneGraphError"
+            values: {
+                "ContextNotAvailable": 1
+            }
+        }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "color"; type: "QColor" }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
@@ -67,11 +74,19 @@ Module {
             isPointer: true
         }
         Signal { name: "frameSwapped" }
+        Signal {
+            name: "openglContextCreated"
+            revision: 2
+            Parameter { name: "context"; type: "QOpenGLContext"; isPointer: true }
+        }
         Signal { name: "sceneGraphInitialized" }
         Signal { name: "sceneGraphInvalidated" }
         Signal { name: "beforeSynchronizing" }
+        Signal { name: "afterSynchronizing"; revision: 2 }
         Signal { name: "beforeRendering" }
         Signal { name: "afterRendering" }
+        Signal { name: "afterAnimating"; revision: 2 }
+        Signal { name: "sceneGraphAboutToStop"; revision: 2 }
         Signal {
             name: "closing"
             revision: 1
@@ -82,6 +97,12 @@ Module {
             Parameter { type: "QColor" }
         }
         Signal { name: "activeFocusItemChanged"; revision: 1 }
+        Signal {
+            name: "sceneGraphError"
+            revision: 2
+            Parameter { name: "error"; type: "QQuickWindow::SceneGraphError" }
+            Parameter { name: "message"; type: "string" }
+        }
         Method { name: "update" }
         Method { name: "releaseResources" }
     }
@@ -91,6 +112,16 @@ Module {
         prototype: "QQuickWindow"
         exports: ["QtQuick.Window/Window 2.1"]
         exportMetaObjectRevisions: [0]
+        Property { name: "visible"; type: "bool" }
+        Property { name: "visibility"; type: "Visibility" }
+        Signal {
+            name: "visibleChanged"
+            Parameter { name: "arg"; type: "bool" }
+        }
+        Signal {
+            name: "visibilityChanged"
+            Parameter { name: "visibility"; type: "QWindow::Visibility" }
+        }
     }
     Component {
         name: "QWindow"
@@ -133,6 +164,11 @@ Module {
         Signal {
             name: "windowStateChanged"
             Parameter { name: "windowState"; type: "Qt::WindowState" }
+        }
+        Signal {
+            name: "windowTitleChanged"
+            revision: 2
+            Parameter { name: "title"; type: "string" }
         }
         Signal {
             name: "xChanged"

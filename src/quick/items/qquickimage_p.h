@@ -100,7 +100,7 @@ Q_SIGNALS:
     void paintedGeometryChanged();
     void horizontalAlignmentChanged(HAlignment alignment);
     void verticalAlignmentChanged(VAlignment alignment);
-    void mipmapChanged(bool);
+    Q_REVISION(1) void mipmapChanged(bool);
 
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);
