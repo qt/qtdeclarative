@@ -52,10 +52,12 @@ public:
         : QSGGeometryNodePrivate()
         , m_texCoordMode(QSGSimpleTextureNode::NoTransform)
         , isAtlasTexture(false)
+        , ownsTexture(false)
     {}
 
     QSGSimpleTextureNode::TextureCoordinatesTransformMode m_texCoordMode;
     uint isAtlasTexture : 1;
+    uint ownsTexture : 1;
 };
 
 static void qsgsimpletexturenode_update(QSGGeometry *g,
@@ -108,6 +110,16 @@ QSGSimpleTextureNode::QSGSimpleTextureNode()
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("simpletexture"));
 #endif
+}
+
+/*!
+    Destroys the texture node
+ */
+QSGSimpleTextureNode::~QSGSimpleTextureNode()
+{
+    Q_D(QSGSimpleTextureNode);
+    if (d->ownsTexture)
+        delete m_material.texture();
 }
 
 /*!
@@ -167,6 +179,10 @@ QRectF QSGSimpleTextureNode::rect() const
 
 /*!
     Sets the texture of this texture node to \a texture.
+
+    Use setOwnsTexture() to set whether the node should take
+    ownership of the texture. By default, the node does not
+    take ownership.
 
     \warning A texture node must have a texture before being added
     to the scenegraph to be rendered.
@@ -242,6 +258,28 @@ QSGSimpleTextureNode::TextureCoordinatesTransformMode QSGSimpleTextureNode::text
 {
     Q_D(const QSGSimpleTextureNode);
     return d->m_texCoordMode;
+}
+
+/*!
+    Sets whether the node takes ownership of the texture to \a owns.
+
+    By default, the node does not take ownership of the texture.
+
+    \sa setTexture()
+ */
+void QSGSimpleTextureNode::setOwnsTexture(bool owns)
+{
+    Q_D(QSGSimpleTextureNode);
+    d->ownsTexture = owns;
+}
+
+/*!
+   Returns \c true if the node takes ownership of the texture; otherwise returns \c false.
+ */
+bool QSGSimpleTextureNode::ownsTexture() const
+{
+    Q_D(const QSGSimpleTextureNode);
+    return d->ownsTexture;
 }
 
 QT_END_NAMESPACE

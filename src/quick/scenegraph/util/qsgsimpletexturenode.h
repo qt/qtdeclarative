@@ -54,6 +54,7 @@ class Q_QUICK_EXPORT QSGSimpleTextureNode : public QSGGeometryNode
 {
 public:
     QSGSimpleTextureNode();
+    ~QSGSimpleTextureNode();
 
     void setRect(const QRectF &rect);
     inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }
@@ -74,6 +75,9 @@ public:
 
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode);
     TextureCoordinatesTransformMode textureCoordinatesTransform() const;
+
+    void setOwnsTexture(bool owns);
+    bool ownsTexture() const;
 
 private:
     QSGGeometry m_geometry;

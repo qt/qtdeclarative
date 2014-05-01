@@ -52,6 +52,8 @@
 #include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtQuick/qsgsimplerectnode.h>
+#include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/private/qsgtexture_p.h>
 
 class NodesTest : public QObject
 {
@@ -73,6 +75,8 @@ private Q_SLOTS:
     void opacityPropegation();
 
     void isBlockedCheck();
+
+    void textureNodeTextureOwnership();
 
 private:
     QOffscreenSurface *surface;
@@ -257,6 +261,32 @@ void NodesTest::isBlockedCheck()
 
     opacity->setOpacity(1);
     QVERIFY(!updater.isNodeBlocked(node, &root));
+}
+
+void NodesTest::textureNodeTextureOwnership()
+{
+    { // Check that it is not deleted by default
+        QPointer<QSGTexture> texture(new QSGPlainTexture());
+
+        QSGSimpleTextureNode *tn = new QSGSimpleTextureNode();
+        QVERIFY(!tn->ownsTexture());
+
+        tn->setTexture(texture);
+        delete tn;
+        QVERIFY(!texture.isNull());
+    }
+
+    { // Check that it is deleted when we so desire
+        QPointer<QSGTexture> texture(new QSGPlainTexture());
+
+        QSGSimpleTextureNode *tn = new QSGSimpleTextureNode();
+        tn->setOwnsTexture(true);
+        QVERIFY(tn->ownsTexture());
+
+        tn->setTexture(texture);
+        delete tn;
+        QVERIFY(texture.isNull());
+    }
 }
 
 QTEST_MAIN(NodesTest);
