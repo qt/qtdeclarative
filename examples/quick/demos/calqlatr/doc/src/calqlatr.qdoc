@@ -29,14 +29,122 @@
     \title Qt Quick Demo - Calqlatr
     \ingroup qtquickdemos
     \example demos/calqlatr
-    \brief A simple QML calculator app, designed for portrait devices.
+    \brief A QML app designed for portrait devices that uses custom components,
+    animated with AnimationController, and JavaScript for the application logic.
     \image qtquick-demo-calqlatr.png
 
-    \e{Calqlatr} demonstrates various QML and \l{Qt Quick} features such as
-    displaying custom components. The logic is implemented in JavaScript and the
-    appearance implemented in QML.
+    \e{Calqlatr} demonstrates various QML and \l{Qt Quick} features, such as
+    displaying custom components and using animation to move the components
+    around in the application view. The application logic is implemented in
+    JavaScript and the appearance is implemented in QML.
 
     \include examples-run.qdocinc
+
+    \section1 Displaying Custom Components
+
+    In the Calqlatr application, we use the following custom types that are
+    each defined in a separate .qml file:
+
+    \list
+        \li Button.qml
+        \li Display.qml
+        \li NumberPad.qml
+        \li StyleLabel.qml
+    \endlist
+
+    To use the custom types, we add an import statement to the main QML file,
+    calqlatr.qml that imports the folder called \c content where the types are
+    located:
+
+    \code
+    import "content"
+    \endcode
+
+    We can then display custom components by adding the component types to
+    any QML file. For example, we use the NumberPad type in calqlatr.qml to
+    create the number pad of the calculator. We place the type inside an
+    \l{Item} QML type, which is the base type for all visual items in Qt Quick:
+
+    \quotefromfile demos/calqlatr/calqlatr.qml
+    \skipto Item
+    \printuntil }
+    \printuntil }
+
+    Further, we use the Button type in the NumberPad type to create the
+    calculator buttons. Button.qml specifies the basic properties for a
+    button that we can modify for each button instance in NumberPad.qml. For the
+    digit and separator buttons, we additionally specify the text property using
+    the property alias \c text that we define in Button.qml.
+
+    For the operator buttons, we also specify another color (green) using the
+    property alias \c color and set the operator property to \c true. We use
+    the operator property in functions that perform the calculations.
+
+    We place the buttons inside a \l{Grid} QML type to position them in a grid:
+
+    \quotefromfile demos/calqlatr/content/NumberPad.qml
+    \skipto Grid
+    \printuntil /^\}/
+
+    \section1 Animating Components
+
+    We use the Display type to display calculations. In Display.qml, we use
+    images to make the display component look like a slip of paper that contains
+    a grip. Users can drag the grip to move the display from left to right.
+
+    When users release the grip, the AnimationController QML type that we define
+    in the calqlatr.qml file finishes running the controlled animation in either
+    a forwards or a backwards direction. To run the animation, we call either
+    completeToEnd() or completeToBeginning(), depending on the direction. We do
+    this in the MouseArea's \c onReleased signal handler, where \c controller
+    is the id of our AnimationController:
+
+    \quotefromfile demos/calqlatr/calqlatr.qml
+    \skipto onPressed
+    \printuntil }
+
+    Unlike other QML animation types, AnimationController is not driven by
+    internal timers but by explicitly setting its progress property to a
+    value between \c 0.0 and \c 1.0.
+
+    Inside the AnimationController, we run two NumberAnimation instances in
+    parallel to move the number pad and the display components simultaneously to
+    the opposite sides of the view. In addition, we run a SequentialAnimation
+    instance to scale the number pad during the transition, giving the animation
+    some depth.
+
+    \quotefromfile demos/calqlatr/calqlatr.qml
+    \skipto AnimationController
+    \printuntil 1; easing.type
+    \printuntil }
+    \printuntil }
+    \printuntil }
+
+    We use the easing curve of the type \c Easing.InOutQuad to accelerate the
+    motion until halfway and then decelerate it.
+
+    \section1 Performing Calculations
+
+    The calculator.js file contains definitions for the functions to execute
+    when users press the digit and operator buttons. To use the functions, we
+    import calculator.js in the calqlatr.qml file as \c CalcEngine:
+
+    \code
+    import "content/calculator.js" as CalcEngine
+    \endcode
+
+    We can then declare the functions to execute depending on whether the
+    operator property for a button is set to \c true in NumberPad.qml:
+
+    \quotefromfile demos/calqlatr/calqlatr.qml
+    \skipto operatorPressed
+    \printuntil digitPressed
+
+    When users press a digit or operator, the text from the digit appears on the
+    display. When they press the equals operator (=), the appropriate
+    calculation is performed, and the results appear on the display.
+
+    \section1 List of Files
 
     \sa {QML Applications}
 */
