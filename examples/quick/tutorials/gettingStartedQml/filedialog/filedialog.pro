@@ -20,14 +20,6 @@ SOURCES += \
 
 OTHER_FILES += qmldir
 
-copyfile = $$PWD/qmldir
-copydest = $$DESTDIR
-
-# On Windows, use backslashes as directory separators
-equals(QMAKE_HOST.os, Windows) {
-    copyfile ~= s,/,\\,g
-    copydest ~= s,/,\\,g
-}
-
 # Copy the qmldir file to the same folder as the plugin binary
-QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$copyfile) $$quote($$copydest) $$escape_expand(\\n\\t)
+QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$PWD/qmldir)) \
+                                $$shell_quote($$shell_path($$DESTDIR)) $$escape_expand(\\n\\t)
