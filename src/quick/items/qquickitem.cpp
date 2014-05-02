@@ -657,13 +657,13 @@ void QQuickKeyNavigationAttached::keyPressed(QKeyEvent *event, bool post)
         break;
     case Qt::Key_Tab:
         if (d->tab) {
-            setFocusNavigation(d->tab, "tab");
+            setFocusNavigation(d->tab, "tab", Qt::TabFocusReason);
             event->accept();
         }
         break;
     case Qt::Key_Backtab:
         if (d->backtab) {
-            setFocusNavigation(d->backtab, "backtab");
+            setFocusNavigation(d->backtab, "backtab", Qt::BacktabFocusReason);
             event->accept();
         }
         break;
@@ -725,14 +725,15 @@ void QQuickKeyNavigationAttached::keyReleased(QKeyEvent *event, bool post)
     if (!event->isAccepted()) QQuickItemKeyFilter::keyReleased(event, post);
 }
 
-void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, const char *dir)
+void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, const char *dir,
+                                                     Qt::FocusReason reason)
 {
     QQuickItem *initialItem = currentItem;
     bool isNextItem = false;
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {
-            currentItem->forceActiveFocus(Qt::OtherFocusReason);
+            currentItem->forceActiveFocus(reason);
         } else {
             QObject *attached =
                 qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(currentItem, false);

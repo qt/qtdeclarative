@@ -88,6 +88,7 @@ private slots:
     void keyNavigation_RightToLeft();
     void keyNavigation_skipNotVisible();
     void keyNavigation_implicitSetting();
+    void keyNavigation_focusReason();
     void layoutMirroring();
     void layoutMirroringIllegalParent();
     void smooth();
@@ -212,6 +213,21 @@ protected:
 
 public:
     int mKey;
+};
+
+class FocusEventFilter : public QObject
+{
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) {
+        if ((event->type() == QEvent::FocusIn) ||  (event->type() == QEvent::FocusOut)) {
+            QFocusEvent *focusEvent = static_cast<QFocusEvent *>(event);
+            lastFocusReason = focusEvent->reason();
+            return false;
+        } else
+            return QObject::eventFilter(watched, event);
+    }
+public:
+    Qt::FocusReason lastFocusReason;
 };
 
 QML_DECLARE_TYPE(KeyTestItem);
@@ -1750,6 +1766,62 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
     item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::keyNavigation_focusReason()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
+
+    FocusEventFilter focusEventFilter;
+
+    window->setSource(testFileUrl("keynavigationtest.qml"));
+    window->show();
+    window->requestActivate();
+
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    // install event filter on first item
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+    item->installEventFilter(&focusEventFilter);
+
+    //install event filter on second item
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
+    QVERIFY(item);
+    item->installEventFilter(&focusEventFilter);
+
+    //install event filter on third item
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
+    QVERIFY(item);
+    item->installEventFilter(&focusEventFilter);
+
+    //install event filter on last item
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
+    QVERIFY(item);
+    item->installEventFilter(&focusEventFilter);
+
+    // tab
+    QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QCOMPARE(focusEventFilter.lastFocusReason, Qt::TabFocusReason);
+
+    // backtab
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QCOMPARE(focusEventFilter.lastFocusReason, Qt::BacktabFocusReason);
+
+    // some arbitrary cursor key
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QCOMPARE(focusEventFilter.lastFocusReason, Qt::OtherFocusReason);
 
     delete window;
 }

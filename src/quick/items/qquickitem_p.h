@@ -686,7 +686,8 @@ Q_SIGNALS:
 private:
     virtual void keyPressed(QKeyEvent *event, bool post);
     virtual void keyReleased(QKeyEvent *event, bool post);
-    void setFocusNavigation(QQuickItem *currentItem, const char *dir);
+    void setFocusNavigation(QQuickItem *currentItem, const char *dir,
+                            Qt::FocusReason reason = Qt::OtherFocusReason);
 };
 
 class QQuickLayoutMirroringAttached : public QObject
