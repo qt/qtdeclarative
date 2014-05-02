@@ -194,6 +194,9 @@ private slots:
 
     void populateTransitions();
     void populateTransitions_data();
+    void sizeTransitions();
+    void sizeTransitions_data();
+
     void addTransitions();
     void addTransitions_data();
     void moveTransitions();
@@ -5793,6 +5796,56 @@ void tst_QQuickListView::populateTransitions_data()
 
     QTest::newRow("empty to start with") << false << false << true;
     QTest::newRow("empty to start with, no populate") << false << false << false;
+}
+
+
+/*
+ * Tests if the first visible item is not repositioned if the same item
+ * resized + changes position during a transition. The test does not test the
+ * actual position while it is transitioning (since its timing sensitive), but
+ * rather tests if the transition has reached its target state properly.
+ **/
+void tst_QQuickListView::sizeTransitions()
+{
+    QFETCH(bool, topToBottom);
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
+    QaimModel model;
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("topToBottom", topToBottom);
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", &model);
+    window->setSource(testFileUrl("sizeTransitions.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // the following will start the transition
+    model.addItem(QLatin1String("Test"), "");
+
+    // This ensures early failure in case of failure (in which case
+    // transitionFinished == true and scriptActionExecuted == false)
+    QTRY_COMPARE(listview->property("scriptActionExecuted").toBool() ||
+                 listview->property("transitionFinished").toBool(), true);
+    QCOMPARE(listview->property("scriptActionExecuted").toBool(), true);
+    QCOMPARE(listview->property("transitionFinished").toBool(), true);
+
+    releaseView(window);
+    delete testObject;
+}
+
+void tst_QQuickListView::sizeTransitions_data()
+{
+    QTest::addColumn<bool>("topToBottom");
+
+    QTest::newRow("TopToBottom")
+            << true;
+
+    QTest::newRow("LeftToRight")
+            << false;
 }
 
 void tst_QQuickListView::addTransitions()
