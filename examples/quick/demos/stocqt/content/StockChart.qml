@@ -43,93 +43,155 @@ import QtQuick 2.0
 Rectangle {
     id: chart
     width: 320
-    height: 320
+    height: 200
     color: "transparent"
 
     property var _months: [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
     property var stockModel: null
     property var startDate: new Date()
     property var endDate: new Date()
+    property string activeChart: "year"
     property var settings
 
     function update() {
-        if (settings.chartType === "year")
+        endDate = new Date();
+        if (chart.activeChart === "year")
             chart.startDate = new Date(chart.endDate.getFullYear() - 1, chart.endDate.getMonth(), chart.endDate.getDate());
-        else if (settings.chartType === "month")
+        else if (chart.activeChart === "month")
             chart.startDate = new Date(chart.endDate.getFullYear() , chart.endDate.getMonth() -1, chart.endDate.getDate());
-        else if (settings.chartType === "week")
+        else if (chart.activeChart === "week")
             chart.startDate = new Date(chart.endDate.getFullYear() , chart.endDate.getMonth(), chart.endDate.getDate() - 7);
         else
-            chart.startDate = new Date(1995, 3, 25);
+            chart.startDate = new Date(2005, 3, 25);
 
         canvas.requestPaint();
     }
 
+    Row {
+        id: activeChartRow
+        anchors.left: chart.left
+        anchors.right: chart.right
+        anchors.top: chart.top
+        anchors.topMargin: 4
+        spacing: 52
+        onWidthChanged: {
+            var buttonsLen = maxButton.width + yearButton.width + monthButton.width + weekButton.width;
+            var space = (width - buttonsLen) / 3;
+            spacing = Math.max(space, 10);
+        }
+
+        Button {
+            id: maxButton
+            text: "Max"
+            buttonEnabled: chart.activeChart === "max"
+            onClicked: {
+                chart.activeChart = "max";
+                chart.update();
+            }
+        }
+        Button {
+            id: yearButton
+            text: "Year"
+            buttonEnabled: chart.activeChart === "year"
+            onClicked: {
+                chart.activeChart = "year";
+                chart.update();
+            }
+        }
+        Button {
+            id: monthButton
+            text: "Month"
+            buttonEnabled: chart.activeChart === "month"
+            onClicked: {
+                chart.activeChart = "month";
+                chart.update();
+            }
+        }
+        Button {
+            id: weekButton
+            text: "Week"
+            buttonEnabled: chart.activeChart === "week"
+            onClicked: {
+                chart.activeChart = "week";
+                chart.update();
+            }
+        }
+    }
+
     Text {
         id: fromDate
-        color: "#6a5b44"
+        color: "#000000"
         width: 50
+        font.family: "Open Sans"
         font.pointSize: 10
         wrapMode: Text.WordWrap
         anchors.left: parent.left
         anchors.leftMargin: 20
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         text: _months[startDate.getMonth()] + "\n" + startDate.getFullYear()
     }
 
     Text {
         id: toDate
-        color: "#6a5b44"
+        color: "#000000"
         font.pointSize: 10
         width: 50
         wrapMode: Text.WordWrap
         anchors.right: parent.right
         anchors.leftMargin: 20
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         text: _months[endDate.getMonth()] + "\n" + endDate.getFullYear()
     }
 
     Canvas {
         id: canvas
-        width: parent.width
-        anchors.top: toDate.bottom
-        anchors.bottom: parent.bottom
-        renderTarget: Canvas.FramebufferObject
+        anchors.top: activeChartRow.bottom
+        anchors.left: chart.left
+        anchors.right: chart.right
+        anchors.bottom: fromDate.top
         antialiasing: true
-        property int frames: first
-        property int mouseX: 0
-        property int mouseY: 0
-        property int mousePressedX: 0
-        property int mousePressedY: 0
-        property int movedY: 0
-        property real scaleX: 1.0
-        property real scaleY: 1.0
-        property int first: 0
-        property int last: 0
 
         property int pixelSkip: 1
 
+        property real xGridOffset: width / 13
+        property real xGridStep: width / 4
+        property real yGridOffset: height / 26
+        property real yGridStep: height / 12
+
         function drawBackground(ctx) {
             ctx.save();
-            ctx.fillStyle = "#272822";
+            ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "#423a2f";
+            ctx.strokeStyle = "#d7d7d7";
             ctx.beginPath();
-            for (var i = 0; i < 10; i++) {
-                ctx.moveTo(0, i * (canvas.height/10.0));
-                ctx.lineTo(canvas.width, i * (canvas.height/10.0));
+            // Horizontal grid lines
+            for (var i = 0; i < 12; i++) {
+                ctx.moveTo(0, canvas.yGridOffset + i * canvas.yGridStep);
+                ctx.lineTo(canvas.width, canvas.yGridOffset + i * canvas.yGridStep);
             }
 
-            for (i = 0; i < 12; i++) {
-                ctx.moveTo(i * (canvas.width/12.0), 0);
-                ctx.lineTo(i * (canvas.width/12.0), canvas.height);
+            // Vertical grid lines
+            var height = 35 * canvas.height / 36;
+            var yOffset = canvas.height - height;
+            for (i = 0; i < 4; i++) {
+                ctx.moveTo(canvas.xGridOffset + i * canvas.xGridStep, yOffset);
+                ctx.lineTo(canvas.xGridOffset + i * canvas.xGridStep, height);
             }
             ctx.stroke();
 
-            ctx.strokeStyle = "#5c7a37";
+            // Right ticks
+            ctx.strokeStyle = "#666666";
             ctx.beginPath();
-            ctx.moveTo(8 * (canvas.width/12.0), 0);
-            ctx.lineTo(8 * (canvas.width/12.0), canvas.height);
+            var xStart = 35 * canvas.width / 36;
+            ctx.moveTo(xStart, 0);
+            ctx.lineTo(xStart, canvas.height);
+            for (i = 0; i < 12; i++) {
+                ctx.moveTo(xStart, canvas.yGridOffset + i * canvas.yGridStep);
+                ctx.lineTo(canvas.width, canvas.yGridOffset + i * canvas.yGridStep);
+            }
+            ctx.moveTo(0, canvas.yGridOffset + 9 * canvas.yGridStep);
+            ctx.lineTo(canvas.width, canvas.yGridOffset + 9 * canvas.yGridStep);
+            ctx.closePath();
             ctx.stroke();
 
             ctx.restore();
@@ -140,61 +202,26 @@ Rectangle {
             ctx.save();
             ctx.globalAlpha = 0.7;
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 3;
             ctx.beginPath();
 
-            var w = canvas.width/points.length;
             var end = points.length;
-            for (var i = 0; i < end; i+=pixelSkip) {
-                var x = points[i].x;
+            var xOffset = canvas.width / 36
+
+            for (var i = 0; i < end; i += pixelSkip) {
+                var x = 34 * points[i].x / 36 + xOffset;
                 var y = points[i][price];
+
                 y = canvas.height * y/highest;
+                y = canvas.height - y;
+                y = 9 * y / 12 + yGridOffset; // Scaling to graph area
                 if (i == 0) {
-                    ctx.moveTo(x+w/2, y);
+                    ctx.moveTo(x, y);
                 } else {
-                    ctx.lineTo(x+w/2, y);
+                    ctx.lineTo(x, y);
                 }
             }
             ctx.stroke();
-            ctx.restore();
-        }
-
-        function drawKLine(ctx, from, to, points, highest)
-        {
-            ctx.save();
-            ctx.globalAlpha = 0.4;
-            ctx.lineWidth = 2;
-            var end = points.length;
-            for (var i = 0; i < end; i+=pixelSkip) {
-                var x = points[i].x;
-                var open = canvas.height * points[i].open/highest - canvas.movedY;
-                var close = canvas.height * points[i].close/highest - canvas.movedY;
-                var high = canvas.height * points[i].high/highest - canvas.movedY;
-                var low = canvas.height * points[i].low/highest - canvas.movedY;
-
-                var top, bottom;
-                if (close <= open) {
-                    ctx.fillStyle = Qt.rgba(1, 0, 0, 1);
-                    ctx.strokeStyle = Qt.rgba(1, 0, 0, 1);
-                    top = close;
-                    bottom = open;
-                } else {
-                    ctx.fillStyle = Qt.rgba(0, 1, 0, 1);
-                    ctx.strokeStyle = Qt.rgba(0, 1, 0, 1);
-                    top = open;
-                    bottom = close;
-                }
-
-                var w1, w2;
-                w1 = canvas.width/points.length;
-                w2 = w1 > 10 ? w1/2 : w1;
-
-                ctx.fillRect(x + (w1 - w2)/2, top, w2, bottom - top);
-                ctx.beginPath();
-                ctx.moveTo(x+w1/2, high);
-                ctx.lineTo(x+w1/2, low);
-                ctx.stroke();
-            }
             ctx.restore();
         }
 
@@ -211,7 +238,8 @@ Rectangle {
                 var x = points[i].x;
                 var y = points[i][price];
                 y = canvas.height * (1 - y/highest);
-                ctx.fillRect(x, y, canvas.width/points.length, canvas.height - y);
+                y = 3 * y / 13;
+                ctx.fillRect(x, canvas.height - y, canvas.width/points.length, y);
             }
             ctx.restore();
         }
@@ -223,41 +251,39 @@ Rectangle {
             ctx.lineWidth = 1;
 
             drawBackground(ctx);
-            if (!stockModel.ready)
-                return;
 
-            last = stockModel.indexOf(chart.endDate)
-            first = last - (chart.endDate.getTime() - chart.startDate.getTime())/86400000;
-            first = Math.max(first, 0);
-            console.log("painting...  first:" + first + ", last:" + last);
+            if (!stockModel.ready) {
+                return;
+            }
+
+            var last = stockModel.indexOf(chart.startDate);
+            var first = 0;
 
             var highestPrice = stockModel.highestPrice;
             var highestVolume = stockModel.highestVolume;
-            console.log("highest price:" + highestPrice + ", highest volume:" + highestVolume)
             var points = [];
-            for (var i = 0; i <= last - first; i+=pixelSkip) {
-                var price = stockModel.get(i + first);
+            var step = canvas.width / (last + 0);
+            for (var i = last, j = 0; i >= 0 ; i -= pixelSkip, j += pixelSkip) {
+                var price = stockModel.get(i);
                 points.push({
-                                x: i*canvas.width/(last-first+1),
+                                x: j * step,
                                 open: price.open,
                                 close: price.close,
-                                high:price.high,
-                                low:price.low,
-                                volume:price.volume
+                                high: price.high,
+                                low: price.low,
+                                volume: price.volume
                             });
             }
+
             if (settings.drawHighPrice)
-                drawPrice(ctx, first, last, settings.highColor,"high", points, highestPrice);
+                drawPrice(ctx, first, last, settings.highColor, "high", points, highestPrice);
             if (settings.drawLowPrice)
-                drawPrice(ctx, first, last, settings.lowColor,"low", points, highestPrice);
+                drawPrice(ctx, first, last, settings.lowColor, "low", points, highestPrice);
             if (settings.drawOpenPrice)
-                drawPrice(ctx, first, last,settings.openColor,"open", points, highestPrice);
+                drawPrice(ctx, first, last,settings.openColor, "open", points, highestPrice);
             if (settings.drawClosePrice)
-                drawPrice(ctx, first, last, settings.closeColor,"close", points, highestPrice);
-            if (settings.drawVolume)
-                drawVolume(ctx, first, last, settings.volumeColor,"volume", points, highestVolume);
-            if (settings.drawKLine)
-                drawKLine(ctx, first, last, points, highestPrice);
+                drawPrice(ctx, first, last, settings.closeColor, "close", points, highestPrice);
+            drawVolume(ctx, first, last, settings.volumeColor, "volume", points, highestVolume);
         }
     }
 }

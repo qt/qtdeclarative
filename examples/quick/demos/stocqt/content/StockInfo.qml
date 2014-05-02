@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -41,23 +41,79 @@
 import QtQuick 2.0
 
 Rectangle {
-    id: button
-    signal clicked
-    property alias text: txt.text
-    property bool buttonEnabled: false
-    width: Math.max(64, txt.width + 16)
-    height: 32
+    id: root
+    width: 440
+    height: 160
     color: "transparent"
-    MouseArea {
-        anchors.fill: parent
-        onClicked: button.clicked()
-    }
+
+    property var stock: null
+
     Text {
-        anchors.centerIn: parent
+        id: stockIdText
+        anchors.left: parent.left
+        anchors.leftMargin: 5
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        color: "#000000"
         font.family: "Open Sans"
-        font.pointSize: 19
+        font.pointSize: 38
         font.weight: Font.DemiBold
-        color: button.buttonEnabled ? "#000000" : "#14aaff"
-        id: txt
+        text: root.stock.stockId
+    }
+
+    Text {
+        id: stockNameText
+        anchors.left: parent.left
+        anchors.leftMargin: 5
+        anchors.bottom: priceChangePercentage.bottom
+        anchors.right: priceChangePercentage.left
+        anchors.rightMargin: 15
+        color: "#000000"
+        font.family: "Open Sans"
+        font.pointSize: 16
+        elide: Text.ElideRight
+        text: root.stock.stockName
+    }
+
+    Text {
+        id: price
+        anchors.right: parent.right
+        anchors.rightMargin: 5
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        horizontalAlignment: Text.AlignRight
+        color: "#000000"
+        font.family: "Open Sans"
+        font.pointSize: 30
+        font.weight: Font.DemiBold
+        text: root.stock.stockPrice
+    }
+
+    Text {
+        id: priceChange
+        anchors.right: parent.right
+        anchors.rightMargin: 20
+        anchors.top: price.bottom
+        anchors.topMargin: 5
+        horizontalAlignment: Text.AlignRight
+        color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
+        font.family: "Open Sans"
+        font.pointSize: 20
+        font.weight: Font.Bold
+        text: root.stock.stockPriceChanged
+    }
+
+    Text {
+        id: priceChangePercentage
+        anchors.right: parent.right
+        anchors.rightMargin: 20
+        anchors.top: priceChange.bottom
+        anchors.topMargin: 5
+        horizontalAlignment: Text.AlignRight
+        color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
+        font.family: "Open Sans"
+        font.pointSize: 18
+        font.weight: Font.Bold
+        text: Math.abs(Math.round(root.stock.stockPriceChanged/(root.stock.stockPrice - root.stock.stockPriceChanged) * 100))/100  +"%"
     }
 }
