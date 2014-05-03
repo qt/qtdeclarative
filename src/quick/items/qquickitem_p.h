@@ -368,6 +368,7 @@ public:
         Qt::MouseButtons acceptedMouseButtons;
 
         QQuickItem::TransformOrigin origin:5;
+        uint transparentForPositioner : 1;
 
         QObjectList resourcesList;
     };
@@ -544,6 +545,9 @@ public:
 #ifndef QT_NO_IM
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
+
+    bool isTransparentForPositioner() const;
+    void setTransparentForPositioner(bool trans);
 
     bool calcEffectiveVisible() const;
     bool setEffectiveVisibleRecur(bool);

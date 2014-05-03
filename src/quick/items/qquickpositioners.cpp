@@ -305,6 +305,8 @@ void QQuickBasePositioner::prePositioning()
 
     for (int ii = 0; ii < children.count(); ++ii) {
         QQuickItem *child = children.at(ii);
+        if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
+            continue;
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
         PositionedItem posItem(child);
         int wIdx = oldItems.find(posItem);
@@ -1038,7 +1040,7 @@ void QQuickRow::reportConflictingAnchors()
 
     \image gridLayout_example.png
 
-    If an item within a Column is not \l {Item::}{visible}, or if it has a width or
+    If an item within a Grid is not \l {Item::}{visible}, or if it has a width or
     height of 0, the item will not be laid out and it will not be visible within the
     column. Also, since a Grid automatically positions its children, a child
     item within a Grid should not set its \l {Item::x}{x} or \l {Item::y}{y} positions
