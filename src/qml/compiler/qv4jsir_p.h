@@ -375,7 +375,8 @@ struct Name: Expr {
 
 struct Q_AUTOTEST_EXPORT Temp: Expr {
     enum Kind {
-        VirtualRegister = 0,
+        Invalid = 0,
+        VirtualRegister,
         PhysicalRegister,
         StackSlot
     };
@@ -386,6 +387,8 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
     // Used when temp is used as base in member expression
     MemberExpressionResolver memberResolver;
 
+    Temp(): kind(Invalid) {}
+
     void init(unsigned kind, unsigned index)
     {
         this->kind = kind;
@@ -393,6 +396,7 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
         this->isReadOnly = false;
     }
 
+    bool isInvalid() const { return kind == Invalid; }
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
     virtual bool isLValue() { return !isReadOnly; }
     virtual Temp *asTemp() { return this; }

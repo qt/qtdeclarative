@@ -39,9 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QT_NO_DEBUG
-#  define _LIBCPP_DEBUG2 0
-#endif // QT_NO_DEBUG
+// When building with debug code, the macro below will enable debug helpers when using libc++.
+// For example, the std::vector<T>::operator[] will use _LIBCPP_ASSERT to check if the index is
+// within the array bounds. Note that this only works reliably with OSX 10.9 or later.
+//#define _LIBCPP_DEBUG2 2
 
 #include "qv4ssa_p.h"
 #include "qv4isel_util_p.h"
@@ -125,7 +126,7 @@ public:
         const_iterator(const BasicBlockSet &set, bool end)
             : set(set)
         {
-            if (end) {
+            if (end || !set.function) {
                 if (set.blockNumbers)
                     numberIt = set.blockNumbers->end();
                 else
@@ -144,10 +145,11 @@ public:
     public:
         BasicBlock *operator*() const
         {
+
             if (set.blockNumbers) {
                 return set.function->basicBlock(*numberIt);
             } else {
-                Q_ASSERT(flagIt <= INT_MAX);
+                Q_ASSERT(flagIt <= static_cast<size_t>(set.function->basicBlockCount()));
                 return set.function->basicBlock(static_cast<int>(flagIt));
             }
         }
@@ -167,13 +169,17 @@ public:
 
         const_iterator &operator++()
         {
-            if (set.blockNumbers)
-                ++numberIt;
-            else
+            if (set.blockNumbers) {
+                if (numberIt != set.blockNumbers->end())
+                    ++numberIt;
+            } else if (flagIt < set.blockFlags->size()) {
                 flagIt = std::distance(set.blockFlags->begin(),
                                        std::find(set.blockFlags->begin() + flagIt + 1,
                                                  set.blockFlags->end(),
                                                  true));
+                if (flagIt > set.blockFlags->size())
+                    flagIt = set.blockFlags->size();
+            }
 
             return *this;
         }
@@ -205,6 +211,8 @@ public:
 
     void insert(BasicBlock *bb)
     {
+        Q_ASSERT(function);
+
         if (blockFlags) {
             (*blockFlags)[bb->index()] = true;
             return;
@@ -233,6 +241,8 @@ public:
 
     QList<BasicBlock *> values() const
     {
+        Q_ASSERT(function);
+
         QList<BasicBlock *> result;
 
         for (const_iterator it = begin(), eit = end(); it != eit; ++it)
@@ -595,11 +605,11 @@ private:
 };
 
 class VariableCollector: public StmtVisitor, ExprVisitor {
-    typedef QHash<Temp, QSet<BasicBlock *> > DefSites;
-    DefSites _defsites;
-    QVector<QSet<Temp> > A_orig;
-    QSet<Temp> nonLocals;
-    QSet<Temp> killed;
+    std::vector<Temp> _allTemps;
+    std::vector<BasicBlockSet> _defsites;
+    std::vector<std::vector<int> > A_orig;
+    std::vector<bool> nonLocals;
+    std::vector<bool> killed;
 
     BasicBlock *currentBB;
     bool isCollectable(Temp *t) const
@@ -609,10 +619,27 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
         return true;
     }
 
+    void addDefInCurrentBlock(Temp *t)
+    {
+        std::vector<int> &temps = A_orig[currentBB->index()];
+        if (std::find(temps.begin(), temps.end(), t->index) == temps.end())
+            temps.push_back(t->index);
+    }
+
+    void addTemp(Temp *t)
+    {
+        if (_allTemps[t->index].kind == Temp::Invalid)
+            _allTemps[t->index] = *t;
+    }
+
 public:
     VariableCollector(IR::Function *function)
     {
-        _defsites.reserve(function->tempCount);
+        _allTemps.resize(function->tempCount);
+        _defsites.resize(function->tempCount);
+        for (int i = 0; i < function->tempCount; ++i)
+            _defsites[i].init(function);
+        nonLocals.resize(function->tempCount);
         A_orig.resize(function->basicBlockCount());
         for (int i = 0, ei = A_orig.size(); i != ei; ++i)
             A_orig[i].reserve(8);
@@ -626,11 +653,9 @@ public:
                 continue;
 
             currentBB = bb;
-            killed.clear();
-            killed.reserve(bb->statements().size() / 2);
-            foreach (Stmt *s, bb->statements()) {
+            killed.assign(function->tempCount, false);
+            foreach (Stmt *s, bb->statements())
                 s->accept(this);
-            }
         }
 
 #if defined(SHOW_SSA)
@@ -645,23 +670,31 @@ public:
 #endif // SHOW_SSA
     }
 
-    QList<Temp> vars() const {
-        return _defsites.keys();
+    const std::vector<Temp> &allTemps() const
+    { return _allTemps; }
+
+    QList<BasicBlock *> defsite(const Temp &n) const
+    {
+        Q_ASSERT(!n.isInvalid());
+        Q_ASSERT(n.index < _defsites.size());
+        return _defsites[n.index].values();
     }
 
-    QSet<BasicBlock *> defsite(const Temp &n) const {
-        return _defsites[n];
-    }
-
-    QSet<Temp> inBlock(BasicBlock *n) const {
+    const std::vector<int> &inBlock(BasicBlock *n) const
+    {
         return A_orig.at(n->index());
     }
 
-    bool isNonLocal(const Temp &var) const { return nonLocals.contains(var); }
+    bool isNonLocal(const Temp &var) const
+    {
+        Q_ASSERT(!var.isInvalid());
+        Q_ASSERT(var.index < nonLocals.size());
+        return nonLocals[var.index];
+    }
 
 protected:
-    virtual void visitPhi(Phi *) {};
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); };
+    virtual void visitPhi(Phi *) {}
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
 
     virtual void visitConst(Const *) {}
     virtual void visitString(IR::String *) {}
@@ -694,6 +727,8 @@ protected:
         s->source->accept(this);
 
         if (Temp *t = s->target->asTemp()) {
+            addTemp(t);
+
             if (isCollectable(t)) {
 #if defined(SHOW_SSA)
                 qout << '\t';
@@ -701,18 +736,11 @@ protected:
                 qout << " -> L" << currentBB->index << endl;
 #endif // SHOW_SSA
 
-                DefSites::iterator defsitesIt = _defsites.find(*t);
-                if (defsitesIt == _defsites.end()) {
-                    QSet<BasicBlock *> bbs;
-                    bbs.reserve(4);
-                    defsitesIt = _defsites.insert(*t, bbs);
-                }
-                defsitesIt->insert(currentBB);
-
-                A_orig[currentBB->index()].insert(*t);
+                _defsites[t->index].insert(currentBB);
+                addDefInCurrentBlock(t);
 
                 // For semi-pruned SSA:
-                killed.insert(*t);
+                killed[t->index] = true;
             }
         } else {
             s->target->accept(this);
@@ -721,9 +749,11 @@ protected:
 
     virtual void visitTemp(Temp *t)
     {
+        addTemp(t);
+
         if (isCollectable(t))
-            if (!killed.contains(*t))
-                nonLocals.insert(*t);
+            if (!killed[t->index])
+                nonLocals[t->index] = true;
     }
 };
 
@@ -821,7 +851,7 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
     IR::Function *function;
     unsigned tempCount;
 
-    typedef QHash<unsigned, int> Mapping; // maps from existing/old temp number to the new and unique temp number.
+    typedef std::vector<int> Mapping; // maps from existing/old temp number to the new and unique temp number.
     enum { Absent = -1 };
     Mapping vregMapping;
     ProcessedBlocks processed;
@@ -879,7 +909,7 @@ public:
         , tempCount(0)
         , processed(f)
     {
-        vregMapping.reserve(f->tempCount);
+        vregMapping.assign(f->tempCount, Absent);
         todo.reserve(f->basicBlockCount());
     }
 
@@ -907,12 +937,9 @@ public:
     }
 
 private:
-    static inline void restore(Mapping &mapping, unsigned temp, int previous)
+    static inline void restore(Mapping &mapping, int temp, int previous)
     {
-        if (previous == Absent)
-            mapping.remove(temp);
-        else
-            mapping[temp] = previous;
+        mapping[temp] = previous;
     }
 
     void rename(BasicBlock *bb)
@@ -961,7 +988,7 @@ private:
         int nr = Absent;
         switch (t.kind) {
         case Temp::VirtualRegister:
-            nr = vregMapping.value(t.index, Absent);
+            nr = vregMapping[t.index];
             break;
         default:
             Q_UNREACHABLE();
@@ -989,8 +1016,8 @@ private:
 
         switch (t.kind) {
         case Temp::VirtualRegister:
-            oldIndex = vregMapping.value(t.index, Absent);
-            vregMapping.insert(t.index, newIndex);
+            oldIndex = vregMapping[t.index];
+            vregMapping[t.index] = newIndex;
             break;
         default:
             Q_UNREACHABLE();
@@ -1084,20 +1111,22 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
     VariableCollector variables(function);
 
     // Prepare for phi node insertion:
-    QVector<QSet<Temp> > A_phi;
+    std::vector<QSet<int> > A_phi;
     A_phi.resize(function->basicBlockCount());
     for (int i = 0, ei = A_phi.size(); i != ei; ++i) {
-        QSet<Temp> temps;
-        temps.reserve(4);
+        QSet<int> temps;
+        temps.reserve(16);
         A_phi[i] = temps;
     }
 
     // Place phi functions:
-    foreach (Temp a, variables.vars()) {
+    foreach (const Temp &a, variables.allTemps()) {
+        if (a.isInvalid())
+            continue;
         if (!variables.isNonLocal(a))
             continue; // for semi-pruned SSA
 
-        QList<BasicBlock *> W = QList<BasicBlock *>::fromSet(variables.defsite(a));
+        QList<BasicBlock *> W = variables.defsite(a);
         while (!W.isEmpty()) {
             BasicBlock *n = W.first();
             W.removeFirst();
@@ -1105,10 +1134,11 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
             for (BasicBlockSet::const_iterator it = dominatorFrontierForN.begin(), eit = dominatorFrontierForN.end();
                  it != eit; ++it) {
                 BasicBlock *y = *it;
-                if (!A_phi.at(y->index()).contains(a)) {
+                if (!A_phi.at(y->index()).contains(a.index)) {
                     insertPhiNode(a, y, function);
-                    A_phi[y->index()].insert(a);
-                    if (!variables.inBlock(y).contains(a))
+                    A_phi[y->index()].insert(a.index);
+                    const std::vector<int> &varsInBlockY = variables.inBlock(y);
+                    if (std::find(varsInBlockY.begin(), varsInBlockY.end(), a.index) == varsInBlockY.end())
                         W.append(y);
                 }
             }
