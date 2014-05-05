@@ -508,21 +508,24 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     Scoped<RegExpObject> regExp(scope, searchValue);
     if (regExp) {
         uint offset = 0;
+
+        // We extract the pointer here to work around a compiler bug on Android.
+        Scoped<RegExp> re(scope, regExp->value);
         while (true) {
             int oldSize = nMatchOffsets;
-            if (allocatedMatchOffsets < nMatchOffsets + regExp->value->captureCount() * 2) {
-                allocatedMatchOffsets = qMax(allocatedMatchOffsets * 2, nMatchOffsets + regExp->value->captureCount() * 2);
+            if (allocatedMatchOffsets < nMatchOffsets + re->captureCount() * 2) {
+                allocatedMatchOffsets = qMax(allocatedMatchOffsets * 2, nMatchOffsets + re->captureCount() * 2);
                 uint *newOffsets = (uint *)malloc(allocatedMatchOffsets*sizeof(uint));
                 memcpy(newOffsets, matchOffsets, nMatchOffsets*sizeof(uint));
                 if (matchOffsets != _matchOffsets)
                     free(matchOffsets);
                 matchOffsets = newOffsets;
             }
-            if (regExp->value->match(string, offset, matchOffsets + oldSize) == JSC::Yarr::offsetNoMatch) {
+            if (re->match(string, offset, matchOffsets + oldSize) == JSC::Yarr::offsetNoMatch) {
                 nMatchOffsets = oldSize;
                 break;
             }
-            nMatchOffsets += regExp->value->captureCount() * 2;
+            nMatchOffsets += re->captureCount() * 2;
             if (!regExp->global)
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
