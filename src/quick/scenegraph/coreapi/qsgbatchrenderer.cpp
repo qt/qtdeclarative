@@ -2470,9 +2470,14 @@ void Renderer::renderRenderNode(Batch *batch)
 
     QSGNode *xform = e->renderNode->parent();
     QMatrix4x4 matrix;
-    while (xform != rootNode()) {
+    QSGNode *root = rootNode();
+    if (e->root) {
+        matrix = qsg_matrixForRoot(e->root);
+        root = e->root->sgNode;
+    }
+    while (xform != root) {
         if (xform->type() == QSGNode::TransformNodeType) {
-            matrix = qsg_matrixForRoot(e->root) * static_cast<QSGTransformNode *>(xform)->combinedMatrix();
+            matrix = matrix * static_cast<QSGTransformNode *>(xform)->combinedMatrix();
             break;
         }
         xform = xform->parent();

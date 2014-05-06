@@ -72,6 +72,7 @@ public:
 private slots:
     void renderOrder();
     void messUpState();
+    void matrix();
 };
 
 class ClearNode : public QSGRenderNode
@@ -259,6 +260,84 @@ void tst_rendernode::messUpState()
              msgColorMismatchAt(errorMessage, x2, y3).constData());
     QCOMPARE(fb.pixel(x2, y4), qRgb(0x00, 0x00, 0x00));
     QCOMPARE(fb.pixel(x2, y5), qRgb(0x00, 0x00, 0x00));
+}
+
+class StateRecordingRenderNode : public QSGRenderNode
+{
+public:
+    StateFlags changedStates() { return StateFlags(-1); }
+    void render(const RenderState &) {
+        matrices[name] = *matrix();
+
+    }
+
+    QString name;
+    static QHash<QString, QMatrix4x4> matrices;
+};
+
+QHash<QString, QMatrix4x4> StateRecordingRenderNode::matrices;
+
+class StateRecordingRenderNodeItem : public QQuickItem
+{
+    Q_OBJECT
+public:
+    StateRecordingRenderNodeItem() { setFlag(ItemHasContents, true); }
+    QSGNode *updatePaintNode(QSGNode *r, UpdatePaintNodeData *) {
+        if (r)
+            return r;
+        StateRecordingRenderNode *rn = new StateRecordingRenderNode();
+        rn->name = objectName();
+        return rn;
+    }
+};
+
+void tst_rendernode::matrix()
+{
+    qmlRegisterType<StateRecordingRenderNodeItem>("RenderNode", 1, 0, "StateRecorder");
+    StateRecordingRenderNode::matrices.clear();
+    runTest("matrix.qml");
+
+    QMatrix4x4 noRotateOffset;
+    noRotateOffset.translate(20, 20);
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; no-rotation"));
+        QCOMPARE(result, noRotateOffset);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; no-rotation"));
+        QCOMPARE(result, noRotateOffset);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; no-rotation"));
+        QCOMPARE(result, noRotateOffset);
+    }
+
+    QMatrix4x4 parentRotation;
+    parentRotation.translate(10, 10);   // parent at x/y: 10
+    parentRotation.translate(5, 5);     // rotate 90 around center (width/height: 10)
+    parentRotation.rotate(90, 0, 0, 1);
+    parentRotation.translate(-5, -5);
+    parentRotation.translate(10, 10);   // StateRecorder at: x/y: 10
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; parent-rotation"));
+        QCOMPARE(result, parentRotation);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; parent-rotation"));
+        QCOMPARE(result, parentRotation);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; parent-rotation"));
+        QCOMPARE(result, parentRotation);
+    }
+
+    QMatrix4x4 selfRotation;
+    selfRotation.translate(10, 10);   // parent at x/y: 10
+    selfRotation.translate(10, 10);   // StateRecorder at: x/y: 10
+    selfRotation.rotate(90, 0, 0, 1); // rotate 90, width/height: 0
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; self-rotation"));
+        QCOMPARE(result, selfRotation);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; self-rotation"));
+        QCOMPARE(result, selfRotation);
+    }
+    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; self-rotation"));
+        QCOMPARE(result, selfRotation);
+    }
 }
 
 
