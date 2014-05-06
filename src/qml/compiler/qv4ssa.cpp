@@ -1154,8 +1154,6 @@ struct UntypedTemp {
     UntypedTemp() {}
     UntypedTemp(const Temp &t): temp(t) {}
 };
-inline uint qHash(const UntypedTemp &t, uint seed = 0) Q_DECL_NOTHROW
-{ return t.temp.index ^ t.temp.kind ^ seed; }
 inline bool operator==(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
 { return t1.temp.index == t2.temp.index && t1.temp.kind == t2.temp.kind; }
 inline bool operator!=(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
@@ -1168,13 +1166,20 @@ public:
             : defStmt(0)
             , blockOfStatement(0)
         { uses.reserve(8); }
+        Temp temp;
         Stmt *defStmt;
         BasicBlock *blockOfStatement;
         QVector<Stmt *> uses;
+
+        bool isValid() const
+        { return temp.kind != Temp::Invalid; }
+
+        void clear()
+        { defStmt = 0; blockOfStatement = 0; uses.clear(); }
     };
 
 private:
-    typedef QHash<UntypedTemp, DefUse> DefUses;
+    typedef std::vector<DefUse> DefUses;
     DefUses _defUses;
     class Temps: public QVector<Temp> {
     public:
@@ -1192,21 +1197,24 @@ private:
     }
 
     void addUse(Temp *t) {
-        Q_ASSERT(t);
+        Q_ASSERT(t && t->index < _defUses.size());
         if (!isCollectible(t))
             return;
 
-        _defUses[*t].uses.push_back(_stmt);
+        _defUses[t->index].uses.push_back(_stmt);
         _usesPerStatement[_stmt].push_back(*t);
     }
 
     void addDef(Temp *t) {
+        Q_ASSERT(t->index < _defUses.size());
         if (!isCollectible(t))
             return;
 
-        Q_ASSERT(!_defUses.contains(*t) || _defUses.value(*t).defStmt == 0 || _defUses.value(*t).defStmt == _stmt);
+        Q_ASSERT(!_defUses[t->index].isValid() || _defUses[t->index].defStmt == 0 || _defUses[t->index].defStmt == _stmt);
 
-        DefUse &defUse = _defUses[*t];
+        DefUse &defUse = _defUses[t->index];
+        if (!defUse.isValid())
+            defUse.temp = *t;
         defUse.defStmt = _stmt;
         defUse.blockOfStatement = _block;
     }
@@ -1214,6 +1222,8 @@ private:
 public:
     DefUsesCalculator(IR::Function *function)
     {
+        _defUses.resize(function->tempCount);
+
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
@@ -1225,38 +1235,49 @@ public:
             }
         }
 
-        QMutableHashIterator<UntypedTemp, DefUse> it(_defUses);
-        while (it.hasNext()) {
-            it.next();
-            if (!it.value().defStmt)
-                it.remove();
+        for (size_t i = 0, ei = _defUses.size(); i != ei; ++i) {
+            DefUse &defUse = _defUses[i];
+            if (defUse.isValid() && !defUse.defStmt)
+                defUse.clear();
         }
     }
 
     void addTemp(Temp *newTemp, Stmt *defStmt, BasicBlock *defBlock)
     {
-        DefUse &defUse = _defUses[*newTemp];
+        if (_defUses.size() <= newTemp->index)
+            _defUses.resize(newTemp->index + 1);
+        DefUse &defUse = _defUses[newTemp->index];
+        if (!defUse.isValid())
+            defUse.temp = *newTemp;
         defUse.defStmt = defStmt;
         defUse.blockOfStatement = defBlock;
     }
 
-    QList<UntypedTemp> defsUntyped() const { return _defUses.keys(); }
+    QList<UntypedTemp> defsUntyped() const
+    {
+        QList<UntypedTemp> res;
+        foreach (const DefUse &du, _defUses)
+            if (du.isValid())
+                res.append(UntypedTemp(du.temp));
+        return res;
+    }
 
     QList<Temp> defs() const {
         QList<Temp> res;
         res.reserve(_defUses.size());
-        foreach (const UntypedTemp &t, _defUses.keys())
-            res.append(t.temp);
+        foreach (const DefUse &du, _defUses)
+            if (du.isValid())
+                res.append(du.temp);
         return res;
     }
 
     void removeDef(const Temp &var) {
-        _defUses.remove(var);
+        _defUses[var.index].clear();
     }
 
     void addUses(const Temp &variable, const QVector<Stmt *> &newUses)
     {
-        QVector<Stmt *> &uses = _defUses[variable].uses;
+        QVector<Stmt *> &uses = _defUses[variable.index].uses;
         foreach (Stmt *stmt, newUses)
             if (std::find(uses.begin(), uses.end(), stmt) == uses.end())
                 uses.push_back(stmt);
@@ -1264,23 +1285,31 @@ public:
 
     void addUse(const Temp &variable, Stmt *newUse)
     {
-        QVector<Stmt *> &uses = _defUses[variable].uses;
+        if (_defUses.size() <= variable.index) {
+            _defUses.resize(variable.index + 1);
+            DefUse &du = _defUses[variable.index];
+            du.temp = variable;
+            du.uses.push_back(newUse);
+            return;
+        }
+
+        QVector<Stmt *> &uses = _defUses[variable.index].uses;
         if (std::find(uses.begin(), uses.end(), newUse) == uses.end())
             uses.push_back(newUse);
     }
 
-    int useCount(const UntypedTemp &variable) const
-    { return _defUses[variable].uses.size(); }
+    int useCount(const Temp &variable) const
+    { return _defUses[variable.index].uses.size(); }
 
-    Stmt *defStmt(const UntypedTemp &variable) const
-    { return _defUses[variable].defStmt; }
+    Stmt *defStmt(const Temp &variable) const
+    { return _defUses[variable.index].defStmt; }
 
     BasicBlock *defStmtBlock(const Temp &variable) const
-    { return _defUses[variable].blockOfStatement; }
+    { return _defUses[variable.index].blockOfStatement; }
 
     void removeUse(Stmt *usingStmt, const Temp &var)
     {
-        QVector<Stmt *> &uses = _defUses[var].uses;
+        QVector<Stmt *> &uses = _defUses[var.index].uses;
         uses.resize(std::remove(uses.begin(), uses.end(), usingStmt) - uses.begin());
     }
 
@@ -1294,15 +1323,9 @@ public:
             return *it;
     }
 
-    const QVector<Stmt *> uses(const UntypedTemp &var) const
+    const QVector<Stmt *> &uses(const Temp &var) const
     {
-        static const QVector<Stmt *> noUses;
-
-        DefUses::const_iterator it = _defUses.find(var);
-        if (it == _defUses.end())
-            return noUses;
-        else
-            return it->uses;
+        return _defUses[var.index].uses;
     }
 
     QVector<Stmt*> removeDefUses(Stmt *s)
@@ -1326,9 +1349,10 @@ public:
     void dump() const
     {
         IRPrinter printer(&qout);
-        foreach (const UntypedTemp &var, _defUses.keys()) {
-            const DefUse &du = _defUses[var];
-            printer.print(const_cast<Temp *>(&var.temp));
+        foreach (const DefUse &du, _defUses) {
+            if (!du.isValid())
+                continue;
+            printer.print(const_cast<Temp *>(&du.temp));
             qout<<" -> defined in block "<<du.blockOfStatement->index()<<", statement: ";
             printer.print(du.defStmt);
             qout<<endl<<"     uses:"<<endl;
@@ -1738,9 +1762,9 @@ public:
     {
         newType = type;
         theTemp = temp;
-        if (Stmt *defStmt = defUses.defStmt(temp))
+        if (Stmt *defStmt = defUses.defStmt(temp.temp))
             defStmt->accept(this);
-        foreach (Stmt *use, defUses.uses(temp))
+        foreach (Stmt *use, defUses.uses(temp.temp))
             use->accept(this);
     }
 
@@ -2178,7 +2202,7 @@ public:
             if (!isUsedAsInt32(temp, knownOk))
                 continue;
 
-            Stmt *s = _defUses.defStmt(temp);
+            Stmt *s = _defUses.defStmt(temp.temp);
             Move *m = s->asMove();
             if (!m)
                 continue;
@@ -2227,7 +2251,7 @@ public:
         PropagateTempTypes propagator(_defUses);
         foreach (const UntypedTemp &t, knownOk) {
             propagator.run(t, SInt32Type);
-            if (Stmt *defStmt = _defUses.defStmt(t)) {
+            if (Stmt *defStmt = _defUses.defStmt(t.temp)) {
                 if (Move *m = defStmt->asMove()) {
                     if (Convert *c = m->source->asConvert()) {
                         c->type = SInt32Type;
@@ -2245,7 +2269,7 @@ public:
 private:
     bool isUsedAsInt32(const UntypedTemp &t, const QVector<UntypedTemp> &knownOk) const
     {
-        const QVector<Stmt *> &uses = _defUses.uses(t);
+        const QVector<Stmt *> &uses = _defUses.uses(t.temp);
         if (uses.isEmpty())
             return false;
 
