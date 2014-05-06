@@ -454,6 +454,11 @@ int QQuickItemView::cacheBuffer() const
 void QQuickItemView::setCacheBuffer(int b)
 {
     Q_D(QQuickItemView);
+    if (b < 0) {
+        qmlInfo(this) << "Cannot set a negative cache buffer";
+        return;
+    }
+
     if (d->buffer != b) {
         d->buffer = b;
         if (isComponentComplete()) {

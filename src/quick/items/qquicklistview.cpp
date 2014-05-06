@@ -2138,7 +2138,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     This property determines whether delegates are retained outside the
     visible area of the view.
 
-    If this value is non-zero, the view may keep as many delegates
+    If this value is greater than zero, the view may keep as many delegates
     instantiated as it can fit within the buffer specified.  For example,
     if in a vertical view the delegate is 20 pixels high and \c cacheBuffer is
     set to 40, then up to 2 delegates above and 2 delegates below the visible
@@ -2148,7 +2148,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     delegates outside the visible area are not painted.
 
     The default value of this property is platform dependent, but will usually
-    be a non-zero value.
+    be a value greater than zero. Negative values are ignored.
 
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
