@@ -93,10 +93,7 @@ public:
 
 class RegExp : public Managed
 {
-    V4_MANAGED
-    Q_MANAGED_TYPE(RegExp)
-
-    struct Data {
+    struct Data : Managed::Data {
         QString pattern;
         OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
 #if ENABLE(YARR_JIT)
@@ -107,22 +104,35 @@ class RegExp : public Managed
         bool ignoreCase;
         bool multiLine;
     };
-    Data data;
-
-    QString pattern() const { return data.pattern; }
-    OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return data.byteCode; }
+    struct {
+        QString pattern;
+        OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
 #if ENABLE(YARR_JIT)
-    JSC::Yarr::YarrCodeBlock jitCode() const { return data.jitCode; }
+        JSC::Yarr::YarrCodeBlock jitCode;
 #endif
-    RegExpCache *cache() const { return data.cache; }
-    int subPatternCount() const { return data.subPatternCount; }
-    bool ignoreCase() const { return data.ignoreCase; }
-    bool multiLine() const { return data.multiLine; }
+        RegExpCache *cache;
+        int subPatternCount;
+        bool ignoreCase;
+        bool multiLine;
+    } __data;
+    V4_MANAGED_NEW
+    Q_MANAGED_TYPE(RegExp)
+
+
+    QString pattern() const { return d()->pattern; }
+    OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return d()->byteCode; }
+#if ENABLE(YARR_JIT)
+    JSC::Yarr::YarrCodeBlock jitCode() const { return d()->jitCode; }
+#endif
+    RegExpCache *cache() const { return d()->cache; }
+    int subPatternCount() const { return d()->subPatternCount; }
+    bool ignoreCase() const { return d()->ignoreCase; }
+    bool multiLine() const { return d()->multiLine; }
 
     static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
     ~RegExp();
 
-    bool isValid() const { return data.byteCode.get(); }
+    bool isValid() const { return d()->byteCode.get(); }
 
     uint match(const QString& string, int start, uint *matchOffsets);
 
