@@ -115,7 +115,7 @@ class RegExp : public Managed
         bool ignoreCase;
         bool multiLine;
     } __data;
-    V4_MANAGED_NEW
+    V4_MANAGED
     Q_MANAGED_TYPE(RegExp)
 
 

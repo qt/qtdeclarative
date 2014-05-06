@@ -69,14 +69,6 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
-
-#define V4_MANAGED_NEW \
-    public: \
-        Q_MANAGED_CHECK \
-        static const QV4::ManagedVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
-        template <typename T> \
-        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
         void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
@@ -186,6 +178,26 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 
 struct Q_QML_PRIVATE_EXPORT Managed
 {
+    struct Data {
+        InternalClass *internalClass;
+        union {
+            uint _data;
+            struct {
+                uchar markBit :  1;
+                uchar inUse   :  1;
+                uchar extensible : 1; // used by Object
+                uchar _unused : 1;
+                uchar needsActivation : 1; // used by FunctionObject
+                uchar strictMode : 1; // used by FunctionObject
+                uchar bindingKeyFlag : 1;
+                uchar hasAccessorProperty : 1;
+                uchar _type;
+                mutable uchar subtype;
+                uchar _flags;
+            };
+        };
+    };
+    Data data;
     V4_MANAGED
     enum {
         IsExecutionContext = false,
@@ -299,30 +311,6 @@ public:
     static bool isEqualTo(Managed *m, Managed *other);
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
-
-    struct Data {
-        InternalClass *internalClass;
-        union {
-            uint _data;
-            struct {
-                uchar markBit :  1;
-                uchar inUse   :  1;
-                uchar extensible : 1; // used by Object
-                uchar _unused : 1;
-                uchar needsActivation : 1; // used by FunctionObject
-                uchar strictMode : 1; // used by FunctionObject
-                uchar bindingKeyFlag : 1;
-                uchar hasAccessorProperty : 1;
-                uchar _type;
-                mutable uchar subtype;
-                uchar _flags;
-            };
-        };
-    };
-    Data data;
-
-    Data *d() { return &data; }
-    const Data *d() const { return &data; }
 
     InternalClass *internalClass() const { return d()->internalClass; }
     void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }

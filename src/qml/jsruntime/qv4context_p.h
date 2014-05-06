@@ -119,7 +119,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         int lineNumber;
     } __data;
 
-    V4_MANAGED_NEW
+    V4_MANAGED
     Q_MANAGED_TYPE(ExecutionContext)
 
     ExecutionContext(ExecutionEngine *engine, ContextType t)
@@ -209,7 +209,7 @@ struct GlobalContext : public ExecutionContext
     struct {
         Object *global;
     } __data;
-    V4_MANAGED_NEW
+    V4_MANAGED
 
     GlobalContext(ExecutionEngine *engine);
 };
@@ -224,7 +224,7 @@ struct CatchContext : public ExecutionContext
         StringValue exceptionVarName;
         Value exceptionValue;
     } __data;
-    V4_MANAGED_NEW
+    V4_MANAGED
 
     CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
 };
@@ -237,7 +237,7 @@ struct WithContext : public ExecutionContext
     struct {
         Object *withObject;
     } __data;
-    V4_MANAGED_NEW
+    V4_MANAGED
 
     WithContext(ExecutionEngine *engine, ObjectRef with);
 };
