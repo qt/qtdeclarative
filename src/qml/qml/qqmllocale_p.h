@@ -148,7 +148,7 @@ public:
 
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {
-        QQmlLocaleData *thisObject = ctx->callData->thisObject.asObject()->as<QQmlLocaleData>();
+        QQmlLocaleData *thisObject = ctx->d()->callData->thisObject.asObject()->as<QQmlLocaleData>();
         if (!thisObject) {
             ctx->throwTypeError();
             return 0;

@@ -210,7 +210,7 @@ Debugger::ExecutionState Debugger::currentExecutionState() const
 {
     ExecutionState state;
     state.fileName = getFunction()->sourceFile();
-    state.lineNumber = engine()->currentContext()->lineNumber;
+    state.lineNumber = engine()->currentContext()->d()->lineNumber;
 
     return state;
 }
@@ -229,7 +229,7 @@ static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
                 return cCtxt;
             --frame;
         }
-        ctxt = ctxt->parent;
+        ctxt = ctxt->d()->parent;
     }
 
     return 0;
@@ -238,7 +238,7 @@ static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
 static inline CallContext *findScope(ExecutionContext *ctxt, int scope)
 {
     for (; scope > 0 && ctxt; --scope)
-        ctxt = ctxt->outer;
+        ctxt = ctxt->d()->outer;
 
     return ctxt ? ctxt->asCallContext() : 0;
 }
@@ -369,7 +369,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
                 if (CallContext *cCtxt = ctxt->asCallContext())
                     if (cCtxt->activation)
                         break;
-                ctxt = ctxt->outer;
+                ctxt = ctxt->d()->outer;
             }
 
             if (!ctxt)
@@ -434,12 +434,12 @@ QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
         return types;
 
     CallContext *sctxt = findContext(m_engine->currentContext(), frame);
-    if (!sctxt || sctxt->type < ExecutionContext::Type_SimpleCallContext)
+    if (!sctxt || sctxt->d()->type < ExecutionContext::Type_SimpleCallContext)
         return types;
     CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
-    for (ExecutionContext *it = ctxt; it; it = it->outer)
-        types.append(it->type);
+    for (ExecutionContext *it = ctxt; it; it = it->d()->outer)
+        types.append(it->d()->type);
 
     return types;
 }
@@ -450,7 +450,7 @@ void Debugger::maybeBreakAtInstruction()
         return;
 
     QMutexLocker locker(&m_lock);
-    int lineNumber = engine()->currentContext()->lineNumber;
+    int lineNumber = engine()->currentContext()->d()->lineNumber;
 
     if (m_gatherSources) {
         m_gatherSources->run();
@@ -495,7 +495,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     if (m_stepping != NotStepping && m_currentContext == m_engine->currentContext()) {
-        m_currentContext = m_engine->currentContext()->parent;
+        m_currentContext = m_engine->currentContext()->d()->parent;
         m_stepping = StepOver;
         m_returnedValue = retVal;
     }
@@ -519,8 +519,8 @@ Function *Debugger::getFunction() const
     if (CallContext *callCtx = context->asCallContext())
         return callCtx->function->function();
     else {
-        Q_ASSERT(context->type == QV4::ExecutionContext::Type_GlobalContext);
-        return context->engine->globalCode;
+        Q_ASSERT(context->d()->type == QV4::ExecutionContext::Type_GlobalContext);
+        return context->d()->engine->globalCode;
     }
 }
 

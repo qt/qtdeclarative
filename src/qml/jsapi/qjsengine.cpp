@@ -309,7 +309,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::ScopedValue result(scope);
 
     QV4::Script script(ctx, program, fileName, lineNumber);
-    script.strictMode = ctx->strictMode;
+    script.strictMode = ctx->d()->strictMode;
     script.inheritContext = true;
     script.parse();
     if (!scope.engine->hasException)

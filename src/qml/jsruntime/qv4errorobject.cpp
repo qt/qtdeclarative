@@ -156,7 +156,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
 ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
+    Scoped<ErrorObject> This(scope, ctx->d()->callData->thisObject);
     if (!This)
         return ctx->throwTypeError();
     if (!This->d()->stack) {
@@ -173,7 +173,7 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
                 trace += QString::number(frame.line);
             }
         }
-        This->d()->stack = ctx->engine->newString(trace)->getPointer();
+        This->d()->stack = ctx->d()->engine->newString(trace)->getPointer();
     }
     return This->d()->stack->asReturnedValue();
 }
@@ -371,18 +371,18 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    Object *o = ctx->callData->thisObject.asObject();
+    Object *o = ctx->d()->callData->thisObject.asObject();
     if (!o)
         return ctx->throwTypeError();
 
-    ScopedValue name(scope, o->get(ctx->engine->id_name));
+    ScopedValue name(scope, o->get(ctx->d()->engine->id_name));
     QString qname;
     if (name->isUndefined())
         qname = QString::fromLatin1("Error");
     else
         qname = name->toQString();
 
-    ScopedString s(scope, ctx->engine->newString(QString::fromLatin1("message")));
+    ScopedString s(scope, ctx->d()->engine->newString(QString::fromLatin1("message")));
     ScopedValue message(scope, o->get(s));
     QString qmessage;
     if (!message->isUndefined())
@@ -397,5 +397,5 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    return ctx->engine->newString(str)->asReturnedValue();
+    return ctx->d()->engine->newString(str)->asReturnedValue();
 }

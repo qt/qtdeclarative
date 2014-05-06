@@ -237,7 +237,7 @@ ReturnedValue JsonParser::parseObject()
     BEGIN << "parseObject pos=" << json;
     Scope scope(context);
 
-    ScopedObject o(scope, context->engine->newObject());
+    ScopedObject o(scope, context->d()->engine->newObject());
 
     QChar token = nextToken();
     while (token == Quote) {
@@ -285,7 +285,7 @@ bool JsonParser::parseMember(ObjectRef o)
     if (!parseValue(val))
         return false;
 
-    ScopedString s(scope, context->engine->newIdentifier(key));
+    ScopedString s(scope, context->d()->engine->newIdentifier(key));
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
         o->putIndexed(idx, val);
@@ -304,7 +304,7 @@ ReturnedValue JsonParser::parseArray()
 {
     Scope scope(context);
     BEGIN << "parseArray";
-    Scoped<ArrayObject> array(scope, context->engine->newArrayObject());
+    Scoped<ArrayObject> array(scope, context->d()->engine->newArrayObject());
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
@@ -407,7 +407,7 @@ bool JsonParser::parseValue(ValueRef val)
             return false;
         DEBUG << "value: string";
         END;
-        val = context->engine->newString(value);
+        val = context->d()->engine->newString(value);
         return true;
     }
     case BeginArray: {
@@ -710,21 +710,21 @@ QString Stringify::Str(const QString &key, ValueRef v)
     ScopedValue value(scope, *v);
     ScopedObject o(scope, value);
     if (o) {
-        ScopedString s(scope, ctx->engine->newString(QStringLiteral("toJSON")));
+        ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toJSON")));
         Scoped<FunctionObject> toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
-            callData->args[0] = ctx->engine->newString(key);
+            callData->args[0] = ctx->d()->engine->newString(key);
             value = toJSON->call(callData);
         }
     }
 
     if (replacerFunction) {
-        ScopedObject holder(scope, ctx->engine->newObject());
+        ScopedObject holder(scope, ctx->d()->engine->newObject());
         holder->put(ctx, QString(), value);
         ScopedCallData callData(scope, 2);
-        callData->args[0] = ctx->engine->newString(key);
+        callData->args[0] = ctx->d()->engine->newString(key);
         callData->args[1] = value;
         callData->thisObject = holder;
         value = replacerFunction->call(callData);
@@ -954,7 +954,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
         return Encode::undefined();
-    return ctx->engine->newString(result)->asReturnedValue();
+    return ctx->d()->engine->newString(result)->asReturnedValue();
 }
 
 
@@ -962,7 +962,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return engine->currentContext()->engine->newString(value.toString())->asReturnedValue();
+        return engine->currentContext()->d()->engine->newString(value.toString())->asReturnedValue();
     else if (value.isDouble())
         return Encode(value.toDouble());
     else if (value.isBool())

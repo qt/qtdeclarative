@@ -303,7 +303,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         if (wrapper && wrapper->d()->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
-            Scoped<String> e(scope, v4->currentContext()->engine->newString(error));
+            Scoped<String> e(scope, v4->currentContext()->d()->engine->newString(error));
             v4->currentContext()->throwError(e);
             return;
         }

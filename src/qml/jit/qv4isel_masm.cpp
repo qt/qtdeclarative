@@ -248,7 +248,7 @@ void InstructionSelection::run(int functionIndex)
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
     _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
     _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
@@ -264,7 +264,7 @@ void InstructionSelection::run(int functionIndex)
         foreach (IR::Stmt *s, _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
-                    Assembler::Address lineAddr(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lineNumber));
+                    Assembler::Address lineAddr(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lineNumber));
                     _as->store32(Assembler::TrustedImm32(s->location.startLine), lineAddr);
                     lastLine = s->location.startLine;
                 }
@@ -544,7 +544,7 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
 
 void InstructionSelection::loadThisObject(IR::Expr *temp)
 {
-    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, callData)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, callData)), Assembler::ScratchRegister);
 #if defined(VALUE_FITS_IN_REGISTER)
     _as->load64(Pointer(Assembler::ScratchRegister, qOffsetOf(CallData, thisObject)),
                 Assembler::ReturnValueRegister);
@@ -1461,7 +1461,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
-    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     _as->leaveStandardStackFrame();

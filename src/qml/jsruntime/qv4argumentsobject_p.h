@@ -115,7 +115,7 @@ struct ArgumentsObject: Object {
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
+                !static_cast<ArgumentsObject *>(m)->context()->d()->strictMode;
     }
 
     enum {

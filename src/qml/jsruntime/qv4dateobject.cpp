@@ -770,7 +770,7 @@ void DatePrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)
 {
-    if (DateObject *thisObject = ctx->callData->thisObject.asDateObject())
+    if (DateObject *thisObject = ctx->d()->callData->thisObject.asDateObject())
         return thisObject->date().asDouble();
     else {
         ctx->throwTypeError();
@@ -780,22 +780,22 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
 
 ReturnedValue DatePrototype::method_parse(CallContext *ctx)
 {
-    if (!ctx->callData->argc)
+    if (!ctx->d()->callData->argc)
         return Encode(qSNaN());
-    return Encode(ParseString(ctx->callData->args[0].toString(ctx)->toQString()));
+    return Encode(ParseString(ctx->d()->callData->args[0].toString(ctx)->toQString()));
 }
 
 ReturnedValue DatePrototype::method_UTC(CallContext *ctx)
 {
-    const int numArgs = ctx->callData->argc;
+    const int numArgs = ctx->d()->callData->argc;
     if (numArgs >= 2) {
-        double year  = ctx->callData->args[0].toNumber();
-        double month = ctx->callData->args[1].toNumber();
-        double day   = numArgs >= 3 ? ctx->callData->args[2].toNumber() : 1;
-        double hours = numArgs >= 4 ? ctx->callData->args[3].toNumber() : 0;
-        double mins  = numArgs >= 5 ? ctx->callData->args[4].toNumber() : 0;
-        double secs  = numArgs >= 6 ? ctx->callData->args[5].toNumber() : 0;
-        double ms    = numArgs >= 7 ? ctx->callData->args[6].toNumber() : 0;
+        double year  = ctx->d()->callData->args[0].toNumber();
+        double month = ctx->d()->callData->args[1].toNumber();
+        double day   = numArgs >= 3 ? ctx->d()->callData->args[2].toNumber() : 1;
+        double hours = numArgs >= 4 ? ctx->d()->callData->args[3].toNumber() : 0;
+        double mins  = numArgs >= 5 ? ctx->d()->callData->args[4].toNumber() : 0;
+        double secs  = numArgs >= 6 ? ctx->d()->callData->args[5].toNumber() : 0;
+        double ms    = numArgs >= 7 ? ctx->d()->callData->args[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         double t = MakeDate(MakeDay(year, month, day),
@@ -815,37 +815,37 @@ ReturnedValue DatePrototype::method_now(CallContext *ctx)
 ReturnedValue DatePrototype::method_toString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toDateString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToDateString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToDateString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toTimeString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToTimeString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToTimeString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToLocaleString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToLocaleString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleDateString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToLocaleDateString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToLocaleDateString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleTimeString(CallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return ctx->engine->newString(ToLocaleTimeString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToLocaleTimeString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_valueOf(CallContext *ctx)
@@ -1007,11 +1007,11 @@ ReturnedValue DatePrototype::method_getTimezoneOffset(CallContext *ctx)
 ReturnedValue DatePrototype::method_setTime(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<DateObject> self(scope, ctx->callData->thisObject);
+    Scoped<DateObject> self(scope, ctx->d()->callData->thisObject);
     if (!self)
         return ctx->throwTypeError();
 
-    double t = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double t = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     self->date().setDouble(TimeClip(t));
     return self->date().asReturnedValue();
 }
@@ -1019,37 +1019,37 @@ ReturnedValue DatePrototype::method_setTime(CallContext *ctx)
 ReturnedValue DatePrototype::method_setMilliseconds(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<DateObject> self(scope, ctx->callData->thisObject);
+    Scoped<DateObject> self(scope, ctx->d()->callData->thisObject);
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double ms = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double ms = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     self->date().setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
     return self->date().asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double ms = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double ms = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     self->date().setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
     return self->date().asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double sec = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double ms = (ctx->callData->argc < 2) ? msFromTime(t) : ctx->callData->args[1].toNumber();
+    double sec = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double ms = (ctx->d()->callData->argc < 2) ? msFromTime(t) : ctx->d()->callData->args[1].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1057,13 +1057,13 @@ ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double sec = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double ms = (ctx->callData->argc < 2) ? msFromTime(t) : ctx->callData->args[1].toNumber();
+    double sec = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double ms = (ctx->d()->callData->argc < 2) ? msFromTime(t) : ctx->d()->callData->args[1].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1071,14 +1071,14 @@ ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double min = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double sec = (ctx->callData->argc < 2) ? SecFromTime(t) : ctx->callData->args[1].toNumber();
-    double ms = (ctx->callData->argc < 3) ? msFromTime(t) : ctx->callData->args[2].toNumber();
+    double min = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double sec = (ctx->d()->callData->argc < 2) ? SecFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double ms = (ctx->d()->callData->argc < 3) ? msFromTime(t) : ctx->d()->callData->args[2].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1086,14 +1086,14 @@ ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double min = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double sec = (ctx->callData->argc < 2) ? SecFromTime(t) : ctx->callData->args[1].toNumber();
-    double ms = (ctx->callData->argc < 3) ? msFromTime(t) : ctx->callData->args[2].toNumber();
+    double min = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double sec = (ctx->d()->callData->argc < 2) ? SecFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double ms = (ctx->d()->callData->argc < 3) ? msFromTime(t) : ctx->d()->callData->args[2].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1101,15 +1101,15 @@ ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double hour = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double min = (ctx->callData->argc < 2) ? MinFromTime(t) : ctx->callData->args[1].toNumber();
-    double sec = (ctx->callData->argc < 3) ? SecFromTime(t) : ctx->callData->args[2].toNumber();
-    double ms = (ctx->callData->argc < 4) ? msFromTime(t) : ctx->callData->args[3].toNumber();
+    double hour = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double min = (ctx->d()->callData->argc < 2) ? MinFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double sec = (ctx->d()->callData->argc < 3) ? SecFromTime(t) : ctx->d()->callData->args[2].toNumber();
+    double ms = (ctx->d()->callData->argc < 4) ? msFromTime(t) : ctx->d()->callData->args[3].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1117,15 +1117,15 @@ ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double hour = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double min = (ctx->callData->argc < 2) ? MinFromTime(t) : ctx->callData->args[1].toNumber();
-    double sec = (ctx->callData->argc < 3) ? SecFromTime(t) : ctx->callData->args[2].toNumber();
-    double ms = (ctx->callData->argc < 4) ? msFromTime(t) : ctx->callData->args[3].toNumber();
+    double hour = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double min = (ctx->d()->callData->argc < 2) ? MinFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double sec = (ctx->d()->callData->argc < 3) ? SecFromTime(t) : ctx->d()->callData->args[2].toNumber();
+    double ms = (ctx->d()->callData->argc < 4) ? msFromTime(t) : ctx->d()->callData->args[3].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1133,12 +1133,12 @@ ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double date = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double date = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1146,12 +1146,12 @@ ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double date = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double date = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1159,13 +1159,13 @@ ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
-    double month = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double date = (ctx->callData->argc < 2) ? DateFromTime(t) : ctx->callData->args[1].toNumber();
+    double month = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double date = (ctx->d()->callData->argc < 2) ? DateFromTime(t) : ctx->d()->callData->args[1].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1173,13 +1173,13 @@ ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double month = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double date = (ctx->callData->argc < 2) ? DateFromTime(t) : ctx->callData->args[1].toNumber();
+    double month = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double date = (ctx->d()->callData->argc < 2) ? DateFromTime(t) : ctx->d()->callData->args[1].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1187,7 +1187,7 @@ ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
@@ -1196,7 +1196,7 @@ ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
         t = 0;
     else
         t = LocalTime(t);
-    double year = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
+    double year = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
     double r;
     if (std::isnan(year)) {
         r = qSNaN();
@@ -1213,14 +1213,14 @@ ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    double year = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double month = (ctx->callData->argc < 2) ? MonthFromTime(t) : ctx->callData->args[1].toNumber();
-    double date = (ctx->callData->argc < 3) ? DateFromTime(t) : ctx->callData->args[2].toNumber();
+    double year = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double month = (ctx->d()->callData->argc < 2) ? MonthFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double date = (ctx->d()->callData->argc < 3) ? DateFromTime(t) : ctx->d()->callData->args[2].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1228,16 +1228,16 @@ ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = LocalTime(self->date().asDouble());
     if (std::isnan(t))
         t = 0;
-    double year = ctx->callData->argc ? ctx->callData->args[0].toNumber() : qSNaN();
-    double month = (ctx->callData->argc < 2) ? MonthFromTime(t) : ctx->callData->args[1].toNumber();
-    double date = (ctx->callData->argc < 3) ? DateFromTime(t) : ctx->callData->args[2].toNumber();
+    double year = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toNumber() : qSNaN();
+    double month = (ctx->d()->callData->argc < 2) ? MonthFromTime(t) : ctx->d()->callData->args[1].toNumber();
+    double date = (ctx->d()->callData->argc < 3) ? DateFromTime(t) : ctx->d()->callData->args[2].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
     self->date().setDouble(t);
     return self->date().asReturnedValue();
@@ -1245,12 +1245,12 @@ ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_toUTCString(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
-    return ctx->engine->newString(ToUTCString(t))->asReturnedValue();
+    return ctx->d()->engine->newString(ToUTCString(t))->asReturnedValue();
 }
 
 static void addZeroPrefixedInt(QString &str, int num, int nDigits)
@@ -1268,19 +1268,19 @@ static void addZeroPrefixedInt(QString &str, int num, int nDigits)
 
 ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 {
-    DateObject *self = ctx->callData->thisObject.asDateObject();
+    DateObject *self = ctx->d()->callData->thisObject.asDateObject();
     if (!self)
         return ctx->throwTypeError();
 
     double t = self->date().asDouble();
     if (!std::isfinite(t))
-        return ctx->throwRangeError(ctx->callData->thisObject);
+        return ctx->throwRangeError(ctx->d()->callData->thisObject);
 
     QString result;
     int year = (int)YearFromTime(t);
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
-            return ctx->engine->newString(QStringLiteral("Invalid Date"))->asReturnedValue();
+            return ctx->d()->engine->newString(QStringLiteral("Invalid Date"))->asReturnedValue();
         result += year < 0 ? QLatin1Char('-') : QLatin1Char('+');
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
@@ -1301,19 +1301,19 @@ ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
     addZeroPrefixedInt(result, msFromTime(t), 3);
     result += QLatin1Char('Z');
 
-    return ctx->engine->newString(result)->asReturnedValue();
+    return ctx->d()->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue O(scope, RuntimeHelpers::toObject(ctx, ValueRef(&ctx->callData->thisObject)));
+    ScopedValue O(scope, RuntimeHelpers::toObject(ctx, ValueRef(&ctx->d()->callData->thisObject)));
     ScopedValue tv(scope, RuntimeHelpers::toPrimitive(O, NUMBER_HINT));
 
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Encode::null();
 
-    ScopedString s(scope, ctx->engine->newString(QStringLiteral("toISOString")));
+    ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toISOString")));
     ScopedValue v(scope, O->objectValue()->get(s));
     FunctionObject *toIso = v->asFunctionObject();
 
@@ -1321,7 +1321,7 @@ ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
         return ctx->throwTypeError();
 
     ScopedCallData callData(scope, 0);
-    callData->thisObject = ctx->callData->thisObject;
+    callData->thisObject = ctx->d()->callData->thisObject;
     return toIso->call(callData);
 }
 

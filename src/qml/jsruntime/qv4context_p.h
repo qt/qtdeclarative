@@ -69,8 +69,6 @@ struct WithContext;
 
 struct Q_QML_EXPORT ExecutionContext : public Managed
 {
-    V4_MANAGED
-    Q_MANAGED_TYPE(ExecutionContext)
     enum {
         IsExecutionContext = true
     };
@@ -83,41 +81,61 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         Type_CallContext = 0x5,
         Type_QmlContext = 0x6
     };
-
-    ExecutionContext(ExecutionEngine *engine, ContextType t)
-        : Managed(engine->executionContextClass)
-    {
-        this->type = t;
-        strictMode = false;
-        this->engine = engine;
-        this->parent = engine->currentContext();
-        outer = 0;
-        lookups = 0;
-        compilationUnit = 0;
-        currentEvalCode = 0;
-        lineNumber = -1;
-        engine->current = this;
-    }
-
-    ContextType type;
-    bool strictMode;
-
-    CallData *callData;
-
-    ExecutionEngine *engine;
-    ExecutionContext *parent;
-    ExecutionContext *outer;
-    Lookup *lookups;
-    CompiledData::CompilationUnit *compilationUnit;
-
     struct EvalCode
     {
         Function *function;
         EvalCode *next;
     };
-    EvalCode *currentEvalCode;
 
-    int lineNumber;
+    struct Data : Managed::Data {
+        ContextType type;
+        bool strictMode;
+
+        CallData *callData;
+
+        ExecutionEngine *engine;
+        ExecutionContext *parent;
+        ExecutionContext *outer;
+        Lookup *lookups;
+        CompiledData::CompilationUnit *compilationUnit;
+        EvalCode *currentEvalCode;
+
+        int lineNumber;
+
+    };
+    struct {
+        ContextType type;
+        bool strictMode;
+
+        CallData *callData;
+
+        ExecutionEngine *engine;
+        ExecutionContext *parent;
+        ExecutionContext *outer;
+        Lookup *lookups;
+        CompiledData::CompilationUnit *compilationUnit;
+        EvalCode *currentEvalCode;
+
+        int lineNumber;
+    } __data;
+
+    V4_MANAGED_NEW
+    Q_MANAGED_TYPE(ExecutionContext)
+
+    ExecutionContext(ExecutionEngine *engine, ContextType t)
+        : Managed(engine->executionContextClass)
+    {
+        d()->type = t;
+        d()->strictMode = false;
+        d()->engine = engine;
+        d()->parent = engine->currentContext();
+        d()->outer = 0;
+        d()->lookups = 0;
+        d()->compilationUnit = 0;
+        d()->currentEvalCode = 0;
+        d()->lineNumber = -1;
+        engine->current = this;
+    }
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
@@ -180,7 +198,7 @@ struct CallContext : public ExecutionContext
 };
 
 inline ReturnedValue CallContext::argument(int i) {
-    return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+    return i < d()->callData->argc ? d()->callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
 struct GlobalContext : public ExecutionContext
@@ -206,26 +224,26 @@ struct WithContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return type >= Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type >= Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 
 inline void ExecutionEngine::pushContext(CallContext *context)
 {
-    context->parent = current;
+    context->d()->parent = current;
     current = context;
-    current->currentEvalCode = 0;
+    current->d()->currentEvalCode = 0;
 }
 
 inline ExecutionContext *ExecutionEngine::popContext()
 {
-    Q_ASSERT(current->parent);
-    current = current->parent;
+    Q_ASSERT(current->d()->parent);
+    current = current->d()->parent;
     return current;
 }
 
@@ -235,7 +253,7 @@ struct ExecutionContextSaver
     ExecutionContext *savedContext;
 
     ExecutionContextSaver(ExecutionContext *context)
-        : engine(context->engine)
+        : engine(context->d()->engine)
         , savedContext(context)
     {
     }
@@ -246,7 +264,7 @@ struct ExecutionContextSaver
 };
 
 inline Scope::Scope(ExecutionContext *ctx)
-    : engine(ctx->engine)
+    : engine(ctx->d()->engine)
 #ifndef QT_NO_DEBUG
     , size(0)
 #endif

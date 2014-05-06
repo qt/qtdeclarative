@@ -71,7 +71,7 @@ struct SequencePrototype : public QV4::Object
 
     static ReturnedValue method_valueOf(QV4::CallContext *ctx)
     {
-        return ctx->callData->thisObject.toString(ctx)->asReturnedValue();
+        return ctx->d()->callData->thisObject.toString(ctx)->asReturnedValue();
     }
 
     static ReturnedValue method_sort(QV4::CallContext *ctx);

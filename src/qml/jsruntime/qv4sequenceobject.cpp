@@ -58,13 +58,13 @@ using namespace QV4;
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV4::ExecutionContext *ctx, const QString& description)
 {
-    QQmlEngine *engine = ctx->engine->v8Engine->engine();
+    QQmlEngine *engine = ctx->d()->engine->v8Engine->engine();
     if (!engine)
         return;
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::StackFrame frame = ctx->engine->currentStackFrame();
+    QV4::StackFrame frame = ctx->d()->engine->currentStackFrame();
 
     retn.setLine(frame.line);
     retn.setUrl(QUrl(frame.source));
@@ -380,9 +380,9 @@ public:
             QV4::Scope scope(m_ctx);
             ScopedObject compare(scope, m_compareFn);
             ScopedCallData callData(scope, 2);
-            callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
-            callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);
-            callData->thisObject = this->m_ctx->engine->globalObject;
+            callData->args[0] = convertElementToValue(this->m_ctx->d()->engine, lhs);
+            callData->args[1] = convertElementToValue(this->m_ctx->d()->engine, rhs);
+            callData->thisObject = this->m_ctx->d()->engine->globalObject;
             QV4::ScopedValue result(scope, compare->call(callData));
             return result->toNumber() < 0;
         }
@@ -401,8 +401,8 @@ public:
         }
 
         QV4::Scope scope(ctx);
-        if (ctx->callData->argc == 1 && ctx->callData->args[0].asFunctionObject()) {
-            CompareFunctor cf(ctx, ctx->callData->args[0]);
+        if (ctx->d()->callData->argc == 1 && ctx->d()->callData->args[0].asFunctionObject()) {
+            CompareFunctor cf(ctx, ctx->d()->callData->args[0]);
             std::sort(d()->container.begin(), d()->container.end(), cf);
         } else {
             DefaultCompareFunctor cf;
@@ -416,7 +416,7 @@ public:
     static QV4::ReturnedValue method_get_length(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->d()->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             return ctx->throwTypeError();
 
@@ -431,11 +431,11 @@ public:
     static QV4::ReturnedValue method_set_length(QV4::CallContext* ctx)
     {
         QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->d()->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             return ctx->throwTypeError();
 
-        quint32 newLength = ctx->callData->args[0].toUInt32();
+        quint32 newLength = ctx->d()->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
@@ -564,11 +564,11 @@ void SequencePrototype::init()
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::ScopedObject o(scope, ctx->callData->thisObject);
+    QV4::ScopedObject o(scope, ctx->d()->callData->thisObject);
     if (!o || !o->isListType())
         return ctx->throwTypeError();
 
-    if (ctx->callData->argc >= 2)
+    if (ctx->d()->callData->argc >= 2)
         return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \

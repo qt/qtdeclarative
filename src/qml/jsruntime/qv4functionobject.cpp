@@ -75,7 +75,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
-    : Object(scope->engine->functionClass)
+    : Object(scope->d()->engine->functionClass)
 {
     d()->scope = scope;
     d()->function = 0;
@@ -83,7 +83,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bo
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Object(scope->engine->functionClass)
+    : Object(scope->d()->engine->functionClass)
 {
     d()->scope = scope;
     d()->function = 0;
@@ -95,7 +95,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : Object(scope->engine->functionClass)
+    : Object(scope->d()->engine->functionClass)
 {
     d()->scope = scope;
     d()->function = 0;
@@ -132,7 +132,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
     d()->strictMode = false;
 
     if (createProto) {
-        Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
+        Scoped<Object> proto(s, scope()->d()->engine->newObject(scope()->d()->engine->protoClass));
         proto->memberData()[Index_ProtoConstructor] = this->asReturnedValue();
         memberData()[Index_Prototype] = proto.asReturnedValue();
     } else {
@@ -140,12 +140,12 @@ void FunctionObject::init(const StringRef n, bool createProto)
     }
 
     ScopedValue v(s, n.asReturnedValue());
-    defineReadonlyProperty(scope()->engine->id_name, v);
+    defineReadonlyProperty(scope()->d()->engine->id_name, v);
 }
 
 ReturnedValue FunctionObject::name()
 {
-    return get(scope()->engine->id_name);
+    return get(scope()->d()->engine->id_name);
 }
 
 
@@ -182,8 +182,8 @@ FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Fu
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
-        return new (scope->engine->memoryManager) ScriptFunction(scope, function);
-    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
+        return new (scope->d()->engine->memoryManager) ScriptFunction(scope, function);
+    return new (scope->d()->engine->memoryManager) SimpleScriptFunction(scope, function, createProto);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
@@ -210,7 +210,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
         }
         body = callData->args[callData->argc - 1].toString(ctx)->toQString();
     }
-    if (ctx->engine->hasException)
+    if (ctx->d()->engine->hasException)
         return Encode::undefined();
 
     QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
@@ -273,17 +273,17 @@ void FunctionPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 
 ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 {
-    FunctionObject *fun = ctx->callData->thisObject.asFunctionObject();
+    FunctionObject *fun = ctx->d()->callData->thisObject.asFunctionObject();
     if (!fun)
         return ctx->throwTypeError();
 
-    return ctx->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
+    return ctx->d()->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
 
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
     Scope scope(ctx);
-    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
     if (!o)
         return ctx->throwTypeError();
 
@@ -323,14 +323,14 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
     if (!o)
         return ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->callData->argc ? ctx->callData->argc - 1 : 0);
-    if (ctx->callData->argc) {
-        for (int i = 1; i < ctx->callData->argc; ++i)
-            callData->args[i - 1] = ctx->callData->args[i];
+    ScopedCallData callData(scope, ctx->d()->callData->argc ? ctx->d()->callData->argc - 1 : 0);
+    if (ctx->d()->callData->argc) {
+        for (int i = 1; i < ctx->d()->callData->argc; ++i)
+            callData->args[i - 1] = ctx->d()->callData->args[i];
     }
     callData->thisObject = ctx->argument(0);
     return o->call(callData);
@@ -339,21 +339,21 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<FunctionObject> target(scope, ctx->callData->thisObject);
+    Scoped<FunctionObject> target(scope, ctx->d()->callData->thisObject);
     if (!target)
         return ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     Members boundArgs;
     boundArgs.reset();
-    if (ctx->callData->argc > 1) {
-        boundArgs.ensureIndex(scope.engine, ctx->callData->argc - 1);
-        boundArgs.d()->d()->size = ctx->callData->argc - 1;
-        memcpy(boundArgs.data(), ctx->callData->args + 1, (ctx->callData->argc - 1)*sizeof(Value));
+    if (ctx->d()->callData->argc > 1) {
+        boundArgs.ensureIndex(scope.engine, ctx->d()->callData->argc - 1);
+        boundArgs.d()->d()->size = ctx->d()->callData->argc - 1;
+        memcpy(boundArgs.data(), ctx->d()->callData->args + 1, (ctx->d()->callData->argc - 1)*sizeof(Value));
     }
     ScopedValue protectBoundArgs(scope, boundArgs.d());
 
-    return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
+    return ctx->d()->engine->newBoundFunction(ctx->d()->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
@@ -369,13 +369,13 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     d()->needsActivation = function->needsActivation();
     d()->strictMode = function->isStrict();
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
+    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
-    if (scope->strictMode) {
+    if (scope->d()->strictMode) {
         ExecutionEngine *v4 = scope->engine;
         Property pd(v4->thrower, v4->thrower);
-        insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->d()->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->d()->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -424,7 +424,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function()->compiledFunction);
+        QmlContextWrapper::registerQmlDependencies(ctx->d()->engine, f->function()->compiledFunction);
 
     return result.asReturnedValue();
 }
@@ -448,17 +448,17 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     if (!scope)
         return;
 
-    ExecutionEngine *v4 = scope->engine;
+    ExecutionEngine *v4 = scope->d()->engine;
 
     d()->needsActivation = function->needsActivation();
     d()->strictMode = function->isStrict();
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
+    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
-    if (scope->strictMode) {
+    if (scope->d()->strictMode) {
         Property pd(v4->thrower, v4->thrower);
-        insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->d()->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        insertMember(scope->d()->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -479,12 +479,12 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
+    ctx.d()->strictMode = f->strictMode();
+    ctx.d()->callData = callData;
     ctx.function = f.getPointer();
-    ctx.compilationUnit = f->function()->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope();
+    ctx.d()->compilationUnit = f->function()->compilationUnit;
+    ctx.d()->lookups = ctx.d()->compilationUnit->runtimeLookups;
+    ctx.d()->outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -516,12 +516,12 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
+    ctx.d()->strictMode = f->strictMode();
+    ctx.d()->callData = callData;
     ctx.function = f;
-    ctx.compilationUnit = f->function()->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope();
+    ctx.d()->compilationUnit = f->function()->compilationUnit;
+    ctx.d()->lookups = ctx.d()->compilationUnit->runtimeLookups;
+    ctx.d()->outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -579,8 +579,8 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
-    ctx.callData = callData;
+    ctx.d()->strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.d()->callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
     return f->d()->code(&ctx);
@@ -598,8 +598,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext ctx(v4);
-    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
-    ctx.callData = callData;
+    ctx.d()->strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.d()->callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
 
     return f->d()->code(&ctx, f->d()->index);
@@ -622,18 +622,18 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, 
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    ScopedValue l(s, target->get(scope->engine->id_length));
+    ScopedValue l(s, target->get(scope->d()->engine->id_length));
     int len = l->toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(len));
+    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(len));
 
-    ExecutionEngine *v4 = scope->engine;
+    ExecutionEngine *v4 = scope->d()->engine;
 
     Property pd(v4->thrower, v4->thrower);
-    insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    insertMember(scope->d()->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    insertMember(scope->d()->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
 void BoundFunction::destroy(Managed *that)
@@ -644,7 +644,7 @@ void BoundFunction::destroy(Managed *that)
 ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope()->engine);
+    Scope scope(f->scope()->d()->engine);
     if (scope.hasException())
         return Encode::undefined();
 
@@ -658,7 +658,7 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope()->engine);
+    Scope scope(f->scope()->d()->engine);
     if (scope.hasException())
         return Encode::undefined();
 

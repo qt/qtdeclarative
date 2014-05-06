@@ -181,27 +181,26 @@ void QV4Include::finished()
 */
 QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
 {
-    if (!ctx->callData->argc)
+    if (!ctx->d()->callData->argc)
         return QV4::Encode::undefined();
 
-    QV4::ExecutionEngine *v4 = ctx->engine;
-    QV4::Scope scope(v4);
-    QV8Engine *engine = v4->v8Engine;
-    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(v4);
+    QV4::Scope scope(ctx->engine());
+    QV8Engine *engine = scope.engine->v8Engine;
+    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(scope.engine);
 
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(ctx->engine->resolvedUrl(ctx->callData->args[0].toQStringNoThrow()));
+    QUrl url(scope.engine->resolvedUrl(ctx->d()->callData->args[0].toQStringNoThrow()));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (ctx->callData->argc >= 2 && ctx->callData->args[1].asFunctionObject())
-        callbackFunction = ctx->callData->args[1];
+    if (ctx->d()->callData->argc >= 2 && ctx->d()->callData->args[1].asFunctionObject())
+        callbackFunction = ctx->d()->callData->args[1];
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     QV4::ScopedValue result(scope);
-    QV4::ScopedObject qmlcontextobject(scope, v4->qmlContextObject());
+    QV4::ScopedObject qmlcontextobject(scope, scope.engine->qmlContextObject());
 
     if (localFile.isEmpty()) {
         QV4Include *i = new QV4Include(url, engine, context,
@@ -218,21 +217,21 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
             QString code = QString::fromUtf8(data);
             QmlIR::Document::removeScriptPragmas(code);
 
-            QV4::Script script(v4, qmlcontextobject, code, url.toString());
+            QV4::Script script(scope.engine, qmlcontextobject, code, url.toString());
 
-            QV4::ExecutionContext *ctx = v4->currentContext();
+            QV4::ExecutionContext *ctx = scope.engine->currentContext();
             script.parse();
-            if (!v4->hasException)
+            if (!scope.engine->hasException)
                 script.run();
-            if (v4->hasException) {
+            if (scope.engine->hasException) {
                 QV4::ScopedValue ex(scope, ctx->catchException());
-                result = resultValue(v4, Exception);
-                result->asObject()->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("exception"))), ex);
+                result = resultValue(scope.engine, Exception);
+                result->asObject()->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("exception"))), ex);
             } else {
-                result = resultValue(v4, Ok);
+                result = resultValue(scope.engine, Ok);
             }
         } else {
-            result = resultValue(v4, NetworkError);
+            result = resultValue(scope.engine, NetworkError);
         }
 
         callback(callbackFunction, result);

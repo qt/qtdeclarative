@@ -80,26 +80,26 @@ void BooleanPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
 {
     bool result;
-    if (ctx->callData->thisObject.isBoolean()) {
-        result = ctx->callData->thisObject.booleanValue();
+    if (ctx->d()->callData->thisObject.isBoolean()) {
+        result = ctx->d()->callData->thisObject.booleanValue();
     } else {
         Scope scope(ctx);
-        Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
+        Scoped<BooleanObject> thisObject(scope, ctx->d()->callData->thisObject);
         if (!thisObject)
             return ctx->throwTypeError();
         result = thisObject->value().booleanValue();
     }
 
-    return Encode(ctx->engine->newString(QLatin1String(result ? "true" : "false")));
+    return Encode(ctx->d()->engine->newString(QLatin1String(result ? "true" : "false")));
 }
 
 ReturnedValue BooleanPrototype::method_valueOf(CallContext *ctx)
 {
-    if (ctx->callData->thisObject.isBoolean())
-        return ctx->callData->thisObject.asReturnedValue();
+    if (ctx->d()->callData->thisObject.isBoolean())
+        return ctx->d()->callData->thisObject.asReturnedValue();
 
     Scope scope(ctx);
-    Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
+    Scoped<BooleanObject> thisObject(scope, ctx->d()->callData->thisObject);
     if (!thisObject)
         return ctx->throwTypeError();
 

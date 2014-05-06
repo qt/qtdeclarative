@@ -64,23 +64,23 @@
 using namespace QV4;
 
 #define V4THROW_SQL(error, desc) { \
-    QV4::Scoped<String> v(scope, ctx->engine->newString(desc)); \
-    QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
+    QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->throwError(ex); \
     return Encode::undefined(); \
 }
 
 #define V4THROW_SQL2(error, desc) { \
-    QV4::Scoped<String> v(scope, ctx->engine->newString(desc)); \
-    QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
+    QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     args->setReturnValue(ctx->throwError(ex)); \
     return; \
 }
 
 #define V4THROW_REFERENCE(string) { \
-    QV4::Scoped<String> v(scope, ctx->engine->newString(string)); \
+    QV4::Scoped<String> v(scope, scope.engine->newString(string)); \
     ctx->throwReferenceError(v); \
     return Encode::undefined(); \
 }
@@ -155,17 +155,17 @@ DEFINE_OBJECT_VTABLE(QQmlSqlDatabaseWrapper);
 static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    return Encode(ctx->engine->newString(r->d()->version));
+    return Encode(scope.engine->newString(r->d()->version));
 }
 
 static ReturnedValue qmlsqldatabase_rows_length(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
 
@@ -184,7 +184,7 @@ static ReturnedValue qmlsqldatabase_rows_length(CallContext *ctx)
 static ReturnedValue qmlsqldatabase_rows_forwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
     return Encode(r->d()->sqlQuery.isForwardOnly());
@@ -193,13 +193,13 @@ static ReturnedValue qmlsqldatabase_rows_forwardOnly(CallContext *ctx)
 static ReturnedValue qmlsqldatabase_rows_setForwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
-    if (ctx->callData->argc < 1)
+    if (ctx->d()->callData->argc < 1)
         return ctx->throwTypeError();
 
-    r->d()->sqlQuery.setForwardOnly(ctx->callData->args[0].toBoolean());
+    r->d()->sqlQuery.setForwardOnly(ctx->d()->callData->args[0].toBoolean());
     return Encode::undefined();
 }
 
@@ -263,28 +263,28 @@ ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *h
 static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
 
-    return qmlsqldatabase_rows_index(r, ctx->engine, ctx->callData->argc ? ctx->callData->args[0].toUInt32() : 0);
+    return qmlsqldatabase_rows_index(r, scope.engine, ctx->d()->callData->argc ? ctx->d()->callData->args[0].toUInt32() : 0);
 }
 
 static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Query)
         V4THROW_REFERENCE("Not a SQLDatabase::Query object");
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = scope.engine->v8Engine;
 
     if (!r->d()->inTransaction)
         V4THROW_SQL(SQLEXCEPTION_DATABASE_ERR,QQmlEngine::tr("executeSql called outside transaction()"));
 
     QSqlDatabase db = r->d()->database;
 
-    QString sql = ctx->callData->argc ? ctx->callData->args[0].toQString() : QString();
+    QString sql = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toQString() : QString();
 
     if (r->d()->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
         V4THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
@@ -296,8 +296,8 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
     ScopedValue result(scope, Primitive::undefinedValue());
 
     if (query.prepare(sql)) {
-        if (ctx->callData->argc > 1) {
-            ScopedValue values(scope, ctx->callData->args[1]);
+        if (ctx->d()->callData->argc > 1) {
+            ScopedValue values(scope, ctx->d()->callData->args[1]);
             if (values->asArrayObject()) {
                 ScopedArrayObject array(scope, values);
                 quint32 size = array->getLength();
@@ -326,21 +326,21 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             }
         }
         if (query.exec()) {
-            QV4::Scoped<QQmlSqlDatabaseWrapper> rows(scope, new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+            QV4::Scoped<QQmlSqlDatabaseWrapper> rows(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
             QV4::ScopedObject p(scope, databaseData(engine)->rowsProto.value());
             rows->setPrototype(p.getPointer());
             rows->d()->type = QQmlSqlDatabaseWrapper::Rows;
             rows->d()->database = db;
             rows->d()->sqlQuery = query;
 
-            Scoped<Object> resultObject(scope, ctx->engine->newObject());
+            Scoped<Object> resultObject(scope, scope.engine->newObject());
             result = resultObject.asReturnedValue();
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
-            resultObject->put((s = ctx->engine->newIdentifier("rowsAffected")), (v = Primitive::fromInt32(query.numRowsAffected())));
-            resultObject->put((s = ctx->engine->newIdentifier("insertId")), (v = engine->toString(query.lastInsertId().toString())));
-            resultObject->put((s = ctx->engine->newIdentifier("rows")), rows);
+            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")), (v = Primitive::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = scope.engine->newIdentifier("insertId")), (v = engine->toString(query.lastInsertId().toString())));
+            resultObject->put((s = scope.engine->newIdentifier("rows")), rows);
         } else {
             err = true;
         }
@@ -384,26 +384,26 @@ struct TransactionRollback {
 
 static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
 {
-    if (ctx->callData->argc < 2)
+    if (ctx->d()->callData->argc < 2)
         return Encode::undefined();
 
     Scope scope(ctx);
 
-    Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject);
+    Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject);
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = scope.engine->v8Engine;
 
     QSqlDatabase db = r->d()->database;
-    QString from_version = ctx->callData->args[0].toQString();
-    QString to_version = ctx->callData->args[1].toQString();
+    QString from_version = ctx->d()->callData->args[0].toQString();
+    QString to_version = ctx->d()->callData->args[1].toQString();
     Scoped<FunctionObject> callback(scope, ctx->argument(2));
 
     if (from_version != r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->d()->version));
 
-    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
     ScopedObject p(scope, databaseData(engine)->queryProto.value());
     w->setPrototype(p.getPointer());
     w->d()->type = QQmlSqlDatabaseWrapper::Query;
@@ -444,19 +444,19 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
 static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool readOnly)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
+    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->d()->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = scope.engine->v8Engine;
 
-    FunctionObject *callback = ctx->callData->argc ? ctx->callData->args[0].asFunctionObject() : 0;
+    FunctionObject *callback = ctx->d()->callData->argc ? ctx->d()->callData->args[0].asFunctionObject() : 0;
     if (!callback)
         V4THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR, QQmlEngine::tr("transaction: missing callback"));
 
     QSqlDatabase db = r->d()->database;
 
-    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
     QV4::ScopedObject p(scope, databaseData(engine)->queryProto.value());
     w->setPrototype(p.getPointer());
     w->d()->type = QQmlSqlDatabaseWrapper::Query;
@@ -734,7 +734,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
             database.open();
     }
 
-    QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
     QV4::ScopedObject p(scope, databaseData(engine)->databaseProto.value());
     db->setPrototype(p.getPointer());
     db->d()->database = database;

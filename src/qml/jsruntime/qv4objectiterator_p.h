@@ -99,7 +99,7 @@ struct ForEachIteratorObject: Object {
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
-        : Object(ctx->engine)
+        : Object(ctx->d()->engine)
         , __data(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
         setVTable(staticVTable());
     }

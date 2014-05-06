@@ -119,7 +119,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef except
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(ex->toString(ctx)->toQString()) << std::endl;
     } else {
-        QV4::ScopedString m(scope, ctx->engine->newString(QStringLiteral("message")));
+        QV4::ScopedString m(scope, scope.engine->newString(QStringLiteral("message")));
         QV4::ScopedValue message(scope, e->get(m));
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
@@ -190,9 +190,9 @@ int main(int argc, char *argv[])
         QV4::Scope scope(ctx);
 
         QV4::ScopedObject globalObject(scope, vm.globalObject);
-        QV4::ScopedObject print(scope, new (ctx->engine->memoryManager) builtins::Print(ctx));
+        QV4::ScopedObject print(scope, new (scope.engine->memoryManager) builtins::Print(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))), print);
-        QV4::ScopedObject gc(scope, new (ctx->engine->memoryManager) builtins::GC(ctx));
+        QV4::ScopedObject gc(scope, new (scope.engine->memoryManager) builtins::GC(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))), gc);
 
         foreach (const QString &fn, args) {

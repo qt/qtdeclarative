@@ -181,7 +181,7 @@ void RegExpObject::markObjects(Managed *that, ExecutionEngine *e)
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
-    Q_ASSERT(0 == internalClass()->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    Q_ASSERT(0 == internalClass()->find(ctx->d()->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return propertyAt(0);
 }
 
@@ -257,7 +257,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
             return ctx->throwTypeError();
 
         Scoped<RegExp> newRe(scope, re->value());
-        return Encode(ctx->engine->newRegExpObject(newRe, re->global()));
+        return Encode(ctx->d()->engine->newRegExpObject(newRe, re->global()));
     }
 
     QString pattern;
@@ -287,11 +287,11 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    Scoped<RegExp> regexp(scope, RegExp::create(ctx->engine, pattern, ignoreCase, multiLine));
+    Scoped<RegExp> regexp(scope, RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
         return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 
-    return Encode(ctx->engine->newRegExpObject(regexp, global));
+    return Encode(ctx->d()->engine->newRegExpObject(regexp, global));
 }
 
 ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
@@ -351,7 +351,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
+    Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
         return ctx->throwTypeError();
 
@@ -370,7 +370,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     uint* matchOffsets = (uint*)alloca(r->value()->captureCount() * 2 * sizeof(uint));
     const int result = r->value()->match(s, offset, matchOffsets);
 
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
     regExpCtor->clearLastMatch();
 
     if (result == -1) {
@@ -379,14 +379,14 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     // fill in result data
-    Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject(ctx->engine->regExpExecArrayClass));
+    Scoped<ArrayObject> array(scope, ctx->d()->engine->newArrayObject(ctx->d()->engine->regExpExecArrayClass));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        v = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        v = (start != -1 && end != -1) ? ctx->d()->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);
@@ -415,24 +415,24 @@ ReturnedValue RegExpPrototype::method_test(CallContext *ctx)
 ReturnedValue RegExpPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
+    Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
         return ctx->throwTypeError();
 
-    return ctx->engine->newString(r->toString())->asReturnedValue();
+    return ctx->d()->engine->newString(r->toString())->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
+    Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
         return ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->callData->argc);
-    memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(Value));
+    ScopedCallData callData(scope, ctx->d()->callData->argc);
+    memcpy(callData->args, ctx->d()->callData->args, ctx->d()->callData->argc*sizeof(Value));
 
-    Scoped<RegExpObject> re(scope, ctx->engine->regExpCtor.asFunctionObject()->construct(callData));
+    Scoped<RegExpObject> re(scope, ctx->d()->engine->regExpCtor.asFunctionObject()->construct(callData));
 
     r->d()->value = re->value();
     r->d()->global = re->global();
@@ -443,42 +443,42 @@ template <int index>
 ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastMatch());
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
     if (result->isUndefined())
-        return ctx->engine->newString(QString())->asReturnedValue();
+        return ctx->d()->engine->newString(QString())->asReturnedValue();
     return result.asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastMatch());
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
     if (result->isUndefined())
-        return ctx->engine->newString(QString())->asReturnedValue();
+        return ctx->d()->engine->newString(QString())->asReturnedValue();
     return result.asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_input(CallContext *ctx)
 {
-    return static_cast<RegExpCtor*>(ctx->engine->regExpCtor.objectValue())->lastInput().asReturnedValue();
+    return static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastInput().asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_leftContext(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
     QString lastInput = regExpCtor->lastInput()->toQString();
-    return ctx->engine->newString(lastInput.left(regExpCtor->lastMatchStart()))->asReturnedValue();
+    return ctx->d()->engine->newString(lastInput.left(regExpCtor->lastMatchStart()))->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_rightContext(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
     QString lastInput = regExpCtor->lastInput()->toQString();
-    return ctx->engine->newString(lastInput.mid(regExpCtor->lastMatchEnd()))->asReturnedValue();
+    return ctx->d()->engine->newString(lastInput.mid(regExpCtor->lastMatchEnd()))->asReturnedValue();
 }
 
 QT_END_NAMESPACE

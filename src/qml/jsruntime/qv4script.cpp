@@ -62,7 +62,7 @@
 using namespace QV4;
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
+    : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
 {
     d()->qml = qml;
 
@@ -77,14 +77,14 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
+    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    d()->qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
-    scope->engine->popContext();
+    d()->qmlContext = scope->d()->engine->currentContext()->newQmlContext(this, qml);
+    scope->d()->engine->popContext();
 }
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
+    : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
 {
     d()->qml = qml;
 
@@ -96,10 +96,10 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
+    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    d()->qmlContext = scope->engine->currentContext()->newQmlContext(this, qml);
-    scope->engine->popContext();
+    d()->qmlContext = scope->d()->engine->currentContext()->newQmlContext(this, qml);
+    scope->d()->engine->popContext();
 }
 
 ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
@@ -133,7 +133,7 @@ void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
 
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
 {
-    QV4::CallContext *signalEmittingContext = ctx->parent->asCallContext();
+    QV4::CallContext *signalEmittingContext = ctx->d()->parent->asCallContext();
     Q_ASSERT(signalEmittingContext);
     return signalEmittingContext->argument(parameterIndex);
 }
@@ -226,7 +226,7 @@ void Script::parse()
 
     parsed = true;
 
-    ExecutionEngine *v4 = scope->engine;
+    ExecutionEngine *v4 = scope->d()->engine;
     Scope valueScope(v4);
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
@@ -300,16 +300,16 @@ ReturnedValue Script::run()
 
         ContextStateSaver(ExecutionContext *context)
             : savedContext(context)
-            , strictMode(context->strictMode)
-            , lookups(context->lookups)
-            , compilationUnit(context->compilationUnit)
+            , strictMode(context->d()->strictMode)
+            , lookups(context->d()->lookups)
+            , compilationUnit(context->d()->compilationUnit)
         {}
 
         ~ContextStateSaver()
         {
-            savedContext->strictMode = strictMode;
-            savedContext->lookups = lookups;
-            savedContext->compilationUnit = compilationUnit;
+            savedContext->d()->strictMode = strictMode;
+            savedContext->d()->lookups = lookups;
+            savedContext->d()->compilationUnit = compilationUnit;
         }
     };
 
@@ -318,7 +318,7 @@ ReturnedValue Script::run()
     if (!vmFunction)
         return Encode::undefined();
 
-    QV4::ExecutionEngine *engine = scope->engine;
+    QV4::ExecutionEngine *engine = scope->d()->engine;
     QV4::Scope valueScope(engine);
 
     if (qml.isUndefined()) {
@@ -326,9 +326,9 @@ ReturnedValue Script::run()
 
         ExecutionContextSaver ctxSaver(scope);
         ContextStateSaver stateSaver(scope);
-        scope->strictMode = vmFunction->isStrict();
-        scope->lookups = vmFunction->compilationUnit->runtimeLookups;
-        scope->compilationUnit = vmFunction->compilationUnit;
+        scope->d()->strictMode = vmFunction->isStrict();
+        scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
+        scope->d()->compilationUnit = vmFunction->compilationUnit;
 
         return vmFunction->code(scope, vmFunction->codeData);
     } else {
@@ -406,7 +406,7 @@ ReturnedValue Script::qmlBinding()
 {
     if (!parsed)
         parse();
-    ExecutionEngine *v4 = scope->engine;
+    ExecutionEngine *v4 = scope->d()->engine;
     Scope valueScope(v4);
     ScopedObject qmlObj(valueScope, qml.value());
     ScopedObject v(valueScope, new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj));

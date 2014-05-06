@@ -283,12 +283,12 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::CallContext *ctx)
 {
-    WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
+    WorkerEngine *engine = (WorkerEngine*)ctx->engine()->v8Engine;
 
-    int id = ctx->callData->argc > 1 ? ctx->callData->args[1].toInt32() : 0;
+    int id = ctx->d()->callData->argc > 1 ? ctx->d()->callData->args[1].toInt32() : 0;
 
     QV4::Scope scope(ctx);
-    QV4::ScopedValue v(scope, ctx->callData->argument(2));
+    QV4::ScopedValue v(scope, ctx->d()->callData->argument(2));
     QByteArray data = QV4::Serialize::serialize(v, engine);
 
     QMutexLocker locker(&engine->p->m_lock);

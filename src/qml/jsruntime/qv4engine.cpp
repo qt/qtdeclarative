@@ -371,7 +371,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
-    rootContext->callData->thisObject = globalObject;
+    rootContext->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->internalClass()->vtable);
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
@@ -460,11 +460,11 @@ void ExecutionEngine::initRootContext()
 {
     rootContext = static_cast<GlobalContext *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
     new (rootContext) GlobalContext(this);
-    rootContext->callData = reinterpret_cast<CallData *>(rootContext + 1);
-    rootContext->callData->tag = QV4::Value::_Integer_Type;
-    rootContext->callData->argc = 0;
-    rootContext->callData->thisObject = globalObject;
-    rootContext->callData->args[0] = Encode::undefined();
+    rootContext->d()->callData = reinterpret_cast<CallData *>(rootContext + 1);
+    rootContext->d()->callData->tag = QV4::Value::_Integer_Type;
+    rootContext->d()->callData->argc = 0;
+    rootContext->d()->callData->thisObject = globalObject;
+    rootContext->d()->callData->args[0] = Encode::undefined();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -475,7 +475,7 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     GlobalContext *g = new (memoryManager) GlobalContext(this);
-    g->callData = rootContext->callData;
+    g->d()->callData = rootContext->d()->callData;
 
     Q_ASSERT(currentContext() == g);
     return g;
@@ -670,17 +670,17 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
     ExecutionContext *ctx = currentContext();
 
-    if (ctx->type == QV4::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = ctx->parent;
+    if (ctx->d()->type == QV4::ExecutionContext::Type_SimpleCallContext && !ctx->d()->outer)
+        ctx = ctx->d()->parent;
 
-    if (!ctx->outer)
+    if (!ctx->d()->outer)
         return 0;
 
-    while (ctx->outer && ctx->outer->type != ExecutionContext::Type_GlobalContext)
-        ctx = ctx->outer;
+    while (ctx->d()->outer && ctx->d()->outer->d()->type != ExecutionContext::Type_GlobalContext)
+        ctx = ctx->d()->outer;
 
     Q_ASSERT(ctx);
-    if (ctx->type != ExecutionContext::Type_QmlContext)
+    if (ctx->d()->type != ExecutionContext::Type_QmlContext)
         return 0;
 
     return static_cast<CallContext *>(ctx)->activation->asReturned<Object>();
@@ -706,19 +706,19 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 
             if (callCtx->function->function())
                 // line numbers can be negative for places where you can't set a real breakpoint
-                frame.line = qAbs(callCtx->lineNumber);
+                frame.line = qAbs(callCtx->d()->lineNumber);
 
             stack.append(frame);
             --frameLimit;
         }
-        c = c->parent;
+        c = c->d()->parent;
     }
 
     if (frameLimit && globalCode) {
         StackFrame frame;
         frame.source = globalCode->sourceFile();
         frame.function = globalCode->name()->toQString();
-        frame.line = rootContext->lineNumber;
+        frame.line = rootContext->d()->lineNumber;
         frame.column = -1;
 
 
@@ -752,8 +752,8 @@ static inline char *v4StackTrace(const ExecutionContext *context)
     QString result;
     QTextStream str(&result);
     str << "stack=[";
-    if (context && context->engine) {
-        const QVector<StackFrame> stackTrace = context->engine->stackTrace(20);
+    if (context && context->d()->engine) {
+        const QVector<StackFrame> stackTrace = context->d()->engine->stackTrace(20);
         for (int i = 0; i < stackTrace.size(); ++i) {
             if (i)
                 str << ',';
@@ -788,7 +788,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
                 base.setUrl(callCtx->function->function()->sourceFile());
             break;
         }
-        c = c->parent;
+        c = c->d()->parent;
     }
 
     if (base.isEmpty() && globalCode)
@@ -842,7 +842,7 @@ void ExecutionEngine::markObjects()
     ExecutionContext *c = currentContext();
     while (c) {
         c->mark(this);
-        c = c->parent;
+        c = c->d()->parent;
     }
 
     id_empty->mark(this);

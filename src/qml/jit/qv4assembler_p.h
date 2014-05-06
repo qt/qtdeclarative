@@ -775,7 +775,7 @@ public:
     void leaveStandardStackFrame();
 
     void checkException() {
-        loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext, engine)), ScratchRegister);
+        loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, engine)), ScratchRegister);
         load32(Address(ScratchRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
         Jump exceptionThrown = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
         if (catchBlock)
@@ -1201,7 +1201,7 @@ void Assembler::copyValue(Result result, IR::Expr* source)
 template <typename T> inline void prepareRelativeCall(const T &, Assembler *){}
 template <> inline void prepareRelativeCall(const RelativeCall &relativeCall, Assembler *as)
 {
-    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lookups)),
+    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lookups)),
                 relativeCall.addr.base);
 }
 

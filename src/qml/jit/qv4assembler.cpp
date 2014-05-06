@@ -194,18 +194,18 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
     int scope = al->scope;
     RegisterID context = ContextRegister;
     if (scope) {
-        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext, outer)), baseReg);
+        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
         --scope;
         context = baseReg;
         while (scope) {
-            loadPtr(Address(context, qOffsetOf(ExecutionContext, outer)), context);
+            loadPtr(Address(context, qOffsetOf(ExecutionContext::Data, outer)), context);
             --scope;
         }
     }
     switch (al->kind) {
     case IR::ArgLocal::Formal:
     case IR::ArgLocal::ScopedFormal: {
-        loadPtr(Address(context, qOffsetOf(ExecutionContext, callData)), baseReg);
+        loadPtr(Address(context, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
         offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
     } break;
     case IR::ArgLocal::Local:
@@ -221,7 +221,7 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
 
 Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
+    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     return Pointer(reg, id * sizeof(QV4::StringValue));
@@ -229,7 +229,7 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, compilationUnit)), reg);
+    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, compilationUnit)), reg);
     loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     addPtr(TrustedImmPtr(id * sizeof(QV4::StringValue)), reg);

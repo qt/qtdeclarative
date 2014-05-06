@@ -103,7 +103,7 @@ bool Object::setPrototype(Object *proto)
 void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef value)
 {
     Scope scope(ctx);
-    ScopedString n(scope, ctx->engine->newString(name));
+    ScopedString n(scope, ctx->d()->engine->newString(name));
     put(n, value);
 }
 
@@ -145,7 +145,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
     return;
 
   reject:
-    if (engine()->currentContext()->strictMode)
+    if (engine()->currentContext()->d()->strictMode)
         engine()->currentContext()->throwTypeError();
 }
 
@@ -737,7 +737,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
     return;
 
   reject:
-    if (engine()->currentContext()->strictMode) {
+    if (engine()->currentContext()->d()->strictMode) {
         QString message = QStringLiteral("Cannot assign to read-only property \"");
         message += name->toQString();
         message += QLatin1Char('\"');
@@ -809,7 +809,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
     return;
 
   reject:
-    if (engine()->currentContext()->strictMode)
+    if (engine()->currentContext()->d()->strictMode)
         engine()->currentContext()->throwTypeError();
 }
 
@@ -831,7 +831,7 @@ bool Object::internalDeleteProperty(const StringRef name)
             InternalClass::removeMember(this, name->identifier());
             return true;
         }
-        if (engine()->currentContext()->strictMode)
+        if (engine()->currentContext()->d()->strictMode)
             engine()->currentContext()->throwTypeError();
         return false;
     }
@@ -847,7 +847,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
     if (!arrayData() || arrayData()->vtable()->del(this, index))
         return true;
 
-    if (engine()->currentContext()->strictMode)
+    if (engine()->currentContext()->d()->strictMode)
         engine()->currentContext()->throwTypeError();
     return false;
 }
@@ -866,8 +866,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     PropertyAttributes *cattrs;
     uint memberIndex;
 
-    if (isArrayObject() && name->equals(ctx->engine->id_length)) {
-        assert(ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->engine->id_length));
+    if (isArrayObject() && name->equals(ctx->d()->engine->id_length)) {
+        assert(ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->d()->engine->id_length));
         Property *lp = propertyAt(ArrayObject::LengthPropertyIndex);
         cattrs = internalClass()->propertyData.constData() + ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
@@ -913,7 +913,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
 
     return __defineOwnProperty__(ctx, memberIndex, name, p, attrs);
 reject:
-  if (ctx->strictMode)
+  if (ctx->d()->strictMode)
       ctx->throwTypeError();
   return false;
 }
@@ -929,7 +929,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
 
     return defineOwnProperty2(ctx, index, p, attrs);
 reject:
-  if (ctx->strictMode)
+  if (ctx->d()->strictMode)
       ctx->throwTypeError();
   return false;
 }
@@ -965,7 +965,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
 
     return __defineOwnProperty__(ctx, index, StringRef::null(), p, attrs);
 reject:
-  if (ctx->strictMode)
+  if (ctx->d()->strictMode)
       ctx->throwTypeError();
   return false;
 }
@@ -1057,7 +1057,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
         setHasAccessorProperty();
     return true;
   reject:
-    if (ctx->strictMode)
+    if (ctx->d()->strictMode)
         ctx->throwTypeError();
     return false;
 }
@@ -1066,7 +1066,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs)
 {
     Scope scope(ctx);
-    ScopedString s(scope, ctx->engine->newString(name));
+    ScopedString s(scope, ctx->d()->engine->newString(name));
     return __defineOwnProperty__(ctx, s, p, attrs);
 }
 

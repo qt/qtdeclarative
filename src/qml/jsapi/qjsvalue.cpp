@@ -385,7 +385,7 @@ double QJSValue::toNumber() const
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
-    if (ctx && ctx->engine->hasException) {
+    if (ctx && ctx->d()->engine->hasException) {
         ctx->catchException();
         return 0;
     }
@@ -411,7 +411,7 @@ bool QJSValue::toBool() const
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     bool b = d->value.toBoolean();
-    if (ctx && ctx->engine->hasException) {
+    if (ctx && ctx->d()->engine->hasException) {
         ctx->catchException();
         return false;
     }
@@ -437,7 +437,7 @@ qint32 QJSValue::toInt() const
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
-    if (ctx && ctx->engine->hasException) {
+    if (ctx && ctx->d()->engine->hasException) {
         ctx->catchException();
         return 0;
     }
@@ -463,7 +463,7 @@ quint32 QJSValue::toUInt() const
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
-    if (ctx && ctx->engine->hasException) {
+    if (ctx && ctx->d()->engine->hasException) {
         ctx->catchException();
         return 0;
     }

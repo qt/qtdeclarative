@@ -104,15 +104,15 @@ static double copySign(double x, double y)
 
 ReturnedValue MathObject::method_abs(CallContext *context)
 {
-    if (!context->callData->argc)
+    if (!context->d()->callData->argc)
         return Encode(qSNaN());
 
-    if (context->callData->args[0].isInteger()) {
-        int i = context->callData->args[0].integerValue();
+    if (context->d()->callData->args[0].isInteger()) {
+        int i = context->d()->callData->args[0].integerValue();
         return Encode(i < 0 ? - i : i);
     }
 
-    double v = context->callData->args[0].toNumber();
+    double v = context->d()->callData->args[0].toNumber();
     if (v == 0) // 0 | -0
         return Encode(0);
 
@@ -121,7 +121,7 @@ ReturnedValue MathObject::method_abs(CallContext *context)
 
 ReturnedValue MathObject::method_acos(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : 2;
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : 2;
     if (v > 1)
         return Encode(qSNaN());
 
@@ -130,7 +130,7 @@ ReturnedValue MathObject::method_acos(CallContext *context)
 
 ReturnedValue MathObject::method_asin(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : 2;
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : 2;
     if (v > 1)
         return Encode(qSNaN());
     else
@@ -139,7 +139,7 @@ ReturnedValue MathObject::method_asin(CallContext *context)
 
 ReturnedValue MathObject::method_atan(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     if (v == 0.0)
         return Encode(v);
     else
@@ -148,8 +148,8 @@ ReturnedValue MathObject::method_atan(CallContext *context)
 
 ReturnedValue MathObject::method_atan2(CallContext *context)
 {
-    double v1 = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
-    double v2 = context->callData->argc > 1 ? context->callData->args[1].toNumber() : qSNaN();
+    double v1 = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
+    double v2 = context->d()->callData->argc > 1 ? context->d()->callData->args[1].toNumber() : qSNaN();
 
     if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0))
         return Encode(copySign(0, -1.0));
@@ -166,7 +166,7 @@ ReturnedValue MathObject::method_atan2(CallContext *context)
 
 ReturnedValue MathObject::method_ceil(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     if (v < 0.0 && v > -1.0)
         return Encode(copySign(0, -1.0));
     else
@@ -175,13 +175,13 @@ ReturnedValue MathObject::method_ceil(CallContext *context)
 
 ReturnedValue MathObject::method_cos(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     return Encode(::cos(v));
 }
 
 ReturnedValue MathObject::method_exp(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     if (qIsInf(v)) {
         if (copySign(1.0, v) == -1.0)
             return Encode(0);
@@ -194,13 +194,13 @@ ReturnedValue MathObject::method_exp(CallContext *context)
 
 ReturnedValue MathObject::method_floor(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     return Encode(::floor(v));
 }
 
 ReturnedValue MathObject::method_log(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     if (v < 0)
         return Encode(qSNaN());
     else
@@ -210,8 +210,8 @@ ReturnedValue MathObject::method_log(CallContext *context)
 ReturnedValue MathObject::method_max(CallContext *context)
 {
     double mx = -qInf();
-    for (int i = 0; i < context->callData->argc; ++i) {
-        double x = context->callData->args[i].toNumber();
+    for (int i = 0; i < context->d()->callData->argc; ++i) {
+        double x = context->d()->callData->args[i].toNumber();
         if (x > mx || std::isnan(x))
             mx = x;
     }
@@ -221,8 +221,8 @@ ReturnedValue MathObject::method_max(CallContext *context)
 ReturnedValue MathObject::method_min(CallContext *context)
 {
     double mx = qInf();
-    for (int i = 0; i < context->callData->argc; ++i) {
-        double x = context->callData->args[i].toNumber();
+    for (int i = 0; i < context->d()->callData->argc; ++i) {
+        double x = context->d()->callData->args[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || std::isnan(x)) {
             mx = x;
@@ -233,8 +233,8 @@ ReturnedValue MathObject::method_min(CallContext *context)
 
 ReturnedValue MathObject::method_pow(CallContext *context)
 {
-    double x = context->callData->argc > 0 ? context->callData->args[0].toNumber() : qSNaN();
-    double y = context->callData->argc > 1 ? context->callData->args[1].toNumber() : qSNaN();
+    double x = context->d()->callData->argc > 0 ? context->d()->callData->args[0].toNumber() : qSNaN();
+    double y = context->d()->callData->argc > 1 ? context->d()->callData->args[1].toNumber() : qSNaN();
 
     if (std::isnan(y))
         return Encode(qSNaN());
@@ -294,26 +294,26 @@ ReturnedValue MathObject::method_random(CallContext *context)
 
 ReturnedValue MathObject::method_round(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     v = copySign(::floor(v + 0.5), v);
     return Encode(v);
 }
 
 ReturnedValue MathObject::method_sin(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     return Encode(::sin(v));
 }
 
 ReturnedValue MathObject::method_sqrt(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     return Encode(::sqrt(v));
 }
 
 ReturnedValue MathObject::method_tan(CallContext *context)
 {
-    double v = context->callData->argc ? context->callData->args[0].toNumber() : qSNaN();
+    double v = context->d()->callData->argc ? context->d()->callData->args[0].toNumber() : qSNaN();
     if (v == 0.0)
         return Encode(v);
     else
