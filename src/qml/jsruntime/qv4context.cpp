@@ -137,7 +137,7 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
 GlobalContext::GlobalContext(ExecutionEngine *eng)
     : ExecutionContext(eng, Type_GlobalContext)
 {
-    global = eng->globalObject;
+    d()->global = eng->globalObject;
 }
 
 WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
@@ -148,7 +148,7 @@ WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
     d()->lookups = d()->parent->d()->lookups;
     d()->compilationUnit = d()->parent->d()->compilationUnit;
 
-    withObject = with.getPointer();
+    d()->withObject = with.getPointer();
 }
 
 CatchContext::CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue)
@@ -160,8 +160,8 @@ CatchContext::CatchContext(ExecutionEngine *engine, const StringRef exceptionVar
     d()->lookups = d()->parent->d()->lookups;
     d()->compilationUnit = d()->parent->d()->compilationUnit;
 
-    this->exceptionVarName = exceptionVarName;
-    this->exceptionValue = exceptionValue;
+    this->d()->exceptionVarName = exceptionVarName;
+    this->d()->exceptionValue = exceptionValue;
 }
 
 CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject *function)
@@ -218,11 +218,11 @@ bool ExecutionContext::deleteProperty(const StringRef name)
         if (ctx->d()->type == Type_WithContext) {
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
-            if (w->withObject->hasProperty(name))
-                return w->withObject->deleteProperty(name);
+            if (w->d()->withObject->hasProperty(name))
+                return w->d()->withObject->deleteProperty(name);
         } else if (ctx->d()->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->d()->exceptionVarName->isEqualTo(name))
                 return false;
         } else if (ctx->d()->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
@@ -237,8 +237,8 @@ bool ExecutionContext::deleteProperty(const StringRef name)
                 return c->activation->deleteProperty(name);
         } else if (ctx->d()->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            if (g->global->hasProperty(name))
-                return g->global->deleteProperty(name);
+            if (g->d()->global->hasProperty(name))
+                return g->d()->global->deleteProperty(name);
         }
     }
 
@@ -273,14 +273,14 @@ void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
         c->function->mark(engine);
     } else if (ctx->d()->type == Type_WithContext) {
         WithContext *w = static_cast<WithContext *>(ctx);
-        w->withObject->mark(engine);
+        w->d()->withObject->mark(engine);
     } else if (ctx->d()->type == Type_CatchContext) {
         CatchContext *c = static_cast<CatchContext *>(ctx);
-        c->exceptionVarName->mark(engine);
-        c->exceptionValue.mark(engine);
+        c->d()->exceptionVarName->mark(engine);
+        c->d()->exceptionValue.mark(engine);
     } else if (ctx->d()->type == Type_GlobalContext) {
         GlobalContext *g = static_cast<GlobalContext *>(ctx);
-        g->global->mark(engine);
+        g->d()->global->mark(engine);
     }
 }
 
@@ -289,13 +289,13 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
     Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Type_WithContext) {
-            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->d()->withObject);
             if (w->hasProperty(name)) {
                 w->put(name, value);
                 return;
             }
-        } else if (ctx->d()->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
-            static_cast<CatchContext *>(ctx)->exceptionValue = *value;
+        } else if (ctx->d()->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->d()->exceptionVarName->isEqualTo(name)) {
+            static_cast<CatchContext *>(ctx)->d()->exceptionValue = *value;
             return;
         } else {
             ScopedObject activation(scope, (Object *)0);
@@ -315,7 +315,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
                 }
                 activation = c->activation;
             } else if (ctx->d()->type == Type_GlobalContext) {
-                activation = static_cast<GlobalContext *>(ctx)->global;
+                activation = static_cast<GlobalContext *>(ctx)->d()->global;
             }
 
             if (activation) {
@@ -353,7 +353,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Type_WithContext) {
-            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->d()->withObject);
             hasWith = true;
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
@@ -366,8 +366,8 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->d()->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue.asReturnedValue();
+            if (c->d()->exceptionVarName->isEqualTo(name))
+                return c->d()->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->d()->type >= Type_CallContext) {
@@ -395,7 +395,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->d()->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            v = g->global->get(name, &hasProperty);
+            v = g->d()->global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }
@@ -418,7 +418,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Type_WithContext) {
-            Object *w = static_cast<WithContext *>(ctx)->withObject;
+            Object *w = static_cast<WithContext *>(ctx)->d()->withObject;
             hasWith = true;
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
@@ -432,8 +432,8 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->d()->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue.asReturnedValue();
+            if (c->d()->exceptionVarName->isEqualTo(name))
+                return c->d()->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->d()->type >= Type_CallContext) {
@@ -464,7 +464,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->d()->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            v = g->global->get(name, &hasProperty);
+            v = g->d()->global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }

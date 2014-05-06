@@ -370,7 +370,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // set up the global object
     //
     globalObject = newObject()->getPointer();
-    rootContext->global = globalObject;
+    rootContext->d()->global = globalObject;
     rootContext->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->internalClass()->vtable);
 

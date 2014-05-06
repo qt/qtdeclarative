@@ -203,23 +203,43 @@ inline ReturnedValue CallContext::argument(int i) {
 
 struct GlobalContext : public ExecutionContext
 {
-    GlobalContext(ExecutionEngine *engine);
+    struct Data : ExecutionContext::Data {
+        Object *global;
+    };
+    struct {
+        Object *global;
+    } __data;
+    V4_MANAGED_NEW
 
-    Object *global;
+    GlobalContext(ExecutionEngine *engine);
 };
 
 struct CatchContext : public ExecutionContext
 {
-    CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
+    struct Data : ExecutionContext::Data {
+        StringValue exceptionVarName;
+        Value exceptionValue;
+    };
+    struct {
+        StringValue exceptionVarName;
+        Value exceptionValue;
+    } __data;
+    V4_MANAGED_NEW
 
-    StringValue exceptionVarName;
-    Value exceptionValue;
+    CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
 };
 
 struct WithContext : public ExecutionContext
 {
+    struct Data : ExecutionContext::Data {
+        Object *withObject;
+    };
+    struct {
+        Object *withObject;
+    } __data;
+    V4_MANAGED_NEW
+
     WithContext(ExecutionEngine *engine, ObjectRef with);
-    Object *withObject;
 };
 
 inline CallContext *ExecutionContext::asCallContext()
