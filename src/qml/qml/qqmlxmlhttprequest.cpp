@@ -239,6 +239,7 @@ public:
     NodeList(ExecutionEngine *engine, NodeImpl *data)
         : Object(engine)
     {
+        Q_UNUSED(__data);
         setVTable(staticVTable());
 
         d()->d = data;
