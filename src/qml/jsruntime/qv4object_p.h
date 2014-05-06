@@ -168,7 +168,8 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyProperty(const StringRef name, ValueRef value);
 
     void insertMember(const StringRef s, const ValueRef v, PropertyAttributes attributes = Attr_Data) {
-        insertMember(s, Property(*v), attributes);
+        Property p(*v);
+        insertMember(s, p, attributes);
     }
     void insertMember(const StringRef s, const Property &p, PropertyAttributes attributes);
 
