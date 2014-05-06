@@ -348,7 +348,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
     boundArgs.reset();
     if (ctx->callData->argc > 1) {
         boundArgs.ensureIndex(scope.engine, ctx->callData->argc - 1);
-        boundArgs.d()->size = ctx->callData->argc - 1;
+        boundArgs.d()->d()->size = ctx->callData->argc - 1;
         memcpy(boundArgs.data(), ctx->callData->args + 1, (ctx->callData->argc - 1)*sizeof(Value));
     }
     ScopedValue protectBoundArgs(scope, boundArgs.d());

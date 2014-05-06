@@ -50,12 +50,19 @@ namespace QV4 {
 
 struct MemberData : Managed
 {
-    V4_MANAGED
-    uint size;
-    Value data[1];
+    struct Data : Managed::Data {
+        uint size;
+        Value data[1];
+    };
+    struct {
+        uint size;
+        Value data[1];
+    } __data;
+
+    V4_MANAGED_NEW
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
-    Value &operator[] (uint idx) { return data[idx]; }
+    Value &operator[] (uint idx) { return d()->data[idx]; }
 
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
@@ -64,10 +71,10 @@ struct Members : Value
 {
     void reset() { m = 0; }
     void ensureIndex(QV4::ExecutionEngine *e, uint idx);
-    Value &operator[] (uint idx) const { return static_cast<MemberData *>(managed())->data[idx]; }
-    inline uint size() const { return d() ? d()->size : 0; }
+    Value &operator[] (uint idx) const { return static_cast<MemberData *>(managed())->d()->data[idx]; }
+    inline uint size() const { return d() ? d()->d()->size : 0; }
     inline MemberData *d() const { return static_cast<MemberData *>(managed()); }
-    Value *data() const { return static_cast<MemberData *>(managed())->data; }
+    Value *data() const { return static_cast<MemberData *>(managed())->d()->data; }
 
     void mark(ExecutionEngine *e) const {
         MemberData *m = d();

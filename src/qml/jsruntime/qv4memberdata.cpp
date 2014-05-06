@@ -49,8 +49,8 @@ DEFINE_MANAGED_VTABLE(MemberData);
 void MemberData::markObjects(Managed *that, ExecutionEngine *e)
 {
     MemberData *m = static_cast<MemberData *>(that);
-    for (uint i = 0; i < m->size; ++i)
-        m->data[i].mark(e);
+    for (uint i = 0; i < m->d()->size; ++i)
+        m->d()->data[i].mark(e);
 }
 
 void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
@@ -64,7 +64,7 @@ void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
             memcpy(newMemberData, d(), sizeof(MemberData) + s*sizeof(Value));
         else
             new (newMemberData) MemberData(e->memberDataClass);
-        newMemberData->size = newAlloc;
+        newMemberData->d()->size = newAlloc;
         m = newMemberData;
     }
 }

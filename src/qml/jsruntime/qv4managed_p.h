@@ -70,6 +70,17 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
 
+#define V4_MANAGED_NEW \
+    public: \
+        Q_MANAGED_CHECK \
+        static const QV4::ManagedVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
+        template <typename T> \
+        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
+        Data *d() { return &static_cast<Data &>(Managed::data); }
+
 #define V4_OBJECT \
     public: \
         Q_MANAGED_CHECK \
