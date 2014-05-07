@@ -93,7 +93,7 @@ struct RegExpObject: Object {
     RegExp *value() const { return d()->value; }
     bool global() const { return d()->global; }
 
-    RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global);
+    RegExpObject(ExecutionEngine *engine, RegExp *value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
 
     void init(ExecutionEngine *engine);
@@ -108,8 +108,6 @@ protected:
     RegExpObject(InternalClass *ic);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
-
-DEFINE_REF(RegExp, Object);
 
 struct RegExpCtor: FunctionObject
 {

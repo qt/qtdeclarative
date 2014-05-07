@@ -214,8 +214,6 @@ private Q_SLOTS:
     void removeDestroyedObject(QObject*);
 };
 
-DEFINE_REF(QObjectWrapper, Object);
-
 }
 
 QT_END_NAMESPACE

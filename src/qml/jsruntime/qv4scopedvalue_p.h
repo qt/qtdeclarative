@@ -383,7 +383,6 @@ struct ScopedCallData {
 
 
 struct ObjectRef;
-struct FunctionObjectRef;
 
 template<typename T>
 inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)

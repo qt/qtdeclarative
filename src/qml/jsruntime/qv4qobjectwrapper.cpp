@@ -87,7 +87,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-static QPair<QObject *, int> extractQtMethod(QV4::FunctionObjectRef function)
+static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
 {
     QV4::ExecutionEngine *v4 = function->engine();
     if (v4) {
@@ -1737,7 +1737,7 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         QV4::ScopedValue rv(scope, engine->fromVariant(value));
-        QV4::QObjectWrapperRef qobjectWrapper = rv;
+        QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, rv);
         if (!!qobjectWrapper) {
             if (QObject *object = qobjectWrapper->object())
                 QQmlData::get(object, true)->setImplicitDestructible();

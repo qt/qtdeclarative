@@ -609,7 +609,7 @@ DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
-BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
+BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs)
     : FunctionObject(scope, QStringLiteral("__bound function__"))
 {
     d()->target = target;

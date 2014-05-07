@@ -308,7 +308,7 @@ public:
     ExecutionContext *popContext();
 
     Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
-    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QV4::Members &boundArgs);
+    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs);
 
     Returned<Object> *newObject();
     Returned<Object> *newObject(InternalClass *internalClass);
@@ -328,7 +328,7 @@ public:
     Returned<DateObject> *newDateObject(const QDateTime &dt);
 
     Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
-    Returned<RegExpObject> *newRegExpObject(RegExpRef re, bool global);
+    Returned<RegExpObject> *newRegExpObject(RegExp *re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
     Returned<Object> *newErrorObject(const ValueRef value);

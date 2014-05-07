@@ -228,7 +228,7 @@ public:
     void setExtensionData(int, Deletable *);
 
     QV4::ReturnedValue variantListToJS(const QVariantList &lst);
-    inline QVariantList variantListFromJS(QV4::ArrayObjectRef array)
+    inline QVariantList variantListFromJS(QV4::ArrayObject *array)
     { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
 
     QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
@@ -280,7 +280,7 @@ protected:
     void initializeGlobal();
 
 private:
-    QVariantList variantListFromJS(QV4::ArrayObjectRef array, V8ObjectSet &visitedObjects);
+    QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
     QVariantMap variantMapFromJS(QV4::ObjectRef object, V8ObjectSet &visitedObjects);
     QVariant variantFromJS(const QV4::ValueRef value, V8ObjectSet &visitedObjects);
 

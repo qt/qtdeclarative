@@ -656,7 +656,7 @@ struct Stringify
     Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
 
     QString Str(const QString &key, ValueRef v);
-    QString JA(ArrayObjectRef a);
+    QString JA(ArrayObject *a);
     QString JO(ObjectRef o);
 
     QString makeMember(const QString &key, ValueRef v);
@@ -837,9 +837,9 @@ QString Stringify::JO(ObjectRef o)
     return result;
 }
 
-QString Stringify::JA(ArrayObjectRef a)
+QString Stringify::JA(ArrayObject *a)
 {
-    if (stack.contains(a.getPointer())) {
+    if (stack.contains(a)) {
         ctx->throwTypeError();
         return QString();
     }
@@ -847,7 +847,7 @@ QString Stringify::JA(ArrayObjectRef a)
     Scope scope(a->engine());
 
     QString result;
-    stack.push(a.getPointer());
+    stack.push(a);
     QString stepback = indent;
     indent += gap;
 
@@ -1061,7 +1061,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     return a.asReturnedValue();
 }
 
-QJsonArray JsonObject::toJsonArray(ArrayObjectRef a, V4ObjectSet &visitedObjects)
+QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
 {
     QJsonArray result;
     if (!a)

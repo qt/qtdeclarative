@@ -468,8 +468,6 @@ struct ObjectRef : public ManagedRef
     }
 };
 
-DEFINE_REF(ArrayObject, Object);
-
 }
 
 QT_END_NAMESPACE

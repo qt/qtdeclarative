@@ -80,7 +80,7 @@ RegExpObject::RegExpObject(InternalClass *ic)
     init(ic->engine);
 }
 
-RegExpObject::RegExpObject(ExecutionEngine *engine, RegExpRef value, bool global)
+RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp *value, bool global)
     : Object(engine->regExpClass)
 {
     d()->value = value;

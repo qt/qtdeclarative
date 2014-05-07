@@ -560,8 +560,7 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 // The result is a QVariantList with length equal to the length
 // of the JS Array, and elements being the JS Array's elements
 // converted to QVariants, recursively.
-QVariantList QV8Engine::variantListFromJS(QV4::ArrayObjectRef a,
-                                          V8ObjectSet &visitedObjects)
+QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a, V8ObjectSet &visitedObjects)
 {
     QVariantList result;
     if (!a)

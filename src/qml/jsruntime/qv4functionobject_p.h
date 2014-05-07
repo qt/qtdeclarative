@@ -166,8 +166,6 @@ inline FunctionObject *value_cast(const Value &v) {
     return v.asFunctionObject();
 }
 
-DEFINE_REF(FunctionObject, Object);
-
 struct FunctionCtor: FunctionObject
 {
     V4_OBJECT
@@ -268,7 +266,7 @@ struct BoundFunction: FunctionObject {
     Value boundThis() const { return d()->boundThis; }
     Members boundArgs() const { return d()->boundArgs; }
 
-    BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs);
+    BoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs);
     ~BoundFunction() {}
 
     static ReturnedValue construct(Managed *, CallData *d);

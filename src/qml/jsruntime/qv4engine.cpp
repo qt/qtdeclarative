@@ -487,7 +487,7 @@ Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *
     return f->asReturned<FunctionObject>();
 }
 
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const Members &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs)
 {
     Q_ASSERT(target);
 
@@ -590,7 +590,7 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
     return newRegExpObject(re, global);
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExpRef re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     return object->asReturned<RegExpObject>();

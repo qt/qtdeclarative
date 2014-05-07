@@ -165,9 +165,6 @@ typedef Returned<Object> ReturnedObject;
 typedef Returned<FunctionObject> ReturnedFunctionObject;
 struct ManagedRef;
 struct ObjectRef;
-struct ArrayObjectRef;
-struct FunctionObjectRef;
-struct RegExpRef;
 
 struct PersistentValuePrivate;
 class PersistentValue;

@@ -479,7 +479,7 @@ public:
     QVariant toVariant() const
     { return QVariant::fromValue<Container>(d()->container); }
 
-    static QVariant toVariant(QV4::ArrayObjectRef array)
+    static QVariant toVariant(QV4::ArrayObject *array)
     {
         QV4::Scope scope(array->engine());
         Container result;
