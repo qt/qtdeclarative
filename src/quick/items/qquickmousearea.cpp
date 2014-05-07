@@ -459,6 +459,10 @@ qreal QQuickMouseArea::mouseY() const
     \qmlproperty bool QtQuick::MouseArea::enabled
     This property holds whether the item accepts mouse events.
 
+    \note Due to historical reasons, this property is not equivalent to
+    Item.enabled. It only affects mouse events, and its effect does not
+    propagate to child items.
+
     By default, this property is true.
 */
 bool QQuickMouseArea::isEnabled() const
