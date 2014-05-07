@@ -151,7 +151,7 @@ struct JSClass
 struct String
 {
     quint32 flags; // isArrayIndex
-    QArrayData str;
+    qint32 size;
     // uint16 strdata[]
 
     static int calculateSize(const QString &str) {
@@ -195,13 +195,12 @@ struct Unit
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const uint offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
-        if (str->str.size == 0)
+        if (str->size == 0)
             return QString();
-        QStringDataPtr holder = { const_cast<QStringData *>(static_cast<const QStringData*>(&str->str)) };
-        QString qstr(holder);
+        const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
         if (flags & StaticData)
-            return qstr;
-        return QString(qstr.constData(), qstr.length());
+            return QString::fromRawData(characters, str->size);
+        return QString(characters, str->size);
     }
 
     const uint *functionOffsetTable() const { return reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable); }
