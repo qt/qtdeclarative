@@ -1709,9 +1709,9 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
 
 /*!
 \overload
-Returns the value of the given \a property.
+Returns the value of the given \a property and \a argument.
 */
-QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
+QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
 {
     Q_D(const QQuickTextEdit);
 
@@ -1724,11 +1724,19 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
         v = (int)d->effectiveInputMethodHints();
         break;
     default:
-        v = d->control->inputMethodQuery(property);
+        v = d->control->inputMethodQuery(property, argument);
         break;
     }
     return v;
+}
 
+/*!
+\overload
+Returns the value of the given \a property.
+*/
+QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
+{
+    return inputMethodQuery(property, QVariant());
 }
 #endif // QT_NO_IM
 
