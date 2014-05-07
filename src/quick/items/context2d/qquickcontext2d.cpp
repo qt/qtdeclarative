@@ -1748,7 +1748,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
 
             if (QV4::Object *o = ctx->d()->callData->args[0].asObject()) {
                 QV4::ScopedString s(scope, scope.engine->newString(QStringLiteral("data")));
-                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s));
+                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s.getPointer()));
                 if (!!pixelData) {
                     patternTexture = pixelData->d()->image;
                 }
@@ -2859,7 +2859,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
         QFontMetrics fm(r->d()->context->state.font);
         uint width = fm.width(ctx->d()->callData->args[0].toQStringNoThrow());
         QV4::Scoped<QV4::Object> tm(scope, scope.engine->newObject());
-        tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))),
+        tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))).getPointer(),
                 QV4::ScopedValue(scope, QV4::Primitive::fromDouble(width)));
         return tm.asReturnedValue();
     }
@@ -4198,8 +4198,7 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     gradientProto = proto;
 
     proto = scope.engine->newObject();
-    QV4::ScopedString s(scope, scope.engine->id_length);
-    proto->defineAccessorProperty(s, QQuickJSContext2DPixelData::proto_get_length, 0);
+    proto->defineAccessorProperty(scope.engine->id_length, QQuickJSContext2DPixelData::proto_get_length, 0);
     pixelArrayProto = proto;
 }
 

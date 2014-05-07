@@ -307,7 +307,7 @@ public:
     void pushContext(CallContext *context);
     ExecutionContext *popContext();
 
-    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
+    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
     Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QV4::Members &boundArgs);
 
     Returned<Object> *newObject();

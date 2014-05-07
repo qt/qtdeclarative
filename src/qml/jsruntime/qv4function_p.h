@@ -94,8 +94,8 @@ struct Q_QML_EXPORT Function {
              ReturnedValue (*codePtr)(ExecutionContext *, const uchar *));
     ~Function();
 
-    inline StringRef name() {
-        return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
+    inline String *name() {
+        return compilationUnit->runtimeStrings[compiledFunction->nameIndex].getPointer();
     }
     inline QString sourceFile() const { return compilationUnit->fileName(); }
 

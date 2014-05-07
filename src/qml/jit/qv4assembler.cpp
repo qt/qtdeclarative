@@ -232,7 +232,7 @@ void Assembler::loadStringRef(RegisterID reg, const QString &string)
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, compilationUnit)), reg);
     loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    addPtr(TrustedImmPtr(id * sizeof(QV4::StringValue)), reg);
+    loadPtr(Address(reg, id * sizeof(QV4::StringValue)), reg);
 }
 
 void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)

@@ -70,7 +70,7 @@ struct StringObject: Object {
 
 protected:
     StringObject(InternalClass *ic);
-    static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs);
+    static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 

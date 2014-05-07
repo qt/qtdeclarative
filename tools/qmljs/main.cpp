@@ -120,7 +120,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef except
         std::cerr << "Uncaught exception: " << qPrintable(ex->toString(ctx)->toQString()) << std::endl;
     } else {
         QV4::ScopedString m(scope, scope.engine->newString(QStringLiteral("message")));
-        QV4::ScopedValue message(scope, e->get(m));
+        QV4::ScopedValue message(scope, e->get(m.getPointer()));
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
 
@@ -191,9 +191,9 @@ int main(int argc, char *argv[])
 
         QV4::ScopedObject globalObject(scope, vm.globalObject);
         QV4::ScopedObject print(scope, new (scope.engine->memoryManager) builtins::Print(ctx));
-        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))), print);
+        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
         QV4::ScopedObject gc(scope, new (scope.engine->memoryManager) builtins::GC(ctx));
-        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))), gc);
+        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
         foreach (const QString &fn, args) {
             QFile file(fn);

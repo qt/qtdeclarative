@@ -283,10 +283,10 @@ ReturnedValue Runtime::deleteElement(ExecutionContext *ctx, const ValueRef base,
     }
 
     ScopedString name(scope, index->toString(ctx));
-    return Runtime::deleteMember(ctx, base, name);
+    return Runtime::deleteMember(ctx, base, name.getPointer());
 }
 
-ReturnedValue Runtime::deleteMember(ExecutionContext *ctx, const ValueRef base, const StringRef name)
+ReturnedValue Runtime::deleteMember(ExecutionContext *ctx, const ValueRef base, String *name)
 {
     Scope scope(ctx);
     ScopedObject obj(scope, base->toObject(ctx));
@@ -295,7 +295,7 @@ ReturnedValue Runtime::deleteMember(ExecutionContext *ctx, const ValueRef base, 
     return Encode(obj->deleteProperty(name));
 }
 
-ReturnedValue Runtime::deleteName(ExecutionContext *ctx, const StringRef name)
+ReturnedValue Runtime::deleteName(ExecutionContext *ctx, String *name)
 {
     Scope scope(ctx);
     return Encode(ctx->deleteProperty(name));
@@ -341,7 +341,7 @@ QV4::ReturnedValue Runtime::in(ExecutionContext *ctx, const ValueRef left, const
     ScopedString s(scope, left->toString(ctx));
     if (scope.hasException())
         return Encode::undefined();
-    bool r = right->objectValue()->hasProperty(s);
+    bool r = right->objectValue()->hasProperty(s.getPointer());
     return Encode(r);
 }
 
@@ -551,7 +551,7 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
     return (new (ctx->engine()->memoryManager) String(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
 }
 
-void Runtime::setProperty(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef value)
+void Runtime::setProperty(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value)
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
@@ -600,7 +600,7 @@ ReturnedValue Runtime::getElement(ExecutionContext *ctx, const ValueRef object, 
     ScopedString name(scope, index->toString(ctx));
     if (scope.hasException())
         return Encode::undefined();
-    return o->get(name);
+    return o->get(name.getPointer());
 }
 
 void Runtime::setElement(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
@@ -624,7 +624,7 @@ void Runtime::setElement(ExecutionContext *ctx, const ValueRef object, const Val
     }
 
     ScopedString name(scope, index->toString(ctx));
-    o->put(name, value);
+    o->put(name.getPointer(), value);
 }
 
 ReturnedValue Runtime::foreachIterator(ExecutionContext *ctx, const ValueRef in)
@@ -648,12 +648,12 @@ ReturnedValue Runtime::foreachNextPropertyName(const ValueRef foreach_iterator)
 }
 
 
-void Runtime::setActivationProperty(ExecutionContext *ctx, const StringRef name, const ValueRef value)
+void Runtime::setActivationProperty(ExecutionContext *ctx, String *name, const ValueRef value)
 {
     ctx->setProperty(name, value);
 }
 
-ReturnedValue Runtime::getProperty(ExecutionContext *ctx, const ValueRef object, const StringRef name)
+ReturnedValue Runtime::getProperty(ExecutionContext *ctx, const ValueRef object, String *name)
 {
     Scope scope(ctx);
 
@@ -672,7 +672,7 @@ ReturnedValue Runtime::getProperty(ExecutionContext *ctx, const ValueRef object,
     return o->get(name);
 }
 
-ReturnedValue Runtime::getActivationProperty(ExecutionContext *ctx, const StringRef name)
+ReturnedValue Runtime::getActivationProperty(ExecutionContext *ctx, String *name)
 {
     return ctx->getProperty(name);
 }
@@ -883,7 +883,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, C
 }
 
 
-ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, const StringRef name, CallDataRef callData)
+ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(context);
@@ -912,7 +912,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, const S
     return o->call(callData);
 }
 
-ReturnedValue Runtime::callProperty(ExecutionContext *context, const StringRef name, CallDataRef callData)
+ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Scope scope(context);
     Scoped<Object> baseObject(scope, callData->thisObject);
@@ -959,7 +959,7 @@ ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef ind
         return Encode::undefined();
     callData->thisObject = baseObject;
 
-    ScopedObject o(scope, baseObject->get(s));
+    ScopedObject o(scope, baseObject->get(s.getPointer()));
     if (!o)
         return context->throwTypeError();
 
@@ -989,7 +989,7 @@ ReturnedValue Runtime::constructGlobalLookup(ExecutionContext *context, uint ind
 }
 
 
-ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, const StringRef name, CallDataRef callData)
+ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
@@ -1012,7 +1012,7 @@ ReturnedValue Runtime::constructValue(ExecutionContext *context, const ValueRef 
     return f->construct(callData);
 }
 
-ReturnedValue Runtime::constructProperty(ExecutionContext *context, const StringRef name, CallDataRef callData)
+ReturnedValue Runtime::constructProperty(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Scope scope(context);
     ScopedObject thisObject(scope, callData->thisObject.toObject(context));
@@ -1073,7 +1073,7 @@ ReturnedValue Runtime::typeofValue(ExecutionContext *ctx, const ValueRef value)
     return res.asReturnedValue();
 }
 
-QV4::ReturnedValue Runtime::typeofName(ExecutionContext *context, const StringRef name)
+QV4::ReturnedValue Runtime::typeofName(ExecutionContext *context, String *name)
 {
     Scope scope(context);
     ScopedValue prop(scope, context->getProperty(name));
@@ -1082,7 +1082,7 @@ QV4::ReturnedValue Runtime::typeofName(ExecutionContext *context, const StringRe
     return Runtime::typeofValue(context, prop);
 }
 
-QV4::ReturnedValue Runtime::typeofMember(ExecutionContext *context, const ValueRef base, const StringRef name)
+QV4::ReturnedValue Runtime::typeofMember(ExecutionContext *context, const ValueRef base, String *name)
 {
     Scope scope(context);
     ScopedObject obj(scope, base->toObject(context));
@@ -1099,7 +1099,7 @@ QV4::ReturnedValue Runtime::typeofElement(ExecutionContext *context, const Value
     ScopedObject obj(scope, base->toObject(context));
     if (scope.engine->hasException)
         return Encode::undefined();
-    ScopedValue prop(scope, obj->get(name));
+    ScopedValue prop(scope, obj->get(name.getPointer()));
     return Runtime::typeofValue(context, prop);
 }
 
@@ -1117,7 +1117,7 @@ ReturnedValue Runtime::unwindException(ExecutionContext *ctx)
     return ctx->engine()->catchException(ctx, 0);
 }
 
-ExecutionContext *Runtime::pushCatchScope(ExecutionContext *ctx, const StringRef exceptionVarName)
+ExecutionContext *Runtime::pushCatchScope(ExecutionContext *ctx, String *exceptionVarName)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->engine()->catchException(ctx, 0));
@@ -1129,7 +1129,7 @@ ExecutionContext *Runtime::popScope(ExecutionContext *ctx)
     return ctx->engine()->popContext();
 }
 
-void Runtime::declareVar(ExecutionContext *ctx, bool deletable, const StringRef name)
+void Runtime::declareVar(ExecutionContext *ctx, bool deletable, String *name)
 {
     ctx->createMutableBinding(name, deletable);
 }
@@ -1344,7 +1344,7 @@ ReturnedValue Runtime::getQmlImportedScripts(NoThrowContext *ctx)
     return context->importedScripts.value();
 }
 
-QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowContext *ctx, const QV4::StringRef name)
+QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowContext *ctx, String *name)
 {
     return ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(ctx->engine()->v8Engine, name);
 }

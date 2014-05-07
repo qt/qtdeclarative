@@ -164,7 +164,6 @@ typedef Returned<String> ReturnedString;
 typedef Returned<Object> ReturnedObject;
 typedef Returned<FunctionObject> ReturnedFunctionObject;
 struct ManagedRef;
-struct StringRef;
 struct ObjectRef;
 struct ArrayObjectRef;
 struct FunctionObjectRef;

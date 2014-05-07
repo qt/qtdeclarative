@@ -108,15 +108,15 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     void setReadOnly(bool b) { d()->readOnly = b; }
 
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static void put(Managed *m, String *name, const ValueRef value);
     static void destroy(Managed *that);
     static void markObjects(Managed *m, ExecutionEngine *engine);
 
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
     ReturnedValue idObjectsArray();
-    ReturnedValue qmlSingletonWrapper(QV8Engine *e, const StringRef &name);
+    ReturnedValue qmlSingletonWrapper(QV8Engine *e, String *name);
 
 };
 

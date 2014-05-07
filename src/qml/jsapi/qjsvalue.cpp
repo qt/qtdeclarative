@@ -861,7 +861,7 @@ QJSValue QJSValue::property(const QString& name) const
     s->makeIdentifier();
     QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
-    result = o->get(s);
+    result = o->get(s.getPointer());
     if (scope.hasException())
         result = ctx->catchException();
 
@@ -893,7 +893,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 
     QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue result(scope);
-    result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
+    result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax.getPointer()) : o->getIndexed(arrayIndex);
     if (scope.hasException())
         result = ctx->catchException();
     return new QJSValuePrivate(engine, result);
@@ -936,7 +936,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     QV4::ExecutionContext *ctx = engine->currentContext();
     s->makeIdentifier();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
-    o->put(s, v);
+    o->put(s.getPointer(), v);
     if (scope.hasException())
         ctx->catchException();
 }
@@ -969,7 +969,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (arrayIndex != UINT_MAX)
         o->putIndexed(arrayIndex, v);
     else
-        o->put(engine->id_uintMax, v);
+        o->put(engine->id_uintMax.getPointer(), v);
     if (scope.hasException())
         ctx->catchException();
 }
@@ -1004,7 +1004,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     ScopedString s(scope, engine->newString(name));
-    bool b = o->deleteProperty(s);
+    bool b = o->deleteProperty(s.getPointer());
     if (scope.hasException())
         ctx->catchException();
     return b;
@@ -1028,7 +1028,7 @@ bool QJSValue::hasProperty(const QString &name) const
         return false;
 
     ScopedString s(scope, engine->newIdentifier(name));
-    return o->hasProperty(s);
+    return o->hasProperty(s.getPointer());
 }
 
 /*!
@@ -1049,7 +1049,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
         return false;
 
     ScopedString s(scope, engine->newIdentifier(name));
-    return o->hasOwnProperty(s);
+    return o->hasOwnProperty(s.getPointer());
 }
 
 /*!

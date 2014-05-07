@@ -117,10 +117,10 @@ private:
 
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
-    static PropertyAttributes query(const Managed *, StringRef name);
-    static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static void put(Managed *m, String *name, const ValueRef value);
+    static PropertyAttributes query(const Managed *, String *name);
+    static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
     static void destroy(Managed *that);
 

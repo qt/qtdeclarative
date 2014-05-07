@@ -106,50 +106,50 @@ struct NoThrowContext : public ExecutionContext
 struct Q_QML_PRIVATE_EXPORT Runtime {
     // call
     static ReturnedValue callGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue callActivationProperty(ExecutionContext *, const StringRef name, CallDataRef callData);
-    static ReturnedValue callProperty(ExecutionContext *context, const StringRef name, CallDataRef callData);
+    static ReturnedValue callActivationProperty(ExecutionContext *, String *name, CallDataRef callData);
+    static ReturnedValue callProperty(ExecutionContext *context, String *name, CallDataRef callData);
     static ReturnedValue callPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData);
     static ReturnedValue callElement(ExecutionContext *context, const ValueRef index, CallDataRef callData);
     static ReturnedValue callValue(ExecutionContext *context, const ValueRef func, CallDataRef callData);
 
     // construct
     static ReturnedValue constructGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue constructActivationProperty(ExecutionContext *, const StringRef name, CallDataRef callData);
-    static ReturnedValue constructProperty(ExecutionContext *context, const StringRef name, CallDataRef callData);
+    static ReturnedValue constructActivationProperty(ExecutionContext *, String *name, CallDataRef callData);
+    static ReturnedValue constructProperty(ExecutionContext *context, String *name, CallDataRef callData);
     static ReturnedValue constructPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData);
     static ReturnedValue constructValue(ExecutionContext *context, const ValueRef func, CallDataRef callData);
 
     // set & get
-    static void setActivationProperty(ExecutionContext *ctx, const StringRef name, const ValueRef value);
-    static void setProperty(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef value);
+    static void setActivationProperty(ExecutionContext *ctx, String *name, const ValueRef value);
+    static void setProperty(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value);
     static void setElement(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value);
-    static ReturnedValue getProperty(ExecutionContext *ctx, const ValueRef object, const StringRef name);
-    static ReturnedValue getActivationProperty(ExecutionContext *ctx, const StringRef name);
+    static ReturnedValue getProperty(ExecutionContext *ctx, const ValueRef object, String *name);
+    static ReturnedValue getActivationProperty(ExecutionContext *ctx, String *name);
     static ReturnedValue getElement(ExecutionContext *ctx, const ValueRef object, const ValueRef index);
 
     // typeof
     static ReturnedValue typeofValue(ExecutionContext *ctx, const ValueRef val);
-    static ReturnedValue typeofName(ExecutionContext *context, const StringRef name);
-    static ReturnedValue typeofMember(ExecutionContext* context, const ValueRef base, const StringRef name);
+    static ReturnedValue typeofName(ExecutionContext *context, String *name);
+    static ReturnedValue typeofMember(ExecutionContext* context, const ValueRef base, String *name);
     static ReturnedValue typeofElement(ExecutionContext* context, const ValueRef base, const ValueRef index);
 
     // delete
     static ReturnedValue deleteElement(ExecutionContext *ctx, const ValueRef base, const ValueRef index);
-    static ReturnedValue deleteMember(ExecutionContext *ctx, const ValueRef base, const StringRef name);
-    static ReturnedValue deleteName(ExecutionContext *ctx, const StringRef name);
+    static ReturnedValue deleteMember(ExecutionContext *ctx, const ValueRef base, String *name);
+    static ReturnedValue deleteName(ExecutionContext *ctx, String *name);
 
     // exceptions & scopes
     static void throwException(ExecutionContext*, const ValueRef value);
     static ReturnedValue unwindException(ExecutionContext *ctx);
     static ExecutionContext *pushWithScope(const ValueRef o, ExecutionContext *ctx);
-    static ExecutionContext *pushCatchScope(ExecutionContext *ctx, const StringRef exceptionVarName);
+    static ExecutionContext *pushCatchScope(ExecutionContext *ctx, String *exceptionVarName);
     static ExecutionContext *popScope(ExecutionContext *ctx);
 
     // closures
     static ReturnedValue closure(ExecutionContext *ctx, int functionId);
 
     // function header
-    static void declareVar(ExecutionContext *ctx, bool deletable, const StringRef name);
+    static void declareVar(ExecutionContext *ctx, bool deletable, String *name);
     static ReturnedValue setupArgumentsObject(ExecutionContext *ctx);
     static void convertThisToObject(ExecutionContext *ctx);
 
@@ -226,7 +226,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue getQmlImportedScripts(NoThrowContext *ctx);
     static ReturnedValue getQmlContextObject(NoThrowContext *ctx);
     static ReturnedValue getQmlScopeObject(NoThrowContext *ctx);
-    static ReturnedValue getQmlSingleton(NoThrowContext *ctx, const StringRef name);
+    static ReturnedValue getQmlSingleton(NoThrowContext *ctx, String *name);
     static ReturnedValue getQmlAttachedProperty(ExecutionContext *ctx, int attachedPropertiesId, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
     static void setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);

@@ -308,6 +308,9 @@ struct Scoped
         return *this;
     }
 
+    operator T *() {
+        return static_cast<T *>(ptr->managed());
+    }
 
     T *operator->() {
         return static_cast<T *>(ptr->managed());
@@ -379,7 +382,6 @@ struct ScopedCallData {
 };
 
 
-struct StringRef;
 struct ObjectRef;
 struct FunctionObjectRef;
 

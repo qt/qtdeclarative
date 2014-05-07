@@ -271,11 +271,6 @@ InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
     return newClass;
 }
 
-void InternalClass::addMember(Object *object, StringRef string, PropertyAttributes data, uint *index)
-{
-    return addMember(object, string.getPointer(), data, index);
-}
-
 void InternalClass::addMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     data.resolve();
@@ -293,11 +288,6 @@ void InternalClass::addMember(Object *object, String *string, PropertyAttributes
     object->setInternalClass(newClass);
 }
 
-
-InternalClass *InternalClass::addMember(StringRef string, PropertyAttributes data, uint *index)
-{
-    return addMember(string.getPointer(), data, index);
-}
 
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
@@ -372,11 +362,6 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     memmove(object->memberData().data() + propIdx, object->memberData().data() + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
 
     oldClass->transitions.insert(t, object->internalClass());
-}
-
-uint InternalClass::find(const StringRef string)
-{
-    return find(string.getPointer());
 }
 
 uint InternalClass::find(const String *string)

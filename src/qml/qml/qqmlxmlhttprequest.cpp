@@ -105,9 +105,9 @@ static ReturnedValue constructMeObject(const ValueRef thisObj, QV8Engine *e)
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
     Scoped<Object> meObj(scope, v4->newObject());
-    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), thisObj);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))).getPointer(), thisObj);
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
-    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))).getPointer(), v);
     return meObj.asReturnedValue();
 }
 
@@ -219,7 +219,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 };
 
@@ -255,7 +255,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NodeList>()->~NodeList();
     }
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
@@ -942,7 +942,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     return Encode::undefined();
 }
 
-ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -1000,7 +1000,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Encode::undefined();
 }
 
-ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -1570,21 +1570,21 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
     }
 
     ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
-    Scoped<Object> thisObj(scope, o->get(s));
+    Scoped<Object> thisObj(scope, o->get(s.getPointer()));
     if (!thisObj) {
         ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
     }
 
     s = v4->newString(QStringLiteral("onreadystatechange"));
-    Scoped<FunctionObject> callback(scope, thisObj->get(s));
+    Scoped<FunctionObject> callback(scope, thisObj->get(s.getPointer()));
     if (!callback) {
         // not an error, but no onreadystatechange function to call.
         return;
     }
 
     s = v4->newString(QStringLiteral("ActivationObject"));
-    Scoped<Object> activationObject(scope, o->get(s));
+    Scoped<Object> activationObject(scope, o->get(s.getPointer()));
     if (!activationObject) {
         v4->currentContext()->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
         return;
@@ -1676,7 +1676,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (!d()->proto)
             setupProto();
         ScopedString s(scope, engine->id_prototype);
-        defineDefaultProperty(s, ScopedObject(scope, d()->proto));
+        defineDefaultProperty(s.getPointer(), ScopedObject(scope, d()->proto));
     }
     ~QQmlXMLHttpRequestCtor()
     {}
@@ -2028,7 +2028,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
 
     Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4->memoryManager) QQmlXMLHttpRequestCtor(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
-    v4->globalObject->defineReadonlyProperty(s, ctor);
+    v4->globalObject->defineReadonlyProperty(s.getPointer(), ctor);
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

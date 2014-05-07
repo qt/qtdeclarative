@@ -235,7 +235,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
     Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
-    QV4::ScopedValue function(scope, m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, name,
+    QV4::ScopedValue function(scope, m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, name.getPointer(),
                                                                     QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
@@ -315,9 +315,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         w->setReadOnly(false);
 
         QV4::Scoped<QV4::Object> api(scope, v4->newObject());
-        api->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("sendMessage"))), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
+        api->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("sendMessage"))).getPointer(), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
-        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))), api);
+        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))).getPointer(), api);
 
         w->setReadOnly(true);
     }

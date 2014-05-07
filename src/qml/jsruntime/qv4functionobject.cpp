@@ -74,7 +74,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
-FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
+FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool createProto)
     : Object(scope->d()->engine->functionClass)
 {
     d()->scope = scope;
@@ -91,7 +91,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, s.engine->newString(name));
-    init(n, createProto);
+    init(n.getPointer(), createProto);
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
@@ -103,7 +103,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, name);
-    init(n, false);
+    init(n.getPointer(), false);
 }
 
 FunctionObject::FunctionObject(InternalClass *ic)
@@ -123,7 +123,7 @@ FunctionObject::~FunctionObject()
         function()->compilationUnit->deref();
 }
 
-void FunctionObject::init(const StringRef n, bool createProto)
+void FunctionObject::init(String *n, bool createProto)
 {
     Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
@@ -139,7 +139,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
         memberData()[Index_Prototype] = Encode::undefined();
     }
 
-    ScopedValue v(s, n.asReturnedValue());
+    ScopedValue v(s, n);
     defineReadonlyProperty(scope()->d()->engine->id_name, v);
 }
 
@@ -555,7 +555,7 @@ InternalClass *SimpleScriptFunction::internalClassForConstructor()
 
 DEFINE_OBJECT_VTABLE(BuiltinFunction);
 
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
 {
     d()->code = code;

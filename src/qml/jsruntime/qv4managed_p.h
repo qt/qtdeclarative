@@ -121,18 +121,18 @@ struct ObjectVTable
     ManagedVTable managedVTable;
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
-    ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
+    ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, const StringRef name, const ValueRef value);
+    void (*put)(Managed *, String *name, const ValueRef value);
     void (*putIndexed)(Managed *, uint index, const ValueRef value);
-    PropertyAttributes (*query)(const Managed *, StringRef name);
+    PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
-    bool (*deleteProperty)(Managed *m, const StringRef name);
+    bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     uint (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
+    void (*advanceIterator)(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
 

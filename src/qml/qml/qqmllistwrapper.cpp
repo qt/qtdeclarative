@@ -105,7 +105,7 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
@@ -148,7 +148,7 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
     return Primitive::undefinedValue().asReturnedValue();
 }
 
-void QmlListWrapper::put(Managed *m, const StringRef name, const ValueRef value)
+void QmlListWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
@@ -162,7 +162,7 @@ void QmlListWrapper::destroy(Managed *that)
     w->~QmlListWrapper();
 }
 
-void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attrs)
+void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name = (String *)0;
     *index = UINT_MAX;

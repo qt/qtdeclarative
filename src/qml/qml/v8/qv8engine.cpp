@@ -231,7 +231,7 @@ static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariant
         uint idx = s->asArrayIndex();
         if (idx > 16 && (!o->arrayData() || idx > o->arrayData()->length() * 2))
             o->initSparseArray();
-        o->put(s, (v = engine->fromVariant(iter.value())));
+        o->put(s.getPointer(), (v = engine->fromVariant(iter.value())));
     }
     return o.asReturnedValue();
 }
@@ -605,7 +605,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
         if (idx < UINT_MAX)
             o->arraySet(idx, v);
         else
-            o->insertMember(s, v);
+            o->insertMember(s.getPointer(), v);
     }
     return o.asReturnedValue();
 }
@@ -898,7 +898,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
                     QByteArray className = name.left(name.size()-1);
-                    QV4::ScopedObject p(scope, proto);
+                    QV4::ScopedObject p(scope, proto.getPointer());
                     if (QObject *qobject = qtObjectFromJS(p))
                         canCast = qobject->qt_metacast(className) != 0;
                 }

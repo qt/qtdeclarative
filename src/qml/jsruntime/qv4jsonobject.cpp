@@ -290,7 +290,7 @@ bool JsonParser::parseMember(ObjectRef o)
     if (idx < UINT_MAX) {
         o->putIndexed(idx, val);
     } else {
-        o->insertMember(s, val);
+        o->insertMember(s.getPointer(), val);
     }
 
     END;
@@ -711,7 +711,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
     ScopedObject o(scope, value);
     if (o) {
         ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toJSON")));
-        Scoped<FunctionObject> toJSON(scope, o->get(s));
+        Scoped<FunctionObject> toJSON(scope, o->get(s.getPointer()));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
@@ -814,7 +814,7 @@ QString Stringify::JO(ObjectRef o)
         for (int i = 0; i < propertyList.size(); ++i) {
             bool exists;
             s = propertyList.at(i);
-            ScopedValue v(scope, o->get(s, &exists));
+            ScopedValue v(scope, o->get(s.getPointer(), &exists));
             if (!exists)
                 continue;
             QString member = makeMember(s->toQString(), v);
@@ -1008,7 +1008,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     ScopedValue v(scope);
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it) {
         v = fromJsonValue(engine, it.value());
-        o->put((s = engine->newString(it.key())), v);
+        o->put((s = engine->newString(it.key())).getPointer(), v);
     }
     return o.asReturnedValue();
 }

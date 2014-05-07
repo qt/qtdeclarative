@@ -159,7 +159,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
     ScopedString name(scope, index->toString(ctx));
     if (scope.hasException())
         return Encode::undefined();
-    return o->get(name);
+    return o->get(name.getPointer());
 
 }
 
@@ -215,7 +215,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
     }
 
     ScopedString name(scope, index->toString(ctx));
-    o->put(name, value);
+    o->put(name.getPointer(), value);
 }
 
 void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v)
@@ -254,7 +254,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     case Value::Managed_Type:
         Q_ASSERT(object->isString());
         proto = engine->stringObjectClass->prototype;
-        if (l->name->equals(engine->id_length)) {
+        if (l->name->equals(engine->id_length.getPointer())) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;
             return stringLengthGetter(l, object);
@@ -331,7 +331,7 @@ ReturnedValue Lookup::getterFallback(Lookup *l, const ValueRef object)
     if (!o)
         return Encode::undefined();
     QV4::ScopedString s(scope, l->name);
-    return o->get(s);
+    return o->get(s.getPointer());
 }
 
 ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
@@ -712,7 +712,7 @@ void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef valu
         if (!o) // type error
             return;
         ScopedString s(scope, l->name);
-        o->put(s, value);
+        o->put(s.getPointer(), value);
         return;
     }
     o->setLookup(l, value);
@@ -743,7 +743,7 @@ void Lookup::setterFallback(Lookup *l, const ValueRef object, const ValueRef val
     QV4::ScopedObject o(scope, object->toObject(scope.engine->currentContext()));
     if (o) {
         QV4::ScopedString s(scope, l->name);
-        o->put(s, value);
+        o->put(s.getPointer(), value);
     }
 }
 

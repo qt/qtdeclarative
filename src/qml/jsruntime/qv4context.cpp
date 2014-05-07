@@ -92,7 +92,7 @@ WithContext *ExecutionContext::newWithContext(ObjectRef with)
     return w;
 }
 
-CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
+CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
 {
     CatchContext *c = new (d()->engine->memoryManager) CatchContext(d()->engine, exceptionVarName, exceptionValue);
     return c;
@@ -107,7 +107,7 @@ CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 
 
 
-void ExecutionContext::createMutableBinding(const StringRef name, bool deletable)
+void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     Scope scope(this);
 
@@ -151,7 +151,7 @@ WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
     d()->withObject = with.getPointer();
 }
 
-CatchContext::CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue)
+CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue)
     : ExecutionContext(engine, Type_CatchContext)
 {
     d()->strictMode = d()->parent->d()->strictMode;
@@ -210,7 +210,7 @@ unsigned int CallContext::variableCount() const
 
 
 
-bool ExecutionContext::deleteProperty(const StringRef name)
+bool ExecutionContext::deleteProperty(String *name)
 {
     Scope scope(this);
     bool hasWith = false;
@@ -284,7 +284,7 @@ void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
     }
 }
 
-void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
+void ExecutionContext::setProperty(String *name, const ValueRef value)
 {
     Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
@@ -332,21 +332,21 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             }
         }
     }
-    if (d()->strictMode || name->equals(d()->engine->id_this)) {
-        ScopedValue n(scope, name.asReturnedValue());
+    if (d()->strictMode || name->equals(d()->engine->id_this.getPointer())) {
+        ScopedValue n(scope, name->asReturnedValue());
         throwReferenceError(n);
         return;
     }
     d()->engine->globalObject->put(name, value);
 }
 
-ReturnedValue ExecutionContext::getProperty(const StringRef name)
+ReturnedValue ExecutionContext::getProperty(String *name)
 {
     Scope scope(this);
     ScopedValue v(scope);
     name->makeIdentifier();
 
-    if (name->equals(d()->engine->id_this))
+    if (name->equals(d()->engine->id_this.getPointer()))
         return d()->callData->thisObject.asReturnedValue();
 
     bool hasWith = false;
@@ -400,18 +400,18 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
                 return v.asReturnedValue();
         }
     }
-    ScopedValue n(scope, name.asReturnedValue());
+    ScopedValue n(scope, name);
     return throwReferenceError(n);
 }
 
-ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectRef base)
+ReturnedValue ExecutionContext::getPropertyAndBase(String *name, ObjectRef base)
 {
     Scope scope(this);
     ScopedValue v(scope);
     base = (Object *)0;
     name->makeIdentifier();
 
-    if (name->equals(d()->engine->id_this))
+    if (name->equals(d()->engine->id_this.getPointer()))
         return d()->callData->thisObject.asReturnedValue();
 
     bool hasWith = false;
@@ -469,7 +469,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
                 return v.asReturnedValue();
         }
     }
-    ScopedValue n(scope, name.asReturnedValue());
+    ScopedValue n(scope, name);
     return throwReferenceError(n);
 }
 

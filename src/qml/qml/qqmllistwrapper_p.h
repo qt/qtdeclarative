@@ -94,10 +94,10 @@ public:
 
     QVariant toVariant() const;
 
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
-    static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
+    static void put(Managed *m, String *name, const ValueRef value);
+    static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
     static void destroy(Managed *that);
 };
 

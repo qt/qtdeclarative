@@ -66,7 +66,7 @@ using namespace QV4;
 #define V4THROW_SQL(error, desc) { \
     QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->throwError(ex); \
     return Encode::undefined(); \
 }
@@ -74,7 +74,7 @@ using namespace QV4;
 #define V4THROW_SQL2(error, desc) { \
     QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     args->setReturnValue(ctx->throwError(ex)); \
     return; \
 }
@@ -238,7 +238,7 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapperRef r, Exec
             QVariant v = record.value(ii);
             ScopedString s(scope, v4->newIdentifier(record.fieldName(ii)));
             ScopedValue val(scope, v.isNull() ? Encode::null() : v8->fromVariant(v));
-            row->put(s, val);
+            row->put(s.getPointer(), val);
         }
         if (hasProperty)
             *hasProperty = true;
@@ -338,9 +338,9 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
-            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")), (v = Primitive::fromInt32(query.numRowsAffected())));
-            resultObject->put((s = scope.engine->newIdentifier("insertId")), (v = engine->toString(query.lastInsertId().toString())));
-            resultObject->put((s = scope.engine->newIdentifier("rows")), rows);
+            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")).getPointer(), (v = Primitive::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = scope.engine->newIdentifier("insertId")).getPointer(), (v = engine->toString(query.lastInsertId().toString())));
+            resultObject->put((s = scope.engine->newIdentifier("rows")).getPointer(), rows);
         } else {
             err = true;
         }

@@ -139,10 +139,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
-    CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
+    CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
 
-    void createMutableBinding(const StringRef name, bool deletable);
+    void createMutableBinding(String *name, bool deletable);
 
     ReturnedValue throwError(const QV4::ValueRef value);
     ReturnedValue throwError(const QString &message);
@@ -157,10 +157,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue throwURIError(const ValueRef msg);
     ReturnedValue throwUnimplemented(const QString &message);
 
-    void setProperty(const StringRef name, const ValueRef value);
-    ReturnedValue getProperty(const StringRef name);
-    ReturnedValue getPropertyAndBase(const StringRef name, ObjectRef base);
-    bool deleteProperty(const StringRef name);
+    void setProperty(String *name, const ValueRef value);
+    ReturnedValue getProperty(String *name);
+    ReturnedValue getPropertyAndBase(String *name, ObjectRef base);
+    bool deleteProperty(String *name);
 
     // Can only be called from within catch(...), rethrows if no JS exception.
     ReturnedValue catchException(StackTrace *trace = 0);
@@ -226,7 +226,7 @@ struct CatchContext : public ExecutionContext
     } __data;
     V4_MANAGED
 
-    CatchContext(ExecutionEngine *engine, const StringRef exceptionVarName, const ValueRef exceptionValue);
+    CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
 };
 
 struct WithContext : public ExecutionContext

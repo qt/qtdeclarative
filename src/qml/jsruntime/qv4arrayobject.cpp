@@ -133,7 +133,7 @@ ReturnedValue ArrayPrototype::method_toString(CallContext *ctx)
     if (ctx->d()->engine->hasException)
         return Encode::undefined();
     ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("join")));
-    ScopedFunctionObject f(scope, o->get(s));
+    ScopedFunctionObject f(scope, o->get(s.getPointer()));
     if (!!f) {
         ScopedCallData d(scope, 0);
         d->thisObject = ctx->d()->callData->thisObject;
@@ -224,7 +224,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
         // crazy!
         //
         ScopedString name(scope, ctx->d()->engine->newString(QStringLiteral("0")));
-        ScopedValue r6(scope, self->get(name));
+        ScopedValue r6(scope, self->get(name.getPointer()));
         if (!r6->isNullOrUndefined())
             R = r6->toString(ctx)->toQString();
 
@@ -233,7 +233,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
             R += r4;
 
             name = Primitive::fromDouble(k).toString(ctx);
-            r12 = self->get(name);
+            r12 = self->get(name.getPointer());
             if (scope.hasException())
                 return Encode::undefined();
 
@@ -290,7 +290,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         ScopedString s(scope);
         for (int i = 0; i < ctx->d()->callData->argc; ++i) {
             s = Primitive::fromDouble(l + i).toString(ctx);
-            instance->put(s, ctx->d()->callData->args[i]);
+            instance->put(s.getPointer(), ctx->d()->callData->args[i]);
         }
         double newLen = l + ctx->d()->callData->argc;
         if (!instance->isArrayObject())

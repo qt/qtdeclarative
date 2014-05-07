@@ -314,7 +314,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
                 }
             }
         }
-        return QV4::Object::get(this, name, hasProperty);
+        return QV4::Object::get(this, name.getPointer(), hasProperty);
     }
 
     QQmlData *ddata = QQmlData::get(d()->object, false);
@@ -352,8 +352,8 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
             QV4::ScopedString connect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionClass->prototype->get(connect)));
-            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionClass->prototype->get(disconnect)));
+            handler->put(connect.getPointer(), QV4::ScopedValue(scope, ctx->d()->engine->functionClass->prototype->get(connect.getPointer())));
+            handler->put(disconnect.getPointer(), QV4::ScopedValue(scope, ctx->d()->engine->functionClass->prototype->get(disconnect.getPointer())));
 
             return handler.asReturnedValue();
         } else {
@@ -664,15 +664,15 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (new (engine->memoryManager) QV4::QObjectWrapper(engine, object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->currentContext(), qmlContext, name.getPointer(), IgnoreRevision, hasProperty, /*includeImports*/ true);
+    return that->getQmlProperty(v4->currentContext(), qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
+void QObjectWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
@@ -681,7 +681,7 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    if (!setQmlProperty(v4->currentContext(), qmlContext, that->d()->object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value)) {
+    if (!setQmlProperty(v4->currentContext(), qmlContext, that->d()->object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QQmlData *ddata = QQmlData::get(that->d()->object);
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
         // as regular JavaScript properties, like on JavaScript objects.
@@ -695,7 +695,7 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     }
 }
 
-PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
+PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     ExecutionEngine *engine = that->engine();
@@ -708,7 +708,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
         return QV4::Object::query(m, name);
 }
 
-void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
+void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
@@ -724,7 +724,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef n
         const QMetaObject *mo = that->d()->object->metaObject();
         const int propertyCount = mo->propertyCount();
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
+            name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()))->getPointer();
             ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
             p->value = that->get(name);
@@ -737,7 +737,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef n
             ++it->arrayIndex;
             if (method.access() == QMetaMethod::Private || index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)
                 continue;
-            name = that->engine()->newString(QString::fromUtf8(method.name()));
+            name = that->engine()->newString(QString::fromUtf8(method.name()))->getPointer();
             *attributes = QV4::Attr_Data;
             p->value = that->get(name);
             return;

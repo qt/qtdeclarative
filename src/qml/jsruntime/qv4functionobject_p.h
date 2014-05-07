@@ -129,12 +129,12 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function() ? function()->compiledFunction->nLocals : 0; }
 
-    FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
+    FunctionObject(ExecutionContext *scope, String *name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(ExecutionContext *scope, const ReturnedValue name);
     ~FunctionObject();
 
-    void init(const StringRef name, bool createProto);
+    void init(String *name, bool createProto);
 
     ReturnedValue newInstance();
 
@@ -197,7 +197,7 @@ struct BuiltinFunction: FunctionObject {
     } __data;
     V4_OBJECT
 
-    BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
+    BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);

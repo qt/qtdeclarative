@@ -139,7 +139,7 @@ void String::markObjects(Managed *that, ExecutionEngine *e)
     }
 }
 
-ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
@@ -185,7 +185,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     return engine->stringObjectClass->prototype->getValue(that, pd, attrs);
 }
 
-void String::put(Managed *m, const StringRef name, const ValueRef value)
+void String::put(Managed *m, String *name, const ValueRef value)
 {
     Scope scope(m->engine());
     if (scope.hasException())
@@ -206,7 +206,7 @@ void String::putIndexed(Managed *m, uint index, const ValueRef value)
     o->putIndexed(index, value);
 }
 
-PropertyAttributes String::query(const Managed *m, StringRef name)
+PropertyAttributes String::query(const Managed *m, String *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -220,7 +220,7 @@ PropertyAttributes String::queryIndexed(const Managed *m, uint index)
     return (index < static_cast<uint>(that->d()->text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
-bool String::deleteProperty(Managed *, const StringRef)
+bool String::deleteProperty(Managed *, String *)
 {
     return false;
 }
@@ -304,9 +304,9 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-bool String::equals(const StringRef other) const
+bool String::equals(String *other) const
 {
-    if (this == other.getPointer())
+    if (this == other)
         return true;
     if (hashValue() != other->hashValue())
         return false;

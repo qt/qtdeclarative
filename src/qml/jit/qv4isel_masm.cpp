@@ -389,8 +389,7 @@ void InstructionSelection::callBuiltinUnwindException(IR::Expr *result)
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    Assembler::Pointer s = _as->loadStringAddress(Assembler::ScratchRegister, exceptionName);
-    generateFunctionCall(Assembler::ContextRegister, Runtime::pushCatchScope, Assembler::ContextRegister, s);
+    generateFunctionCall(Assembler::ContextRegister, Runtime::pushCatchScope, Assembler::ContextRegister, Assembler::PointerToString(exceptionName));
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result)

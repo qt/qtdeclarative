@@ -104,9 +104,9 @@ public:
     static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
 
 
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
-    static PropertyAttributes query(const Managed *, StringRef name);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static void put(Managed *m, String *name, const ValueRef value);
+    static PropertyAttributes query(const Managed *, String *name);
     static void destroy(Managed *that);
 
     static bool isEqualTo(Managed *that, Managed *o);

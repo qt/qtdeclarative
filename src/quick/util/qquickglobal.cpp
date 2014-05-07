@@ -286,17 +286,17 @@ public:
 
         QV4::ScopedString s(scope);
 
-        QV4::ScopedValue vbold(scope, obj->get((s = v4->newString(QStringLiteral("bold")))));
-        QV4::ScopedValue vcap(scope, obj->get((s = v4->newString(QStringLiteral("capitalization")))));
-        QV4::ScopedValue vfam(scope, obj->get((s = v4->newString(QStringLiteral("family")))));
-        QV4::ScopedValue vital(scope, obj->get((s = v4->newString(QStringLiteral("italic")))));
-        QV4::ScopedValue vlspac(scope, obj->get((s = v4->newString(QStringLiteral("letterSpacing")))));
-        QV4::ScopedValue vpixsz(scope, obj->get((s = v4->newString(QStringLiteral("pixelSize")))));
-        QV4::ScopedValue vpntsz(scope, obj->get((s = v4->newString(QStringLiteral("pointSize")))));
-        QV4::ScopedValue vstrk(scope, obj->get((s = v4->newString(QStringLiteral("strikeout")))));
-        QV4::ScopedValue vundl(scope, obj->get((s = v4->newString(QStringLiteral("underline")))));
-        QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight")))));
-        QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
+        QV4::ScopedValue vbold(scope, obj->get((s = v4->newString(QStringLiteral("bold"))).getPointer()));
+        QV4::ScopedValue vcap(scope, obj->get((s = v4->newString(QStringLiteral("capitalization"))).getPointer()));
+        QV4::ScopedValue vfam(scope, obj->get((s = v4->newString(QStringLiteral("family"))).getPointer()));
+        QV4::ScopedValue vital(scope, obj->get((s = v4->newString(QStringLiteral("italic"))).getPointer()));
+        QV4::ScopedValue vlspac(scope, obj->get((s = v4->newString(QStringLiteral("letterSpacing"))).getPointer()));
+        QV4::ScopedValue vpixsz(scope, obj->get((s = v4->newString(QStringLiteral("pixelSize"))).getPointer()));
+        QV4::ScopedValue vpntsz(scope, obj->get((s = v4->newString(QStringLiteral("pointSize"))).getPointer()));
+        QV4::ScopedValue vstrk(scope, obj->get((s = v4->newString(QStringLiteral("strikeout"))).getPointer()));
+        QV4::ScopedValue vundl(scope, obj->get((s = v4->newString(QStringLiteral("underline"))).getPointer()));
+        QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight"))).getPointer()));
+        QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing"))).getPointer()));
 
         // pull out the values, set ok to true if at least one valid field is given.
         if (vbold->isBoolean()) {

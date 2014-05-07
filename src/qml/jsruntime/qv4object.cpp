@@ -104,7 +104,7 @@ void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef valu
 {
     Scope scope(ctx);
     ScopedString n(scope, ctx->d()->engine->newString(name));
-    put(n, value);
+    put(n.getPointer(), value);
 }
 
 ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs)
@@ -154,7 +154,7 @@ void Object::defineDefaultProperty(const QString &name, ValueRef value)
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    defineDefaultProperty(s, value);
+    defineDefaultProperty(s.getPointer(), value);
 }
 
 void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount)
@@ -162,12 +162,12 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s, code));
+    Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s.getPointer(), code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s, function);
+    defineDefaultProperty(s.getPointer(), function);
 }
 
-void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(CallContext *), int argumentCount)
+void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -181,10 +181,10 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
     ExecutionEngine *e = engine();
     Scope scope(e);
     Scoped<String> s(scope, e->newIdentifier(name));
-    defineAccessorProperty(s, getter, setter);
+    defineAccessorProperty(s.getPointer(), getter, setter);
 }
 
-void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
+void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
 {
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);
@@ -199,10 +199,10 @@ void Object::defineReadonlyProperty(const QString &name, ValueRef value)
     QV4::ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    defineReadonlyProperty(s, value);
+    defineReadonlyProperty(s.getPointer(), value);
 }
 
-void Object::defineReadonlyProperty(const StringRef name, ValueRef value)
+void Object::defineReadonlyProperty(String *name, ValueRef value)
 {
     insertMember(name, value, Attr_ReadOnly);
 }
@@ -221,10 +221,10 @@ void Object::ensureMemberIndex(uint idx)
     memberData().ensureIndex(engine(), idx);
 }
 
-void Object::insertMember(const StringRef s, const Property &p, PropertyAttributes attributes)
+void Object::insertMember(String *s, const Property &p, PropertyAttributes attributes)
 {
     uint idx;
-    InternalClass::addMember(this, s.getPointer(), attributes, &idx);
+    InternalClass::addMember(this, s, attributes, &idx);
 
 
     ensureMemberIndex(internalClass()->size);
@@ -240,7 +240,7 @@ void Object::insertMember(const StringRef s, const Property &p, PropertyAttribut
 }
 
 // Section 8.12.1
-Property *Object::__getOwnProperty__(const StringRef name, PropertyAttributes *attrs)
+Property *Object::__getOwnProperty__(String *name, PropertyAttributes *attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -278,7 +278,7 @@ Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
 }
 
 // Section 8.12.2
-Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttributes *attrs) const
+Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -287,7 +287,7 @@ Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttrib
 
     const Object *o = this;
     while (o) {
-        uint idx = o->internalClass()->find(name.getPointer());
+        uint idx = o->internalClass()->find(name);
         if (idx < UINT_MAX) {
             if (attrs)
                 *attrs = o->internalClass()->propertyData[idx];
@@ -326,7 +326,7 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     return 0;
 }
 
-bool Object::hasProperty(const StringRef name) const
+bool Object::hasProperty(String *name) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -356,7 +356,7 @@ bool Object::hasProperty(uint index) const
     return false;
 }
 
-bool Object::hasOwnProperty(const StringRef name) const
+bool Object::hasOwnProperty(String *name) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -393,7 +393,7 @@ ReturnedValue Object::call(Managed *m, CallData *)
     return m->engine()->currentContext()->throwTypeError();
 }
 
-ReturnedValue Object::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
@@ -403,7 +403,7 @@ ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, const StringRef name, const ValueRef value)
+void Object::put(Managed *m, String *name, const ValueRef value)
 {
     static_cast<Object *>(m)->internalPut(name, value);
 }
@@ -413,14 +413,14 @@ void Object::putIndexed(Managed *m, uint index, const ValueRef value)
     static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
-PropertyAttributes Object::query(const Managed *m, StringRef name)
+PropertyAttributes Object::query(const Managed *m, String *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return queryIndexed(m, idx);
 
     const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass()->find(name.getPointer());
+    idx = o->internalClass()->find(name);
     if (idx < UINT_MAX)
         return o->internalClass()->propertyData[idx];
 
@@ -441,7 +441,7 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool Object::deleteProperty(Managed *m, const StringRef name)
+bool Object::deleteProperty(Managed *m, String *name)
 {
     return static_cast<Object *>(m)->internalDeleteProperty(name);
 }
@@ -505,7 +505,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     }
 
     ScopedString s(scope, l->name);
-    o->put(s, value);
+    o->put(s.getPointer(), value);
 
     if (o->internalClass() == c)
         return;
@@ -534,7 +534,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     l->setter = Lookup::setterGeneric;
 }
 
-void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *pd, PropertyAttributes *attrs)
+void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
     name = (String *)0;
@@ -601,7 +601,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uin
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(const StringRef name, bool *hasProperty)
+ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -611,7 +611,7 @@ ReturnedValue Object::internalGet(const StringRef name, bool *hasProperty)
 
     Object *o = this;
     while (o) {
-        uint idx = o->internalClass()->find(name.getPointer());
+        uint idx = o->internalClass()->find(name);
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
@@ -661,7 +661,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::internalPut(const StringRef name, const ValueRef value)
+void Object::internalPut(String *name, const ValueRef value)
 {
     if (internalClass()->engine->hasException)
         return;
@@ -672,7 +672,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
 
     name->makeIdentifier();
 
-    uint member = internalClass()->find(name.getPointer());
+    uint member = internalClass()->find(name);
     Property *pd = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
@@ -814,7 +814,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(const StringRef name)
+bool Object::internalDeleteProperty(String *name)
 {
     if (internalClass()->engine->hasException)
         return false;
@@ -853,7 +853,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -895,7 +895,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     }
 
     // Clause 1
-    memberIndex = internalClass()->find(name.getPointer());
+    memberIndex = internalClass()->find(name);
     current = (memberIndex < UINT_MAX) ? propertyAt(memberIndex) : 0;
     cattrs = internalClass()->propertyData.constData() + memberIndex;
 
@@ -963,14 +963,14 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
         return true;
     }
 
-    return __defineOwnProperty__(ctx, index, StringRef::null(), p, attrs);
+    return __defineOwnProperty__(ctx, index, 0, p, attrs);
 reject:
   if (ctx->d()->strictMode)
       ctx->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const StringRef member, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *member, const Property &p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
@@ -978,7 +978,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
 
     Property *current;
     PropertyAttributes cattrs;
-    if (!member.isNull()) {
+    if (member) {
         current = propertyAt(index);
         cattrs = internalClass()->propertyData[index];
     } else {
@@ -1011,7 +1011,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
             // 9b
             cattrs.setType(PropertyAttributes::Accessor);
             cattrs.clearWritable();
-            if (member.isNull()) {
+            if (!member) {
                 // need to convert the array and the slot
                 initSparseArray();
                 setArrayAttributes(index, cattrs);
@@ -1023,7 +1023,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
             // 9c
             cattrs.setType(PropertyAttributes::Data);
             cattrs.setWritable(false);
-            if (member.isNull()) {
+            if (!member) {
                 // need to convert the array and the slot
                 setArrayAttributes(index, cattrs);
                 current = arrayData()->getProperty(index);
@@ -1048,8 +1048,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Stri
   accept:
 
     current->merge(cattrs, p, attrs);
-    if (!member.isNull()) {
-        InternalClass::changeMember(this, member.getPointer(), cattrs);
+    if (member) {
+        InternalClass::changeMember(this, member, cattrs);
     } else {
         setArrayAttributes(index, cattrs);
     }
@@ -1067,7 +1067,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, c
 {
     Scope scope(ctx);
     ScopedString s(scope, ctx->d()->engine->newString(name));
-    return __defineOwnProperty__(ctx, s, p, attrs);
+    return __defineOwnProperty__(ctx, s.getPointer(), p, attrs);
 }
 
 

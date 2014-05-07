@@ -120,7 +120,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
 }
 
 
-ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
@@ -166,7 +166,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, qobjectSingleton, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                 QV4::ScopedObject o(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(v4));
@@ -189,7 +189,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
             } else if (w->d()->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, ao, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                    return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
                 // Fall through to base implementation
             }
@@ -230,7 +230,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
 }
 
 
-void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
+void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -250,7 +250,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
         QObject *object = w->d()->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao)
-            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, ao, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -258,7 +258,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, qobjectSingleton, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::ScopedObject apiprivate(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->value);
             if (!apiprivate) {
@@ -272,13 +272,11 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     }
 }
 
-PropertyAttributes QmlTypeWrapper::query(const Managed *m, StringRef name)
+PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
 {
     // ### Implement more efficiently.
-    Scope scope(m->engine());
-    ScopedString n(scope, name);
     bool hasProperty = false;
-    static_cast<Object *>(const_cast<Managed*>(m))->get(n, &hasProperty);
+    static_cast<Object *>(const_cast<Managed*>(m))->get(name, &hasProperty);
     return hasProperty ? Attr_Data : Attr_Invalid;
 }
 

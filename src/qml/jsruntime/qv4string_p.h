@@ -100,7 +100,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
             QStringData::deallocate(d()->text);
     }
 
-    bool equals(const StringRef other) const;
+    bool equals(String *other) const;
     inline bool isEqualTo(const String *other) const {
         if (this == other)
             return true;
@@ -176,13 +176,13 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 protected:
     static void destroy(Managed *);
     static void markObjects(Managed *that, ExecutionEngine *e);
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
+    static void put(Managed *m, String *name, const ValueRef value);
     static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static PropertyAttributes query(const Managed *m, StringRef name);
+    static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *, const StringRef);
+    static bool deleteProperty(Managed *, String *);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
     static uint getLength(const Managed *m);
@@ -207,7 +207,6 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
     return v.toString(e)->asReturnedValue();
 }
 
-DEFINE_REF(String, Managed);
 #endif
 
 }

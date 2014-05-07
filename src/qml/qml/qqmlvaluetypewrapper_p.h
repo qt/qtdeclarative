@@ -93,11 +93,11 @@ public:
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);
 
-    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
-    static void put(Managed *m, const StringRef name, const ValueRef value);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static void put(Managed *m, String *name, const ValueRef value);
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
-    static PropertyAttributes query(const Managed *, StringRef name);
+    static PropertyAttributes query(const Managed *, String *name);
 
     static QV4::ReturnedValue method_toString(CallContext *ctx);
 

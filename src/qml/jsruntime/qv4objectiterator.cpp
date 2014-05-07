@@ -80,7 +80,7 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     }
 }
 
-void ObjectIterator::next(StringRef name, uint *index, Property *pd, PropertyAttributes *attrs)
+void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     name = (String *)0;
     *index = UINT_MAX;
@@ -137,7 +137,9 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    next(name, &index, &p, &attrs);
+    String *n;
+    next(n, &index, &p, &attrs);
+    name = n;
     if (attrs.isEmpty())
         return Encode::null();
 
@@ -159,7 +161,9 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    next(name, &index, &p, &attrs);
+    String *n;
+    next(n, &index, &p, &attrs);
+    name = n;
     if (attrs.isEmpty())
         return Encode::null();
 
@@ -181,7 +185,9 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    next(name, &index, &p, &attrs);
+    String *n;
+    next(n, &index, &p, &attrs);
+    name = n;
     if (attrs.isEmpty())
         return Encode::null();
 

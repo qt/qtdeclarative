@@ -155,7 +155,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
             p->setGetter(new (engine->memoryManager) QV4::IndexedBuiltinFunction(wrapper->context(), index++, signalParameterGetter));
             p->setSetter(0);
             s = engine->newString(QString::fromUtf8(param));
-            qmlScopeObject->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+            qmlScopeObject->insertMember(s.getPointer(), p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
         }
     }
 

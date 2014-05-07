@@ -444,6 +444,7 @@ struct TypedValue : public Value
 
     bool operator!() const { return !managed(); }
 
+    operator T *() { return static_cast<T *>(managed()); }
     T *operator->() { return static_cast<T *>(managed()); }
     const T *operator->() const { return static_cast<T *>(managed()); }
     T *getPointer() const { return static_cast<T *>(managed()); }

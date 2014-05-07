@@ -206,7 +206,7 @@ bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, StringRef name)
+PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
 {
     const QmlValueTypeWrapper *r = m->as<const QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -220,9 +220,9 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, StringRef name)
     {
         QQmlData *ddata = QQmlData::get(r->d()->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name.getPointer(), 0, 0);
+            result = ddata->propertyCache->property(name, 0, 0);
         else
-            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type, name.getPointer(), 0, local);
+            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type, name, 0, local);
     }
     return result ? Attr_Data : Attr_Invalid;
 }
@@ -270,7 +270,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
     }
 }
 
-ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
+ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -297,7 +297,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
     {
         QQmlData *ddata = QQmlData::get(r->d()->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name.getPointer(), 0, 0);
+            result = ddata->propertyCache->property(name, 0, 0);
         else
             result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type, name, 0, local);
     }
@@ -308,7 +308,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), qmlContext, r->d()->type, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision);
+        return QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), qmlContext, r->d()->type, name, QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
@@ -332,7 +332,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
 #undef VALUE_TYPE_ACCESSOR
 }
 
-void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
+void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
