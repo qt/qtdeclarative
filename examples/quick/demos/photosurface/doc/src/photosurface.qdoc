@@ -29,13 +29,135 @@
     \title Qt Quick Demo - Photo Surface
     \ingroup qtquickdemos
     \example demos/photosurface
-    \brief A touch-based app for shuffling photos around a virtual surface.
+    \brief A QML app for touch devices that uses a Repeater with a
+    FolderListModel to access content in a folder, and a PinchArea that contains
+    a MouseArea to handle pinch gestures on the fetched content.
     \image qtquick-demo-photosurface-small.png
 
-    \e{Photo Surface} demonstrates how to handle dragging, rotation and pinch
-    zooming within the same item using a \l PinchArea containing a \l MouseArea.
+    \e{Photo Surface} demonstrates how to use a \l{Repeater} with a
+    FolderListModel and a FileDialog to access images from a folder selected
+    by a user and how to handle dragging, rotation and pinch zooming within the
+    same item using a \l PinchArea that contains a \l MouseArea.
+
+    All the app code is contained in one QML file, photosurface.qml. Inline
+    JavaScript code is used to place, rotate, and scale images on the photo
+    surface.
 
     \include examples-run.qdocinc
 
-    \sa {QML Applications}
+    \section1 Creating the Main Window
+
+    To create the main window for the Photo Surface app, we use the \l{Window}
+    QML type as the root item. It automatically sets up the window for use with
+    \l{Qt Quick} graphical types:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto Window {
+    \printuntil defaultSize
+
+    To use the \l{Window} type, we must import it:
+
+    \code
+    import QtQuick.Window 2.1
+    \endcode
+
+    \section1 Accessing Folder Contents
+
+    We use a \l{Repeater} QML type together with the FolderListModel to display
+    GIF, JPG, and PNG images located in a folder:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto Repeater
+    \printuntil }
+
+    To use the FolderListModel type, we must import it:
+
+    \code
+    import Qt.labs.folderlistmodel 1.0
+    \endcode
+
+    We use a FileDialog to enable users to select the folder that contains
+    the images:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto FileDialog
+    \printuntil }
+
+    To use the FileDialog type, we must import \l{Qt Quick Dialogs}:
+
+    \code
+    import QtQuick.Dialogs 1.0
+    \endcode
+
+    We use the \c {fileDialog.open()} function to open the file dialog when the
+    app starts:
+
+    \code
+    Component.onCompleted: fileDialog.open()
+    \endcode
+
+    Users can also click the file dialog icon to open the file dialog. We use
+    an \l{Image} QML type to display the icon. Inside the \l{Image} type, we
+    use a MouseArea with the \c onClicked signal handler to call the
+    \c {fileDialog.open()} function:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipuntil Image {
+    \skipto Image {
+    \printuntil }
+    \printuntil }
+
+    \section1 Displaying Images on the Photo Surface
+
+    We use a \l{Rectangle} as a delegate for a \l{Repeater} to provide a frame
+    for each image that the FolderListModel finds in the selected folder. We use
+    JavaScript \c Math() methods to place the frames randomly on the photo
+    surface and to rotate them at random angles, as well as to scale the images:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto Rectangle
+    \printuntil }
+
+    \section1 Handling Pinch Gestures
+
+    We use a PinchArea that contains a MouseArea in the photo frames to handle
+    dragging, rotation and pinch zooming of the frame:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto PinchArea
+    \printuntil onPinchFinished
+
+    We use the \c pinch group property to control how the photo frames react to
+    pinch gestures. The \c pinch.target sets \c photoFrame as the item to
+    manipulate. The rotation properties specify that the frames can be rotated
+    at all angles and the scale properties specify that they can be scaled
+    between \c 0.1 and \c 10.
+
+    In the MouseArea's \c onPressed signal handler, we raise the selected photo
+    frame to the top by increasing the value of its \c z property. The root item
+    stores the z value of the top-most frame. The border color of the photo
+    frame is controlled in the \c onEntered and \c onExited signal handlers to
+    highlight the selected image.
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto MouseArea
+    \printuntil onExited
+
+    To enable you to test the example on the desktop, we use the MouseArea's
+    \c onWheel signal handler to simulate pinch gestures by using a mouse:
+
+    \quotefromfile demos/photosurface/photosurface.qml
+    \skipto onWheel
+    \printuntil photoFrame.y
+    \printuntil }
+    \printuntil }
+    \printuntil }
+
+    The \c onWheel signal handler is called in response to mouse wheel gestures.
+    Use the vertical wheel to zoom and Ctrl and the vertical wheel to rotate
+    frames. If the mouse has a horizontal wheel, use it to rotate frames.
+
+    \section1 List of Files
+
+    \sa {QML Applications}
 */
