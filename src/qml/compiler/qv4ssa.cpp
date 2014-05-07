@@ -239,16 +239,12 @@ public:
     const_iterator begin() const { return const_iterator(*this, false); }
     const_iterator end() const { return const_iterator(*this, true); }
 
-    QList<BasicBlock *> values() const
+    void collectValues(std::vector<BasicBlock *> &bbs) const
     {
         Q_ASSERT(function);
 
-        QList<BasicBlock *> result;
-
         for (const_iterator it = begin(), eit = end(); it != eit; ++it)
-            result.append(*it);
-
-        return result;
+            bbs.push_back(*it);
     }
 };
 
@@ -452,8 +448,8 @@ class DominatorTree {
         }
 
         // Fill the worklist and initialize the node status for each basic-block
-        QHash<BasicBlockIndex, NodeProgress> nodeStatus;
-        nodeStatus.reserve(function->basicBlockCount());
+        std::vector<NodeProgress> nodeStatus;
+        nodeStatus.resize(function->basicBlockCount());
         std::vector<BasicBlockIndex> worklist;
         worklist.reserve(function->basicBlockCount() * 2);
         foreach (BasicBlock *bb, function->basicBlocks()) {
@@ -673,11 +669,10 @@ public:
     const std::vector<Temp> &allTemps() const
     { return _allTemps; }
 
-    QList<BasicBlock *> defsite(const Temp &n) const
-    {
+    void collectDefSites(const Temp &n, std::vector<BasicBlock *> &bbs) const {
         Q_ASSERT(!n.isInvalid());
         Q_ASSERT(n.index < _defsites.size());
-        return _defsites[n.index].values();
+        _defsites[n.index].collectValues(bbs);
     }
 
     const std::vector<int> &inBlock(BasicBlock *n) const
@@ -754,6 +749,238 @@ protected:
         if (isCollectable(t))
             if (!killed[t->index])
                 nonLocals[t->index] = true;
+    }
+};
+
+struct UntypedTemp {
+    Temp temp;
+    UntypedTemp() {}
+    UntypedTemp(const Temp &t): temp(t) {}
+};
+inline bool operator==(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
+{ return t1.temp.index == t2.temp.index && t1.temp.kind == t2.temp.kind; }
+inline bool operator!=(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
+{ return !(t1 == t2); }
+
+class DefUses
+{
+public:
+    struct DefUse {
+        DefUse()
+            : defStmt(0)
+            , blockOfStatement(0)
+        { uses.reserve(8); }
+        Temp temp;
+        Stmt *defStmt;
+        BasicBlock *blockOfStatement;
+        QVector<Stmt *> uses;
+
+        bool isValid() const
+        { return temp.kind != Temp::Invalid; }
+
+        void clear()
+        { defStmt = 0; blockOfStatement = 0; uses.clear(); }
+    };
+
+private:
+    std::vector<DefUse> _defUses;
+    class Temps: public QVector<Temp> {
+    public:
+        Temps() { reserve(4); }
+    };
+    std::vector<Temps> _usesPerStatement;
+
+    void ensure(Temp *newTemp)
+    {
+        if (_defUses.size() <= newTemp->index) {
+            _defUses.reserve(newTemp->index + _defUses.size() / 3 + 1);
+            _defUses.resize(newTemp->index + 1);
+        }
+    }
+
+    void ensure(Stmt *s)
+    {
+        Q_ASSERT(s->id() >= 0);
+        if (static_cast<unsigned>(s->id()) >= _usesPerStatement.size()) {
+            _usesPerStatement.reserve(s->id() + _usesPerStatement.size() / 3 + 1);
+            _usesPerStatement.resize(s->id() + 1);
+        }
+    }
+
+    void addUseForStatement(Stmt *s, const Temp &var)
+    {
+        ensure(s);
+        _usesPerStatement[s->id()].push_back(var);
+    }
+
+public:
+    DefUses(IR::Function *function)
+    {
+        _usesPerStatement.resize(function->statementCount());
+        _defUses.resize(function->tempCount);
+    }
+
+    void cleanup()
+    {
+        for (size_t i = 0, ei = _defUses.size(); i != ei; ++i) {
+            DefUse &defUse = _defUses[i];
+            if (defUse.isValid() && !defUse.defStmt)
+                defUse.clear();
+        }
+    }
+
+    unsigned statementCount() const
+    { return _usesPerStatement.size(); }
+
+    unsigned tempCount() const
+    { return _defUses.size(); }
+
+    const Temp &temp(int idx) const
+    { return _defUses[idx].temp; }
+
+    void addDef(Temp *newTemp, Stmt *defStmt, BasicBlock *defBlock)
+    {
+        ensure(newTemp);
+        DefUse &defUse = _defUses[newTemp->index];
+        Q_ASSERT(!defUse.isValid());
+        defUse.temp = *newTemp;
+        defUse.defStmt = defStmt;
+        defUse.blockOfStatement = defBlock;
+    }
+
+    QList<UntypedTemp> defsUntyped() const
+    {
+        QList<UntypedTemp> res;
+        foreach (const DefUse &du, _defUses)
+            if (du.isValid())
+                res.append(UntypedTemp(du.temp));
+        return res;
+    }
+
+    std::vector<const Temp *> defs() const {
+        std::vector<const Temp *> res;
+        res.reserve(_defUses.size());
+        for (unsigned i = 0, ei = _defUses.size(); i != ei; ++i) {
+            const DefUse &du = _defUses.at(i);
+            if (du.isValid())
+                res.push_back(&du.temp);
+        }
+        return res;
+    }
+
+    void removeDef(const Temp &variable) {
+        Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
+        _defUses[variable.index].clear();
+    }
+
+    void addUses(const Temp &variable, const QVector<Stmt *> &newUses)
+    {
+        Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
+        QVector<Stmt *> &uses = _defUses[variable.index].uses;
+        foreach (Stmt *stmt, newUses)
+            if (std::find(uses.begin(), uses.end(), stmt) == uses.end())
+                uses.push_back(stmt);
+    }
+
+    void addUse(const Temp &variable, Stmt *newUse)
+    {
+        if (_defUses.size() <= variable.index) {
+            _defUses.resize(variable.index + 1);
+            DefUse &du = _defUses[variable.index];
+            du.temp = variable;
+            du.uses.push_back(newUse);
+            addUseForStatement(newUse, variable);
+            return;
+        }
+
+        QVector<Stmt *> &uses = _defUses[variable.index].uses;
+        if (std::find(uses.begin(), uses.end(), newUse) == uses.end())
+            uses.push_back(newUse);
+        addUseForStatement(newUse, variable);
+    }
+
+    int useCount(const Temp &variable) const
+    {
+        Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
+        return _defUses[variable.index].uses.size();
+    }
+
+    Stmt *defStmt(const Temp &variable) const
+    {
+        Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
+        return _defUses[variable.index].defStmt;
+    }
+
+    BasicBlock *defStmtBlock(const Temp &variable) const
+    {
+        Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
+        return _defUses[variable.index].blockOfStatement;
+    }
+
+    void removeUse(Stmt *usingStmt, const Temp &var)
+    {
+        Q_ASSERT(static_cast<unsigned>(var.index) < _defUses.size());
+        QVector<Stmt *> &uses = _defUses[var.index].uses;
+        uses.erase(std::remove(uses.begin(), uses.end(), usingStmt), uses.end());
+    }
+
+    void registerNewStatement(Stmt *s)
+    {
+        ensure(s);
+    }
+
+    const QVector<Temp> &usedVars(Stmt *s) const
+    {
+        Q_ASSERT(s->id() >= 0);
+        Q_ASSERT(static_cast<unsigned>(s->id()) < _usesPerStatement.size());
+        return _usesPerStatement[s->id()];
+    }
+
+    const QVector<Stmt *> &uses(const Temp &var) const
+    {
+        return _defUses[var.index].uses;
+    }
+
+    QVector<Stmt*> removeDefUses(Stmt *s)
+    {
+        QVector<Stmt*> defStmts;
+        foreach (const Temp &usedVar, usedVars(s)) {
+            if (Stmt *ds = defStmt(usedVar))
+                defStmts += ds;
+            removeUse(s, usedVar);
+        }
+        if (Move *m = s->asMove()) {
+            if (Temp *t = m->target->asTemp())
+                removeDef(*t);
+        } else if (Phi *p = s->asPhi()) {
+            removeDef(*p->targetTemp);
+        }
+
+        return defStmts;
+    }
+
+    void dump() const
+    {
+        qout << "Defines and uses:" << endl;
+        foreach (const DefUse &du, _defUses) {
+            if (!du.isValid())
+                continue;
+            qout << '%' << du.temp.index;
+            qout << " -> defined in block " << du.blockOfStatement->index()
+                 << ", statement: " << du.defStmt->id()
+                 << endl;
+            qout << "     uses:";
+            foreach (Stmt *s, du.uses)
+                qout << ' ' << s->id();
+            qout << endl;
+        }
+        qout << "Uses per statement:" << endl;
+        for (unsigned i = 0, ei = _usesPerStatement.size(); i != ei; ++i) {
+            qout << "    " << i << ":";
+            foreach (const Temp &t, _usesPerStatement[i])
+                qout << ' ' << t.index;
+            qout << endl;
+        }
     }
 };
 
@@ -848,7 +1075,10 @@ void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
 //     mapping[t] = c
 class VariableRenamer: public StmtVisitor, public ExprVisitor
 {
+    Q_DISABLE_COPY(VariableRenamer)
+
     IR::Function *function;
+    DefUses &defUses;
     unsigned tempCount;
 
     typedef std::vector<int> Mapping; // maps from existing/old temp number to the new and unique temp number.
@@ -856,12 +1086,8 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
     Mapping vregMapping;
     ProcessedBlocks processed;
 
-    bool isRenamable(Temp *t) const
-    {
-        Q_UNUSED(t);
-        Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
-        return true;
-    }
+    BasicBlock *currentBB;
+    Stmt *currentStmt;
 
     struct TodoAction {
         enum { RestoreVReg, Rename } action;
@@ -904,8 +1130,9 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
     QVector<TodoAction> todo;
 
 public:
-    VariableRenamer(IR::Function *f)
+    VariableRenamer(IR::Function *f, DefUses &defUses)
         : function(f)
+        , defUses(defUses)
         , tempCount(0)
         , processed(f)
     {
@@ -963,8 +1190,12 @@ private:
 
     void renameStatementsAndPhis(BasicBlock *bb)
     {
-        foreach (Stmt *s, bb->statements())
+        currentBB = bb;
+
+        foreach (Stmt *s, bb->statements()) {
+            currentStmt = s;
             s->accept(this);
+        }
 
         foreach (BasicBlock *Y, bb->out) {
             const int j = Y->in.indexOf(bb);
@@ -976,6 +1207,7 @@ private:
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
                     t->index = newTmp;
                     t->kind = Temp::VirtualRegister;
+                    defUses.addUse(*t, phi);
                 } else {
                     break;
                 }
@@ -1030,11 +1262,10 @@ private:
 
 protected:
     virtual void visitTemp(Temp *e) { // only called for uses, not defs
-        if (isRenamable(e)) {
-//            qDebug()<<"I: replacing use of"<<e->index<<"with"<<stack[e->index].top();
-            e->index = currentNumber(*e);
-            e->kind = Temp::VirtualRegister;
-        }
+//        qDebug()<<"I: replacing use of"<<e->index<<"with"<<stack[e->index].top();
+        e->index = currentNumber(*e);
+        e->kind = Temp::VirtualRegister;
+        defUses.addUse(*e, currentStmt);
     }
 
     virtual void visitMove(Move *s) {
@@ -1048,13 +1279,12 @@ protected:
             s->target->accept(this);
     }
 
-    void renameTemp(Temp *t) {
-        if (isRenamable(t)) {
-            const int newIdx = nextFreeTemp(*t);
-//            qDebug()<<"I: replacing def of"<<a<<"with"<<newIdx;
-            t->kind = Temp::VirtualRegister;
-            t->index = newIdx;
-        }
+    void renameTemp(Temp *t) { // only called for defs, not uses
+        const int newIdx = nextFreeTemp(*t);
+//        qDebug()<<"I: replacing def of"<<a<<"with"<<newIdx;
+        t->kind = Temp::VirtualRegister;
+        t->index = newIdx;
+        defUses.addDef(t, currentStmt, currentBB);
     }
 
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
@@ -1096,7 +1326,7 @@ protected:
     }
 };
 
-void convertToSSA(IR::Function *function, const DominatorTree &df)
+void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defUses)
 {
 #if defined(SHOW_SSA)
     qout << "Converting function ";
@@ -1111,13 +1341,13 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
     VariableCollector variables(function);
 
     // Prepare for phi node insertion:
-    std::vector<QSet<int> > A_phi;
+    std::vector<std::vector<bool> > A_phi;
     A_phi.resize(function->basicBlockCount());
-    for (int i = 0, ei = A_phi.size(); i != ei; ++i) {
-        QSet<int> temps;
-        temps.reserve(16);
-        A_phi[i] = temps;
-    }
+    for (int i = 0, ei = A_phi.size(); i != ei; ++i)
+        A_phi[i].assign(function->tempCount, false);
+
+    std::vector<BasicBlock *> W;
+    W.reserve(8);
 
     // Place phi functions:
     foreach (const Temp &a, variables.allTemps()) {
@@ -1126,332 +1356,88 @@ void convertToSSA(IR::Function *function, const DominatorTree &df)
         if (!variables.isNonLocal(a))
             continue; // for semi-pruned SSA
 
-        QList<BasicBlock *> W = variables.defsite(a);
-        while (!W.isEmpty()) {
-            BasicBlock *n = W.first();
-            W.removeFirst();
+        W.clear();
+        variables.collectDefSites(a, W);
+        while (!W.empty()) {
+            BasicBlock *n = W.back();
+            W.pop_back();
             const BasicBlockSet &dominatorFrontierForN = df.dominatorFrontier(n);
             for (BasicBlockSet::const_iterator it = dominatorFrontierForN.begin(), eit = dominatorFrontierForN.end();
                  it != eit; ++it) {
                 BasicBlock *y = *it;
-                if (!A_phi.at(y->index()).contains(a.index)) {
+                if (!A_phi.at(y->index()).at(a.index)) {
                     insertPhiNode(a, y, function);
-                    A_phi[y->index()].insert(a.index);
+                    A_phi[y->index()].at(a.index) = true;
                     const std::vector<int> &varsInBlockY = variables.inBlock(y);
                     if (std::find(varsInBlockY.begin(), varsInBlockY.end(), a.index) == varsInBlockY.end())
-                        W.append(y);
+                        W.push_back(y);
                 }
             }
         }
     }
 
     // Rename variables:
-    VariableRenamer(function).run();
+    VariableRenamer(function, defUses).run();
 }
 
-struct UntypedTemp {
-    Temp temp;
-    UntypedTemp() {}
-    UntypedTemp(const Temp &t): temp(t) {}
-};
-inline bool operator==(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
-{ return t1.temp.index == t2.temp.index && t1.temp.kind == t2.temp.kind; }
-inline bool operator!=(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
-{ return !(t1 == t2); }
-
-class DefUsesCalculator: public StmtVisitor, public ExprVisitor {
-public:
-    struct DefUse {
-        DefUse()
-            : defStmt(0)
-            , blockOfStatement(0)
-        { uses.reserve(8); }
-        Temp temp;
-        Stmt *defStmt;
-        BasicBlock *blockOfStatement;
-        QVector<Stmt *> uses;
-
-        bool isValid() const
-        { return temp.kind != Temp::Invalid; }
-
-        void clear()
-        { defStmt = 0; blockOfStatement = 0; uses.clear(); }
-    };
-
-private:
-    typedef std::vector<DefUse> DefUses;
-    DefUses _defUses;
-    class Temps: public QVector<Temp> {
-    public:
-        Temps() { reserve(4); }
-    };
-    QHash<Stmt *, Temps > _usesPerStatement;
-
-    BasicBlock *_block;
-    Stmt *_stmt;
-
-    bool isCollectible(Temp *t) const {
-        Q_UNUSED(t);
-        Q_ASSERT(t->kind != Temp::PhysicalRegister && t->kind != Temp::StackSlot);
-        return true;
-    }
-
-    void addUse(Temp *t) {
-        Q_ASSERT(t && t->index < _defUses.size());
-        if (!isCollectible(t))
-            return;
-
-        _defUses[t->index].uses.push_back(_stmt);
-        _usesPerStatement[_stmt].push_back(*t);
-    }
-
-    void addDef(Temp *t) {
-        Q_ASSERT(t->index < _defUses.size());
-        if (!isCollectible(t))
-            return;
-
-        Q_ASSERT(!_defUses[t->index].isValid() || _defUses[t->index].defStmt == 0 || _defUses[t->index].defStmt == _stmt);
-
-        DefUse &defUse = _defUses[t->index];
-        if (!defUse.isValid())
-            defUse.temp = *t;
-        defUse.defStmt = _stmt;
-        defUse.blockOfStatement = _block;
-    }
-
-public:
-    DefUsesCalculator(IR::Function *function)
-    {
-        _defUses.resize(function->tempCount);
-
-        foreach (BasicBlock *bb, function->basicBlocks()) {
-            if (bb->isRemoved())
-                continue;
-
-            _block = bb;
-            foreach (Stmt *stmt, bb->statements()) {
-                _stmt = stmt;
-                stmt->accept(this);
-            }
-        }
-
-        for (size_t i = 0, ei = _defUses.size(); i != ei; ++i) {
-            DefUse &defUse = _defUses[i];
-            if (defUse.isValid() && !defUse.defStmt)
-                defUse.clear();
-        }
-    }
-
-    void addTemp(Temp *newTemp, Stmt *defStmt, BasicBlock *defBlock)
-    {
-        if (_defUses.size() <= newTemp->index)
-            _defUses.resize(newTemp->index + 1);
-        DefUse &defUse = _defUses[newTemp->index];
-        if (!defUse.isValid())
-            defUse.temp = *newTemp;
-        defUse.defStmt = defStmt;
-        defUse.blockOfStatement = defBlock;
-    }
-
-    QList<UntypedTemp> defsUntyped() const
-    {
-        QList<UntypedTemp> res;
-        foreach (const DefUse &du, _defUses)
-            if (du.isValid())
-                res.append(UntypedTemp(du.temp));
-        return res;
-    }
-
-    QList<Temp> defs() const {
-        QList<Temp> res;
-        res.reserve(_defUses.size());
-        foreach (const DefUse &du, _defUses)
-            if (du.isValid())
-                res.append(du.temp);
-        return res;
-    }
-
-    void removeDef(const Temp &var) {
-        _defUses[var.index].clear();
-    }
-
-    void addUses(const Temp &variable, const QVector<Stmt *> &newUses)
-    {
-        QVector<Stmt *> &uses = _defUses[variable.index].uses;
-        foreach (Stmt *stmt, newUses)
-            if (std::find(uses.begin(), uses.end(), stmt) == uses.end())
-                uses.push_back(stmt);
-    }
-
-    void addUse(const Temp &variable, Stmt *newUse)
-    {
-        if (_defUses.size() <= variable.index) {
-            _defUses.resize(variable.index + 1);
-            DefUse &du = _defUses[variable.index];
-            du.temp = variable;
-            du.uses.push_back(newUse);
-            return;
-        }
-
-        QVector<Stmt *> &uses = _defUses[variable.index].uses;
-        if (std::find(uses.begin(), uses.end(), newUse) == uses.end())
-            uses.push_back(newUse);
-    }
-
-    int useCount(const Temp &variable) const
-    { return _defUses[variable.index].uses.size(); }
-
-    Stmt *defStmt(const Temp &variable) const
-    { return _defUses[variable.index].defStmt; }
-
-    BasicBlock *defStmtBlock(const Temp &variable) const
-    { return _defUses[variable.index].blockOfStatement; }
-
-    void removeUse(Stmt *usingStmt, const Temp &var)
-    {
-        QVector<Stmt *> &uses = _defUses[var.index].uses;
-        uses.resize(std::remove(uses.begin(), uses.end(), usingStmt) - uses.begin());
-    }
-
-    const QVector<Temp> &usedVars(Stmt *s) const
-    {
-        static const QVector<Temp> noVars;
-        QHash<Stmt *, Temps >::const_iterator it = _usesPerStatement.find(s);
-        if (it == _usesPerStatement.end())
-            return noVars;
-        else
-            return *it;
-    }
-
-    const QVector<Stmt *> &uses(const Temp &var) const
-    {
-        return _defUses[var.index].uses;
-    }
-
-    QVector<Stmt*> removeDefUses(Stmt *s)
-    {
-        QVector<Stmt*> defStmts;
-        foreach (const Temp &usedVar, usedVars(s)) {
-            if (Stmt *ds = defStmt(usedVar))
-                defStmts += ds;
-            removeUse(s, usedVar);
-        }
-        if (Move *m = s->asMove()) {
-            if (Temp *t = m->target->asTemp())
-                removeDef(*t);
-        } else if (Phi *p = s->asPhi()) {
-            removeDef(*p->targetTemp);
-        }
-
-        return defStmts;
-    }
-
-    void dump() const
-    {
-        IRPrinter printer(&qout);
-        foreach (const DefUse &du, _defUses) {
-            if (!du.isValid())
-                continue;
-            printer.print(const_cast<Temp *>(&du.temp));
-            qout<<" -> defined in block "<<du.blockOfStatement->index()<<", statement: ";
-            printer.print(du.defStmt);
-            qout<<endl<<"     uses:"<<endl;
-            foreach (Stmt *s, du.uses) {
-                qout<<"       ";printer.print(s);qout<<endl;
-            }
-        }
-    }
-
-protected:
-    virtual void visitExp(Exp *s) { s->expr->accept(this); }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-
-    virtual void visitPhi(Phi *s) {
-        addDef(s->targetTemp);
-        foreach (Expr *e, s->d->incoming)
-            addUse(e->asTemp());
-    }
-
-    virtual void visitMove(Move *s) {
-        if (Temp *t = s->target->asTemp())
-            addDef(t);
-        else
-            s->target->accept(this);
-
-        s->source->accept(this);
-    }
-
-    virtual void visitTemp(Temp *e) { addUse(e); }
-
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(Member *e) { e->base->accept(this); }
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-};
-
-bool hasPhiOnlyUses(Phi *phi, const DefUsesCalculator &defUses, QSet<Phi *> &collectedPhis)
+/// Calculate if a phi node result is used only by other phi nodes, and if those uses are
+/// in turn also used by other phi nodes.
+bool hasPhiOnlyUses(Phi *phi, const DefUses &defUses, QBitArray &collectedPhis)
 {
-    collectedPhis.insert(phi);
+    collectedPhis.setBit(phi->id());
+
     foreach (Stmt *use, defUses.uses(*phi->targetTemp)) {
-        if (Phi *dependentPhi = use->asPhi()) {
-            if (!collectedPhis.contains(dependentPhi)) {
-                if (!hasPhiOnlyUses(dependentPhi, defUses, collectedPhis))
-                    return false;
-            }
-        } else {
+        Phi *dependentPhi = use->asPhi();
+        if (!dependentPhi)
+            return false; // there is a use by a non-phi node
+
+        if (collectedPhis.at(dependentPhi->id()))
+            continue; // we already found this node
+
+        if (!hasPhiOnlyUses(dependentPhi, defUses, collectedPhis))
             return false;
-        }
     }
+
     return true;
 }
 
-void cleanupPhis(DefUsesCalculator &defUses)
+void cleanupPhis(DefUses &defUses)
 {
-    QLinkedList<Phi *> phis;
-    foreach (const Temp &def, defUses.defs())
-        if (Phi *phi = defUses.defStmt(def)->asPhi())
-            phis.append(phi);
+    QBitArray toRemove(defUses.statementCount());
+    QBitArray collectedPhis(defUses.statementCount());
+    std::vector<Phi *> allPhis;
+    allPhis.reserve(32);
 
-    QSet<Phi *> toRemove;
-    while (!phis.isEmpty()) {
-        Phi *phi = phis.first();
-        phis.removeFirst();
-        if (toRemove.contains(phi))
+    foreach (const Temp *def, defUses.defs()) {
+        Stmt *defStmt = defUses.defStmt(*def);
+        if (!defStmt)
             continue;
-        QSet<Phi *> collectedPhis;
+
+        Phi *phi = defStmt->asPhi();
+        if (!phi)
+            continue;
+        allPhis.push_back(phi);
+        if (toRemove.at(phi->id()))
+            continue;
+
+        collectedPhis.fill(false);
         if (hasPhiOnlyUses(phi, defUses, collectedPhis))
-            toRemove.unite(collectedPhis);
+            toRemove |= collectedPhis;
     }
 
-    foreach (Phi *phi, toRemove) {
-        Temp targetVar = *phi->targetTemp;
+    foreach (Phi *phi, allPhis) {
+        if (!toRemove.at(phi->id()))
+            continue;
 
+        const Temp &targetVar = *phi->targetTemp;
         defUses.defStmtBlock(targetVar)->removeStatement(phi);
 
         foreach (const Temp &usedVar, defUses.usedVars(phi))
             defUses.removeUse(phi, usedVar);
         defUses.removeDef(targetVar);
     }
+
+    defUses.cleanup();
 }
 
 class StatementWorklist
@@ -1560,6 +1546,9 @@ public:
                 }
             }
         }
+
+        replaced.assign(replaced.size(), Stmt::InvalidId);
+        removed.assign(removed.size(), false);
     }
 
     StatementWorklist &operator+=(const QVector<Stmt *> &stmts)
@@ -1640,17 +1629,16 @@ public:
     void registerNewStatement(Stmt *s)
     {
         Q_ASSERT(s->id() >= 0);
-        if (static_cast<unsigned>(s->id()) < stmts.size())
-            return;
+        if (static_cast<unsigned>(s->id()) >= stmts.size()) {
+            if (static_cast<unsigned>(s->id()) >= stmts.capacity())
+                grow();
 
-        if (static_cast<unsigned>(s->id()) >= stmts.capacity())
-            grow();
-
-        int newSize = s->id() + 1;
-        stmts.resize(newSize, 0);
-        worklist.resize(newSize, false);
-        replaced.resize(newSize, Stmt::InvalidId);
-        removed.resize(newSize, false);
+            int newSize = s->id() + 1;
+            stmts.resize(newSize, 0);
+            worklist.resize(newSize, false);
+            replaced.resize(newSize, Stmt::InvalidId);
+            removed.resize(newSize, false);
+        }
 
         stmts[s->id()] = s;
     }
@@ -1658,7 +1646,7 @@ public:
 private:
     void grow()
     {
-        size_t newCapacity = (stmts.capacity() * 3) / 2;
+        size_t newCapacity = ((stmts.capacity() + 1) * 3) / 2;
         stmts.reserve(newCapacity);
         worklist.reserve(newCapacity);
         replaced.reserve(newCapacity);
@@ -1667,13 +1655,13 @@ private:
 };
 
 class EliminateDeadCode: public ExprVisitor {
-    DefUsesCalculator &_defUses;
+    DefUses &_defUses;
     StatementWorklist &_worklist;
     bool _sideEffect;
     QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUsesCalculator &defUses, StatementWorklist &worklist)
+    EliminateDeadCode(DefUses &defUses, StatementWorklist &worklist)
         : _defUses(defUses)
         , _worklist(worklist)
     {
@@ -1825,12 +1813,12 @@ struct DiscoveredType {
 
 class PropagateTempTypes: public StmtVisitor, ExprVisitor
 {
-    const DefUsesCalculator &defUses;
+    const DefUses &defUses;
     UntypedTemp theTemp;
     DiscoveredType newType;
 
 public:
-    PropagateTempTypes(const DefUsesCalculator &defUses)
+    PropagateTempTypes(const DefUses &defUses)
         : defUses(defUses)
     {}
 
@@ -1898,23 +1886,30 @@ protected:
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
     QQmlEnginePrivate *qmlEngine;
-    const DefUsesCalculator &_defUses;
-    typedef QHash<Temp, DiscoveredType> TempTypes;
+    const DefUses &_defUses;
+    typedef std::vector<DiscoveredType> TempTypes;
     TempTypes _tempTypes;
     StatementWorklist *_worklist;
     struct TypingResult {
         DiscoveredType type;
         bool fullyTyped;
 
-        TypingResult(const DiscoveredType &type = DiscoveredType()) : type(type), fullyTyped(type.type != UnknownType) {}
-        explicit TypingResult(MemberExpressionResolver memberResolver): type(memberResolver), fullyTyped(true) {}
+        TypingResult(const DiscoveredType &type = DiscoveredType())
+            : type(type)
+            , fullyTyped(type.type != UnknownType)
+        {}
+        explicit TypingResult(MemberExpressionResolver memberResolver)
+            : type(memberResolver)
+            , fullyTyped(true)
+        {}
     };
     TypingResult _ty;
 
 public:
-    TypeInference(QQmlEnginePrivate *qmlEngine, const DefUsesCalculator &defUses)
+    TypeInference(QQmlEnginePrivate *qmlEngine, const DefUses &defUses)
         : qmlEngine(qmlEngine)
         , _defUses(defUses)
+        , _tempTypes(_defUses.tempCount())
         , _worklist(0)
         , _ty(UnknownType)
     {}
@@ -1944,8 +1939,15 @@ public:
         }
 
         PropagateTempTypes propagator(_defUses);
-        for (QHash<Temp, DiscoveredType>::const_iterator i = _tempTypes.begin(), ei = _tempTypes.end(); i != ei; ++i)
-            propagator.run(i.key(), i.value());
+        for (unsigned i = 0, ei = _tempTypes.size(); i != ei; ++i) {
+            const Temp &temp = _defUses.temp(i);
+            if (temp.kind == Temp::Invalid)
+                continue;
+            const DiscoveredType &tempType = _tempTypes[i];
+            if (tempType.type == UnknownType)
+                continue;
+            propagator.run(temp, tempType);
+        }
 
         _worklist = 0;
     }
@@ -1975,11 +1977,9 @@ private:
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
-            TempTypes::iterator it = _tempTypes.find(*t);
-            if (it == _tempTypes.end())
-                it = _tempTypes.insert(*t, DiscoveredType());
-            if (it.value() != ty) {
-                it.value() = ty;
+            DiscoveredType &it = _tempTypes[t->index];
+            if (it != ty) {
+                it = ty;
 
 #if defined(SHOW_SSA)
                 foreach (Stmt *s, _defUses.uses(*t)) {
@@ -2015,7 +2015,7 @@ protected:
         if (e->memberResolver.isValid())
             _ty = TypingResult(e->memberResolver);
         else
-            _ty = TypingResult(_tempTypes.value(*e));
+            _ty = TypingResult(_tempTypes[e->index]);
         setType(e, _ty.type);
     }
     virtual void visitArgLocal(ArgLocal *e) {
@@ -2194,10 +2194,10 @@ protected:
 
 class ReverseInference
 {
-    const DefUsesCalculator &_defUses;
+    const DefUses &_defUses;
 
 public:
-    ReverseInference(const DefUsesCalculator &defUses)
+    ReverseInference(const DefUses &defUses)
         : _defUses(defUses)
     {}
 
@@ -2359,7 +2359,7 @@ void convertConst(Const *c, Type targetType)
 }
 
 class TypePropagation: public StmtVisitor, public ExprVisitor {
-    DefUsesCalculator &_defUses;
+    DefUses &_defUses;
     Type _ty;
     IR::Function *_f;
 
@@ -2410,7 +2410,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
     }
 
 public:
-    TypePropagation(DefUsesCalculator &defUses) : _defUses(defUses), _ty(UnknownType) {}
+    TypePropagation(DefUses &defUses) : _defUses(defUses), _ty(UnknownType) {}
 
     void run(IR::Function *f, StatementWorklist &worklist) {
         _f = f;
@@ -2440,7 +2440,7 @@ public:
                     Move *convCall = f->NewStmt<Move>();
                     worklist.registerNewStatement(convCall);
                     convCall->init(target, convert);
-                    _defUses.addTemp(target, convCall, bb);
+                    _defUses.addDef(target, convCall, bb);
 
                     Temp *source = bb->TEMP(target->index);
                     source->type = conversion.targetType;
@@ -2461,7 +2461,7 @@ public:
                     Move *convCall = f->NewStmt<Move>();
                     worklist.registerNewStatement(convCall);
                     convCall->init(target, convert);
-                    _defUses.addTemp(target, convCall, bb);
+                    _defUses.addDef(target, convCall, bb);
                     _defUses.addUse(*t, convCall);
 
                     Temp *source = bb->TEMP(target->index);
@@ -2489,7 +2489,7 @@ public:
                     Move *extraMove = f->NewStmt<Move>();
                     worklist.registerNewStatement(extraMove);
                     extraMove->init(tmp, u);
-                    _defUses.addTemp(tmp, extraMove, bb);
+                    _defUses.addDef(tmp, extraMove, bb);
 
                     if (Temp *unopOperand = u->expr->asTemp()) {
                         _defUses.addUse(*unopOperand, extraMove);
@@ -2627,7 +2627,7 @@ protected:
     }
 };
 
-void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist)
+void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist, DefUses &defUses)
 {
     foreach (BasicBlock *bb, f->basicBlocks()) {
         if (bb->isRemoved())
@@ -2647,6 +2647,7 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
             BasicBlock *newBB = f->newBasicBlock(containingGroup, bb->catchBlock);
             Jump *s = f->NewStmt<Jump>();
             worklist.registerNewStatement(s);
+            defUses.registerNewStatement(s);
             s->init(bb);
             newBB->appendStatement(s);
 
@@ -2951,13 +2952,13 @@ static Expr *clone(Expr *e, IR::Function *function) {
 
 class ExprReplacer: public StmtVisitor, public ExprVisitor
 {
-    DefUsesCalculator &_defUses;
+    DefUses &_defUses;
     IR::Function* _function;
     Temp *_toReplace;
     Expr *_replacement;
 
 public:
-    ExprReplacer(DefUsesCalculator &defUses, IR::Function *function)
+    ExprReplacer(DefUses &defUses, IR::Function *function)
         : _defUses(defUses)
         , _function(function)
         , _toReplace(0)
@@ -3068,7 +3069,7 @@ namespace {
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
 /// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, IR::Function *func, DefUsesCalculator &defUses, StatementWorklist &W,
+void purgeBB(BasicBlock *bb, IR::Function *func, DefUses &defUses, StatementWorklist &W,
              DominatorTree &df)
 {
     // TODO: after the change above: if we keep on detaching the block from predecessors or
@@ -3203,7 +3204,7 @@ bool tryOptimizingComparison(Expr *&expr)
 }
 } // anonymous namespace
 
-void optimizeSSA(StatementWorklist &W, DefUsesCalculator &defUses, DominatorTree &df)
+void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
 {
     IR::Function *function = W.function();
     ExprReplacer replaceUses(defUses, function);
@@ -3473,6 +3474,7 @@ void optimizeSSA(StatementWorklist &W, DefUsesCalculator &defUses, DominatorTree
                 // Note: this assumes that there are no critical edges! Meaning, we can safely purge
                 //       any basic blocks that are found to be unreachable.
                 Jump *jump = function->NewStmt<Jump>();
+                W.registerNewStatement(jump);
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
                     purgeBB(cjump->iffalse, function, defUses, W, df);
@@ -3854,12 +3856,12 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         // Calculate the dominator tree:
         DominatorTree df(function);
 
-//        qout << "Converting to SSA..." << endl;
-        convertToSSA(function, df);
-//        showMeTheCode(function);
+        DefUses defUses(function);
 
-//        qout << "Starting def/uses calculation..." << endl;
-        DefUsesCalculator defUses(function);
+//        qout << "Converting to SSA..." << endl;
+        convertToSSA(function, df, defUses);
+//        showMeTheCode(function);
+//        defUses.dump();
 
 //        qout << "Cleaning up phi nodes..." << endl;
         cleanupPhis(defUses);
@@ -3881,7 +3883,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
         // Transform the CFG into edge-split SSA.
 //        qout << "Starting edge splitting..." << endl;
-        splitCriticalEdges(function, df, worklist);
+        splitCriticalEdges(function, df, worklist, defUses);
 //        showMeTheCode(function);
 
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
