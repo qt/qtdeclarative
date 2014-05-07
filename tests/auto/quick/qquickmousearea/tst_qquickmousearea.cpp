@@ -86,6 +86,7 @@ private slots:
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }
     void dragging();
+    void dragSmoothed();
     void dragThreshold();
     void invalidDrag_data() { rejectedButton_data(); }
     void invalidDrag();
@@ -334,6 +335,50 @@ void tst_QQuickMouseArea::dragging()
     QCOMPARE(blackRect->y(), 61.0);
 }
 
+void tst_QQuickMouseArea::dragSmoothed()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != 0);
+
+    QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseRegion->drag();
+    drag->setThreshold(5);
+
+    mouseRegion->setAcceptedButtons(Qt::LeftButton);
+    QQuickItem *blackRect = window.rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+    QVERIFY(!drag->active());
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 102), 50);
+    QTest::mouseMove(&window, QPoint(100, 106), 50);
+    QTest::mouseMove(&window, QPoint(100, 122), 50);
+    QTRY_COMPARE(blackRect->x(), 50.0);
+    QTRY_COMPARE(blackRect->y(), 66.0);
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100,122));
+
+    // reset rect position
+    blackRect->setX(50.0);
+    blackRect->setY(50.0);
+
+    // now try with smoothed disabled
+    drag->setSmoothed(false);
+    QVERIFY(!drag->active());
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 102), 50);
+    QTest::mouseMove(&window, QPoint(100, 106), 50);
+    QTest::mouseMove(&window, QPoint(100, 122), 50);
+    QTRY_COMPARE(blackRect->x(), 50.0);
+    QTRY_COMPARE(blackRect->y(), 72.0);
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 122));
+}
 
 void tst_QQuickMouseArea::dragThreshold()
 {

@@ -723,7 +723,9 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
                 || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event, d->drag->threshold()))) {
             setKeepMouseGrab(true);
             d->stealMouse = true;
-            d->startScene = event->windowPos();
+
+            if (d->drag->smoothed())
+                d->startScene = event->windowPos();
         }
 
         d->moved = true;
@@ -1249,6 +1251,10 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
     \c drag.threshold determines the threshold in pixels of when the drag operation should
     start. By default this is bound to a platform dependent value. This property was added in
     Qt Quick 2.2.
+
+    If \c drag.smoothed is \c true, the target will be moved only after the drag operation has
+    started. If set to \c false, the target will be moved straight to the current mouse position.
+    By default, this property is \c true. This property was added in Qt Quick 2.4
 
     \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
 

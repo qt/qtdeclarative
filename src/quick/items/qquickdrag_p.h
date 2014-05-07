@@ -157,6 +157,7 @@ class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
     Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
+    Q_PROPERTY(bool smoothed READ smoothed WRITE setSmoothed NOTIFY smoothedChanged)
     // Note, threshold was added in QtQuick 2.2 but REVISION is not supported (or needed) for grouped
     // properties See QTBUG-33179
     Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged RESET resetThreshold)
@@ -185,6 +186,9 @@ public:
     qreal ymax() const;
     void setYmax(qreal);
 
+    bool smoothed() const;
+    void setSmoothed(bool smooth);
+
     qreal threshold() const;
     void setThreshold(qreal);
     void resetThreshold();
@@ -206,6 +210,7 @@ Q_SIGNALS:
     void maximumYChanged();
     void activeChanged();
     void filterChildrenChanged();
+    void smoothedChanged();
     void thresholdChanged();
 
 private:
@@ -217,6 +222,7 @@ private:
     qreal _ymax;
     bool _active : 1;
     bool _filterChildren: 1;
+    bool _smoothed : 1;
     qreal _threshold;
     Q_DISABLE_COPY(QQuickDrag)
 };

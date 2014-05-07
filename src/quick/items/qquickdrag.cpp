@@ -791,7 +791,7 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
 QQuickDrag::QQuickDrag(QObject *parent)
 : QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false),
-  _threshold(qApp->styleHints()->startDragDistance())
+  _smoothed(true), _threshold(qApp->styleHints()->startDragDistance())
 {
 }
 
@@ -885,6 +885,18 @@ void QQuickDrag::setYmax(qreal m)
     emit maximumYChanged();
 }
 
+bool QQuickDrag::smoothed() const
+{
+    return _smoothed;
+}
+
+void QQuickDrag::setSmoothed(bool smooth)
+{
+    if (_smoothed != smooth) {
+        _smoothed = smooth;
+        emit smoothedChanged();
+    }
+}
 
 qreal QQuickDrag::threshold() const
 {
