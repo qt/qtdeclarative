@@ -3683,6 +3683,85 @@ void removeUnreachleBlocks(IR::Function *function)
     function->setScheduledBlocks(newSchedule);
     function->renumberBasicBlocks();
 }
+
+class ConvertArgLocals: protected StmtVisitor, protected ExprVisitor
+{
+public:
+    ConvertArgLocals(IR::Function *function)
+        : function(function)
+    {
+        tempForLocal.resize(function->locals.size(), -1);
+    }
+
+    void toTemps()
+    {
+        if (function->variablesCanEscape())
+            return;
+
+        foreach (BasicBlock *bb, function->basicBlocks())
+            if (!bb->isRemoved())
+                foreach (Stmt *s, bb->statements())
+                    s->accept(this);
+
+        function->locals.clear();
+    }
+
+protected:
+    virtual void visitConst(Const *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
+    virtual void visitName(Name *) {}
+    virtual void visitTemp(Temp *) {}
+    virtual void visitArgLocal(ArgLocal *) {}
+    virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { check(e->expr); }
+    virtual void visitUnop(Unop *e) { check(e->expr); }
+    virtual void visitBinop(Binop *e) { check(e->left); check(e->right); }
+    virtual void visitCall(Call *e) {
+        check(e->base);
+        for (ExprList *it = e->args; it; it = it->next)
+            check(it->expr);
+    }
+    virtual void visitNew(New *e) {
+        check(e->base);
+        for (ExprList *it = e->args; it; it = it->next)
+            check(it->expr);
+    }
+    virtual void visitSubscript(Subscript *e) { check(e->base); check(e->index); }
+    virtual void visitMember(Member *e) { check(e->base); }
+    virtual void visitExp(Exp *s) { check(s->expr); }
+    virtual void visitMove(Move *s) { check(s->target); check(s->source); }
+    virtual void visitJump(Jump *) {}
+    virtual void visitCJump(CJump *s) { check(s->cond); }
+    virtual void visitRet(Ret *s) { check(s->expr); }
+    virtual void visitPhi(Phi *) {
+        Q_UNREACHABLE();
+    }
+
+private:
+    void check(Expr *&e) {
+        if (ArgLocal *al = e->asArgLocal()) {
+            if (al->kind == ArgLocal::Local) {
+                Temp *t = function->New<Temp>();
+                t->init(Temp::VirtualRegister, fetchTempForLocal(al->index));
+                e = t;
+            }
+        } else {
+            e->accept(this);
+        }
+    }
+
+    int fetchTempForLocal(int local)
+    {
+        int &ref = tempForLocal[local];
+        if (ref == -1)
+            ref = function->tempCount++;
+        return ref;
+    }
+
+    IR::Function *function;
+    std::vector<int> tempForLocal;
+};
 } // anonymous namespace
 
 void LifeTimeInterval::setFrom(Stmt *from) {
@@ -3852,6 +3931,8 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
     if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
+
+        ConvertArgLocals(function).toTemps();
 
         // Calculate the dominator tree:
         DominatorTree df(function);
