@@ -89,7 +89,7 @@ ArrayPrototype::ArrayPrototype(InternalClass *ic)
 {
 }
 
-void ArrayPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

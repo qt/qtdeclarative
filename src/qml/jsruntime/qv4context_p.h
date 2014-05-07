@@ -138,9 +138,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     }
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
-    WithContext *newWithContext(ObjectRef with);
+    WithContext *newWithContext(Object *with);
     CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
-    CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
+    CallContext *newQmlContext(FunctionObject *f, Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -159,7 +159,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     void setProperty(String *name, const ValueRef value);
     ReturnedValue getProperty(String *name);
-    ReturnedValue getPropertyAndBase(String *name, ObjectRef base);
+    ReturnedValue getPropertyAndBase(String *name, Object *&base);
     bool deleteProperty(String *name);
 
     // Can only be called from within catch(...), rethrows if no JS exception.
@@ -180,7 +180,7 @@ struct CallContext : public ExecutionContext
         locals = 0;
         activation = 0;
     }
-    CallContext(ExecutionEngine *engine, ObjectRef qml, QV4::FunctionObject *function);
+    CallContext(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
 
     FunctionObject *function;
     int realArgumentCount;
@@ -239,7 +239,7 @@ struct WithContext : public ExecutionContext
     } __data;
     V4_MANAGED
 
-    WithContext(ExecutionEngine *engine, ObjectRef with);
+    WithContext(ExecutionEngine *engine, Object *with);
 };
 
 inline CallContext *ExecutionContext::asCallContext()

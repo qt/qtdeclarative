@@ -66,7 +66,7 @@ ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
     return Encode(value);
 }
 
-void BooleanPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

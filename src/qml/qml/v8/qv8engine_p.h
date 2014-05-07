@@ -232,7 +232,7 @@ public:
     { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
 
     QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
-    inline QVariantMap variantMapFromJS(QV4::ObjectRef object)
+    inline QVariantMap variantMapFromJS(QV4::Object *object)
     { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
 
     QV4::ReturnedValue variantToJS(const QVariant &value);
@@ -281,7 +281,7 @@ protected:
 
 private:
     QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
-    QVariantMap variantMapFromJS(QV4::ObjectRef object, V8ObjectSet &visitedObjects);
+    QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
     QVariant variantFromJS(const QV4::ValueRef value, V8ObjectSet &visitedObjects);
 
     Q_DISABLE_COPY(QV8Engine)

@@ -81,7 +81,7 @@ private:
 
     ReturnedValue parseObject();
     ReturnedValue parseArray();
-    bool parseMember(ObjectRef o);
+    bool parseMember(Object *o);
     bool parseString(QString *string);
     bool parseValue(ValueRef val);
     bool parseNumber(ValueRef val);
@@ -268,7 +268,7 @@ ReturnedValue JsonParser::parseObject()
 /*
     member = string name-separator value
 */
-bool JsonParser::parseMember(ObjectRef o)
+bool JsonParser::parseMember(Object *o)
 {
     BEGIN << "parseMember";
     Scope scope(context);
@@ -657,7 +657,7 @@ struct Stringify
 
     QString Str(const QString &key, ValueRef v);
     QString JA(ArrayObject *a);
-    QString JO(ObjectRef o);
+    QString JO(Object *o);
 
     QString makeMember(const QString &key, ValueRef v);
 };
@@ -780,9 +780,9 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
     return QString();
 }
 
-QString Stringify::JO(ObjectRef o)
+QString Stringify::JO(Object *o)
 {
-    if (stack.contains(o.getPointer())) {
+    if (stack.contains(o)) {
         ctx->throwTypeError();
         return QString();
     }
@@ -790,7 +790,7 @@ QString Stringify::JO(ObjectRef o)
     Scope scope(ctx);
 
     QString result;
-    stack.push(o.getPointer());
+    stack.push(o);
     QString stepback = indent;
     indent += gap;
 
@@ -1013,7 +1013,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     return o.asReturnedValue();
 }
 
-QJsonObject JsonObject::toJsonObject(ObjectRef o, V4ObjectSet &visitedObjects)
+QJsonObject JsonObject::toJsonObject(Object *o, V4ObjectSet &visitedObjects)
 {
     QJsonObject result;
     if (!o || o->asFunctionObject())

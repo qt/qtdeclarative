@@ -726,7 +726,7 @@ void Debugger::Collector::collect(const QString &name, const ScopedValue &value)
     }
 }
 
-void Debugger::Collector::collect(const ObjectRef object)
+void Debugger::Collector::collect(Object *object)
 {
     bool property = true;
     qSwap(property, m_isProperty);

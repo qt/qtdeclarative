@@ -86,7 +86,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     return c;
 }
 
-WithContext *ExecutionContext::newWithContext(ObjectRef with)
+WithContext *ExecutionContext::newWithContext(Object *with)
 {
     WithContext *w = new (d()->engine->memoryManager) WithContext(d()->engine, with);
     return w;
@@ -98,7 +98,7 @@ CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const 
     return c;
 }
 
-CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
+CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
     CallContext *c = static_cast<CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
     new (c) CallContext(d()->engine, qml, f);
@@ -140,7 +140,7 @@ GlobalContext::GlobalContext(ExecutionEngine *eng)
     d()->global = eng->globalObject;
 }
 
-WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
+WithContext::WithContext(ExecutionEngine *engine, Object *with)
     : ExecutionContext(engine, Type_WithContext)
 {
     d()->callData = d()->parent->d()->callData;
@@ -148,7 +148,7 @@ WithContext::WithContext(ExecutionEngine *engine, ObjectRef with)
     d()->lookups = d()->parent->d()->lookups;
     d()->compilationUnit = d()->parent->d()->compilationUnit;
 
-    d()->withObject = with.getPointer();
+    d()->withObject = with;
 }
 
 CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue)
@@ -164,7 +164,7 @@ CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarName, co
     this->d()->exceptionValue = exceptionValue;
 }
 
-CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject *function)
+CallContext::CallContext(ExecutionEngine *engine, Object *qml, FunctionObject *function)
     : ExecutionContext(engine, Type_QmlContext)
 {
     this->function = function;
@@ -176,7 +176,7 @@ CallContext::CallContext(ExecutionEngine *engine, ObjectRef qml, FunctionObject 
     d()->strictMode = true;
     d()->outer = function->scope();
 
-    activation = qml.getPointer();
+    activation = qml;
 
     if (function->function()) {
         d()->compilationUnit = function->function()->compilationUnit;
@@ -404,7 +404,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     return throwReferenceError(n);
 }
 
-ReturnedValue ExecutionContext::getPropertyAndBase(String *name, ObjectRef base)
+ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
 {
     Scope scope(this);
     ScopedValue v(scope);

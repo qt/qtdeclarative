@@ -2554,7 +2554,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
 
-    m_program = new QV4::Script(v4, QV4::ObjectRef::null(), m_precompiledScript);
+    m_program = new QV4::Script(v4, 0, m_precompiledScript);
 
     addToEngine(engine);
 

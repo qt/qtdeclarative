@@ -67,15 +67,15 @@ struct Q_QML_EXPORT ObjectIterator
         WithProtoChain = 0x2,
     };
 
-    ObjectRef object;
-    ObjectRef current;
+    Value *object;
+    Value *current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;
     uint memberIndex;
     uint flags;
 
-    ObjectIterator(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags);
-    ObjectIterator(Scope &scope, const ObjectRef o, uint flags);
+    ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint flags);
+    ObjectIterator(Scope &scope, Object *o, uint flags);
     void next(String *&name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(ValueRef value);
     ReturnedValue nextPropertyNameAsString(ValueRef value);
@@ -84,13 +84,13 @@ struct Q_QML_EXPORT ObjectIterator
 
 struct ForEachIteratorObject: Object {
     struct Data : Object::Data {
-        Data(const ObjectRef o, uint flags)
+        Data(Object *o, uint flags)
             : it(workArea, workArea + 1, o, flags) {}
         ObjectIterator it;
         Value workArea[2];
     };
     struct _Data {
-        _Data(const ObjectRef o, uint flags)
+        _Data(Object *o, uint flags)
             : it(workArea, workArea + 1, o, flags) {}
         ObjectIterator it;
         Value workArea[2];
@@ -98,7 +98,7 @@ struct ForEachIteratorObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
-    ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
+    ForEachIteratorObject(ExecutionContext *ctx, Object *o)
         : Object(ctx->d()->engine)
         , __data(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
         setVTable(staticVTable());

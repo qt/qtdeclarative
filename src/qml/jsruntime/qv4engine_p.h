@@ -342,7 +342,7 @@ public:
 
     Returned<Object> *newVariantObject(const QVariant &v);
 
-    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o);
+    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
     Returned<Object> *qmlContextObject() const;
 

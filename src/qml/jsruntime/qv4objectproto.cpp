@@ -102,7 +102,7 @@ ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
     return RuntimeHelpers::toObject(m->engine()->currentContext(), ValueRef(&callData->args[0]));
 }
 
-void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
+void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
 {
     Scope scope(v4);
     ScopedObject o(scope, this);

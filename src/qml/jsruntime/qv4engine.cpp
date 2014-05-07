@@ -347,21 +347,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typeErrorCtor = new (memoryManager) TypeErrorCtor(rootContext);
     uRIErrorCtor = new (memoryManager) URIErrorCtor(rootContext);
 
-    objectPrototype->init(this, objectCtor);
-    stringPrototype->init(this, stringCtor);
-    numberPrototype->init(this, numberCtor);
-    booleanPrototype->init(this, booleanCtor);
-    arrayPrototype->init(this, arrayCtor);
-    datePrototype->init(this, dateCtor);
-    functionPrototype->init(this, functionCtor);
-    regExpPrototype->init(this, regExpCtor);
-    errorPrototype->init(this, errorCtor);
-    evalErrorPrototype->init(this, evalErrorCtor);
-    rangeErrorPrototype->init(this, rangeErrorCtor);
-    referenceErrorPrototype->init(this, referenceErrorCtor);
-    syntaxErrorPrototype->init(this, syntaxErrorCtor);
-    typeErrorPrototype->init(this, typeErrorCtor);
-    uRIErrorPrototype->init(this, uRIErrorCtor);
+    objectPrototype->init(this, objectCtor.asObject());
+    stringPrototype->init(this, stringCtor.asObject());
+    numberPrototype->init(this, numberCtor.asObject());
+    booleanPrototype->init(this, booleanCtor.asObject());
+    arrayPrototype->init(this, arrayCtor.asObject());
+    datePrototype->init(this, dateCtor.asObject());
+    functionPrototype->init(this, functionCtor.asObject());
+    regExpPrototype->init(this, regExpCtor.asObject());
+    errorPrototype->init(this, errorCtor.asObject());
+    evalErrorPrototype->init(this, evalErrorCtor.asObject());
+    rangeErrorPrototype->init(this, rangeErrorCtor.asObject());
+    referenceErrorPrototype->init(this, referenceErrorCtor.asObject());
+    syntaxErrorPrototype->init(this, syntaxErrorCtor.asObject());
+    typeErrorPrototype->init(this, typeErrorCtor.asObject());
+    uRIErrorPrototype->init(this, uRIErrorCtor.asObject());
 
     variantPrototype->init();
     static_cast<SequencePrototype *>(sequencePrototype.managed())->init();
@@ -660,7 +660,7 @@ Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
+Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
     Object *obj = new (memoryManager) ForEachIteratorObject(ctx, o);
     return obj->asReturned<Object>();

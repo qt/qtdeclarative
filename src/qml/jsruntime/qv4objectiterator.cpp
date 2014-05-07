@@ -46,35 +46,35 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, const ObjectRef o, uint flags)
-    : object(ObjectRef::fromValuePointer(scratch1))
-    , current(ObjectRef::fromValuePointer(scratch2))
+ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint flags)
+    : object(scratch1)
+    , current(scratch2)
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
 {
-    object = o.getPointer();
-    current = o.getPointer();
+    object->o = o;
+    current->o = o;
 
-    if (!!object && object->asArgumentsObject()) {
+    if (object->as<ArgumentsObject>()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
 }
 
-ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
-    : object(ObjectRef::fromValuePointer(scope.alloc(1)))
-    , current(ObjectRef::fromValuePointer(scope.alloc(1)))
+ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
+    : object(scope.alloc(1))
+    , current(scope.alloc(1))
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
 {
-    object = o;
-    current = o;
+    object->o = o;
+    current->o = o;
 
-    if (!!object && object->asArgumentsObject()) {
+    if (object->as<ArgumentsObject>()) {
         Scope scope(object->engine());
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
@@ -85,24 +85,24 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
     name = (String *)0;
     *index = UINT_MAX;
 
-    if (!object) {
+    if (!object->asObject()) {
         *attrs = PropertyAttributes();
         return;
     }
 
     while (1) {
-        if (!current)
+        if (!current->asObject())
             break;
 
         while (1) {
-            current->advanceIterator(this, name, index, pd, attrs);
+            current->asObject()->advanceIterator(this, name, index, pd, attrs);
             if (attrs->isEmpty())
                 break;
             // check the property is not already defined earlier in the proto chain
-            if (current != object) {
-                Object *o = object;
+            if (current->asObject() != object->asObject()) {
+                Object *o = object->asObject();
                 bool shadowed = false;
-                while (o != current) {
+                while (o != current->asObject()) {
                     if ((!!name && o->hasOwnProperty(name)) ||
                         (*index != UINT_MAX && o->hasOwnProperty(*index))) {
                         shadowed = true;
@@ -117,9 +117,9 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
         }
 
         if (flags & WithProtoChain)
-            current = current->prototype();
+            current->o = current->objectValue()->prototype();
         else
-            current = (Object *)0;
+            current->o = (Object *)0;
 
         arrayIndex = 0;
         memberIndex = 0;
@@ -129,7 +129,7 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
 
 ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
 {
-    if (!object)
+    if (!object->asObject())
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -143,7 +143,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->getValue(&p, attrs);
+    value = object->objectValue()->getValue(&p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -153,7 +153,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
 {
-    if (!object)
+    if (!object->asObject())
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -167,7 +167,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->getValue(&p, attrs);
+    value = object->objectValue()->getValue(&p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -177,7 +177,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString()
 {
-    if (!object)
+    if (!object->asObject())
         return Encode::null();
 
     PropertyAttributes attrs;

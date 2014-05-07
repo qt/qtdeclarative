@@ -469,7 +469,7 @@ void QV8Engine::initializeGlobal()
                       "    }"\
                       "})"
 
-        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), QV4::ObjectRef::null()));
+        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
         Q_ASSERT(!!result);
         m_freezeObject = result;
 #undef FREEZE_SOURCE
@@ -613,8 +613,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 // The result is a QVariantMap with keys being the property names
 // of the object, and values being the values of the JS object's
 // properties converted to QVariants, recursively.
-QVariantMap QV8Engine::variantMapFromJS(QV4::ObjectRef o,
-                                        V8ObjectSet &visitedObjects)
+QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o, V8ObjectSet &visitedObjects)
 {
     QVariantMap result;
 

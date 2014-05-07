@@ -203,7 +203,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     return value.asReturnedValue();
 }
 
-void StringPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

@@ -633,14 +633,14 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn)
+    inline ArrayElementLessThan(ExecutionContext *context, Object *thisObject, const ValueRef comparefn)
         : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
 
     bool operator()(const Value &v1, const Value &v2) const;
 
 private:
     ExecutionContext *m_context;
-    ObjectRef thisObject;
+    Object *thisObject;
     const ValueRef m_comparefn;
 };
 
@@ -670,7 +670,7 @@ bool ArrayElementLessThan::operator()(const Value &v1, const Value &v2) const
     return p1s->toQString() < p2s->toQString();
 }
 
-void ArrayData::sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint len)
+void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint len)
 {
     if (!len)
         return;

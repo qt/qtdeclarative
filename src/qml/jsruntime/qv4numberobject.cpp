@@ -71,7 +71,7 @@ ReturnedValue NumberCtor::call(Managed *, CallData *callData)
     return Encode(dbl);
 }
 
-void NumberPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

@@ -144,7 +144,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     static void ensureAttributes(Object *o);
     static void realloc(Object *o, Type newType, uint offset, uint alloc, bool enforceAttributes);
 
-    static void sort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint dataLen);
+    static void sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint dataLen);
     static uint append(Object *obj, const ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
 };

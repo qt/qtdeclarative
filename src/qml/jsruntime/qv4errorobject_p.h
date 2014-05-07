@@ -187,46 +187,46 @@ struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
     ErrorPrototype(InternalClass *ic): ErrorObject(ic) {}
-    void init(ExecutionEngine *engine, ObjectRef ctor) { init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { init(engine, ctor, this); }
 
-    static void init(ExecutionEngine *engine, ObjectRef ctor, Object *obj);
+    static void init(ExecutionEngine *engine, Object *ctor, Object *obj);
     static ReturnedValue method_toString(CallContext *ctx);
 };
 
 struct EvalErrorPrototype: ErrorObject
 {
     EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct RangeErrorPrototype: ErrorObject
 {
     RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ErrorObject
 {
     ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: ErrorObject
 {
     SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct TypeErrorPrototype: ErrorObject
 {
     TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct URIErrorPrototype: ErrorObject
 {
     URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { setVTable(staticVTable()); }
-    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 

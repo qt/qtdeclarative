@@ -61,7 +61,7 @@
 
 using namespace QV4;
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
+QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
     : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
 {
     d()->qml = qml;
@@ -83,7 +83,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     scope->d()->engine->popContext();
 }
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
+QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Object *qml)
     : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
 {
     d()->qml = qml;
@@ -197,9 +197,9 @@ struct CompilationUnitHolder : public Object
 
 DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
-Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit *compilationUnit)
+Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext), strictMode(false), inheritContext(true), parsed(false)
-    , qml(qml.asReturnedValue()), vmFunction(0), parseAsBinding(true)
+    , qml(qml->asReturnedValue()), vmFunction(0), parseAsBinding(true)
 {
     parsed = true;
 
@@ -413,7 +413,7 @@ ReturnedValue Script::qmlBinding()
     return v.asReturnedValue();
 }
 
-QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, ObjectRef scopeObject)
+QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
 {
     QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());

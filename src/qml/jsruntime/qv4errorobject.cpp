@@ -355,7 +355,7 @@ ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) URIErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-void ErrorPrototype::init(ExecutionEngine *engine, ObjectRef ctor, Object *obj)
+void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj)
 {
     Scope scope(engine);
     ScopedString s(scope);

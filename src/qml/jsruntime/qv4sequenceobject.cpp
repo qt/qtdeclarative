@@ -636,7 +636,7 @@ ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const
         return list->toVariant(); \
     else
 
-QVariant SequencePrototype::toVariant(ObjectRef object)
+QVariant SequencePrototype::toVariant(Object *object)
 {
     Q_ASSERT(object->isListType());
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
@@ -669,7 +669,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         return qMetaTypeId<SequenceType>(); \
     } else
 
-int SequencePrototype::metaTypeForSequence(QV4::ObjectRef object)
+int SequencePrototype::metaTypeForSequence(QV4::Object *object)
 {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
     /*else*/ {

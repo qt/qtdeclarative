@@ -254,7 +254,7 @@ FunctionPrototype::FunctionPrototype(InternalClass *ic)
 {
 }
 
-void FunctionPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

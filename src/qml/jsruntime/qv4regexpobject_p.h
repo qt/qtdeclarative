@@ -141,7 +141,7 @@ struct RegExpCtor: FunctionObject
 struct RegExpPrototype: RegExpObject
 {
     RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
-    void init(ExecutionEngine *engine, ObjectRef ctor);
+    void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_exec(CallContext *ctx);
     static ReturnedValue method_test(CallContext *ctx);

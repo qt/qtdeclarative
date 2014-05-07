@@ -1499,7 +1499,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(d()->v8);
         QV4::Scope scope(v4);
 
-        QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal));
+        QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.asObject()));
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = v4->globalObject;
         callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);

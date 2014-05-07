@@ -86,7 +86,7 @@ struct StringCtor: FunctionObject
 struct StringPrototype: StringObject
 {
     StringPrototype(InternalClass *ic): StringObject(ic) {}
-    void init(ExecutionEngine *engine, ObjectRef ctor);
+    void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_toString(CallContext *context);
     static ReturnedValue method_charAt(CallContext *context);

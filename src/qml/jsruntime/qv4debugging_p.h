@@ -105,7 +105,7 @@ public:
         virtual ~Collector();
 
         void collect(const QString &name, const ScopedValue &value);
-        void collect(const ObjectRef object);
+        void collect(Object *object);
 
     protected:
         virtual void addUndefined(const QString &name) = 0;

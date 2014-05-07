@@ -67,9 +67,9 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
 
     V4_OBJECT
 
-    QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
+    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-    QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml);
+    QmlBindingWrapper(ExecutionContext *scope, Object *qml);
 
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m, ExecutionEngine *e);
@@ -87,11 +87,11 @@ struct Q_QML_EXPORT Script {
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(scope), strictMode(false), inheritContext(false), parsed(false)
         , vmFunction(0), parseAsBinding(false) {}
-    Script(ExecutionEngine *engine, ObjectRef qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
-        , qml(qml.asReturnedValue()), vmFunction(0), parseAsBinding(true) {}
-    Script(ExecutionEngine *engine, ObjectRef qml, CompiledData::CompilationUnit *compilationUnit);
+        , qml(qml->asReturnedValue()), vmFunction(0), parseAsBinding(true) {}
+    Script(ExecutionEngine *engine, Object *qml, CompiledData::CompilationUnit *compilationUnit);
     ~Script();
     QString sourceFile;
     int line;
@@ -114,7 +114,7 @@ struct Q_QML_EXPORT Script {
 
     static QV4::CompiledData::CompilationUnit *precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
 
-    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
+    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
 };
 
 }

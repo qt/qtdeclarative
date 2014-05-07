@@ -62,7 +62,7 @@ struct ArrayPrototype: ArrayObject
 {
     ArrayPrototype(InternalClass *ic);
 
-    void init(ExecutionEngine *engine, ObjectRef ctor);
+    void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_isArray(CallContext *ctx);
     static ReturnedValue method_toString(CallContext *ctx);

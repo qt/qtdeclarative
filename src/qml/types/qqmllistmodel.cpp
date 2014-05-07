@@ -409,7 +409,7 @@ ListModel *ListModel::getListProperty(int elementIndex, const ListLayout::Role &
     return e->getListProperty(role);
 }
 
-void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles, QV8Engine *eng)
+void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, QV8Engine *eng)
 {
     ListElement *e = elements[elementIndex];
 
@@ -483,7 +483,7 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles
     }
 }
 
-void ListModel::set(int elementIndex, QV4::ObjectRef object, QV8Engine *eng)
+void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
 {
     if (!object)
         return;
@@ -580,13 +580,13 @@ void ListModel::remove(int index, int count)
     updateCacheIndices();
 }
 
-void ListModel::insert(int elementIndex, QV4::ObjectRef object, QV8Engine *eng)
+void ListModel::insert(int elementIndex, QV4::Object *object, QV8Engine *eng)
 {
     insertElement(elementIndex);
     set(elementIndex, object, eng);
 }
 
-int ListModel::append(QV4::ObjectRef object, QV8Engine *eng)
+int ListModel::append(QV4::Object *object, QV8Engine *eng)
 {
     int elementIndex = appendElement();
     set(elementIndex, object, eng);
@@ -883,7 +883,7 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
     return roleIndex;
 }
 
-int ListElement::setVariantMapProperty(const ListLayout::Role &role, QV4::ObjectRef o, QV8Engine *eng)
+int ListElement::setVariantMapProperty(const ListLayout::Role &role, QV4::Object *o, QV8Engine *eng)
 {
     int roleIndex = -1;
 
@@ -970,7 +970,7 @@ void ListElement::setListPropertyFast(const ListLayout::Role &role, ListModel *m
     *value = m;
 }
 
-void ListElement::setVariantMapFast(const ListLayout::Role &role, QV4::ObjectRef o, QV8Engine *eng)
+void ListElement::setVariantMapFast(const ListLayout::Role &role, QV4::Object *o, QV8Engine *eng)
 {
     char *mem = getPropertyMemory(role);
     QVariantMap *map = new (mem) QVariantMap;

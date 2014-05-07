@@ -312,7 +312,7 @@ void RegExpCtor::markObjects(Managed *that, ExecutionEngine *e)
     FunctionObject::markObjects(that, e);
 }
 
-void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void RegExpPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);

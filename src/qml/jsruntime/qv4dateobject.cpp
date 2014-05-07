@@ -707,7 +707,7 @@ ReturnedValue DateCtor::call(Managed *m, CallData *)
     return m->engine()->newString(ToString(t))->asReturnedValue();
 }
 
-void DatePrototype::init(ExecutionEngine *engine, ObjectRef ctor)
+void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
