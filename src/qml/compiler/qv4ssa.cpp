@@ -764,7 +764,7 @@ void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
     qout << " in block " << y->index << endl;
 #endif
 
-    Phi *phiNode = f->New<Phi>();
+    Phi *phiNode = f->NewStmt<Phi>();
     phiNode->d = new Stmt::Data;
     phiNode->targetTemp = f->New<Temp>();
     phiNode->targetTemp->init(a.kind, a.index);
@@ -1456,80 +1456,108 @@ void cleanupPhis(DefUsesCalculator &defUses)
 
 class StatementWorklist
 {
-    QVector<Stmt *> worklist;
-    QBitArray inWorklist;
-    QSet<Stmt *> removed;
-    QHash<Stmt*,Stmt*> replaced;
+    IR::Function *theFunction;
+    std::vector<Stmt *> stmts;
+    std::vector<bool> worklist;
+    unsigned worklistSize;
+    std::vector<int> replaced;
+    std::vector<bool> removed;
 
     Q_DISABLE_COPY(StatementWorklist)
 
 public:
     StatementWorklist(IR::Function *function)
+        : theFunction(function)
+        , stmts(function->statementCount(), 0)
+        , worklist(function->statementCount(), false)
+        , worklistSize(0)
+        , replaced(function->statementCount(), Stmt::InvalidId)
+        , removed(function->statementCount())
     {
-        QVector<Stmt *> w;
-        int stmtCount = 0;
+        grow();
 
-        // Put in all statements, and number them on the fly. The numbering is used to index the
-        // bit array.
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
             foreach (Stmt *s, bb->statements()) {
-                s->id = stmtCount++;
-                w.append(s);
+                if (!s)
+                    continue;
+
+                stmts[s->id()] = s;
+                worklist[s->id()] = true;
+                ++worklistSize;
             }
         }
-
-        // For QVector efficiency reasons, we process statements from the back. However, it is more
-        // effective to process the statements in ascending order. So we need to invert the
-        // order.
-        worklist.reserve(w.size());
-        for (int i = w.size() - 1; i >= 0; --i)
-            worklist.append(w.at(i));
-
-        inWorklist = QBitArray(stmtCount, true);
     }
 
-    // This will clear the entry for the statement in the basic block. After processing all
-    // statements, the cleanup method needs to be run to remove all null-pointers.
-    void clear(Stmt *stmt)
+    void reset()
     {
-        Q_ASSERT(!inWorklist.at(stmt->id));
-        removed.insert(stmt);
+        foreach (Stmt *s, stmts) {
+            if (!s)
+                continue;
+
+            worklist[s->id()] = true;
+            ++worklistSize;
+        }
+
+        replaced.assign(replaced.size(), Stmt::InvalidId);
+        removed.assign(removed.size(), false);
+    }
+
+    void remove(Stmt *stmt)
+    {
+        replaced[stmt->id()] = Stmt::InvalidId;
+        removed[stmt->id()] = true;
+        std::vector<bool>::reference inWorklist = worklist[stmt->id()];
+        if (inWorklist) {
+            inWorklist = false;
+            Q_ASSERT(worklistSize > 0);
+            --worklistSize;
+        }
     }
 
     void replace(Stmt *oldStmt, Stmt *newStmt)
     {
         Q_ASSERT(oldStmt);
-        Q_ASSERT(newStmt);
-        Q_ASSERT(!removed.contains(oldStmt));
+        Q_ASSERT(replaced[oldStmt->id()] == Stmt::InvalidId);
+        Q_ASSERT(removed[oldStmt->id()] == false);
 
-        if (newStmt->id == -1)
-            newStmt->id = oldStmt->id;
-        QHash<Stmt *, Stmt *>::const_iterator it = replaced.find(oldStmt);
-        if (it != replaced.end())
-            oldStmt = it.key();
-        replaced[oldStmt] = newStmt;
+        Q_ASSERT(newStmt);
+        registerNewStatement(newStmt);
+        Q_ASSERT(replaced[newStmt->id()] == Stmt::InvalidId);
+        Q_ASSERT(removed[newStmt->id()] == false);
+
+        replaced[oldStmt->id()] = newStmt->id();
+        worklist[oldStmt->id()] = false;
     }
 
-    void cleanup(IR::Function *function)
+    void applyToFunction()
     {
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        foreach (BasicBlock *bb, theFunction->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
             for (int i = 0; i < bb->statementCount();) {
-                Stmt *stmt = bb->statements()[i];
-                QHash<Stmt *, Stmt *>::const_iterator it = replaced.find(stmt);
-                if (it != replaced.end() && !removed.contains(it.value())) {
-                    bb->replaceStatement(i, it.value());
-                } else if (removed.contains(stmt)) {
-                    bb->removeStatement(i);
-                    continue;
-                }
+                Stmt *stmt = bb->statements().at(i);
 
-                ++i;
+                int id = stmt->id();
+                Q_ASSERT(id != Stmt::InvalidId);
+                Q_ASSERT(static_cast<unsigned>(stmt->id()) < stmts.size());
+
+                for (int replacementId = replaced[id]; replacementId != Stmt::InvalidId; replacementId = replaced[replacementId])
+                    id = replacementId;
+                Q_ASSERT(id != Stmt::InvalidId);
+                Q_ASSERT(static_cast<unsigned>(stmt->id()) < stmts.size());
+
+                if (removed[id]) {
+                    bb->removeStatement(i);
+                } else {
+                    if (id != stmt->id())
+                        bb->replaceStatement(i, stmts[id]);
+
+                    ++i;
+                }
             }
         }
     }
@@ -1542,18 +1570,17 @@ public:
         return *this;
     }
 
-
     StatementWorklist &operator+=(Stmt *s)
     {
         if (!s)
             return *this;
 
-        Q_ASSERT(s->id >= 0);
-        Q_ASSERT(s->id < inWorklist.size());
+        Q_ASSERT(s->id() >= 0);
+        Q_ASSERT(static_cast<unsigned>(s->id()) < worklist.size());
 
-        if (!inWorklist.at(s->id)) {
-            worklist.append(s);
-            inWorklist.setBit(s->id);
+        if (!worklist[s->id()]) {
+            worklist[s->id()] = true;
+            ++worklistSize;
         }
 
         return *this;
@@ -1561,12 +1588,14 @@ public:
 
     StatementWorklist &operator-=(Stmt *s)
     {
-        Q_ASSERT(s->id >= 0);
-        Q_ASSERT(s->id < inWorklist.size());
+        Q_ASSERT(s->id() >= 0);
+        Q_ASSERT(static_cast<unsigned>(s->id()) < worklist.size());
 
-        if (inWorklist.at(s->id)) {
-            worklist.remove(worklist.indexOf(s));
-            inWorklist.clearBit(s->id);
+        std::vector<bool>::reference inWorklist = worklist[s->id()];
+        if (inWorklist) {
+            inWorklist = false;
+            Q_ASSERT(worklistSize > 0);
+            --worklistSize;
         }
 
         return *this;
@@ -1574,19 +1603,66 @@ public:
 
     bool isEmpty() const
     {
-        return worklist.isEmpty();
+        return worklistSize == 0;
     }
 
-    Stmt *takeOne()
+    Stmt *takeNext(Stmt *last)
     {
         if (isEmpty())
             return 0;
 
-        Stmt *s = worklist.last();
-        Q_ASSERT(s->id < inWorklist.size());
-        worklist.removeLast();
-        inWorklist.clearBit(s->id);
+        const int startAt = last ? last->id() + 1 : 0;
+        Q_ASSERT(startAt >= 0);
+        Q_ASSERT(static_cast<unsigned>(startAt) <= worklist.size());
+
+        Q_ASSERT(worklist.size() == stmts.size());
+
+        // Do not compare the result of find with the end iterator, because some libc++ versions
+        // have a bug where the result of the ++operator is past-the-end of the vector, but unequal
+        // to end().
+        size_t pos = std::find(worklist.begin() + startAt, worklist.end(), true) - worklist.begin();
+        if (pos >= worklist.size())
+            pos = std::find(worklist.begin(), worklist.begin() + startAt, true) - worklist.begin();
+
+        worklist[pos] = false;
+        Q_ASSERT(worklistSize > 0);
+        --worklistSize;
+        Stmt *s = stmts.at(pos);
+        Q_ASSERT(s);
         return s;
+    }
+
+    IR::Function *function() const
+    {
+        return theFunction;
+    }
+
+    void registerNewStatement(Stmt *s)
+    {
+        Q_ASSERT(s->id() >= 0);
+        if (static_cast<unsigned>(s->id()) < stmts.size())
+            return;
+
+        if (static_cast<unsigned>(s->id()) >= stmts.capacity())
+            grow();
+
+        int newSize = s->id() + 1;
+        stmts.resize(newSize, 0);
+        worklist.resize(newSize, false);
+        replaced.resize(newSize, Stmt::InvalidId);
+        removed.resize(newSize, false);
+
+        stmts[s->id()] = s;
+    }
+
+private:
+    void grow()
+    {
+        size_t newCapacity = (stmts.capacity() * 3) / 2;
+        stmts.reserve(newCapacity);
+        worklist.reserve(newCapacity);
+        replaced.reserve(newCapacity);
+        removed.reserve(newCapacity);
     }
 };
 
@@ -1822,69 +1898,10 @@ protected:
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
     QQmlEnginePrivate *qmlEngine;
-    IR::Function *function;
     const DefUsesCalculator &_defUses;
     typedef QHash<Temp, DiscoveredType> TempTypes;
     TempTypes _tempTypes;
-    class W {
-        std::vector<bool> worklist;
-        std::vector<Stmt *> stmts;
-        int count;
-    public:
-        W(IR::Function *f)
-            : count(0)
-        {
-            foreach (BasicBlock *bb, f->basicBlocks()) {
-                if (bb->isRemoved())
-                    continue;
-                foreach (Stmt *stmt, bb->statements())
-                    stmt->id = count++;
-                stmts.insert(stmts.end(), bb->statements().begin(), bb->statements().end());
-            }
-            worklist.resize(stmts.size(), true);
-        }
-
-        ~W()
-        {
-            foreach (Stmt *stmt, stmts)
-                stmt->id = -1;
-        }
-
-        void append(const QVector<Stmt*>&stmts)
-        {
-            foreach (Stmt *stmt, stmts)
-                append(stmt);
-        }
-
-        void append(Stmt *stmt)
-        {
-            Q_ASSERT(stmt->id >= 0);
-
-            if (worklist[stmt->id])
-                return;
-            worklist[stmt->id] = true;
-            ++count;
-        }
-
-        bool empty() const
-        { return count == 0; }
-
-        Stmt *takeNext(Stmt *last)
-        {
-            if (empty())
-                return 0;
-
-            const int startAt = last ? last->id + 1 : 0;
-            Q_ASSERT(startAt >= 0);
-
-            size_t pos = std::distance(worklist.begin(), std::find(worklist.begin() + startAt, worklist.end(), true));
-            if (pos >= worklist.size())
-                pos = std::distance(worklist.begin(), std::find(worklist.begin(), worklist.begin() + startAt, true));
-            --count;
-            worklist[pos] = false;
-            return stmts[pos];
-        }
-    } *_worklist;
+    StatementWorklist *_worklist;
     struct TypingResult {
         DiscoveredType type;
         bool fullyTyped;
@@ -1902,10 +1919,8 @@ public:
         , _ty(UnknownType)
     {}
 
-    void run(IR::Function *f) {
-        W w(f);
+    void run(StatementWorklist &w) {
         _worklist = &w;
-        function = f;
 
         Stmt *s = 0;
         while ((s = _worklist->takeNext(s))) {
@@ -1917,7 +1932,7 @@ public:
 #endif
 
             if (!run(s)) {
-                _worklist->append(s);
+                *_worklist += s;
 #if defined(SHOW_SSA)
                 qout<<"Pushing back stmt: ";
                 s->dump(qout);qout<<endl;
@@ -1974,7 +1989,7 @@ private:
                 }
 #endif
 
-                _worklist->append(_defUses.uses(*t));
+                *_worklist += _defUses.uses(*t);
             }
         } else {
             e->type = (Type) ty.type;
@@ -2397,7 +2412,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
 public:
     TypePropagation(DefUsesCalculator &defUses) : _defUses(defUses), _ty(UnknownType) {}
 
-    void run(IR::Function *f) {
+    void run(IR::Function *f, StatementWorklist &worklist) {
         _f = f;
         foreach (BasicBlock *bb, f->basicBlocks()) {
             if (bb->isRemoved())
@@ -2422,7 +2437,8 @@ public:
                     Temp *target = bb->TEMP(bb->newTemp());
                     target->type = conversion.targetType;
                     Expr *convert = bb->CONVERT(al, conversion.targetType);
-                    Move *convCall = f->New<Move>();
+                    Move *convCall = f->NewStmt<Move>();
+                    worklist.registerNewStatement(convCall);
                     convCall->init(target, convert);
                     _defUses.addTemp(target, convCall, bb);
 
@@ -2442,7 +2458,8 @@ public:
                     Temp *target = bb->TEMP(bb->newTemp());
                     target->type = conversion.targetType;
                     Expr *convert = bb->CONVERT(t, conversion.targetType);
-                    Move *convCall = f->New<Move>();
+                    Move *convCall = f->NewStmt<Move>();
+                    worklist.registerNewStatement(convCall);
                     convCall->init(target, convert);
                     _defUses.addTemp(target, convCall, bb);
                     _defUses.addUse(*t, convCall);
@@ -2469,7 +2486,8 @@ public:
                     //   int32{%2} = int32{convert(double{%3})};
                     Temp *tmp = bb->TEMP(bb->newTemp());
                     tmp->type = u->type;
-                    Move *extraMove = f->New<Move>();
+                    Move *extraMove = f->NewStmt<Move>();
+                    worklist.registerNewStatement(extraMove);
                     extraMove->init(tmp, u);
                     _defUses.addTemp(tmp, extraMove, bb);
 
@@ -2609,7 +2627,7 @@ protected:
     }
 };
 
-void splitCriticalEdges(IR::Function *f, DominatorTree &df)
+void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist)
 {
     foreach (BasicBlock *bb, f->basicBlocks()) {
         if (bb->isRemoved())
@@ -2627,7 +2645,8 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df)
 
             // create the basic block:
             BasicBlock *newBB = f->newBasicBlock(containingGroup, bb->catchBlock);
-            Jump *s = f->New<Jump>();
+            Jump *s = f->NewStmt<Jump>();
+            worklist.registerNewStatement(s);
             s->init(bb);
             newBB->appendStatement(s);
 
@@ -3184,22 +3203,22 @@ bool tryOptimizingComparison(Expr *&expr)
 }
 } // anonymous namespace
 
-void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTree &df)
+void optimizeSSA(StatementWorklist &W, DefUsesCalculator &defUses, DominatorTree &df)
 {
-    StatementWorklist W(function);
+    IR::Function *function = W.function();
     ExprReplacer replaceUses(defUses, function);
 
+    Stmt *s = 0;
     while (!W.isEmpty()) {
-        Stmt *s = W.takeOne();
-        if (!s)
-            continue;
+        s = W.takeNext(s);
+        Q_ASSERT(s);
 
         if (Phi *phi = s->asPhi()) {
             // constant propagation:
             if (Const *c = isConstPhi(phi)) {
                 replaceUses(phi->targetTemp, c, W);
                 defUses.removeDef(*phi->targetTemp);
-                W.clear(s);
+                W.remove(s);
                 continue;
             }
 
@@ -3215,7 +3234,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                     defUses.addUses(*t2, newT2Uses);
                 }
                 defUses.removeDef(*t);
-                W.clear(s);
+                W.remove(s);
                 continue;
             }
 
@@ -3227,7 +3246,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 }
 
                 defUses.removeDef(*phi->targetTemp);
-                W.clear(s);
+                W.remove(s);
                 continue;
             }
         } else  if (Move *m = s->asMove()) {
@@ -3251,7 +3270,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 if (defUses.useCount(*targetTemp) == 0) {
                     EliminateDeadCode(defUses, W).run(m->source, s);
                     if (!m->source)
-                        W.clear(s);
+                        W.remove(s);
                     continue;
                 }
 
@@ -3259,7 +3278,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                 if (Const *sourceConst = m->source->asConst()) {
                     replaceUses(targetTemp, sourceConst, W);
                     defUses.removeDef(*targetTemp);
-                    W.clear(s);
+                    W.remove(s);
                     continue;
                 }
                 if (Member *member = m->source->asMember()) {
@@ -3269,7 +3288,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                         c->init(SInt32Type, enumValue);
                         replaceUses(targetTemp, c, W);
                         defUses.removeDef(*targetTemp);
-                        W.clear(s);
+                        W.remove(s);
                         defUses.removeUse(s, *member->base->asTemp());
                         continue;
                     } else if (member->attachedPropertiesIdOrEnumValue != 0 && member->property && member->base->asTemp()) {
@@ -3290,7 +3309,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
                     defUses.removeUse(s, *sourceTemp);
                     defUses.addUses(*sourceTemp, newT2Uses);
                     defUses.removeDef(*targetTemp);
-                    W.clear(s);
+                    W.remove(s);
                     continue;
                 }
 
@@ -3453,7 +3472,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
             if (Const *constantCondition = cjump->cond->asConst()) {
                 // Note: this assumes that there are no critical edges! Meaning, we can safely purge
                 //       any basic blocks that are found to be unreachable.
-                Jump *jump = function->New<Jump>();
+                Jump *jump = function->NewStmt<Jump>();
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
                     purgeBB(cjump->iffalse, function, defUses, W, df);
@@ -3475,7 +3494,7 @@ void optimizeSSA(IR::Function *function, DefUsesCalculator &defUses, DominatorTr
         }
     }
 
-    W.cleanup(function);
+    W.applyToFunction();
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
@@ -3554,17 +3573,8 @@ class LifeRanges {
 public:
     LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
     {
+        function->renumberForLifeRanges();
         _liveIn.resize(function->basicBlockCount());
-
-        int id = 0;
-        foreach (BasicBlock *bb, function->basicBlocks()) {
-            foreach (Stmt *s, bb->statements()) {
-                if (s->asPhi())
-                    s->id = id + 1;
-                else
-                    s->id = ++id;
-            }
-        }
 
         for (int i = function->basicBlockCount() - 1; i >= 0; --i) {
             BasicBlock *bb = function->basicBlock(i);
@@ -3626,7 +3636,7 @@ private:
         QVector<Stmt *> statements = bb->statements();
 
         foreach (const Temp &opd, live)
-            _intervals[opd].addRange(statements.first()->id, statements.last()->id);
+            _intervals[opd].addRange(statements.first()->id(), statements.last()->id());
 
         InputOutputCollector collector;
         for (int i = statements.size() - 1; i >= 0; --i) {
@@ -3647,14 +3657,14 @@ private:
                 live.remove(opd);
             }
             foreach (const Temp &opd, collector.inputs) {
-                _intervals[opd].addRange(statements.first()->id, s->id);
+                _intervals[opd].addRange(statements.first()->id(), s->id());
                 live.insert(opd);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
             foreach (const Temp &opd, live)
-                _intervals[opd].addRange(statements.first()->id, loopEnd->terminator()->id);
+                _intervals[opd].addRange(statements.first()->id(), loopEnd->terminator()->id());
         }
 
         _liveIn[bb->index()] = live;
@@ -3674,14 +3684,14 @@ void removeUnreachleBlocks(IR::Function *function)
 } // anonymous namespace
 
 void LifeTimeInterval::setFrom(Stmt *from) {
-    Q_ASSERT(from && from->id > 0);
+    Q_ASSERT(from && from->id() > 0);
 
     if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
-        _ranges.push_front(Range(from->id, from->id));
+        _ranges.push_front(Range(from->id(), from->id()));
         if (_end == Invalid)
-            _end = from->id;
+            _end = from->id();
     } else {
-        _ranges.first().start = from->id;
+        _ranges.first().start = from->id();
     }
 }
 
@@ -3855,8 +3865,10 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         cleanupPhis(defUses);
 //        showMeTheCode(function);
 
+        StatementWorklist worklist(function);
+
 //        qout << "Running type inference..." << endl;
-        TypeInference(qmlEngine, defUses).run(function);
+        TypeInference(qmlEngine, defUses).run(worklist);
 //        showMeTheCode(function);
 
 //        qout << "Doing reverse inference..." << endl;
@@ -3864,18 +3876,19 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        showMeTheCode(function);
 
 //        qout << "Doing type propagation..." << endl;
-        TypePropagation(defUses).run(function);
+        TypePropagation(defUses).run(function, worklist);
 //        showMeTheCode(function);
 
         // Transform the CFG into edge-split SSA.
 //        qout << "Starting edge splitting..." << endl;
-        splitCriticalEdges(function, df);
+        splitCriticalEdges(function, df, worklist);
 //        showMeTheCode(function);
 
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
-            optimizeSSA(function, defUses, df);
+            worklist.reset();
+            optimizeSSA(worklist, defUses, df);
 //            showMeTheCode(function);
         }
 
@@ -4097,7 +4110,7 @@ QList<IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, IR::Function *functio
 
     int insertionPoint = atEnd ? bb->statements().size() - 1 : 0;
     foreach (const Move &m, _moves) {
-        IR::Move *move = function->New<IR::Move>();
+        IR::Move *move = function->NewStmt<IR::Move>();
         move->init(clone(m.to, function), clone(m.from, function));
         move->swap = m.needsSwap;
         bb->insertStatementBefore(insertionPoint++, move);

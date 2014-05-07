@@ -99,7 +99,7 @@ public:
     {
         foreach (BasicBlock *bb, function->basicBlocks()) {
             foreach (Stmt *s, bb->statements()) {
-                Q_ASSERT(s->id > 0);
+                Q_ASSERT(s->id() > 0);
                 _currentStmt = s;
                 s->accept(this);
             }
@@ -640,19 +640,19 @@ private:
             break;
         }
 
-        _defs[*t] = Def(_currentStmt->id, canHaveReg, isPhiTarget);
+        _defs[*t] = Def(_currentStmt->id(), canHaveReg, isPhiTarget);
     }
 
     void addUses(Expr *e, Use::RegisterFlag flag)
     {
-        Q_ASSERT(_currentStmt->id > 0);
+        Q_ASSERT(_currentStmt->id() > 0);
         if (!e)
             return;
         Temp *t = e->asTemp();
         if (!t)
             return;
         if (t && t->kind == Temp::VirtualRegister)
-            _uses[*t].append(Use(_currentStmt->id, flag));
+            _uses[*t].append(Use(_currentStmt->id(), flag));
     }
 
     void addUses(ExprList *l, Use::RegisterFlag flag)
@@ -663,7 +663,7 @@ private:
 
     void addCall()
     {
-        _calls.append(_currentStmt->id);
+        _calls.append(_currentStmt->id());
     }
 
     void addHint(Expr *hinted, Temp *hint1, Temp *hint2 = 0)
@@ -809,7 +809,7 @@ private:
 
         if (i->reg() != LifeTimeInterval::Invalid) {
             // check if we need to generate spill/unspill instructions
-            if (i->start() == _currentStmt->id) {
+            if (i->start() == _currentStmt->id()) {
                 if (i->isSplitFromInterval()) {
                     int pReg = platformRegister(*i);
                     _loads.append(generateUnspill(i->temp(), pReg));
@@ -829,7 +829,7 @@ private:
             // for phi nodes, only activate the range belonging to that node
             for (int it = 0, eit = _unprocessed.size(); it != eit; ++it) {
                 const LifeTimeInterval *i = _unprocessed.at(it);
-                if (i->start() > _currentStmt->id)
+                if (i->start() > _currentStmt->id())
                     break;
                 if (i->temp() == *phi->targetTemp) {
                     activate(i);
@@ -842,7 +842,7 @@ private:
 
         while (!_unprocessed.isEmpty()) {
             const LifeTimeInterval *i = _unprocessed.first();
-            if (i->start() > _currentStmt->id)
+            if (i->start() > _currentStmt->id())
                 break;
 
             activate(i);
@@ -853,7 +853,7 @@ private:
 
     void cleanOldIntervals()
     {
-        const int id = _currentStmt->id;
+        const int id = _currentStmt->id();
         QMutableHashIterator<Temp, const LifeTimeInterval *> it(_intervalForTemp);
         while (it.hasNext()) {
             const LifeTimeInterval *i = it.next().value();
@@ -879,13 +879,13 @@ private:
 
         MoveMapping mapping;
 
-        const int predecessorEnd = predecessor->terminator()->id; // the terminator is always last and always has an id set...
+        const int predecessorEnd = predecessor->terminator()->id(); // the terminator is always last and always has an id set...
         Q_ASSERT(predecessorEnd > 0); // ... but we verify it anyway for good measure.
 
         int successorStart = -1;
         foreach (Stmt *s, successor->statements()) {
-            if (s && s->id > 0) {
-                successorStart = s->id;
+            if (s && s->id() > 0) {
+                successorStart = s->id();
                 break;
             }
         }
@@ -901,7 +901,7 @@ private:
 
             if (it->start() == successorStart) {
                 foreach (Stmt *s, successor->statements()) {
-                    if (!s || s->id < 1)
+                    if (!s || s->id() < 1)
                         continue;
                     if (Phi *phi = s->asPhi()) {
                         if (*phi->targetTemp == it->temp()) {
@@ -956,7 +956,7 @@ private:
 
                 Q_ASSERT(!_info->isPhiTarget(it->temp()) || it->isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
-                    const int successorEnd = successor->terminator()->id;
+                    const int successorEnd = successor->terminator()->id();
                     const int idx = successor->in.indexOf(predecessor);
                     foreach (const Use &use, _info->uses(it->temp())) {
                         if (use.pos == static_cast<unsigned>(successorStart)) {
@@ -1031,7 +1031,7 @@ private:
     {
         Q_ASSERT(spillSlot >= 0);
 
-        Move *store = _function->New<Move>();
+        Move *store = _function->NewStmt<Move>();
         store->init(createTemp(Temp::StackSlot, spillSlot, type),
                     createTemp(Temp::PhysicalRegister, pReg, type));
         return store;
@@ -1042,7 +1042,7 @@ private:
         Q_ASSERT(pReg >= 0);
         int spillSlot = _assignedSpillSlots.value(t, -1);
         Q_ASSERT(spillSlot != -1);
-        Move *load = _function->New<Move>();
+        Move *load = _function->NewStmt<Move>();
         load->init(createTemp(Temp::PhysicalRegister, pReg, t.type),
                    createTemp(Temp::StackSlot, spillSlot, t.type));
         return load;
@@ -1056,7 +1056,7 @@ protected:
 
         const LifeTimeInterval *i = _intervalForTemp[*t];
         Q_ASSERT(i->isValid());
-        if (i->reg() != LifeTimeInterval::Invalid && i->covers(_currentStmt->id)) {
+        if (i->reg() != LifeTimeInterval::Invalid && i->covers(_currentStmt->id())) {
             int pReg = platformRegister(*i);
             t->kind = Temp::PhysicalRegister;
             t->index = pReg;

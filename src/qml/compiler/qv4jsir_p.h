@@ -387,7 +387,11 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
     // Used when temp is used as base in member expression
     MemberExpressionResolver memberResolver;
 
-    Temp(): kind(Invalid) {}
+    Temp()
+        : index((1 << 28) - 1)
+        , kind(Invalid)
+        , isReadOnly(0)
+    {}
 
     void init(unsigned kind, unsigned index)
     {
@@ -614,11 +618,13 @@ struct Stmt {
         QVector<Expr *> incoming; // used by Phi nodes
     };
 
+    enum { InvalidId = -1 };
+
     Data *d;
-    int id;
     QQmlJS::AST::SourceLocation location;
 
-    Stmt(): d(0), id(-1) {}
+    explicit Stmt(int id): d(0), _id(id) {}
+
     virtual ~Stmt()
     {
 #ifdef Q_CC_MSVC
@@ -637,16 +643,24 @@ struct Stmt {
     virtual Ret *asRet() { return 0; }
     virtual Phi *asPhi() { return 0; }
 
+    int id() const { return _id; }
+
 private: // For memory management in BasicBlock
     friend struct BasicBlock;
     void destroyData() {
         delete d;
         d = 0;
     }
+
+private:
+    friend struct Function;
+    int _id;
 };
 
 struct Exp: Stmt {
     Expr *expr;
+
+    Exp(int id): Stmt(id) {}
 
     void init(Expr *expr)
     {
@@ -663,6 +677,8 @@ struct Move: Stmt {
     Expr *source;
     bool swap;
 
+    Move(int id): Stmt(id) {}
+
     void init(Expr *target, Expr *source)
     {
         this->target = target;
@@ -677,6 +693,8 @@ struct Move: Stmt {
 
 struct Jump: Stmt {
     BasicBlock *target;
+
+    Jump(int id): Stmt(id) {}
 
     void init(BasicBlock *target)
     {
@@ -694,6 +712,8 @@ struct CJump: Stmt {
     BasicBlock *iftrue;
     BasicBlock *iffalse;
 
+    CJump(int id): Stmt(id) {}
+
     void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     {
         this->cond = cond;
@@ -710,6 +730,8 @@ struct CJump: Stmt {
 struct Ret: Stmt {
     Expr *expr;
 
+    Ret(int id): Stmt(id) {}
+
     void init(Expr *expr)
     {
         this->expr = expr;
@@ -723,6 +745,8 @@ struct Ret: Stmt {
 
 struct Phi: Stmt {
     Temp *targetTemp;
+
+    Phi(int id): Stmt(id) {}
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
@@ -976,7 +1000,10 @@ struct Function {
     PropertyDependencyMap contextObjectPropertyDependencies;
     PropertyDependencyMap scopeObjectPropertyDependencies;
 
-    template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
+    template <typename T> T *New() { return new (pool->allocate(sizeof(T))) T(); }
+    template <typename T> T *NewStmt() {
+        return new (pool->allocate(sizeof(T))) T(getNewStatementId());
+    }
 
     Function(Module *module, Function *outer, const QString &name);
     ~Function();
@@ -1016,9 +1043,14 @@ struct Function {
     void setScheduledBlocks(const QVector<BasicBlock *> &scheduled);
     void renumberBasicBlocks();
 
+    unsigned getNewStatementId() { return _statementCount++; }
+    unsigned statementCount() const { return _statementCount; }
+    void renumberForLifeRanges();
+
 private:
     QVector<BasicBlock *> _basicBlocks;
     QVector<BasicBlock *> *_allBasicBlocks;
+    unsigned _statementCount;
 };
 
 class CloneExpr: protected IR::ExprVisitor

@@ -411,6 +411,7 @@ Function::Function(Module *module, Function *outer, const QString &name)
     , line(-1)
     , column(-1)
     , _allBasicBlocks(0)
+    , _statementCount(0)
 {
     this->name = newString(name);
     _basicBlocks.reserve(8);
@@ -491,6 +492,21 @@ void Function::renumberBasicBlocks()
 {
     for (int i = 0, ei = basicBlockCount(); i != ei; ++i)
         basicBlock(i)->changeIndex(i);
+}
+
+void Function::renumberForLifeRanges()
+{
+    //### TODO: check if this can be done in a more elegant way.
+
+    int id = 0;
+    foreach (BasicBlock *bb, basicBlocks()) {
+        foreach (Stmt *s, bb->statements()) {
+            if (s->asPhi())
+                s->_id = id + 1;
+            else
+                s->_id = ++id;
+        }
+    }
 }
 
 BasicBlock::~BasicBlock()
@@ -665,7 +681,7 @@ Stmt *BasicBlock::EXP(Expr *expr)
     if (isTerminated())
         return 0;
 
-    Exp *s = function->New<Exp>();
+    Exp *s = function->NewStmt<Exp>();
     s->init(expr);
     appendStatement(s);
     return s;
@@ -677,7 +693,7 @@ Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
     if (isTerminated())
         return 0;
 
-    Move *s = function->New<Move>();
+    Move *s = function->NewStmt<Move>();
     s->init(target, source);
     appendStatement(s);
     return s;
@@ -689,7 +705,7 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     if (isTerminated())
         return 0;
 
-    Jump *s = function->New<Jump>();
+    Jump *s = function->NewStmt<Jump>();
     s->init(target);
     appendStatement(s);
 
@@ -713,7 +729,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
         return JUMP(iftrue);
     }
 
-    CJump *s = function->New<CJump>();
+    CJump *s = function->NewStmt<CJump>();
     s->init(cond, iftrue, iffalse);
     appendStatement(s);
 
@@ -738,7 +754,7 @@ Stmt *BasicBlock::RET(Temp *expr)
     if (isTerminated())
         return 0;
 
-    Ret *s = function->New<Ret>();
+    Ret *s = function->NewStmt<Ret>();
     s->init(expr);
     appendStatement(s);
     return s;
@@ -955,8 +971,8 @@ void IRPrinter::print(BasicBlock *bb)
         QTextStream os(&buf);
         QTextStream *prevOut = &os;
         std::swap(out, prevOut);
-        if (s->id > 0)
-            *out << s->id << ": ";
+        if (s->id() >= 0)
+            *out << s->id() << ": ";
         s->accept(this);
         if (s->location.isValid()) {
             out->flush();
