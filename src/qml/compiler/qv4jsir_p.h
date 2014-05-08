@@ -773,8 +773,6 @@ public:
     BasicBlock *catchBlock;
     QVector<BasicBlock *> in;
     QVector<BasicBlock *> out;
-    QBitArray liveIn;
-    QBitArray liveOut;
     QQmlJS::AST::SourceLocation nextLocation;
 
     BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
@@ -785,7 +783,10 @@ public:
         , _isExceptionHandler(false)
         , _groupStart(false)
         , _isRemoved(false)
-    {}
+    {
+        in.reserve(2);
+        out.reserve(2);
+    }
     ~BasicBlock();
 
     const QVector<Stmt *> &statements() const
