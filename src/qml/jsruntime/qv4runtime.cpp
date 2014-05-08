@@ -866,7 +866,7 @@ QV4::Bool Runtime::compareLessEqual(const QV4::ValueRef l, const QV4::ValueRef r
 }
 
 #ifndef V4_BOOTSTRAP
-ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData)
+ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, CallData *callData)
 {
     Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
@@ -883,7 +883,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, C
 }
 
 
-ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String *name, CallData *callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(context);
@@ -912,7 +912,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String 
     return o->call(callData);
 }
 
-ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, CallData *callData)
 {
     Scope scope(context);
     Scoped<Object> baseObject(scope, callData->thisObject);
@@ -938,7 +938,7 @@ ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, Cal
     return o->call(callData);
 }
 
-ReturnedValue Runtime::callPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData)
+ReturnedValue Runtime::callPropertyLookup(ExecutionContext *context, uint index, CallData *callData)
 {
     Lookup *l = context->d()->lookups + index;
     Value v;
@@ -949,7 +949,7 @@ ReturnedValue Runtime::callPropertyLookup(ExecutionContext *context, uint index,
     return v.objectValue()->call(callData);
 }
 
-ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef index, CallDataRef callData)
+ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef index, CallData *callData)
 {
     Scope scope(context);
     ScopedObject baseObject(scope, callData->thisObject.toObject(context));
@@ -966,7 +966,7 @@ ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef ind
     return o->call(callData);
 }
 
-ReturnedValue Runtime::callValue(ExecutionContext *context, const ValueRef func, CallDataRef callData)
+ReturnedValue Runtime::callValue(ExecutionContext *context, const ValueRef func, CallData *callData)
 {
     if (!func->isObject())
         return context->throwTypeError();
@@ -975,7 +975,7 @@ ReturnedValue Runtime::callValue(ExecutionContext *context, const ValueRef func,
 }
 
 
-ReturnedValue Runtime::constructGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData)
+ReturnedValue Runtime::constructGlobalLookup(ExecutionContext *context, uint index, CallData *callData)
 {
     Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
@@ -989,7 +989,7 @@ ReturnedValue Runtime::constructGlobalLookup(ExecutionContext *context, uint ind
 }
 
 
-ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, String *name, CallData *callData)
 {
     Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
@@ -1003,7 +1003,7 @@ ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, St
     return f->construct(callData);
 }
 
-ReturnedValue Runtime::constructValue(ExecutionContext *context, const ValueRef func, CallDataRef callData)
+ReturnedValue Runtime::constructValue(ExecutionContext *context, const ValueRef func, CallData *callData)
 {
     Object *f = func->asObject();
     if (!f)
@@ -1012,7 +1012,7 @@ ReturnedValue Runtime::constructValue(ExecutionContext *context, const ValueRef 
     return f->construct(callData);
 }
 
-ReturnedValue Runtime::constructProperty(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue Runtime::constructProperty(ExecutionContext *context, String *name, CallData *callData)
 {
     Scope scope(context);
     ScopedObject thisObject(scope, callData->thisObject.toObject(context));
@@ -1026,7 +1026,7 @@ ReturnedValue Runtime::constructProperty(ExecutionContext *context, String *name
     return f->construct(callData);
 }
 
-ReturnedValue Runtime::constructPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData)
+ReturnedValue Runtime::constructPropertyLookup(ExecutionContext *context, uint index, CallData *callData)
 {
     Lookup *l = context->d()->lookups + index;
     Value v;

@@ -399,38 +399,6 @@ inline Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
     return *this;
 }
 
-struct CallDataRef {
-    CallDataRef(const ScopedCallData &c)
-        : ptr(c.ptr) {}
-    CallDataRef(CallData *v) { ptr = v; }
-    // Important: Do NOT add a copy constructor to this class
-    // adding a copy constructor actually changes the calling convention, ie.
-    // is not even binary compatible. Adding it would break assumptions made
-    // in the jit'ed code.
-    CallDataRef &operator=(const ScopedCallData &c)
-    { *ptr = *c.ptr; return *this; }
-    CallDataRef &operator=(const CallDataRef &o)
-    { *ptr = *o.ptr; return *this; }
-
-    operator const CallData *() const {
-        return ptr;
-    }
-    const CallData *operator->() const {
-        return ptr;
-    }
-
-    operator CallData *() {
-        return ptr;
-    }
-    CallData *operator->() {
-        return ptr;
-    }
-
-private:
-    CallData *ptr;
-};
-
-
 template <typename T>
 inline Value &Value::operator=(Returned<T> *t)
 {

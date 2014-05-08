@@ -105,19 +105,19 @@ struct NoThrowContext : public ExecutionContext
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
     // call
-    static ReturnedValue callGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue callActivationProperty(ExecutionContext *, String *name, CallDataRef callData);
-    static ReturnedValue callProperty(ExecutionContext *context, String *name, CallDataRef callData);
-    static ReturnedValue callPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue callElement(ExecutionContext *context, const ValueRef index, CallDataRef callData);
-    static ReturnedValue callValue(ExecutionContext *context, const ValueRef func, CallDataRef callData);
+    static ReturnedValue callGlobalLookup(ExecutionContext *context, uint index, CallData *callData);
+    static ReturnedValue callActivationProperty(ExecutionContext *, String *name, CallData *callData);
+    static ReturnedValue callProperty(ExecutionContext *context, String *name, CallData *callData);
+    static ReturnedValue callPropertyLookup(ExecutionContext *context, uint index, CallData *callData);
+    static ReturnedValue callElement(ExecutionContext *context, const ValueRef index, CallData *callData);
+    static ReturnedValue callValue(ExecutionContext *context, const ValueRef func, CallData *callData);
 
     // construct
-    static ReturnedValue constructGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue constructActivationProperty(ExecutionContext *, String *name, CallDataRef callData);
-    static ReturnedValue constructProperty(ExecutionContext *context, String *name, CallDataRef callData);
-    static ReturnedValue constructPropertyLookup(ExecutionContext *context, uint index, CallDataRef callData);
-    static ReturnedValue constructValue(ExecutionContext *context, const ValueRef func, CallDataRef callData);
+    static ReturnedValue constructGlobalLookup(ExecutionContext *context, uint index, CallData *callData);
+    static ReturnedValue constructActivationProperty(ExecutionContext *, String *name, CallData *callData);
+    static ReturnedValue constructProperty(ExecutionContext *context, String *name, CallData *callData);
+    static ReturnedValue constructPropertyLookup(ExecutionContext *context, uint index, CallData *callData);
+    static ReturnedValue constructValue(ExecutionContext *context, const ValueRef func, CallData *callData);
 
     // set & get
     static void setActivationProperty(ExecutionContext *ctx, String *name, const ValueRef value);
