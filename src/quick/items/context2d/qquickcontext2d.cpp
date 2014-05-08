@@ -477,22 +477,20 @@ public:
 V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 
-class QQuickJSContext2D : public QV4::Object
+struct QQuickJSContext2D : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+         Data(QV4::ExecutionEngine *engine)
+             : Object::Data(engine)
+         {
+             setVTable(staticVTable());
+         }
         QQuickContext2D* context;
     };
     struct {
         QQuickContext2D* context;
     } __data;
     V4_OBJECT
-public:
-    QQuickJSContext2D(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {
-        Q_UNUSED(__data);
-        setVTable(staticVTable());
-    }
 
     static QV4::ReturnedValue method_get_globalAlpha(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_globalAlpha(QV4::CallContext *ctx);
@@ -542,56 +540,58 @@ struct QQuickJSContext2DPrototype : public QV4::Object
 {
     V4_OBJECT
 public:
-    QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
+    static Data *create(QV4::ExecutionEngine *engine)
     {
+        Data *d = new (engine) Data(engine);
         QV4::Scope scope(engine);
-        QV4::ScopedObject protectThis(scope, this);
+        QV4::ScopedObject o(scope, d);
 
-        defineDefaultProperty(QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
-        defineDefaultProperty(QStringLiteral("restore"), method_restore, 0);
-        defineDefaultProperty(QStringLiteral("moveTo"), method_moveTo, 0);
-        defineDefaultProperty(QStringLiteral("lineTo"), method_lineTo, 0);
-        defineDefaultProperty(QStringLiteral("caretBlinkRate"), method_caretBlinkRate, 0);
-        defineDefaultProperty(QStringLiteral("clip"), method_clip, 0);
-        defineDefaultProperty(QStringLiteral("setTransform"), method_setTransform, 0);
-        defineDefaultProperty(QStringLiteral("text"), method_text, 0);
-        defineDefaultProperty(QStringLiteral("roundedRect"), method_roundedRect, 0);
-        defineDefaultProperty(QStringLiteral("createPattern"), method_createPattern, 0);
-        defineDefaultProperty(QStringLiteral("stroke"), method_stroke, 0);
-        defineDefaultProperty(QStringLiteral("arc"), method_arc, 0);
-        defineDefaultProperty(QStringLiteral("createImageData"), method_createImageData, 0);
-        defineDefaultProperty(QStringLiteral("measureText"), method_measureText, 0);
-        defineDefaultProperty(QStringLiteral("ellipse"), method_ellipse, 0);
-        defineDefaultProperty(QStringLiteral("fill"), method_fill, 0);
-        defineDefaultProperty(QStringLiteral("save"), method_save, 0);
-        defineDefaultProperty(QStringLiteral("scale"), method_scale, 0);
-        defineDefaultProperty(QStringLiteral("drawImage"), method_drawImage, 0);
-        defineDefaultProperty(QStringLiteral("transform"), method_transform, 0);
-        defineDefaultProperty(QStringLiteral("fillText"), method_fillText, 0);
-        defineDefaultProperty(QStringLiteral("strokeText"), method_strokeText, 0);
-        defineDefaultProperty(QStringLiteral("translate"), method_translate, 0);
-        defineDefaultProperty(QStringLiteral("createRadialGradient"), method_createRadialGradient, 0);
-        defineDefaultProperty(QStringLiteral("shear"), method_shear, 0);
-        defineDefaultProperty(QStringLiteral("isPointInPath"), method_isPointInPath, 0);
-        defineDefaultProperty(QStringLiteral("bezierCurveTo"), method_bezierCurveTo, 0);
-        defineDefaultProperty(QStringLiteral("resetTransform"), method_resetTransform, 0);
-        defineDefaultProperty(QStringLiteral("arcTo"), method_arcTo, 0);
-        defineDefaultProperty(QStringLiteral("fillRect"), method_fillRect, 0);
-        defineDefaultProperty(QStringLiteral("createConicalGradient"), method_createConicalGradient, 0);
-        defineDefaultProperty(QStringLiteral("drawFocusRing"), method_drawFocusRing, 0);
-        defineDefaultProperty(QStringLiteral("beginPath"), method_beginPath, 0);
-        defineDefaultProperty(QStringLiteral("clearRect"), method_clearRect, 0);
-        defineDefaultProperty(QStringLiteral("rect"), method_rect, 0);
-        defineDefaultProperty(QStringLiteral("reset"), method_reset, 0);
-        defineDefaultProperty(QStringLiteral("rotate"), method_rotate, 0);
-        defineDefaultProperty(QStringLiteral("setCaretSelectionRect"), method_setCaretSelectionRect, 0);
-        defineDefaultProperty(QStringLiteral("putImageData"), method_putImageData, 0);
-        defineDefaultProperty(QStringLiteral("getImageData"), method_getImageData, 0);
-        defineDefaultProperty(QStringLiteral("createLinearGradient"), method_createLinearGradient, 0);
-        defineDefaultProperty(QStringLiteral("strokeRect"), method_strokeRect, 0);
-        defineDefaultProperty(QStringLiteral("closePath"), method_closePath, 0);
-        defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, 0);
+        o->defineDefaultProperty(QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
+        o->defineDefaultProperty(QStringLiteral("restore"), method_restore, 0);
+        o->defineDefaultProperty(QStringLiteral("moveTo"), method_moveTo, 0);
+        o->defineDefaultProperty(QStringLiteral("lineTo"), method_lineTo, 0);
+        o->defineDefaultProperty(QStringLiteral("caretBlinkRate"), method_caretBlinkRate, 0);
+        o->defineDefaultProperty(QStringLiteral("clip"), method_clip, 0);
+        o->defineDefaultProperty(QStringLiteral("setTransform"), method_setTransform, 0);
+        o->defineDefaultProperty(QStringLiteral("text"), method_text, 0);
+        o->defineDefaultProperty(QStringLiteral("roundedRect"), method_roundedRect, 0);
+        o->defineDefaultProperty(QStringLiteral("createPattern"), method_createPattern, 0);
+        o->defineDefaultProperty(QStringLiteral("stroke"), method_stroke, 0);
+        o->defineDefaultProperty(QStringLiteral("arc"), method_arc, 0);
+        o->defineDefaultProperty(QStringLiteral("createImageData"), method_createImageData, 0);
+        o->defineDefaultProperty(QStringLiteral("measureText"), method_measureText, 0);
+        o->defineDefaultProperty(QStringLiteral("ellipse"), method_ellipse, 0);
+        o->defineDefaultProperty(QStringLiteral("fill"), method_fill, 0);
+        o->defineDefaultProperty(QStringLiteral("save"), method_save, 0);
+        o->defineDefaultProperty(QStringLiteral("scale"), method_scale, 0);
+        o->defineDefaultProperty(QStringLiteral("drawImage"), method_drawImage, 0);
+        o->defineDefaultProperty(QStringLiteral("transform"), method_transform, 0);
+        o->defineDefaultProperty(QStringLiteral("fillText"), method_fillText, 0);
+        o->defineDefaultProperty(QStringLiteral("strokeText"), method_strokeText, 0);
+        o->defineDefaultProperty(QStringLiteral("translate"), method_translate, 0);
+        o->defineDefaultProperty(QStringLiteral("createRadialGradient"), method_createRadialGradient, 0);
+        o->defineDefaultProperty(QStringLiteral("shear"), method_shear, 0);
+        o->defineDefaultProperty(QStringLiteral("isPointInPath"), method_isPointInPath, 0);
+        o->defineDefaultProperty(QStringLiteral("bezierCurveTo"), method_bezierCurveTo, 0);
+        o->defineDefaultProperty(QStringLiteral("resetTransform"), method_resetTransform, 0);
+        o->defineDefaultProperty(QStringLiteral("arcTo"), method_arcTo, 0);
+        o->defineDefaultProperty(QStringLiteral("fillRect"), method_fillRect, 0);
+        o->defineDefaultProperty(QStringLiteral("createConicalGradient"), method_createConicalGradient, 0);
+        o->defineDefaultProperty(QStringLiteral("drawFocusRing"), method_drawFocusRing, 0);
+        o->defineDefaultProperty(QStringLiteral("beginPath"), method_beginPath, 0);
+        o->defineDefaultProperty(QStringLiteral("clearRect"), method_clearRect, 0);
+        o->defineDefaultProperty(QStringLiteral("rect"), method_rect, 0);
+        o->defineDefaultProperty(QStringLiteral("reset"), method_reset, 0);
+        o->defineDefaultProperty(QStringLiteral("rotate"), method_rotate, 0);
+        o->defineDefaultProperty(QStringLiteral("setCaretSelectionRect"), method_setCaretSelectionRect, 0);
+        o->defineDefaultProperty(QStringLiteral("putImageData"), method_putImageData, 0);
+        o->defineDefaultProperty(QStringLiteral("getImageData"), method_getImageData, 0);
+        o->defineDefaultProperty(QStringLiteral("createLinearGradient"), method_createLinearGradient, 0);
+        o->defineDefaultProperty(QStringLiteral("strokeRect"), method_strokeRect, 0);
+        o->defineDefaultProperty(QStringLiteral("closePath"), method_closePath, 0);
+        o->defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, 0);
+
+        return d;
     }
 
     static QV4::ReturnedValue method_get_canvas(QV4::CallContext *ctx);
@@ -644,9 +644,16 @@ public:
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
 
 
-class QQuickContext2DStyle : public QV4::Object
+struct QQuickContext2DStyle : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+        Data(QV4::ExecutionEngine *e)
+          : Object::Data(e)
+        {
+            patternRepeatX = false;
+            patternRepeatY = false;
+            setVTable(staticVTable());
+        }
         QBrush brush;
         bool patternRepeatX:1;
         bool patternRepeatY:1;
@@ -658,20 +665,12 @@ class QQuickContext2DStyle : public QV4::Object
     } __data;
 
     V4_OBJECT
-public:
-    QQuickContext2DStyle(QV4::ExecutionEngine *e)
-      : QV4::Object(e)
-    {
-        d()->patternRepeatX = false;
-        d()->patternRepeatY = false;
-        setVTable(staticVTable());
-    }
 
     static QV4::ReturnedValue gradient_proto_addColorStop(QV4::CallContext *ctx);
 protected:
     static void destroy(Managed *that)
     {
-        static_cast<QQuickContext2DStyle *>(that)->~QQuickContext2DStyle();
+        static_cast<QQuickContext2DStyle *>(that)->d()->~Data();
     }
 };
 
@@ -874,7 +873,15 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 
 struct QQuickJSContext2DPixelData : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+        Data(QV4::ExecutionEngine *engine)
+            : Object::Data(engine)
+        {
+            setVTable(staticVTable());
+            QV4::Scope scope(engine);
+            QV4::ScopedObject o(scope, this);
+            o->setArrayType(QV4::ArrayData::Custom);
+        }
         QImage image;
     };
     struct {
@@ -882,18 +889,9 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     } __data;
 
     V4_OBJECT
-    QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {
-        setVTable(staticVTable());
-        QV4::Scope scope(engine);
-        QV4::ScopedObject protectThis(scope, this);
-        Q_UNUSED(protectThis);
-        setArrayType(QV4::ArrayData::Custom);
-    }
 
     static void destroy(QV4::Managed *that) {
-        static_cast<QQuickJSContext2DPixelData *>(that)->~QQuickJSContext2DPixelData();
+        static_cast<QQuickJSContext2DPixelData *>(that)->d()->~Data();
     }
     static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
     static void putIndexed(QV4::Managed *m, uint index, const QV4::ValueRef value);
@@ -905,27 +903,26 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DPixelData);
 
 struct QQuickJSContext2DImageData : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+        Data(QV4::ExecutionEngine *engine)
+            : Object::Data(engine)
+        {
+            setVTable(staticVTable());
+            pixelData = QV4::Primitive::undefinedValue();
+
+            QV4::Scope scope(engine);
+            QV4::ScopedObject o(scope, this);
+
+            o->defineAccessorProperty(QStringLiteral("width"), method_get_width, 0);
+            o->defineAccessorProperty(QStringLiteral("height"), method_get_height, 0);
+            o->defineAccessorProperty(QStringLiteral("data"), method_get_data, 0);
+        }
         QV4::Value pixelData;
     };
     struct {
         QV4::Value pixelData;
     } __data;
     V4_OBJECT
-
-    QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {
-        setVTable(staticVTable());
-        d()->pixelData = QV4::Primitive::undefinedValue();
-
-        QV4::Scope scope(engine);
-        QV4::ScopedObject protectThis(scope, this);
-
-        defineAccessorProperty(QStringLiteral("width"), method_get_width, 0);
-        defineAccessorProperty(QStringLiteral("height"), method_get_height, 0);
-        defineAccessorProperty(QStringLiteral("data"), method_get_data, 0);
-    }
 
     static QV4::ReturnedValue method_get_width(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_height(QV4::CallContext *ctx);
@@ -944,7 +941,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engi
     QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
-    QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, new (scope.engine->memoryManager) QQuickJSContext2DPixelData(v4));
+    QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, new (scope.engine) QQuickJSContext2DPixelData::Data(v4));
     QV4::ScopedObject p(scope, ed->pixelArrayProto.value());
     pixelData->setPrototype(p.getPointer());
 
@@ -956,7 +953,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engi
         pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
-    QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, new (scope.engine->memoryManager) QQuickJSContext2DImageData(v4));
+    QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, new (scope.engine) QQuickJSContext2DImageData::Data(v4));
     imageData->d()->pixelData = pixelData.asReturnedValue();
     return imageData.asReturnedValue();
 }
@@ -1570,7 +1567,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
         }
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine->memoryManager) QQuickContext2DStyle(scope.engine));
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine) QQuickContext2DStyle::Data(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p.getPointer());
         gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
@@ -1624,7 +1621,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
 
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine->memoryManager) QQuickContext2DStyle(scope.engine));
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine) QQuickContext2DStyle::Data(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p.getPointer());
         gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
@@ -1670,7 +1667,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
 
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine->memoryManager) QQuickContext2DStyle(scope.engine));
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (scope.engine) QQuickContext2DStyle::Data(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p.getPointer());
         gradient->d()->brush = QConicalGradient(x, y, angle);
@@ -1731,7 +1728,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
     QV8Engine *engine = scope.engine->v8Engine;
 
     if (ctx->d()->callData->argc == 2) {
-        QV4::Scoped<QQuickContext2DStyle> pattern(scope, new (scope.engine->memoryManager) QQuickContext2DStyle(scope.engine));
+        QV4::Scoped<QQuickContext2DStyle> pattern(scope, new (scope.engine) QQuickContext2DStyle::Data(scope.engine));
 
         QColor color = engine->toVariant(ctx->d()->callData->args[0], qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
@@ -4171,7 +4168,7 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::Object> proto(scope, new (scope.engine->memoryManager) QQuickJSContext2DPrototype(v4));
+    QV4::Scoped<QV4::Object> proto(scope, QQuickJSContext2DPrototype::create(v4));
     proto->defineAccessorProperty(QStringLiteral("strokeStyle"), QQuickJSContext2D::method_get_strokeStyle, QQuickJSContext2D::method_set_strokeStyle);
     proto->defineAccessorProperty(QStringLiteral("font"), QQuickJSContext2D::method_get_font, QQuickJSContext2D::method_set_font);
     proto->defineAccessorProperty(QStringLiteral("fillRule"), QQuickJSContext2D::method_get_fillRule, QQuickJSContext2D::method_set_fillRule);
@@ -4286,7 +4283,7 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         QQuickContext2DEngineData *ed = engineData(engine);
         QV4::ExecutionEngine *v4Engine = QV8Engine::getV4(engine);
         QV4::Scope scope(v4Engine);
-        QV4::Scoped<QQuickJSContext2D> wrapper(scope, new (v4Engine->memoryManager) QQuickJSContext2D(v4Engine));
+        QV4::Scoped<QQuickJSContext2D> wrapper(scope, new (v4Engine) QQuickJSContext2D::Data(v4Engine));
         QV4::ScopedObject p(scope, ed->contextPrototype.value());
         wrapper->setPrototype(p.getPointer());
         wrapper->d()->context = this;
