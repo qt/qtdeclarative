@@ -208,6 +208,9 @@ struct Q_QML_PRIVATE_EXPORT Managed
         };
 
         void setVTable(const ManagedVTable *vt);
+        ReturnedValue asReturnedValue() const {
+            return reinterpret_cast<Managed *>(const_cast<Data *>(this))->asReturnedValue();
+        }
 
         void *operator new(size_t size, ExecutionEngine *e);
         void *operator new(size_t, Managed *m) { return m; }

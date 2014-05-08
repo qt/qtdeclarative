@@ -66,6 +66,7 @@ namespace QV4 {
 struct QtObject : Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *v4, QQmlEngine *qmlEngine);
         QObject *platform;
         QObject *application;
     };
@@ -76,7 +77,6 @@ struct QtObject : Object
 
     V4_OBJECT
 
-    QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
 
     static ReturnedValue method_isQtObject(CallContext *ctx);
     static ReturnedValue method_rgba(CallContext *ctx);
@@ -118,7 +118,9 @@ struct QtObject : Object
 
 struct ConsoleObject : Object
 {
-    ConsoleObject(ExecutionEngine *v4);
+    struct Data : Object::Data {
+        Data(ExecutionEngine *engine);
+    };
 
     static ReturnedValue method_error(CallContext *ctx);
     static ReturnedValue method_log(CallContext *ctx);
@@ -155,6 +157,7 @@ struct GlobalExtensions {
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
     struct Data : FunctionObject::Data {
+        Data(FunctionObject *originalFunction);
         QV4::FunctionObject *originalFunction;
         // Set when the binding is created later
         QQmlSourceLocation bindingLocation;
@@ -165,7 +168,6 @@ struct QQmlBindingFunction : public QV4::FunctionObject
     } __data;
 
     V4_OBJECT
-    QQmlBindingFunction(FunctionObject *originalFunction);
 
     void initBindingLocation(); // from caller stack trace
 
@@ -173,7 +175,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 
     static void markObjects(Managed *that, ExecutionEngine *e);
     static void destroy(Managed *that) {
-        static_cast<QQmlBindingFunction *>(that)->~QQmlBindingFunction();
+        static_cast<QQmlBindingFunction *>(that)->d()->~Data();
     }
 
 };
