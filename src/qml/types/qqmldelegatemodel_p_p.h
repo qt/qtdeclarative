@@ -162,6 +162,13 @@ protected:
 struct QQmlDelegateModelItemObject : QV4::Object
 {
     struct Data : QV4::Object::Data {
+        Data(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
+            : Object::Data(engine)
+            , item(item)
+        {
+            setVTable(staticVTable());
+        }
+        ~Data();
         QQmlDelegateModelItem *item;
     };
     struct {
@@ -169,14 +176,6 @@ struct QQmlDelegateModelItemObject : QV4::Object
     } __data;
 
     V4_OBJECT
-
-    QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
-        : Object(engine)
-    {
-        setVTable(staticVTable());
-        d()->item = item;
-    }
-    ~QQmlDelegateModelItemObject();
 
     static void destroy(Managed *that);
 };

@@ -152,7 +152,8 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
         QV4::ScopedString s(valueScope);
         int index = 0;
         foreach (const QByteArray &param, signalParameters) {
-            p->setGetter(new (engine->memoryManager) QV4::IndexedBuiltinFunction(wrapper->context(), index++, signalParameterGetter));
+            QV4::ScopedFunctionObject g(valueScope, new (engine) QV4::IndexedBuiltinFunction::Data(wrapper->context(), index++, signalParameterGetter));
+            p->setGetter(g);
             p->setSetter(0);
             s = engine->newString(QString::fromUtf8(param));
             qmlScopeObject->insertMember(s.getPointer(), p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);

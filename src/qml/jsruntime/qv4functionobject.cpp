@@ -74,6 +74,44 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
+FunctionObject::Data::Data(ExecutionContext *scope, String *name, bool createProto)
+    : Object::Data(scope->d()->engine->functionClass)
+    , scope(scope)
+{
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    f->init(name, createProto);
+}
+
+
+FunctionObject::Data::Data(ExecutionContext *scope, const QString &name, bool createProto)
+    : Object::Data(scope->d()->engine->functionClass)
+    , scope(scope)
+{
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    ScopedString n(s, s.engine->newString(name));
+    f->init(n.getPointer(), createProto);
+}
+
+FunctionObject::Data::Data(ExecutionContext *scope, const ReturnedValue name)
+    : Object::Data(scope->d()->engine->functionClass)
+    , scope(scope)
+{
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    ScopedString n(s, name);
+    f->init(n.getPointer(), false);
+}
+
+FunctionObject::Data::Data(InternalClass *ic)
+    : Object::Data(ic)
+    , scope(ic->engine->rootContext)
+{
+    memberData.ensureIndex(ic->engine, Index_Prototype);
+    memberData[Index_Prototype] = Encode::undefined();
+}
+
 FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool createProto)
     : Object(scope->d()->engine->functionClass)
 {
@@ -117,10 +155,10 @@ FunctionObject::FunctionObject(InternalClass *ic)
     memberData()[Index_Prototype] = Encode::undefined();
 }
 
-FunctionObject::~FunctionObject()
+FunctionObject::Data::~Data()
 {
-    if (function())
-        function()->compilationUnit->deref();
+    if (function)
+        function->compilationUnit->deref();
 }
 
 void FunctionObject::init(String *n, bool createProto)

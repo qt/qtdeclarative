@@ -95,9 +95,14 @@ struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
     struct Data : Object::Data {
+        Data(ExecutionContext *scope, String *name, bool createProto = false);
+        Data(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
+        Data(ExecutionContext *scope, const ReturnedValue name);
+        Data(InternalClass *ic);
+        ~Data();
+
         ExecutionContext *scope;
         Function *function;
-
     };
     struct {
         ExecutionContext *scope;
@@ -132,7 +137,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     FunctionObject(ExecutionContext *scope, String *name, bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(ExecutionContext *scope, const ReturnedValue name);
-    ~FunctionObject();
 
     void init(String *name, bool createProto);
 
@@ -142,6 +146,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
     using Object::call;
     static ReturnedValue construct(Managed *that, CallData *);
     static ReturnedValue call(Managed *that, CallData *d);
+    static void destroy(Managed *m) {
+        static_cast<FunctionObject *>(m)->d()->~Data();
+    }
 
     static FunctionObject *cast(const Value &v) {
         return v.asFunctionObject();
@@ -204,6 +211,13 @@ struct BuiltinFunction: FunctionObject {
 struct IndexedBuiltinFunction: FunctionObject
 {
     struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
+            : FunctionObject::Data(scope),
+              code(code)
+            , index(index)
+        {
+            setVTable(staticVTable());
+        }
         ReturnedValue (*code)(CallContext *, uint index);
         uint index;
     };
@@ -212,14 +226,6 @@ struct IndexedBuiltinFunction: FunctionObject
         uint index;
     } __data;
     V4_OBJECT
-
-    IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
-        : FunctionObject(scope)
-    {
-        d()->code = code;
-        d()->index = index;
-        setVTable(staticVTable());
-    }
 
     static ReturnedValue construct(Managed *m, CallData *)
     {

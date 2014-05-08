@@ -1857,14 +1857,14 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisI
 
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelItemObject);
 
-QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
+QQmlDelegateModelItemObject::Data::~Data()
 {
-    d()->item->Dispose();
+    item->Dispose();
 }
 
 void QQmlDelegateModelItemObject::destroy(Managed *that)
 {
-    static_cast<QQmlDelegateModelItemObject *>(that)->~QQmlDelegateModelItemObject();
+    static_cast<QQmlDelegateModelItemObject *>(that)->d()->~Data();
 }
 
 
@@ -2466,7 +2466,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
     QV4::Scope scope(v4);
-    QV4::ScopedObject o(scope, new (v4->memoryManager) QQmlDelegateModelItemObject(v4, cacheItem));
+    QV4::ScopedObject o(scope, new (v4) QQmlDelegateModelItemObject::Data(v4, cacheItem));
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
     o->setPrototype(p.getPointer());
     ++cacheItem->scriptRef;
