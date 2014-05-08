@@ -71,6 +71,8 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
 
     struct Data : Object::Data {
+        Data(QV8Engine *engine);
+        ~Data();
         QV8Engine *v8;
         TypeNameMode mode;
         QPointer<QObject> object;
@@ -91,8 +93,6 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
 
     V4_OBJECT
 private:
-    QmlTypeWrapper(QV8Engine *engine);
-    ~QmlTypeWrapper();
 
 public:
 

@@ -70,6 +70,7 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
     enum ObjectType { Reference, Copy };
     struct Data : Object::Data {
+        Data(QV8Engine *engine, ObjectType type);
         QV8Engine *v8;
         ObjectType objectType;
         mutable QQmlValueType *type;
@@ -81,9 +82,6 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
     } __data;
 
     V4_OBJECT
-protected:
-    QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
-    ~QmlValueTypeWrapper();
 
 public:
 

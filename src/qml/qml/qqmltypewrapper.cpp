@@ -56,18 +56,18 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 
-QmlTypeWrapper::QmlTypeWrapper(QV8Engine *engine)
-    : Object(QV8Engine::getV4(engine))
+QmlTypeWrapper::Data::Data(QV8Engine *engine)
+    : Object::Data(QV8Engine::getV4(engine))
+    , v8(engine)
+    , mode(IncludeEnums)
 {
     setVTable(staticVTable());
-    d()->v8 = engine;
-    d()->mode = IncludeEnums;
 }
 
-QmlTypeWrapper::~QmlTypeWrapper()
+QmlTypeWrapper::Data::~Data()
 {
-    if (d()->typeNamespace)
-        d()->typeNamespace->release();
+    if (typeNamespace)
+        typeNamespace->release();
 }
 
 bool QmlTypeWrapper::isSingleton() const
@@ -99,7 +99,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, Typ
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope, new (v4->memoryManager) QmlTypeWrapper(v8));
+    Scoped<QmlTypeWrapper> w(scope, new (v4) QmlTypeWrapper::Data(v8));
     w->d()->mode = mode; w->d()->object = o; w->d()->type = t;
     return w.asReturnedValue();
 }
@@ -113,7 +113,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope, new (v4->memoryManager) QmlTypeWrapper(v8));
+    Scoped<QmlTypeWrapper> w(scope, new (v4) QmlTypeWrapper::Data(v8));
     w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t; w->d()->importNamespace = importNamespace;
     t->addref();
     return w.asReturnedValue();
@@ -282,7 +282,7 @@ PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
 
 void QmlTypeWrapper::destroy(Managed *that)
 {
-    static_cast<QmlTypeWrapper *>(that)->~QmlTypeWrapper();
+    static_cast<QmlTypeWrapper *>(that)->d()->~Data();
 }
 
 bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
