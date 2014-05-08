@@ -167,6 +167,17 @@ DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 struct CompilationUnitHolder : public Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
+            : Object::Data(engine)
+            , unit(unit)
+        {
+            unit->ref();
+            setVTable(staticVTable());
+        }
+        ~Data()
+        {
+            unit->deref();
+        }
         QV4::CompiledData::CompilationUnit *unit;
     };
     struct {
@@ -175,21 +186,10 @@ struct CompilationUnitHolder : public Object
 
     V4_OBJECT
 
-    CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
-        : Object(engine)
-    {
-        d()->unit = unit;
-        d()->unit->ref();
-        setVTable(staticVTable());
-    }
-    ~CompilationUnitHolder()
-    {
-        d()->unit->deref();
-    }
 
     static void destroy(Managed *that)
     {
-        static_cast<CompilationUnitHolder*>(that)->~CompilationUnitHolder();
+        static_cast<CompilationUnitHolder*>(that)->d()->~Data();
     }
 
 };
@@ -206,7 +206,7 @@ Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *
         vmFunction = compilationUnit->linkToEngine(v4);
         Q_ASSERT(vmFunction);
         Scope valueScope(v4);
-        ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
+        ScopedObject holder(valueScope, new (v4) CompilationUnitHolder::Data(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
     } else
         vmFunction = 0;
@@ -278,7 +278,7 @@ void Script::parse()
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
-        ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
+        ScopedObject holder(valueScope, new (v4) CompilationUnitHolder::Data(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
     }
 

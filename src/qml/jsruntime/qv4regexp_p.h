@@ -62,38 +62,13 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ExecutionEngine;
+struct RegExpCacheKey;
 
-struct RegExpCacheKey
-{
-    RegExpCacheKey(const QString &pattern, bool ignoreCase, bool multiLine)
-        : pattern(pattern)
-        , ignoreCase(ignoreCase)
-        , multiLine(multiLine)
-    { }
-    explicit inline RegExpCacheKey(const RegExp *re);
-
-    bool operator==(const RegExpCacheKey &other) const
-    { return pattern == other.pattern && ignoreCase == other.ignoreCase && multiLine == other.multiLine; }
-    bool operator!=(const RegExpCacheKey &other) const
-    { return !operator==(other); }
-
-    QString pattern;
-    uint ignoreCase : 1;
-    uint multiLine : 1;
-};
-
-inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
-{ return qHash(key.pattern, seed); }
-
-class RegExpCache : public QHash<RegExpCacheKey, RegExp*>
-{
-public:
-    ~RegExpCache();
-};
-
-class RegExp : public Managed
+struct RegExp : public Managed
 {
     struct Data : Managed::Data {
+        Data(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
+        ~Data();
         QString pattern;
         OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
 #if ENABLE(YARR_JIT)
@@ -129,8 +104,7 @@ class RegExp : public Managed
     bool ignoreCase() const { return d()->ignoreCase; }
     bool multiLine() const { return d()->multiLine; }
 
-    static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
-    ~RegExp();
+    static RegExp::Data* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
 
     bool isValid() const { return d()->byteCode.get(); }
 
@@ -141,18 +115,43 @@ class RegExp : public Managed
     static void destroy(Managed *that);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 
-private:
     friend class RegExpCache;
-    Q_DISABLE_COPY(RegExp);
-    RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
-
 };
 
-inline RegExpCacheKey::RegExpCacheKey(const RegExp *re)
-    : pattern(re->pattern())
-    , ignoreCase(re->ignoreCase())
-    , multiLine(re->multiLine())
+struct RegExpCacheKey
+{
+    RegExpCacheKey(const QString &pattern, bool ignoreCase, bool multiLine)
+        : pattern(pattern)
+        , ignoreCase(ignoreCase)
+        , multiLine(multiLine)
+    { }
+    explicit inline RegExpCacheKey(const RegExp::Data *re);
+
+    bool operator==(const RegExpCacheKey &other) const
+    { return pattern == other.pattern && ignoreCase == other.ignoreCase && multiLine == other.multiLine; }
+    bool operator!=(const RegExpCacheKey &other) const
+    { return !operator==(other); }
+
+    QString pattern;
+    uint ignoreCase : 1;
+    uint multiLine : 1;
+};
+
+inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
+    : pattern(re->pattern)
+    , ignoreCase(re->ignoreCase)
+    , multiLine(re->multiLine)
 {}
+
+inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
+{ return qHash(key.pattern, seed); }
+
+class RegExpCache : public QHash<RegExpCacheKey, RegExp::Data *>
+{
+public:
+    ~RegExpCache();
+};
+
 
 
 }

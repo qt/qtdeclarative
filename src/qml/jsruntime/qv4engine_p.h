@@ -112,7 +112,7 @@ struct IdentifierTable;
 struct InternalClass;
 struct InternalClassPool;
 class MultiplyWrappedQObjectMap;
-class RegExp;
+struct RegExp;
 class RegExpCache;
 struct QmlExtensions;
 struct Exception;

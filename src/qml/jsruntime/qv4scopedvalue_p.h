@@ -117,6 +117,15 @@ struct ScopedValue
 #endif
     }
 
+    ScopedValue(const Scope &scope, HeapObject *o)
+    {
+        ptr = scope.engine->jsStackTop++;
+        ptr->m = reinterpret_cast<Managed *>(o);
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
     ScopedValue(const Scope &scope, Managed *m)
     {
         ptr = scope.engine->jsStackTop++;
@@ -147,6 +156,11 @@ struct ScopedValue
 
     ScopedValue &operator=(const Value &v) {
         *ptr = v;
+        return *this;
+    }
+
+    ScopedValue &operator=(HeapObject *o) {
+        ptr->m = reinterpret_cast<Managed *>(o);
         return *this;
     }
 

@@ -302,8 +302,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
-    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype));
-    regExpClass = InternalClass::create(this, RegExpObject::staticVTable(), regExpPrototype);
+    Scoped<RegExpPrototype> regExpPrototype(scope, new (this) RegExpPrototype::Data(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype)));
+    regExpClass = InternalClass::create(this, RegExpObject::staticVTable(), regExpPrototype.getPointer());
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
@@ -592,13 +592,15 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
 
 Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
-    RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
+    Scope scope(this);
+    Scoped<RegExpObject> object(scope, new (this) RegExpObject::Data(this, re, global));
     return object->asReturned<RegExpObject>();
 }
 
 Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
-    RegExpObject *object = new (memoryManager) RegExpObject(this, re);
+    Scope scope(this);
+    Scoped<RegExpObject> object(scope, new (this) RegExpObject::Data(this, re));
     return object->asReturned<RegExpObject>();
 }
 

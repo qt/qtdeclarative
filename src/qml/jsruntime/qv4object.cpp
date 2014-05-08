@@ -90,7 +90,6 @@ Object::Object(InternalClass *ic)
 {
     Q_ASSERT(internalClass()->vtable != &Managed::static_vtbl);
 
-    Q_ASSERT(!memberData().d());
     if (internalClass()->size) {
         Scope scope(engine());
         ScopedObject protectThis(scope, this);

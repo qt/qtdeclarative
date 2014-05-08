@@ -129,9 +129,14 @@ private:
     static QV4::ReturnedValue method_localeCompare(QV4::CallContext *ctx);
 };
 
-class QQmlLocaleData : public QV4::Object
+struct QQmlLocaleData : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+        Data(QV4::ExecutionEngine *engine)
+            : Object::Data(engine)
+        {
+            setVTable(staticVTable());
+        }
         QLocale locale;
     };
     struct {
@@ -139,13 +144,6 @@ class QQmlLocaleData : public QV4::Object
     } __data;
 
     V4_OBJECT
-public:
-    QQmlLocaleData(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {
-        setVTable(staticVTable());
-    }
-
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {
         QQmlLocaleData *thisObject = ctx->d()->callData->thisObject.asObject()->as<QQmlLocaleData>();

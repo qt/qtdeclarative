@@ -70,32 +70,42 @@ Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyn
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(RegExpObject);
+DEFINE_OBJECT_VTABLE(RegExpPrototype);
 
-RegExpObject::RegExpObject(InternalClass *ic)
-    : Object(ic)
+RegExpObject::Data::Data(InternalClass *ic)
+    : Object::Data(ic)
 {
-    d()->value = RegExp::create(ic->engine, QString(), false, false);
-    d()->global = false;
-    Q_ASSERT(internalClass()->vtable == staticVTable());
-    init(ic->engine);
+    setVTable(staticVTable());
+
+    Scope scope(ic->engine);
+    Scoped<RegExpObject> o(scope, this);
+    o->d()->value = reinterpret_cast<RegExp *>(RegExp::create(ic->engine, QString(), false, false));
+    o->d()->global = false;
+    o->init(ic->engine);
 }
 
-RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp *value, bool global)
-    : Object(engine->regExpClass)
+RegExpObject::Data::Data(ExecutionEngine *engine, RegExp *value, bool global)
+    : Object::Data(engine->regExpClass)
+    , value(value)
+    , global(global)
 {
-    d()->value = value;
-    d()->global = global;
-    init(engine);
+    setVTable(staticVTable());
+
+    Scope scope(engine);
+    Scoped<RegExpObject> o(scope, this);
+    o->init(engine);
 }
 
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
-RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
-    : Object(engine->regExpClass)
+RegExpObject::Data::Data(ExecutionEngine *engine, const QRegExp &re)
+    : Object::Data(engine->regExpClass)
 {
-    d()->value = 0;
-    d()->global = false;
+    setVTable(staticVTable());
+
+    value = 0;
+    global = false;
 
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
@@ -135,17 +145,15 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     }
 
     Scope scope(engine);
-    ScopedObject protectThis(scope, this);
+    Scoped<RegExpObject> o(scope, this);
 
-    d()->value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+    o->d()->value = reinterpret_cast<RegExp *>(RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false));
 
-    init(engine);
+    o->init(engine);
 }
 
 void RegExpObject::init(ExecutionEngine *engine)
 {
-    setVTable(staticVTable());
-
     Scope scope(engine);
     ScopedObject protectThis(scope, this);
 
@@ -256,8 +264,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         if (!f->isUndefined())
             return ctx->throwTypeError();
 
-        Scoped<RegExp> newRe(scope, re->value());
-        return Encode(ctx->d()->engine->newRegExpObject(newRe, re->global()));
+        return Encode(ctx->d()->engine->newRegExpObject(re->value(), re->global()));
     }
 
     QString pattern;
@@ -287,7 +294,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    Scoped<RegExp> regexp(scope, RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
+    RegExp *regexp = reinterpret_cast<RegExp *>(RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
         return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 
@@ -312,10 +319,11 @@ void RegExpCtor::markObjects(Managed *that, ExecutionEngine *e)
     FunctionObject::markObjects(that, e);
 }
 
-void RegExpPrototype::init(ExecutionEngine *engine, Object *ctor)
+void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
+    ScopedObject ctor(scope, constructor);
 
     ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
     ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));

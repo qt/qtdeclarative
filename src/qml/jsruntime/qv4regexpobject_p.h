@@ -63,15 +63,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-class RegExp;
-
 struct RegExpObject: Object {
     struct Data : Object::Data {
-        RegExp* value;
+        Data(ExecutionEngine *engine, RegExp *value, bool global);
+        Data(ExecutionEngine *engine, const QRegExp &re);
+        Data(InternalClass *ic);
+
+        RegExp *value;
         bool global;
     };
     struct {
-        RegExp* value;
+        RegExp *value;
         bool global;
     } __data;
 
@@ -93,9 +95,6 @@ struct RegExpObject: Object {
     RegExp *value() const { return d()->value; }
     bool global() const { return d()->global; }
 
-    RegExpObject(ExecutionEngine *engine, RegExp *value, bool global);
-    RegExpObject(ExecutionEngine *engine, const QRegExp &re);
-
     void init(ExecutionEngine *engine);
 
     Property *lastIndexProperty(ExecutionContext *ctx);
@@ -105,7 +104,6 @@ struct RegExpObject: Object {
     uint flags() const;
 
 protected:
-    RegExpObject(InternalClass *ic);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
@@ -140,7 +138,15 @@ struct RegExpCtor: FunctionObject
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
+    struct Data : RegExpObject::Data
+    {
+        Data(InternalClass *ic): RegExpObject::Data(ic)
+        {
+            setVTable(staticVTable());
+        }
+    };
+    V4_OBJECT
+
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_exec(CallContext *ctx);

@@ -169,6 +169,7 @@ void FunctionObject::init(String *n, bool createProto)
     d()->needsActivation = true;
     d()->strictMode = false;
 
+    memberData().ensureIndex(s.engine, Index_Prototype);
     if (createProto) {
         Scoped<Object> proto(s, scope()->d()->engine->newObject(scope()->d()->engine->protoClass));
         proto->memberData()[Index_ProtoConstructor] = this->asReturnedValue();
@@ -178,7 +179,7 @@ void FunctionObject::init(String *n, bool createProto)
     }
 
     ScopedValue v(s, n);
-    defineReadonlyProperty(scope()->d()->engine->id_name, v);
+    defineReadonlyProperty(s.engine->id_name, v);
 }
 
 ReturnedValue FunctionObject::name()

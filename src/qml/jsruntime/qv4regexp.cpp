@@ -49,7 +49,7 @@ RegExpCache::~RegExpCache()
 {
     for (RegExpCache::Iterator it = begin(), e = end();
          it != e; ++it)
-        it.value()->d()->cache = 0;
+        it.value()->cache = 0;
     clear();
 }
 
@@ -70,62 +70,59 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
+RegExp::Data* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
 {
     RegExpCacheKey key(pattern, ignoreCase, multiline);
 
     RegExpCache *cache = engine->regExpCache;
     if (cache) {
-        if (RegExp *result = cache->value(key))
+        if (RegExp::Data *result = cache->value(key))
             return result;
     }
 
-    RegExp *result = new (engine->memoryManager) RegExp(engine, pattern, ignoreCase, multiline);
+    RegExp::Data *result = new (engine) RegExp::Data(engine, pattern, ignoreCase, multiline);
 
     if (!cache)
         cache = engine->regExpCache = new RegExpCache;
 
-    result->d()->cache = cache;
+    result->cache = cache;
     cache->insert(key, result);
 
     return result;
 }
 
-RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : Managed(engine->regExpValueClass)
+RegExp::Data::Data(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
+    : Managed::Data(engine->regExpValueClass)
+    , pattern(pattern)
+    , ignoreCase(ignoreCase)
+    , multiLine(multiline)
 {
-    d()->pattern = pattern;
-    d()->cache = 0;
-    d()->ignoreCase = ignoreCase;
-    d()->multiLine = multiline;
-
-    if (!engine)
-        return;
+    setVTable(staticVTable());
     const char* error = 0;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiline, &error);
     if (error)
         return;
-    d()->subPatternCount = yarrPattern.m_numSubpatterns;
-    d()->byteCode = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
+    subPatternCount = yarrPattern.m_numSubpatterns;
+    byteCode = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
 #if ENABLE(YARR_JIT)
     if (!yarrPattern.m_containsBackreferences && engine->iselFactory->jitCompileRegexps()) {
         JSC::JSGlobalData dummy(engine->regExpAllocator);
-        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, d()->jitCode);
+        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, jitCode);
     }
 #endif
 }
 
-RegExp::~RegExp()
+RegExp::Data::~Data()
 {
-    if (cache()) {
+    if (cache) {
         RegExpCacheKey key(this);
-        cache()->remove(key);
+        cache->remove(key);
     }
 }
 
 void RegExp::destroy(Managed *that)
 {
-    static_cast<RegExp*>(that)->~RegExp();
+    static_cast<RegExp*>(that)->d()->~Data();
 }
 
 void RegExp::markObjects(Managed *that, ExecutionEngine *e)
