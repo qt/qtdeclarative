@@ -61,22 +61,21 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : Object(QV8Engine::getV4(engine))
+QmlContextWrapper::Data::Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+    : Object::Data(QV8Engine::getV4(engine))
+    , readOnly(true)
+    , ownsContext(ownsContext)
+    , isNullWrapper(false)
+    , context(context)
+    , scopeObject(scopeObject)
 {
     setVTable(staticVTable());
-
-    d()->readOnly = true;
-    d()->ownsContext = ownsContext;
-    d()->isNullWrapper = false;
-    d()->context = context;
-    d()->scopeObject = scopeObject;
 }
 
-QmlContextWrapper::~QmlContextWrapper()
+QmlContextWrapper::Data::~Data()
 {
-    if (d()->context && d()->ownsContext)
-        d()->context->destroy();
+    if (context && ownsContext)
+        context->destroy();
 }
 
 ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
@@ -84,7 +83,7 @@ ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, 
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope valueScope(v4);
 
-    Scoped<QmlContextWrapper> w(valueScope, new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope));
+    Scoped<QmlContextWrapper> w(valueScope, new (v4) QmlContextWrapper::Data(v8, ctxt, scope));
     return w.asReturnedValue();
 }
 
@@ -98,7 +97,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0, true));
+    Scoped<QmlContextWrapper> w(scope, new (v4) QmlContextWrapper::Data(v8, context, 0, true));
     w->d()->isNullWrapper = true;
     return w.asReturnedValue();
 }
@@ -357,7 +356,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
 
 void QmlContextWrapper::destroy(Managed *that)
 {
-    static_cast<QmlContextWrapper *>(that)->~QmlContextWrapper();
+    static_cast<QmlContextWrapper *>(that)->d()->~Data();
 }
 
 void QmlContextWrapper::markObjects(Managed *m, ExecutionEngine *engine)
@@ -415,7 +414,9 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
 {
     if (!d()->idObjectsWrapper) {
         ExecutionEngine *v4 = engine();
-        d()->idObjectsWrapper = new (v4->memoryManager) QQmlIdObjectsArray(v4, this);
+        Scope scope(v4);
+        Scoped<QQmlIdObjectsArray> a(scope, new (v4) QQmlIdObjectsArray::Data(v4, this));
+        d()->idObjectsWrapper = a.getPointer();
     }
     return d()->idObjectsWrapper->asReturnedValue();
 }
@@ -443,12 +444,11 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, String *name
 
 DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
-QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
-    : Object(engine)
+QQmlIdObjectsArray::Data::Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
+    : Object::Data(engine)
+    , contextWrapper(contextWrapper)
 {
     setVTable(staticVTable());
-
-    d()->contextWrapper = contextWrapper;
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)

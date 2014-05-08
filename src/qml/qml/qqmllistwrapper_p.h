@@ -70,6 +70,8 @@ namespace QV4 {
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
     struct Data : Object::Data {
+        Data(QV8Engine *engine);
+        ~Data();
         QV8Engine *v8;
         QPointer<QObject> object;
         QQmlListProperty<QObject> property;
@@ -83,11 +85,6 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     } __data;
 
     V4_OBJECT
-protected:
-    QmlListWrapper(QV8Engine *engine);
-    ~QmlListWrapper();
-
-public:
 
     static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
     static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);

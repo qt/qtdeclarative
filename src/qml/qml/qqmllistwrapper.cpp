@@ -52,19 +52,18 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-QmlListWrapper::QmlListWrapper(QV8Engine *engine)
-    : Object(QV8Engine::getV4(engine))
+QmlListWrapper::Data::Data(QV8Engine *engine)
+    : Object::Data(QV8Engine::getV4(engine))
+    , v8(engine)
 {
     setVTable(staticVTable());
-    d()->v8 = engine;
 
     QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::ScopedObject protectThis(scope, this);
-    Q_UNUSED(protectThis);
-    setArrayType(ArrayData::Custom);
+    QV4::ScopedObject o(scope, this);
+    o->setArrayType(ArrayData::Custom);
 }
 
-QmlListWrapper::~QmlListWrapper()
+QmlListWrapper::Data::~Data()
 {
 }
 
@@ -76,7 +75,7 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId,
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
+    Scoped<QmlListWrapper> r(scope, new (v4) QmlListWrapper::Data(v8));
     r->d()->object = object;
     r->d()->propertyType = propType;
     void *args[] = { &r->d()->property, 0 };
@@ -89,7 +88,7 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObje
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
+    Scoped<QmlListWrapper> r(scope, new (v4) QmlListWrapper::Data(v8));
     r->d()->object = prop.object;
     r->d()->property = prop;
     r->d()->propertyType = propType;
@@ -159,7 +158,7 @@ void QmlListWrapper::put(Managed *m, String *name, const ValueRef value)
 void QmlListWrapper::destroy(Managed *that)
 {
     QmlListWrapper *w = that->as<QmlListWrapper>();
-    w->~QmlListWrapper();
+    w->d()->~Data();
 }
 
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)

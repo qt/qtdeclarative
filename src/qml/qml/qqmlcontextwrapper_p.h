@@ -74,6 +74,8 @@ struct QQmlIdObjectsArray;
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
     struct Data : Object::Data {
+        Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+        ~Data();
         bool readOnly;
         bool ownsContext;
         bool isNullWrapper;
@@ -93,8 +95,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     } __data;
 
     V4_OBJECT
-    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    ~QmlContextWrapper();
 
     static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
     static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
@@ -123,6 +123,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 struct QQmlIdObjectsArray : public Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
         QmlContextWrapper *contextWrapper;
     };
     struct {
@@ -130,7 +131,6 @@ struct QQmlIdObjectsArray : public Object
     } __data;
 
     V4_OBJECT
-    QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void markObjects(Managed *that, ExecutionEngine *engine);
