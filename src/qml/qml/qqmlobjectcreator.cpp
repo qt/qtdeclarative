@@ -261,7 +261,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     QV4::ScopedValue scopeObjectProtector(valueScope, declarativeData->jsWrapper.value());
     Q_UNUSED(scopeObjectProtector);
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4) QV4::QmlBindingWrapper::Data(v4->rootContext, qmlScope));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
     qSwap(_qmlContext, qmlContext);
@@ -1163,7 +1163,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QV4::ScopedValue scopeObjectProtector(valueScope, ddata ? ddata->jsWrapper.value() : 0);
     Q_UNUSED(scopeObjectProtector);
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4) QV4::QmlBindingWrapper::Data(v4->rootContext, qmlScope));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
     qSwap(_qmlContext, qmlContext);

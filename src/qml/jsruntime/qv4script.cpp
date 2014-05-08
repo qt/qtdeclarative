@@ -61,45 +61,43 @@
 
 using namespace QV4;
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
-    : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
+    : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    , qml(qml)
 {
-    d()->qml = qml;
-
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    d()->function = f;
-    if (function())
-        function()->compilationUnit->ref();
-    d()->needsActivation = function() ? function()->needsActivation() : false;
+    function = f;
+    if (function)
+        function->compilationUnit->ref();
+    needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
-    ScopedValue protectThis(s, this);
+    Scoped<QmlBindingWrapper> o(s, this);
 
-    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
+    o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    d()->qmlContext = scope->d()->engine->currentContext()->newQmlContext(this, qml);
-    scope->d()->engine->popContext();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    s.engine->popContext();
 }
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Object *qml)
-    : FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+QmlBindingWrapper::Data::Data(ExecutionContext *scope, Object *qml)
+    : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    , qml(qml)
 {
-    d()->qml = qml;
-
     Q_ASSERT(scope->inUse());
 
     setVTable(staticVTable());
-    d()->needsActivation = false;
+    needsActivation = false;
 
     Scope s(scope);
-    ScopedValue protectThis(s, this);
+    Scoped<QmlBindingWrapper> o(s, this);
 
-    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
+    o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    d()->qmlContext = scope->d()->engine->currentContext()->newQmlContext(this, qml);
-    scope->d()->engine->popContext();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    s.engine->popContext();
 }
 
 ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
@@ -143,7 +141,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine->memoryManager) QV4::QmlBindingWrapper(engine->rootContext, qmlScopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine) QV4::QmlBindingWrapper::Data(engine->rootContext, qmlScopeObject));
 
     if (!signalParameters.isEmpty()) {
         if (error)
@@ -334,7 +332,7 @@ ReturnedValue Script::run()
         return vmFunction->code(scope, vmFunction->codeData);
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
-        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj);
+        ScopedFunctionObject f(valueScope, new (engine) QmlBindingWrapper::Data(scope, vmFunction, qmlObj));
         ScopedCallData callData(valueScope, 0);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -410,7 +408,7 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->d()->engine;
     Scope valueScope(v4);
     ScopedObject qmlObj(valueScope, qml.value());
-    ScopedObject v(valueScope, new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj));
+    ScopedObject v(valueScope, new (v4) QmlBindingWrapper::Data(scope, vmFunction, qmlObj));
     return v.asReturnedValue();
 }
 
