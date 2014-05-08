@@ -264,8 +264,8 @@ void printUsage()
     printf("Any argument ending in .qml will be treated as a QML file to be loaded.\n");
     printf("Any number of QML files can be loaded. They will share the same engine.\n");
     printf("Any argument which is not a recognized option and which does not end in .qml will be ignored.\n");
-    printf("'gui' application type is only available if the QtGui module is avaialble.\n");
-    printf("'widget' application type is only available if the QtWidgets module is avaialble.\n");
+    printf("'gui' application type is only available if the QtGui module is available.\n");
+    printf("'widget' application type is only available if the QtWidgets module is available.\n");
     printf("\n");
     printf("General Options:\n");
     printf("\t-h, -help..................... Print this usage information and exit.\n");
