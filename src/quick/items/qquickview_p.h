@@ -105,6 +105,13 @@ public:
 struct QQuickRootItemMarker : public QV4::Object
 {
     struct Data : QV4::Object::Data {
+        Data(QV4::ExecutionEngine *engine, QQuickWindow *window)
+            : Object::Data(engine)
+            , window(window)
+        {
+            setVTable(staticVTable());
+        }
+
         QQuickWindow *window;
     };
     struct {
@@ -113,12 +120,7 @@ struct QQuickRootItemMarker : public QV4::Object
 
     V4_OBJECT
 
-    QQuickRootItemMarker(QQmlEngine *engine, QQuickWindow *window);
-
-    static void destroy(Managed *that)
-    {
-        static_cast<QQuickRootItemMarker*>(that)->~QQuickRootItemMarker();
-    }
+    static Data *create(QQmlEngine *engine, QQuickWindow *window);
 
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 

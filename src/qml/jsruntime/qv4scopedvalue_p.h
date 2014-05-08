@@ -215,6 +215,16 @@ struct Scoped
         ++scope.size;
 #endif
     }
+    Scoped(const Scope &scope, HeapObject *o)
+    {
+        Value v;
+        v.m = reinterpret_cast<Managed *>(o);
+        ptr = scope.engine->jsStackTop++;
+        setPointer(value_cast<T>(v));
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
     Scoped(const Scope &scope, const ScopedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
@@ -280,6 +290,12 @@ struct Scoped
 #endif
     }
 
+    Scoped<T> &operator=(HeapObject *o) {
+        Value v;
+        v.m = reinterpret_cast<Managed *>(o);
+        setPointer(value_cast<T>(v));
+        return *this;
+    }
     Scoped<T> &operator=(const Value &v) {
         setPointer(value_cast<T>(v));
         return *this;

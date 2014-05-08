@@ -176,26 +176,41 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     advanceIterator                            \
 }
 
+struct HeapObject {
+
+};
+
 struct Q_QML_PRIVATE_EXPORT Managed
 {
-    struct Data {
+    struct Data : HeapObject {
+        Data() {}
+        Data(InternalClass *internal)
+            : internalClass(internal)
+            , inUse(1)
+            , extensible(1)
+        {
+            // ####
+//            Q_ASSERT(internal && internal->vtable);
+        }
         InternalClass *internalClass;
-        union {
-            uint _data;
-            struct {
-                uchar markBit :  1;
-                uchar inUse   :  1;
-                uchar extensible : 1; // used by Object
-                uchar _unused : 1;
-                uchar needsActivation : 1; // used by FunctionObject
-                uchar strictMode : 1; // used by FunctionObject
-                uchar bindingKeyFlag : 1;
-                uchar hasAccessorProperty : 1;
-                uchar _type;
-                mutable uchar subtype;
-                uchar _flags;
-            };
+        struct {
+            uchar markBit :  1;
+            uchar inUse   :  1;
+            uchar extensible : 1; // used by Object
+            uchar _unused : 1;
+            uchar needsActivation : 1; // used by FunctionObject
+            uchar strictMode : 1; // used by FunctionObject
+            uchar bindingKeyFlag : 1;
+            uchar hasAccessorProperty : 1;
+            uchar _type;
+            mutable uchar subtype;
+            uchar _flags;
         };
+
+        void setVTable(const ManagedVTable *vt);
+
+        void *operator new(size_t size, ExecutionEngine *e);
+        void *operator new(size_t, Managed *m) { return m; }
     };
     Data data;
     V4_MANAGED
@@ -214,12 +229,8 @@ private:
 
 protected:
     Managed(InternalClass *internal)
+        : data(internal)
     {
-        Q_ASSERT(internal && internal->vtable);
-        d()->internalClass = internal;
-        d()->_data = 0;
-        d()->inUse = 1;
-        d()->extensible = 1;
     }
 
 public:

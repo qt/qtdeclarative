@@ -274,6 +274,12 @@ QT_BEGIN_NAMESPACE
 struct QV4ParticleData : public QV4::Object
 {
     struct Data : QV4::Object::Data {
+        Data(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
+            : Object::Data(engine)
+            , datum(datum)
+        {
+            setVTable(QV4ParticleData::staticVTable());
+        }
         QQuickParticleData* datum;//TODO: Guard needed?
     };
     struct {
@@ -281,15 +287,6 @@ struct QV4ParticleData : public QV4::Object
     } __data;
 
     V4_OBJECT
-    QV4ParticleData(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
-        : Object(engine)
-    {
-        setVTable(staticVTable());
-        d()->datum = datum;
-    }
-
-    static void destroy(Managed *that)
-    { that->as<QV4ParticleData>()->~QV4ParticleData(); }
 };
 
 DEFINE_OBJECT_VTABLE(QV4ParticleData);
@@ -523,7 +520,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     QV8ParticleDataDeletable *d = particleV8Data(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
-    QV4::ScopedObject o(scope, new (v4->memoryManager) QV4ParticleData(v4, datum));
+    QV4::ScopedObject o(scope, new (v4) QV4ParticleData::Data(v4, datum));
     QV4::ScopedObject p(scope, d->proto.value());
     o->setPrototype(p.getPointer());
     m_v4Value = o;

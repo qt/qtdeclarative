@@ -164,7 +164,22 @@ void Managed::setVTable(const ManagedVTable *vt)
     d()->internalClass = internalClass()->changeVTable(vt);
 }
 
+void Managed::Data::setVTable(const ManagedVTable *vt)
+{
+    Q_ASSERT(internalClass);
+    internalClass = internalClass->changeVTable(vt);
+}
+
+
 bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;
+}
+
+
+void *Managed::Data::operator new(size_t size, ExecutionEngine *e)
+{
+    assert(e);
+
+    return e->memoryManager->allocManaged(size);
 }

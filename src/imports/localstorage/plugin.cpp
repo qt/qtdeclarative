@@ -104,6 +104,13 @@ class QQmlSqlDatabaseWrapper : public Object
 public:
     enum Type { Database, Query, Rows };
     struct Data : Object::Data {
+        Data(ExecutionEngine *e)
+            : Object::Data(e)
+        {
+            setVTable(staticVTable());
+            type = Database;
+        }
+
         Type type;
         QSqlDatabase database;
 
@@ -130,14 +137,10 @@ public:
 
     V4_OBJECT
 
-    QQmlSqlDatabaseWrapper(QV8Engine *e)
-        : Object(QV8Engine::getV4(e))
+    static Data *create(QV8Engine *engine)
     {
-        setVTable(staticVTable());
-        d()->type = Database;
-        d()->inTransaction = false;
-        d()->readonly = false;
-        d()->forwardOnly = false;
+        QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
+        return new (e) Data(e);
     }
 
     ~QQmlSqlDatabaseWrapper() {
@@ -325,7 +328,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             }
         }
         if (query.exec()) {
-            QV4::Scoped<QQmlSqlDatabaseWrapper> rows(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+            QV4::Scoped<QQmlSqlDatabaseWrapper> rows(scope, QQmlSqlDatabaseWrapper::create(engine));
             QV4::ScopedObject p(scope, databaseData(engine)->rowsProto.value());
             rows->setPrototype(p.getPointer());
             rows->d()->type = QQmlSqlDatabaseWrapper::Rows;
@@ -402,7 +405,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
     if (from_version != r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->d()->version));
 
-    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(engine));
     ScopedObject p(scope, databaseData(engine)->queryProto.value());
     w->setPrototype(p.getPointer());
     w->d()->type = QQmlSqlDatabaseWrapper::Query;
@@ -455,7 +458,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool re
 
     QSqlDatabase db = r->d()->database;
 
-    Scoped<QQmlSqlDatabaseWrapper> w(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(engine));
     QV4::ScopedObject p(scope, databaseData(engine)->queryProto.value());
     w->setPrototype(p.getPointer());
     w->d()->type = QQmlSqlDatabaseWrapper::Query;
@@ -733,7 +736,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
             database.open();
     }
 
-    QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, new (scope.engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
+    QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, QQmlSqlDatabaseWrapper::create(engine));
     QV4::ScopedObject p(scope, databaseData(engine)->databaseProto.value());
     db->setPrototype(p.getPointer());
     db->d()->database = database;

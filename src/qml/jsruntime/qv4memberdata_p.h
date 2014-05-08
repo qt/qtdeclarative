@@ -51,11 +51,17 @@ namespace QV4 {
 struct MemberData : Managed
 {
     struct Data : Managed::Data {
-        uint size;
+        union {
+            uint size;
+            double _dummy;
+        };
         Value data[1];
     };
     struct {
-        uint size;
+        union {
+            uint size;
+            double _dummy;
+        };
         Value data[1];
     } __data;
 

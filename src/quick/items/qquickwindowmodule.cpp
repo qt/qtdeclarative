@@ -102,7 +102,7 @@ protected:
         {
             QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(e);
             QV4::Scope scope(v4);
-            QV4::ScopedObject v(scope, new (v4->memoryManager) QQuickRootItemMarker(e, this));
+            QV4::ScopedObject v(scope, QQuickRootItemMarker::create(e, this));
             rootItemMarker = v;
         }
     }

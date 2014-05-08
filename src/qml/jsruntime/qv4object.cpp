@@ -70,6 +70,16 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Object);
 
+Object::Data::Data(InternalClass *internalClass)
+    : Managed::Data(internalClass)
+{
+    if (internalClass->size) {
+        Scope scope(internalClass->engine);
+        ScopedObject o(scope, this);
+        o->memberData().ensureIndex(internalClass->engine, internalClass->size);
+    }
+}
+
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->objectClass)
 {

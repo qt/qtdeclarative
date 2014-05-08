@@ -104,6 +104,12 @@ struct URIErrorPrototype;
 
 struct Q_QML_EXPORT Object: Managed {
     struct Data : Managed::Data {
+        Data(ExecutionEngine *engine)
+            : Managed::Data(engine->objectClass)
+        {
+        }
+        Data(InternalClass *internal = 0);
+
         Members memberData;
         ArrayData *arrayData;
     };
