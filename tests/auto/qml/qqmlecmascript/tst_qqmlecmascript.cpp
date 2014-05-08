@@ -3924,7 +3924,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
                 Q_UNUSED(temporaryScope)
             }
 
-            engine->gc();
+            ctxt->engine->collectGarbage();
             qml = scripts->getIndexed(i);
             newContext = QV4::QmlContextWrapper::getContext(qml);
             QVERIFY(scriptContext == newContext);

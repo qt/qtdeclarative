@@ -219,8 +219,6 @@ public:
     // Return the list of illegal id names (the names of the properties on the global object)
     const QSet<QString> &illegalNames() const;
 
-    void gc();
-
     static QMutex *registrationMutex();
     static int registerExtension();
 

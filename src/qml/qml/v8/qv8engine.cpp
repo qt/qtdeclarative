@@ -486,11 +486,6 @@ void QV8Engine::freezeObject(const QV4::ValueRef value)
     f->call(callData);
 }
 
-void QV8Engine::gc()
-{
-    m_v4Engine->memoryManager->runGC();
-}
-
 struct QV8EngineRegistrationData
 {
     QV8EngineRegistrationData() : extensionCount(0) {}
