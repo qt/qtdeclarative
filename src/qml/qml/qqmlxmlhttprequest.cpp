@@ -187,6 +187,20 @@ class NamedNodeMap : public Object
 {
 public:
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
+            : Object::Data(engine)
+            , list(list)
+            , d(data)
+        {
+            setVTable(staticVTable());
+
+            if (d)
+                d->addref();
+        }
+        ~Data() {
+            if (d)
+                d->release();
+        }
         QList<NodeImpl *> list; // Only used in NamedNodeMap
         NodeImpl *d;
     };
@@ -197,27 +211,12 @@ public:
 
     V4_OBJECT
 
-    NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
-        : Object(engine)
-    {
-        setVTable(staticVTable());
-
-        d()->list = list;
-        d()->d = data;
-        if (d()->d)
-            d()->d->addref();
-    }
-    ~NamedNodeMap() {
-        if (d()->d)
-            d()->d->release();
-    }
-
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<NamedNodeMap>()->~NamedNodeMap();
+        that->as<NamedNodeMap>()->d()->~Data();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
@@ -228,6 +227,19 @@ DEFINE_OBJECT_VTABLE(NamedNodeMap);
 class NodeList : public Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, NodeImpl *data)
+            : Object::Data(engine)
+            , d(data)
+        {
+            setVTable(staticVTable());
+
+            if (d)
+                d->addref();
+        }
+        ~Data() {
+            if (d)
+                d->release();
+        }
         NodeImpl *d;
     };
     struct {
@@ -236,24 +248,10 @@ class NodeList : public Object
 
     V4_OBJECT
 public:
-    NodeList(ExecutionEngine *engine, NodeImpl *data)
-        : Object(engine)
-    {
-        Q_UNUSED(__data);
-        setVTable(staticVTable());
-
-        d()->d = data;
-        if (d()->d)
-            d()->d->addref();
-    }
-    ~NodeList() {
-        if (d()->d)
-            d()->d->release();
-    }
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<NodeList>()->~NodeList();
+        that->as<NodeList>()->d()->~Data();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
@@ -267,28 +265,30 @@ DEFINE_OBJECT_VTABLE(NodeList);
 
 class NodePrototype : public Object
 {
+    struct Data : Object::Data {
+        Data(ExecutionEngine *engine)
+            : Object::Data(engine)
+        {
+            setVTable(staticVTable());
+
+            Scope scope(engine);
+            ScopedObject o(scope, this);
+
+            o->defineAccessorProperty(QStringLiteral("nodeName"), method_get_nodeName, 0);
+            o->defineAccessorProperty(QStringLiteral("nodeValue"), method_get_nodeValue, 0);
+            o->defineAccessorProperty(QStringLiteral("nodeType"), method_get_nodeType, 0);
+
+            o->defineAccessorProperty(QStringLiteral("parentNode"), method_get_parentNode, 0);
+            o->defineAccessorProperty(QStringLiteral("childNodes"), method_get_childNodes, 0);
+            o->defineAccessorProperty(QStringLiteral("firstChild"), method_get_firstChild, 0);
+            o->defineAccessorProperty(QStringLiteral("lastChild"), method_get_lastChild, 0);
+            o->defineAccessorProperty(QStringLiteral("previousSibling"), method_get_previousSibling, 0);
+            o->defineAccessorProperty(QStringLiteral("nextSibling"), method_get_nextSibling, 0);
+            o->defineAccessorProperty(QStringLiteral("attributes"), method_get_attributes, 0);
+        }
+    };
     V4_OBJECT
 public:
-    NodePrototype(ExecutionEngine *engine)
-        : Object(engine)
-    {
-        setVTable(staticVTable());
-
-        Scope scope(engine);
-        ScopedObject protectThis(scope, this);
-
-        defineAccessorProperty(QStringLiteral("nodeName"), method_get_nodeName, 0);
-        defineAccessorProperty(QStringLiteral("nodeValue"), method_get_nodeValue, 0);
-        defineAccessorProperty(QStringLiteral("nodeType"), method_get_nodeType, 0);
-
-        defineAccessorProperty(QStringLiteral("parentNode"), method_get_parentNode, 0);
-        defineAccessorProperty(QStringLiteral("childNodes"), method_get_childNodes, 0);
-        defineAccessorProperty(QStringLiteral("firstChild"), method_get_firstChild, 0);
-        defineAccessorProperty(QStringLiteral("lastChild"), method_get_lastChild, 0);
-        defineAccessorProperty(QStringLiteral("previousSibling"), method_get_previousSibling, 0);
-        defineAccessorProperty(QStringLiteral("nextSibling"), method_get_nextSibling, 0);
-        defineAccessorProperty(QStringLiteral("attributes"), method_get_attributes, 0);
-    }
 
     static void initClass(ExecutionEngine *engine);
 
@@ -318,9 +318,22 @@ public:
 
 DEFINE_OBJECT_VTABLE(NodePrototype);
 
-class Node : public Object
+struct Node : public Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, NodeImpl *data)
+            : Object::Data(engine)
+            , d(data)
+        {
+            setVTable(staticVTable());
+
+            if (d)
+                d->addref();
+        }
+        ~Data() {
+            if (d)
+                d->release();
+        }
         NodeImpl *d;
     };
     struct {
@@ -328,33 +341,20 @@ class Node : public Object
     } __data;
     V4_OBJECT
 
-    Node(ExecutionEngine *engine, NodeImpl *data)
-        : Object(engine)
-    {
-        setVTable(staticVTable());
-
-        d()->d = data;
-        if (d()->d)
-            d()->d->addref();
-    }
-    ~Node() {
-        if (d()->d)
-            d()->d->release();
-    }
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<Node>()->~Node();
+        that->as<Node>()->d()->~Data();
     }
 
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *);
 
-    Node(const Node &o);
     bool isNull() const;
 
 private:
     Node &operator=(const Node &);
+    Node(const Node &o);
 };
 
 DEFINE_OBJECT_VTABLE(Node);
@@ -614,7 +614,7 @@ ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
     Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->nodePrototype.isUndefined()) {
-        ScopedObject p(scope, new (v4->memoryManager) NodePrototype(v4));
+        ScopedObject p(scope, new (v4) NodePrototype::Data(v4));
         d->nodePrototype = p;
         v4->v8Engine->freezeObject(p);
     }
@@ -626,7 +626,7 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    Scoped<Node> instance(scope, new (v4->memoryManager) Node(v4, data));
+    Scoped<Node> instance(scope, new (v4) Node::Data(v4, data));
     ScopedObject p(scope);
 
     switch (data->type) {
@@ -901,18 +901,10 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
         return Encode::null();
     }
 
-    ScopedObject instance(scope, new (v4->memoryManager) Node(v4, document));
+    ScopedObject instance(scope, new (v4) Node::Data(v4, document));
     ScopedObject p(scope);
     instance->setPrototype((p = Document::prototype(v4)).getPointer());
     return instance.asReturnedValue();
-}
-
-Node::Node(const Node &o)
-    : Object(o.engine())
-{
-    d()->d = o.d()->d;
-    if (d()->d)
-        d()->d->addref();
 }
 
 bool Node::isNull() const
@@ -972,10 +964,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 ReturnedValue NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    Scope scope(v4);
-
-    Scoped<NamedNodeMap> instance(scope, new (v4->memoryManager) NamedNodeMap(v4, data, list));
-    return instance.asReturnedValue();
+    return (new (v4) NamedNodeMap::Data(v4, data, list))->asReturnedValue();
 }
 
 ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -1017,9 +1006,7 @@ ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    Scope scope(v4);
-    Scoped<NodeList> instance(scope, new (v4->memoryManager) NodeList(v4, data));
-    return instance.asReturnedValue();
+    return (new (v4) NodeList::Data(v4, data))->asReturnedValue();
 }
 
 ReturnedValue Document::method_documentElement(CallContext *ctx)
@@ -1627,6 +1614,15 @@ void QQmlXMLHttpRequest::destroyNetwork()
 struct QQmlXMLHttpRequestWrapper : public Object
 {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
+            : Object::Data(engine)
+            , request(request)
+        {
+            setVTable(staticVTable());
+        }
+        ~Data() {
+            delete request;
+        }
         QQmlXMLHttpRequest *request;
     };
     struct {
@@ -1634,18 +1630,9 @@ struct QQmlXMLHttpRequestWrapper : public Object
     } __data;
 
     V4_OBJECT
-    QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
-        : Object(engine)
-    {
-        d()->request = request;
-        setVTable(staticVTable());
-    }
-    ~QQmlXMLHttpRequestWrapper() {
-        delete d()->request;
-    }
 
     static void destroy(Managed *that) {
-        that->as<QQmlXMLHttpRequestWrapper>()->~QQmlXMLHttpRequestWrapper();
+        that->as<QQmlXMLHttpRequestWrapper>()->d()->~Data();
     }
 };
 
@@ -1654,6 +1641,23 @@ DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     struct Data : FunctionObject::Data {
+        Data(ExecutionEngine *engine)
+            : FunctionObject::Data(engine->rootContext, QStringLiteral("XMLHttpRequest"))
+        {
+            setVTable(staticVTable());
+            Scope scope(engine);
+            Scoped<QQmlXMLHttpRequestCtor> ctor(scope, this);
+
+            ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
+            ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
+            ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
+            ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
+            ctor->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
+            if (!ctor->d()->proto)
+                ctor->setupProto();
+            ScopedString s(scope, engine->id_prototype);
+            ctor->defineDefaultProperty(s.getPointer(), ScopedObject(scope, ctor->d()->proto));
+        }
         Object *proto;
     };
     struct {
@@ -1661,29 +1665,6 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     } __data;
 
     V4_OBJECT
-    QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
-        : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
-    {
-        setVTable(staticVTable());
-        Scope scope(engine);
-        ScopedValue protectThis(scope, this);
-
-        defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
-        defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
-        defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
-        defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
-        defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
-        if (!d()->proto)
-            setupProto();
-        ScopedString s(scope, engine->id_prototype);
-        defineDefaultProperty(s.getPointer(), ScopedObject(scope, d()->proto));
-    }
-    ~QQmlXMLHttpRequestCtor()
-    {}
-
-    static void destroy(Managed *that) {
-        that->as<QQmlXMLHttpRequestCtor>()->~QQmlXMLHttpRequestCtor();
-    }
     static void markObjects(Managed *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->d()->proto)
@@ -1699,7 +1680,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
-        Scoped<QQmlXMLHttpRequestWrapper> w(scope, new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r));
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, new (that->engine()) QQmlXMLHttpRequestWrapper::Data(that->engine(), r));
         w->setPrototype(ctor->d()->proto);
         return w.asReturnedValue();
     }
@@ -2026,7 +2007,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4->memoryManager) QQmlXMLHttpRequestCtor(v4));
+    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4) QQmlXMLHttpRequestCtor::Data(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
     v4->globalObject->defineReadonlyProperty(s.getPointer(), ctor);
 
