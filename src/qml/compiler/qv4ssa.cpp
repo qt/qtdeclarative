@@ -243,18 +243,13 @@ public:
                 else
                     flagIt = set.blockFlags->size();
             } else {
-                if (set.blockNumbers) {
+                if (set.blockNumbers)
                     numberIt = set.blockNumbers->begin();
-                } else {
-                    flagIt = 0;
-                    size_t eIt = set.blockFlags->size();
-                    while (flagIt != eIt) {
-                        if (set.blockFlags->operator[](flagIt))
-                            break;
-                        else
-                            ++flagIt;
-                    }
-                }
+                else
+                    flagIt = std::distance(set.blockFlags->begin(),
+                                           std::find(set.blockFlags->begin(),
+                                                     set.blockFlags->end(),
+                                                     true));
             }
         }
 
@@ -284,16 +279,13 @@ public:
 
         const_iterator &operator++()
         {
-            if (set.blockNumbers) {
+            if (set.blockNumbers)
                 ++numberIt;
-            } else {
-                size_t eIt = set.blockFlags->size();
-                while (flagIt != eIt) {
-                     ++flagIt;
-                    if (flagIt == eIt || set.blockFlags->operator[](flagIt))
-                        break;
-                }
-            }
+            else
+                flagIt = std::distance(set.blockFlags->begin(),
+                                       std::find(set.blockFlags->begin() + flagIt + 1,
+                                                 set.blockFlags->end(),
+                                                 true));
 
             return *this;
         }
