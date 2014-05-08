@@ -356,69 +356,6 @@ inline FunctionObject *managed_cast(Managed *m)
     return m->asFunctionObject();
 }
 
-
-Value *extractValuePointer(const ScopedValue &);
-template<typename T>
-Value *extractValuePointer(const Scoped<T> &);
-
-#define DEFINE_REF_METHODS(Class, Base) \
-    Class##Ref(const QV4::ScopedValue &v) \
-    { QV4::Value *val = extractValuePointer(v); ptr = QV4::value_cast<Class>(*val) ? val : 0; } \
-    Class##Ref(const QV4::Scoped<Class> &v) { ptr = extractValuePointer(v); } \
-    Class##Ref(QV4::TypedValue<Class> &v) { ptr = &v; } \
-    Class##Ref(QV4::Value &v) { ptr = QV4::value_cast<Class>(v) ? &v : 0; } \
-    Class##Ref &operator=(Class *t) { \
-        if (sizeof(void *) == 4) \
-            ptr->tag = QV4::Value::Managed_Type; \
-        ptr->m = t; \
-        return *this; \
-    } \
-    Class##Ref &operator=(QV4::Returned<Class> *t) { \
-        if (sizeof(void *) == 4) \
-            ptr->tag = QV4::Value::Managed_Type; \
-        ptr->m = t->getPointer(); \
-        return *this; \
-    } \
-    operator const Class *() const { return ptr ? static_cast<Class*>(ptr->managed()) : 0; } \
-    const Class *operator->() const { return static_cast<Class*>(ptr->managed()); } \
-    operator Class *() { return ptr ? static_cast<Class*>(ptr->managed()) : 0; } \
-    Class *operator->() { return static_cast<Class*>(ptr->managed()); } \
-    Class *getPointer() const { return static_cast<Class *>(ptr->managed()); } \
-    operator QV4::Returned<Class> *() const { return ptr ? QV4::Returned<Class>::create(getPointer()) : 0; } \
-    static Class##Ref null() { Class##Ref c; c.ptr = 0; return c; } \
-protected: \
-    Class##Ref() {} \
-public: \
-
-#define DEFINE_REF(Class, Base) \
-struct Class##Ref : public Base##Ref \
-{ DEFINE_REF_METHODS(Class, Base) } \
-
-
-struct ManagedRef {
-    // Important: Do NOT add a copy constructor to this class or any derived class
-    // adding a copy constructor actually changes the calling convention, ie.
-    // is not even binary compatible. Adding it would break assumptions made
-    // in the jit'ed code.
-    DEFINE_REF_METHODS(Managed, Managed);
-
-    bool operator==(const ManagedRef &other) {
-        if (ptr == other.ptr)
-            return true;
-        return ptr && other.ptr && ptr->m == other.ptr->m;
-    }
-    bool operator!=(const ManagedRef &other) {
-        return !operator==(other);
-    }
-    bool operator!() const { return !ptr || !ptr->managed(); }
-
-    bool isNull() const { return !ptr; }
-    ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Primitive::undefinedValue().asReturnedValue(); }
-
-public:
-    Value *ptr;
-};
-
 }
 
 

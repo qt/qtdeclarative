@@ -163,7 +163,6 @@ template<typename T> struct Returned;
 typedef Returned<String> ReturnedString;
 typedef Returned<Object> ReturnedObject;
 typedef Returned<FunctionObject> ReturnedFunctionObject;
-struct ManagedRef;
 
 struct PersistentValuePrivate;
 class PersistentValue;

@@ -522,20 +522,10 @@ PersistentValue::PersistentValue(Returned<T> *obj)
 {
 }
 
-inline PersistentValue::PersistentValue(const ManagedRef obj)
-    : d(new PersistentValuePrivate(obj.asReturnedValue()))
-{
-}
-
 template<typename T>
 inline PersistentValue &PersistentValue::operator=(Returned<T> *obj)
 {
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
-}
-
-inline PersistentValue &PersistentValue::operator=(const ManagedRef obj)
-{
-    return operator=(obj.asReturnedValue());
 }
 
 inline PersistentValue &PersistentValue::operator=(const ScopedValue &other)
@@ -576,18 +566,6 @@ inline ValueRef &ValueRef::operator=(const ScopedValue &o)
 {
     *ptr = *o.ptr;
     return *this;
-}
-
-
-inline Value *extractValuePointer(const ScopedValue &v)
-{
-    return v.ptr;
-}
-
-template<typename T>
-Value *extractValuePointer(const Scoped<T> &v)
-{
-    return v.ptr;
 }
 
 struct ScopedProperty
