@@ -163,9 +163,33 @@ template <> bool convertValueToElement(const ValueRef value)
 }
 
 template <typename Container>
-class QQmlSequence : public QV4::Object
+struct QQmlSequence : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : Object::Data {
+        Data(QV4::ExecutionEngine *engine, const Container &container)
+            : Object::Data(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
+            , container(container)
+            , propertyIndex(-1)
+            , isReference(false)
+        {
+            QV4::Scope scope(engine);
+            QV4::Scoped<QQmlSequence<Container> > o(scope, this);
+            o->setArrayType(ArrayData::Custom);
+            o->init();
+        }
+
+        Data(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
+            : Object::Data(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
+            , object(object)
+            , propertyIndex(propertyIndex)
+            , isReference(true)
+        {
+            QV4::Scope scope(engine);
+            QV4::Scoped<QQmlSequence<Container> > o(scope, this);
+            o->setArrayType(ArrayData::Custom);
+            o->loadReference();
+            o->init();
+        }
         mutable Container container;
         QPointer<QObject> object;
         int propertyIndex;
@@ -181,34 +205,6 @@ class QQmlSequence : public QV4::Object
     V4_OBJECT
     Q_MANAGED_TYPE(QmlSequence)
 public:
-    QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QV4::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
-    {
-        d()->container = container;
-        d()->propertyIndex = -1;
-        d()->isReference = false;
-
-        QV4::Scope scope(engine);
-        QV4::ScopedObject protectThis(scope, this);
-        Q_UNUSED(protectThis);
-        setArrayType(ArrayData::Custom);
-        init();
-    }
-
-    QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
-    {
-        d()->object = object;
-        d()->propertyIndex = propertyIndex;
-        d()->isReference = true;
-
-        QV4::Scope scope(engine);
-        QV4::ScopedObject protectThis(scope, this);
-        Q_UNUSED(protectThis);
-        setArrayType(ArrayData::Custom);
-        loadReference();
-        init();
-    }
 
     void init()
     {
@@ -591,7 +587,7 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Scoped<QV4::Object> obj(scope, new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex)); \
+        QV4::Scoped<QV4::Object> obj(scope, new (engine) QQml##ElementTypeName##List::Data(engine, object, propertyIndex)); \
         return obj.asReturnedValue(); \
     } else
 
@@ -609,7 +605,7 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Scoped<QV4::Object> obj(scope, new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >())); \
+        QV4::Scoped<QV4::Object> obj(scope, new (engine) QQml##ElementTypeName##List::Data(engine, v.value<SequenceType >())); \
         return obj.asReturnedValue(); \
     } else
 

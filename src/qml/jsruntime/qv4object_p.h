@@ -132,9 +132,6 @@ struct Q_QML_EXPORT Object: Managed {
 
     Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData().data() + index); }
 
-    Object(ExecutionEngine *engine);
-    Object(InternalClass *internalClass);
-
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass()->vtable); }
     Object *prototype() const { return internalClass()->prototype; }
     bool setPrototype(Object *proto);

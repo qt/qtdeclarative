@@ -1192,7 +1192,7 @@ QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionContext *ctx)
 {
     Q_ASSERT(ctx->d()->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
-    return (new (c->engine()->memoryManager) ArgumentsObject(c))->asReturnedValue();
+    return (new (c->engine()) ArgumentsObject::Data(c))->asReturnedValue();
 }
 
 #endif // V4_BOOTSTRAP

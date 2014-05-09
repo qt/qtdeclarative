@@ -80,23 +80,6 @@ Object::Data::Data(InternalClass *internalClass)
     }
 }
 
-Object::Object(ExecutionEngine *engine)
-    : Managed(engine->objectClass)
-{
-}
-
-Object::Object(InternalClass *ic)
-    : Managed(ic)
-{
-    Q_ASSERT(internalClass()->vtable != &Managed::static_vtbl);
-
-    if (internalClass()->size) {
-        Scope scope(engine());
-        ScopedObject protectThis(scope, this);
-        memberData().ensureIndex(engine(), internalClass()->size);
-    }
-}
-
 bool Object::setPrototype(Object *proto)
 {
     Object *pp = proto;

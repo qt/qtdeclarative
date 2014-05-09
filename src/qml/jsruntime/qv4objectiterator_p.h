@@ -84,8 +84,11 @@ struct Q_QML_EXPORT ObjectIterator
 
 struct ForEachIteratorObject: Object {
     struct Data : Object::Data {
-        Data(Object *o, uint flags)
-            : it(workArea, workArea + 1, o, flags) {}
+        Data(ExecutionContext *ctx, Object *o)
+            : Object::Data(ctx->engine())
+            , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
+            setVTable(staticVTable());
+        }
         ObjectIterator it;
         Value workArea[2];
     };
@@ -97,12 +100,6 @@ struct ForEachIteratorObject: Object {
     } __data;
     V4_OBJECT
     Q_MANAGED_TYPE(ForeachIteratorObject)
-
-    ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : Object(ctx->d()->engine)
-        , __data(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
-        setVTable(staticVTable());
-    }
 
     ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }
 

@@ -485,13 +485,15 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
 Returned<Object> *ExecutionEngine::newObject()
 {
-    Object *object = new (memoryManager) Object(this);
+    Scope scope(this);
+    ScopedObject object(scope, new (this) Object::Data(this));
     return object->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
 {
-    Object *object = new (memoryManager) Object(internalClass);
+    Scope scope(this);
+    ScopedObject object(scope, new (this) Object::Data(internalClass));
     return object->asReturned<Object>();
 }
 
@@ -666,7 +668,8 @@ Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
 
 Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
-    Object *obj = new (memoryManager) ForEachIteratorObject(ctx, o);
+    Scope scope(this);
+    ScopedObject obj(scope, new (this) ForEachIteratorObject::Data(ctx, o));
     return obj->asReturned<Object>();
 }
 

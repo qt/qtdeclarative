@@ -93,6 +93,7 @@ struct ArgumentsSetterFunction: FunctionObject
 
 struct ArgumentsObject: Object {
     struct Data : Object::Data {
+        Data(CallContext *context);
         CallContext *context;
         bool fullyCreated;
         Members mappedArguments;
@@ -108,8 +109,6 @@ struct ArgumentsObject: Object {
     CallContext *context() const { return d()->context; }
     bool fullyCreated() const { return d()->fullyCreated; }
     Members &mappedArguments() { return d()->mappedArguments; }
-
-    ArgumentsObject(CallContext *context);
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&
