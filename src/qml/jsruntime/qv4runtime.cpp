@@ -267,8 +267,7 @@ ReturnedValue Runtime::closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->d()->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    FunctionObject *f = FunctionObject::createScriptFunction(ctx, clos);
-    return f->asReturnedValue();
+    return FunctionObject::createScriptFunction(ctx, clos)->asReturnedValue();
 }
 
 ReturnedValue Runtime::deleteElement(ExecutionContext *ctx, const ValueRef base, const ValueRef index)

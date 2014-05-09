@@ -336,7 +336,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     numberCtor = new (memoryManager) NumberCtor(rootContext);
     booleanCtor = new (memoryManager) BooleanCtor(rootContext);
     arrayCtor = new (memoryManager) ArrayCtor(rootContext);
-    functionCtor = new (memoryManager) FunctionCtor(rootContext);
+    functionCtor = static_cast<HeapObject *>(new (this) FunctionCtor::Data(rootContext));
     dateCtor = new (memoryManager) DateCtor(rootContext);
     regExpCtor = new (memoryManager) RegExpCtor(rootContext);
     errorCtor = new (memoryManager) ErrorCtor(rootContext);
@@ -412,7 +412,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
-    thrower = newBuiltinFunction(rootContext, name.getPointer(), throwTypeError)->getPointer();
+    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(rootContext, name.getPointer(), throwTypeError)).getPointer();
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -479,20 +479,6 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
     Q_ASSERT(currentContext() == g);
     return g;
-}
-
-Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
-{
-    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
-    return f->asReturned<FunctionObject>();
-}
-
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs)
-{
-    Q_ASSERT(target);
-
-    BoundFunction *f = new (memoryManager) BoundFunction(scope, target, boundThis, boundArgs);
-    return f->asReturned<BoundFunction>();
 }
 
 

@@ -176,10 +176,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     advanceIterator                            \
 }
 
-struct HeapObject {
-
-};
-
 struct Q_QML_PRIVATE_EXPORT Managed
 {
     struct Data : HeapObject {

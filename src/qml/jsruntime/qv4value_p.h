@@ -64,6 +64,8 @@ struct Returned : private T
     using T::asReturnedValue;
 };
 
+struct HeapObject {};
+
 struct Q_QML_PRIVATE_EXPORT Value
 {
     /*
@@ -345,6 +347,10 @@ struct Q_QML_PRIVATE_EXPORT Value
     template<typename T>
     Value &operator=(T *t) {
         val = Value::fromManaged(t).val;
+        return *this;
+    }
+    Value &operator=(HeapObject *o) {
+        m = reinterpret_cast<Managed *>(o);
         return *this;
     }
 

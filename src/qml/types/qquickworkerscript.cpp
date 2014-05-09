@@ -235,7 +235,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
     Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
-    QV4::ScopedValue function(scope, m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, name.getPointer(),
+    QV4::ScopedValue function(scope, QV4::BuiltinFunction::create(m_v4Engine->rootContext, name.getPointer(),
                                                                     QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;

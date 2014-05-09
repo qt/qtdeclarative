@@ -154,7 +154,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return v.asFunctionObject();
     }
 
-    static FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static Data *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
     ReturnedValue protoProperty() { return memberData()[Index_Prototype].asReturnedValue(); }
 
@@ -175,8 +175,11 @@ inline FunctionObject *value_cast(const Value &v) {
 
 struct FunctionCtor: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+    };
+
     V4_OBJECT
-    FunctionCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -195,6 +198,7 @@ struct FunctionPrototype: FunctionObject
 
 struct BuiltinFunction: FunctionObject {
     struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
         ReturnedValue (*code)(CallContext *);
     };
     struct {
@@ -202,7 +206,10 @@ struct BuiltinFunction: FunctionObject {
     } __data;
     V4_OBJECT
 
-    BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
+    static BuiltinFunction::Data *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
+    {
+        return new (scope->engine()) Data(scope, name, code);
+    }
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -237,8 +244,10 @@ struct IndexedBuiltinFunction: FunctionObject
 
 
 struct SimpleScriptFunction: FunctionObject {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope, Function *function, bool createProto);
+    };
     V4_OBJECT
-    SimpleScriptFunction(ExecutionContext *scope, Function *function, bool createProto);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -247,8 +256,10 @@ struct SimpleScriptFunction: FunctionObject {
 };
 
 struct ScriptFunction: SimpleScriptFunction {
+    struct Data : SimpleScriptFunction::Data {
+        Data(ExecutionContext *scope, Function *function);
+    };
     V4_OBJECT
-    ScriptFunction(ExecutionContext *scope, Function *function);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -257,6 +268,7 @@ struct ScriptFunction: SimpleScriptFunction {
 
 struct BoundFunction: FunctionObject {
     struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs);
         FunctionObject *target;
         Value boundThis;
         Members boundArgs;
@@ -268,17 +280,18 @@ struct BoundFunction: FunctionObject {
     } __data;
     V4_OBJECT
 
+    static BoundFunction::Data *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
+    {
+        return new (scope->engine()) Data(scope, target, boundThis, boundArgs);
+    }
+
     FunctionObject *target() { return d()->target; }
     Value boundThis() const { return d()->boundThis; }
     Members boundArgs() const { return d()->boundArgs; }
 
-    BoundFunction(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs);
-    ~BoundFunction() {}
-
     static ReturnedValue construct(Managed *, CallData *d);
     static ReturnedValue call(Managed *that, CallData *dd);
 
-    static void destroy(Managed *);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 

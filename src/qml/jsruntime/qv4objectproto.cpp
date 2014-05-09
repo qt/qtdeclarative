@@ -133,8 +133,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineGetter__"), method_defineGetter, 2);
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
-    Property p(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_get_proto)->getPointer(),
-               v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto)->getPointer());
+    Property p(ScopedFunctionObject(scope, BuiltinFunction::create(v4->rootContext, v4->id___proto__, method_get_proto)).getPointer(),
+               ScopedFunctionObject(scope, BuiltinFunction::create(v4->rootContext, v4->id___proto__, method_set_proto)).getPointer());
     insertMember(v4->id___proto__, p, Attr_Accessor|Attr_NotEnumerable);
 }
 
