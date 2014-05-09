@@ -532,9 +532,14 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
     Q_ASSERT(value);
 
     prepareCallData(args, 0);
-    generateFunctionCall(result, Runtime::callValue, Assembler::ContextRegister,
-                         Assembler::Reference(value),
-                         baseAddressForCallData());
+    if (value->asConst())
+        generateFunctionCall(result, Runtime::callValue, Assembler::ContextRegister,
+                             Assembler::PointerToValue(value),
+                             baseAddressForCallData());
+    else
+        generateFunctionCall(result, Runtime::callValue, Assembler::ContextRegister,
+                             Assembler::Reference(value),
+                             baseAddressForCallData());
 }
 
 void InstructionSelection::loadThisObject(IR::Expr *temp)

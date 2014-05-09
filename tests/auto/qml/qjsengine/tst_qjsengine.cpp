@@ -159,6 +159,8 @@ private slots:
 
     void scopeOfEvaluate();
 
+    void callConstants();
+
 signals:
     void testSignal();
 };
@@ -3048,6 +3050,15 @@ void tst_QJSEngine::scopeOfEvaluate()
     QVERIFY(function.isCallable());
     QJSValue result = function.call(QJSValueList() << wrapper);
     QCOMPARE(result.toInt(), 42);
+}
+
+void tst_QJSEngine::callConstants()
+{
+    QJSEngine engine;
+    engine.evaluate("function f() {\n"
+                    "  var one; one();\n"
+                    "  var two = null; two();\n"
+                    "}\n");
 }
 
 QTEST_MAIN(tst_QJSEngine)

@@ -239,7 +239,7 @@ void IRDecoder::visitExp(IR::Exp *s)
         // These are calls where the result is ignored.
         if (c->base->asName()) {
             callBuiltin(c, 0);
-        } else if (c->base->asTemp() || c->base->asArgLocal()) {
+        } else if (c->base->asTemp() || c->base->asArgLocal() || c->base->asConst()) {
             callValue(c->base, c->args, 0);
         } else if (Member *member = c->base->asMember()) {
             Q_ASSERT(member->base->asTemp() || member->base->asArgLocal());
@@ -247,10 +247,10 @@ void IRDecoder::visitExp(IR::Exp *s)
         } else if (Subscript *s = c->base->asSubscript()) {
             callSubscript(s->base, s->index, c->args, 0);
         } else {
-            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
         }
     } else {
-        Q_UNIMPLEMENTED();
+        Q_UNREACHABLE();
     }
 }
 
