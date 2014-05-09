@@ -68,6 +68,13 @@ struct VariantObject : Object
 {
     struct Data : Object::Data, public ExecutionEngine::ScarceResourceData
     {
+        Data(InternalClass *ic);
+        Data(ExecutionEngine *engine, const QVariant &value);
+        ~Data() {
+            if (isScarce())
+                node.remove();
+        }
+        bool isScarce() const;
         int vmePropertyReferenceCount;
     };
     struct __Data : public ExecutionEngine::ScarceResourceData
@@ -77,14 +84,10 @@ struct VariantObject : Object
 
     V4_OBJECT
 
-    VariantObject(InternalClass *ic);
-    VariantObject(ExecutionEngine *engine, const QVariant &value);
-
     static QVariant toVariant(const ValueRef v);
 
     void addVmePropertyReference();
     void removeVmePropertyReference();
-    bool isScarce() const;
 
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
@@ -93,8 +96,6 @@ struct VariantObject : Object
 struct VariantPrototype : VariantObject
 {
 public:
-    VariantPrototype(InternalClass *ic);
-
     void init();
 
     static ReturnedValue method_preserve(CallContext *ctx);

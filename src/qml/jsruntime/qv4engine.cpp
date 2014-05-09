@@ -324,12 +324,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     ScopedObject uRIErrorPrototype(scope, new (this) URIErrorPrototype::Data(errorClass));
     uriErrorClass = InternalClass::create(this, URIErrorObject::staticVTable(), uRIErrorPrototype);
 
-    ScopedObject variantPrototype(scope, new (memoryManager) VariantPrototype(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype)));
+    ScopedObject variantPrototype(scope, new (this) VariantPrototype::Data(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype)));
     variantClass = InternalClass::create(this, VariantObject::staticVTable(), variantPrototype);
     Q_ASSERT(variantClass->prototype == variantPrototype);
     Q_ASSERT(variantPrototype->internalClass()->prototype == objectPrototype);
 
-    sequencePrototype = new (memoryManager) SequencePrototype(arrayClass);
+    sequencePrototype = ScopedValue(scope, new (this) SequencePrototype::Data(arrayClass));
 
     objectCtor = static_cast<HeapObject *>(new (this) ObjectCtor::Data(rootContext));
     stringCtor = static_cast<HeapObject *>(new (this) StringCtor::Data(rootContext));
@@ -390,8 +390,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (this) MathObject::Data(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (this) JsonObject::Data(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
@@ -658,7 +658,8 @@ Returned<Object> *ExecutionEngine::newURIErrorObject(const ValueRef message)
 
 Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    Object *o = new (memoryManager) VariantObject(this, v);
+    Scope scope(this);
+    ScopedObject o(scope, new (this) VariantObject::Data(this, v));
     return o->asReturned<Object>();
 }
 

@@ -65,8 +65,6 @@ namespace QV4 {
 
 struct SequencePrototype : public QV4::Object
 {
-    SequencePrototype(QV4::InternalClass *ic);
-
     void init();
 
     static ReturnedValue method_valueOf(QV4::CallContext *ctx)

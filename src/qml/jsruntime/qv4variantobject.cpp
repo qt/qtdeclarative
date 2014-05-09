@@ -51,17 +51,17 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(VariantObject);
 
-VariantObject::VariantObject(InternalClass *ic)
-    : Object(ic)
+VariantObject::Data::Data(InternalClass *ic)
+    : Object::Data(ic)
 {
 }
 
-VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
-    : Object(engine->variantClass)
+VariantObject::Data::Data(ExecutionEngine *engine, const QVariant &value)
+    : Object::Data(engine->variantClass)
 {
-    d()->data = value;
+    data = value;
     if (isScarce())
-        engine->scarceResources.insert(d());
+        engine->scarceResources.insert(this);
 }
 
 QVariant VariantObject::toVariant(const QV4::ValueRef v)
@@ -86,18 +86,16 @@ QVariant VariantObject::toVariant(const QV4::ValueRef v)
     return QVariant();
 }
 
-bool VariantObject::isScarce() const
+bool VariantObject::Data::isScarce() const
 {
-    QVariant::Type t = d()->data.type();
+    QVariant::Type t = data.type();
     return t == QVariant::Pixmap || t == QVariant::Image;
 }
 
 void VariantObject::destroy(Managed *that)
 {
     VariantObject *v = static_cast<VariantObject *>(that);
-    if (v->isScarce())
-        v->d()->node.remove();
-    v->~VariantObject();
+    v->d()->~Data();
 }
 
 bool VariantObject::isEqualTo(Managed *m, Managed *other)
@@ -116,7 +114,7 @@ bool VariantObject::isEqualTo(Managed *m, Managed *other)
 
 void VariantObject::addVmePropertyReference()
 {
-    if (isScarce() && ++d()->vmePropertyReferenceCount == 1) {
+    if (d()->isScarce() && ++d()->vmePropertyReferenceCount == 1) {
         // remove from the ep->scarceResources list
         // since it is now no longer eligible to be
         // released automatically by the engine.
@@ -126,7 +124,7 @@ void VariantObject::addVmePropertyReference()
 
 void VariantObject::removeVmePropertyReference()
 {
-    if (isScarce() && --d()->vmePropertyReferenceCount == 0) {
+    if (d()->isScarce() && --d()->vmePropertyReferenceCount == 0) {
         // and add to the ep->scarceResources list
         // since it is now eligible to be released
         // automatically by the engine.
@@ -134,11 +132,6 @@ void VariantObject::removeVmePropertyReference()
     }
 }
 
-
-VariantPrototype::VariantPrototype(InternalClass *ic)
-    : VariantObject(ic)
-{
-}
 
 void VariantPrototype::init()
 {
@@ -152,7 +145,7 @@ QV4::ReturnedValue VariantPrototype::method_preserve(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
-    if (o && o->isScarce())
+    if (o && o->d()->isScarce())
         o->d()->node.remove();
     return Encode::undefined();
 }
@@ -162,7 +155,7 @@ QV4::ReturnedValue VariantPrototype::method_destroy(CallContext *ctx)
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
     if (o) {
-        if (o->isScarce())
+        if (o->d()->isScarce())
             o->d()->node.remove();
         o->d()->data = QVariant();
     }

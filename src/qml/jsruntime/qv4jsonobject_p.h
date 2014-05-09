@@ -51,12 +51,14 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct JsonObject : Object {
+    struct Data : Object::Data {
+        Data(InternalClass *ic);
+    };
     Q_MANAGED_TYPE(JsonObject)
     V4_OBJECT
 private:
     typedef QSet<QV4::Object *> V4ObjectSet;
 public:
-    JsonObject(InternalClass *ic);
 
     static ReturnedValue method_parse(CallContext *ctx);
     static ReturnedValue method_stringify(CallContext *ctx);

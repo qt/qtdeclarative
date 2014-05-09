@@ -49,9 +49,12 @@ namespace QV4 {
 
 struct MathObject: Object
 {
+    struct Data : Object::Data {
+        Data(InternalClass *ic);
+    };
+
     V4_OBJECT
     Q_MANAGED_TYPE(MathObject)
-    MathObject(InternalClass *ic);
 
     static ReturnedValue method_abs(CallContext *context);
     static ReturnedValue method_acos(CallContext *context);

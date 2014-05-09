@@ -883,14 +883,14 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-JsonObject::JsonObject(InternalClass *ic)
-    : Object(ic)
+JsonObject::Data::Data(InternalClass *ic)
+    : Object::Data(ic)
 {
     Scope scope(ic->engine);
-    ScopedObject protectThis(scope, this);
+    ScopedObject o(scope, this);
 
-    defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);
-    defineDefaultProperty(QStringLiteral("stringify"), method_stringify, 3);
+    o->defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);
+    o->defineDefaultProperty(QStringLiteral("stringify"), method_stringify, 3);
 }
 
 
