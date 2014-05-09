@@ -46,8 +46,8 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(BooleanCtor);
 DEFINE_OBJECT_VTABLE(BooleanObject);
 
-BooleanCtor::BooleanCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Boolean"))
+BooleanCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Boolean"))
 {
     setVTable(staticVTable());
 }

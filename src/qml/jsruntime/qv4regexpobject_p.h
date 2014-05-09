@@ -110,10 +110,12 @@ protected:
 struct RegExpCtor: FunctionObject
 {
     struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
         Value lastMatch;
         StringValue lastInput;
         int lastMatchStart;
         int lastMatchEnd;
+        void clearLastMatch();
     };
     struct {
         Value lastMatch;
@@ -123,13 +125,11 @@ struct RegExpCtor: FunctionObject
     } __data;
 
     V4_OBJECT
-    RegExpCtor(ExecutionContext *scope);
 
     Value lastMatch() { return d()->lastMatch; }
     StringValue lastInput() { return d()->lastInput; }
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
-    void clearLastMatch();
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

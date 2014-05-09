@@ -51,8 +51,8 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(NumberCtor);
 DEFINE_OBJECT_VTABLE(NumberObject);
 
-NumberCtor::NumberCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Number"))
+NumberCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Number"))
 {
     setVTable(staticVTable());
 }

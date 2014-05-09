@@ -134,10 +134,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function() ? function()->compiledFunction->nLocals : 0; }
 
-    FunctionObject(ExecutionContext *scope, String *name, bool createProto = false);
-    FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
-    FunctionObject(ExecutionContext *scope, const ReturnedValue name);
-
     void init(String *name, bool createProto);
 
     ReturnedValue newInstance();
@@ -162,9 +158,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool strictMode() const { return d()->strictMode; }
     bool bindingKeyFlag() const { return d()->bindingKeyFlag; }
 
-protected:
-    FunctionObject(InternalClass *ic);
-
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
@@ -187,7 +180,11 @@ struct FunctionCtor: FunctionObject
 
 struct FunctionPrototype: FunctionObject
 {
-    FunctionPrototype(InternalClass *ic);
+    struct Data : FunctionObject::Data {
+        Data(InternalClass *ic);
+    };
+    V4_OBJECT
+
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_toString(CallContext *ctx);

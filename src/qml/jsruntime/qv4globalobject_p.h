@@ -50,8 +50,11 @@ namespace QV4 {
 
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+    };
+
     V4_OBJECT
-    EvalFunction(ExecutionContext *scope);
 
     ReturnedValue evalCall(CallData *callData, bool directCall);
 

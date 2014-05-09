@@ -346,11 +346,13 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 
 DEFINE_OBJECT_VTABLE(EvalFunction);
 
-EvalFunction::EvalFunction(ExecutionContext *scope)
-    : FunctionObject(scope, scope->d()->engine->id_eval)
+EvalFunction::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, scope->d()->engine->id_eval)
 {
     setVTable(staticVTable());
-    defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(1));
 }
 
 ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)

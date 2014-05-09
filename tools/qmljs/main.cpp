@@ -72,10 +72,13 @@ using namespace QV4;
 
 struct Print: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope)
+            : FunctionObject::Data(scope, QStringLiteral("print")) {
+            setVTable(staticVTable());
+        }
+    };
     V4_OBJECT
-    Print(ExecutionContext *scope): FunctionObject(scope, QStringLiteral("print")) {
-        setVTable(staticVTable());
-    }
 
     static ReturnedValue call(Managed *, CallData *callData)
     {
@@ -94,12 +97,16 @@ DEFINE_OBJECT_VTABLE(Print);
 
 struct GC: public FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope)
+            : FunctionObject::Data(scope, QStringLiteral("gc"))
+        {
+            setVTable(staticVTable());
+        }
+
+    };
     V4_OBJECT
-    GC(ExecutionContext* scope)
-        : FunctionObject(scope, QStringLiteral("gc"))
-    {
-        setVTable(staticVTable());
-    }
+
     static ReturnedValue call(Managed *m, CallData *)
     {
         m->engine()->memoryManager->runGC();
@@ -190,9 +197,9 @@ int main(int argc, char *argv[])
         QV4::Scope scope(ctx);
 
         QV4::ScopedObject globalObject(scope, vm.globalObject);
-        QV4::ScopedObject print(scope, new (scope.engine->memoryManager) builtins::Print(ctx));
+        QV4::ScopedObject print(scope, new (scope.engine) builtins::Print::Data(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
-        QV4::ScopedObject gc(scope, new (scope.engine->memoryManager) builtins::GC(ctx));
+        QV4::ScopedObject gc(scope, new (scope.engine) builtins::GC::Data(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
         foreach (const QString &fn, args) {

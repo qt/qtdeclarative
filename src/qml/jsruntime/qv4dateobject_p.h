@@ -84,8 +84,10 @@ protected:
 
 struct DateCtor: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    DateCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *);

@@ -112,48 +112,6 @@ FunctionObject::Data::Data(InternalClass *ic)
     memberData[Index_Prototype] = Encode::undefined();
 }
 
-FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool createProto)
-    : Object(scope->d()->engine->functionClass)
-{
-    d()->scope = scope;
-    d()->function = 0;
-    init(name, createProto);
-}
-
-FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Object(scope->d()->engine->functionClass)
-{
-    d()->scope = scope;
-    d()->function = 0;
-
-    Scope s(scope);
-    ScopedValue protectThis(s, this);
-    ScopedString n(s, s.engine->newString(name));
-    init(n.getPointer(), createProto);
-}
-
-FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : Object(scope->d()->engine->functionClass)
-{
-    d()->scope = scope;
-    d()->function = 0;
-
-    Scope s(scope);
-    ScopedValue protectThis(s, this);
-    ScopedString n(s, name);
-    init(n.getPointer(), false);
-}
-
-FunctionObject::FunctionObject(InternalClass *ic)
-    : Object(ic)
-{
-    d()->scope = ic->engine->rootContext;
-    d()->function = 0;
-
-    d()->needsActivation = false;
-    d()->strictMode = false;
-    memberData()[Index_Prototype] = Encode::undefined();
-}
 
 FunctionObject::Data::~Data()
 {
@@ -288,8 +246,10 @@ ReturnedValue FunctionCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-FunctionPrototype::FunctionPrototype(InternalClass *ic)
-    : FunctionObject(ic)
+DEFINE_OBJECT_VTABLE(FunctionPrototype);
+
+FunctionPrototype::Data::Data(InternalClass *ic)
+    : FunctionObject::Data(ic)
 {
 }
 

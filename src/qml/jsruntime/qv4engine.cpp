@@ -295,7 +295,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     uint index;
     functionProtoClass = functionProtoClass->addMember(id_prototype, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
-    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(functionProtoClass);
+    Scoped<FunctionPrototype> functionPrototype(scope, new (this) FunctionPrototype::Data(functionProtoClass));
     functionClass = InternalClass::create(this, FunctionObject::staticVTable(), functionPrototype);
     functionClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
@@ -331,21 +331,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     sequencePrototype = new (memoryManager) SequencePrototype(arrayClass);
 
-    objectCtor = new (memoryManager) ObjectCtor(rootContext);
-    stringCtor = new (memoryManager) StringCtor(rootContext);
-    numberCtor = new (memoryManager) NumberCtor(rootContext);
-    booleanCtor = new (memoryManager) BooleanCtor(rootContext);
-    arrayCtor = new (memoryManager) ArrayCtor(rootContext);
+    objectCtor = static_cast<HeapObject *>(new (this) ObjectCtor::Data(rootContext));
+    stringCtor = static_cast<HeapObject *>(new (this) StringCtor::Data(rootContext));
+    numberCtor = static_cast<HeapObject *>(new (this) NumberCtor::Data(rootContext));
+    booleanCtor = static_cast<HeapObject *>(new (this) BooleanCtor::Data(rootContext));
+    arrayCtor = static_cast<HeapObject *>(new (this) ArrayCtor::Data(rootContext));
     functionCtor = static_cast<HeapObject *>(new (this) FunctionCtor::Data(rootContext));
-    dateCtor = new (memoryManager) DateCtor(rootContext);
-    regExpCtor = new (memoryManager) RegExpCtor(rootContext);
-    errorCtor = new (memoryManager) ErrorCtor(rootContext);
-    evalErrorCtor = new (memoryManager) EvalErrorCtor(rootContext);
-    rangeErrorCtor = new (memoryManager) RangeErrorCtor(rootContext);
-    referenceErrorCtor = new (memoryManager) ReferenceErrorCtor(rootContext);
-    syntaxErrorCtor = new (memoryManager) SyntaxErrorCtor(rootContext);
-    typeErrorCtor = new (memoryManager) TypeErrorCtor(rootContext);
-    uRIErrorCtor = new (memoryManager) URIErrorCtor(rootContext);
+    dateCtor = static_cast<HeapObject *>(new (this) DateCtor::Data(rootContext));
+    regExpCtor = static_cast<HeapObject *>(new (this) RegExpCtor::Data(rootContext));
+    errorCtor = static_cast<HeapObject *>(new (this) ErrorCtor::Data(rootContext));
+    evalErrorCtor = static_cast<HeapObject *>(new (this) EvalErrorCtor::Data(rootContext));
+    rangeErrorCtor = static_cast<HeapObject *>(new (this) RangeErrorCtor::Data(rootContext));
+    referenceErrorCtor = static_cast<HeapObject *>(new (this) ReferenceErrorCtor::Data(rootContext));
+    syntaxErrorCtor = static_cast<HeapObject *>(new (this) SyntaxErrorCtor::Data(rootContext));
+    typeErrorCtor = static_cast<HeapObject *>(new (this) TypeErrorCtor::Data(rootContext));
+    uRIErrorCtor = static_cast<HeapObject *>(new (this) URIErrorCtor::Data(rootContext));
 
     objectPrototype->init(this, objectCtor.asObject());
     stringPrototype->init(this, stringCtor.asObject());
@@ -397,7 +397,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
-    evalFunction = new (memoryManager) EvalFunction(rootContext);
+
+    evalFunction = Scoped<EvalFunction>(scope, new (this) EvalFunction::Data(rootContext));
     globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
@@ -807,8 +808,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
             delete [] oldAccessors;
         }
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = Value::fromManaged(new (memoryManager) ArgumentsGetterFunction(rootContext, i));
-            argumentsAccessors[i].set = Value::fromManaged(new (memoryManager) ArgumentsSetterFunction(rootContext, i));
+            argumentsAccessors[i].value = ScopedValue(scope, new (scope.engine) ArgumentsGetterFunction::Data(rootContext, i));
+            argumentsAccessors[i].set = ScopedValue(scope, new (scope.engine) ArgumentsSetterFunction::Data(rootContext, i));
         }
     }
 }

@@ -48,8 +48,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArrayCtor);
 
-ArrayCtor::ArrayCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Array"))
+ArrayCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Array"))
 {
     setVTable(staticVTable());
 }

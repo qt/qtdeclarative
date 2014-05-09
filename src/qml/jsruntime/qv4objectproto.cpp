@@ -74,8 +74,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ObjectCtor);
 
-ObjectCtor::ObjectCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Object"))
+ObjectCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Object"))
 {
     setVTable(staticVTable());
 }

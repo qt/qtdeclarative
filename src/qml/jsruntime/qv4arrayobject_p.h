@@ -51,8 +51,11 @@ namespace QV4 {
 
 struct ArrayCtor: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+    };
+
     V4_OBJECT
-    ArrayCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

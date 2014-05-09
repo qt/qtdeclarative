@@ -173,8 +173,8 @@ void StringObject::markObjects(Managed *that, ExecutionEngine *e)
 
 DEFINE_OBJECT_VTABLE(StringCtor);
 
-StringCtor::StringCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("String"))
+StringCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("String"))
 {
     setVTable(staticVTable());
 }

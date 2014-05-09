@@ -125,9 +125,12 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+        Data(ExecutionContext *scope, const QString &name);
+    };
+
     V4_OBJECT
-    ErrorCtor(ExecutionContext *scope);
-    ErrorCtor(ExecutionContext *scope, const QString &name);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -135,49 +138,60 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-
-    EvalErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    RangeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    ReferenceErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    SyntaxErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    TypeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
+    struct Data : ErrorCtor::Data {
+        Data(ExecutionContext *scope);
+    };
     V4_OBJECT
-    URIErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };

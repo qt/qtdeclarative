@@ -253,14 +253,14 @@ DEFINE_OBJECT_VTABLE(SyntaxErrorCtor);
 DEFINE_OBJECT_VTABLE(TypeErrorCtor);
 DEFINE_OBJECT_VTABLE(URIErrorCtor);
 
-ErrorCtor::ErrorCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Error"))
+ErrorCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Error"))
 {
     setVTable(staticVTable());
 }
 
-ErrorCtor::ErrorCtor(ExecutionContext *scope, const QString &name)
-    : FunctionObject(scope, name)
+ErrorCtor::Data::Data(ExecutionContext *scope, const QString &name)
+    : FunctionObject::Data(scope, name)
 {
     setVTable(staticVTable());
 }
@@ -277,8 +277,8 @@ ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
     return static_cast<Object *>(that)->construct(callData);
 }
 
-EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("EvalError"))
+EvalErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("EvalError"))
 {
     setVTable(staticVTable());
 }
@@ -290,8 +290,8 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) EvalErrorObject(m->engine(), v))->asReturnedValue();
 }
 
-RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("RangeError"))
+RangeErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("RangeError"))
 {
     setVTable(staticVTable());
 }
@@ -303,8 +303,8 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) RangeErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("ReferenceError"))
+ReferenceErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("ReferenceError"))
 {
     setVTable(staticVTable());
 }
@@ -316,8 +316,8 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) ReferenceErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("SyntaxError"))
+SyntaxErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("SyntaxError"))
 {
     setVTable(staticVTable());
 }
@@ -329,8 +329,8 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) SyntaxErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("TypeError"))
+TypeErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("TypeError"))
 {
     setVTable(staticVTable());
 }
@@ -342,8 +342,8 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
     return (new (m->engine()->memoryManager) TypeErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, QStringLiteral("URIError"))
+URIErrorCtor::Data::Data(ExecutionContext *scope)
+    : ErrorCtor::Data(scope, QStringLiteral("URIError"))
 {
     setVTable(staticVTable());
 }

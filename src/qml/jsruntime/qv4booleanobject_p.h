@@ -51,8 +51,11 @@ namespace QV4 {
 
 struct BooleanCtor: FunctionObject
 {
+    struct Data : FunctionObject::Data {
+        Data(ExecutionContext *scope);
+    };
+
     V4_OBJECT
-    BooleanCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

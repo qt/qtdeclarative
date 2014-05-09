@@ -237,19 +237,19 @@ uint RegExpObject::flags() const
 
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
-RegExpCtor::RegExpCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("RegExp"))
+RegExpCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("RegExp"))
 {
     setVTable(staticVTable());
     clearLastMatch();
 }
 
-void RegExpCtor::clearLastMatch()
+void RegExpCtor::Data::clearLastMatch()
 {
-    d()->lastMatch = Primitive::nullValue();
-    d()->lastInput = engine()->id_empty;
-    d()->lastMatchStart = 0;
-    d()->lastMatchEnd = 0;
+    lastMatch = Primitive::nullValue();
+    lastInput = internalClass->engine->id_empty;
+    lastMatchStart = 0;
+    lastMatchEnd = 0;
 }
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
@@ -379,7 +379,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     const int result = r->value()->match(s, offset, matchOffsets);
 
     Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
-    regExpCtor->clearLastMatch();
+    regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
         r->lastIndexProperty(ctx)->value = Primitive::fromInt32(0);

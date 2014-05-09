@@ -657,8 +657,8 @@ QDateTime DateObject::toQDateTime() const
 
 DEFINE_OBJECT_VTABLE(DateCtor);
 
-DateCtor::DateCtor(ExecutionContext *scope)
-    : FunctionObject(scope, QStringLiteral("Date"))
+DateCtor::Data::Data(ExecutionContext *scope)
+    : FunctionObject::Data(scope, QStringLiteral("Date"))
 {
     setVTable(staticVTable());
 }
