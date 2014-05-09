@@ -78,6 +78,7 @@ struct QObjectSlotDispatcher;
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
     struct Data : QV4::Object::Data {
+        Data(ExecutionEngine *engine, QObject *object);
         QPointer<QObject> object;
     };
     struct {
@@ -113,8 +114,6 @@ private:
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
-    QObjectWrapper(ExecutionEngine *engine, QObject *object);
-
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
@@ -131,6 +130,7 @@ private:
 struct QObjectMethod : public QV4::FunctionObject
 {
     struct Data : QV4::FunctionObject::Data {
+        Data(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
         QPointer<QObject> object;
         int index;
         QV4::PersistentValue qmlGlobal;
@@ -150,9 +150,6 @@ struct QObjectMethod : public QV4::FunctionObject
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object.data(); }
 
-private:
-    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
-
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
     QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const ValueRef args, int argc);
 
@@ -162,13 +159,14 @@ private:
 
     static void destroy(Managed *that)
     {
-        static_cast<QObjectMethod *>(that)->~QObjectMethod();
+        static_cast<QObjectMethod *>(that)->d()->~Data();
     }
 };
 
 struct QmlSignalHandler : public QV4::Object
 {
     struct Data : QV4::Object::Data {
+        Data(ExecutionEngine *engine, QObject *object, int signalIndex);
         QPointer<QObject> object;
         int signalIndex;
     };
@@ -179,7 +177,6 @@ struct QmlSignalHandler : public QV4::Object
 
     V4_OBJECT
 
-    QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex);
 
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object.data(); }
@@ -188,7 +185,7 @@ private:
 
     static void destroy(Managed *that)
     {
-        static_cast<QmlSignalHandler *>(that)->~QmlSignalHandler();
+        static_cast<QmlSignalHandler *>(that)->d()->~Data();
     }
 };
 

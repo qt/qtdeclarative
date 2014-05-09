@@ -239,14 +239,11 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
     }
 }
 
-QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
-    : Object(engine)
+QObjectWrapper::Data::Data(ExecutionEngine *engine, QObject *object)
+    : Object::Data(engine)
+    , object(object)
 {
-    d()->object = object;
     setVTable(staticVTable());
-
-    Scope scope(engine);
-    ScopedObject protectThis(scope, this);
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -348,7 +345,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
             QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->d()->engine->qmlContextObject());
             return QV4::QObjectMethod::create(ctx->d()->engine->rootContext, object, property->coreIndex, qmlcontextobject);
         } else if (property->isSignalHandler()) {
-            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->d()->engine->memoryManager) QV4::QmlSignalHandler(ctx->d()->engine, object, property->coreIndex));
+            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (scope.engine) QV4::QmlSignalHandler::Data(ctx->d()->engine, object, property->coreIndex));
 
             QV4::ScopedString connect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("disconnect")));
@@ -661,7 +658,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     QQmlEngine *qmlEngine = engine->v8Engine->engine();
     if (qmlEngine)
         QQmlData::ensurePropertyCache(qmlEngine, object);
-    return (new (engine->memoryManager) QV4::QObjectWrapper(engine, object))->asReturnedValue();
+    return (new (engine) QV4::QObjectWrapper::Data(engine, object))->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
@@ -1028,7 +1025,7 @@ void QObjectWrapper::destroy(Managed *that)
     QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
     QPointer<QObject> object = This->d()->object;
     ExecutionEngine *engine = This->engine();
-    This->~QObjectWrapper();
+    This->d()->~Data();
     This = 0;
     if (!object)
         return;
@@ -1750,17 +1747,17 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
 
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
 {
-    return (new (scope->d()->engine->memoryManager) QObjectMethod(scope, object, index, qmlGlobal))->asReturnedValue();
+    return (new (scope->d()->engine) QObjectMethod::Data(scope, object, index, qmlGlobal))->asReturnedValue();
 }
 
-QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
-    : FunctionObject(scope)
+QObjectMethod::Data::Data(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
+    : FunctionObject::Data(scope)
+    , object(object)
+    , index(index)
+    , qmlGlobal(qmlGlobal)
 {
-    d()->object = object;
-    d()->index = index;
     setVTable(staticVTable());
-    setSubtype(WrappedQtMethod);
-    d()->qmlGlobal = qmlGlobal;
+    subtype = WrappedQtMethod;
 }
 
 QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
@@ -1888,11 +1885,11 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
-QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex)
-    : Object(engine)
+QmlSignalHandler::Data::Data(ExecutionEngine *engine, QObject *object, int signalIndex)
+    : Object::Data(engine)
+    , object(object)
+    , signalIndex(signalIndex)
 {
-    d()->object = object;
-    d()->signalIndex = signalIndex;
     setVTable(staticVTable());
 }
 
