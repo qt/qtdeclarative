@@ -251,38 +251,37 @@ bool String::isEqualTo(Managed *t, Managed *o)
 }
 
 
-String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine->stringClass)
+String::Data::Data(ExecutionEngine *engine, const QString &t)
+    : Managed::Data(engine->stringClass)
 {
-    Data *data = d();
-    data->text = const_cast<QString &>(text).data_ptr();
-    data->text->ref.ref();
-    data->identifier = 0;
-    data->stringHash = UINT_MAX;
-    data->largestSubLength = 0;
-    data->len = d()->text->size;
-    setSubtype(StringType_Unknown);
+    subtype = StringType_Unknown;
+
+    text = const_cast<QString &>(t).data_ptr();
+    text->ref.ref();
+    identifier = 0;
+    stringHash = UINT_MAX;
+    largestSubLength = 0;
+    len = text->size;
 }
 
-String::String(ExecutionEngine *engine, String *l, String *r)
-    : Managed(engine->stringClass)
+String::Data::Data(ExecutionEngine *engine, String *l, String *r)
+    : Managed::Data(engine->stringClass)
 {
-    setSubtype(StringType_Unknown);
+    subtype = StringType_Unknown;
 
-    Data *data = d();
-    data->left = l;
-    data->right = r;
-    data->stringHash = UINT_MAX;
-    data->largestSubLength = qMax(l->d()->largestSubLength, r->d()->largestSubLength);
-    data->len = l->d()->len + r->d()->len;
+    left = l;
+    right = r;
+    stringHash = UINT_MAX;
+    largestSubLength = qMax(l->d()->largestSubLength, r->d()->largestSubLength);
+    len = l->d()->len + r->d()->len;
 
-    if (!l->d()->largestSubLength && l->d()->len > d()->largestSubLength)
-        d()->largestSubLength = l->d()->len;
-    if (!r->d()->largestSubLength && r->d()->len > d()->largestSubLength)
-        d()->largestSubLength = r->d()->len;
+    if (!l->d()->largestSubLength && l->d()->len > largestSubLength)
+        largestSubLength = l->d()->len;
+    if (!r->d()->largestSubLength && r->d()->len > largestSubLength)
+        largestSubLength = r->d()->len;
 
     // make sure we don't get excessive depth in our strings
-    if (d()->len > 256 && d()->len >= 2*d()->largestSubLength)
+    if (len > 256 && len >= 2*largestSubLength)
         simplifyString();
 }
 
@@ -321,33 +320,33 @@ bool String::equals(String *other) const
 void String::makeIdentifierImpl() const
 {
     if (d()->largestSubLength)
-        simplifyString();
+        d()->simplifyString();
     Q_ASSERT(!d()->largestSubLength);
     engine()->identifierTable->identifier(this);
 }
 
-void String::simplifyString() const
+void String::Data::simplifyString() const
 {
-    Q_ASSERT(d()->largestSubLength);
+    Q_ASSERT(largestSubLength);
 
     int l = length();
     QString result(l, Qt::Uninitialized);
     QChar *ch = const_cast<QChar *>(result.constData());
     recursiveAppend(ch);
-    d()->text = result.data_ptr();
-    d()->text->ref.ref();
-    d()->identifier = 0;
-    d()->largestSubLength = 0;
+    text = result.data_ptr();
+    text->ref.ref();
+    identifier = 0;
+    largestSubLength = 0;
 }
 
-QChar *String::recursiveAppend(QChar *ch) const
+QChar *String::Data::recursiveAppend(QChar *ch) const
 {
-    if (d()->largestSubLength) {
-        ch = d()->left->recursiveAppend(ch);
-        ch = d()->right->recursiveAppend(ch);
+    if (largestSubLength) {
+        ch = left->d()->recursiveAppend(ch);
+        ch = right->d()->recursiveAppend(ch);
     } else {
-        memcpy(ch, d()->text->data(), d()->text->size*sizeof(QChar));
-        ch += d()->text->size;
+        memcpy(ch, text->data(), text->size*sizeof(QChar));
+        ch += text->size;
     }
     return ch;
 }
@@ -356,7 +355,7 @@ QChar *String::recursiveAppend(QChar *ch) const
 void String::createHashValue() const
 {
     if (d()->largestSubLength)
-        simplifyString();
+        d()->simplifyString();
     Q_ASSERT(!d()->largestSubLength);
     const QChar *ch = reinterpret_cast<const QChar *>(d()->text->data());
     const QChar *end = ch + d()->text->size;
@@ -421,7 +420,7 @@ uint String::createHashValue(const char *ch, int length)
 
 uint String::getLength(const Managed *m)
 {
-    return static_cast<const String *>(m)->length();
+    return static_cast<const String *>(m)->d()->length();
 }
 
 #endif // V4_BOOTSTRAP

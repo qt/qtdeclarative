@@ -245,7 +245,7 @@ public:
     }
 
     inline bool equals(const QV4::String *string) const {
-        if (length != string->length() || hash != string->hashValue())
+        if (length != string->d()->length() || hash != string->hashValue())
                 return false;
         if (isQString()) {
             QStringDataPtr dd;

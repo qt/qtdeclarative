@@ -62,6 +62,8 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     internalClass = engine->emptyClass;
     const quint32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
+    Scope scope(engine);
+    ScopedString s(scope);
     for (int i = static_cast<int>(compiledFunction->nFormals - 1); i >= 0; --i) {
         String *arg = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
         while (1) {
@@ -71,7 +73,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                 break;
             }
             // duplicate arguments, need some trick to store them
-            arg = new (engine->memoryManager) String(engine, arg, engine->newString(QString(0xfffe))->getPointer());
+            arg = (s = new (engine) String::Data(engine, arg, engine->newString(QString(0xfffe))->getPointer())).getPointer();
         }
     }
 

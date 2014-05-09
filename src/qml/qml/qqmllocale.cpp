@@ -383,7 +383,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(QV4::CallContext *
         if (!ctx->d()->callData->args[1].isString())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
         QV4::String *fs = ctx->d()->callData->args[1].toString(ctx);
-        if (fs->length())
+        if (fs->d()->length())
             format = fs->toQString().at(0).unicode();
     }
     int prec = 2;
@@ -447,7 +447,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_fromLocaleString(QV4::CallContext
     }
 
     QV4::String *ns = ctx->d()->callData->args[numberIdx].toString(ctx);
-    if (!ns->length())
+    if (!ns->d()->length())
         return QV4::Encode(Q_QNAN);
 
     bool ok = false;

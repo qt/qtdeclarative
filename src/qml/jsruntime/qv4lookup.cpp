@@ -563,7 +563,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
 ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
 {
     if (String *s = object->asString())
-        return Encode(s->length());
+        return Encode(s->d()->length());
 
     l->getter = getterGeneric;
     return getterGeneric(l, object);

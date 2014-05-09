@@ -510,11 +510,11 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionContext *ctx, const ValueR
             pright = convert_to_string_add(ctx, pright);
         if (scope.engine->hasException)
             return Encode::undefined();
-        if (!pleft->stringValue()->length())
+        if (!pleft->stringValue()->d()->length())
             return pright->asReturnedValue();
-        if (!pright->stringValue()->length())
+        if (!pright->stringValue()->d()->length())
             return pleft->asReturnedValue();
-        return (new (ctx->engine()->memoryManager) String(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+        return (new (ctx->engine()) String::Data(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -526,11 +526,11 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
     Q_ASSERT(left->isString() || right->isString());
 
     if (left->isString() && right->isString()) {
-        if (!left->stringValue()->length())
+        if (!left->stringValue()->d()->length())
             return right->asReturnedValue();
-        if (!right->stringValue()->length())
+        if (!right->stringValue()->d()->length())
             return left->asReturnedValue();
-        return (new (ctx->engine()->memoryManager) String(ctx->d()->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
+        return (new (ctx->engine()) String::Data(ctx->d()->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
     }
 
     Scope scope(ctx);
@@ -543,11 +543,11 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
         pright = convert_to_string_add(ctx, right);
     if (scope.engine->hasException)
         return Encode::undefined();
-    if (!pleft->stringValue()->length())
+    if (!pleft->stringValue()->d()->length())
         return pright->asReturnedValue();
-    if (!pright->stringValue()->length())
+    if (!pright->stringValue()->d()->length())
         return pleft->asReturnedValue();
-    return (new (ctx->engine()->memoryManager) String(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+    return (new (ctx->engine()) String::Data(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
 }
 
 void Runtime::setProperty(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value)

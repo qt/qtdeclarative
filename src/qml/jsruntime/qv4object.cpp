@@ -384,7 +384,7 @@ bool Object::hasOwnProperty(uint index) const
         return true;
     if (isStringObject()) {
         String *s = static_cast<const StringObject *>(this)->d()->value.asString();
-        if (index < (uint)s->length())
+        if (index < (uint)s->d()->length())
             return true;
     }
     if (!queryIndexed(index).isEmpty())
@@ -444,7 +444,7 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
 
     if (o->isStringObject()) {
         String *s = static_cast<const StringObject *>(o)->d()->value.asString();
-        if (index < (uint)s->length())
+        if (index < (uint)s->d()->length())
             return (Attr_NotWritable|Attr_NotConfigurable);
     }
     return Attr_Invalid;

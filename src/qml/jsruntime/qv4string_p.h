@@ -54,6 +54,19 @@ struct Identifier;
 struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
     struct Data : Managed::Data {
+        Data(ExecutionEngine *engine, const QString &text);
+        Data(ExecutionEngine *engine, String *l, String *n);
+        ~Data() {
+            if (!largestSubLength && !text->ref.deref())
+                QStringData::deallocate(text);
+        }
+        void simplifyString() const;
+        int length() const {
+            Q_ASSERT((largestSubLength &&
+                      (len == left->d()->len + right->d()->len)) ||
+                     len == (uint)text->size);
+            return len;
+        }
         union {
             mutable QStringData *text;
             mutable String *left;
@@ -65,6 +78,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         mutable uint stringHash;
         mutable uint largestSubLength;
         uint len;
+    private:
+        QChar *recursiveAppend(QChar *ch) const;
     };
     struct {
         union {
@@ -93,13 +108,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         StringType_ArrayIndex
     };
 
-    String(ExecutionEngine *engine, const QString &text);
-    String(ExecutionEngine *engine, String *l, String *n);
-    ~String() {
-        if (!d()->largestSubLength && !d()->text->ref.deref())
-            QStringData::deallocate(d()->text);
-    }
-
     bool equals(String *other) const;
     inline bool isEqualTo(const String *other) const {
         if (this == other)
@@ -121,13 +129,11 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     inline QString toQString() const {
         if (d()->largestSubLength)
-            simplifyString();
+            d()->simplifyString();
         QStringDataPtr ptr = { d()->text };
         d()->text->ref.ref();
         return QString(ptr);
     }
-
-    void simplifyString() const;
 
     inline unsigned hashValue() const {
         if (subtype() == StringType_Unknown)
@@ -164,12 +170,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
             l = l->d()->left;
         return l->d()->text->size && QChar::isUpper(l->d()->text->data()[0]);
     }
-    int length() const {
-        Q_ASSERT((d()->largestSubLength &&
-                  (d()->len == d()->left->d()->len + d()->right->d()->len)) ||
-                 d()->len == (uint)d()->text->size);
-        return d()->len;
-    }
 
     Identifier *identifier() const { return d()->identifier; }
 
@@ -186,9 +186,6 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
     static uint getLength(const Managed *m);
-
-private:
-    QChar *recursiveAppend(QChar *ch) const;
 #endif
 
 public:

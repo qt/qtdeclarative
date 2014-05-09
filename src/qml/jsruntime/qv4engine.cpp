@@ -497,7 +497,8 @@ Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
 
 Returned<String> *ExecutionEngine::newString(const QString &s)
 {
-    return (new (memoryManager) String(this, s))->asReturned<String>();
+    Scope scope(this);
+    return ScopedString(scope, new (this) String::Data(this, s))->asReturned<String>();
 }
 
 String *ExecutionEngine::newIdentifier(const QString &text)
