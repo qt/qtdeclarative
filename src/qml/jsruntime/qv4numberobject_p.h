@@ -62,7 +62,6 @@ struct NumberCtor: FunctionObject
 
 struct NumberPrototype: NumberObject
 {
-    NumberPrototype(InternalClass *ic): NumberObject(ic) {}
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_toString(CallContext *ctx);

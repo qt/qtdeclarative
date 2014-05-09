@@ -323,6 +323,17 @@ private:
 
 struct BooleanObject: Object {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, const ValueRef val)
+            : Object::Data(engine->booleanClass)
+        {
+            value = val;
+        }
+        Data(InternalClass *ic)
+            : Object::Data(ic)
+        {
+            Q_ASSERT(internalClass->vtable == staticVTable());
+            value = Encode(false);
+        }
         Value value;
     };
     struct {
@@ -333,22 +344,19 @@ struct BooleanObject: Object {
 
     Value value() const { return d()->value; }
 
-    BooleanObject(ExecutionEngine *engine, const ValueRef val)
-        : Object(engine->booleanClass)
-    {
-        d()->value = val;
-    }
-protected:
-    BooleanObject(InternalClass *ic)
-        : Object(ic)
-    {
-        Q_ASSERT(internalClass()->vtable == staticVTable());
-        d()->value = Encode(false);
-    }
 };
 
 struct NumberObject: Object {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, const ValueRef val)
+            : Object::Data(engine->numberClass) {
+            value = val;
+        }
+        Data(InternalClass *ic)
+            : Object::Data(ic) {
+            Q_ASSERT(internalClass->vtable == staticVTable());
+            value = Encode((int)0);
+        }
         Value value;
     };
     struct {
@@ -359,28 +367,22 @@ struct NumberObject: Object {
 
     Value value() const { return d()->value; }
 
-    NumberObject(ExecutionEngine *engine, const ValueRef val)
-        : Object(engine->numberClass) {
-        d()->value = val;
-    }
-protected:
-    NumberObject(InternalClass *ic)
-        : Object(ic) {
-        Q_ASSERT(internalClass()->vtable == staticVTable());
-        d()->value = Encode((int)0);
-    }
 };
 
 struct ArrayObject: Object {
+    struct Data : Object::Data {
+        Data(ExecutionEngine *engine) : Object::Data(engine->arrayClass) { init(); }
+        Data(ExecutionEngine *engine, const QStringList &list);
+        Data(InternalClass *ic) : Object::Data(ic) { init(); }
+        void init()
+        { memberData[LengthPropertyIndex] = Primitive::fromInt32(0); }
+    };
+
     V4_OBJECT
     Q_MANAGED_TYPE(ArrayObject)
     enum {
         LengthPropertyIndex = 0
     };
-
-    ArrayObject(ExecutionEngine *engine) : Object(engine->arrayClass) { init(engine); }
-    ArrayObject(ExecutionEngine *engine, const QStringList &list);
-    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
 
     void init(ExecutionEngine *engine);
 

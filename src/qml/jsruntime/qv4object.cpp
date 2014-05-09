@@ -1163,30 +1163,23 @@ void Object::initSparseArray()
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
-ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Object(engine->arrayClass)
+ArrayObject::Data::Data(ExecutionEngine *engine, const QStringList &list)
+    : Object::Data(engine->arrayClass)
 {
-    init(engine);
+    init();
     Scope scope(engine);
-    ScopedValue protectThis(scope, this);
+    ScopedObject a(scope, this);
 
     // Converts a QStringList to JS.
     // The result is a new Array object with length equal to the length
     // of the QStringList, and the elements being the QStringList's
     // elements converted to JS Strings.
     int len = list.count();
-    arrayReserve(len);
+    a->arrayReserve(len);
     ScopedValue v(scope);
     for (int ii = 0; ii < len; ++ii)
-        arrayPut(ii, (v = engine->newString(list.at(ii))));
-    setArrayLengthUnchecked(len);
-}
-
-void ArrayObject::init(ExecutionEngine *engine)
-{
-    Q_UNUSED(engine);
-
-    memberData()[LengthPropertyIndex] = Primitive::fromInt32(0);
+        a->arrayPut(ii, (v = engine->newString(list.at(ii))));
+    a->setArrayLengthUnchecked(len);
 }
 
 ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)

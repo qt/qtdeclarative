@@ -643,11 +643,11 @@ static double getLocalTZA()
 
 DEFINE_OBJECT_VTABLE(DateObject);
 
-DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
-    : Object(engine->dateClass)
+DateObject::Data::Data(ExecutionEngine *engine, const QDateTime &date)
+    : Object::Data(engine->dateClass)
 {
     setVTable(staticVTable());
-    d()->value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
+    value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
 
 QDateTime DateObject::toQDateTime() const

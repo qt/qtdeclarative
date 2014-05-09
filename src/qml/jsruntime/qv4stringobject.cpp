@@ -77,35 +77,29 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-StringObject::StringObject(InternalClass *ic)
-    : Object(ic)
+StringObject::Data::Data(InternalClass *ic)
+    : Object::Data(ic)
 {
-    Q_ASSERT(internalClass()->vtable == staticVTable());
+    Q_ASSERT(internalClass->vtable == staticVTable());
+    value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
+    tmpProperty.value = Primitive::undefinedValue();
 
-    Scope scope(engine());
-    ScopedObject protectThis(scope, this);
-
-    d()->value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
-
-    d()->tmpProperty.value = Primitive::undefinedValue();
-
-    defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
+    Scope scope(ic->engine);
+    ScopedObject s(scope, this);
+    s->defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
 
-StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
-    : Object(engine->stringObjectClass)
+StringObject::Data::Data(ExecutionEngine *engine, const ValueRef val)
+    : Object::Data(engine->stringObjectClass)
 {
+    value = val;
+    Q_ASSERT(value.isString());
+    tmpProperty.value = Primitive::undefinedValue();
     setVTable(staticVTable());
 
     Scope scope(engine);
-    ScopedObject protectThis(scope, this);
-
-    d()->value = *val;
-
-    d()->tmpProperty.value = Primitive::undefinedValue();
-
-    assert(d()->value.isString());
-    defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(d()->value.stringValue()->toQString().length()));
+    ScopedObject s(scope, this);
+    s->defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(value.stringValue()->toQString().length()));
 }
 
 Property *StringObject::getIndex(uint index) const

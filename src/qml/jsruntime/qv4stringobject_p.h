@@ -51,6 +51,8 @@ namespace QV4 {
 
 struct StringObject: Object {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, const ValueRef value);
+        Data(InternalClass *ic);
         Value value;
         // ### get rid of tmpProperty
         mutable Property tmpProperty;
@@ -62,14 +64,12 @@ struct StringObject: Object {
     V4_OBJECT
     Q_MANAGED_TYPE(StringObject)
 
-    StringObject(ExecutionEngine *engine, const ValueRef value);
 
     Property *getIndex(uint index) const;
 
     static bool deleteIndexedProperty(Managed *m, uint index);
 
 protected:
-    StringObject(InternalClass *ic);
     static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs);
     static void markObjects(Managed *that, ExecutionEngine *e);
 };
@@ -87,7 +87,6 @@ struct StringCtor: FunctionObject
 
 struct StringPrototype: StringObject
 {
-    StringPrototype(InternalClass *ic): StringObject(ic) {}
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_toString(CallContext *context);

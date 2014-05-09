@@ -84,11 +84,6 @@ ReturnedValue ArrayCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-ArrayPrototype::ArrayPrototype(InternalClass *ic)
-    : ArrayObject(ic)
-{
-}
-
 void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);

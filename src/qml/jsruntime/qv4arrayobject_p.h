@@ -63,8 +63,6 @@ struct ArrayCtor: FunctionObject
 
 struct ArrayPrototype: ArrayObject
 {
-    ArrayPrototype(InternalClass *ic);
-
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_isArray(CallContext *ctx);

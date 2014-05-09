@@ -53,6 +53,18 @@ namespace QV4 {
 
 struct DateObject: Object {
     struct Data : Object::Data {
+        Data(ExecutionEngine *engine, const ValueRef date)
+            : Object::Data(engine->dateClass)
+        {
+            value = date;
+        }
+        Data(ExecutionEngine *engine, const QDateTime &date);
+        Data(InternalClass *ic)
+            : Object::Data(ic)
+        {
+            Q_ASSERT(internalClass->vtable == staticVTable());
+            value = Primitive::fromDouble(qSNaN());
+        }
         Value value;
     };
     struct {
@@ -66,20 +78,7 @@ struct DateObject: Object {
     Value &date() { return d()->value; }
     void setDate(const ValueRef date) { d()->value = date; }
 
-    DateObject(ExecutionEngine *engine, const ValueRef date)
-        : Object(engine->dateClass)
-    {
-        setDate(date);
-    }
-    DateObject(ExecutionEngine *engine, const QDateTime &date);
-
     QDateTime toQDateTime() const;
-
-protected:
-    DateObject(InternalClass *ic): Object(ic) {
-        Q_ASSERT(internalClass()->vtable == staticVTable());
-        d()->value = Primitive::fromDouble(qSNaN());
-    }
 };
 
 struct DateCtor: FunctionObject
@@ -95,7 +94,6 @@ struct DateCtor: FunctionObject
 
 struct DatePrototype: DateObject
 {
-    DatePrototype(InternalClass *ic): DateObject(ic) {}
     void init(ExecutionEngine *engine, Object *ctor);
 
     static double getThisDate(ExecutionContext *ctx);

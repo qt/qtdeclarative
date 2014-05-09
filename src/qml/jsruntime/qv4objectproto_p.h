@@ -62,8 +62,6 @@ struct ObjectCtor: FunctionObject
 
 struct ObjectPrototype: Object
 {
-    ObjectPrototype(InternalClass *ic) : Object(ic) {}
-
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_getPrototypeOf(CallContext *ctx);
