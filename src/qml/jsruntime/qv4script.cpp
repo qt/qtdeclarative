@@ -78,7 +78,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    o->d()->qmlContext = reinterpret_cast<CallContext *>(s.engine->currentContext()->newQmlContext(o, qml));
     s.engine->popContext();
 }
 
@@ -96,7 +96,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Object *qml)
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    o->d()->qmlContext = reinterpret_cast<CallContext *>(s.engine->currentContext()->newQmlContext(o, qml));
     s.engine->popContext();
 }
 
@@ -111,7 +111,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
         return QV4::Encode::undefined();
 
     CallContext *ctx = This->d()->qmlContext;
-    std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
+    std::fill(ctx->d()->locals, ctx->d()->locals + ctx->d()->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
     ScopedValue result(scope, This->function()->code(ctx, This->function()->codeData));
     engine->popContext();

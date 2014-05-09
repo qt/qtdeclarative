@@ -378,7 +378,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
     ExecutionContext *context = v4->currentContext();
     callData->thisObject = obj.asReturnedValue();
-    ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
+    ExecutionContext *ctx = reinterpret_cast<ExecutionContext *>(context->newCallContext(f.getPointer(), callData));
 
     ExecutionContextSaver ctxSaver(context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
@@ -402,7 +402,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     Scope scope(context);
 
-    CallContext *ctx = context->newCallContext(f, callData);
+    CallContext *ctx = reinterpret_cast<CallContext *>(context->newCallContext(f, callData));
 
     ExecutionContextSaver ctxSaver(context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
@@ -460,21 +460,21 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);
 
-    CallContext ctx(v4);
-    ctx.d()->strictMode = f->strictMode();
-    ctx.d()->callData = callData;
+    CallContext::Data ctx(v4);
+    ctx.strictMode = f->strictMode();
+    ctx.callData = callData;
     ctx.function = f.getPointer();
-    ctx.d()->compilationUnit = f->function()->compilationUnit;
-    ctx.d()->lookups = ctx.d()->compilationUnit->runtimeLookups;
-    ctx.d()->outer = f->scope();
+    ctx.compilationUnit = f->function()->compilationUnit;
+    ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }
-    Q_ASSERT(v4->currentContext() == &ctx);
+    Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    Scoped<Object> result(scope, Q_V4_PROFILE(v4, &ctx, f->function()));
+    Scoped<Object> result(scope, Q_V4_PROFILE(v4, reinterpret_cast<CallContext *>(&ctx), f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
@@ -497,21 +497,21 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);
 
-    CallContext ctx(v4);
-    ctx.d()->strictMode = f->strictMode();
-    ctx.d()->callData = callData;
+    CallContext::Data ctx(v4);
+    ctx.strictMode = f->strictMode();
+    ctx.callData = callData;
     ctx.function = f;
-    ctx.d()->compilationUnit = f->function()->compilationUnit;
-    ctx.d()->lookups = ctx.d()->compilationUnit->runtimeLookups;
-    ctx.d()->outer = f->scope();
+    ctx.compilationUnit = f->function()->compilationUnit;
+    ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }
-    Q_ASSERT(v4->currentContext() == &ctx);
+    Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    ScopedValue result(scope, Q_V4_PROFILE(v4, &ctx, f->function()));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, reinterpret_cast<CallContext *>(&ctx), f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
@@ -560,12 +560,12 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);
 
-    CallContext ctx(v4);
-    ctx.d()->strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
-    ctx.d()->callData = callData;
-    Q_ASSERT(v4->currentContext() == &ctx);
+    CallContext::Data ctx(v4);
+    ctx.strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.callData = callData;
+    Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    return f->d()->code(&ctx);
+    return f->d()->code(reinterpret_cast<CallContext *>(&ctx));
 }
 
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
@@ -579,12 +579,12 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);
 
-    CallContext ctx(v4);
-    ctx.d()->strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
-    ctx.d()->callData = callData;
-    Q_ASSERT(v4->currentContext() == &ctx);
+    CallContext::Data ctx(v4);
+    ctx.strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.callData = callData;
+    Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    return f->d()->code(&ctx, f->d()->index);
+    return f->d()->code(reinterpret_cast<CallContext *>(&ctx), f->d()->index);
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

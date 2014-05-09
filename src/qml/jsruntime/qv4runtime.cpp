@@ -1106,7 +1106,7 @@ ExecutionContext *Runtime::pushWithScope(const ValueRef o, ExecutionContext *ctx
 {
     Scope scope(ctx);
     ScopedObject obj(scope, o->toObject(ctx));
-    return ctx->newWithContext(obj);
+    return reinterpret_cast<ExecutionContext *>(ctx->newWithContext(obj));
 }
 
 ReturnedValue Runtime::unwindException(ExecutionContext *ctx)
@@ -1120,7 +1120,7 @@ ExecutionContext *Runtime::pushCatchScope(ExecutionContext *ctx, String *excepti
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->engine()->catchException(ctx, 0));
-    return ctx->newCatchContext(exceptionVarName, v);
+    return reinterpret_cast<ExecutionContext *>(ctx->newCatchContext(exceptionVarName, v));
 }
 
 ExecutionContext *Runtime::popScope(ExecutionContext *ctx)

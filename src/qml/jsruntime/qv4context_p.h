@@ -88,6 +88,20 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     };
 
     struct Data : Managed::Data {
+        Data(ExecutionEngine *engine, ContextType t)
+            : Managed::Data(engine->executionContextClass)
+            , type(t)
+            , strictMode(false)
+            , engine(engine)
+            , parent(engine->currentContext())
+            , outer(0)
+            , lookups(0)
+            , compilationUnit(0)
+            , currentEvalCode(0)
+            , lineNumber(-1)
+        {
+            engine->current = reinterpret_cast<ExecutionContext *>(this);
+        }
         ContextType type;
         bool strictMode;
 
@@ -137,10 +151,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         engine->current = this;
     }
 
-    CallContext *newCallContext(FunctionObject *f, CallData *callData);
-    WithContext *newWithContext(Object *with);
-    CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
-    CallContext *newQmlContext(FunctionObject *f, Object *qml);
+    HeapObject *newCallContext(FunctionObject *f, CallData *callData);
+    HeapObject *newWithContext(Object *with);
+    HeapObject *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
+    HeapObject *newQmlContext(FunctionObject *f, Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -173,19 +187,28 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
 struct CallContext : public ExecutionContext
 {
-    CallContext(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
-        : ExecutionContext(engine, t)
-    {
-        function = 0;
-        locals = 0;
-        activation = 0;
-    }
-    CallContext(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
+    struct Data : ExecutionContext::Data {
+        Data(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
+            : ExecutionContext::Data(engine, t)
+        {
+            function = 0;
+            locals = 0;
+            activation = 0;
+        }
+        Data(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
 
-    FunctionObject *function;
-    int realArgumentCount;
-    Value *locals;
-    Object *activation;
+        FunctionObject *function;
+        int realArgumentCount;
+        Value *locals;
+        Object *activation;
+    };
+    struct {
+        FunctionObject *function;
+        int realArgumentCount;
+        Value *locals;
+        Object *activation;
+    } __data;
+    V4_MANAGED
 
     // formals are in reverse order
     String * const *formals() const;
@@ -204,6 +227,7 @@ inline ReturnedValue CallContext::argument(int i) {
 struct GlobalContext : public ExecutionContext
 {
     struct Data : ExecutionContext::Data {
+        Data(ExecutionEngine *engine);
         Object *global;
     };
     struct {
@@ -211,12 +235,12 @@ struct GlobalContext : public ExecutionContext
     } __data;
     V4_MANAGED
 
-    GlobalContext(ExecutionEngine *engine);
 };
 
 struct CatchContext : public ExecutionContext
 {
     struct Data : ExecutionContext::Data {
+        Data(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
         StringValue exceptionVarName;
         Value exceptionValue;
     };
@@ -225,21 +249,18 @@ struct CatchContext : public ExecutionContext
         Value exceptionValue;
     } __data;
     V4_MANAGED
-
-    CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
 };
 
 struct WithContext : public ExecutionContext
 {
     struct Data : ExecutionContext::Data {
+        Data(ExecutionEngine *engine, Object *with);
         Object *withObject;
     };
     struct {
         Object *withObject;
     } __data;
     V4_MANAGED
-
-    WithContext(ExecutionEngine *engine, Object *with);
 };
 
 inline CallContext *ExecutionContext::asCallContext()

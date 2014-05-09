@@ -210,7 +210,7 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
     } break;
     case IR::ArgLocal::Local:
     case IR::ArgLocal::ScopedLocal: {
-        loadPtr(Address(context, qOffsetOf(CallContext, locals)), baseReg);
+        loadPtr(Address(context, qOffsetOf(CallContext::Data, locals)), baseReg);
         offset = al->index * sizeof(Value);
     } break;
     default:

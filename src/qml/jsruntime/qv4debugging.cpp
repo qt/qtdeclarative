@@ -224,7 +224,7 @@ static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
 {
     while (ctxt) {
         CallContext *cCtxt = ctxt->asCallContext();
-        if (cCtxt && cCtxt->function) {
+        if (cCtxt && cCtxt->d()->function) {
             if (frame < 1)
                 return cCtxt;
             --frame;
@@ -327,7 +327,7 @@ void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int sco
                 QString qName;
                 if (String *name = ctxt->variables()[i])
                     qName = name->toQString();
-                v = ctxt->locals[i];
+                v = ctxt->d()->locals[i];
                 collector->collect(qName, v);
             }
         }
@@ -367,7 +367,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
             ExecutionContext *ctxt = findContext(engine->currentContext(), frameNr);
             while (ctxt) {
                 if (CallContext *cCtxt = ctxt->asCallContext())
-                    if (cCtxt->activation)
+                    if (cCtxt->d()->activation)
                         break;
                 ctxt = ctxt->d()->outer;
             }
@@ -376,7 +376,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
                 return false;
 
             Scope scope(engine);
-            ScopedObject o(scope, ctxt->asCallContext()->activation);
+            ScopedObject o(scope, ctxt->asCallContext()->d()->activation);
             collector->collect(o);
             return true;
         }
@@ -517,7 +517,7 @@ Function *Debugger::getFunction() const
 {
     ExecutionContext *context = m_engine->currentContext();
     if (CallContext *callCtx = context->asCallContext())
-        return callCtx->function->function();
+        return callCtx->d()->function->function();
     else {
         Q_ASSERT(context->d()->type == QV4::ExecutionContext::Type_GlobalContext);
         return context->d()->engine->globalCode;

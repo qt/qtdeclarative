@@ -73,10 +73,10 @@ ArgumentsObject::Data::Data(CallContext *context)
     } else {
         args->setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
-        args->memberData()[CalleePropertyIndex] = context->function->asReturnedValue();
+        args->memberData()[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length));
-    args->memberData()[LengthPropertyIndex] = Primitive::fromInt32(context->realArgumentCount);
+    args->memberData()[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
 }
 
 void ArgumentsObject::fullyCreate()
@@ -84,8 +84,8 @@ void ArgumentsObject::fullyCreate()
     if (fullyCreated())
         return;
 
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
-    uint argCount = qMin(context()->realArgumentCount, context()->d()->callData->argc);
+    uint numAccessors = qMin((int)context()->d()->function->formalParameterCount(), context()->d()->realArgumentCount);
+    uint argCount = qMin(context()->d()->realArgumentCount, context()->d()->callData->argc);
     ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
     context()->d()->engine->requireArgumentsAccessors(numAccessors);
     mappedArguments().ensureIndex(engine(), numAccessors);
@@ -109,7 +109,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
+    uint numAccessors = qMin((int)context()->d()->function->formalParameterCount(), context()->d()->realArgumentCount);
     if (pd && index < (uint)numAccessors)
         isMapped = arrayData()->attributes(index).isAccessor() && pd->getter() == context()->d()->engine->argumentsAccessors[index].getter();
 
@@ -188,8 +188,8 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated())
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context()->function->formalParameterCount(), args->context()->realArgumentCount);
-    uint argCount = qMin(args->context()->realArgumentCount, args->context()->d()->callData->argc);
+    uint numAccessors = qMin((int)args->context()->d()->function->formalParameterCount(), args->context()->d()->realArgumentCount);
+    uint argCount = qMin(args->context()->d()->realArgumentCount, args->context()->d()->callData->argc);
     if (index >= argCount)
         return PropertyAttributes();
     if (index >= numAccessors)

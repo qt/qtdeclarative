@@ -459,13 +459,15 @@ void ExecutionEngine::enableProfiler()
 
 void ExecutionEngine::initRootContext()
 {
-    rootContext = static_cast<GlobalContext *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
-    new (rootContext) GlobalContext(this);
-    rootContext->d()->callData = reinterpret_cast<CallData *>(rootContext + 1);
-    rootContext->d()->callData->tag = QV4::Value::_Integer_Type;
-    rootContext->d()->callData->argc = 0;
-    rootContext->d()->callData->thisObject = globalObject;
-    rootContext->d()->callData->args[0] = Encode::undefined();
+    GlobalContext::Data *r = reinterpret_cast<GlobalContext::Data *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
+    new (r) GlobalContext::Data(this);
+    r->callData = reinterpret_cast<CallData *>(r + 1);
+    r->callData->tag = QV4::Value::_Integer_Type;
+    r->callData->argc = 0;
+    r->callData->thisObject = globalObject;
+    r->callData->args[0] = Encode::undefined();
+
+    rootContext = reinterpret_cast<GlobalContext *>(r);
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -475,11 +477,11 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext *g = new (memoryManager) GlobalContext(this);
-    g->d()->callData = rootContext->d()->callData;
+    GlobalContext::Data *g = new (this) GlobalContext::Data(this);
+    g->callData = rootContext->d()->callData;
 
-    Q_ASSERT(currentContext() == g);
-    return g;
+    Q_ASSERT(currentContext() == reinterpret_cast<GlobalContext *>(g));
+    return reinterpret_cast<GlobalContext *>(g);
 }
 
 
@@ -690,7 +692,7 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
     if (ctx->d()->type != ExecutionContext::Type_QmlContext)
         return 0;
 
-    return static_cast<CallContext *>(ctx)->activation->asReturned<Object>();
+    return static_cast<CallContext *>(ctx)->d()->activation->asReturned<Object>();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
@@ -702,16 +704,16 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     QV4::ExecutionContext *c = currentContext();
     while (c && frameLimit) {
         CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->function) {
+        if (callCtx && callCtx->d()->function) {
             StackFrame frame;
-            if (callCtx->function->function())
-                frame.source = callCtx->function->function()->sourceFile();
-            name = callCtx->function->name();
+            if (callCtx->d()->function->function())
+                frame.source = callCtx->d()->function->function()->sourceFile();
+            name = callCtx->d()->function->name();
             frame.function = name->toQString();
             frame.line = -1;
             frame.column = -1;
 
-            if (callCtx->function->function())
+            if (callCtx->d()->function->function())
                 // line numbers can be negative for places where you can't set a real breakpoint
                 frame.line = qAbs(callCtx->d()->lineNumber);
 
@@ -790,9 +792,9 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     QV4::ExecutionContext *c = currentContext();
     while (c) {
         CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->function) {
-            if (callCtx->function->function())
-                base.setUrl(callCtx->function->function()->sourceFile());
+        if (callCtx && callCtx->d()->function) {
+            if (callCtx->d()->function->function())
+                base.setUrl(callCtx->d()->function->function()->sourceFile());
             break;
         }
         c = c->d()->parent;
