@@ -1201,23 +1201,27 @@ bool QQuickTextInput::hasAcceptableInput() const
 }
 
 /*!
-    \qmlsignal QtQuick::TextInput::onAccepted()
+    \qmlsignal QtQuick::TextInput::accepted()
 
-    This handler is called when the Return or Enter key is pressed.
+    This signal is emitted when the Return or Enter key is pressed.
     Note that if there is a \l validator or \l inputMask set on the text
-    input, the handler will only be emitted if the input is in an acceptable
+    input, the signal will only be emitted if the input is in an acceptable
     state.
+
+    The corresponding handler is \c onAccepted.
 */
 
 /*!
-    \qmlsignal QtQuick::TextInput::onEditingFinished()
+    \qmlsignal QtQuick::TextInput::editingFinished()
     \since 5.2
 
-    This handler is called when the Return or Enter key is pressed or
+    This signal is emitted when the Return or Enter key is pressed or
     the text input loses focus. Note that if there is a validator or
     inputMask set on the text input and enter/return is pressed, this
-    handler will only be called if the input follows
+    signal will only be emitted if the input follows
     the inputMask and the validator returns an acceptable state.
+
+    The corresponding handler is \c onEditingFinished.
 */
 
 #ifndef QT_NO_IM
@@ -2360,7 +2364,6 @@ void QQuickTextInput::setPersistentSelection(bool on)
     emit persistentSelectionChanged();
 }
 
-#ifndef QT_NO_CLIPBOARD
 /*!
     \qmlproperty bool QtQuick::TextInput::canPaste
 
@@ -2369,6 +2372,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
 */
 bool QQuickTextInput::canPaste() const
 {
+#if !defined(QT_NO_CLIPBOARD)
     Q_D(const QQuickTextInput);
     if (!d->canPasteValid) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
@@ -2376,8 +2380,10 @@ bool QQuickTextInput::canPaste() const
         const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
     }
     return d->canPaste;
-}
+#else
+    return false;
 #endif
+}
 
 /*!
     \qmlproperty bool QtQuick::TextInput::canUndo

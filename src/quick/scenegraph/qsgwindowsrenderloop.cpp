@@ -179,11 +179,11 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         RLDEBUG(" - creating GL context");
         m_gl = new QOpenGLContext();
         m_gl->setFormat(window->requestedFormat());
-        if (QSGContext::sharedOpenGLContext())
-            m_gl->setShareContext(QSGContext::sharedOpenGLContext());
+        if (QOpenGLContextPrivate::globalShareContext())
+            m_gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
         bool created = m_gl->create();
         if (!created) {
-            const bool isEs = m_gl->isES();
+            const bool isEs = m_gl->isOpenGLES();
             delete m_gl;
             m_gl = 0;
             handleContextCreationFailure(window, isEs);
@@ -341,7 +341,7 @@ QImage QSGWindowsRenderLoop::grab(QQuickWindow *window)
     d->syncSceneGraph();
     d->renderSceneGraph(window->size());
 
-    QImage image = qt_gl_read_framebuffer(window->size(), false, false);
+    QImage image = qt_gl_read_framebuffer(window->size() * window->devicePixelRatio(), false, false);
     return image;
 }
 

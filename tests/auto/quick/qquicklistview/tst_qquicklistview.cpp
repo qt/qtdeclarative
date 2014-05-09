@@ -147,6 +147,7 @@ private slots:
     void modelChanges();
     void manualHighlight();
     void initialZValues();
+    void initialZValues_data();
     void header();
     void header_data();
     void header_delayItemCreation();
@@ -222,6 +223,9 @@ private slots:
 
     void QTBUG_36481();
     void QTBUG_35920();
+
+    void roundingErrors();
+    void roundingErrors_data();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -3346,9 +3350,9 @@ void tst_QQuickListView::modelChanges()
 void tst_QQuickListView::QTBUG_9791()
 {
     QQuickView *window = createView();
-
     window->setSource(testFileUrl("strictlyenforcerange.qml"));
-    qApp->processEvents();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
     QTRY_VERIFY(listview != 0);
@@ -3465,8 +3469,9 @@ void tst_QQuickListView::QTBUG_11105()
 
 void tst_QQuickListView::initialZValues()
 {
+    QFETCH(QString, fileName);
     QQuickView *window = createView();
-    window->setSource(testFileUrl("initialZValues.qml"));
+    window->setSource(testFileUrl(fileName));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
@@ -3474,13 +3479,31 @@ void tst_QQuickListView::initialZValues()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    QVERIFY(listview->currentItem());
+    QTRY_COMPARE(listview->currentItem()->z(), listview->property("itemZ").toReal());
+
     QVERIFY(listview->headerItem());
-    QTRY_COMPARE(listview->headerItem()->z(), listview->property("initialZ").toReal());
+    QTRY_COMPARE(listview->headerItem()->z(), listview->property("headerZ").toReal());
 
     QVERIFY(listview->footerItem());
-    QTRY_COMPARE(listview->footerItem()->z(), listview->property("initialZ").toReal());
+    QTRY_COMPARE(listview->footerItem()->z(), listview->property("footerZ").toReal());
+
+    QVERIFY(listview->highlightItem());
+    QTRY_COMPARE(listview->highlightItem()->z(), listview->property("highlightZ").toReal());
+
+    QQuickText *sectionItem = 0;
+    QTRY_VERIFY(sectionItem = findItem<QQuickText>(contentItem, "section"));
+    QTRY_COMPARE(sectionItem->z(), listview->property("sectionZ").toReal());
 
     delete window;
+}
+
+void tst_QQuickListView::initialZValues_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("defaults") << "defaultZValues.qml";
+    QTest::newRow("constants") << "constantZValues.qml";
+    QTest::newRow("bindings") << "boundZValues.qml";
 }
 
 void tst_QQuickListView::header()
@@ -7027,9 +7050,7 @@ void tst_QQuickListView::outsideViewportChangeNotAffectingView()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    flick(window, QPoint(20, 200), QPoint(20, 20), 10);
-
-    QTRY_COMPARE(listview->isFlicking(), false);
+    listview->setContentY(1250);
 
     QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
     QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
@@ -7127,12 +7148,12 @@ void tst_QQuickListView::displayMargin()
 
 void tst_QQuickListView::highlightItemGeometryChanges()
 {
-    QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("HighlightResize.qml"));
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("HighlightResize.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    QScopedPointer<QObject> object(component.create());
-
-    QQuickListView *listview = qobject_cast<QQuickListView *>(object.data());
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
     QVERIFY(listview);
 
     QCOMPARE(listview->count(), 5);
@@ -7181,6 +7202,63 @@ void tst_QQuickListView::QTBUG_35920()
         }
     }
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(10,100));
+}
+
+void tst_QQuickListView::roundingErrors()
+{
+    QFETCH(bool, pixelAligned);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("roundingErrors.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    listview->setPixelAligned(pixelAligned);
+    listview->positionViewAtIndex(20, QQuickListView::Beginning);
+
+    QQuickItem *content = listview->contentItem();
+    QVERIFY(content);
+
+    const QPoint viewPos(150, 36);
+    const QPointF contentPos = content->mapFromItem(listview, viewPos);
+
+    QPointer<QQuickItem> item = listview->itemAt(contentPos.x(), contentPos.y());
+    QVERIFY(item);
+
+    // QTBUG-37339: drag an item and verify that it doesn't
+    // get prematurely released due to rounding errors
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, viewPos);
+    for (int i = 0; i < 150; i += 5) {
+        QTest::mouseMove(window.data(), viewPos - QPoint(i, 0));
+        QVERIFY(item);
+    }
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(0, 36));
+
+    // maintain position relative to the right edge
+    listview->setLayoutDirection(Qt::RightToLeft);
+    const qreal contentX = listview->contentX();
+    listview->setContentX(contentX + 0.2);
+    QCOMPARE(listview->contentX(), pixelAligned ? qRound(contentX + 0.2) : contentX + 0.2);
+    listview->setWidth(listview->width() - 0.2);
+    QCOMPARE(listview->contentX(), pixelAligned ? qRound(contentX + 0.2) : contentX + 0.2);
+
+    // maintain position relative to the bottom edge
+    listview->setOrientation(QQuickListView::Vertical);
+    listview->setVerticalLayoutDirection(QQuickListView::BottomToTop);
+    const qreal contentY = listview->contentY();
+    listview->setContentY(contentY + 0.2);
+    QCOMPARE(listview->contentY(), pixelAligned ? qRound(contentY + 0.2) : contentY + 0.2);
+    listview->setHeight(listview->height() - 0.2);
+    QCOMPARE(listview->contentY(), pixelAligned ? qRound(contentY + 0.2) : contentY + 0.2);
+}
+
+void tst_QQuickListView::roundingErrors_data()
+{
+    QTest::addColumn<bool>("pixelAligned");
+    QTest::newRow("pixelAligned=true") << true;
+    QTest::newRow("pixelAligned=false") << false;
 }
 
 QTEST_MAIN(tst_QQuickListView)

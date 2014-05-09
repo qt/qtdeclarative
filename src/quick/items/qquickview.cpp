@@ -58,16 +58,16 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_OBJECT_VTABLE(QQuickRootItemMarker);
 
-QQuickRootItemMarker::QQuickRootItemMarker(QQuickViewPrivate *view)
-    : QV4::Object(QQmlEnginePrivate::getV4Engine(view->engine.data()))
-    , view(view)
+QQuickRootItemMarker::QQuickRootItemMarker(QQmlEngine *engine, QQuickWindow *window)
+    : QV4::Object(QQmlEnginePrivate::getV4Engine(engine))
+    , window(window)
 {
     setVTable(staticVTable());
 }
 
 void QQuickRootItemMarker::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
 {
-    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->view->root;
+    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->window->contentItem();
     if (root) {
         QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
         rootPrivate->markObjects(e);
@@ -91,7 +91,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
     {
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine.data());
         QV4::Scope scope(v4);
-        QV4::Scoped<QQuickRootItemMarker> v(scope, new (v4->memoryManager) QQuickRootItemMarker(this));
+        QV4::Scoped<QQuickRootItemMarker> v(scope, new (v4->memoryManager) QQuickRootItemMarker(engine.data(), q));
         rootItemMarker = v;
     }
 

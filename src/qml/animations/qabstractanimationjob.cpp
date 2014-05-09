@@ -45,6 +45,7 @@
 #include "private/qanimationgroupjob_p.h"
 #include "private/qanimationjobutil_p.h"
 #include "private/qqmlengine_p.h"
+#include "private/qqmlglobal_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
 
@@ -53,6 +54,8 @@ QT_BEGIN_NAMESPACE
 #ifndef QT_NO_THREAD
 Q_GLOBAL_STATIC(QThreadStorage<QQmlAnimationTimer *>, animationTimer)
 #endif
+
+DEFINE_BOOL_CONFIG_OPTION(animationTickDump, QML_ANIMATION_TICK_DUMP);
 
 QAnimationJobChangeListener::~QAnimationJobChangeListener()
 {
@@ -115,6 +118,11 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
                           + (animation->direction() == QAbstractAnimationJob::Forward ? delta : -delta);
             animation->setCurrentTime(elapsed);
         }
+        if (animationTickDump()) {
+            qDebug() << "***** Dumping Animation Tree ***** ( tick:" << lastTick << "delta:" << delta << ")";
+            for (int i = 0; i < animations.count(); ++i)
+                qDebug() << animations.at(i);
+        }
         insideTick = false;
         currentAnimationIdx = 0;
     }
@@ -153,7 +161,8 @@ void QQmlAnimationTimer::startAnimations()
 void QQmlAnimationTimer::stopTimer()
 {
     stopTimerPending = false;
-    if (animations.isEmpty() && !startAnimationPending) {
+    bool pendingStart = startAnimationPending && animationsToStart.size() > 0;
+    if (animations.isEmpty() && !pendingStart) {
         QUnifiedTimer::resumeAnimationTimer(this);
         QUnifiedTimer::stopAnimationTimer(this);
         // invalidate the start reference time
@@ -371,6 +380,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
         {
             // this ensures that the value is updated now that the animation is running
             if (oldState == Stopped) {
+                m_currentLoop = 0;
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
                     RETURN_IF_DELETED(QQmlAnimationTimer::ensureTimerUpdate());
@@ -644,6 +654,21 @@ void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeLis
             break;
         }
     }
+}
+
+void QAbstractAnimationJob::debugAnimation(QDebug d) const
+{
+    d << "AbstractAnimationJob(" << hex << (void *) this << dec << ")" << "duration:" << duration();
+}
+
+QDebug operator<<(QDebug d, const QAbstractAnimationJob *job)
+{
+    if (!job) {
+        d << "AbstractAnimationJob(null)";
+        return d;
+    }
+    job->debugAnimation(d);
+    return d;
 }
 
 QT_END_NAMESPACE

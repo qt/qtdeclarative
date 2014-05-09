@@ -40,8 +40,9 @@
 ****************************************************************************/
 
 #include <private/qqmlbundle_p.h>
-#include <private/qqmlscript_p.h>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QSet>
+#include <QtCore/QStringList>
 #include <iostream>
 
 static bool createBundle(const QString &fileName, const QStringList &fileNames)

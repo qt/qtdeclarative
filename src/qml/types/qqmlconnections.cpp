@@ -46,6 +46,7 @@
 #include <private/qqmlboundsignal_p.h>
 #include <qqmlcontext.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qqmlcompiler_p.h>
 #include <qqmlinfo.h>
 
 #include <QtCore/qdebug.h>
@@ -68,6 +69,7 @@ public:
     bool componentcomplete;
 
     QByteArray data;
+    QQmlRefPointer<QQmlCompiledData> cdata;
 };
 
 /*!
@@ -203,17 +205,14 @@ void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
     d->ignoreUnknownSignals = ignore;
 }
 
-QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &props)
+QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
-    Q_UNUSED(objectIndex)
     QByteArray rv;
     QDataStream ds(&rv, QIODevice::WriteOnly);
 
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
         QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
-        int propLine = binding->location.line;
-        int propColumn = binding->location.column;
 
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
@@ -233,21 +232,19 @@ QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlU
             return QByteArray();
         } else {
             ds << propName;
-            ds << binding->valueAsString(&qmlUnit->header);
-            ds << propLine;
-            ds << propColumn;
+            ds << bindingIdentifier(binding);
         }
     }
 
     return rv;
 }
 
-void QQmlConnectionsParser::setCustomData(QObject *object,
-                                            const QByteArray &data)
+void QQmlConnectionsParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *cdata)
 {
     QQmlConnectionsPrivate *p =
         static_cast<QQmlConnectionsPrivate *>(QObjectPrivate::get(object));
     p->data = data;
+    p->cdata = cdata;
 }
 
 
@@ -261,12 +258,8 @@ void QQmlConnections::connectSignals()
     while (!ds.atEnd()) {
         QString propName;
         ds >> propName;
-        QString script;
-        ds >> script;
-        int line;
-        ds >> line;
-        int column;
-        ds >> column;
+        int bindingId;
+        ds >> bindingId;
 
         QQmlProperty prop(target(), propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {
@@ -274,19 +267,15 @@ void QQmlConnections::connectSignals()
             QQmlBoundSignal *signal =
                 new QQmlBoundSignal(target(), signalIndex, this, qmlEngine(this));
 
-            QString location;
             QQmlContextData *ctxtdata = 0;
             QQmlData *ddata = QQmlData::get(this);
             if (ddata) {
                 ctxtdata = ddata->outerContext;
-                if (ctxtdata && !ctxtdata->url.isEmpty())
-                    location = ddata->outerContext->urlString;
             }
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target(), signalIndex,
-                                              ctxtdata, this, script,
-                                              location, line, column) : 0;
+                                              ctxtdata, this, d->cdata->functionForBindingId(bindingId)) : 0;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

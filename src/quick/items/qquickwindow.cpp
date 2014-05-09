@@ -286,7 +286,7 @@ void QQuickWindow::update()
     Q_D(QQuickWindow);
     if (d->windowManager)
         d->windowManager->update(this);
-    else
+    else if (d->renderControl)
         d->renderControl->update();
 }
 
@@ -450,6 +450,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         sg = renderControl->sceneGraphContext();
         context = renderControl->renderContext(sg);
     } else {
+        windowManager->addWindow(q);
         sg = windowManager->sceneGraphContext();
         context = windowManager->createRenderContext(sg);
     }
@@ -975,8 +976,6 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     For easily displaying a scene from a QML file, see \l{QQuickView}.
 
-
-
     \section1 Rendering
 
     QQuickWindow uses a scene graph on top of OpenGL to
@@ -1031,6 +1030,9 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     scene graph and its OpenGL context being deleted. The
     sceneGraphInvalidated() signal will be emitted when this happens.
 
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
+
     \sa {Scene Graph - OpenGL Under QML}
 
 */
@@ -1077,10 +1079,12 @@ QQuickWindow::~QQuickWindow()
     Q_D(QQuickWindow);
 
     d->animationController->deleteLater();
-    if (d->renderControl)
+    if (d->renderControl) {
         d->renderControl->windowDestroyed();
-    else
+    } else if (d->windowManager) {
+        d->windowManager->removeWindow(this);
         d->windowManager->windowDestroyed(this);
+    }
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
@@ -1089,8 +1093,6 @@ QQuickWindow::~QQuickWindow()
 #endif
     delete d->contentItem; d->contentItem = 0;
 }
-
-
 
 /*!
     This function tries to release redundant resources currently held by the QML scene.
@@ -1289,9 +1291,11 @@ bool QQuickWindow::event(QEvent *e)
         QTouchEvent *touch = static_cast<QTouchEvent*>(e);
         d->translateTouchEvent(touch);
         d->deliverTouchEvent(touch);
-        // we consume all touch events ourselves to avoid duplicate
-        // mouse delivery by QtGui mouse synthesis
-        e->accept();
+        if (Q_LIKELY(qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+            // we consume all touch events ourselves to avoid duplicate
+            // mouse delivery by QtGui mouse synthesis
+            e->accept();
+        }
         return true;
     }
         break;
@@ -2389,9 +2393,9 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
     const bool isDebug = QLibraryInfo::isDebugBuild();
     const QString eglLibName = QLatin1String(isDebug ? "libEGLd.dll" : "libEGL.dll");
     const QString glesLibName = QLatin1String(isDebug ? "libGLESv2d.dll" : "libGLESv2.dll");
-     //: %1 Context type (Open GL, EGL), ANGLE %2, %3 library names
+     //: %1 Context type (Open GL, EGL), %2 format, ANGLE %3, %4 library names
     const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
-        "Failed to create %1 context for format %2."
+        "Failed to create %1 context for format %2.\n"
         "This is most likely caused by not having the necessary graphics drivers installed.\n\n"
         "Install a driver providing OpenGL 2.0 or higher, or, if this is not possible, "
         "make sure the ANGLE Open GL ES 2.0 emulation libraries (%3, %4 and d3dcompiler_*.dll) "
@@ -2784,7 +2788,7 @@ void QQuickWindow::maybeUpdate()
     Q_D(QQuickWindow);
     if (d->renderControl)
         d->renderControl->maybeUpdate();
-    else
+    else if (d->windowManager)
         d->windowManager->maybeUpdate(this);
 }
 
@@ -2856,12 +2860,12 @@ QOpenGLContext *QQuickWindow::openglContext() const
 /*!
     \fn void QQuickWindow::sceneGraphError(SceneGraphError error, const QString &message)
 
-    This signal is emitted when an error occurred during scene graph initialization.
+    This signal is emitted when an \a error occurred during scene graph initialization.
 
     Applications should connect to this signal if they wish to handle errors,
     like OpenGL context creation failures, in a custom way. When no slot is
     connected to the signal, the behavior will be different: Quick will print
-    the message, or show a message box, and terminate the application.
+    the \a message, or show a message box, and terminate the application.
 
     This signal will be emitted from the gui thread.
 
@@ -2908,7 +2912,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 */
 
 /*!
-    \qmlsignal closing(CloseEvent close)
+    \qmlsignal QtQuick.Window::Window::closing(CloseEvent close)
     \since 5.1
 
     This signal is emitted when the user tries to close the window.
@@ -2917,6 +2921,8 @@ QOpenGLContext *QQuickWindow::openglContext() const
     property is true by default so that the window is allowed to close; but you
     can implement an onClosing() handler and set close.accepted = false if
     you need to do something else before the window can be closed.
+
+    The corresponding handler is \c onClosing.
  */
 
 
@@ -3042,7 +3048,7 @@ QImage QQuickWindow::grabWindow()
 
         QOpenGLContext context;
         context.setFormat(requestedFormat());
-        context.setShareContext(QSGContext::sharedOpenGLContext());
+        context.setShareContext(QOpenGLContextPrivate::globalShareContext());
         context.create();
         context.makeCurrent(this);
         d->context->initialize(&context);
@@ -3051,7 +3057,7 @@ QImage QQuickWindow::grabWindow()
         d->syncSceneGraph();
         d->renderSceneGraph(size());
 
-        QImage image = qt_gl_read_framebuffer(size(), false, false);
+        QImage image = qt_gl_read_framebuffer(size() * devicePixelRatio(), false, false);
         d->cleanupNodesOnShutdown();
         d->context->invalidate();
         context.doneCurrent();
@@ -3059,7 +3065,11 @@ QImage QQuickWindow::grabWindow()
         return image;
     }
 
-    return d->renderControl ? d->renderControl->grab() : d->windowManager->grab(this);
+    if (d->renderControl)
+        return d->renderControl->grab();
+    else if (d->windowManager)
+        return d->windowManager->grab(this);
+    return QImage();
 }
 
 /*!
@@ -3244,8 +3254,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 
-    \sa scenegraphInvalidated()
-
+    \sa sceneGraphInvalidated()
     \since 5.3
  */
 
@@ -3303,6 +3312,10 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     support QSGTexture::Repeat. Other values from CreateTextureOption are
     ignored.
 
+    The returned texture will be using \c GL_TEXTURE_2D as texture target and
+    \c GL_RGBA as internal format. Reimplement QSGTexture to create textures
+    with different parameters.
+
     \warning This function will return 0 if the scene graph has not yet been
     initialized.
 
@@ -3314,7 +3327,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 
     This function can be called from any thread.
 
-    \sa sceneGraphInitialized()
+    \sa sceneGraphInitialized(), QSGTexture
  */
 
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
@@ -3337,13 +3350,17 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
     The caller of the function is responsible for deleting the returned texture.
 
+    The returned texture will be using \c GL_TEXTURE_2D as texture target and
+    assumes that internal format is \c {GL_RGBA}. Reimplement QSGTexture to
+    create textures with different parameters.
+
     Use \a options to customize the texture attributes. The TextureUsesAtlas
     option is ignored.
 
     \warning This function will return 0 if the scenegraph has not yet been
     initialized.
 
-    \sa sceneGraphInitialized()
+    \sa sceneGraphInitialized(), QSGTexture
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {

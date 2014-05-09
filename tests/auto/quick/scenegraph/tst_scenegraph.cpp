@@ -119,7 +119,7 @@ bool compareImages(const QImage &ia, const QImage &ib)
 
     int w = ia.width();
     int h = ia.height();
-    const int tolerance = 1;
+    const int tolerance = 5;
     for (int y=0; y<h; ++y) {
         const uint *as= (const uint *) ia.constScanLine(y);
         const uint *bs= (const uint *) ib.constScanLine(y);
@@ -328,6 +328,7 @@ void tst_SceneGraph::render_data()
           << "data/render_StackingOrder.qml"
           << "data/render_Mipmap.qml"
           << "data/render_ImageFiltering.qml"
+          << "data/render_bug37555.qml"
         ;
 
     QRegExp sampleCount("#samples: *(\\d+)");

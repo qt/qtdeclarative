@@ -59,7 +59,7 @@ namespace QV4 {
 class ExecutableAllocator;
 struct Function;
 
-class Q_QML_EXPORT EvalInstructionSelection
+class Q_QML_PRIVATE_EXPORT EvalInstructionSelection
 {
 public:
     EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
@@ -90,7 +90,7 @@ protected:
     IR::Module *irModule;
 };
 
-class Q_QML_EXPORT EvalISelFactory
+class Q_QML_PRIVATE_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
@@ -99,7 +99,7 @@ public:
 };
 
 namespace IR {
-class Q_QML_EXPORT IRDecoder: protected IR::StmtVisitor
+class Q_QML_PRIVATE_EXPORT IRDecoder: protected IR::StmtVisitor
 {
 public:
     IRDecoder() : _function(0) {}
@@ -125,7 +125,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinReThrow() = 0;
     virtual void callBuiltinUnwindException(IR::Temp *) = 0;
     virtual void callBuiltinPushCatchScope(const QString &exceptionName) = 0;
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result) = 0;
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result) = 0;
     virtual void callBuiltinPushWithScope(IR::Temp *arg) = 0;
     virtual void callBuiltinPopScope() = 0;

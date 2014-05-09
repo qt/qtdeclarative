@@ -129,7 +129,7 @@ uint PropertyHash::lookup(const Identifier *identifier) const
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
     , prototype(0)
-    , vtable(&Managed::static_vtbl)
+    , vtable(&QV4::Managed::static_vtbl)
     , m_sealed(0)
     , m_frozen(0)
     , size(0)
@@ -138,7 +138,8 @@ InternalClass::InternalClass(ExecutionEngine *engine)
 
 
 InternalClass::InternalClass(const QV4::InternalClass &other)
-    : engine(other.engine)
+    : QQmlJS::Managed()
+    , engine(other.engine)
     , prototype(other.prototype)
     , vtable(other.vtable)
     , propertyTable(other.propertyTable)
@@ -160,10 +161,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
 
     if (newClass->size > object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size + 1);
-        memmove(object->memberData + idx + 2, object->memberData + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
+        memmove(object->memberData.data() + idx + 2, object->memberData.data() + idx + 1, (object->internalClass->size - idx - 1)*sizeof(Value));
     } else if (newClass->size < object->internalClass->size) {
         Q_ASSERT(newClass->size == object->internalClass->size - 1);
-        memmove(object->memberData + idx + 1, object->memberData + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
+        memmove(object->memberData.data() + idx + 1, object->memberData.data() + idx + 2, (object->internalClass->size - idx - 2)*sizeof(Value));
     }
     object->internalClass = newClass;
 }
@@ -368,7 +369,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     // remove the entry in memberdata
-    memmove(object->memberData + propIdx, object->memberData + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
+    memmove(object->memberData.data() + propIdx, object->memberData.data() + propIdx + 1, (object->internalClass->size - propIdx)*sizeof(Value));
 
     oldClass->transitions.insert(t, object->internalClass);
 }
@@ -455,20 +456,24 @@ void InternalClass::destroy()
     transitions.clear();
 }
 
-void InternalClass::markObjects()
+struct InternalClassPoolVisitor
 {
-    // all prototype changes are done on the empty class
-    Q_ASSERT(!prototype);
+    ExecutionEngine *engine;
+    void operator()(InternalClass *klass)
+    {
+        // all prototype changes are done on the empty class
+        Q_ASSERT(!klass->prototype || klass != engine->emptyClass);
 
-    for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
-         it != end; ++it) {
-        if (it.key().flags == Transition::VTableChange) {
-            it.value()->markObjects();
-        } else if (it.key().flags == Transition::ProtoChange) {
-            Q_ASSERT(it.value()->prototype);
-            it.value()->prototype->mark(engine);
-        }
+        if (klass->prototype)
+            klass->prototype->mark(engine);
     }
+};
+
+void InternalClassPool::markObjects(ExecutionEngine *engine)
+{
+    InternalClassPoolVisitor v;
+    v.engine = engine;
+    visitManagedPool<InternalClass, InternalClassPoolVisitor>(v);
 }
 
 QT_END_NAMESPACE

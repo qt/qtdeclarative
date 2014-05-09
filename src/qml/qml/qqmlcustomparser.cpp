@@ -47,8 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlScript;
-
 /*!
     \class QQmlCustomParser
     \brief The QQmlCustomParser class allows you to add new arbitrary types to QML.
@@ -102,7 +100,7 @@ void QQmlCustomParser::clearErrors()
 
     An error is generated referring to the \a location in the source file.
 */
-void QQmlCustomParser::error(const CompiledData::Location &location, const QString &description)
+void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
     error.setLine(location.line);
@@ -142,11 +140,6 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QV4::CompiledData::Binding *binding)
 {
     return compiler->bindingIdentifier(binding, this);
-}
-
-QQmlJS::AST::Node *QQmlCustomParser::astForBinding(int objectIndex, int scriptIndex) const
-{
-    return compiler->astForBinding(objectIndex, scriptIndex);
 }
 
 struct StaticQtMetaObject : public QObject

@@ -61,8 +61,6 @@ QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
   rootPropertyCache(0), compilationUnit(0), qmlUnit(0), totalBindingsCount(0), totalParserStatusCount(0)
 {
     Q_ASSERT(engine);
-
-    bytecode.reserve(1024);
 }
 
 void QQmlCompiledData::destroy()

@@ -76,74 +76,12 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 using namespace WTF;
 
-static const std::size_t CHUNK_SIZE = 1024*32;
-
-#if OS(WINCE)
-void* g_stackBase = 0;
-
-inline bool isPageWritable(void* page)
-{
-    MEMORY_BASIC_INFORMATION memoryInformation;
-    DWORD result = VirtualQuery(page, &memoryInformation, sizeof(memoryInformation));
-
-    // return false on error, including ptr outside memory
-    if (result != sizeof(memoryInformation))
-        return false;
-
-    DWORD protect = memoryInformation.Protect & ~(PAGE_GUARD | PAGE_NOCACHE);
-    return protect == PAGE_READWRITE
-        || protect == PAGE_WRITECOPY
-        || protect == PAGE_EXECUTE_READWRITE
-        || protect == PAGE_EXECUTE_WRITECOPY;
-}
-
-static void* getStackBase(void* previousFrame)
-{
-    // find the address of this stack frame by taking the address of a local variable
-    bool isGrowingDownward;
-    void* thisFrame = (void*)(&isGrowingDownward);
-
-    isGrowingDownward = previousFrame < &thisFrame;
-    static DWORD pageSize = 0;
-    if (!pageSize) {
-        SYSTEM_INFO systemInfo;
-        GetSystemInfo(&systemInfo);
-        pageSize = systemInfo.dwPageSize;
-    }
-
-    // scan all of memory starting from this frame, and return the last writeable page found
-    register char* currentPage = (char*)((DWORD)thisFrame & ~(pageSize - 1));
-    if (isGrowingDownward) {
-        while (currentPage > 0) {
-            // check for underflow
-            if (currentPage >= (char*)pageSize)
-                currentPage -= pageSize;
-            else
-                currentPage = 0;
-            if (!isPageWritable(currentPage))
-                return currentPage + pageSize;
-        }
-        return 0;
-    } else {
-        while (true) {
-            // guaranteed to complete because isPageWritable returns false at end of memory
-            currentPage += pageSize;
-            if (!isPageWritable(currentPage))
-                return currentPage;
-        }
-    }
-}
-#endif
-
 struct MemoryManager::Data
 {
-    bool enableGC;
     bool gcBlocked;
-    bool scribble;
     bool aggressiveGC;
-    bool exactGC;
+    bool gcStats;
     ExecutionEngine *engine;
-    quintptr *stackTop;
 
     enum { MaxItemSize = 512 };
     Managed *smallItems[MaxItemSize/16];
@@ -153,6 +91,7 @@ struct MemoryManager::Data
     int totalItems;
     int totalAlloc;
     uint maxShift;
+    std::size_t maxChunkSize;
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -172,35 +111,40 @@ struct MemoryManager::Data
 
     LargeItem *largeItems;
 
+    GCDeletable *deletable;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
     QVector<unsigned> allocSizeCounters;
 #endif // DETAILED_MM_STATS
 
-    Data(bool enableGC)
-        : enableGC(enableGC)
-        , gcBlocked(false)
+    Data()
+        : gcBlocked(false)
         , engine(0)
-        , stackTop(0)
         , totalItems(0)
         , totalAlloc(0)
-        , maxShift(10)
+        , maxShift(6)
+        , maxChunkSize(32*1024)
         , largeItems(0)
+        , deletable(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
-        scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = qgetenv("QV4_MM_CONSERVATIVE_GC").isEmpty();
+        gcStats = !qgetenv("QV4_MM_STATS").isEmpty();
 
         QByteArray overrideMaxShift = qgetenv("QV4_MM_MAXBLOCK_SHIFT");
         bool ok;
         uint override = overrideMaxShift.toUInt(&ok);
         if (ok && override <= 11 && override > 0)
             maxShift = override;
+
+        QByteArray maxChunkString = qgetenv("QV4_MM_MAX_CHUNK_SIZE");
+        std::size_t tmpMaxChunkSize = maxChunkString.toUInt(&ok);
+        if (ok)
+            maxChunkSize = tmpMaxChunkSize;
     }
 
     ~Data()
@@ -209,10 +153,6 @@ struct MemoryManager::Data
             i->memory.deallocate();
     }
 };
-
-#define SCRIBBLE(obj, c, size) \
-    if (m_d->scribble) \
-        ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 
 
 namespace QV4 {
@@ -225,58 +165,13 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 } // namespace QV4
 
 MemoryManager::MemoryManager()
-    : m_d(new Data(true))
+    : m_d(new Data)
     , m_persistentValues(0)
     , m_weakValues(0)
 {
-    setEnableGC(true);
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
-
-#if OS(QNX)
-    // TLS is at the top of each thread's stack,
-    // so the stack base for thread is the result of __tls()
-    m_d->stackTop = reinterpret_cast<quintptr *>(
-          (((quintptr)__tls() + __PAGESIZE - 1) & ~(__PAGESIZE - 1)));
-#elif USE(PTHREADS)
-#  if OS(DARWIN)
-    void *st = pthread_get_stackaddr_np(pthread_self());
-    m_d->stackTop = static_cast<quintptr *>(st);
-#  else
-    void* stackBottom = 0;
-    pthread_attr_t attr;
-#if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
-    if (pthread_attr_get_np(pthread_self(), &attr) == 0) {
-#else
-    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
-#endif
-        size_t stackSize = 0;
-        pthread_attr_getstack(&attr, &stackBottom, &stackSize);
-        pthread_attr_destroy(&attr);
-
-        m_d->stackTop = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
-    } else {
-        // can't scan the native stack so have to rely on exact gc
-        m_d->stackTop = 0;
-        m_d->exactGC = true;
-    }
-#  endif
-#elif OS(WINCE)
-    if (false && g_stackBase) {
-        // This code path is disabled as we have no way of initializing it yet
-        m_d->stackTop = static_cast<quintptr *>(g_stackBase);
-    } else {
-        int dummy;
-        m_d->stackTop = static_cast<quintptr *>(getStackBase(&dummy));
-    }
-#elif OS(WINDOWS)
-    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
-    m_d->stackTop = static_cast<quintptr*>(tib->StackBase);
-#else
-#  error "Unsupported platform: no way to get the top-of-stack."
-#endif
-
 }
 
 Managed *MemoryManager::alloc(std::size_t size)
@@ -316,11 +211,11 @@ Managed *MemoryManager::alloc(std::size_t size)
 
     // no free item available, allocate a new chunk
     {
-        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (32MB by default)
+        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (2MB by default)
         uint shift = ++m_d->nChunks[pos];
         if (shift > m_d->maxShift)
             shift = m_d->maxShift;
-        std::size_t allocSize = CHUNK_SIZE*(size_t(1) << shift);
+        std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
@@ -329,9 +224,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
-#ifndef QT_NO_DEBUG
-        memset(chunk, 0, allocation.memory.size());
-#endif
+
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
@@ -381,37 +274,6 @@ void MemoryManager::mark()
     }
 
     collectFromJSStack();
-
-    if (!m_d->exactGC) {
-        // push all caller saved registers to the stack, so we can find the objects living in these registers
-#if COMPILER(MSVC) && !OS(WINRT) // WinRT must use exact GC
-#  if CPU(X86_64)
-        HANDLE thread = GetCurrentThread();
-        WOW64_CONTEXT ctxt;
-        /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
-#  elif CPU(X86)
-        HANDLE thread = GetCurrentThread();
-        CONTEXT ctxt;
-        /*bool success =*/ GetThreadContext(thread, &ctxt);
-#  endif // CPU
-#elif COMPILER(CLANG) || COMPILER(GCC)
-#  if CPU(X86_64)
-        quintptr regs[5];
-        asm(
-            "mov %%rbp, %0\n"
-            "mov %%r12, %1\n"
-            "mov %%r13, %2\n"
-            "mov %%r14, %3\n"
-            "mov %%r15, %4\n"
-            : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
-            :
-            :
-        );
-#  endif // CPU
-#endif // COMPILER
-
-        collectFromStack();
-    }
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -483,11 +345,8 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    GCDeletable *deletable = 0;
-    GCDeletable **firstDeletable = &deletable;
-
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
+        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
 
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
@@ -500,13 +359,16 @@ void MemoryManager::sweep(bool lastSweep)
             i = i->next;
             continue;
         }
+        if (m->internalClass->vtable->destroy)
+            m->internalClass->vtable->destroy(m);
 
         *last = i->next;
         free(i);
         i = *last;
     }
 
-    deletable = *firstDeletable;
+    GCDeletable *deletable = m_d->deletable;
+    m_d->deletable = 0;
     while (deletable) {
         GCDeletable *next = deletable->next;
         deletable->lastCall = lastSweep;
@@ -515,7 +377,7 @@ void MemoryManager::sweep(bool lastSweep)
     }
 }
 
-void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
+void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
     Managed **f = &m_d->smallItems[size >> 4];
@@ -538,10 +400,8 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                Object *o = m->asObject();
-                if (o && o->vtable()->collectDeletables)
-                    o->vtable()->collectDeletables(m, deletable);
-                m->internalClass->vtable->destroy(m);
+                if (m->internalClass->vtable->destroy)
+                    m->internalClass->vtable->destroy(m);
 
                 memset(m, 0, size);
                 m->setNextFree(*f);
@@ -550,7 +410,6 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
                 VALGRIND_MEMPOOL_FREE(this, m);
 #endif
                 *f = m;
-                SCRIBBLE(m, 0x99, size);
             }
         }
     }
@@ -571,32 +430,57 @@ void MemoryManager::setGCBlocked(bool blockGC)
 
 void MemoryManager::runGC()
 {
-    if (!m_d->enableGC || m_d->gcBlocked) {
+    if (m_d->gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
     }
 
-//    QTime t; t.start();
+    if (!m_d->gcStats) {
+        mark();
+        sweep();
+    } else {
+        int totalMem = 0;
+        for (int i = 0; i < m_d->heapChunks.size(); ++i)
+            totalMem += m_d->heapChunks.at(i).memory.size();
 
-//    qDebug() << ">>>>>>>>runGC";
+        QTime t;
+        t.start();
+        mark();
+        int markTime = t.elapsed();
+        t.restart();
+        int usedBefore = getUsedMem();
+        sweep();
+        int usedAfter = getUsedMem();
+        int sweepTime = t.elapsed();
 
-    mark();
-//    std::cerr << "GC: marked " << marks
-//              << " objects in " << t.elapsed()
-//              << "ms" << std::endl;
+        qDebug() << "========== GC ==========";
+        qDebug() << "Marked object in" << markTime << "ms.";
+        qDebug() << "Sweeped object in" << sweepTime << "ms.";
+        qDebug() << "Allocated" << totalMem << "bytes in" << m_d->heapChunks.size() << "chunks.";
+        qDebug() << "Used memory before GC:" << usedBefore;
+        qDebug() << "Used memory after GC:" << usedAfter;
+        qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
+        qDebug() << "======== End GC ========";
+    }
 
-//    t.restart();
-    /*std::size_t freedCount =*/ sweep();
-//    std::cerr << "GC: sweep freed " << freedCount
-//              << " objects in " << t.elapsed()
-//              << "ms" << std::endl;
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
     m_d->totalAlloc = 0;
 }
 
-void MemoryManager::setEnableGC(bool enableGC)
+uint MemoryManager::getUsedMem()
 {
-    m_d->enableGC = enableGC;
+    uint usedMem = 0;
+    for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
+        char *chunkStart = reinterpret_cast<char *>(i->memory.base());
+        char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
+        for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
+            Managed *m = reinterpret_cast<Managed *>(chunk);
+            Q_ASSERT((qintptr) chunk % 16 == 0);
+            if (m->inUse)
+                usedMem += i->chunkSize;
+        }
+    }
+    return usedMem;
 }
 
 MemoryManager::~MemoryManager()
@@ -636,6 +520,12 @@ void MemoryManager::dumpStats() const
 #endif // DETAILED_MM_STATS
 }
 
+void MemoryManager::registerDeletable(GCDeletable *d)
+{
+    d->next = m_d->deletable;
+    m_d->deletable = d;
+}
+
 ExecutionEngine *MemoryManager::engine() const
 {
     return m_d->engine;
@@ -652,57 +542,6 @@ void MemoryManager::willAllocate(std::size_t size)
 }
 
 #endif // DETAILED_MM_STATS
-
-void MemoryManager::collectFromStack() const
-{
-    quintptr valueOnStack = 0;
-
-    if (!m_d->heapChunks.count())
-        return;
-
-    quintptr *current = (&valueOnStack) + 1;
-//    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
-
-#if V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(current, (m_d->stackTop - current)*sizeof(quintptr));
-#endif
-
-    char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
-    char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
-    int i = 0;
-    for (QVector<Data::Chunk>::Iterator it = m_d->heapChunks.begin(), end =
-         m_d->heapChunks.end(); it != end; ++it) {
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) - 1;
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
-    }
-    Q_ASSERT(i == m_d->heapChunks.count() * 2);
-
-    for (; current < m_d->stackTop; ++current) {
-        char* genericPtr = reinterpret_cast<char *>(*current);
-
-        if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
-            continue;
-        int index = std::lower_bound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
-        // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
-        Q_ASSERT(index >= 0 && index < m_d->heapChunks.count() * 2);
-        if (index & 1) {
-            int size = m_d->heapChunks.at(index >> 1).chunkSize;
-            Managed *m = reinterpret_cast<Managed *>(genericPtr);
-//            qDebug() << "   inside" << size;
-
-            if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1] - 1   ) % size)
-                // wrongly aligned value, skip it
-                continue;
-
-            if (!m->inUse)
-                // Skip pointers to already freed objects, they are bogus as well
-                continue;
-
-//            qDebug() << "       marking";
-            m->mark(m_d->engine);
-        }
-    }
-}
 
 void MemoryManager::collectFromJSStack() const
 {

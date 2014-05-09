@@ -64,6 +64,7 @@
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4mm_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -681,9 +682,16 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
     if (!setQmlProperty(v4->currentContext(), qmlContext, that->m_object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, value)) {
-        QString error = QLatin1String("Cannot assign to non-existent property \"") +
-                        name->toQString() + QLatin1Char('\"');
-        v4->currentContext()->throwError(error);
+        QQmlData *ddata = QQmlData::get(that->m_object);
+        // Types created by QML are not extensible at run-time, but for other QObjects we can store them
+        // as regular JavaScript properties, like on JavaScript objects.
+        if (ddata && ddata->context) {
+            QString error = QLatin1String("Cannot assign to non-existent property \"") +
+                            name->toQString() + QLatin1Char('\"');
+            v4->currentContext()->throwError(error);
+        } else {
+            QV4::Object::put(m, name, value);
+        }
     }
 }
 
@@ -1004,10 +1012,13 @@ namespace {
     };
 }
 
-void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
+void QObjectWrapper::destroy(Managed *that)
 {
-    QObjectWrapper *This = static_cast<QObjectWrapper*>(m);
-    QPointer<QObject> &object = This->m_object;
+    QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
+    QPointer<QObject> object = This->m_object;
+    ExecutionEngine *engine = This->engine();
+    This->~QObjectWrapper();
+    This = 0;
     if (!object)
         return;
 
@@ -1019,12 +1030,11 @@ void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
         return;
 
     QObjectDeleter *deleter = new QObjectDeleter(object);
-    object = 0;
-    deleter->next = *deletable;
-    *deletable = deleter;
+    engine->memoryManager->registerDeletable(deleter);
 }
 
-DEFINE_MANAGED_VTABLE_WITH_DELETABLES(QObjectWrapper);
+
+DEFINE_OBJECT_VTABLE(QObjectWrapper);
 
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread
@@ -1314,6 +1324,11 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
             mo = mo->superClass();
             methodOffset -= QMetaObject_methods(mo);
         }
+
+        // If we've been called before with the same override index, then
+        // we can't go any further...
+        if (&dummy == current && dummy.coreIndex == current->overrideIndex)
+            return 0;
 
         QMetaMethod method = mo->method(current->overrideIndex);
         dummy.load(method);

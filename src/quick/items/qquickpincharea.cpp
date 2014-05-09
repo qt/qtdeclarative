@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
     \li \c previousScale is the scale factor of the previous event.
     \endlist
 
-    When a pinch gesture is started, the scale is 1.0.
+    When a pinch gesture is started, the scale is \c 1.0.
 */
 
 /*!
@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
     \li \c rotation is the total rotation since the pinch gesture started.
     \endlist
 
-    When a pinch gesture is started, the rotation is 0.0.
+    When a pinch gesture is started, the rotation is \c 0.0.
 */
 
 /*!
@@ -190,33 +190,50 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchStarted()
+    \qmlsignal QtQuick::PinchArea::pinchStarted()
 
-    This handler is called when the pinch area detects that a pinch gesture has started.
+    This signal is emitted when the pinch area detects that a pinch gesture has
+    started: two touch points (fingers) have been detected, and they have moved
+    beyond the \l {QStyleHints}{startDragDistance} threshold for the gesture to begin.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    property) provides information about the pinch gesture, including the scale,
+    center and angle of the pinch. At the time of the \c pinchStarted signal,
+    these values are reset to the default values, regardless of the results
+    from previous gestures: pinch.scale will be \c 1.0 and pinch.rotation will be \c 0.0.
+    As the gesture progresses, \l pinchUpdated will report the deviation from those
+    defaults.
 
     To ignore this gesture set the \c pinch.accepted property to false.  The gesture
     will be canceled and no further events will be sent.
+
+    The corresponding handler is \c onPinchStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchUpdated()
+    \qmlsignal QtQuick::PinchArea::pinchUpdated()
 
-    This handler is called when the pinch area detects that a pinch gesture has changed.
+    This signal is emitted when the pinch area detects that a pinch gesture has changed.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch
+    gesture, including the scale, center and angle of the pinch. These values
+    reflect changes only since the beginning of the current gesture, and
+    therefore are not limited by the minimum and maximum limits in the
+    \l {PinchArea}{pinch} property.
+
+    The corresponding handler is \c onPinchUpdated.
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::onPinchFinished()
+    \qmlsignal QtQuick::PinchArea::pinchFinished()
 
-    This handler is called when the pinch area detects that a pinch gesture has finished.
+    This signal is emitted when the pinch area detects that a pinch gesture has finished.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
-    including the scale, center and angle of the pinch.
+    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    property) provides information about the pinch gesture, including the
+    scale, center and angle of the pinch.
+
+    The corresponding handler is \c onPinchFinished.
 */
 
 
@@ -239,8 +256,8 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \list
     \li \c pinch.target specifies the id of the item to drag.
     \li \c pinch.active specifies if the target item is currently being dragged.
-    \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
-    \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
+    \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item.scale property, but not the \c PinchEvent \l {PinchEvent}{scale} property.
+    \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item.rotation property, but not the \c PinchEvent \l {PinchEvent}{rotation} property.
     \li \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XAndYAxis)
     \li \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
@@ -360,6 +377,39 @@ void QQuickPinchArea::updatePinch()
     Q_D(QQuickPinchArea);
 
     QQuickWindow *win = window();
+
+    if (d->touchPoints.count() < 2) {
+        setKeepMouseGrab(false);
+        QQuickWindow *c = window();
+        if (c && c->mouseGrabberItem() == this)
+            ungrabMouse();
+    }
+
+    if (d->touchPoints.count() == 0) {
+        if (d->inPinch) {
+            d->inPinch = false;
+            QPointF pinchCenter = mapFromScene(d->sceneLastCenter);
+            QQuickPinchEvent pe(pinchCenter, d->pinchLastScale, d->pinchLastAngle, d->pinchRotation);
+            pe.setStartCenter(d->pinchStartCenter);
+            pe.setPreviousCenter(pinchCenter);
+            pe.setPreviousAngle(d->pinchLastAngle);
+            pe.setPreviousScale(d->pinchLastScale);
+            pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
+            pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
+            pe.setPoint1(mapFromScene(d->lastPoint1));
+            pe.setPoint2(mapFromScene(d->lastPoint2));
+            emit pinchFinished(&pe);
+            d->pinchStartDist = 0;
+            d->pinchActivated = false;
+            if (d->pinch && d->pinch->target())
+                d->pinch->setActive(false);
+        }
+        d->initPinch = false;
+        d->pinchRejected = false;
+        d->stealMouse = false;
+        return;
+    }
+
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
     QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
 
@@ -404,48 +454,57 @@ void QQuickPinchArea::updatePinch()
         if (angle > 180)
             angle -= 360;
         if (!d->inPinch || d->initPinch) {
-            if (d->touchPoints.count() >= 2
-                    && (qAbs(p1.x()-d->sceneStartPoint1.x()) >= dragThreshold
-                    || qAbs(p1.y()-d->sceneStartPoint1.y()) >= dragThreshold
-                    || qAbs(p2.x()-d->sceneStartPoint2.x()) >= dragThreshold
-                    || qAbs(p2.y()-d->sceneStartPoint2.y()) >= dragThreshold)) {
-                d->initPinch = false;
+            if (d->touchPoints.count() >= 2) {
+                if (d->initPinch) {
+                    if (!d->inPinch)
+                        d->pinchStartDist = dist;
+                    d->initPinch = false;
+                }
                 d->sceneStartCenter = sceneCenter;
                 d->sceneLastCenter = sceneCenter;
                 d->pinchStartCenter = mapFromScene(sceneCenter);
-                d->pinchStartDist = dist;
                 d->pinchStartAngle = angle;
                 d->pinchLastScale = 1.0;
                 d->pinchLastAngle = angle;
                 d->pinchRotation = 0.0;
                 d->lastPoint1 = p1;
                 d->lastPoint2 = p2;
-                QQuickPinchEvent pe(d->pinchStartCenter, 1.0, angle, 0.0);
-                pe.setStartCenter(d->pinchStartCenter);
-                pe.setPreviousCenter(d->pinchStartCenter);
-                pe.setPreviousAngle(d->pinchLastAngle);
-                pe.setPreviousScale(d->pinchLastScale);
-                pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
-                pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
-                pe.setPoint1(mapFromScene(d->lastPoint1));
-                pe.setPoint2(mapFromScene(d->lastPoint2));
-                pe.setPointCount(d->touchPoints.count());
-                emit pinchStarted(&pe);
-                if (pe.accepted()) {
-                    if (win && win->mouseGrabberItem() != this)
-                        grabMouse();
-                    setKeepMouseGrab(true);
-                    grabTouchPoints(QVector<int>() << touchPoint1.id() << touchPoint2.id());
-                    d->inPinch = true;
-                    d->stealMouse = true;
-                    if (d->pinch && d->pinch->target()) {
-                        d->pinchStartPos = pinch()->target()->position();
-                        d->pinchStartScale = d->pinch->target()->scale();
-                        d->pinchStartRotation = d->pinch->target()->rotation();
-                        d->pinch->setActive(true);
+                if (qAbs(dist - d->pinchStartDist) >= dragThreshold ||
+                        (pinch()->axis() != QQuickPinch::NoDrag &&
+                         (qAbs(p1.x()-d->sceneStartPoint1.x()) >= dragThreshold
+                          || qAbs(p1.y()-d->sceneStartPoint1.y()) >= dragThreshold
+                          || qAbs(p2.x()-d->sceneStartPoint2.x()) >= dragThreshold
+                          || qAbs(p2.y()-d->sceneStartPoint2.y()) >= dragThreshold))) {
+                    QQuickPinchEvent pe(d->pinchStartCenter, 1.0, angle, 0.0);
+                    d->pinchStartDist = dist;
+                    pe.setStartCenter(d->pinchStartCenter);
+                    pe.setPreviousCenter(d->pinchStartCenter);
+                    pe.setPreviousAngle(d->pinchLastAngle);
+                    pe.setPreviousScale(d->pinchLastScale);
+                    pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
+                    pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
+                    pe.setPoint1(mapFromScene(d->lastPoint1));
+                    pe.setPoint2(mapFromScene(d->lastPoint2));
+                    pe.setPointCount(d->touchPoints.count());
+                    emit pinchStarted(&pe);
+                    if (pe.accepted()) {
+                        d->inPinch = true;
+                        d->stealMouse = true;
+                        if (win && win->mouseGrabberItem() != this)
+                            grabMouse();
+                        setKeepMouseGrab(true);
+                        grabTouchPoints(QVector<int>() << touchPoint1.id() << touchPoint2.id());
+                        d->inPinch = true;
+                        d->stealMouse = true;
+                        if (d->pinch && d->pinch->target()) {
+                            d->pinchStartPos = pinch()->target()->position();
+                            d->pinchStartScale = d->pinch->target()->scale();
+                            d->pinchStartRotation = d->pinch->target()->rotation();
+                            d->pinch->setActive(true);
+                        }
+                    } else {
+                        d->pinchRejected = true;
                     }
-                } else {
-                    d->pinchRejected = true;
                 }
             }
         } else if (d->pinchStartDist > 0) {

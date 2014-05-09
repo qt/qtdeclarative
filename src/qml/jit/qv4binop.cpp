@@ -148,7 +148,7 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));
     } else {
-        assert(!"unreachable");
+        Q_ASSERT(!"unreachable");
     }
 
     if (done.isSet())
@@ -240,11 +240,14 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Temp *target)
 bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
 {
     Q_ASSERT(leftSource->type == IR::SInt32Type);
-    Assembler::RegisterID targetReg;
-    if (target->kind == IR::Temp::PhysicalRegister)
-        targetReg = (Assembler::RegisterID) target->index;
-    else
-        targetReg = Assembler::ReturnValueRegister;
+    Assembler::RegisterID targetReg = Assembler::ReturnValueRegister;
+    if (target->kind == IR::Temp::PhysicalRegister) {
+        // We try to load leftSource into the target's register, but we can't do that if
+        // the target register is the same as rightSource.
+        IR::Temp *rhs = rightSource->asTemp();
+        if (!rhs || rhs->kind != IR::Temp::PhysicalRegister || rhs->index != target->index)
+            targetReg = (Assembler::RegisterID) target->index;
+    }
 
     switch (op) {
     case IR::OpBitAnd: {
@@ -296,13 +299,19 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->lshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                          Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->lshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                             Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
-            if (!rightSource->asConst())
-                as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
+            as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->lshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeInt32(targetReg, target);
@@ -311,12 +320,19 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->rshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                          Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->rshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                             Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->rshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeInt32(targetReg, target);
@@ -325,24 +341,25 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
         Q_ASSERT(rightSource->type == IR::SInt32Type);
 
         if (IR::Const *c = rightSource->asConst()) {
-            as->urshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                           Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
+            if (int(c->value) == 0)
+                as->move(as->toInt32Register(leftSource, Assembler::ReturnValueRegister), targetReg);
+            else
+                as->urshift32(as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                              Assembler::TrustedImm32(int(c->value) & 0x1f), targetReg);
         } else {
             as->move(as->toInt32Register(rightSource, Assembler::ScratchRegister),
                       Assembler::ScratchRegister);
+#if CPU(ARM) || CPU(X86) || CPU(X86_64)
+            // The ARM assembler will generate this for us, and Intel will do it on the CPU.
+#else
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+#endif
             as->urshift32(as->toInt32Register(leftSource, targetReg), Assembler::ScratchRegister, targetReg);
         }
         as->storeUInt32(targetReg, target);
         return true;
     case IR::OpAdd: {
         Q_ASSERT(rightSource->type == IR::SInt32Type);
-
-        Assembler::RegisterID targetReg;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            targetReg = (Assembler::RegisterID) target->index;
-        else
-            targetReg = Assembler::ReturnValueRegister;
 
         as->add32(as->toInt32Register(leftSource, targetReg),
                    as->toInt32Register(rightSource, Assembler::ScratchRegister),
@@ -363,24 +380,12 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *ta
             return true;
         }
 
-        Assembler::RegisterID targetReg;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            targetReg = (Assembler::RegisterID) target->index;
-        else
-            targetReg = Assembler::ReturnValueRegister;
-
         as->move(as->toInt32Register(leftSource, targetReg), targetReg);
         as->sub32(as->toInt32Register(rightSource, Assembler::ScratchRegister), targetReg);
         as->storeInt32(targetReg, target);
     } return true;
     case IR::OpMul: {
         Q_ASSERT(rightSource->type == IR::SInt32Type);
-
-        Assembler::RegisterID targetReg;
-        if (target->kind == IR::Temp::PhysicalRegister)
-            targetReg = (Assembler::RegisterID) target->index;
-        else
-            targetReg = Assembler::ReturnValueRegister;
 
         as->mul32(as->toInt32Register(leftSource, targetReg),
                    as->toInt32Register(rightSource, Assembler::ScratchRegister),

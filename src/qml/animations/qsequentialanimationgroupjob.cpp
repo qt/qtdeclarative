@@ -75,8 +75,12 @@ bool QSequentialAnimationGroupJob::atEnd() const
 int QSequentialAnimationGroupJob::animationActualTotalDuration(QAbstractAnimationJob *anim) const
 {
     int ret = anim->totalDuration();
-    if (ret == -1)
-        ret = uncontrolledAnimationFinishTime(anim); //we can try the actual duration there
+    if (ret == -1) {
+        int done = uncontrolledAnimationFinishTime(anim);
+        // If the animation has reached the end, use the uncontrolledFinished value.
+        if (done >= 0 && (anim->loopCount() - 1 == anim->currentLoop() || anim->state() == Stopped))
+            return done;
+    }
     return ret;
 }
 
@@ -411,6 +415,13 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
 
     //let's also update the total current time
     m_totalCurrentTime = m_currentTime + m_loopCount * duration();
+}
+
+void QSequentialAnimationGroupJob::debugAnimation(QDebug d) const
+{
+    d << "SequentialAnimationGroupJob(" << hex << (void *) this << dec << ")" << "currentAnimation:" << (void *)m_currentAnimation;
+
+    debugChildren(d);
 }
 
 QT_END_NAMESPACE

@@ -1250,9 +1250,9 @@ QQuickText::~QQuickText()
 */
 
 /*!
-    \qmlsignal QtQuick::Text::onLineLaidOut(object line)
+    \qmlsignal QtQuick::Text::lineLaidOut(object line)
 
-    This handler is called for each line of text that is laid out during the layout
+    This signal is emitted for each line of text that is laid out during the layout
     process. The specified \a line object provides more details about the line that
     is currently being laid out.
 
@@ -1277,12 +1277,14 @@ QQuickText::~QQuickText()
         }
     }
     \endcode
+
+    The corresponding handler is \c onLineLaidOut.
 */
 
 /*!
-    \qmlsignal QtQuick::Text::onLinkActivated(string link)
+    \qmlsignal QtQuick::Text::linkActivated(string link)
 
-    This handler is called when the user clicks on a link embedded in the text.
+    This signal is emitted when the user clicks on a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
 
@@ -1293,6 +1295,8 @@ QQuickText::~QQuickText()
 
     Clicking on the highlighted link will output
     \tt{http://qt-project.org link activated} to the console.
+
+    The corresponding handler is \c onLinkActivated.
 */
 
 /*!
@@ -2566,12 +2570,14 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
 }
 
 /*!
-    \qmlsignal QtQuick::Text::onLinkHovered(string link)
+    \qmlsignal QtQuick::Text::linkHovered(string link)
     \since 5.2
 
-    This handler is called when the user hovers a link embedded in the
+    This signal is emitted when the user hovers a link embedded in the
     text. The link must be in rich text or HTML format and the \a link
     string provides access to the particular link.
+
+    The corresponding handler is \c onLinkHovered.
 
     \sa hoveredLink, linkAt()
 */
@@ -2584,7 +2590,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     embedded in the text. The link must be in rich text or HTML format
     and the \a hoveredLink string provides access to the particular link.
 
-    \sa onLinkHovered, linkAt()
+    \sa linkHovered, linkAt()
 */
 
 QString QQuickText::hoveredLink() const

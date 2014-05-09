@@ -143,11 +143,11 @@ Those signals can be handled by signal handler functions, which can be defined
 by clients to implement custom program logic.
 
 Suppose that a button represented by a Rectangle type has a MouseArea and a
-Text label. The MouseArea will emit its "pressed" signal when the user presses
-the defined interactive area, which will automatically trigger the
-\l{MouseArea::}{onPressed} handler, which can be defined by clients. The QML
-engine will execute the JavaScript expressions defined in the onPressed and
-onReleased handlers, as required. Typically, a signal handler is bound to
+Text label. The MouseArea will emit its \l{MouseArea::}{pressed} signal when the
+user presses the defined interactive area, which will automatically trigger the
+\c onPressed handler, which can be defined by clients. The QML
+engine will execute the JavaScript expressions defined in the \c onPressed and
+\c onReleased handlers, as required. Typically, a signal handler is bound to
 JavaScript expressions to initiate other events or to simply assign property
 values.
 
@@ -327,8 +327,8 @@ instances - can use this attached property.  If there is more than one
 \c onCompleted() handler to execute at startup, they are run sequentially in
 an undefined order.
 
-Likewise, the \l {Component::onDestruction} handler definitions are triggered
-on component destruction.
+Likewise, every \c Component will emit a \l {Component::destruction}{destruction()}
+signal just before being destroyed.
 
 */
 

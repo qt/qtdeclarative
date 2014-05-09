@@ -39,8 +39,6 @@
 **
 ****************************************************************************/
 
-#define GL_GLEXT_PROTOTYPES
-
 #include "qsgtexture_p.h"
 #include <qopenglfunctions.h>
 #include <QtQuick/private/qsgcontext_p.h>
@@ -83,7 +81,7 @@ static QElapsedTimer qsg_renderer_timer;
 
 QT_BEGIN_NAMESPACE
 
-#if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
+#ifndef QT_NO_DEBUG
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
@@ -236,6 +234,9 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     If the texture is used in such a way that atlas is not preferable,
     the function removedFromAtlas() can be used to extract a
     non-atlassed copy.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa {Scene Graph - Rendering FBOs}, {Scene Graph - Rendering FBOs in a thread}
  */
@@ -514,7 +515,7 @@ void QSGTexture::updateBindOptions(bool force)
     }
 
     if (force || d->wrapChanged) {
-#if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
+#ifndef QT_NO_DEBUG
         if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat) {
             bool npotSupported = QOpenGLFunctions(QOpenGLContext::currentContext()).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
             QSize size = textureSize();
@@ -566,6 +567,7 @@ void QSGPlainTexture::setImage(const QImage &image)
     m_has_alpha = image.hasAlphaChannel();
     m_dirty_texture = true;
     m_dirty_bind_options = true;
+    m_mipmaps_generated = false;
  }
 
 int QSGPlainTexture::textureId() const
@@ -686,7 +688,10 @@ void QSGPlainTexture::bind()
         externalFormat = GL_BGRA;
 #ifdef QT_OPENGL_ES
         internalFormat = GL_BGRA;
-#endif
+#else
+        if (context->isOpenGLES())
+            internalFormat = GL_BGRA;
+#endif // QT_OPENGL_ES
     } else if (!wrongfullyReportsBgra8888Support
                && (context->hasExtension(QByteArrayLiteral("GL_EXT_texture_format_BGRA8888"))
                    || context->hasExtension(QByteArrayLiteral("GL_IMG_texture_format_BGRA8888")))) {
@@ -765,6 +770,9 @@ void QSGPlainTexture::bind()
 
     To update the content of the texture, call updateTexture() explicitly. Simply calling bind()
     will not update the texture.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 

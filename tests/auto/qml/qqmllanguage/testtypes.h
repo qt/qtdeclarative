@@ -119,7 +119,7 @@ class MyQmlObject : public QObject, public MyInterface
 
     Q_INTERFACES(MyInterface)
 public:
-    MyQmlObject() : m_value(-1), m_interface(0), m_qmlobject(0) { qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType"); }
+    MyQmlObject();
 
     int value() const { return m_value; }
     void setValue(int v) { m_value = v; }
@@ -161,6 +161,8 @@ public:
     QJSValue qjsvalue() const { return m_qjsvalue; }
     void setQJSValue(const QJSValue &value) { m_qjsvalue = value; emit qjsvalueChanged(); }
 
+    int childAddedEventCount() const { return m_childAddedEventCount; }
+
 public slots:
     void basicSlot() { qWarning("MyQmlObject::basicSlot"); }
     void basicSlotWithArgs(int v) { qWarning("MyQmlObject::basicSlotWithArgs(%d)", v); }
@@ -173,6 +175,9 @@ signals:
     void signalWithDefaultArg(int parameter = 5);
     void qjsvalueChanged();
 
+protected:
+    virtual bool event(QEvent *event);
+
 private:
     friend class tst_qqmllanguage;
     int m_value;
@@ -181,6 +186,7 @@ private:
     MyCustomVariantType m_custom;
     int m_propertyWithNotify;
     QJSValue m_qjsvalue;
+    int m_childAddedEventCount;
 };
 QML_DECLARE_TYPE(MyQmlObject)
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
@@ -230,6 +236,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyMirroredEnum mirroredEnumProperty READ mirroredEnumProperty WRITE setMirroredEnumProperty NOTIFY mirroredEnumPropertyChanged)
     Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
+    Q_PROPERTY(QByteArray byteArrayProperty READ byteArrayProperty WRITE setByteArrayProperty NOTIFY byteArrayPropertyChanged)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
     Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
@@ -349,6 +356,15 @@ public:
     void setStringProperty(const QString &v) {
         stringPropertyValue = v;
         emit stringPropertyChanged();
+    }
+
+    QByteArray byteArrayPropertyValue;
+    QByteArray byteArrayProperty() const {
+        return byteArrayPropertyValue;
+    }
+    void setByteArrayProperty(const QByteArray &v) {
+        byteArrayPropertyValue = v;
+        emit byteArrayPropertyChanged();
     }
 
     uint uintPropertyValue;
@@ -564,6 +580,7 @@ signals:
     void qtEnumPropertyChanged();
     void mirroredEnumPropertyChanged();
     void stringPropertyChanged();
+    void byteArrayPropertyChanged();
     void uintPropertyChanged();
     void intPropertyChanged();
     void realPropertyChanged();
@@ -722,15 +739,15 @@ class MyCustomParserType : public QObject
 class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
-    QByteArray compile(const QV4::CompiledData::QmlUnit *, int, const QList<const QV4::CompiledData::Binding *> &) { return QByteArray(); }
-    void setCustomData(QObject *, const QByteArray &) {}
+    QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) { return QByteArray(); }
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
 };
 
 class EnumSupportingCustomParser : public QQmlCustomParser
 {
 public:
-    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &) {}
+    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData*) {}
 };
 
 class MyParserStatus : public QObject, public QQmlParserStatus
@@ -1100,8 +1117,52 @@ public:
 
 class CustomBindingParser : public QQmlCustomParser
 {
-    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings);
-    virtual void setCustomData(QObject *object, const QByteArray &data);
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
+};
+
+class SimpleObjectWithCustomParser : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
+public:
+    SimpleObjectWithCustomParser()
+        : m_intProperty(0)
+        , m_customBindingsCount(0)
+    {}
+
+    int intProperty() const { return m_intProperty; }
+    void setIntProperty(int value) { m_intProperty = value; }
+
+    void setCustomBindingsCount(int count) { m_customBindingsCount = count; }
+    int customBindingsCount() const { return m_customBindingsCount; }
+
+private:
+    int m_intProperty;
+    int m_customBindingsCount;
+};
+
+class SimpleObjectCustomParser : public QQmlCustomParser
+{
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings);
+    virtual void setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData *);
+};
+
+class RootObjectInCreationTester : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *subObject READ subObject WRITE setSubObject FINAL)
+    Q_CLASSINFO("DeferredPropertyNames", "subObject");
+public:
+    RootObjectInCreationTester()
+        : obj(0)
+    {}
+
+    QObject *subObject() const { return obj; }
+    void setSubObject(QObject *o) { obj = o; }
+
+private:
+    QObject *obj;
 };
 
 void registerTypes();

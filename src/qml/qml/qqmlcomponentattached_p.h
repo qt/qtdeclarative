@@ -73,7 +73,6 @@ Q_SIGNALS:
     void destruction();
 
 private:
-    friend class QQmlVME;
     friend class QQmlContextData;
 };
 

@@ -150,7 +150,7 @@ public:
     static const int RegisterArgumentCount = 0;
     static RegisterID registerForArgument(int)
     {
-        assert(false);
+        Q_ASSERT(false);
         // Not reached.
         return JSC::X86Registers::eax;
     }
@@ -187,7 +187,7 @@ public:
             JSC::X86Registers::r8,
             JSC::X86Registers::r9
         };
-        assert(index >= 0 && index < RegisterArgumentCount);
+        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
     };
     static const int StackShadowSpace = 32;
@@ -203,7 +203,7 @@ public:
             JSC::X86Registers::r8,
             JSC::X86Registers::r9
         };
-        assert(index >= 0 && index < RegisterArgumentCount);
+        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
     };
     static const int StackShadowSpace = 0;
@@ -219,12 +219,12 @@ public:
 #define ARGUMENTS_IN_REGISTERS
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 
-    static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
-    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
+    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp; // r13
+    static const RegisterID StackFrameRegister = JSC::ARMRegisters::fp; // r11
     static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
+    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
     static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
 
@@ -238,7 +238,7 @@ public:
     static const int RegisterArgumentCount = 4;
     static RegisterID registerForArgument(int index)
     {
-        assert(index >= 0 && index < RegisterArgumentCount);
+        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
         return static_cast<RegisterID>(JSC::ARMRegisters::r0 + index);
     };
 
@@ -446,6 +446,7 @@ public:
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
+        Label label;
         const char* functionName;
     };
     struct PointerToValue {
@@ -473,6 +474,7 @@ public:
         ctl.call = call();
         ctl.externalFunction = function;
         ctl.functionName = functionName;
+        ctl.label = label();
         _callsToLink.append(ctl);
     }
 
@@ -582,7 +584,7 @@ public:
 
     void loadArgumentInRegister(Reference temp, RegisterID dest, int argumentNumber)
     {
-        assert(temp.value);
+        Q_ASSERT(temp.value);
         Pointer addr = loadTempAddress(dest, temp.value);
         loadArgumentInRegister(addr, dest, argumentNumber);
     }
@@ -591,7 +593,7 @@ public:
     {
         Q_UNUSED(argumentNumber);
 
-        assert(block.block);
+        Q_ASSERT(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
         addPatch(patch, block.block);
     }
@@ -630,13 +632,13 @@ public:
         } else if (expr->asConst()) {
             loadArgumentInRegister(expr->asConst(), dest, argumentNumber);
         } else {
-            assert(!"unimplemented expression type in loadArgument");
+            Q_ASSERT(!"unimplemented expression type in loadArgument");
         }
     }
 #else
     void loadArgumentInRegister(IR::Expr*, RegisterID)
     {
-        assert(!"unimplemented: expression in loadArgument");
+        Q_ASSERT(!"unimplemented: expression in loadArgument");
     }
 #endif
 
@@ -771,7 +773,7 @@ public:
     template <int StackSlot>
     void loadArgumentOnStack(Reference temp, int argumentNumber)
     {
-        assert (temp.value);
+        Q_ASSERT (temp.value);
 
         Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
         loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
@@ -782,7 +784,7 @@ public:
     {
         Q_UNUSED(argumentNumber);
 
-        assert(block.block);
+        Q_ASSERT(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
         poke(ScratchRegister, StackSlot);
         addPatch(patch, block.block);

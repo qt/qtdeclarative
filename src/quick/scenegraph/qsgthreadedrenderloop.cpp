@@ -62,6 +62,7 @@
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qquickprofiler_p.h>
+#include <private/qqmldebugservice_p.h>
 
 /*
    Overall design:
@@ -428,7 +429,7 @@ bool QSGRenderThread::event(QEvent *e)
             QQuickWindowPrivate::get(window)->renderSceneGraph(windowSize);
 
             QSG_RT_DEBUG(" - grabbing result...");
-            *ce->image = qt_gl_read_framebuffer(windowSize, false, false);
+            *ce->image = qt_gl_read_framebuffer(windowSize * window->devicePixelRatio(), false, false);
         }
         QSG_RT_DEBUG(" - waking gui to handle grab result");
         waitCondition.wakeOne();
@@ -513,6 +514,10 @@ void QSGRenderThread::sync(bool inExpose)
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
+        // If the scene graph was touched since the last sync() make sure it sends the
+        // changed signal.
+        if (d->renderer)
+            d->renderer->clearChangedFlag();
         d->syncSceneGraph();
         if (!hadRenderer && d->renderer) {
             QSG_RT_DEBUG(" - renderer was created, hooking up changed signal");
@@ -663,6 +668,8 @@ void QSGRenderThread::run()
     animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
     animatorDriver->install();
     QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
+    if (QQmlDebugService::isDebuggingEnabled())
+        QQuickProfiler::registerAnimationCallback();
 
     while (active) {
 
@@ -791,8 +798,6 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
     }
 }
 
-
-
 /*
     Removes this window from the list of tracked windowes in this
     window manager. hide() will trigger obscure, which in turn will
@@ -873,6 +878,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         QSG_GUI_DEBUG(window, " - adding window to list");
         Window win;
         win.window = window;
+        win.actualWindowFormat = window->format();
         win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
         win.timerId = 0;
         win.updateDuringSync = false;
@@ -899,11 +905,11 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
 
         if (!w->thread->gl) {
             w->thread->gl = new QOpenGLContext();
-            if (QSGContext::sharedOpenGLContext())
-                w->thread->gl->setShareContext(QSGContext::sharedOpenGLContext());
+            if (QOpenGLContextPrivate::globalShareContext())
+                w->thread->gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
             w->thread->gl->setFormat(w->window->requestedFormat());
             if (!w->thread->gl->create()) {
-                const bool isEs = w->thread->gl->isES();
+                const bool isEs = w->thread->gl->isOpenGLES();
                 delete w->thread->gl;
                 w->thread->gl = 0;
                 handleContextCreationFailure(w->window, isEs);
@@ -1045,7 +1051,7 @@ void QSGThreadedRenderLoop::releaseResources(Window *w, bool inDestructor)
         if (!window->handle()) {
             QSG_GUI_DEBUG(window, " - using fallback surface");
             fallback = new QOffscreenSurface();
-            fallback->setFormat(window->requestedFormat());
+            fallback->setFormat(w->actualWindowFormat);
             fallback->create();
         }
 

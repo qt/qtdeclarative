@@ -60,23 +60,27 @@ QQmlPlatform::~QQmlPlatform()
 QString QQmlPlatform::os()
 {
 #if defined(Q_OS_ANDROID)
-    return QLatin1String("android");
+    return QStringLiteral("android");
 #elif defined(Q_OS_BLACKBERRY)
-    return QLatin1String("blackberry");
+    return QStringLiteral("blackberry");
 #elif defined(Q_OS_IOS)
-    return QLatin1String("ios");
+    return QStringLiteral("ios");
 #elif defined(Q_OS_MAC)
-    return QLatin1String("osx");
+    return QStringLiteral("osx");
 #elif defined(Q_OS_WINCE)
-    return QLatin1String("wince");
+    return QStringLiteral("wince");
+#elif defined(Q_OS_WINPHONE)
+    return QStringLiteral("winphone");
+#elif defined(Q_OS_WINRT)
+    return QStringLiteral("winrt");
 #elif defined(Q_OS_WIN)
-    return QLatin1String("windows");
+    return QStringLiteral("windows");
 #elif defined(Q_OS_LINUX)
-    return QLatin1String("linux");
+    return QStringLiteral("linux");
 #elif defined(Q_OS_UNIX)
-    return QLatin1String("unix");
+    return QStringLiteral("unix");
 #else
-    return QLatin1String("unknown");
+    return QStringLiteral("unknown");
 #endif
 }
 

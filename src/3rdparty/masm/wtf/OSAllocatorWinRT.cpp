@@ -38,6 +38,7 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool, bool, bool)
     void* result = _aligned_malloc(bytes, 16);
     if (!result)
         CRASH();
+    memset(result, 0, bytes);
     return result;
 }
 

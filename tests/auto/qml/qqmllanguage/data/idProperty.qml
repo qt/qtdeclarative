@@ -5,4 +5,8 @@ MyContainer {
     MyTypeObject {
         id: "myObjectId"
     }
+
+    MyTypeObject {
+        selfGroupProperty.id: "name.with.dots"
+    }
 }

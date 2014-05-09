@@ -167,4 +167,16 @@ void QAnimationGroupJob::animationRemoved(QAbstractAnimationJob* anim, QAbstract
     }
 }
 
+void QAnimationGroupJob::debugChildren(QDebug d) const
+{
+    int indentLevel = 1;
+    const QAnimationGroupJob *group = this;
+    while ((group = group->m_group))
+        ++indentLevel;
+
+    QByteArray ind(indentLevel, ' ');
+    for (QAbstractAnimationJob *child = firstChild(); child; child = child->nextSibling())
+        d << "\n" << ind.constData() << child;
+}
+
 QT_END_NAMESPACE

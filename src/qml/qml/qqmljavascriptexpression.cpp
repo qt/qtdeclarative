@@ -218,7 +218,6 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
 }
 
 /*! \internal
-    \reimp
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */

@@ -73,6 +73,8 @@ private slots:
     void activeFocusOnTab6();
     void activeFocusOnTab7();
     void activeFocusOnTab8();
+    void activeFocusOnTab9();
+    void activeFocusOnTab10();
 
     void nextItemInFocusChain();
     void nextItemInFocusChain2();
@@ -83,6 +85,7 @@ private slots:
     void standardKeys();
     void keysProcessingOrder();
     void keysim();
+    void keysForward();
     void keyNavigation_data();
     void keyNavigation();
     void keyNavigation_RightToLeft();
@@ -856,6 +859,140 @@ void tst_QQuickItem::activeFocusOnTab8()
     delete window;
 }
 
+void tst_QQuickItem::activeFocusOnTab9()
+{
+    if (qt_tab_all_widgets())
+        QSKIP("This function doesn't support iterating all.");
+
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300,300));
+
+    window->setSource(testFileUrl("activeFocusOnTab9.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QVERIFY(content->hasActiveFocus());
+
+    QQuickItem *textinput1 = findItem<QQuickItem>(window->rootObject(), "textinput1");
+    QVERIFY(textinput1);
+    QQuickItem *textedit1 = findItem<QQuickItem>(window->rootObject(), "textedit1");
+    QVERIFY(textedit1);
+
+    QVERIFY(!textinput1->hasActiveFocus());
+    textinput1->forceActiveFocus();
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // Tab: textinput1->textedit1
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // BackTab: textinput1->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab10()
+{
+    if (!qt_tab_all_widgets())
+        QSKIP("This function doesn't support NOT iterating all.");
+
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300,300));
+
+    window->setSource(testFileUrl("activeFocusOnTab9.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QVERIFY(content->hasActiveFocus());
+
+    QQuickItem *textinput1 = findItem<QQuickItem>(window->rootObject(), "textinput1");
+    QVERIFY(textinput1);
+    QQuickItem *textedit1 = findItem<QQuickItem>(window->rootObject(), "textedit1");
+    QVERIFY(textedit1);
+    QQuickItem *textinput2 = findItem<QQuickItem>(window->rootObject(), "textinput2");
+    QVERIFY(textinput2);
+    QQuickItem *textedit2 = findItem<QQuickItem>(window->rootObject(), "textedit2");
+    QVERIFY(textedit2);
+
+    QVERIFY(!textinput1->hasActiveFocus());
+    textinput1->forceActiveFocus();
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // Tab: textinput1->textinput2
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
+
+    // Tab: textinput2->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
+
+    // BackTab: textinput2->textinput1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput1->hasActiveFocus());
+
+    // BackTab: textinput1->textedit2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit2->hasActiveFocus());
+
+    // BackTab: textedit2->textedit1
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textedit1->hasActiveFocus());
+
+    // BackTab: textedit1->textinput2
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    QVERIFY(textinput2->hasActiveFocus());
+
+    delete window;
+}
+
 void tst_QQuickItem::nextItemInFocusChain()
 {
     if (!qt_tab_all_widgets())
@@ -1266,6 +1403,78 @@ void tst_QQuickItem::keysim()
     QCOMPARE(input->text(), QLatin1String("Hello world!"));
 
     delete window;
+}
+
+void tst_QQuickItem::keysForward()
+{
+    QQuickView window;
+    window.setBaseSize(QSize(240,320));
+
+    window.setSource(testFileUrl("keysforward.qml"));
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QVERIFY(QGuiApplication::focusWindow() == &window);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(window.rootObject());
+    QVERIFY(rootItem);
+    QQuickItem *sourceItem = rootItem->property("source").value<QQuickItem *>();
+    QVERIFY(sourceItem);
+    QQuickItem *primaryTarget = rootItem->property("primaryTarget").value<QQuickItem *>();
+    QVERIFY(primaryTarget);
+    QQuickItem *secondaryTarget = rootItem->property("secondaryTarget").value<QQuickItem *>();
+    QVERIFY(secondaryTarget);
+
+    // primary target accepts/consumes Key_P
+    QKeyEvent pressKeyP(QEvent::KeyPress, Qt::Key_P, Qt::NoModifier, "P");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyP);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QVERIFY(pressKeyP.isAccepted());
+
+    QKeyEvent releaseKeyP(QEvent::KeyRelease, Qt::Key_P, Qt::NoModifier, "P");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyP);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QVERIFY(releaseKeyP.isAccepted());
+
+    // secondary target accepts/consumes Key_S
+    QKeyEvent pressKeyS(QEvent::KeyPress, Qt::Key_S, Qt::NoModifier, "S");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyS);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S);
+    QVERIFY(pressKeyS.isAccepted());
+
+    QKeyEvent releaseKeyS(QEvent::KeyRelease, Qt::Key_S, Qt::NoModifier, "S");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyS);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S);
+    QVERIFY(releaseKeyS.isAccepted());
+
+    // neither target accepts/consumes Key_Q
+    QKeyEvent pressKeyQ(QEvent::KeyPress, Qt::Key_Q, Qt::NoModifier, "Q");
+    QCoreApplication::sendEvent(sourceItem, &pressKeyQ);
+    QCOMPARE(rootItem->property("pressedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("pressedKeys").toList(), QVariantList() << Qt::Key_Q);
+    QCOMPARE(primaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_Q);
+    QCOMPARE(secondaryTarget->property("pressedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S << Qt::Key_Q);
+    QVERIFY(!pressKeyQ.isAccepted());
+
+    QKeyEvent releaseKeyQ(QEvent::KeyRelease, Qt::Key_Q, Qt::NoModifier, "Q");
+    QCoreApplication::sendEvent(sourceItem, &releaseKeyQ);
+    QCOMPARE(rootItem->property("releasedKeys").toList(), QVariantList());
+    QCOMPARE(sourceItem->property("releasedKeys").toList(), QVariantList() << Qt::Key_Q);
+    QCOMPARE(primaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_Q);
+    QCOMPARE(secondaryTarget->property("releasedKeys").toList(), QVariantList() << Qt::Key_P << Qt::Key_S << Qt::Key_Q);
+    QVERIFY(!releaseKeyQ.isAccepted());
 }
 
 QQuickItemPrivate *childPrivate(QQuickItem *rootItem, const char * itemString)

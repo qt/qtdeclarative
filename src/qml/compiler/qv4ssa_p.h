@@ -77,12 +77,12 @@ private:
 public:
     enum { Invalid = -1 };
 
-    LifeTimeInterval()
+    explicit LifeTimeInterval(int rangeCapacity = 2)
         : _end(Invalid)
         , _reg(Invalid)
         , _isFixedInterval(0)
         , _isSplitFromInterval(0)
-    {}
+    { _ranges.reserve(rangeCapacity); }
 
     bool isValid() const { return _end != Invalid; }
 
@@ -92,8 +92,7 @@ public:
 
     void setFrom(Stmt *from);
     void addRange(int from, int to);
-    Ranges ranges() const { return _ranges; }
-    void reserveRanges(int capacity) { _ranges.reserve(capacity); }
+    const Ranges &ranges() const { return _ranges; }
 
     int start() const { return _ranges.first().start; }
     int end() const { return _end; }
@@ -137,13 +136,12 @@ public:
     }
 };
 
-class Q_QML_EXPORT Optimizer
+class Q_QML_PRIVATE_EXPORT Optimizer
 {
+    Q_DISABLE_COPY(Optimizer)
+
 public:
-    Optimizer(Function *function)
-        : function(function)
-        , inSSA(false)
-    {}
+    Optimizer(Function *function);
 
     void run(QQmlEnginePrivate *qmlEngine);
     void convertOutOfSSA();
@@ -153,7 +151,7 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
 
-    QVector<LifeTimeInterval> lifeRanges() const;
+    QVector<LifeTimeInterval> lifeTimeIntervals() const;
 
     QSet<IR::Jump *> calculateOptionalJumps();
 

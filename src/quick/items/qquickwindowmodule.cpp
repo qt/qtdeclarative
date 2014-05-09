@@ -41,6 +41,7 @@
 
 #include "qquickwindowmodule_p.h"
 #include "qquickscreen_p.h"
+#include "qquickview_p.h"
 #include <QtQuick/QQuickWindow>
 #include <QtCore/QCoreApplication>
 #include <QtQml/QQmlEngine>
@@ -73,7 +74,7 @@ public:
     void setVisible(bool visible) {
         if (!m_complete)
             m_visible = visible;
-        else
+        else if (!transientParent() || transientParent()->isVisible())
             QQuickWindow::setVisible(visible);
     }
 
@@ -91,16 +92,41 @@ Q_SIGNALS:
 
 protected:
     void classBegin() {
+        QQmlEngine* e = qmlEngine(this);
         //Give QQuickView behavior when created from QML with QQmlApplicationEngine
         if (QCoreApplication::instance()->property("__qml_using_qqmlapplicationengine") == QVariant(true)) {
-            QQmlEngine* e = qmlEngine(this);
             if (e && !e->incubationController())
                 e->setIncubationController(incubationController());
+        }
+        Q_ASSERT(e);
+        {
+            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(e);
+            QV4::Scope scope(v4);
+            QV4::ScopedObject v(scope, new (v4->memoryManager) QQuickRootItemMarker(e, this));
+            rootItemMarker = v;
         }
     }
 
     void componentComplete() {
         m_complete = true;
+        if (transientParent() && !transientParent()->isVisible()) {
+            connect(transientParent(), &QQuickWindow::visibleChanged, this,
+                    &QQuickWindowQmlImpl::setWindowVisibility, Qt::QueuedConnection);
+        } else {
+            setWindowVisibility();
+        }
+    }
+
+private Q_SLOTS:
+    void setWindowVisibility()
+    {
+        if (transientParent() && !transientParent()->isVisible())
+            return;
+
+        if (sender()) {
+            disconnect(transientParent(), &QWindow::visibleChanged, this,
+                       &QQuickWindowQmlImpl::setWindowVisibility);
+        }
 
         // We have deferred window creation until we have the full picture of what
         // the user wanted in terms of window state, geometry, visibility, etc.
@@ -140,6 +166,7 @@ private:
     bool m_complete;
     bool m_visible;
     Visibility m_visibility;
+    QV4::PersistentValue rootItemMarker;
 };
 
 void QQuickWindowModule::defineModule()

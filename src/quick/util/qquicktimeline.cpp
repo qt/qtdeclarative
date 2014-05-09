@@ -723,6 +723,11 @@ void QQuickTimeLine::updateCurrentTime(int v)
     }
 }
 
+void QQuickTimeLine::debugAnimation(QDebug d) const
+{
+    d << "QuickTimeLine(" << hex << (void *) this << dec << ")";
+}
+
 bool operator<(const QPair<int, Update> &lhs,
                const QPair<int, Update> &rhs)
 {

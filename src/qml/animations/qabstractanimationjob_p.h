@@ -123,6 +123,8 @@ protected:
     virtual void updateDirection(QAbstractAnimationJob::Direction direction);
     virtual void topLevelAnimationLoopChanged() {}
 
+    virtual void debugAnimation(QDebug d) const;
+
     void fireTopLevelAnimationLoopChanged();
 
     void setState(QAbstractAnimationJob::State state);
@@ -169,6 +171,7 @@ protected:
 
     friend class QQmlAnimationTimer;
     friend class QAnimationGroupJob;
+    friend QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
 };
 
 class Q_QML_PRIVATE_EXPORT QAnimationJobChangeListener
@@ -236,6 +239,8 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QAbstractAnimationJob::ChangeTypes)
+
+QDebug operator<<(QDebug, const QAbstractAnimationJob *job);
 
 QT_END_NAMESPACE
 

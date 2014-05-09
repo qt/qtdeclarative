@@ -450,7 +450,7 @@ static void appendReplacementString(QString *result, const QString &input, const
             uint substStart = JSC::Yarr::offsetNoMatch;
             uint substEnd = JSC::Yarr::offsetNoMatch;
             if (ch == '$') {
-                *result += QLatin1Char(ch);
+                *result += QChar(ch);
                 continue;
             } else if (ch == '&') {
                 substStart = matchOffsets[0];
@@ -463,7 +463,8 @@ static void appendReplacementString(QString *result, const QString &input, const
                 substEnd = input.length();
             } else if (ch >= '1' && ch <= '9') {
                 uint capture = ch - '0';
-                if (capture > 0 && capture < static_cast<uint>(captureCount)) {
+                Q_ASSERT(capture > 0);
+                if (capture < static_cast<uint>(captureCount)) {
                     substStart = matchOffsets[capture * 2];
                     substEnd = matchOffsets[capture * 2 + 1];
                 }
@@ -498,8 +499,8 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     int numCaptures = 0;
     int numStringMatches = 0;
 
-    uint allocatedMatchOffsets = 32;
-    uint _matchOffsets[32];
+    uint allocatedMatchOffsets = 64;
+    uint _matchOffsets[64];
     uint *matchOffsets = _matchOffsets;
     uint nMatchOffsets = 0;
 

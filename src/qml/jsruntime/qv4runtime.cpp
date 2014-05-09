@@ -41,6 +41,7 @@
 
 #include "qv4global_p.h"
 #include "qv4runtime_p.h"
+#ifndef V4_BOOTSTRAP
 #include "qv4object_p.h"
 #include "qv4jsir_p.h"
 #include "qv4objectproto_p.h"
@@ -54,6 +55,7 @@
 #include <private/qqmlcontextwrapper_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include <private/qv8engine_p.h>
+#endif
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -63,7 +65,7 @@
 #include <typeinfo>
 #include <stdlib.h>
 
-#include "../../../3rdparty/double-conversion/double-conversion.h"
+#include "../../3rdparty/double-conversion/double-conversion.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -207,6 +209,7 @@ void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
 
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS
 
+#ifndef V4_BOOTSTRAP
 void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);
@@ -215,7 +218,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
         *result = QStringLiteral("NaN");
         return;
     } else if (qIsInf(num)) {
-        *result = QLatin1String(num < 0 ? "-Infinity" : "Infinity");
+        *result = num < 0 ? QStringLiteral("-Infinity") : QStringLiteral("Infinity");
         return;
     }
 
@@ -264,7 +267,7 @@ ReturnedValue Runtime::closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    FunctionObject *f = FunctionObject::creatScriptFunction(ctx, clos);
+    FunctionObject *f = FunctionObject::createScriptFunction(ctx, clos);
     return f->asReturnedValue();
 }
 
@@ -300,6 +303,9 @@ ReturnedValue Runtime::deleteName(ExecutionContext *ctx, const StringRef name)
 
 QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
+    // As nothing in this method can call into the memory manager, avoid using a Scope
+    // for performance reasons
+
     FunctionObject *f = right->asFunctionObject();
     if (!f)
         return ctx->throwTypeError();
@@ -307,23 +313,20 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
     if (f->subtype == FunctionObject::BoundFunction)
         f = static_cast<BoundFunction *>(f)->target;
 
-    Scope scope(ctx->engine);
-    ScopedObject v(scope, left);
+    Object *v = left->asObject();
     if (!v)
         return Encode(false);
 
-    Scoped<Object> o(scope, f->protoProperty());
-    if (!o) {
-        scope.engine->currentContext()->throwTypeError();
-        return Encode(false);
-    }
+    Object *o = QV4::Value::fromReturnedValue(f->protoProperty()).asObject();
+    if (!o)
+        return ctx->throwTypeError();
 
     while (v) {
         v = v->prototype();
 
-        if (! v)
+        if (!v)
             break;
-        else if (o.getPointer() == v)
+        else if (o == v)
             return Encode(true);
     }
 
@@ -414,10 +417,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
     return ctx->throwTypeError();
 }
 
-Bool Runtime::toBoolean(const ValueRef value)
-{
-    return value->toBoolean();
-}
+
 
 Returned<Object> *RuntimeHelpers::convertToObject(ExecutionContext *ctx, const ValueRef value)
 {
@@ -632,7 +632,7 @@ ReturnedValue Runtime::foreachIterator(ExecutionContext *ctx, const ValueRef in)
     Scope scope(ctx);
     Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
-        o = in;
+        o = in->toObject(ctx);
     Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o));
     return it.asReturnedValue();
 }
@@ -677,6 +677,8 @@ ReturnedValue Runtime::getActivationProperty(ExecutionContext *ctx, const String
     return ctx->getProperty(name);
 }
 
+#endif // V4_BOOTSTRAP
+
 uint RuntimeHelpers::equalHelper(const ValueRef x, const ValueRef y)
 {
     Q_ASSERT(x->type() != y->type() || (x->isManaged() && (x->isString() != y->isString())));
@@ -697,14 +699,20 @@ uint RuntimeHelpers::equalHelper(const ValueRef x, const ValueRef y)
         return Runtime::compareEqual(Primitive::fromDouble((double) x->booleanValue()), y);
     } else if (y->isBoolean()) {
         return Runtime::compareEqual(x, Primitive::fromDouble((double) y->booleanValue()));
-    } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-        Scope scope(y->objectValue()->engine());
-        ScopedValue py(scope, RuntimeHelpers::toPrimitive(y, PREFERREDTYPE_HINT));
-        return Runtime::compareEqual(x, py);
-    } else if (x->isObject() && (y->isNumber() || y->isString())) {
-        Scope scope(x->objectValue()->engine());
-        ScopedValue px(scope, RuntimeHelpers::toPrimitive(x, PREFERREDTYPE_HINT));
-        return Runtime::compareEqual(px, y);
+    } else {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
+        if ((x->isNumber() || x->isString()) && y->isObject()) {
+            Scope scope(y->objectValue()->engine());
+            ScopedValue py(scope, RuntimeHelpers::toPrimitive(y, PREFERREDTYPE_HINT));
+            return Runtime::compareEqual(x, py);
+        } else if (x->isObject() && (y->isNumber() || y->isString())) {
+            Scope scope(x->objectValue()->engine());
+            ScopedValue px(scope, RuntimeHelpers::toPrimitive(x, PREFERREDTYPE_HINT));
+            return Runtime::compareEqual(px, y);
+        }
+#endif
     }
 
     return false;
@@ -732,15 +740,25 @@ QV4::Bool Runtime::compareGreaterThan(const QV4::ValueRef l, const QV4::ValueRef
         return l->integerValue() > r->integerValue();
     if (l->isNumber() && r->isNumber())
         return l->asDouble() > r->asDouble();
-    if (l->isString() && r->isString())
+    if (l->isString() && r->isString()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return r->stringValue()->compare(l->stringValue());
+#endif
+    }
 
     if (l->isObject() || r->isObject()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
         return Runtime::compareGreaterThan(pl, pr);
+#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -755,15 +773,25 @@ QV4::Bool Runtime::compareLessThan(const QV4::ValueRef l, const QV4::ValueRef r)
         return l->integerValue() < r->integerValue();
     if (l->isNumber() && r->isNumber())
         return l->asDouble() < r->asDouble();
-    if (l->isString() && r->isString())
+    if (l->isString() && r->isString()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return l->stringValue()->compare(r->stringValue());
+#endif
+    }
 
     if (l->isObject() || r->isObject()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
         return Runtime::compareLessThan(pl, pr);
+#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -778,15 +806,25 @@ QV4::Bool Runtime::compareGreaterEqual(const QV4::ValueRef l, const QV4::ValueRe
         return l->integerValue() >= r->integerValue();
     if (l->isNumber() && r->isNumber())
         return l->asDouble() >= r->asDouble();
-    if (l->isString() && r->isString())
+    if (l->isString() && r->isString()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return !l->stringValue()->compare(r->stringValue());
+#endif
+    }
 
     if (l->isObject() || r->isObject()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
         return Runtime::compareGreaterEqual(pl, pr);
+#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -801,15 +839,25 @@ QV4::Bool Runtime::compareLessEqual(const QV4::ValueRef l, const QV4::ValueRef r
         return l->integerValue() <= r->integerValue();
     if (l->isNumber() && r->isNumber())
         return l->asDouble() <= r->asDouble();
-    if (l->isString() && r->isString())
+    if (l->isString() && r->isString()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return !r->stringValue()->compare(l->stringValue());
+#endif
+    }
 
     if (l->isObject() || r->isObject()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+#else
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
         return Runtime::compareLessEqual(pl, pr);
+#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -817,7 +865,7 @@ QV4::Bool Runtime::compareLessEqual(const QV4::ValueRef l, const QV4::ValueRef r
     return dl <= dr;
 }
 
-
+#ifndef V4_BOOTSTRAP
 ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Scope scope(context);
@@ -1144,6 +1192,8 @@ QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionContext *ctx)
     return (new (c->engine->memoryManager) ArgumentsObject(c))->asReturnedValue();
 }
 
+#endif // V4_BOOTSTRAP
+
 QV4::ReturnedValue Runtime::increment(const QV4::ValueRef value)
 {
     TRACE1(value);
@@ -1168,6 +1218,8 @@ QV4::ReturnedValue Runtime::decrement(const QV4::ValueRef value)
     }
 }
 
+#ifndef V4_BOOTSTRAP
+
 QV4::ReturnedValue RuntimeHelpers::toString(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
 {
     if (value->isString())
@@ -1186,6 +1238,8 @@ QV4::ReturnedValue RuntimeHelpers::toObject(QV4::ExecutionContext *ctx, const QV
 
     return Encode(o);
 }
+
+#endif // V4_BOOTSTRAP
 
 ReturnedValue Runtime::toDouble(const ValueRef value)
 {
@@ -1217,6 +1271,8 @@ unsigned Runtime::doubleToUInt(const double &d)
     return Primitive::toUInt32(d);
 }
 
+#ifndef V4_BOOTSTRAP
+
 ReturnedValue Runtime::regexpLiteral(ExecutionContext *ctx, int id)
 {
     return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
@@ -1230,6 +1286,8 @@ ReturnedValue Runtime::getQmlIdArray(NoThrowContext *ctx)
 ReturnedValue Runtime::getQmlContextObject(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    if (!context)
+        return Encode::undefined();
     return QObjectWrapper::wrap(ctx->engine, context->contextObject);
 }
 
@@ -1277,6 +1335,8 @@ void Runtime::setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object
 ReturnedValue Runtime::getQmlImportedScripts(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    if (!context)
+        return Encode::undefined();
     return context->importedScripts.value();
 }
 
@@ -1296,6 +1356,8 @@ void Runtime::convertThisToObject(ExecutionContext *ctx)
         *t = t->toObject(ctx)->asReturnedValue();
     }
 }
+
+#endif // V4_BOOTSTRAP
 
 } // namespace QV4
 

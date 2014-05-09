@@ -55,8 +55,7 @@ QContinuingAnimationGroupJob::~QContinuingAnimationGroupJob()
 
 void QContinuingAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
 {
-    if (!firstChild())
-        return;
+    Q_ASSERT(firstChild());
 
     for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
         if (animation->state() == state()) {
@@ -81,6 +80,10 @@ void QContinuingAnimationGroupJob::updateState(QAbstractAnimationJob::State newS
                 animation->pause();
         break;
     case Running:
+        if (!firstChild()) {
+            stop();
+            return;
+        }
         for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
             resetUncontrolledAnimationFinishTime(animation);
             animation->setDirection(m_direction);
@@ -116,6 +119,13 @@ void QContinuingAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
 
     setUncontrolledAnimationFinishTime(this, currentTime());
     stop();
+}
+
+void QContinuingAnimationGroupJob::debugAnimation(QDebug d) const
+{
+    d << "ContinuingAnimationGroupJob(" << hex << (void *) this << dec << ")";
+
+    debugChildren(d);
 }
 
 QT_END_NAMESPACE

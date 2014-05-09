@@ -46,13 +46,11 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_OPENGL_ES_2
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
-#endif
 
 QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 
@@ -83,19 +81,20 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     QSGTexture *t = tx->texture();
 
     t->setFiltering(tx->filtering());
-#ifdef QT_OPENGL_ES_2
-    bool npotSupported = QOpenGLFunctions(const_cast<QOpenGLContext *>(state.context())).hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
-    QSize size = t->textureSize();
-    bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-    if (!npotSupported && isNpot) {
-        t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        t->setVerticalWrapMode(QSGTexture::ClampToEdge);
-    } else
-#endif
-    {
-        t->setHorizontalWrapMode(tx->horizontalWrapMode());
-        t->setVerticalWrapMode(tx->verticalWrapMode());
+
+    t->setHorizontalWrapMode(tx->horizontalWrapMode());
+    t->setVerticalWrapMode(tx->verticalWrapMode());
+    bool npotSupported = const_cast<QOpenGLContext *>(state.context())
+        ->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
+    if (!npotSupported) {
+        QSize size = t->textureSize();
+        const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+        if (isNpot) {
+            t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+            t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+        }
     }
+
     t->setMipmapFiltering(tx->mipmapFiltering());
 
     if (oldTx == 0 || oldTx->texture()->textureId() != t->textureId())
@@ -153,7 +152,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     : m_texture(0)
     , m_filtering(QSGTexture::Nearest)
-    , m_mipmap_filtering(QSGTexture::Nearest)
+    , m_mipmap_filtering(QSGTexture::None)
     , m_horizontal_wrap(QSGTexture::ClampToEdge)
     , m_vertical_wrap(QSGTexture::ClampToEdge)
 {

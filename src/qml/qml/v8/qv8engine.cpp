@@ -601,7 +601,11 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
         s = m_v4Engine->newIdentifier(it.key());
         v = variantToJS(it.value());
-        o->insertMember(s, v);
+        uint idx = s->asArrayIndex();
+        if (idx < UINT_MAX)
+            o->arraySet(idx, v);
+        else
+            o->insertMember(s, v);
     }
     return o.asReturnedValue();
 }

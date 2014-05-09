@@ -14,7 +14,6 @@ Window {
             anchors.fill: parent;
             onPressed: window2.requestActivate();
         }
-        Component.onCompleted: window2.show();
     }
 
     Window {
@@ -22,6 +21,7 @@ Window {
         objectName: "window2";
         color: "#FF0000";
         width: 100; height: 100;
+        visible: true
         Item {
             width: 100; height: 100;
         }

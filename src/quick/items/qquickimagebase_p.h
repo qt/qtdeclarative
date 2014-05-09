@@ -86,6 +86,8 @@ public:
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
+    void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
+
 Q_SIGNALS:
     void sourceChanged(const QUrl &);
     void sourceSizeChanged();
@@ -104,6 +106,8 @@ protected:
 private Q_SLOTS:
     virtual void requestFinished();
     void requestProgress(qint64,qint64);
+    void handleWindowChanged(QQuickWindow *window);
+    void handleScreenChanged(QScreen *);
 
 private:
     Q_DISABLE_COPY(QQuickImageBase)

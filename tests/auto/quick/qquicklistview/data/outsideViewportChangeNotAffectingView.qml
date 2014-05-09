@@ -42,13 +42,16 @@ import QtQuick 2.1
 import QtTest 1.0
 
 Item {
+    width: 300
+    height: 542
+
     function resizeThirdItem(size) {
         resizingListModel.setProperty(3, "size", size)
     }
 
     ListView {
-        width: 300
-        height: 542
+        id: list
+        anchors.fill: parent
         model: ListModel {
             id: resizingListModel
             ListElement { size: 300; }
@@ -62,6 +65,9 @@ Item {
             width: parent.width
             color: index % 2 == 0 ? "red" : "blue"
             height: size
+            Text { anchors.centerIn: parent; text: index }
         }
     }
+
+    Text { text: list.contentY; color: "white" }
 }

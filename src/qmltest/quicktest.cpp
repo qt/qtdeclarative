@@ -198,6 +198,29 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
+    // Peek at arguments to check for '-widgets' argument
+#ifdef QT_QMLTEST_WITH_WIDGETS
+    bool withWidgets = false;
+    for (int index = 1; index < argc; ++index) {
+        if (strcmp(argv[index], "-widgets") == 0) {
+            withWidgets = true;
+            break;
+        }
+    }
+#endif
+
+    QCoreApplication *app = 0;
+    if (!QCoreApplication::instance()) {
+#ifdef QT_QMLTEST_WITH_WIDGETS
+        if (withWidgets)
+            app = new QApplication(argc, argv);
+        else
+#endif
+        {
+            app = new QGuiApplication(argc, argv);
+        }
+    }
+
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
     //      -input dir          Specify the input directory for test cases.
@@ -205,9 +228,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     QStringList imports;
     QString testPath;
     QString translationFile;
-#ifdef QT_QMLTEST_WITH_WIDGETS
-    bool withWidgets = false;
-#endif
     int index = 1;
     QScopedArrayPointer<char *> testArgV(new char *[argc + 1]);
     testArgV[0] = argv[0];
@@ -234,20 +254,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         }
     }
     testArgV[testArgC] = 0;
-
-    QCoreApplication* app = 0;
-    if (!QCoreApplication::instance()) {
-#ifdef QT_QMLTEST_WITH_WIDGETS
-        if (withWidgets)
-            app = new QApplication(argc, argv);
-        else
-#endif
-        {
-            app = new QGuiApplication(argc, argv);
-        }
-    }
-
-    // Parse the command-line arguments.
 
     // Setting currentAppname and currentTestObjectName (via setProgramName) are needed
     // for the code coverage analysis. Must be done before parseArgs is called.

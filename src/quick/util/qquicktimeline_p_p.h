@@ -109,6 +109,7 @@ Q_SIGNALS:
 
 protected:
     virtual void updateCurrentTime(int);
+    void debugAnimation(QDebug d) const;
 
 private:
     void remove(QQuickTimeLineObject *);

@@ -117,11 +117,7 @@ private:
     static PropertyAttributes query(const Managed *, StringRef name);
     static void advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
-    static void collectDeletables(Managed *m, GCDeletable **deletable);
-    static void destroy(Managed *that)
-    {
-        static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
-    }
+    static void destroy(Managed *that);
 
     static ReturnedValue method_connect(CallContext *ctx);
     static ReturnedValue method_disconnect(CallContext *ctx);

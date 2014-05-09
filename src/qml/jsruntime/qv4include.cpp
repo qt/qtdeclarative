@@ -148,7 +148,7 @@ void QV4Include::finished()
         QByteArray data = m_reply->readAll();
 
         QString code = QString::fromUtf8(data);
-        QQmlScript::Parser::extractPragmas(code);
+        QmlIR::Document::removeScriptPragmas(code);
 
         QV4::ScopedObject qmlglobal(scope, m_qmlglobal.value());
         QV4::Script script(v4, qmlglobal, code, m_url.toString());
@@ -216,7 +216,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         if (f.open(QIODevice::ReadOnly)) {
             QByteArray data = f.readAll();
             QString code = QString::fromUtf8(data);
-            QQmlScript::Parser::extractPragmas(code);
+            QmlIR::Document::removeScriptPragmas(code);
 
             QV4::Script script(v4, qmlcontextobject, code, url.toString());
 

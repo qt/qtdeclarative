@@ -44,6 +44,10 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmlirbuilder_p.h>
+#include <private/qv4value_inl_p.h>
+#include <private/qv4codegen_p.h>
+#include <private/qqmldirparser_p.h>
 
 int main()
 {

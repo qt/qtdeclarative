@@ -156,21 +156,22 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
         newData->sparse = old->sparse;
         old->sparse = 0;
         newData->freeList = old->freeList;
-        return;
-    }
-
-    newData->sparse = new SparseArray;
-    uint *lastFree = &newData->freeList;
-    for (uint i = 0; i < toCopy; ++i) {
-        if (!newData->data[i].isEmpty()) {
-            SparseArrayNode *n = newData->sparse->insert(i);
-            n->value = i;
-        } else {
-            *lastFree = i;
-            newData->data[i].tag = Value::Empty_Type;
-            lastFree = &newData->data[i].uint_32;
+    } else {
+        newData->sparse = new SparseArray;
+        uint *lastFree = &newData->freeList;
+        for (uint i = 0; i < toCopy; ++i) {
+            if (!newData->data[i].isEmpty()) {
+                SparseArrayNode *n = newData->sparse->insert(i);
+                n->value = i;
+            } else {
+                *lastFree = i;
+                newData->data[i].tag = Value::Empty_Type;
+                lastFree = &newData->data[i].uint_32;
+            }
         }
     }
+
+    uint *lastFree = &newData->freeList;
     for (uint i = toCopy; i < newData->alloc; ++i) {
         *lastFree = i;
         newData->data[i].tag = Value::Empty_Type;
@@ -580,6 +581,8 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
 
     if (other->isSparse())
         obj->initSparseArray();
+    else
+        obj->arrayCreate();
 
     uint oldSize = obj->getLength();
 

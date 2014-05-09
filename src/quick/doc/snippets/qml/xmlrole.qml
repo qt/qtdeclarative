@@ -52,7 +52,7 @@ XmlListModel {
 
 //![1]
     // XmlRole queries will be made on <book> elements
-    query: "/catalogue/book"
+    query: "/catalog/book"
 
     // query the book title
     XmlRole { name: "title"; query: "title/string()" }
@@ -65,17 +65,22 @@ XmlListModel {
 
     // query the book's first listed author (note in XPath the first index is 1, not 0)
     XmlRole { name: "first_author"; query: "author[1]/string()" }
+
+    // query the wanted attribute as a boolean
+    XmlRole { name: "wanted"; query: "boolean(@wanted)" }
 }
 //![1]
 
+//![2]
 ListView {
     width: 300; height: 200
     model: model
     delegate: Column {
-        Text { text: title + " (" + type + ")"; font.bold: true }
+        Text { text: title + " (" + type + ")"; font.bold: wanted }
         Text { text: first_author }
         Text { text: year }
     }
+//![2]
 }
 
 }

@@ -64,7 +64,7 @@ struct Returned : private T
     using T::asReturnedValue;
 };
 
-struct Q_QML_EXPORT Value
+struct Q_QML_PRIVATE_EXPORT Value
 {
     /*
         We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
@@ -119,20 +119,21 @@ struct Q_QML_EXPORT Value
 
 #if QT_POINTER_SIZE == 4
     enum Masks {
-        NaN_Mask = 0x7ff80000,
-        NotDouble_Mask = 0x7ffc0000,
-        Type_Mask = 0xffff8000,
-        Immediate_Mask = NotDouble_Mask | 0x00008000,
-        IsNullOrUndefined_Mask = Immediate_Mask | 0x20000,
+        SilentNaNBit           =                  0x00040000,
+        NaN_Mask               =                  0x7ff80000,
+        NotDouble_Mask         =                  0x7ffa0000,
+        Type_Mask              =                  0xffffc000,
+        Immediate_Mask         = NotDouble_Mask | 0x00004000 | SilentNaNBit,
+        IsNullOrUndefined_Mask = Immediate_Mask |    0x08000,
         Tag_Shift = 32
     };
     enum ValueType {
         Undefined_Type = Immediate_Mask | 0x00000,
-        Null_Type = Immediate_Mask | 0x10000,
-        Boolean_Type = Immediate_Mask | 0x20000,
-        Integer_Type = Immediate_Mask | 0x30000,
-        Managed_Type = NotDouble_Mask | 0x00000,
-        Empty_Type = NotDouble_Mask | 0x30000
+        Null_Type      = Immediate_Mask | 0x10000,
+        Boolean_Type   = Immediate_Mask | 0x08000,
+        Integer_Type   = Immediate_Mask | 0x18000,
+        Managed_Type   = NotDouble_Mask | 0x00000 | SilentNaNBit,
+        Empty_Type     = NotDouble_Mask | 0x18000 | SilentNaNBit
     };
 
     enum ImmediateFlags {
@@ -241,8 +242,8 @@ struct Q_QML_EXPORT Value
     static inline bool bothDouble(Value a, Value b) {
         return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
     }
-    double doubleValue() const { return dbl; }
-    void setDouble(double d) { dbl = d; }
+    double doubleValue() const { Q_ASSERT(isDouble()); return dbl; }
+    void setDouble(double d) { dbl = d; Q_ASSERT(isDouble()); }
     bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
     inline bool isString() const;
@@ -372,7 +373,7 @@ inline String *Value::asString() const
     return 0;
 }
 
-struct Q_QML_EXPORT Primitive : public Value
+struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();
     static inline Primitive fromBoolean(bool b);

@@ -51,7 +51,6 @@
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
 #include "qqmlglobal_p.h"
-#include "qqmlscript_p.h"
 #include <private/qqmlenginedebugservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
@@ -264,14 +263,14 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 */
 
 /*!
-    \qmlattachedsignal Component::onCompleted()
+    \qmlattachedsignal Component::completed()
 
     Emitted after component "startup" has completed. This can be used to
     execute script code at startup, once the full QML environment has been
     established.
 
-    The \c {Component::onCompleted} attached property can be declared on
-    any object. The order of running the \c onCompleted scripts is
+    The corresponding handler is \c onCompleted. It can be declared on
+    any object. The order of running the \c onCompleted handlers is
     undefined.
 
     \qml
@@ -285,16 +284,16 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 */
 
 /*!
-    \qmlattachedsignal Component::onDestruction()
+    \qmlattachedsignal Component::destruction()
 
     Emitted as the component begins destruction. This can be used to undo
-    work done in the onCompleted signal, or other imperative code in your
-    application.
+    work done in response to the \l {completed}{completed()} signal, or other
+    imperative code in your application.
 
-    The \c {Component::onDestruction} attached property can be declared on
+    The corresponding handler is \c onDestruction. It can be declared on
     any object. However, it applies to the destruction of the component as
     a whole, and not the destruction of the specific object. The order of
-    running the \c onDestruction scripts is undefined.
+    running the \c onDestruction handlers is undefined.
 
     \qml
     Rectangle {

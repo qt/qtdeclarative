@@ -102,6 +102,23 @@ Item {
         }
     }
 
+    ListView {
+        id: listViewDelegateModelAfterCreate
+        anchors.fill: parent
+        property int createdDelegates: 0
+    }
+
+    Component {
+        id: delegateModelAfterCreateComponent
+        Rectangle {
+            width: 140
+            height: 140
+            border.color: "black"
+            color: "red"
+            Component.onCompleted: listViewDelegateModelAfterCreate.createdDelegates++;
+        }
+    }
+
     ListModel { id: emptymodel }
     ListModel { id: manyitems }
     ListModel { id: firstmodel; ListElement { name: "FirstModelElement0" } }
@@ -248,6 +265,12 @@ Item {
                 asyncListViewLoaderView.currentIndex = 3;
                 asyncListViewLoaderView.currentIndex = 4;
             }
+        }
+
+        function test_set_delegate_model_after_list_creation() {
+            listViewDelegateModelAfterCreate.delegate = delegateModelAfterCreateComponent;
+            listViewDelegateModelAfterCreate.model = 40;
+            verify(listViewDelegateModelAfterCreate.createdDelegates > 0);
         }
     }
 }

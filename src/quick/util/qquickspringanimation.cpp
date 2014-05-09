@@ -101,6 +101,7 @@ public:
 protected:
     virtual void updateCurrentTime(int time);
     virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
+    void debugAnimation(QDebug d) const;
 
 private:
     QQuickSpringAnimationPrivate *animationTemplate;
@@ -319,6 +320,15 @@ void QSpringAnimation::updateState(QAbstractAnimationJob::State newState, QAbstr
     if (newState == QAbstractAnimationJob::Running)
         init();
 }
+
+void QSpringAnimation::debugAnimation(QDebug d) const
+{
+    d << "SpringAnimationJob(" << hex << (void *) this << dec << ")" << "velocity:" << maxVelocity
+      << "spring:" << spring << "damping:" << damping << "epsilon:" << epsilon << "modulus:" << modulus
+      << "mass:" << mass << "target:" << target.object() << "property:" << target.name()
+      << "to:" << to << "current velocity:" << velocity;
+}
+
 
 void QQuickSpringAnimationPrivate::updateMode()
 {

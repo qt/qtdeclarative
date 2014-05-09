@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -31,7 +31,7 @@
 \brief An introduction to the basic concepts and features of QML.
 \nextpage QML Tutorial 1 - Basic Types
 
-This tutorial gives an introduction to QML, the declarative language for Qt Quick. It doesn't cover everything;
+This tutorial gives an introduction to QML, the language for Qt Quick UIs. It doesn't cover everything;
 the emphasis is on teaching the key principles, and features are introduced as needed.
 
 Through the different steps of this tutorial we will learn about QML basic types, we will create our own QML component

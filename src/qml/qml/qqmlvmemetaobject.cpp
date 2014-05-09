@@ -615,7 +615,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
             QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
 
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[data->runtimeFunctionIndex];
-            o = QV4::FunctionObject::creatScriptFunction(qmlBindingContext, runtimeFunction);
+            o = QV4::FunctionObject::createScriptFunction(qmlBindingContext, runtimeFunction);
             v8methods[index] = o;
         }
     }

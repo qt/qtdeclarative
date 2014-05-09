@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlContextData;
+
 namespace QV4 {
 
 struct ExecutionContext;
@@ -64,6 +66,8 @@ struct QmlBindingWrapper : FunctionObject {
     static void markObjects(Managed *m, ExecutionEngine *e);
 
     CallContext *context() const { return qmlContext; }
+
+    static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction, const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
 private:
     Object *qml;
@@ -100,7 +104,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static CompiledData::CompilationUnit *precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
+    static QV4::CompiledData::CompilationUnit *precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
 };

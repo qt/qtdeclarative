@@ -97,8 +97,8 @@ public:
 
     void collect(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks) {
-            foreach (Stmt *s, bb->statements) {
+        foreach (BasicBlock *bb, function->basicBlocks()) {
+            foreach (Stmt *s, bb->statements()) {
                 Q_ASSERT(s->id > 0);
                 _currentStmt = s;
                 s->accept(this);
@@ -207,7 +207,7 @@ protected: // IRDecoder
     virtual void callBuiltinReThrow() {}
     virtual void callBuiltinUnwindException(IR::Temp *) {}
     virtual void callBuiltinPushCatchScope(const QString &) {};
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *, IR::Temp *) {}
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *, IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(IR::Temp *, IR::Temp *) {}
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *, IR::Temp *) {}
     virtual void callBuiltinPushWithScope(IR::Temp *) {}
@@ -705,8 +705,8 @@ public:
         for (int i = 0, ei = _intervals.size(); i != ei; ++i)
             _unprocessed[i] = &_intervals[i];
 
-        _liveAtStart.reserve(function->basicBlocks.size());
-        _liveAtEnd.reserve(function->basicBlocks.size());
+        _liveAtStart.reserve(function->basicBlockCount());
+        _liveAtEnd.reserve(function->basicBlockCount());
     }
 
     void run() {
@@ -718,13 +718,14 @@ public:
 private:
     void renumber()
     {
-        foreach (BasicBlock *bb, _function->basicBlocks) {
+        foreach (BasicBlock *bb, _function->basicBlocks()) {
+            QVector<Stmt *> statements = bb->statements();
             QVector<Stmt *> newStatements;
-            newStatements.reserve(bb->statements.size() + 7);
+            newStatements.reserve(bb->statements().size() + 7);
 
             bool seenFirstNonPhiStmt = false;
-            for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
-                _currentStmt = bb->statements[i];
+            for (int i = 0, ei = statements.size(); i != ei; ++i) {
+                _currentStmt = statements[i];
                 _loads.clear();
                 _stores.clear();
                 addNewIntervals();
@@ -766,7 +767,7 @@ private:
             }
 #endif
 
-            bb->statements = newStatements;
+            bb->setStatements(newStatements);
         }
 
     }
@@ -833,7 +834,7 @@ private:
 
     void resolve()
     {
-        foreach (BasicBlock *bb, _function->basicBlocks) {
+        foreach (BasicBlock *bb, _function->basicBlocks()) {
             foreach (BasicBlock *bbOut, bb->out)
                 resolveEdge(bb, bbOut);
         }
@@ -848,11 +849,11 @@ private:
 
         MoveMapping mapping;
 
-        const int predecessorEnd = predecessor->statements.last()->id; // the terminator is always last and always has an id set...
+        const int predecessorEnd = predecessor->terminator()->id; // the terminator is always last and always has an id set...
         Q_ASSERT(predecessorEnd > 0); // ... but we verify it anyway for good measure.
 
         int successorStart = -1;
-        foreach (Stmt *s, successor->statements) {
+        foreach (Stmt *s, successor->statements()) {
             if (s && s->id > 0) {
                 successorStart = s->id;
                 break;
@@ -869,7 +870,7 @@ private:
             Expr *moveFrom = 0;
 
             if (it->start() == successorStart) {
-                foreach (Stmt *s, successor->statements) {
+                foreach (Stmt *s, successor->statements()) {
                     if (!s || s->id < 1)
                         continue;
                     if (Phi *phi = s->asPhi()) {
@@ -925,14 +926,14 @@ private:
 
                 Q_ASSERT(!_info->isPhiTarget(it->temp()) || it->isSplitFromInterval() || lifeTimeHole);
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
-                    const int successorEnd = successor->statements.last()->id;
+                    const int successorEnd = successor->terminator()->id;
                     const int idx = successor->in.indexOf(predecessor);
                     foreach (const Use &use, _info->uses(it->temp())) {
                         if (use.pos == static_cast<unsigned>(successorStart)) {
                             // only check the current edge, not all other possible ones. This is
                             // important for phi nodes: they have uses that are only valid when
                             // coming in over a specific edge.
-                            foreach (Stmt *s, successor->statements) {
+                            foreach (Stmt *s, successor->statements()) {
                                 if (Phi *phi = s->asPhi()) {
                                     Q_ASSERT(it->temp().index != phi->targetTemp->index);
                                     Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0
@@ -1076,6 +1077,8 @@ RegisterAllocator::RegisterAllocator(const QVector<int> &normalRegisters, const 
 {
     Q_ASSERT(normalRegisters.size() >= 2);
     Q_ASSERT(fpRegisters.size() >= 2);
+    _active.reserve((normalRegisters.size() + fpRegisters.size()) * 2);
+    _inactive.reserve(_active.size());
 }
 
 RegisterAllocator::~RegisterAllocator()
@@ -1084,13 +1087,16 @@ RegisterAllocator::~RegisterAllocator()
 
 void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 {
+    _lastAssignedRegister.reserve(function->tempCount);
+    _assignedSpillSlots.reserve(function->tempCount);
     _activeSpillSlots.resize(function->tempCount);
 
 #ifdef DEBUG_REGALLOC
     qDebug() << "*** Running regalloc for function" << (function->name ? qPrintable(*function->name) : "NO NAME") << "***";
 #endif // DEBUG_REGALLOC
 
-    _unhandled = opt.lifeRanges();
+    _unhandled = opt.lifeTimeIntervals();
+    _handled.reserve(_unhandled.size());
 
     _info.reset(new RegAllocInfo);
     _info->collect(function);
@@ -1110,10 +1116,6 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 #endif // DEBUG_REGALLOC
 
     prepareRanges();
-
-    _handled.reserve(_unhandled.size());
-    _active.reserve(32);
-    _inactive.reserve(16);
 
     Optimizer::showMeTheCode(function);
 
@@ -1135,46 +1137,55 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 #endif // DEBUG_REGALLOC
 }
 
-static inline LifeTimeInterval createFixedInterval(int reg, bool isFP, int rangeCount)
+static inline LifeTimeInterval createFixedInterval(int rangeCount)
 {
+    LifeTimeInterval i(rangeCount);
+    i.setReg(0);
+
+    Temp t;
+    t.init(Temp::PhysicalRegister, 0, 0);
+    t.type = IR::SInt32Type;
+    i.setTemp(t);
+
+    return i;
+}
+
+static inline LifeTimeInterval cloneFixedInterval(int reg, bool isFP, LifeTimeInterval lti)
+{
+    lti.setReg(reg);
+    lti.setFixedInterval(true);
+
     Temp t;
     t.init(Temp::PhysicalRegister, reg, 0);
     t.type = isFP ? IR::DoubleType : IR::SInt32Type;
-    LifeTimeInterval i;
-    i.setTemp(t);
-    i.setReg(reg);
-    i.setFixedInterval(true);
-    i.reserveRanges(rangeCount);
-    return i;
+    lti.setTemp(t);
+
+    return lti;
 }
 
 void RegisterAllocator::prepareRanges()
 {
+    LifeTimeInterval ltiWithCalls = createFixedInterval(_info->calls().size());
+    foreach (int callPosition, _info->calls())
+        ltiWithCalls.addRange(callPosition, callPosition);
+
     const int regCount = _normalRegisters.size();
-    _fixedRegisterRanges.resize(regCount);
-    for (int reg = 0; reg < regCount; ++reg)
-        _fixedRegisterRanges[reg] = createFixedInterval(reg, false, _info->calls().size());
+    _fixedRegisterRanges.reserve(regCount);
+    for (int reg = 0; reg < regCount; ++reg) {
+        LifeTimeInterval lti = cloneFixedInterval(reg, false, ltiWithCalls);
+        _fixedRegisterRanges.append(lti);
+        if (lti.isValid())
+            _active.append(lti);
+    }
 
     const int fpRegCount = _fpRegisters.size();
-    _fixedFPRegisterRanges.resize(fpRegCount);
+    _fixedFPRegisterRanges.reserve(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
-        _fixedFPRegisterRanges[fpReg] = createFixedInterval(fpReg, true, _info->calls().size());
+        LifeTimeInterval lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
+        _fixedFPRegisterRanges.append(lti);
+        if (lti.isValid())
+            _active.append(lti);
     }
-
-    foreach (int callPosition, _info->calls()) {
-        for (int reg = 0; reg < regCount; ++reg)
-            _fixedRegisterRanges[reg].addRange(callPosition, callPosition);
-        for (int fpReg = 0; fpReg < fpRegCount; ++fpReg)
-            _fixedFPRegisterRanges[fpReg].addRange(callPosition, callPosition);
-    }
-    for (int reg = 0; reg < regCount; ++reg)
-        if (_fixedRegisterRanges[reg].isValid())
-            _active.append(_fixedRegisterRanges[reg]);
-    for (int fpReg = 0; fpReg < fpRegCount; ++fpReg)
-        if (_fixedFPRegisterRanges[fpReg].isValid())
-            _active.append(_fixedFPRegisterRanges[fpReg]);
-
-    std::sort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
 }
 
 void RegisterAllocator::linearScan()
@@ -1186,7 +1197,7 @@ void RegisterAllocator::linearScan()
 
         // check for intervals in active that are handled or inactive
         for (int i = 0; i < _active.size(); ) {
-            const LifeTimeInterval &it = _active[i];
+            const LifeTimeInterval &it = _active.at(i);
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
@@ -1201,7 +1212,7 @@ void RegisterAllocator::linearScan()
 
         // check for intervals in inactive that are handled or active
         for (int i = 0; i < _inactive.size(); ) {
-            LifeTimeInterval &it = _inactive[i];
+            const LifeTimeInterval &it = _inactive.at(i);
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
@@ -1221,6 +1232,10 @@ void RegisterAllocator::linearScan()
         }
 
         Q_ASSERT(!current.isFixedInterval());
+
+#ifdef DEBUG_REGALLOC
+        qDebug() << "** Position" << position;
+#endif // DEBUG_REGALLOC
 
         if (_info->canHaveRegister(current.temp())) {
             tryAllocateFreeReg(current, position);
@@ -1374,11 +1389,15 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     QVector<LifeTimeInterval *> nextUseRangeForReg(nextUsePos.size(), 0);
     Q_ASSERT(nextUsePos.size() > 0);
 
+    const bool definedAtCurrentPosition = !current.isSplitFromInterval() && current.start() == position;
+
     for (int i = 0, ei = _active.size(); i != ei; ++i) {
         LifeTimeInterval &it = _active[i];
         if (it.isFP() == needsFPReg) {
             int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
-            if (nu != -1 && nu < nextUsePos[it.reg()]) {
+            if (nu == position && !definedAtCurrentPosition) {
+                nextUsePos[it.reg()] = 0;
+            } else if (nu != -1 && nu < nextUsePos[it.reg()]) {
                 nextUsePos[it.reg()] = nu;
                 nextUseRangeForReg[it.reg()] = &it;
             } else if (nu == -1 && nextUsePos[it.reg()] == INT_MAX) {
@@ -1440,8 +1459,8 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
         // make sure that current does not intersect with the fixed interval for reg
-        const LifeTimeInterval &fixedRegRange = needsFPReg ? _fixedFPRegisterRanges[reg]
-                                                           : _fixedRegisterRanges[reg];
+        const LifeTimeInterval &fixedRegRange = needsFPReg ? _fixedFPRegisterRanges.at(reg)
+                                                           : _fixedRegisterRanges.at(reg);
         int ni = nextIntersection(current, fixedRegRange, position);
         if (ni != -1) {
 #ifdef DEBUG_REGALLOC
@@ -1603,7 +1622,7 @@ void RegisterAllocator::assignSpillSlot(const Temp &t, int startPos, int endPos)
         return;
 
     for (int i = 0, ei = _activeSpillSlots.size(); i != ei; ++i) {
-        if (_activeSpillSlots[i] < startPos) {
+        if (_activeSpillSlots.at(i) < startPos) {
             _activeSpillSlots[i] = endPos;
             _assignedSpillSlots.insert(t, i);
             return;

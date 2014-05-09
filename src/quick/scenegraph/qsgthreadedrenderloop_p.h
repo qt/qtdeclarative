@@ -87,6 +87,7 @@ private:
     struct Window {
         QQuickWindow *window;
         QSGRenderThread *thread;
+        QSurfaceFormat actualWindowFormat;
         int timerId;
         uint updateDuringSync : 1;
     };

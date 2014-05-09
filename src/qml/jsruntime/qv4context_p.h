@@ -60,7 +60,7 @@ struct ValueRef;
 namespace CompiledData {
 struct CompilationUnit;
 struct Function;
-};
+}
 
 struct CallContext;
 struct CallContext;

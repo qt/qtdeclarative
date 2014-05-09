@@ -54,9 +54,11 @@ public:
 
     static QList<QThread *> threads;
 
+public Q_SLOTS:
+    void ready();
+
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-
 
 private:
     RenderThread *m_renderThread;

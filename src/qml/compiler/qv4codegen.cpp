@@ -41,7 +41,6 @@
 
 #include "qv4codegen_p.h"
 #include "qv4util_p.h"
-#include "qv4debugging_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
@@ -51,8 +50,13 @@
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
-#include <qv4runtime_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4value_inl_p.h>
+
+#ifndef V4_BOOTSTRAP
 #include <qv4context_p.h>
+#endif
+
 #include <cmath>
 #include <iostream>
 
@@ -2041,7 +2045,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     sourceElements(body);
 
-    _function->insertBasicBlock(_exitBlock);
+    _function->addBasicBlock(_exitBlock);
 
     _block->JUMP(_exitBlock);
 
@@ -2212,8 +2216,6 @@ bool Codegen::visit(ForEachStatement *ast)
     IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, foreachin, foreachend, foreachin);
-
     int objectToIterateOn = _block->newTemp();
     move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
@@ -2222,6 +2224,7 @@ bool Codegen::visit(ForEachStatement *ast)
     int iterator = _block->newTemp();
     move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
+    enterLoop(ast, foreachin, foreachend, foreachin);
     _block->JUMP(foreachin);
 
     _block = foreachbody;
@@ -2352,8 +2355,6 @@ bool Codegen::visit(LocalForEachStatement *ast)
     IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, foreachin, foreachend, foreachin);
-
     variableDeclaration(ast->declaration);
 
     int iterator = _block->newTemp();
@@ -2363,6 +2364,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
     _block->JUMP(foreachin);
+    enterLoop(ast, foreachin, foreachend, foreachin);
 
     _block = foreachbody;
     int temp = _block->newTemp();
@@ -2597,7 +2599,7 @@ bool Codegen::visit(TryStatement *ast)
 
     if (ast->catchExpression) {
         pushExceptionHandler(catchExceptionHandler);
-        _function->insertBasicBlock(catchBody);
+        _function->addBasicBlock(catchBody);
         _block = catchBody;
 
         ++_function->insideWithOrCatch;
@@ -2615,7 +2617,7 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(finallyBody ? finallyBody : end);
         popExceptionHandler();
 
-        _function->insertBasicBlock(catchExceptionHandler);
+        _function->addBasicBlock(catchExceptionHandler);
         catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
         if (finallyBody || surroundingExceptionHandler)
             catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
@@ -2626,7 +2628,7 @@ bool Codegen::visit(TryStatement *ast)
     _scopeAndFinally = tcf.parent;
 
     if (finallyBody) {
-        _function->insertBasicBlock(finallyBody);
+        _function->addBasicBlock(finallyBody);
         _block = finallyBody;
 
         int hasException = _block->newTemp();
@@ -2641,7 +2643,7 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(end);
     }
 
-    _function->insertBasicBlock(end);
+    _function->addBasicBlock(end);
     _block = end;
 
     return false;
@@ -2812,11 +2814,9 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
         return;
 
     hasError = true;
-    QQmlError error;
-    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
-    error.setDescription(detail);
-    error.setLine(loc.startLine);
-    error.setColumn(loc.startColumn);
+    QQmlJS::DiagnosticMessage error;
+    error.message = detail;
+    error.loc = loc;
     _errors << error;
 }
 
@@ -2826,17 +2826,35 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
         return;
 
     hasError = true;
-    QQmlError error;
-    error.setUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
-    error.setDescription(detail);
-    error.setLine(loc.startLine);
-    error.setColumn(loc.startColumn);
+    QQmlJS::DiagnosticMessage error;
+    error.message = detail;
+    error.loc = loc;
     _errors << error;
 }
 
-QList<QQmlError> Codegen::errors() const
+QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 {
     return _errors;
+}
+
+#ifndef V4_BOOTSTRAP
+
+QList<QQmlError> Codegen::qmlErrors() const
+{
+    QList<QQmlError> qmlErrors;
+    qmlErrors.reserve(_errors.size());
+
+    QUrl url(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
+    foreach (const QQmlJS::DiagnosticMessage &msg, _errors) {
+        QQmlError e;
+        e.setUrl(url);
+        e.setLine(msg.loc.startLine);
+        e.setColumn(msg.loc.startColumn);
+        e.setDescription(msg.message);
+        qmlErrors << e;
+    }
+
+    return qmlErrors;
 }
 
 void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
@@ -2854,3 +2872,5 @@ void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const Q
     hasError = true;
     context->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
+
+#endif // V4_BOOTSTRAP

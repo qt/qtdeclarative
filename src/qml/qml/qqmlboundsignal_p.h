@@ -78,6 +78,8 @@ public:
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function);
 
+    QQmlBoundSignalExpression(QObject *target, int index,
+                              QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
@@ -104,7 +106,6 @@ private:
     bool invalidParameterName() const { return m_extra.flag2(); }
     void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
 
-    QV4::PersistentValue m_v8qmlscope;
     QV4::PersistentValue m_v8function;
 
     QObject *m_target;
@@ -119,6 +120,7 @@ private:
         QString m_parameterString;
         QString m_expression;
         QQmlSourceLocation m_sourceLocation;
+        QV4::PersistentValue m_v8qmlscope;
     };
 
     // We store some flag bits in the following flag pointers.

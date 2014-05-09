@@ -109,8 +109,8 @@ the view and cannot be moved by other means.
 
 Dragging the content item is enabled by binding it to the MouseArea's
 \l {QtQuick::MouseArea::drag.target}{drag.target} property.  Because we still want the view to be
-flickable we wait until the MouseArea's \l {QtQuick::MouseArea::onPressAndHold}{onPressAndHold}
-handler is triggered before binding the drag target. This way when mouse moves before the hold
+flickable we wait until the MouseArea's \l {QtQuick::MouseArea::}{pressAndHold}
+signal is emitted before binding the drag target. This way when mouse moves before the hold
 timeout has expired it is interpreted as moving the list and if it moves after it is interpreted as
 dragging an item.  To make it more obvious to the user when an item can be dragged we'll change the
 background color of the content item when the timeout has expired.

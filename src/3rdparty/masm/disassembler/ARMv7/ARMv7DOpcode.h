@@ -69,6 +69,7 @@ protected:
 
     static const char* conditionName(unsigned condition) { return s_conditionNames[condition & 0xf]; }
     static const char* shiftName(unsigned shiftValue) { return s_shiftNames[shiftValue & 0x3]; }
+    static bool isRightShift(unsigned shiftValue) { return shiftValue == 1 || shiftValue == 2; }
 
     bool inITBlock() { return m_ITConditionIndex < m_ITBlocksize; }
     bool startingITBlock() { return m_ITConditionIndex == m_ITBlocksize + 1; }
@@ -514,7 +515,10 @@ protected:
     const char* opName() { return shiftName(op()); }
 
     unsigned op() { return (m_opcode >> 12) & 0x3; }
-    unsigned immediate5() { return (m_opcode >> 6) & 0x1f; }
+    unsigned immediate5() {
+        unsigned imm = (m_opcode >> 6) & 0x1f;
+        return isRightShift(op()) && imm == 0 ? 32 : imm;
+    }
 };
 
 class ARMv7DOpcodeMiscAddSubSP : public ARMv7D16BitOpcode {

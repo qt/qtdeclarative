@@ -42,7 +42,10 @@
 #include "qquickimagebase_p.h"
 #include "qquickimagebase_p_p.h"
 
+#include <QtGui/qguiapplication.h>
+
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,12 +53,14 @@ QQuickImageBase::QQuickImageBase(QQuickItem *parent)
 : QQuickImplicitSizeItem(*(new QQuickImageBasePrivate), parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(windowChanged(QQuickWindow*)), SLOT(handleWindowChanged(QQuickWindow*)));
 }
 
 QQuickImageBase::QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent)
 : QQuickImplicitSizeItem(dd, parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(windowChanged(QQuickWindow*)), SLOT(handleWindowChanged(QQuickWindow*)));
 }
 
 QQuickImageBase::~QQuickImageBase()
@@ -208,7 +213,13 @@ void QQuickImageBase::load()
         if (d->cache)
             options |= QQuickPixmap::Cache;
         d->pix.clear(this);
-        d->pix.load(qmlEngine(this), d->url, d->sourcesize, options);
+
+        const qreal targetDevicePixelRatio = (window() ? window()->devicePixelRatio() : qApp->devicePixelRatio());
+        d->devicePixelRatio = 1.0;
+
+        QUrl loadUrl = d->url;
+        resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
+        d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options);
 
         if (d->pix.isLoading()) {
             if (d->progress != 0.0) {
@@ -275,6 +286,19 @@ void QQuickImageBase::requestProgress(qint64 received, qint64 total)
     }
 }
 
+void QQuickImageBase::handleWindowChanged(QQuickWindow* window)
+{
+    if (window)
+        connect(window, SIGNAL(screenChanged(QScreen*)), this, SLOT(handleScreenChanged(QScreen*)));
+}
+
+void QQuickImageBase::handleScreenChanged(QScreen*)
+{
+    // Screen DPI might have changed, reload images on screen change.
+    if (isComponentComplete())
+        load();
+}
+
 void QQuickImageBase::componentComplete()
 {
     Q_D(QQuickImageBase);
@@ -286,7 +310,52 @@ void QQuickImageBase::componentComplete()
 void QQuickImageBase::pixmapChange()
 {
     Q_D(QQuickImageBase);
-    setImplicitSize(d->pix.width(), d->pix.height());
+    setImplicitSize(d->pix.width() / d->devicePixelRatio, d->pix.height() / d->devicePixelRatio);
+}
+
+// /path/to/foo.png -> path/too/foo@2x.png
+static QString image2xPath(const QString &path)
+{
+    const int dotIndex = path.lastIndexOf(QLatin1Char('.'));
+    if (dotIndex == -1)
+        return path;
+    if (path.contains(QLatin1String("@2x.")))
+        return path;
+
+    QString retinaPath = path;
+    retinaPath.insert(dotIndex, QStringLiteral("@2x"));
+    return retinaPath;
+}
+
+void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio)
+{
+    Q_ASSERT(sourceUrl);
+    Q_ASSERT(sourceDevicePixelRatio);
+
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
+
+    // Non-local file path: @2x loading is not supported.
+    if (localFile.isEmpty())
+        return;
+
+    // Special case: the url in the QML source refers directly to an "@2x" file.
+    if (localFile.contains(QLatin1String("@2x"))) {
+        *sourceDevicePixelRatio = qreal(2.0);
+        return;
+    }
+
+    // Don't load @2x files non normal-dpi displays.
+    if (!(targetDevicePixelRatio > qreal(1.0)))
+        return;
+
+    // Look for an @2x version
+    QString localFile2x = image2xPath(localFile);
+    if (!QFile(localFile2x).exists())
+        return;
+
+    // @2x file found found: Change url and devicePixelRatio
+    *sourceUrl = QUrl::fromLocalFile(localFile2x);
+    *sourceDevicePixelRatio = qreal(2.0);
 }
 
 QT_END_NAMESPACE

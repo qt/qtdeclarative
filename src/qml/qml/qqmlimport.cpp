@@ -296,7 +296,7 @@ public:
 
     QQmlImportNamespace::Import *addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                       const QString &uri, const QString &url,
-                                                      int vmaj, int vmin, QQmlScript::Import::Type type,
+                                                      int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
 
    bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
@@ -624,12 +624,13 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
     }
 
-    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type), end = qmlDirComponents.end();
+    const QString typeStr = type.toString();
+    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(typeStr), end = qmlDirComponents.end();
     if (it != end) {
         QString componentUrl;
         bool isCompositeSingleton = false;
         QQmlDirComponents::ConstIterator candidate = end;
-        for ( ; it != end && it.key() == type; ++it) {
+        for ( ; it != end && it.key() == typeStr; ++it) {
             const QQmlDirParser::Component &c = *it;
 
             // importing version -1 means import ALL versions
@@ -1211,7 +1212,7 @@ QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) 
 
 QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                                       const QString &uri, const QString &url, int vmaj, int vmin,
-                                                                      QQmlScript::Import::Type type,
+                                                                      QV4::CompiledData::Import::ImportType type,
                                                                       QList<QQmlError> *errors, bool lowPrecedence)
 {
     Q_ASSERT(nameSpace);
@@ -1224,7 +1225,7 @@ QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImport
     import->url = url;
     import->majversion = vmaj;
     import->minversion = vmin;
-    import->isLibrary = (type == QQmlScript::Import::Library);
+    import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
 
     if (lowPrecedence)
         nameSpace->imports.append(import);
@@ -1245,7 +1246,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     QQmlImportNamespace *nameSpace = importNamespace(prefix);
     Q_ASSERT(nameSpace);
 
-    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, uri, qmldirUrl, vmaj, vmin, QQmlScript::Import::Library, errors);
+    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, uri, qmldirUrl, vmaj, vmin, QV4::CompiledData::Import::ImportLibrary, errors);
     Q_ASSERT(inserted);
 
     if (!incomplete) {
@@ -1375,7 +1376,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     if (!url.endsWith(Slash) && !url.endsWith(Backslash))
         url += Slash;
 
-    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QQmlScript::Import::File, errors, isImplicitImport);
+    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QV4::CompiledData::Import::ImportFile, errors, isImplicitImport);
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
@@ -1578,8 +1579,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
 QQmlImportDatabase::~QQmlImportDatabase()
 {
-    qDeleteAll(qmldirCache);
-    qmldirCache.clear();
+    clearDirCache();
 }
 
 /*!
@@ -1814,7 +1814,7 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
     fileImportPath = paths;
 
     // Our existing cached paths may have been invalidated
-    qmldirCache.clear();
+    clearDirCache();
 }
 
 /*!
@@ -2022,6 +2022,22 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
 #else
     return false;
 #endif
+}
+
+void QQmlImportDatabase::clearDirCache()
+{
+    QStringHash<QmldirCache *>::ConstIterator itr = qmldirCache.begin();
+    while (itr != qmldirCache.end()) {
+        QmldirCache *cache = *itr;
+        do {
+            QmldirCache *nextCache = cache->next;
+            delete cache;
+            cache = nextCache;
+        } while (cache);
+
+        ++itr;
+    }
+    qmldirCache.clear();
 }
 
 QT_END_NAMESPACE

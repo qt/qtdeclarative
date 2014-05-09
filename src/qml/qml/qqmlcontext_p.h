@@ -59,7 +59,6 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include "qqmllist.h"
-#include "qqmlscript_p.h"
 
 #include <QtCore/qhash.h>
 #include <QtQml/qjsvalue.h>
@@ -106,7 +105,6 @@ public:
     static QObject *context_at(QQmlListProperty<QObject> *, int);
 };
 
-class QQmlVME;
 class QQmlComponentAttached;
 class QQmlGuardedContextData;
 class Q_QML_PRIVATE_EXPORT QQmlContextData

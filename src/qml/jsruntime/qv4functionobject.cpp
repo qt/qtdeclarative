@@ -167,12 +167,13 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
 void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
-    o->scope->mark(e);
+    if (o->scope)
+        o->scope->mark(e);
 
     Object::markObjects(that, e);
 }
 
-FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
 {
     if (function->needsActivation() ||
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
@@ -236,7 +237,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return FunctionObject::creatScriptFunction(v4->rootContext, vmf)->asReturnedValue();
+    return FunctionObject::createScriptFunction(v4->rootContext, vmf)->asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)
@@ -356,11 +357,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
-
-    this->function = function;
-    this->function->compilationUnit->ref();
-    Q_ASSERT(function);
-    Q_ASSERT(function->code);
 
     // global function
     if (!scope)
@@ -545,7 +541,7 @@ InternalClass *SimpleScriptFunction::internalClassForConstructor()
     Scope scope(internalClass->engine);
     ScopedObject p(scope, proto);
     if (p)
-        classForConstructor = InternalClass::create(scope.engine, Object::staticVTable(), p.getPointer());
+        classForConstructor = internalClass->engine->constructClass->changePrototype(p.getPointer());
     else
         classForConstructor = scope.engine->objectClass;
 

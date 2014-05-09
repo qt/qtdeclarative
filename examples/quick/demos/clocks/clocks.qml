@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
+import "content" as Content
 
 Rectangle {
     id: root
@@ -54,7 +54,7 @@ Rectangle {
         snapMode: ListView.SnapOneItem
         highlightRangeMode: ListView.ApplyRange
 
-        delegate: Clock { city: cityName; shift: timeShift }
+        delegate: Content.Clock { city: cityName; shift: timeShift }
         model: ListModel {
             ListElement { cityName: "New York"; timeShift: -4 }
             ListElement { cityName: "London"; timeShift: 0 }

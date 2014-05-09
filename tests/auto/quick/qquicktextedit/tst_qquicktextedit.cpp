@@ -1296,7 +1296,7 @@ void tst_qquicktextedit::selectionOnFocusOut()
     QVERIFY(edit2->hasActiveFocus());
 
     edit2->setFocus(false, Qt::PopupFocusReason);
-    QVERIFY(!edit2->hasActiveFocus());
+    QVERIFY(edit2->hasActiveFocus());
     QCOMPARE(edit2->selectedText(), QLatin1String("text 2"));
 }
 

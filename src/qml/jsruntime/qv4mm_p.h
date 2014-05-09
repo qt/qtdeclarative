@@ -107,10 +107,11 @@ public:
     void setGCBlocked(bool blockGC);
     void runGC();
 
-    void setEnableGC(bool enableGC);
     void setExecutionEngine(ExecutionEngine *engine);
 
     void dumpStats() const;
+
+    void registerDeletable(GCDeletable *d);
 
 protected:
     /// expects size to be aligned
@@ -124,11 +125,11 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectFromStack() const;
     void collectFromJSStack() const;
     void mark();
     void sweep(bool lastSweep = false);
-    void sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);
+    void sweep(char *chunkStart, std::size_t chunkSize, size_t size);
+    uint getUsedMem();
 
 protected:
     QScopedPointer<Data> m_d;

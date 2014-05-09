@@ -105,6 +105,7 @@ public:
 protected:
     virtual void updateCurrentTime(int);
     virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
+    void debugAnimation(QDebug d) const;
 
 private:
     qreal easeFollow(qreal);

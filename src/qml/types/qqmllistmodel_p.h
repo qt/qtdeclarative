@@ -168,8 +168,8 @@ public:
 
 
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
-    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings);
-    void setCustomData(QObject *, const QByteArray &);
+    QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    void setCustomData(QObject *, const QByteArray &, QQmlCompiledData *);
 
 private:
     struct ListInstruction
@@ -183,7 +183,7 @@ private:
         int instrCount;
         ListInstruction *instructions() const;
     };
-    bool compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QV4::CompiledData::Binding *binding, QList<ListInstruction> &instr, QByteArray &data);
+    bool compileProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, QList<ListInstruction> &instr, QByteArray &data);
 
     bool definesEmptyList(const QString &);
 

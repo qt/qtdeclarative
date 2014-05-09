@@ -74,7 +74,7 @@ steps such as use cases and introductory material. For more information about Qt
 
 \div {class="landingicons"}
     \div {class="icons1of3"}
-        \bold{Development Environment}
+        \b{Development Environment}
         \list
         \li \l{Qt Creator: Creating Qt Quick Projects}{Creating Qt Quick Projects}
         \li \l{Qt Creator: Using Qt Quick Designer}{Using Qt Quick Designer}
@@ -85,7 +85,7 @@ steps such as use cases and introductory material. For more information about Qt
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{Beginning with QML and Qt Quick}
+        \b{Beginning with QML and Qt Quick}
         \list
         \li \l{First Steps with QML}
         \li \l{Getting Started Programming with Qt Quick}{Qt Quick Text Editor}
@@ -93,7 +93,7 @@ steps such as use cases and introductory material. For more information about Qt
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{Use Cases}
+        \b{Use Cases}
         \list
         \li \l{qtquick-usecase-visual.html}{Visual types in QML}
         \li \l{qtquick-usecase-userinput.html}{Responding to User Input in QML}
@@ -124,7 +124,7 @@ the examples from within Qt Creator.
 
 \div {class="landingicons"}
     \div {class="icons1of3"}
-        \bold{QML Types and Controls}
+        \b{QML Types and Controls}
         \list
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
         \li \l{Qt Quick System Dialog Examples}{Dialog Examples}
@@ -135,7 +135,7 @@ the examples from within Qt Creator.
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{Layouts and Views}
+        \b{Layouts and Views}
         \list
         \li \l{Qt Quick Controls - Basic Layouts Example}{Basic Layouts}
         \li \l{Qt Quick Examples - Positioners}{Positioners}
@@ -145,7 +145,7 @@ the examples from within Qt Creator.
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{Image and Graphics}
+        \b{Image and Graphics}
         \list
         \li \l{Qt Quick Examples - Image Elements}{Image Elements}
         \li \l{Qt Quick Examples - Animation}{Animation}
@@ -157,7 +157,7 @@ the examples from within Qt Creator.
 
 \div {class="landingicons"}
     \div {class="icons1of3"}
-        \bold{Keyboard, Focus, and Touch}
+        \b{Keyboard, Focus, and Touch}
         \list
         \li \l{Qt Quick Examples - Key Interaction}{Key Interaction}
         \li \l{Qt Quick Examples - MouseArea}{MouseArea}
@@ -165,7 +165,7 @@ the examples from within Qt Creator.
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{System and Events}
+        \b{System and Events}
         \list
         \li \l{Qt Quick Examples - Threading}{Threading}
         \li \l{Qt Quick Examples - Accessibility}{Accessibility}
@@ -174,7 +174,7 @@ the examples from within Qt Creator.
         \endlist
     \enddiv
     \div {class="icons1of3"}
-        \bold{Scene Graph}
+        \b{Scene Graph}
         \list
         \li \l{Scene Graph - OpenGL Under QML}{OpenGL Under QML}
         \li \l{Scene Graph - Painted Item}{Painted Item}

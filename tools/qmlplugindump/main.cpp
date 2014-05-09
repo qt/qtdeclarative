@@ -317,6 +317,29 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
     return metas;
 }
 
+class KnownAttributes {
+    QHash<QByteArray, int> m_properties;
+    QHash<QByteArray, QHash<int, int> > m_methods;
+public:
+    bool knownMethod(const QByteArray &name, int nArgs, int revision)
+    {
+        if (m_methods.contains(name)) {
+            QHash<int, int> overloads = m_methods.value(name);
+            if (overloads.contains(nArgs) && overloads.value(nArgs) <= revision)
+                return true;
+        }
+        m_methods[name][nArgs] = revision;
+        return false;
+    }
+
+    bool knownProperty(const QByteArray &name, int revision)
+    {
+        if (m_properties.contains(name) && m_properties.value(name) <= revision)
+            return true;
+        m_properties[name] = revision;
+        return false;
+    }
+};
 
 class Dumper
 {
@@ -350,12 +373,15 @@ public:
         return exportString;
     }
 
-    void writeMetaContent(const QMetaObject *meta)
+    void writeMetaContent(const QMetaObject *meta, KnownAttributes *knownAttributes = 0)
     {
         QSet<QString> implicitSignals;
         for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
             const QMetaProperty &property = meta->property(index);
-            dump(property);
+            dump(property, knownAttributes);
+            if (knownAttributes)
+                knownAttributes->knownMethod(QByteArray(property.name()).append("Changed"),
+                                             0, property.revision());
             implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
         }
 
@@ -368,38 +394,52 @@ public:
                         || signature == QByteArrayLiteral("destroyed()")
                         || signature == QByteArrayLiteral("deleteLater()"))
                     continue;
-                dump(method, implicitSignals);
+                dump(method, implicitSignals, knownAttributes);
             }
 
             // and add toString(), destroy() and destroy(int)
-            qml->writeStartObject(QLatin1String("Method"));
-            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("toString")));
-            qml->writeEndObject();
-            qml->writeStartObject(QLatin1String("Method"));
-            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
-            qml->writeEndObject();
-            qml->writeStartObject(QLatin1String("Method"));
-            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
-            qml->writeStartObject(QLatin1String("Parameter"));
-            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("delay")));
-            qml->writeScriptBinding(QLatin1String("type"), enquote(QLatin1String("int")));
-            qml->writeEndObject();
-            qml->writeEndObject();
+            if (!knownAttributes || !knownAttributes->knownMethod(QByteArray("toString"), 0, 0)) {
+                qml->writeStartObject(QLatin1String("Method"));
+                qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("toString")));
+                qml->writeEndObject();
+            }
+            if (!knownAttributes || !knownAttributes->knownMethod(QByteArray("destroy"), 0, 0)) {
+                qml->writeStartObject(QLatin1String("Method"));
+                qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+                qml->writeEndObject();
+            }
+            if (!knownAttributes || !knownAttributes->knownMethod(QByteArray("destroy"), 1, 0)) {
+                qml->writeStartObject(QLatin1String("Method"));
+                qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+                qml->writeStartObject(QLatin1String("Parameter"));
+                qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("delay")));
+                qml->writeScriptBinding(QLatin1String("type"), enquote(QLatin1String("int")));
+                qml->writeEndObject();
+                qml->writeEndObject();
+            }
         } else {
             for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
-                dump(meta->method(index), implicitSignals);
+                dump(meta->method(index), implicitSignals, knownAttributes);
         }
     }
 
-    QString getPrototypeNameForCompositeType(const QMetaObject *metaObject, QSet<QByteArray> &defaultReachableNames)
+    QString getPrototypeNameForCompositeType(const QMetaObject *metaObject, QSet<QByteArray> &defaultReachableNames,
+                                             QList<const QMetaObject *> *objectsToMerge)
     {
         QString prototypeName;
         if (!defaultReachableNames.contains(metaObject->className())) {
+            // dynamic meta objects can break things badly
+            // but extended types are usually fine
+            const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
+            if (!(mop->flags & DynamicMetaObject) && objectsToMerge
+                    && !objectsToMerge->contains(metaObject))
+                objectsToMerge->append(metaObject);
             const QMetaObject *superMetaObject = metaObject->superClass();
             if (!superMetaObject)
                 prototypeName = "QObject";
             else
-                prototypeName = getPrototypeNameForCompositeType(superMetaObject, defaultReachableNames);
+                prototypeName = getPrototypeNameForCompositeType(
+                            superMetaObject, defaultReachableNames, objectsToMerge);
         } else {
             prototypeName = convertToId(metaObject->className());
         }
@@ -418,8 +458,11 @@ public:
 
         const QMetaObject *mainMeta = object->metaObject();
 
+        QList<const QMetaObject *> objectsToMerge;
+        KnownAttributes knownAttributes;
         // Get C++ base class name for the composite type
-        QString prototypeName = getPrototypeNameForCompositeType(mainMeta, defaultReachableNames);
+        QString prototypeName = getPrototypeNameForCompositeType(mainMeta, defaultReachableNames,
+                                                                 &objectsToMerge);
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
 
         QString qmlTyName = compositeType->qmlTypeName();
@@ -430,11 +473,10 @@ public:
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
         qml->writeBooleanBinding(QLatin1String("isComposite"), true);
 
-        if (!compositeType->isCreatable())
+        if (compositeType->isSingleton()) {
             qml->writeBooleanBinding(QLatin1String("isCreatable"), false);
-
-        if (compositeType->isSingleton())
             qml->writeBooleanBinding(QLatin1String("isSingleton"), true);
+        }
 
         for (int index = mainMeta->classInfoCount() - 1 ; index >= 0 ; --index) {
             QMetaClassInfo classInfo = mainMeta->classInfo(index);
@@ -444,25 +486,8 @@ public:
             }
         }
 
-        QSet<const QMetaObject *> metas;
-        QSet<const QMetaObject *> candidatesComposite;
-        collectReachableMetaObjects(mainMeta, &candidatesComposite);
-
-        // Also eliminate meta objects with the same classname.
-        // This is required because extended objects seem not to share
-        // a single meta object instance.
-        foreach (const QMetaObject *mo, candidatesComposite) {
-            if (!defaultReachableNames.contains(mo->className()))
-                metas.insert(mo);
-        }
-
-        // put the metaobjects into a map so they are always dumped in the same order
-        QMap<QString, const QMetaObject *> nameToMeta;
-        foreach (const QMetaObject *meta, metas)
-            nameToMeta.insert(convertToId(meta), meta);
-
-        foreach (const QMetaObject *meta, nameToMeta)
-            writeMetaContent(meta);
+        foreach (const QMetaObject *meta, objectsToMerge)
+            writeMetaContent(meta, &knownAttributes);
 
         qml->writeEndObject();
     }
@@ -580,21 +605,23 @@ private:
             qml->writeScriptBinding(QLatin1String("isPointer"), QLatin1String("true"));
     }
 
-    void dump(const QMetaProperty &prop)
+    void dump(const QMetaProperty &prop, KnownAttributes *knownAttributes = 0)
     {
+        int revision = prop.revision();
+        QByteArray propName = prop.name();
+        if (knownAttributes && knownAttributes->knownProperty(propName, revision))
+            return;
         qml->writeStartObject("Property");
-
         qml->writeScriptBinding(QLatin1String("name"), enquote(QString::fromUtf8(prop.name())));
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 4))
-        if (int revision = prop.revision())
+        if (revision)
             qml->writeScriptBinding(QLatin1String("revision"), QString::number(revision));
-#endif
         writeTypeProperties(prop.typeName(), prop.isWritable());
 
         qml->writeEndObject();
     }
 
-    void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals)
+    void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals,
+              KnownAttributes *knownAttributes = 0)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
             if (meth.access() != QMetaMethod::Public)
@@ -615,6 +642,9 @@ private:
             return;
         }
 
+        int revision = meth.revision();
+        if (knownAttributes && knownAttributes->knownMethod(name, meth.parameterNames().size(), revision))
+            return;
         if (meth.methodType() == QMetaMethod::Signal)
             qml->writeStartObject(QLatin1String("Signal"));
         else
@@ -622,10 +652,8 @@ private:
 
         qml->writeScriptBinding(QLatin1String("name"), enquote(name));
 
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 4))
-        if (int revision = meth.revision())
+        if (revision)
             qml->writeScriptBinding(QLatin1String("revision"), QString::number(revision));
-#endif
 
         if (typeName != QLatin1String("void"))
             qml->writeScriptBinding(QLatin1String("type"), enquote(typeName));

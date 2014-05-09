@@ -169,6 +169,20 @@ void QQmlIncubatorPrivate::clear()
         nextWaitingFor.remove();
         waitingOnMe = 0;
     }
+
+    // if we're waiting on any incubators then they should be cleared too.
+    while (waitingFor.first()) {
+        QQmlIncubator * i = static_cast<QQmlIncubatorPrivate*>(waitingFor.first())->q;
+        if (i)
+            i->clear();
+    }
+
+    bool guardOk = vmeGuard.isOK();
+
+    vmeGuard.clear();
+    if (creator && guardOk)
+        creator->clear();
+    creator.reset(0);
 }
 
 /*!
@@ -393,7 +407,7 @@ void QQmlIncubationController::incubateFor(int msecs)
 
 /*!
 Incubate objects while the bool pointed to by \a flag is true, or until there are no
-more objects to incubate, or up to msecs if msecs is not zero.
+more objects to incubate, or up to \a msecs if \a msecs is not zero.
 
 Generally this method is used in conjunction with a thread or a UNIX signal that sets
 the bool pointed to by \a flag to false when it wants incubation to be interrupted.
@@ -562,20 +576,6 @@ void QQmlIncubator::clear()
 
     d->clear();
 
-    // if we're waiting on any incubators then they should be cleared too.
-    while (d->waitingFor.first()) {
-        QQmlIncubator * i = static_cast<QQmlIncubatorPrivate*>(d->waitingFor.first())->q;
-        if (i)
-            i->clear();
-    }
-
-    bool guardOk = d->vmeGuard.isOK();
-
-    d->vmeGuard.clear();
-    if (d->creator && guardOk)
-        d->creator->clear();
-    d->creator.reset(0);
-
     Q_ASSERT(d->compiledData == 0);
     Q_ASSERT(d->waitingOnMe.data() == 0);
     Q_ASSERT(d->waitingFor.isEmpty());
@@ -687,7 +687,7 @@ void QQmlIncubator::statusChanged(Status status)
 }
 
 /*!
-Called after the object is first created, but before property bindings are
+Called after the \a object is first created, but before property bindings are
 evaluated and, if applicable, QQmlParserStatus::componentComplete() is
 called.  This is equivalent to the point between QQmlComponent::beginCreate()
 and QQmlComponent::endCreate(), and can be used to assign initial values

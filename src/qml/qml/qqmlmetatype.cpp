@@ -106,6 +106,7 @@ struct QQmlMetaTypeData
     QBitArray lists;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
+    QQmlPrivate::QmlUnitCacheLookupFunction lookupCachedQmlUnit;
 
     QSet<QString> protectedNamespaces;
 
@@ -142,6 +143,7 @@ static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 }
 
 QQmlMetaTypeData::QQmlMetaTypeData()
+    : lookupCachedQmlUnit(0)
 {
 }
 
@@ -1344,6 +1346,15 @@ int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
     return index;
 }
 
+int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration)
+{
+    if (hookRegistration.version > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    data->lookupCachedQmlUnit = hookRegistration.lookupCachedQmlUnit;
+    return 0;
+}
 
 /*
 This method is "over generalized" to allow us to (potentially) register more types of things in
@@ -1363,6 +1374,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
     } else if (type == CompositeSingletonRegistration) {
         return registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
+    } else if (type == QmlUnitCacheHookRegistration) {
+        return registerQmlUnitCacheHook(*reinterpret_cast<RegisterQmlUnitCacheHook *>(data));
     }
     return -1;
 }
@@ -1865,26 +1878,13 @@ QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-int QQmlMetaType::QQuickAnchorLineMetaTypeId()
+const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
 {
-    static int id = 0;
-    if (!id) {
-        id = QMetaType::type("QQuickAnchorLine");
-    }
-    return id;
-}
-
-QQmlMetaType::CompareFunction QQmlMetaType::anchorLineCompareFunction = 0;
-
-void QQmlMetaType::setQQuickAnchorLineCompareFunction(CompareFunction fun)
-{
-    anchorLineCompareFunction = fun;
-}
-
-bool QQmlMetaType::QQuickAnchorLineCompare(const void *p1, const void *p2)
-{
-    Q_ASSERT(anchorLineCompareFunction != 0);
-    return anchorLineCompareFunction(p1, p2);
+    QReadLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    if (data->lookupCachedQmlUnit)
+        return data->lookupCachedQmlUnit(uri);
+    return 0;
 }
 
 QT_END_NAMESPACE

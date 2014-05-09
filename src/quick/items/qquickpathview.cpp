@@ -1147,50 +1147,62 @@ bool QQuickPathView::isDragging() const
 }
 
 /*!
-    \qmlsignal QtQuick::PathView::onMovementStarted()
+    \qmlsignal QtQuick::PathView::movementStarted()
 
-    This handler is called when the view begins moving due to user
+    This signal is emitted when the view begins moving due to user
     interaction.
+
+    The corresponding handler is \c onMovementStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::PathView::onMovementEnded()
+    \qmlsignal QtQuick::PathView::movementEnded()
 
-    This handler is called when the view stops moving due to user
-    interaction.  If a flick was generated, this handler will
-    be triggered once the flick stops.  If a flick was not
-    generated, the handler will be triggered when the
+    This signal is emitted when the view stops moving due to user
+    interaction.  If a flick was generated, this signal will
+    be emitted once the flick stops.  If a flick was not
+    generated, this signal will be emitted when the
     user stops dragging - i.e. a mouse or touch release.
+
+    The corresponding handler is \c onMovementEnded.
 */
 
 /*!
-    \qmlsignal QtQuick::PathView::onFlickStarted()
+    \qmlsignal QtQuick::PathView::flickStarted()
 
-    This handler is called when the view is flicked.  A flick
+    This signal is emitted when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
     while still in motion.
+
+    The corresponding handler is \c onFlickStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::PathView::onFlickEnded()
+    \qmlsignal QtQuick::PathView::flickEnded()
 
-    This handler is called when the view stops moving due to a flick.
+    This signal is emitted when the view stops moving due to a flick.
+
+    The corresponding handler is \c onFlickEnded.
 */
 
 /*!
-    \qmlsignal QtQuick::PathView::onDragStarted()
+    \qmlsignal QtQuick::PathView::dragStarted()
 
-    This handler is called when the view starts to be dragged due to user
+    This signal is emitted when the view starts to be dragged due to user
     interaction.
+
+    The corresponding handler is \c onDragStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::PathView::onDragEnded()
+    \qmlsignal QtQuick::PathView::dragEnded()
 
-    This handler is called when the user stops dragging the view.
+    This signal is emitted when the user stops dragging the view.
 
     If the velocity of the drag is suffient at the time the
     touch/mouse button is released then a flick will start.
+
+    The corresponding handler is \c onDragEnded.
 */
 
 /*!
@@ -1230,6 +1242,8 @@ void QQuickPathView::setDelegate(QQmlComponent *delegate)
     if (!d->ownModel) {
         d->model = new QQmlDelegateModel(qmlContext(this));
         d->ownModel = true;
+        if (isComponentComplete())
+            static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
     }
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();

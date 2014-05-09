@@ -98,7 +98,6 @@ private:
     Q_DECLARE_PRIVATE(QQmlExpression)
     friend class QQmlDebugger;
     friend class QQmlContext;
-    friend class QQmlVME;
 };
 
 QT_END_NAMESPACE

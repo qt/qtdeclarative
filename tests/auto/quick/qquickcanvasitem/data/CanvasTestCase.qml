@@ -16,7 +16,6 @@ TestCase {
     if (type === "2d")
       return [
              { tag:"image threaded", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}},
-             { tag:"image canvas invisible", properties:{visible: false, width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}},
 //             { tag:"image cooperative", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Cooperative}},
              { tag:"image immediate", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Immediate}},
 //             { tag:"fbo cooperative", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Cooperative}},

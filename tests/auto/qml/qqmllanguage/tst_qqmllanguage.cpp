@@ -65,6 +65,17 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
+static inline bool isCaseSensitiveFileSystem(const QString &path) {
+    Q_UNUSED(path)
+#if defined(Q_OS_MAC)
+    return pathconf(path.toLatin1().constData(), _PC_CASE_SENSITIVE);
+#elif defined(Q_OS_WIN)
+    return false;
+#else
+    return true;
+#endif
+}
+
 /*
 This test case covers QML language issues.  This covers everything that does not
 involve evaluating ECMAScript expressions and bindings.
@@ -99,6 +110,7 @@ private slots:
     void assignLiteralToVariant();
     void assignLiteralToVar();
     void assignLiteralToJSValue();
+    void assignNullStrings();
     void bindJSValueToVar();
     void bindJSValueToVariant();
     void bindJSValueToType();
@@ -218,9 +230,14 @@ private slots:
 
     void customParserBindingScopes();
     void customParserEvaluateEnum();
+    void customParserProperties();
 
     void preservePropertyCacheOnGroupObjects();
     void propertyCacheInSync();
+
+    void rootObjectInCreationNotForSubObjects();
+
+    void noChildEvents();
 
 private:
     QQmlEngine engine;
@@ -328,6 +345,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("nonexistantProperty.4") << "nonexistantProperty.4.qml" << "nonexistantProperty.4.errors.txt" << false;
     QTest::newRow("nonexistantProperty.5") << "nonexistantProperty.5.qml" << "nonexistantProperty.5.errors.txt" << false;
     QTest::newRow("nonexistantProperty.6") << "nonexistantProperty.6.qml" << "nonexistantProperty.6.errors.txt" << false;
+    QTest::newRow("nonexistantProperty.7") << "nonexistantProperty.7.qml" << "nonexistantProperty.7.errors.txt" << false;
 
     QTest::newRow("wrongType (string for int)") << "wrongType.1.qml" << "wrongType.1.errors.txt" << false;
     QTest::newRow("wrongType (int for bool)") << "wrongType.2.qml" << "wrongType.2.errors.txt" << false;
@@ -493,13 +511,11 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("notAvailable") << "notAvailable.qml" << "notAvailable.errors.txt" << false;
     QTest::newRow("singularProperty") << "singularProperty.qml" << "singularProperty.errors.txt" << false;
     QTest::newRow("singularProperty.2") << "singularProperty.2.qml" << "singularProperty.2.errors.txt" << false;
-    QTest::newRow("incorrectCase") << "incorrectCase.qml"
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-        << "incorrectCase.errors.insensitive.txt"
-#else
-        << "incorrectCase.errors.sensitive.txt"
-#endif
-        << false;
+
+    const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
+        QStringLiteral("incorrectCase.errors.sensitive.txt") :
+        QStringLiteral("incorrectCase.errors.insensitive.txt");
+    QTest::newRow("incorrectCase") << "incorrectCase.qml" << expectedError << false;
 
     QTest::newRow("metaobjectRevision.1") << "metaobjectRevision.1.qml" << "metaobjectRevision.1.errors.txt" << false;
     QTest::newRow("metaobjectRevision.2") << "metaobjectRevision.2.qml" << "metaobjectRevision.2.errors.txt" << false;
@@ -859,6 +875,19 @@ void tst_qqmllanguage::assignLiteralToJSValue()
     }
 }
 
+void tst_qqmllanguage::assignNullStrings()
+{
+    QQmlComponent component(&engine, testFileUrl("assignNullStrings.qml"));
+    VERIFY_ERRORS(0);
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->stringProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isNull());
+    QMetaObject::invokeMethod(object, "assignNullStringsFromJs", Qt::DirectConnection);
+    QVERIFY(object->stringProperty().isNull());
+    QVERIFY(object->byteArrayProperty().isNull());
+}
+
 void tst_qqmllanguage::bindJSValueToVar()
 {
     QQmlComponent component(&engine, testFileUrl("assignLiteralToJSValue.qml"));
@@ -1175,12 +1204,17 @@ void tst_qqmllanguage::idProperty()
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
-    QCOMPARE(object->getChildren()->count(), 1);
+    QCOMPARE(object->getChildren()->count(), 2);
     MyTypeObject *child =
         qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
     QVERIFY(child != 0);
     QCOMPARE(child->id(), QString("myObjectId"));
     QCOMPARE(object->property("object"), QVariant::fromValue((QObject *)child));
+
+    child =
+        qobject_cast<MyTypeObject *>(object->getChildren()->at(1));
+    QVERIFY(child != 0);
+    QCOMPARE(child->id(), QString("name.with.dots"));
 }
 
 // Tests automatic connection to notify signals if "onBlahChanged" syntax is used
@@ -1874,6 +1908,28 @@ void tst_qqmllanguage::scriptString()
         QVERIFY(object != 0);
         QCOMPARE(object->scriptProperty().isUndefinedLiteral(), true);
     }
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptString7.qml"));
+        VERIFY_ERRORS(0);
+
+        MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+        QVERIFY(object != 0);
+        QQmlScriptString ss = object->scriptProperty();
+
+        {
+            QQmlExpression expr(ss, /*context*/0, object);
+            QCOMPARE(expr.evaluate().toInt(), int(100));
+        }
+
+        {
+            SimpleObjectWithCustomParser testScope;
+            QVERIFY(testScope.metaObject()->indexOfProperty("intProperty") != object->metaObject()->indexOfProperty("intProperty"));
+
+            testScope.setIntProperty(42);
+            QQmlExpression expr(ss, /*context*/0, &testScope);
+            QCOMPARE(expr.evaluate().toInt(), int(42));
+        }
+    }
 }
 
 // Check that default property assignments are correctly spliced into explicit
@@ -2208,6 +2264,11 @@ void tst_qqmllanguage::importsLocal_data()
            "Test {}"
         << (!qmlCheckTypes()?"TestType":"")
         << (!qmlCheckTypes()?"":"Test is ambiguous. Found in org/qtproject/Test/ and in subdir/");
+    QTest::newRow("file URL survives percent-encoding")
+        << "import \"" + QUrl::fromLocalFile(QDir::currentPath() + "/{subdir}").toString() + "\"\n"
+           "Test {}"
+        << "QQuickRectangle"
+        << "";
 }
 
 void tst_qqmllanguage::importsLocal()
@@ -2574,12 +2635,9 @@ void tst_qqmllanguage::importIncorrectCase()
     QList<QQmlError> errors = component.errors();
     QCOMPARE(errors.count(), 1);
 
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-    QString expectedError = QLatin1String("File name case mismatch");
-#else
-    QString expectedError = QLatin1String("File not found");
-#endif
-
+    const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
+        QStringLiteral("File not found") :
+        QStringLiteral("File name case mismatch");
     QCOMPARE(errors.at(0).description(), expectedError);
 
     engine.setImportPathList(defaultImportPathList);
@@ -3591,6 +3649,20 @@ void tst_qqmllanguage::customParserEvaluateEnum()
     QVERIFY(!o.isNull());
 }
 
+void tst_qqmllanguage::customParserProperties()
+{
+    QQmlComponent component(&engine, testFile("customParserProperties.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    SimpleObjectWithCustomParser *testObject = qobject_cast<SimpleObjectWithCustomParser*>(o.data());
+    QVERIFY(testObject);
+    QCOMPARE(testObject->customBindingsCount(), 0);
+    QCOMPARE(testObject->intProperty(), 42);
+    QCOMPARE(testObject->property("qmlString").toString(), QStringLiteral("Hello"));
+    QVERIFY(!testObject->property("someObject").isNull());
+}
+
 void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
 {
     QQmlComponent component(&engine, testFile("preservePropertyCacheOnGroupObjects.qml"));
@@ -3628,6 +3700,41 @@ void tst_qqmllanguage::propertyCacheInSync()
     // Those always have to be in sync and correct.
     QVERIFY(ddata->propertyCache == vmemoCache);
     QCOMPARE(anchors->property("margins").toInt(), 50);
+}
+
+void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
+{
+    QQmlComponent component(&engine, testFile("rootObjectInCreationNotForSubObjects.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    // QQmlComponent should have set this back to false anyway
+    QQmlData *ddata = QQmlData::get(o.data());
+    QVERIFY(!ddata->rootObjectInCreation);
+
+    QObject *subObject = qvariant_cast<QObject*>(o->property("subObject"));
+    QVERIFY(!subObject);
+
+    qmlExecuteDeferred(o.data());
+
+    subObject = qvariant_cast<QObject*>(o->property("subObject"));
+    QVERIFY(subObject);
+
+    ddata = QQmlData::get(subObject);
+    // This should never have been set in the first place as there is no
+    // QQmlComponent to set it back to false.
+    QVERIFY(!ddata->rootObjectInCreation);
+}
+
+void tst_qqmllanguage::noChildEvents()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0; import Test 1.0; MyQmlObject { property QtObject child: QtObject {} }", QUrl());
+    VERIFY_ERRORS(0);
+    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->childAddedEventCount(), 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

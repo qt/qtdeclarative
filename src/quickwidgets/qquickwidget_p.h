@@ -87,6 +87,7 @@ public:
     void createContext();
     void destroyContext();
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
+    void createOffscreenSurface();
 
     GLuint textureId() const Q_DECL_OVERRIDE;
 
@@ -112,7 +113,7 @@ public:
     QSize initialSize;
     QElapsedTimer frameTimer;
 
-    int updateTimer;
+    QBasicTimer updateTimer;
     bool eventPending;
     bool updatePending;
     bool fakeHidden;

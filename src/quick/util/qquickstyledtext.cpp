@@ -89,7 +89,7 @@ public:
                                   QQmlContext *context,
                                   bool preloadImages,
                                   bool *fontSizeModified)
-        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl), hasNewLine(false), nbImages(0), updateImagePositions(false)
+        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl), hasNewLine(true), nbImages(0), updateImagePositions(false)
         , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), fontSizeModified(fontSizeModified), context(context)
     {
     }

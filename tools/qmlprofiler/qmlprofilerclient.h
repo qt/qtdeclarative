@@ -102,7 +102,7 @@ signals:
                qint64 startTime, qint64 length,
                const QStringList &data,
                const QmlEventLocation &location);
-    void frame(qint64 time, int frameRate, int animationCount);
+    void frame(qint64 time, int frameRate, int animationCount, int threadId);
 
 protected:
     virtual void messageReceived(const QByteArray &);

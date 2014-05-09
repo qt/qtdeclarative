@@ -39,18 +39,15 @@
 **
 ****************************************************************************/
 
-#include "qv4debugging_p.h"
-#include "qv4engine_p.h"
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4function_p.h"
+#include <private/qv4value_inl_p.h>
+#ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
+#endif
 
 #include <QString>
-
-#include <cassert>
 
 namespace {
 Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
@@ -70,8 +67,10 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *exe
         ownJSGenerator.reset(jsGenerator);
     }
     this->jsGenerator = jsGenerator;
-    assert(execAllocator);
-    assert(module);
+#ifndef V4_BOOTSTRAP
+    Q_ASSERT(execAllocator);
+#endif
+    Q_ASSERT(module);
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()
@@ -146,6 +145,9 @@ void IRDecoder::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->source->asMember()) {
             if (m->property) {
+#ifdef V4_BOOTSTRAP
+                Q_UNIMPLEMENTED();
+#else
                 bool captureRequired = true;
 
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
@@ -161,6 +163,7 @@ void IRDecoder::visitMove(IR::Move *s)
                     }
                 }
                 getQObjectProperty(m->base, m->property->coreIndex, captureRequired, attachedPropertiesId, t);
+#endif // V4_BOOTSTRAP
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
@@ -202,7 +205,11 @@ void IRDecoder::visitMove(IR::Move *s)
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
                 const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
                 if (m->property && attachedPropertiesId == 0) {
+#ifdef V4_BOOTSTRAP
+                    Q_UNIMPLEMENTED();
+#else
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
+#endif
                     return;
                 } else {
                     setProperty(s->source, m->base, *m->name);
@@ -221,7 +228,7 @@ void IRDecoder::visitMove(IR::Move *s)
     Q_UNIMPLEMENTED();
     s->dump(qout, IR::Stmt::MIR);
     qout << endl;
-    assert(!"TODO");
+    Q_ASSERT(!"TODO");
 }
 
 IRDecoder::~IRDecoder()
@@ -252,7 +259,7 @@ void IRDecoder::visitExp(IR::Exp *s)
 void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 {
     IR::Name *baseName = call->base->asName();
-    assert(baseName != 0);
+    Q_ASSERT(baseName != 0);
 
     switch (baseName->builtin) {
     case IR::Name::builtin_invalid:
@@ -294,7 +301,7 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 
     case IR::Name::builtin_throw: {
         IR::Expr *arg = call->args->expr;
-        assert(arg->asTemp() || arg->asConst());
+        Q_ASSERT(arg->asTemp() || arg->asConst());
         callBuiltinThrow(arg);
     } return;
 
@@ -313,19 +320,19 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
     } return;
 
     case IR::Name::builtin_foreach_iterator_object: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        IR::Expr *arg = call->args->expr;
+        Q_ASSERT(arg != 0);
         callBuiltinForeachIteratorObject(arg, result);
     } return;
 
     case IR::Name::builtin_foreach_next_property_name: {
         IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        Q_ASSERT(arg != 0);
         callBuiltinForeachNextPropertyname(arg, result);
     } return;
     case IR::Name::builtin_push_with_scope: {
         IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        Q_ASSERT(arg != 0);
         callBuiltinPushWithScope(arg);
     } return;
 
@@ -337,10 +344,10 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
         if (!call->args)
             return;
         IR::Const *deletable = call->args->expr->asConst();
-        assert(deletable->type == IR::BoolType);
+        Q_ASSERT(deletable->type == IR::BoolType);
         for (IR::ExprList *it = call->args->next; it; it = it->next) {
             IR::Name *arg = it->expr->asName();
-            assert(arg != 0);
+            Q_ASSERT(arg != 0);
             callBuiltinDeclareVar(deletable->value != 0, *arg->id);
         }
     } return;
@@ -396,6 +403,6 @@ void IRDecoder::callBuiltin(IR::Call *call, IR::Temp *result)
 
     Q_UNIMPLEMENTED();
     call->dump(qout); qout << endl;
-    assert(!"TODO!");
+    Q_ASSERT(!"TODO!");
     Q_UNREACHABLE();
 }

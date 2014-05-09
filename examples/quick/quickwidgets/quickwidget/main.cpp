@@ -58,6 +58,13 @@ private:
 MainWindow::MainWindow()
    : m_quickWidget(new QQuickWidget)
 {
+    if (QCoreApplication::arguments().contains(QStringLiteral("--coreprofile"))) {
+        QSurfaceFormat format;
+        format.setVersion(4, 4);
+        format.setProfile(QSurfaceFormat::CoreProfile);
+        m_quickWidget->setFormat(format);
+    }
+
     QMdiArea *centralWidget = new QMdiArea;
 
     QLCDNumber *lcd = new QLCDNumber;

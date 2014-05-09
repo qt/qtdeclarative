@@ -413,6 +413,7 @@ QQmlDebugServer::QQmlDebugServer()
             Q_D(QQmlDebugServer);
             d->thread = new QQmlDebugServerThread;
             moveToThread(d->thread);
+            d->thread->setObjectName(QStringLiteral("QQmlDebugServerThread"));
             d->thread->setPluginName(pluginName);
             d->thread->setPortRange(portFrom, portTo, block, hostAddress);
 

@@ -118,7 +118,7 @@ Item {
 
                 // ![1]
                 ctx.fillStyle = "white";
-                ctx.font = "Bold 17px";
+                ctx.font = "bold 17px sans-serif";
                 ctx.fillText("Qt Quick", 40, 70);
                 // ![1]
                 ctx.restore();

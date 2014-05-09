@@ -80,7 +80,7 @@ struct ArgumentsObject: Object {
     Q_MANAGED_TYPE(ArgumentsObject)
     CallContext *context;
     bool fullyCreated;
-    QVector<Value> mappedArguments;
+    Members mappedArguments;
     ArgumentsObject(CallContext *context);
     ~ArgumentsObject() {}
 

@@ -271,10 +271,10 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \li Replace all HTML event handlers with the MouseArea item.
     \li Change setInterval/setTimeout function calls with the \l Timer item or
        the use of requestAnimationFrame().
-    \li Place painting code into the onPaint handler and trigger
+    \li Place painting code into the \c onPaint handler and trigger
        painting by calling the markDirty() or requestPaint() methods.
     \li To draw images, load them by calling the Canvas's loadImage() method and then request to paint
-       them in the onImageLoaded handler.
+       them in the \c onImageLoaded handler.
     \endlist
 
     \sa Context2D
@@ -590,8 +590,10 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &
         emit canvasWindowChanged();
     }
 
-    if (d->available && newSize != oldGeometry.size())
-        requestPaint();
+    if (d->available && newSize != oldGeometry.size()) {
+        if (isVisible() || (d->extra.isAllocated() && d->extra->effectRefCount > 0))
+            requestPaint();
+    }
 }
 
 void QQuickCanvasItem::releaseResources()
@@ -640,9 +642,6 @@ void QQuickCanvasItem::updatePolish()
     QQuickItem::updatePolish();
 
     Q_D(QQuickCanvasItem);
-    if (!isVisible() && !(d->extra.isAllocated() && d->extra->effectRefCount>0))
-        return;
-
     if (d->context && d->renderStrategy != QQuickCanvasItem::Cooperative)
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, antialiasing());
 
@@ -844,10 +843,9 @@ void QQuickCanvasItem::requestPaint()
     \qmlmethod QtQuick::Canvas::markDirty(rect area)
 
     Mark the given \a area as dirty, so that when this area is visible the
-    canvas renderer will redraw it. This will trigger the onPaint signal
-    handler function.
+    canvas renderer will redraw it. This will trigger the \c paint signal.
 
-    \sa onPaint, requestPaint()
+    \sa paint, requestPaint()
 */
 
 void QQuickCanvasItem::markDirty(const QRectF& rect)
@@ -897,9 +895,11 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 }
 
 /*!
-    \qmlsignal QtQuick::Canvas::onImageLoaded()
+    \qmlsignal QtQuick::Canvas::imageLoaded()
 
-    This handler is called when an image has been loaded.
+    This signal is emitted when an image has been loaded.
+
+    The corresponding handler is \c onImageLoaded.
 
     \sa loadImage()
 */
@@ -908,11 +908,11 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
   \qmlmethod QtQuick::Canvas::loadImage(url image)
     Loads the given \c image asynchronously.
 
-    When the image is ready, onImageLoaded will be emitted.
+    When the image is ready, \l imageLoaded will be emitted.
     The loaded image can be unloaded by the unloadImage() method.
 
     Note: Only loaded images can be painted on the Canvas item.
-  \sa unloadImage, onImageLoaded, isImageLoaded(),
+  \sa unloadImage, imageLoaded, isImageLoaded(),
       Context2D::createImageData(), Context2D::drawImage()
 */
 void QQuickCanvasItem::loadImage(const QUrl& url)
@@ -939,7 +939,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
   Once an image is unloaded it cannot be painted by the canvas context
   unless it is loaded again.
 
-  \sa loadImage(), onImageLoaded, isImageLoaded(),
+  \sa loadImage(), imageLoaded, isImageLoaded(),
       Context2D::createImageData(), Context2D::drawImage
 */
 void QQuickCanvasItem::unloadImage(const QUrl& url)
@@ -1099,20 +1099,24 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 }
 
 /*!
-    \qmlsignal QtQuick::Canvas::onPaint(rect region)
+    \qmlsignal QtQuick::Canvas::paint(rect region)
 
-    This handler is called to render the \a region. If a context is active it
-    can be referenced from the context property.
+    This signal is emitted when the \a region needs to be rendered. If a context
+    is active it can be referenced from the context property.
 
-    This signal can be triggered markdirty(), requestPaint() or by changing
+    This signal can be triggered by markdirty(), requestPaint() or by changing
     the current canvas window.
+
+    The corresponding handler is \c onPaint.
 */
 
 /*!
-    \qmlsignal QtQuick::Canvas::onPainted()
+    \qmlsignal QtQuick::Canvas::painted()
 
-    This handler is called after all context painting commands are executed and
+    This signal is emitted after all context painting commands are executed and
     the Canvas has been rendered.
+
+    The corresponding handler is \c onPainted.
 */
 
 QT_END_NAMESPACE

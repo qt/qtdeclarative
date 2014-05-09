@@ -633,7 +633,7 @@ defined by its implementation.
 A signal is a notification from an object that some event has occurred: for
 example, a property has changed, an animation has started or stopped, or
 when an image has been downloaded. The \l MouseArea type, for example, has
-a \l {MouseArea::onClicked}{clicked} signal that is emitted when the user clicks
+a \l {MouseArea::}{clicked} signal that is emitted when the user clicks
 within the mouse area.
 
 An object can be notified through a \l{Signal handler attributes}

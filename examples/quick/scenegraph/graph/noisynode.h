@@ -42,8 +42,7 @@
 #define NOISYNODE_H
 
 #include <QSGGeometryNode>
-
-class QQuickWindow;
+#include <QQuickWindow>
 
 class NoisyNode : public QSGGeometryNode
 {

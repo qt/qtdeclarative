@@ -319,9 +319,15 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             }
 
             if (activation) {
-                if (ctx->type == Type_QmlContext || activation->hasOwnProperty(name)) {
+                if (ctx->type == Type_QmlContext) {
                     activation->put(name, value);
                     return;
+                } else {
+                    uint member = activation->internalClass->find(name);
+                    if (member < UINT_MAX) {
+                        activation->putValue(activation->propertyAt(member), activation->internalClass->propertyData[member], value);
+                        return;
+                    }
                 }
             }
         }

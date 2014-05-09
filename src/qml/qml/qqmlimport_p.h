@@ -47,8 +47,8 @@
 #include <QtCore/qset.h>
 #include <QtCore/qstringlist.h>
 #include <private/qqmldirparser_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qhashedstring_p.h>
 
 //
 //  W A R N I N G
@@ -174,6 +174,7 @@ private:
                           const QString &typeNamespace, QList<QQmlError> *errors);
     bool registerPluginTypes(QObject *instance, const QString &basePath,
                           const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors);
+    void clearDirCache();
 
     struct QmldirCache {
         int versionMajor;

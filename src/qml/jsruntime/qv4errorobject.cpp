@@ -50,7 +50,6 @@
 #include <cmath>
 #include <qmath.h>
 #include <qnumeric.h>
-#include <cassert>
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

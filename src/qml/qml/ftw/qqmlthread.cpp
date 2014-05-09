@@ -127,6 +127,7 @@ QQmlThreadPrivate::QQmlThreadPrivate(QQmlThread *q)
 : q(q), m_threadProcessing(false), m_mainProcessing(false), m_shutdown(false),
   m_mainThreadWaiting(false), mainSync(0), m_mainObject(this)
 {
+    setObjectName(QStringLiteral("QQmlThread"));
 }
 
 bool QQmlThreadPrivate::event(QEvent *e)

@@ -116,11 +116,13 @@ TextEdit {
 */
 
 /*!
-    \qmlsignal QtQuick::TextEdit::onLinkActivated(string link)
+    \qmlsignal QtQuick::TextEdit::linkActivated(string link)
 
-    This handler is called when the user clicks on a link embedded in the text.
+    This signal is emitted when the user clicks on a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
+
+    The corresponding handler is \c onLinkActivated.
 */
 
 // This is a pretty arbitrary figure. The idea is that we don't want to break down the document
@@ -2009,6 +2011,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
     QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
+    QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -2241,6 +2244,11 @@ void QQuickTextEdit::updateWholeDocument()
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
+}
+
+void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
+{
+    markDirtyNodesForRange(block.position(), block.position() + block.length(), 0);
 }
 
 void QQuickTextEdit::updateCursor()
@@ -2509,12 +2517,14 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
 }
 
 /*!
-    \qmlsignal QtQuick::TextEdit::onLinkHovered(string link)
+    \qmlsignal QtQuick::TextEdit::linkHovered(string link)
     \since 5.2
 
-    This handler is called when the user hovers a link embedded in the text.
+    This signal is emitted when the user hovers a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
+
+    The corresponding handler is \c onLinkHovered.
 
     \sa hoveredLink, linkAt()
 */
@@ -2527,7 +2537,7 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     embedded in the text. The link must be in rich text or HTML format
     and the link string provides access to the particular link.
 
-    \sa onLinkHovered, linkAt()
+    \sa linkHovered, linkAt()
 */
 
 QString QQuickTextEdit::hoveredLink() const

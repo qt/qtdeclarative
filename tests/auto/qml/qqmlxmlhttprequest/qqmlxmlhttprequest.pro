@@ -2,8 +2,6 @@ CONFIG += testcase
 TARGET = tst_qqmlxmlhttprequest
 macx:CONFIG -= app_bundle
 
-CONFIG+=insignificant_test # QTQAINFRA-573
-
 INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
 

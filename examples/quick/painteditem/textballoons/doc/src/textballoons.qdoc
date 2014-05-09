@@ -78,9 +78,9 @@
     \snippet customitems/painteditem/textballoon.cpp 1
 
     We start with setting the pen and brush on the item to define the look of
-    the item. After that we start drawing. Note that the \l {QQuickPaintedItem::}{boundingRect()}
+    the item. After that we start drawing. Note that the \l {QQuickPaintedItem::}{contentsBoundingRect()}
     item is called to draw depending on the size of the item. The rectangle
-    returned by the \l {QQuickPaintedItem::}{boundingRect()} function is the size
+    returned by the \l {QQuickPaintedItem::}{contentsBoundingRect()} function is the size
     of the item as defined in the QML file.
 
     \section1 textballoons.qml file

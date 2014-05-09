@@ -40,8 +40,6 @@
 
 #include "noisynode.h"
 
-#include <QtCore/QResource>
-
 #include <QtQuick/QSGSimpleMaterialShader>
 #include <QtQuick/QSGTexture>
 #include <QtQuick/QQuickWindow>
@@ -63,16 +61,9 @@ class NoisyShader : public QSGSimpleMaterialShader<NoisyMaterial>
     QSG_DECLARE_SIMPLE_SHADER(NoisyShader, NoisyMaterial)
 
 public:
-    const char *vertexShader() const {
-        QResource r(":/scenegraph/graph/shaders/noisy.vsh");
-        Q_ASSERT(r.isValid());
-        return (const char *) r.data();
-    }
-
-    const char *fragmentShader() const {
-        QResource r(":/scenegraph/graph/shaders/noisy.fsh");
-        Q_ASSERT(r.isValid());
-        return (const char *) r.data();
+    NoisyShader() {
+        setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/noisy.vsh");
+        setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/noisy.fsh");
     }
 
     QList<QByteArray> attributes() const {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }

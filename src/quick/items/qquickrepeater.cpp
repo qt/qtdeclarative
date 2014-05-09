@@ -131,22 +131,26 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
  */
 
 /*!
-    \qmlsignal QtQuick::Repeater::onItemAdded(int index, Item item)
+    \qmlsignal QtQuick::Repeater::itemAdded(int index, Item item)
 
-    This handler is called when an item is added to the repeater. The \a index
+    This signal is emitted when an item is added to the repeater. The \a index
     parameter holds the index at which the item has been inserted within the
     repeater, and the \a item parameter holds the \l Item that has been added.
+
+    The corresponding handler is \c onItemAdded.
 */
 
 /*!
-    \qmlsignal QtQuick::Repeater::onItemRemoved(int index, Item item)
+    \qmlsignal QtQuick::Repeater::itemRemoved(int index, Item item)
 
-    This handler is called when an item is removed from the repeater. The \a index
+    This signal is emitted when an item is removed from the repeater. The \a index
     parameter holds the index at which the item was removed from the repeater,
     and the \a item parameter holds the \l Item that was removed.
 
     Do not keep a reference to \a item if it was created by this repeater, as
-    in these cases it will be deleted shortly after the handler is called.
+    in these cases it will be deleted shortly after the signal is handled.
+
+    The corresponding handler is \c onItemRemoved.
 */
 QQuickRepeater::QQuickRepeater(QQuickItem *parent)
   : QQuickItem(*(new QQuickRepeaterPrivate), parent)

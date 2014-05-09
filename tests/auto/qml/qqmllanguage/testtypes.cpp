@@ -92,6 +92,9 @@ void registerTypes()
     qmlRegisterType<MyCreateableDerivedClass,1>("Test", 1, 1, "MyCreateableDerivedClass");
 
     qmlRegisterCustomType<CustomBinding>("Test", 1, 0, "CustomBinding", new CustomBindingParser);
+    qmlRegisterCustomType<SimpleObjectWithCustomParser>("Test", 1, 0, "SimpleObjectWithCustomParser", new SimpleObjectCustomParser);
+
+    qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -102,9 +105,8 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
-    Q_UNUSED(objectIndex)
     QByteArray result;
     QDataStream ds(&result, QIODevice::WriteOnly);
 
@@ -123,7 +125,7 @@ QByteArray CustomBindingParser::compile(const QV4::CompiledData::QmlUnit *qmlUni
     return result;
 }
 
-void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data)
+void CustomBindingParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
@@ -155,10 +157,9 @@ void CustomBinding::componentComplete()
     }
 }
 
-QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, int objectIndex, const QList<const QV4::CompiledData::Binding *> &bindings)
+QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     Q_UNUSED(qmlUnit)
-    Q_UNUSED(objectIndex)
 
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
@@ -188,4 +189,36 @@ QByteArray EnumSupportingCustomParser::compile(const QV4::CompiledData::QmlUnit 
     }
 
     return QByteArray();
+}
+
+
+QByteArray SimpleObjectCustomParser::compile(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    return QByteArray::number(bindings.count());
+}
+
+void SimpleObjectCustomParser::setCustomData(QObject *object, const QByteArray &data, QQmlCompiledData*)
+{
+   SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
+   Q_ASSERT(o);
+   bool ok = false;
+   o->setCustomBindingsCount(data.toInt(&ok));
+   Q_ASSERT(ok);
+}
+
+
+MyQmlObject::MyQmlObject()
+    : m_value(-1)
+    , m_interface(0)
+    , m_qmlobject(0)
+    , m_childAddedEventCount(0)
+{
+    qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType");
+}
+
+bool MyQmlObject::event(QEvent *event)
+{
+    if (event->type() == QEvent::ChildAdded)
+        m_childAddedEventCount++;
+    return QObject::event(event);
 }

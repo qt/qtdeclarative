@@ -54,6 +54,7 @@
 #include <private/qqmlengine_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
@@ -61,7 +62,7 @@
 using namespace QV4;
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval)
+    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
     , qml(qml)
     , qmlContext(0)
 {
@@ -69,8 +70,9 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 
     setVTable(staticVTable());
     function = f;
-    function->compilationUnit->ref();
-    needsActivation = function->needsActivation();
+    if (function)
+        function->compilationUnit->ref();
+    needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);
@@ -82,7 +84,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
 }
 
 QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
-    : FunctionObject(scope, scope->engine->id_eval)
+    : FunctionObject(scope, scope->engine->id_eval, /*createProto = */ false)
     , qml(qml)
     , qmlContext(0)
 {
@@ -108,7 +110,8 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 
     Scope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
-    Q_ASSERT(This->function);
+    if (!This->function)
+        return QV4::Encode::undefined();
 
     CallContext *ctx = This->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount(), Primitive::undefinedValue());
@@ -127,6 +130,38 @@ void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
     FunctionObject::markObjects(m, e);
     if (wrapper->qmlContext)
         wrapper->qmlContext->mark(e);
+}
+
+static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
+{
+    QV4::CallContext *signalEmittingContext = ctx->parent->asCallContext();
+    Q_ASSERT(signalEmittingContext);
+    return signalEmittingContext->argument(parameterIndex);
+}
+
+Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
+{
+    ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
+    QV4::Scope valueScope(engine);
+    QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine->memoryManager) QV4::QmlBindingWrapper(engine->rootContext, qmlScopeObject));
+
+    if (!signalParameters.isEmpty()) {
+        if (error)
+            QQmlPropertyCache::signalParameterStringForJS(qmlContext->engine, signalParameters, error);
+        QV4::ScopedProperty p(valueScope);
+        QV4::ScopedString s(valueScope);
+        int index = 0;
+        foreach (const QByteArray &param, signalParameters) {
+            p->setGetter(new (engine->memoryManager) QV4::IndexedBuiltinFunction(wrapper->context(), index++, signalParameterGetter));
+            p->setSetter(0);
+            s = engine->newString(QString::fromUtf8(param));
+            qmlScopeObject->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+        }
+    }
+
+    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapper->context(), runtimeFunction));
+    return function->asReturned<FunctionObject>();
 }
 
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
@@ -307,12 +342,10 @@ Function *Script::function()
     return vmFunction;
 }
 
-CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
+QV4::CompiledData::CompilationUnit *Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
 {
     using namespace QQmlJS;
     using namespace QQmlJS::AST;
-
-    IR::Module module(engine->debugger != 0);
 
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
@@ -351,18 +384,17 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
     }
 
     QQmlJS::Codegen cg(/*strict mode*/false);
-    cg.generateFromProgram(url.toString(), source, program, &module, QQmlJS::Codegen::EvalCode);
-    errors = cg.errors();
+    cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::Codegen::EvalCode);
+    errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)
-            *reportedErrors << cg.errors();
+            *reportedErrors << errors;
         return 0;
     }
 
-    Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, module, unitGenerator));
     isel->setUseFastLookups(false);
-    return isel->compile();
+    return isel->compile(/*generate unit data*/false);
 }
 
 ReturnedValue Script::qmlBinding()

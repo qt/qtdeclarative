@@ -72,7 +72,7 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
             switch (decodedMessageType) {
             case QQuickProfiler::Event:
                 if (decodedDetailType == (int)QQuickProfiler::AnimationFrame)
-                    ds << framerate << count;
+                    ds << framerate << count << threadId;
                 break;
             case QQuickProfiler::PixmapCacheEvent:
                 ds << detailUrl.toString();
@@ -137,7 +137,14 @@ void QQuickProfiler::initialize()
 
 void animationTimerCallback(qint64 delta)
 {
-    Q_QUICK_PROFILE(animationFrame(delta));
+    Q_QUICK_PROFILE(animationFrame(delta,
+            QThread::currentThread() == QCoreApplication::instance()->thread() ?
+            QQuickProfiler::GuiThread : QQuickProfiler::RenderThread));
+}
+
+void QQuickProfiler::registerAnimationCallback()
+{
+    QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
 }
 
 class CallbackRegistrationHelper : public QObject {
@@ -145,7 +152,7 @@ class CallbackRegistrationHelper : public QObject {
 public slots:
     void registerAnimationTimerCallback()
     {
-        QUnifiedTimer::instance()->registerProfilerCallback(&animationTimerCallback);
+        QQuickProfiler::registerAnimationCallback();
         delete this;
     }
 };

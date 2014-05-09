@@ -966,7 +966,8 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
             if (!sectionItem) {
                 delete nobj;
             } else {
-                sectionItem->setZ(2);
+                if (qFuzzyIsNull(sectionItem->z()))
+                    sectionItem->setZ(2);
                 QQml_setParent_noEvent(sectionItem, contentItem);
                 sectionItem->setParentItem(contentItem);
             }
@@ -1836,19 +1837,23 @@ QQuickListView::~QQuickListView()
 */
 
 /*!
-    \qmlattachedsignal QtQuick::ListView::onAdd()
-    This attached signal handler is called immediately after an item is added to the view.
+    \qmlattachedsignal QtQuick::ListView::add()
+    This attached signal is emitted immediately after an item is added to the view.
 
     If an \l add transition is specified, it is applied immediately after
-    this signal handler is called.
+    this signal is handled.
+
+    The corresponding handler is \c onAdd.
 */
 
 /*!
-    \qmlattachedsignal QtQuick::ListView::onRemove()
-    This attached handler is called immediately before an item is removed from the view.
+    \qmlattachedsignal QtQuick::ListView::remove()
+    This attached signal is emitted immediately before an item is removed from the view.
 
     If a \l remove transition has been specified, it is applied after
-    this signal handler is called, providing that delayRemove is false.
+    this signal is handled, providing that \l delayRemove is false.
+
+    The corresponding handler is \c onRemove.
 */
 
 /*!
@@ -1881,6 +1886,8 @@ QQuickListView::~QQuickListView()
     It is recommended that the delegate's size be a whole number to avoid sub-pixel
     alignment of items.
 
+    The default \l {QQuickItem::z}{stacking order} of delegate instances is \c 1.
+
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are parented to ListView's \l {Flickable::contentItem}{contentItem}, not to the view itself.
     State should \e never be stored in a delegate.
@@ -1908,6 +1915,8 @@ QQuickListView::~QQuickListView()
 
   The \c highlightItem is managed by the view unless
   \l highlightFollowsCurrentItem is set to false.
+  The default \l {QQuickItem::z}{stacking order}
+  of the highlight item is \c 0.
 
   \sa highlight, highlightFollowsCurrentItem
 */
@@ -1924,7 +1933,8 @@ QQuickListView::~QQuickListView()
     An instance of the highlight component is created for each list.
     The geometry of the resulting component instance is managed by the list
     so as to stay with the current item, unless the highlightFollowsCurrentItem
-    property is false.
+    property is false. The default \l {QQuickItem::z}{stacking order} of the
+    highlight item is \c 0.
 
     \sa highlightItem, highlightFollowsCurrentItem,
     {Qt Quick Examples - Views#Highlight demonstrates adding a custom highlight to a ListView.}{ListView highlight example}
@@ -2202,7 +2212,9 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     A case insensitive comparison is used when determining section
     boundaries.
 
-    \c section.delegate holds the delegate component for each section.
+    \c section.delegate holds the delegate component for each section. The
+    default \l {QQuickItem::z}{stacking order} of section delegate instances
+    is \c 2.
 
     \c section.labelPositioning determines whether the current and/or
     next section labels stick to the start/end of the view, and whether
@@ -2388,7 +2400,8 @@ void QQuickListView::setSnapMode(SnapMode mode)
     This property holds the component to use as the footer.
 
     An instance of the footer component is created for each view.  The
-    footer is positioned at the end of the view, after any items.
+    footer is positioned at the end of the view, after any items. The
+    default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
     \sa header, footerItem
 */
@@ -2400,6 +2413,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
+    The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
     \sa footer, headerItem
 */
@@ -2410,6 +2424,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
+    The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
     \sa header, footerItem
 */
@@ -2419,7 +2434,8 @@ void QQuickListView::setSnapMode(SnapMode mode)
     This holds the footer item created from the \l footer component.
 
     An instance of the footer component is created for each view.  The
-    footer is positioned at the end of the view, after any items.
+    footer is positioned at the end of the view, after any items. The
+    default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
     \sa footer, headerItem
 */
@@ -2487,7 +2503,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     populated, or when the view's \l model changes. (In those cases, the \l populate transition is
     applied instead.) Additionally, this transition should \e not animate the height of the new item;
     doing so will cause any items beneath the new item to be laid out at the wrong position. Instead,
-    the height can be animated within \l onAdd in the delegate.
+    the height can be animated within the \l {add}{onAdd} handler in the delegate.
 
     \sa addDisplaced, populate, ViewTransition
 */
@@ -2844,11 +2860,11 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     Q_D(QQuickListView);
     if (d->isRightToLeft()) {
         // maintain position relative to the right edge
-        int dx = newGeometry.width() - oldGeometry.width();
+        qreal dx = newGeometry.width() - oldGeometry.width();
         setContentX(contentX() - dx);
     } else if (d->isBottomToTop()) {
         // maintain position relative to the bottom edge
-        int dy = newGeometry.height() - oldGeometry.height();
+        qreal dy = newGeometry.height() - oldGeometry.height();
         setContentY(contentY() - dy);
     }
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
@@ -2958,7 +2974,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
     }
 
     // index can be the next item past the end of the visible items list (i.e. appended)
-    int pos = 0;
+    qreal pos = 0;
     if (visibleItems.count()) {
         pos = index < visibleItems.count() ? visibleItems.at(index)->position()
                                                 : visibleItems.last()->endPosition()+spacing;
@@ -2969,7 +2985,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = 0;
-        int from = tempPos - displayMarginBeginning - buffer;
+        qreal from = tempPos - displayMarginBeginning - buffer;
 
         for (i = count-1; i >= 0; --i) {
             if (pos > from && insertionIdx < visibleIndex) {
@@ -3000,7 +3016,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         }
     } else {
         int i = 0;
-        int to = buffer+displayMarginEnd+tempPos+size();
+        qreal to = buffer + displayMarginEnd + tempPos + size();
         for (i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))

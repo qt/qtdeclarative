@@ -109,7 +109,9 @@
 #include <qlibrary.h>
 #include <windows.h>
 
-#define CSIDL_APPDATA           0x001a  // <username>\Application Data
+#ifndef CSIDL_APPDATA
+#  define CSIDL_APPDATA           0x001a  // <username>\Application Data
+#endif
 #endif
 
 Q_DECLARE_METATYPE(QQmlProperty)
@@ -2302,12 +2304,23 @@ static inline QString shellNormalizeFileName(const QString &name)
 {
     const QString nativeSeparatorName(QDir::toNativeSeparators(name));
     const LPCTSTR nameC = reinterpret_cast<LPCTSTR>(nativeSeparatorName.utf16());
+// The correct declaration of the SHGetPathFromIDList symbol is
+// being used in mingw-w64 as of r6215, which is a v3 snapshot.
+#if defined(Q_CC_MINGW) && (!defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 3)
+    ITEMIDLIST file;
+    if (FAILED(SHParseDisplayName(nameC, NULL, &file, 0, NULL)))
+        return name;
+    TCHAR buffer[MAX_PATH];
+    if (!SHGetPathFromIDList(&file, buffer))
+        return name;
+#else
     PIDLIST_ABSOLUTE file;
     if (FAILED(SHParseDisplayName(nameC, NULL, &file, 0, NULL)))
         return name;
     TCHAR buffer[MAX_PATH];
     if (!SHGetPathFromIDList(file, buffer))
         return name;
+#endif
     QString canonicalName = QString::fromWCharArray(buffer);
     // Upper case drive letter
     if (canonicalName.size() > 2 && canonicalName.at(1) == QLatin1Char(':'))

@@ -2916,7 +2916,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2936,7 +2936,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage()
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2957,7 +2957,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
   \sa Image
   \sa Canvas::loadImage()
   \sa Canvas::isImageLoaded
-  \sa Canvas::onImageLoaded
+  \sa Canvas::imageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */
@@ -3175,8 +3175,11 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint 
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
-    if (!m)
+    if (!m) {
+        if (hasProperty)
+            *hasProperty = false;
         return m->engine()->currentContext()->throwTypeError();
+    }
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
         if (hasProperty)
@@ -4136,7 +4139,9 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
          QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->openglContext();
-         m_surface = window;
+         m_surface.reset(new QOffscreenSurface);
+         m_surface->setFormat(window->format());
+         m_surface->create();
          m_glContext = new QOpenGLContext;
          m_glContext->setFormat(cc->format());
          m_glContext->setShareContext(cc);

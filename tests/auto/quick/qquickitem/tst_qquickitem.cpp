@@ -170,6 +170,7 @@ private slots:
     void acceptedMouseButtons();
 
     void visualParentOwnership();
+    void visualParentOwnershipWindow();
 
 private:
 
@@ -1189,8 +1190,9 @@ static inline QByteArray msgItem(const QQuickItem *item)
 
 void tst_qquickitem::mouseGrab()
 {
-#if defined(Q_OS_WIN) && defined(QT_OPENGL_ES_2)
-    QSKIP("Fails in the CI for ANGLE builds on Windows, QTBUG-32664");
+#ifdef Q_OS_WIN
+    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
+        QSKIP("Fails in the CI for ANGLE builds on Windows, QTBUG-32664");
 #endif
     QQuickWindow window;
     window.setFramePosition(QPoint(100, 100));
@@ -1820,6 +1822,63 @@ void tst_qquickitem::visualParentOwnership()
         root->setProperty("keepAliveProperty", QVariant());
 
         gc(*view.engine());
+        QVERIFY(secondItem.isNull());
+    }
+}
+
+void tst_qquickitem::visualParentOwnershipWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("visualParentOwnershipWindow.qml"));
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(component.create());
+    QVERIFY(window);
+    QQuickItem *root = window->contentItem();
+
+    QVariant newObject;
+    {
+        QVERIFY(QMetaObject::invokeMethod(window, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> newItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!newItem.isNull());
+
+        QVERIFY(!newItem->parent());
+        QVERIFY(!newItem->parentItem());
+
+        newItem->setParentItem(root);
+
+        gc(engine);
+
+        QVERIFY(!newItem.isNull());
+        newItem->setParentItem(0);
+
+        gc(engine);
+        QVERIFY(newItem.isNull());
+    }
+    {
+        QVERIFY(QMetaObject::invokeMethod(window, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> firstItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!firstItem.isNull());
+
+        firstItem->setParentItem(root);
+
+        QVERIFY(QMetaObject::invokeMethod(window, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QPointer<QQuickItem> secondItem = qvariant_cast<QQuickItem*>(newObject);
+        QVERIFY(!firstItem.isNull());
+
+        secondItem->setParentItem(firstItem);
+
+        gc(engine);
+
+        delete firstItem;
+
+        window->setProperty("keepAliveProperty", newObject);
+
+        gc(engine);
+        QVERIFY(!secondItem.isNull());
+
+        window->setProperty("keepAliveProperty", QVariant());
+
+        gc(engine);
         QVERIFY(secondItem.isNull());
     }
 }

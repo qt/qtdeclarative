@@ -38,12 +38,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QQMLCODEGENERATOR_P_H
-#define QQMLCODEGENERATOR_P_H
+#ifndef QQMLIRBUILDER_P_H
+#define QQMLIRBUILDER_P_H
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmlpool_p.h>
-#include <private/qqmlscript_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compileddata_p.h>
@@ -53,32 +52,20 @@
 #include <QTextStream>
 #include <QCoreApplication>
 
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlpropertycache_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyCache;
+class QQmlContextData;
 class QQmlTypeNameCache;
 
-namespace QtQml {
+namespace QmlIR {
 
-using namespace QV4;
-
-struct DebugStream
-{
-    DebugStream(QTextStream &stream)
-        : stream(stream)
-        , indent(0)
-    {}
-
-    template <typename T>
-    QTextStream &operator<<(const T &value)
-    {
-        return stream << QByteArray(indent * 4, ' ') << value;
-    }
-
-    QTextStream &noindent() { return stream; }
-
-    QTextStream &stream;
-    int indent;
-};
+struct Document;
+struct IRLoader;
 
 template <typename T>
 struct PoolList
@@ -206,7 +193,7 @@ public:
     }
 };
 
-struct QmlObject;
+struct Object;
 
 struct SignalParameter : public QV4::CompiledData::Parameter
 {
@@ -219,14 +206,14 @@ struct Signal
     QV4::CompiledData::Location location;
     PoolList<SignalParameter> *parameters;
 
-    QStringList parameterStringList(const QStringList &stringPool) const;
+    QStringList parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const;
 
     Signal *next;
 };
 
-struct QmlProperty : public QV4::CompiledData::Property
+struct Property : public QV4::CompiledData::Property
 {
-    QmlProperty *next;
+    Property *next;
 };
 
 struct Binding : public QV4::CompiledData::Binding
@@ -244,7 +231,7 @@ struct Function
     Function *next;
 };
 
-struct CompiledFunctionOrExpression
+struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
         : node(0)
@@ -264,9 +251,9 @@ struct CompiledFunctionOrExpression
     CompiledFunctionOrExpression *next;
 };
 
-struct QmlObject
+struct Q_QML_PRIVATE_EXPORT Object
 {
-    Q_DECLARE_TR_FUNCTIONS(QmlObject)
+    Q_DECLARE_TR_FUNCTIONS(Object)
 public:
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
@@ -275,7 +262,7 @@ public:
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
 
-    const QmlProperty *firstProperty() const { return properties->first; }
+    const Property *firstProperty() const { return properties->first; }
     int propertyCount() const { return properties->count; }
     const Signal *firstSignal() const { return qmlSignals->first; }
     int signalCount() const { return qmlSignals->count; }
@@ -286,34 +273,35 @@ public:
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
-    QmlObject *declarationsOverride;
+    Object *declarationsOverride;
 
     void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
-
-    void dump(DebugStream &out);
 
     QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
     QString appendSignal(Signal *signal);
-    QString appendProperty(QmlProperty *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
-    void appendFunction(QtQml::Function *f);
+    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
+    void appendFunction(QmlIR::Function *f);
 
     QString appendBinding(Binding *b, bool isListBinding);
     Binding *findBinding(quint32 nameIndex) const;
     Binding *unlinkBinding(Binding *before, Binding *binding) { return bindings->unlink(before, binding); }
     void insertSorted(Binding *b);
+    QString bindingAsString(Document *doc, int scriptIndex) const;
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
     FixedPoolArray<int> *runtimeFunctionIndices;
 
 private:
-    PoolList<QmlProperty> *properties;
+    friend struct IRLoader;
+
+    PoolList<Property> *properties;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
 };
 
-struct Pragma
+struct Q_QML_PRIVATE_EXPORT Pragma
 {
     enum PragmaType {
         PragmaSingleton = 0x1
@@ -323,34 +311,39 @@ struct Pragma
     QV4::CompiledData::Location location;
 };
 
-struct ParsedQML
+struct Q_QML_PRIVATE_EXPORT Document
 {
-    ParsedQML(bool debugMode)
-        : jsModule(debugMode)
-        , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
-    {}
+    Document(bool debugMode);
     QString code;
     QQmlJS::Engine jsParserEngine;
     QV4::IR::Module jsModule;
-    QList<QV4::CompiledData::Import*> imports;
+    QList<const QV4::CompiledData::Import *> imports;
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
     int indexOfRootObject;
-    QList<QmlObject*> objects;
+    QList<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
+    quint32 unitFlags;
+
+    QV4::CompiledData::CompilationUnit *javaScriptCompilationUnit;
+    QHash<int, QStringList> extraSignalParameters;
 
     QV4::CompiledData::TypeReferenceMap typeReferences;
+    void collectTypeReferences();
 
-    QString stringAt(int index) const { return jsGenerator.strings.value(index); }
+    int registerString(const QString &str) { return jsGenerator.registerString(str); }
+    QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
+
+    void extractScriptMetaData(QString &script, QQmlJS::DiagnosticMessage *error);
+    static void removeScriptPragmas(QString &script);
 };
 
-// Doesn't really generate code per-se, but more the data structure
-struct Q_QML_EXPORT QQmlCodeGenerator : public QQmlJS::AST::Visitor
+struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
-    QQmlCodeGenerator(const QSet<QString> &illegalNames);
-    bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output);
+    IRBuilder(const QSet<QString> &illegalNames);
+    bool generateFromQml(const QString &code, const QString &url, const QString &urlString, Document *output);
 
     static bool isSignalPropertyName(const QString &name);
 
@@ -376,8 +369,8 @@ public:
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, QmlObject *declarationsOverride = 0);
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, QmlObject *declarationsOverride = 0)
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = 0);
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = 0)
     { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
@@ -387,10 +380,6 @@ public:
     { return QStringRef(&sourceCode, loc.offset, loc.length); }
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,
                          const QQmlJS::AST::SourceLocation &last) const;
-    static QQmlScript::LocationSpan location(QQmlJS::AST::UiQualifiedId *id)
-    {
-        return location(id->identifierToken, id->identifierToken);
-    }
 
     void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement);
 
@@ -399,65 +388,53 @@ public:
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
-    QmlObject *bindingsTarget() const;
+    Object *bindingsTarget() const;
 
     bool setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value);
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
-    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, QmlObject **object, bool onAssignment = false);
+    bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
-
-    void collectTypeReferences();
-
-    static QQmlScript::LocationSpan location(QQmlJS::AST::SourceLocation start, QQmlJS::AST::SourceLocation end);
 
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
 
-    QString stringAt(int index) const { return jsGenerator->strings.at(index); }
+    QString stringAt(int index) const { return jsGenerator->stringForIndex(index); }
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
 
-    QList<QQmlError> errors;
+    QList<QQmlJS::DiagnosticMessage> errors;
 
     QSet<QString> illegalNames;
 
-    QList<QV4::CompiledData::Import*> _imports;
+    QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
-    QList<QmlObject*> _objects;
+    QList<Object*> _objects;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
-    QmlObject *_object;
-    QmlProperty *_propertyDeclaration;
+    Object *_object;
+    Property *_propertyDeclaration;
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
-    QUrl url;
+    QString url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
 };
 
-struct Q_QML_EXPORT QmlUnitGenerator
+struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QmlUnitGenerator()
-        : jsUnitGenerator(0)
-    {
-    }
-
-    QV4::CompiledData::QmlUnit *generate(ParsedQML &output);
+    QV4::CompiledData::QmlUnit *generate(Document &output);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
-    char *writeBindings(char *bindingPtr, QmlObject *o, BindingFilter filter) const;
-
-    int getStringId(const QString &str) const;
-
-    QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
+    char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
 };
 
-struct PropertyResolver
+#ifndef V4_BOOTSTRAP
+struct Q_QML_EXPORT PropertyResolver
 {
     PropertyResolver(QQmlPropertyCache *cache)
         : cache(cache)
@@ -475,12 +452,13 @@ struct PropertyResolver
 
     QQmlPropertyCache *cache;
 };
+#endif
 
-struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
+struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen(const QString &fileName, const QString &sourceCode, IR::Module *jsModule,
+    JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
-              const QStringList &stringPool);
+              const QV4::Compiler::StringTableGenerator *stringPool);
 
     struct IdMapping
     {
@@ -498,7 +476,7 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 
 protected:
     virtual void beginFunctionBodyHook();
-    virtual IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
@@ -507,7 +485,7 @@ private:
     QQmlJS::Engine *jsEngine; // needed for memory pool
     QQmlJS::AST::UiProgram *qmlRoot;
     QQmlTypeNameCache *imports;
-    const QStringList &stringPool;
+    const QV4::Compiler::StringTableGenerator *stringPool;
 
     bool _disableAcceleratedLookups;
     ObjectIdMapping _idObjects;
@@ -519,8 +497,8 @@ private:
     int _idArrayTemp;
 };
 
-} // namespace QtQml
+} // namespace QmlIR
 
 QT_END_NAMESPACE
 
-#endif // QQMLCODEGENERATOR_P_H
+#endif // QQMLIRBUILDER_P_H

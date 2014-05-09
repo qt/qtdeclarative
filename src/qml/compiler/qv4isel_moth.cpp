@@ -118,7 +118,7 @@ inline QV4::Runtime::BinaryOperation aluOpFunction(IR::AluOp op)
     case IR::OpOr:
         return 0;
     default:
-        assert(!"Unknown AluOp");
+        Q_ASSERT(!"Unknown AluOp");
         return 0;
     }
 };
@@ -257,7 +257,7 @@ protected:
 
         if (IR::Jump *jump = s->asJump()) {
             IR::MoveMapping moves;
-            foreach (IR::Stmt *succStmt, jump->target->statements) {
+            foreach (IR::Stmt *succStmt, jump->target->statements()) {
                 if (IR::Phi *phi = succStmt->asPhi()) {
                     forceActivation(*phi->targetTemp);
                     for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
@@ -360,7 +360,7 @@ void InstructionSelection::run(int functionIndex)
                 qgetenv("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION").isEmpty();
 
         if (doStackSlotAllocation) {
-            AllocateStackSlots(opt.lifeRanges()).forFunction(_function);
+            AllocateStackSlots(opt.lifeTimeIntervals()).forFunction(_function);
         } else {
             opt.convertOutOfSSA();
             ConvertTemps().toStackSlots(_function);
@@ -377,7 +377,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_currentStatement, cs);
 
     int locals = frameSize();
-    assert(locals >= 0);
+    Q_ASSERT(locals >= 0);
 
     IR::BasicBlock *exceptionHandler = 0;
 
@@ -386,10 +386,11 @@ void InstructionSelection::run(int functionIndex)
     addInstruction(push);
 
     currentLine = 0;
-    for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+    QVector<IR::BasicBlock *> basicBlocks = _function->basicBlocks();
+    for (int i = 0, ei = basicBlocks.size(); i != ei; ++i) {
         blockNeedsDebugInstruction = irModule->debugMode;
-        _block = _function->basicBlocks[i];
-        _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
+        _block = basicBlocks[i];
+        _nextBlock = (i < ei - 1) ? basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
 
         if (_block->catchBlock != exceptionHandler) {
@@ -404,7 +405,7 @@ void InstructionSelection::run(int functionIndex)
             exceptionHandler = _block->catchBlock;
         }
 
-        foreach (IR::Stmt *s, _block->statements) {
+        foreach (IR::Stmt *s, _block->statements()) {
             _currentStatement = s;
 
             if (s->location.isValid()) {
@@ -607,7 +608,7 @@ void InstructionSelection::loadQmlSingleton(const QString &name, IR::Temp *temp)
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
 {
-    assert(sourceConst);
+    Q_ASSERT(sourceConst);
 
     Instruction::MoveConst move;
     move.source = convertToValue(sourceConst).asReturnedValue();
@@ -1009,7 +1010,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         *args = argLocation;
     if (e) {
         // We need to move all the temps into the function arg array
-        assert(argLocation >= 0);
+        Q_ASSERT(argLocation >= 0);
         while (e) {
             if (IR::Const *c = e->expr->asConst()) {
                 Instruction::MoveConst move;
@@ -1038,7 +1039,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
@@ -1053,7 +1054,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
@@ -1093,7 +1094,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     if (blockNeedsDebugInstruction) {
         // this is required so stepOut will always be guaranteed to stop in every stack frame
         Instruction::Debug debug;
-        debug.lineNumber = -currentLine;
+        debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
 
@@ -1231,7 +1232,7 @@ void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionNam
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result)
 {
     Instruction::CallBuiltinForeachIteratorObject call;
     call.arg = getParam(arg);
@@ -1467,7 +1468,7 @@ QByteArray InstructionSelection::squeezeCode() const
 }
 
 Param InstructionSelection::getParam(IR::Expr *e) {
-    assert(e);
+    Q_ASSERT(e);
 
     if (IR::Const *c = e->asConst()) {
         int idx = jsUnitGenerator()->registerConstant(convertToValue(c).asReturnedValue());

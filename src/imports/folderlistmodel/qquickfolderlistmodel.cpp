@@ -158,35 +158,28 @@ void QQuickFolderListModelPrivate::_q_directoryUpdated(const QString &directory,
     Q_UNUSED(directory);
 
     QModelIndex parent;
-    if (data.size() > list.size()) {
-        //File(s) removed. Since I do not know how many
-        //or where I need to update the whole list from the first item.
+    if (data.size() == list.size()) {
+        QModelIndex modelIndexFrom = q->createIndex(fromIndex, 0);
+        QModelIndex modelIndexTo = q->createIndex(toIndex, 0);
         data = list;
-        q->beginRemoveRows(parent, fromIndex, toIndex);
-        q->endRemoveRows();
+        emit q->dataChanged(modelIndexFrom, modelIndexTo);
+    } else {
+        // File(s) inserted or removed. Since I do not know how many
+        // or where, I need to update the whole list from the first item.
+        // This is a little pessimistic, but optimizing it would require
+        // more information in the signal from FileInfoThread.
+        if (data.size() > 0) {
+            q->beginRemoveRows(parent, 0, data.size() - 1);
+            q->endRemoveRows();
+        }
+        data = list;
         if (list.size() > 0) {
-            q->beginInsertRows(parent, fromIndex, list.size()-1);
+            if (toIndex > list.size() - 1)
+                toIndex = list.size() - 1;
+            q->beginInsertRows(parent, 0, data.size() - 1);
             q->endInsertRows();
         }
         emit q->rowCountChanged();
-    } else if (data.size() < list.size()) {
-        //qDebug() << "File added. FromIndex: " << fromIndex << " toIndex: " << toIndex << " list size: " << list.size();
-        //File(s) added. Calculate how many and insert
-        //from the first changed one.
-        toIndex = fromIndex + (list.size() - data.size()-1);
-        q->beginInsertRows(parent, fromIndex, toIndex);
-        q->endInsertRows();
-        data = list;
-        emit q->rowCountChanged();
-        QModelIndex modelIndexFrom = q->createIndex(fromIndex, 0);
-        QModelIndex modelIndexTo = q->createIndex(toIndex, 0);
-        emit q->dataChanged(modelIndexFrom, modelIndexTo);
-    } else {
-        //qDebug() << "File has been updated";
-        QModelIndex modelIndexFrom = q->createIndex(fromIndex, 0);
-        QModelIndex modelIndexTo = q->createIndex(toIndex, 0);
-        data = list;
-        emit q->dataChanged(modelIndexFrom, modelIndexTo);
     }
 }
 

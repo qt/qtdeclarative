@@ -59,13 +59,32 @@ struct JSClassMember;
 
 namespace Compiler {
 
-struct Q_QML_EXPORT JSUnitGenerator {
-    JSUnitGenerator(IR::Module *module, int headerSize = -1);
-
-    IR::Module *irModule;
+struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
+    StringTableGenerator();
 
     int registerString(const QString &str);
     int getStringId(const QString &string) const;
+    QString stringForIndex(int index) const { return strings.at(index); }
+    uint stringCount() const { return strings.size(); }
+
+    uint sizeOfTableAndData() const { return stringDataSize + strings.count() * sizeof(uint); }
+
+    void clear();
+
+    void serialize(uint *stringTable, char *dataStart, char *stringData);
+
+private:
+    QHash<QString, int> stringToId;
+    QStringList strings;
+    uint stringDataSize;
+};
+
+struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
+    JSUnitGenerator(IR::Module *module, int headerSize = -1);
+
+    int registerString(const QString &str) { return stringTable.registerString(str); }
+    int getStringId(const QString &string) const { return stringTable.getStringId(string); }
+    QString stringForIndex(int index) const { return stringTable.stringForIndex(index); }
 
     uint registerGetterLookup(const QString &name);
     uint registerSetterLookup(const QString &name);
@@ -79,13 +98,14 @@ struct Q_QML_EXPORT JSUnitGenerator {
 
     int registerJSClass(int count, IR::ExprList *args);
 
-    QV4::CompiledData::Unit *generateUnit(int *totalUnitSize = 0);
+    QV4::CompiledData::Unit *generateUnit();
     // Returns bytes written
     int writeFunction(char *f, int index, IR::Function *irFunction);
 
-    QHash<QString, int> stringToId;
-    QStringList strings;
-    uint stringDataSize;
+    StringTableGenerator stringTable;
+private:
+    IR::Module *irModule;
+
     QHash<IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;

@@ -99,8 +99,8 @@ static void qt_print_node_count()
     together. Nodes in a blocked subtree will not be preprocessed() and not
     rendered.
 
-    \warning Anything related to QSGNode should happen on the scene graph
-    rendering thread.
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 /*!
@@ -683,6 +683,9 @@ void qsgnode_set_description(QSGNode *node, const QString &description)
 
     The QSGBasicGeometryNode class should not be used by itself. It is only encapsulates
     shared functionality between the QSGGeometryNode and QSGClipNode classes.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
   */
 
 
@@ -823,6 +826,9 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     time of rendering is 1. The primary usecase is to special case opaque rendering
     to avoid an extra operation in the fragment shader can have significant performance
     impact on embedded graphics chips. The opaque material is optional.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa QSGGeometry, QSGMaterial, QSGSimpleMaterial
  */
@@ -1036,6 +1042,9 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
     Clip nodes must have a geometry before they can be added to the scene graph.
 
     Clipping is usually implemented by using the stencil buffer.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 
@@ -1127,6 +1136,10 @@ void QSGClipNode::setClipRect(const QRectF &rect)
     transformations. However, because the renderer optimizes for 2D use-cases rather
     than 3D use-cases, rendering a scene with full 3D transformations needs to
     be done with some care.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
+
  */
 
 
@@ -1264,6 +1277,8 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyState state)
     be marked as blocked, causing isSubtreeBlocked() to return true. This
     is done for performance reasons.
 
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 

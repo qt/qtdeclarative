@@ -94,7 +94,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0));
+    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0, true));
     w->isNullWrapper = true;
     return w.asReturnedValue();
 }
@@ -387,6 +387,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
     }
 
+    Q_ASSERT(qmlContext->contextObject);
     const quint32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
     const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
     for (int i = 0; i < contextPropertyDependencyCount; ++i) {
@@ -459,6 +460,9 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
             *hasProperty = false;
         return Encode::undefined();
     }
+
+    if (hasProperty)
+        *hasProperty = true;
 
     ExecutionEngine *v4 = m->engine();
     QQmlEnginePrivate *ep = v4->v8Engine->engine() ? QQmlEnginePrivate::get(v4->v8Engine->engine()) : 0;

@@ -88,11 +88,8 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt)
         if (QQmlCompiledData *cdata = typeData->compiledData()) {
             QV4::ExecutionEngine *v4 = engine->v4engine();
             QV4::Scope valueScope(v4);
-            QV4::ScopedObject scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(v4->v8Engine, ctxtdata, obj));
-            QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject));
-            QV4::ExecutionContext *qmlContext = wrapper->context();
             QV4::Function *runtimeFunction = cdata->compilationUnit->runtimeFunctions[cdata->customParserBindings[id]];
-            QV4::ScopedValue function(valueScope, QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction));
+            QV4::ScopedValue function(valueScope, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, obj, runtimeFunction));
             rv = new QQmlBinding(function, obj, ctxtdata);
         }
 
@@ -128,31 +125,33 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
         return;
 
     QString url;
-    QString code;
+    QV4::Function *runtimeFunction = 0;
 
-    int id = scriptPrivate->bindingId;
-    if (id >= 0) {
-        QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
-        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-            QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
-            Q_ASSERT(typeData);
+    QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
+    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
+    if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
+        QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
+        Q_ASSERT(typeData);
 
-            if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                code = cdata->primitives.at(id);
-                url = cdata->name;
-            }
-
-            typeData->release();
+        if (QQmlCompiledData *cdata = typeData->compiledData()) {
+            url = cdata->name;
+            if (scriptPrivate->bindingId != QQmlBinding::Invalid)
+                runtimeFunction = cdata->compilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
         }
-    } else
-        code = scriptPrivate->script;
+
+        typeData->release();
+    }
 
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
     setScopeObject(obj ? obj : scriptPrivate->scope);
 
-    v4function = qmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);
+    if (runtimeFunction) {
+        v4function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, scopeObject(), runtimeFunction);
+    } else {
+        QString code = scriptPrivate->script;
+        v4function = qmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);
+    }
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
@@ -215,7 +214,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     QV4::ScopedFunctionObject f(scope, v4function.value());
     Q_ASSERT(f);
     if (f->bindingKeyFlag) {
-        QQmlSourceLocation loc = f->as<QQmlBindingFunction>()->bindingLocation;
+        QQmlSourceLocation loc = f->as<QV4::QQmlBindingFunction>()->bindingLocation;
         url = loc.sourceFile;
         lineNumber = loc.line;
         columnNumber = loc.column;

@@ -166,8 +166,8 @@ static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
         };
     \endcode
 
-    \warning Instances of QSGMaterialShader belongs to the Scene Graph rendering
-    thread, and cannot be used from the GUI thread.
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
 
  */
 
@@ -550,6 +550,9 @@ static void qt_print_material_count()
     \ingroup qtquick-scenegraph-materials
 
     It serves no purpose outside the QSGMaterial::type() function.
+
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 /*!
@@ -585,8 +588,8 @@ static void qt_print_material_count()
         };
     \endcode
 
-    \warning Instances of QSGMaterial belongs to the Scene Graph rendering thread,
-    and cannot be used from the GUI thread.
+    \note All classes with QSG prefix should be used solely on the scene graph's
+    rendering thread. See \l {Scene Graph and Rendering} for more information.
  */
 
 /*!

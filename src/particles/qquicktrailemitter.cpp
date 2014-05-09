@@ -119,12 +119,11 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     \qmlproperty real QtQuick.Particles::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles::TrailEmitter::onEmitFollowParticles(Array particles, Particle followed)
+    \qmlsignal QtQuick.Particles::TrailEmitter::emitFollowParticles(Array particles, Particle followed)
 
-    This handler is called when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
+    This signal is emitted when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 
-    If you use this signal handler, emitParticles will not be emitted.
-
+    The corresponding handler is \c onEmitFollowParticles. If you use this signal handler, emitParticles will not be emitted.
 */
 
 bool QQuickTrailEmitter::isEmitFollowConnected()

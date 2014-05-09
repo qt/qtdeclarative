@@ -79,18 +79,19 @@ class QAbstractAnimationAction
 public:
     virtual ~QAbstractAnimationAction() {}
     virtual void doAction() = 0;
+    virtual void debugAction(QDebug, int) const {}
 };
 
 //templated animation action
 //allows us to specify an action that calls a function of a class.
 //(so that class doesn't have to inherit QQuickAbstractAnimationAction)
-template<class T, void (T::*method)()>
+template<class T, void (T::*method)(), void (T::*debugMethod)(QDebug, int) const>
 class QAnimationActionProxy : public QAbstractAnimationAction
 {
 public:
     QAnimationActionProxy(T *instance) : m_instance(instance) {}
     virtual void doAction() { (m_instance->*method)(); }
-
+    virtual void debugAction(QDebug d, int indentLevel) const { (m_instance->*debugMethod)(d, indentLevel); }
 private:
     T *m_instance;
 };
@@ -111,6 +112,7 @@ public:
 protected:
     virtual void updateCurrentTime(int);
     virtual void updateState(State newState, State oldState);
+    void debugAnimation(QDebug d) const;
 
 private:
     QAbstractAnimationAction *animAction;
@@ -121,6 +123,7 @@ class QQuickBulkValueUpdater
 public:
     virtual ~QQuickBulkValueUpdater() {}
     virtual void setValue(qreal value) = 0;
+    virtual void debugUpdater(QDebug, int) const {}
 };
 
 //animates QQuickBulkValueUpdater (assumes start and end values will be reals or compatible)
@@ -145,6 +148,7 @@ public:
 protected:
     void updateCurrentTime(int currentTime);
     void topLevelAnimationLoopChanged();
+    void debugAnimation(QDebug d) const;
 
 private:
     QQuickBulkValueUpdater *animValue;
@@ -224,8 +228,10 @@ public:
 
     void execute();
     QAbstractAnimationAction* createAction();
+    void debugAction(QDebug d, int indentLevel) const;
     typedef QAnimationActionProxy<QQuickScriptActionPrivate,
-                                 &QQuickScriptActionPrivate::execute> Proxy;
+                                 &QQuickScriptActionPrivate::execute,
+                                 &QQuickScriptActionPrivate::debugAction> Proxy;
 };
 
 class QQuickPropertyActionPrivate : public QQuickAbstractAnimationPrivate
@@ -306,6 +312,8 @@ public:
     ~QQuickAnimationPropertyUpdater();
 
     void setValue(qreal v);
+
+    void debugUpdater(QDebug d, int indentLevel) const;
 
     QQuickStateActions actions;
     int interpolatorType;       //for Number/ColorAnimation

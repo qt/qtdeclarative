@@ -41,7 +41,6 @@
 
 #include "qv4executableallocator_p.h"
 
-#include <assert.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/PageAllocation.h>
 
@@ -81,7 +80,7 @@ ExecutableAllocator::Allocation *ExecutableAllocator::Allocation::split(size_t d
 
 bool ExecutableAllocator::Allocation::mergeNext(ExecutableAllocator *allocator)
 {
-    assert(free);
+    Q_ASSERT(free);
     if (!next || !next->free)
         return false;
 
@@ -101,7 +100,7 @@ bool ExecutableAllocator::Allocation::mergeNext(ExecutableAllocator *allocator)
 
 bool ExecutableAllocator::Allocation::mergePrevious(ExecutableAllocator *allocator)
 {
-    assert(free);
+    Q_ASSERT(free);
     if (!prev || !prev->free)
         return false;
 
@@ -185,8 +184,8 @@ ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
         chunk->firstAllocation = allocation;
     }
 
-    assert(allocation);
-    assert(allocation->free);
+    Q_ASSERT(allocation);
+    Q_ASSERT(allocation->free);
 
     allocation->free = false;
 
@@ -204,16 +203,16 @@ void ExecutableAllocator::free(Allocation *allocation)
 {
     QMutexLocker locker(&mutex);
 
-    assert(allocation);
+    Q_ASSERT(allocation);
 
     allocation->free = true;
 
     QMap<quintptr, ChunkOfPages*>::Iterator it = chunks.lowerBound(allocation->addr);
     if (it != chunks.begin())
         --it;
-    assert(it != chunks.end());
+    Q_ASSERT(it != chunks.end());
     ChunkOfPages *chunk = *it;
-    assert(chunk->contains(allocation));
+    Q_ASSERT(chunk->contains(allocation));
 
     bool merged = allocation->mergeNext(this);
     merged |= allocation->mergePrevious(this);

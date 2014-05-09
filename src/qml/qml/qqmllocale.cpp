@@ -290,8 +290,11 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::CallConte
         tm = r->locale.toTime(dateString, enumFormat);
     }
 
-    QDateTime dt = QDateTime::currentDateTime();
-    dt.setTime(tm);
+    QDateTime dt;
+    if (tm.isValid()) {
+        dt = QDateTime::currentDateTime();
+        dt.setTime(tm);
+    }
 
     return QV4::Encode(engine->newDateObject(dt));
 }

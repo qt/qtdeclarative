@@ -93,8 +93,9 @@ void ArgumentsObject::fullyCreate()
     uint argCount = qMin(context->realArgumentCount, context->callData->argc);
     ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
     context->engine->requireArgumentsAccessors(numAccessors);
+    mappedArguments.ensureIndex(engine(), numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
-        mappedArguments.append(context->callData->args[i]);
+        mappedArguments[i] = context->callData->args[i];
         arraySet(i, context->engine->argumentsAccessors[i], Attr_Accessor);
     }
     arrayPut(numAccessors, context->callData->args + numAccessors, argCount - numAccessors);
@@ -113,7 +114,8 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
-    if (pd && index < (uint)mappedArguments.size())
+    uint numAccessors = qMin((int)context->function->formalParameterCount(), context->realArgumentCount);
+    if (pd && index < (uint)numAccessors)
         isMapped = arrayData->attributes(index).isAccessor() && pd->getter() == context->engine->argumentsAccessors[index].getter();
 
     if (isMapped) {
@@ -121,7 +123,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         map.copy(*pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData->getProperty(index);
-        pd->value = mappedArguments.at(index);
+        pd->value = mappedArguments[index];
     }
 
     bool strict = ctx->strictMode;
@@ -158,6 +160,8 @@ ReturnedValue ArgumentsObject::getIndexed(Managed *m, uint index, bool *hasPrope
             *hasProperty = true;
         return args->context->callData->args[index].asReturnedValue();
     }
+    if (hasProperty)
+        *hasProperty = false;
     return Encode::undefined();
 }
 
@@ -232,9 +236,9 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 void ArgumentsObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
-    o->context->mark(e);
-    for (int i = 0; i < o->mappedArguments.size(); ++i)
-        o->mappedArguments.at(i).mark(e);
+    if (o->context)
+        o->context->mark(e);
+    o->mappedArguments.mark(e);
 
     Object::markObjects(that, e);
 }

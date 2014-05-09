@@ -149,7 +149,6 @@ private:
     friend class QQmlComponentPrivate;
     friend class QQmlValueTypeProxyBinding;
     friend class QQmlPropertyPrivate;
-    friend class QQmlVME;
     friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
     friend class QV4Bindings;
     friend class QQmlObjectCreator;

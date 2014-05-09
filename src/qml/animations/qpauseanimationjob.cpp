@@ -68,4 +68,9 @@ void QPauseAnimationJob::updateCurrentTime(int)
 {
 }
 
+void QPauseAnimationJob::debugAnimation(QDebug d) const
+{
+    d << "PauseAnimationJob(" << hex << (void *) this << dec << ")" << "duration:" << m_duration;
+}
+
 QT_END_NAMESPACE

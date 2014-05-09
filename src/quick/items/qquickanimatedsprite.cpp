@@ -596,7 +596,10 @@ void QQuickAnimatedSprite::prepareNextFrame()
         qreal frameDuration = m_spriteEngine->spriteDuration()/frameCount;
         if (frameDuration > 0) {
             qreal frame = (time - animT)/(frameDuration / 1000.0);
-            frame = qBound(qreal(0.0), frame, frameCount - qreal(1.0));//Stop at count-1 frames until we have between anim interpolation
+            bool lastLoop = m_loops > 0 && m_curLoop == m_loops-1;
+            //don't visually interpolate for the last frame of the last loop
+            qreal max = lastLoop ? frameCount - qreal(1.0) : frameCount;
+            frame = qBound(qreal(0.0), frame, max);
             progress = modf(frame,&frameAt);
             if (m_curFrame > frameAt) //went around
                 m_curLoop++;
@@ -623,21 +626,54 @@ void QQuickAnimatedSprite::prepareNextFrame()
     }
     if (m_curFrame != lastFrame && isCurrentFrameChangedConnected())
         emit currentFrameChanged(m_curFrame);
-    if (m_spriteEngine->sprite()->reverse())
-        frameAt = (m_spriteEngine->spriteFrames() - 1) - frameAt;
-    qreal y = m_spriteEngine->spriteY() / m_sheetSize.height();
+
+    qreal frameCount = m_spriteEngine->spriteFrames();
+    bool reverse = m_spriteEngine->sprite()->reverse();
+    if (reverse)
+        frameAt = (frameCount - 1) - frameAt;
+
     qreal w = m_spriteEngine->spriteWidth() / m_sheetSize.width();
     qreal h = m_spriteEngine->spriteHeight() / m_sheetSize.height();
-    qreal x1 = m_spriteEngine->spriteX() / m_sheetSize.width();
-    x1 += frameAt * w;
-    qreal x2 = x1;
-    if (frameAt < (m_spriteEngine->spriteFrames()-1))
-        x2 += w;
+    qreal x1 = m_spriteEngine->spriteX() / m_sheetSize.width() + frameAt * w;
+    qreal y1 = m_spriteEngine->spriteY() / m_sheetSize.height();
+
+    //### hard-coded 0/1 work because we are the only
+    // images in the sprite sheet (without this we cannot assume
+    // where in the sheet we begin/end).
+    qreal x2;
+    qreal y2;
+    if (reverse) {
+        if (frameAt > 0) {
+            x2 = x1 - w;
+            y2 = y1;
+        } else {
+            x2 = 1.0 - w;
+            y2 = y1 - h;
+            if (y2 < 0.0) {
+                //the last row may not fill the entire width
+                int maxRowFrames = m_sheetSize.width() / m_spriteEngine->spriteWidth();
+                if (m_spriteEngine->maxFrames() % maxRowFrames)
+                    x2 = ((m_spriteEngine->maxFrames() % maxRowFrames) - 1) * w;
+
+                y2 = 1.0 - h;
+            }
+        }
+    } else {
+        if (frameAt < (frameCount-1)) {
+            x2 = x1 + w;
+            y2 = y1;
+        } else {
+            x2 = 0.0;
+            y2 = y1 + h;
+            if (y2 >= 1.0)
+                y2 = 0.0;
+        }
+    }
 
     m_material->animX1 = x1;
-    m_material->animY1 = y;
+    m_material->animY1 = y1;
     m_material->animX2 = x2;
-    m_material->animY2 = y;
+    m_material->animY2 = y2;
     m_material->animW = w;
     m_material->animH = h;
     m_material->animT = m_interpolate ? progress : 0.0;

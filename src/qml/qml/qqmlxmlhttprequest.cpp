@@ -905,8 +905,11 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
-    if (!r)
+    if (!r) {
+        if (hasProperty)
+            *hasProperty = false;
         return v4->currentContext()->throwTypeError();
+    }
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -960,8 +963,11 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
-    if (!r)
+    if (!r) {
+        if (hasProperty)
+            *hasProperty = false;
         return v4->currentContext()->throwTypeError();
+    }
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -1388,7 +1394,8 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ContentNotFoundError ||
         error == QNetworkReply::AuthenticationRequiredError ||
         error == QNetworkReply::ContentReSendError ||
-        error == QNetworkReply::UnknownContentError) {
+        error == QNetworkReply::UnknownContentError ||
+        error == QNetworkReply::ProtocolInvalidOperationError) {
         m_state = Loading;
         dispatchCallback(me);
     } else {
@@ -1650,6 +1657,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->proto)
             c->proto->mark(e);
+        FunctionObject::markObjects(that, e);
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {

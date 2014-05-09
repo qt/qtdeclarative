@@ -58,6 +58,25 @@ void SelfRegisteringType::clearMe()
     m_me = 0;
 }
 
+SelfRegisteringOuterType *SelfRegisteringOuterType::m_me = 0;
+bool SelfRegisteringOuterType::beenDeleted = false;
+SelfRegisteringOuterType::SelfRegisteringOuterType()
+: m_v(0)
+{
+    m_me = this;
+    beenDeleted = false;
+}
+
+SelfRegisteringOuterType::~SelfRegisteringOuterType()
+{
+    beenDeleted = true;
+}
+
+SelfRegisteringOuterType *SelfRegisteringOuterType::me()
+{
+    return m_me;
+}
+
 CompletionRegisteringType *CompletionRegisteringType::m_me = 0;
 CompletionRegisteringType::CompletionRegisteringType()
 {
@@ -131,6 +150,7 @@ void CompletionCallbackType::registerCallback(callback c, void *d)
 void registerTypes()
 {
     qmlRegisterType<SelfRegisteringType>("Qt.test", 1,0, "SelfRegistering");
+    qmlRegisterType<SelfRegisteringOuterType>("Qt.test", 1,0, "SelfRegisteringOuter");
     qmlRegisterType<CompletionRegisteringType>("Qt.test", 1,0, "CompletionRegistering");
     qmlRegisterType<CallbackRegisteringType>("Qt.test", 1,0, "CallbackRegistering");
     qmlRegisterType<CompletionCallbackType>("Qt.test", 1,0, "CompletionCallback");

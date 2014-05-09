@@ -1,4 +1,4 @@
-QT += qml quick core-private
+QT += qml quick quick-private gui-private core-private
 qtHaveModule(widgets): QT += widgets
 CONFIG += no_import_scan
 

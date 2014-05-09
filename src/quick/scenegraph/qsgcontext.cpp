@@ -99,13 +99,8 @@ public:
     QSGContextPrivate()
         : antialiasingMethod(QSGContext::UndecidedAntialiasing)
         , distanceFieldDisabled(qmlDisableDistanceField())
-        , distanceFieldAntialiasing(
-#if !defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
-              QSGGlyphNode::HighQualitySubPixelAntialiasing
-#else
-              QSGGlyphNode::GrayAntialiasing
-#endif
-              )
+        , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
+        , distanceFieldAntialiasingDecided(false)
     {
     }
 
@@ -117,11 +112,8 @@ public:
     QSGContext::AntialiasingMethod antialiasingMethod;
     bool distanceFieldDisabled;
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
-
-    static QOpenGLContext *sharedOpenGLContext;
+    bool distanceFieldAntialiasingDecided;
 };
-
-QOpenGLContext *QSGContextPrivate::sharedOpenGLContext = 0;
 
 class QSGTextureCleanupEvent : public QEvent
 {
@@ -161,6 +153,8 @@ QSGContext::QSGContext(QObject *parent) :
 {
     Q_D(QSGContext);
     QByteArray mode = qgetenv("QSG_DISTANCEFIELD_ANTIALIASING");
+    if (!mode.isEmpty())
+        d->distanceFieldAntialiasingDecided = true;
     if (mode == "subpixel")
         d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
     else if (mode == "subpixel-lowq")
@@ -177,20 +171,6 @@ QSGContext::~QSGContext()
 QSGRenderContext *QSGContext::createRenderContext()
 {
     return new QSGRenderContext(this);
-}
-
-/*!
- * This function is used by the Qt WebEngine to set up context sharing
- * across multiple windows. Do not use it for any other purpose.
- */
-void QSGContext::setSharedOpenGLContext(QOpenGLContext *context)
-{
-    QSGContextPrivate::sharedOpenGLContext = context;
-}
-
-QOpenGLContext *QSGContext::sharedOpenGLContext()
-{
-    return QSGContextPrivate::sharedOpenGLContext;
 }
 
 void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
@@ -210,6 +190,17 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
             else
                 d->antialiasingMethod = VertexAntialiasing;
         }
+    }
+
+    // With OpenGL ES, except for Angle on Windows, use GrayAntialiasing, unless
+    // some value had been requested explicitly. This could not be decided
+    // before without a context. Now the context is ready.
+    if (!d->distanceFieldAntialiasingDecided) {
+        d->distanceFieldAntialiasingDecided = true;
+#ifndef Q_OS_WIN
+        if (renderContext->openglContext()->isOpenGLES())
+            d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+#endif
     }
 
     static bool dumped = false;

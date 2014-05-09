@@ -93,7 +93,7 @@ protected:
     virtual void callBuiltinReThrow();
     virtual void callBuiltinUnwindException(IR::Temp *);
     virtual void callBuiltinPushCatchScope(const QString &exceptionName);
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
+    virtual void callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinPushWithScope(IR::Temp *arg);
     virtual void callBuiltinPopScope();

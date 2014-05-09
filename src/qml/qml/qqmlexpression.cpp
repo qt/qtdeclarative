@@ -78,17 +78,10 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
     expressionFunctionValid = false;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
-                                 QObject *me, const QString &srcUrl,
-                                 quint16 lineNumber, quint16 columnNumber)
+void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
 {
-    url = srcUrl;
-    line = lineNumber;
-    column = columnNumber;
-
-    expression = expr;
-
-    expressionFunctionValid = false;
+    expressionFunctionValid = true;
+    function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, me, runtimeFunction);
 
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(me);
@@ -156,9 +149,9 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
-    bool defaultConstruction = true;
     QQmlContextData *evalCtxtData = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
     QObject *scopeObject = scope ? scope : scriptPrivate->scope;
+    QV4::Function *runtimeFunction = 0;
 
     if (scriptPrivate->context) {
         QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
@@ -168,23 +161,22 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                int id = scriptPrivate->bindingId;
-                if (id >= 0) {
-                    defaultConstruction = false;
-                    d->init(evalCtxtData, cdata->primitives.at(id), scopeObject,
-                            cdata->name, scriptPrivate->lineNumber, scriptPrivate->columnNumber);
-                } else {
-                    d->url = cdata->name;
-                    d->line = scriptPrivate->lineNumber;
-                    d->column = scriptPrivate->columnNumber;
-                }
+                d->url = cdata->name;
+                d->line = scriptPrivate->lineNumber;
+                d->column = scriptPrivate->columnNumber;
+
+                if (scriptPrivate->bindingId != QQmlBinding::Invalid)
+                    runtimeFunction = cdata->compilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
             }
 
             typeData->release();
         }
     }
 
-    if (defaultConstruction)
+    if (runtimeFunction) {
+        d->expression = scriptPrivate->script;
+        d->init(evalCtxtData, runtimeFunction, scopeObject);
+    } else
         d->init(evalCtxtData, scriptPrivate->script, scopeObject);
 }
 

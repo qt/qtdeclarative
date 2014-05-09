@@ -51,7 +51,6 @@
 #include <cmath>
 #include <qmath.h>
 #include <qnumeric.h>
-#include <cassert>
 #include <time.h>
 
 #include <private/qqmljsengine_p.h>
@@ -157,7 +156,7 @@ static inline bool InLeapYear(double t)
     if (x == 365)
         return 0;
 
-    assert(x == 366);
+    Q_ASSERT(x == 366);
     return 1;
 }
 
@@ -628,12 +627,13 @@ static double getLocalTZA()
 #ifndef Q_OS_WIN
     struct tm t;
     time_t curr;
+    tzset();
     time(&curr);
     localtime_r(&curr, &t);
     time_t locl = mktime(&t);
     gmtime_r(&curr, &t);
     time_t globl = mktime(&t);
-    return double(locl - globl) * 1000.0;
+    return (double(locl) - double(globl)) * 1000.0;
 #else
     TIME_ZONE_INFORMATION tzInfo;
     GetTimeZoneInformation(&tzInfo);

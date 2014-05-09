@@ -132,12 +132,16 @@ typedef QPair<int, int> QQuickXmlListRange;
 
     For example, if there is an XML document like this:
 
-    \quotefile qml/xmlrole.qml
+    \quotefile qml/xmlrole.xml
     Here are some valid XPath expressions for XmlRole queries on this document:
 
     \snippet qml/xmlrole.qml 0
     \dots 4
     \snippet qml/xmlrole.qml 1
+
+    Accessing the model data for the above roles from a delegate:
+
+    \snippet qml/xmlrole.qml 2
 
     See the \l{http://www.w3.org/TR/xpath20/}{W3C XPath 2.0 specification} for more information.
 */
@@ -539,7 +543,7 @@ class QQuickXmlListModelPrivate : public QAbstractItemModelPrivate
     Q_DECLARE_PUBLIC(QQuickXmlListModel)
 public:
     QQuickXmlListModelPrivate()
-        : isComponentComplete(true), size(-1), highestRole(Qt::UserRole)
+        : isComponentComplete(true), size(0), highestRole(Qt::UserRole)
         , reply(0), status(QQuickXmlListModel::Null), progress(0.0)
         , queryId(-1), roleObjects(), redirectCount(0) {}
 

@@ -55,13 +55,11 @@
 
 #include "qqml.h"
 #include "qqmlerror.h"
-#include "qqmlscript_p.h"
 #include "qqmlengine_p.h"
 #include <private/qbitfield_p.h>
 #include "qqmlpropertycache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
-#include <private/qqmlcodegenerator_p.h>
 #include "private/qv4identifier_p.h"
 #include <private/qqmljsastfwd_p.h>
 #include "qqmlcustomparser_p.h"
@@ -129,15 +127,10 @@ public:
     QHash<int, TypeReference*> resolvedTypes;
 
     QQmlPropertyCache *rootPropertyCache;
-    QList<QString> primitives;
-    QVector<QByteArray> datas;
-    QByteArray bytecode;
+    QVector<QByteArray> metaObjects;
     QVector<QQmlPropertyCache *> propertyCaches;
-    QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
-    QList<QUrl> urls;
 
-    // --- new compiler
     QV4::CompiledData::CompilationUnit *compilationUnit;
     QV4::CompiledData::QmlUnit *qmlUnit;
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
@@ -156,10 +149,13 @@ public:
     int totalObjectCount; // Number of objects explicitly instantiated
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-    bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }
+    bool isCompositeType() const { return !metaObjects.at(qmlUnit->indexOfRootObject).isEmpty(); }
 
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
+
+    QV4::Function *functionForBindingId(int bindingId) const
+    { return compilationUnit->runtimeFunctions[customParserBindings[bindingId]]; }
 
 protected:
     virtual void destroy(); // From QQmlRefCount

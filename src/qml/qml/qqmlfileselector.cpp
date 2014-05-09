@@ -152,8 +152,8 @@ void QQmlFileSelector::setSelector(QFileSelector *selector)
 }
 
 /*!
-  Adds extra selectors to the current QFileSelector being used. Use this when
-  extra selectors are all you need to avoid having to create your own
+  Adds extra selectors contained in \a strings to the current QFileSelector being used.
+  Use this when extra selectors are all you need to avoid having to create your own
   QFileSelector instance.
 */
 void QQmlFileSelector::setExtraSelectors(QStringList &strings)
@@ -163,7 +163,7 @@ void QQmlFileSelector::setExtraSelectors(QStringList &strings)
 }
 
 /*!
-  Gets the QQmlFileSelector currently active on the target engine.
+  Gets the QQmlFileSelector currently active on the target \a engine.
 */
 QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
 {

@@ -69,6 +69,7 @@ public:
     QQuickImageBasePrivate()
       : status(QQuickImageBase::Null),
         progress(0.0),
+        devicePixelRatio(1.0),
         async(false),
         cache(true),
         mirror(false)
@@ -81,6 +82,7 @@ public:
     qreal progress;
     QSize sourcesize;
     QSize oldSourceSize;
+    qreal devicePixelRatio;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;

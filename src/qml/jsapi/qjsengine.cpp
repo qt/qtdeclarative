@@ -78,6 +78,7 @@ Q_DECLARE_METATYPE(QList<int>)
 /*!
   \since 5.0
   \class QJSEngine
+  \reentrant
 
   \brief The QJSEngine class provides an environment for evaluating JavaScript code.
 

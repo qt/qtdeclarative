@@ -61,23 +61,9 @@ QT_BEGIN_NAMESPACE
 class QQuickColorProvider : public QQmlColorProvider
 {
 public:
-    static inline QColor QColorFromString(const QString &s)
-    {
-        // Should we also handle #rrggbb here?
-        if (s.length() == 9 && s.startsWith(QLatin1Char('#'))) {
-            uchar a = fromHex(s, 1);
-            uchar r = fromHex(s, 3);
-            uchar g = fromHex(s, 5);
-            uchar b = fromHex(s, 7);
-            return QColor(r, g, b, a);
-        }
-
-        return QColor(s);
-    }
-
     QVariant colorFromString(const QString &s, bool *ok)
     {
-        QColor c(QColorFromString(s));
+        QColor c(s);
         if (c.isValid()) {
             if (ok) *ok = true;
             return QVariant(c);
@@ -89,7 +75,7 @@ public:
 
     unsigned rgbaFromString(const QString &s, bool *ok)
     {
-        QColor c(QColorFromString(s));
+        QColor c(s);
         if (c.isValid()) {
             if (ok) *ok = true;
             return c.rgba();
@@ -154,34 +140,6 @@ public:
         qreal b = tintColor.blueF() * a + baseColor.blueF() * inv_a;
 
         return QVariant::fromValue(QColor::fromRgbF(r, g, b, a + inv_a * baseColor.alphaF()));
-    }
-
-private:
-    static uchar fromHex(const uchar c, const uchar c2)
-    {
-        uchar rv = 0;
-        if (c >= '0' && c <= '9')
-            rv += (c - '0') * 16;
-        else if (c >= 'A' && c <= 'F')
-            rv += (c - 'A' + 10) * 16;
-        else if (c >= 'a' && c <= 'f')
-            rv += (c - 'a' + 10) * 16;
-
-        if (c2 >= '0' && c2 <= '9')
-            rv += (c2 - '0');
-        else if (c2 >= 'A' && c2 <= 'F')
-            rv += (c2 - 'A' + 10);
-        else if (c2 >= 'a' && c2 <= 'f')
-            rv += (c2 - 'a' + 10);
-
-        return rv;
-    }
-
-    static inline uchar fromHex(const QString &s, int idx)
-    {
-        uchar c = s.at(idx).toLatin1();
-        uchar c2 = s.at(idx + 1).toLatin1();
-        return fromHex(c, c2);
     }
 };
 
@@ -639,7 +597,7 @@ public:
 
         switch (type) {
         case QMetaType::QColor:
-            return createFromStringTyped<QColor>(data, dataSize, QQuickColorProvider::QColorFromString(s));
+            return createFromStringTyped<QColor>(data, dataSize, QColor(s));
         case QMetaType::QVector2D:
             return createFromStringTyped<QVector2D>(data, dataSize, vector2DFromString(s, &ok));
         case QMetaType::QVector3D:
@@ -677,7 +635,7 @@ public:
 
     bool variantFromString(const QString &s, QVariant *v)
     {
-        QColor c(QQuickColorProvider::QColorFromString(s));
+        QColor c(s);
         if (c.isValid()) {
             *v = QVariant::fromValue(c);
             return true;
@@ -725,7 +683,7 @@ public:
         switch (type) {
         case QMetaType::QColor:
             {
-            QColor c(QQuickColorProvider::QColorFromString(s));
+            QColor c(s);
             *v = QVariant::fromValue(c);
             return true;
             }

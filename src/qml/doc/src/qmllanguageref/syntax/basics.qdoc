@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,8 +29,12 @@
 \title QML Syntax Basics
 \brief Description of the basics of QML syntax
 
-QML is a declarative language that enables objects to be defined in terms of their attributes
-and how they relate and respond to changes in other objects. In contrast to imperative code, where changes in attributes and behavior are expressed through a series of statements that are processed step by step, the declarative QML syntax integrates attribute and behavioral changes directly into the definitions of individual objects.
+QML is a multi-paradigm language that enables objects to be defined in terms of their attributes
+and how they relate and respond to changes in other objects. In contrast to purely imperative code,
+where changes in attributes and behavior are expressed through a series of statements that are
+processed step by step, QML's declarative syntax integrates attribute and behavioral changes
+directly into the definitions of individual objects. These attribute definitions can then include
+imperative code, in the case where complex custom application behavior is needed.
 
 QML source code is generally loaded by the engine through QML \e documents, which are
 standalone documents of QML code. These can be used to define \l {QML Object Types}{QML object types} that can then be reused throughout an application.

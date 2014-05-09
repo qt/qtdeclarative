@@ -414,7 +414,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     needsActivation = function->needsActivation();
 
     if (strictMode) {
-        ScopedFunctionObject e(scope, FunctionObject::creatScriptFunction(ctx, function));
+        ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->callData->thisObject;
         return e->call(callData);

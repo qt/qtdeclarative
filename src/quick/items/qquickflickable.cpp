@@ -548,19 +548,23 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onDragStarted()
+    \qmlsignal QtQuick::Flickable::dragStarted()
 
-    This handler is called when the view starts to be dragged due to user
+    This signal is emitted when the view starts to be dragged due to user
     interaction.
+
+    The corresponding handler is \c onDragStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onDragEnded()
+    \qmlsignal QtQuick::Flickable::dragEnded()
 
-    This handler is called when the user stops dragging the view.
+    This signal is emitted when the user stops dragging the view.
 
     If the velocity of the drag is sufficient at the time the
     touch/mouse button is released then a flick will start.
+
+    The corresponding handler is \c onDragEnded.
 */
 
 /*!
@@ -615,34 +619,42 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onMovementStarted()
+    \qmlsignal QtQuick::Flickable::movementStarted()
 
-    This handler is called when the view begins moving due to user
+    This signal is emitted when the view begins moving due to user
     interaction.
+
+    The corresponding handler is \c onMovementStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onMovementEnded()
+    \qmlsignal QtQuick::Flickable::movementEnded()
 
-    This handler is called when the view stops moving due to user
-    interaction.  If a flick was generated, this handler will
-    be triggered once the flick stops.  If a flick was not
-    generated, the handler will be triggered when the
+    This signal is emitted when the view stops moving due to user
+    interaction.  If a flick was generated, this signal will
+    be emitted once the flick stops.  If a flick was not
+    generated, this signal will be emitted when the
     user stops dragging - i.e. a mouse or touch release.
+
+    The corresponding handler is \c onMovementEnded.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onFlickStarted()
+    \qmlsignal QtQuick::Flickable::flickStarted()
 
-    This handler is called when the view is flicked.  A flick
+    This signal is emitted when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
     while still in motion.
+
+    The corresponding handler is \c onFlickStarted.
 */
 
 /*!
-    \qmlsignal QtQuick::Flickable::onFlickEnded()
+    \qmlsignal QtQuick::Flickable::flickEnded()
 
-    This handler is called when the view stops moving due to a flick.
+    This signal is emitted when the view stops moving due to a flick.
+
+    The corresponding handler is \c onFlickEnded.
 */
 
 /*!
@@ -1725,9 +1737,9 @@ void QQuickFlickable::setRebound(QQuickTransition *transition)
     and \l {Item::childrenRect.height}{childrenRect.height} properties
     of the \l contentItem. For example, the previous snippet could be rewritten with:
 
-    \qml
+    \code
     contentWidth: contentItem.childrenRect.width; contentHeight: contentItem.childrenRect.height
-    \endqml
+    \endcode
 
     Though this assumes that the origin of the childrenRect is 0,0.
 */

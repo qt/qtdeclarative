@@ -42,12 +42,13 @@
 #include "qv4jsir_p.h"
 #include <private/qqmljsast_p.h>
 
+#ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
+#endif
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qset.h>
 #include <cmath>
-#include <cassert>
 
 #ifdef CONST
 #undef CONST
@@ -165,11 +166,14 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     void operator()(IR::Function *function)
     {
         subexpressions.clear();
+        subexpressions.reserve(function->basicBlockCount() * 8);
 
-        foreach (BasicBlock *block, function->basicBlocks) {
+        foreach (BasicBlock *block, function->basicBlocks()) {
+            if (block->isRemoved())
+                continue;
             clone.setBasicBlock(block);
 
-            foreach (Stmt *s, block->statements) {
+            foreach (Stmt *s, block->statements()) {
                 s->accept(this);
             }
         }
@@ -277,12 +281,14 @@ static QString dumpStart(const Expr *e) {
         return QString();
 
     QString result = typeName(e->type);
+#ifndef V4_BOOTSTRAP
     const Temp *temp = const_cast<Expr*>(e)->asTemp();
     if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
         result += QLatin1Char('<');
         result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
         result += QLatin1Char('>');
     }
+#endif
     result += QLatin1Char('{');
     return result;
 }
@@ -555,8 +561,10 @@ void Member::dump(QTextStream &out) const
     else
         base->dump(out);
     out << '.' << *name;
+#ifndef V4_BOOTSTRAP
     if (property)
         out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
+#endif
 }
 
 void Exp::dump(QTextStream &out, Mode)
@@ -587,7 +595,7 @@ void Move::dump(QTextStream &out, Mode mode)
 void Jump::dump(QTextStream &out, Mode mode)
 {
     Q_UNUSED(mode);
-    out << "goto " << 'L' << target->index << ';';
+    out << "goto " << 'L' << target->index() << ';';
 }
 
 void CJump::dump(QTextStream &out, Mode mode)
@@ -596,9 +604,9 @@ void CJump::dump(QTextStream &out, Mode mode)
     out << "if (";
     cond->dump(out);
     if (mode == HIR)
-        out << ") goto " << 'L' << iftrue->index << "; else goto " << 'L' << iffalse->index << ';';
+        out << ") goto " << 'L' << iftrue->index() << "; else goto " << 'L' << iffalse->index() << ';';
     else
-        out << ") goto " << 'L' << iftrue->index << ";";
+        out << ") goto " << 'L' << iftrue->index() << ";";
 }
 
 void Ret::dump(QTextStream &out, Mode)
@@ -632,7 +640,7 @@ Function *Module::newFunction(const QString &name, Function *outer)
     functions.append(f);
     if (!outer) {
         if (!isQmlModule) {
-            assert(!rootFunction);
+            Q_ASSERT(!rootFunction);
             rootFunction = f;
         }
     } else {
@@ -655,15 +663,37 @@ void Module::setFileName(const QString &name)
     }
 }
 
+Function::Function(Module *module, Function *outer, const QString &name)
+    : module(module)
+    , pool(&module->pool)
+    , tempCount(0)
+    , maxNumberOfArguments(0)
+    , outer(outer)
+    , insideWithOrCatch(0)
+    , hasDirectEval(false)
+    , usesArgumentsObject(false)
+    , isStrict(false)
+    , isNamedExpression(false)
+    , hasTry(false)
+    , hasWith(false)
+    , unused(0)
+    , line(-1)
+    , column(-1)
+    , _allBasicBlocks(0)
+{
+    this->name = newString(name);
+    _basicBlocks.reserve(8);
+}
+
 Function::~Function()
 {
-    // destroy the Stmt::Data blocks manually, because memory pool cleanup won't
-    // call the Stmt destructors.
-    foreach (IR::BasicBlock *b, basicBlocks)
-        foreach (IR::Stmt *s, b->statements)
-            s->destroyData();
+    if (_allBasicBlocks) {
+        qDeleteAll(*_allBasicBlocks);
+        delete _allBasicBlocks;
+    } else {
+        qDeleteAll(_basicBlocks);
+    }
 
-    qDeleteAll(basicBlocks);
     pool = 0;
     module = 0;
 }
@@ -677,7 +707,31 @@ const QString *Function::newString(const QString &text)
 BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode)
 {
     BasicBlock *block = new BasicBlock(this, containingLoop, catchBlock);
-    return mode == InsertBlock ? insertBasicBlock(block) : block;
+    return mode == InsertBlock ? addBasicBlock(block) : block;
+}
+
+BasicBlock *Function::addBasicBlock(BasicBlock *block)
+{
+    Q_ASSERT(block->index() < 0);
+    block->setIndex(_basicBlocks.size());
+    _basicBlocks.append(block);
+    return block;
+}
+
+void Function::removeBasicBlock(BasicBlock *block)
+{
+    block->markAsRemoved();
+    block->in.clear();
+    block->out.clear();
+}
+
+int Function::liveBasicBlocksCount() const
+{
+    int count = 0;
+    foreach (BasicBlock *bb, basicBlocks())
+        if (!bb->isRemoved())
+            ++count;
+    return count;
 }
 
 void Function::dump(QTextStream &out, Stmt::Mode mode)
@@ -690,7 +744,7 @@ void Function::dump(QTextStream &out, Stmt::Mode mode)
         out << "\treceive " << *formal << ';' << endl;
     foreach (const QString *local, locals)
         out << "\tlocal " << *local << ';' << endl;
-    foreach (BasicBlock *bb, basicBlocks)
+    foreach (BasicBlock *bb, basicBlocks())
         bb->dump(out, mode);
     out << '}' << endl;
 }
@@ -709,13 +763,35 @@ int Function::indexOfArgument(const QStringRef &string) const
     }
     return -1;
 }
+
+void Function::setScheduledBlocks(const QVector<BasicBlock *> &scheduled)
+{
+    Q_ASSERT(!_allBasicBlocks);
+    _allBasicBlocks = new QVector<BasicBlock *>(basicBlocks());
+    _basicBlocks = scheduled;
+}
+
+void Function::renumberBasicBlocks()
+{
+    for (int i = 0, ei = basicBlockCount(); i != ei; ++i)
+        basicBlock(i)->changeIndex(i);
+}
+
+BasicBlock::~BasicBlock()
+{
+    foreach (Stmt *s, _statements)
+        s->destroyData();
+}
+
 unsigned BasicBlock::newTemp()
 {
+    Q_ASSERT(!isRemoved());
     return function->tempCount++;
 }
 
 Temp *BasicBlock::TEMP(unsigned index)
 {
+    Q_ASSERT(!isRemoved());
     Temp *e = function->New<Temp>();
     e->init(Temp::VirtualRegister, index, 0);
     return e;
@@ -723,6 +799,7 @@ Temp *BasicBlock::TEMP(unsigned index)
 
 Temp *BasicBlock::ARG(unsigned index, unsigned scope)
 {
+    Q_ASSERT(!isRemoved());
     Temp *e = function->New<Temp>();
     e->init(scope ? Temp::ScopedFormal : Temp::Formal, index, scope);
     return e;
@@ -730,6 +807,7 @@ Temp *BasicBlock::ARG(unsigned index, unsigned scope)
 
 Temp *BasicBlock::LOCAL(unsigned index, unsigned scope)
 {
+    Q_ASSERT(!isRemoved());
     Temp *e = function->New<Temp>();
     e->init(scope ? Temp::ScopedLocal : Temp::Local, index, scope);
     return e;
@@ -737,6 +815,7 @@ Temp *BasicBlock::LOCAL(unsigned index, unsigned scope)
 
 Expr *BasicBlock::CONST(Type type, double value)
 {
+    Q_ASSERT(!isRemoved());
     Const *e = function->New<Const>();
     if (type == NumberType) {
         int ival = (int)value;
@@ -745,13 +824,19 @@ Expr *BasicBlock::CONST(Type type, double value)
             type = SInt32Type;
         else
             type = DoubleType;
+    } else if (type == NullType) {
+        value = 0;
+    } else if (type == UndefinedType) {
+        value = qSNaN();
     }
+
     e->init(type, value);
     return e;
 }
 
 Expr *BasicBlock::STRING(const QString *value)
 {
+    Q_ASSERT(!isRemoved());
     String *e = function->New<String>();
     e->init(value);
     return e;
@@ -759,6 +844,7 @@ Expr *BasicBlock::STRING(const QString *value)
 
 Expr *BasicBlock::REGEXP(const QString *value, int flags)
 {
+    Q_ASSERT(!isRemoved());
     RegExp *e = function->New<RegExp>();
     e->init(value, flags);
     return e;
@@ -766,6 +852,7 @@ Expr *BasicBlock::REGEXP(const QString *value, int flags)
 
 Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
 {
+    Q_ASSERT(!isRemoved());
     Name *e = function->New<Name>();
     e->init(function->newString(id), line, column);
     return e;
@@ -773,6 +860,7 @@ Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
 
 Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column)
 {
+    Q_ASSERT(!isRemoved());
     Name *e = function->New<Name>();
     e->initGlobal(function->newString(id), line, column);
     return e;
@@ -781,6 +869,7 @@ Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column)
 
 Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
 {
+    Q_ASSERT(!isRemoved());
     Name *e = function->New<Name>();
     e->init(builtin, line, column);
     return e;
@@ -788,6 +877,7 @@ Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
 
 Closure *BasicBlock::CLOSURE(int functionInModule)
 {
+    Q_ASSERT(!isRemoved());
     Closure *clos = function->New<Closure>();
     clos->init(functionInModule, function->module->functions.at(functionInModule)->name);
     return clos;
@@ -795,6 +885,7 @@ Closure *BasicBlock::CLOSURE(int functionInModule)
 
 Expr *BasicBlock::CONVERT(Expr *expr, Type type)
 {
+    Q_ASSERT(!isRemoved());
     Convert *e = function->New<Convert>();
     e->init(expr, type);
     return e;
@@ -802,6 +893,7 @@ Expr *BasicBlock::CONVERT(Expr *expr, Type type)
 
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
 {
+    Q_ASSERT(!isRemoved());
     Unop *e = function->New<Unop>();
     e->init(op, expr);
     return e;
@@ -809,6 +901,7 @@ Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
 
 Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 {
+    Q_ASSERT(!isRemoved());
     Binop *e = function->New<Binop>();
     e->init(op, left, right);
     return e;
@@ -816,6 +909,7 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 
 Expr *BasicBlock::CALL(Expr *base, ExprList *args)
 {
+    Q_ASSERT(!isRemoved());
     Call *e = function->New<Call>();
     e->init(base, args);
     int argc = 0;
@@ -827,6 +921,7 @@ Expr *BasicBlock::CALL(Expr *base, ExprList *args)
 
 Expr *BasicBlock::NEW(Expr *base, ExprList *args)
 {
+    Q_ASSERT(!isRemoved());
     New *e = function->New<New>();
     e->init(base, args);
     return e;
@@ -834,6 +929,7 @@ Expr *BasicBlock::NEW(Expr *base, ExprList *args)
 
 Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
 {
+    Q_ASSERT(!isRemoved());
     Subscript *e = function->New<Subscript>();
     e->init(base, index);
     return e;
@@ -841,6 +937,7 @@ Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
 
 Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property, uchar kind, int attachedPropertiesIdOrEnumValue)
 {
+    Q_ASSERT(!isRemoved());
     Member*e = function->New<Member>();
     e->init(base, name, property, kind, attachedPropertiesIdOrEnumValue);
     return e;
@@ -848,6 +945,7 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *prop
 
 Stmt *BasicBlock::EXP(Expr *expr)
 {
+    Q_ASSERT(!isRemoved());
     if (isTerminated())
         return 0;
 
@@ -859,6 +957,7 @@ Stmt *BasicBlock::EXP(Expr *expr)
 
 Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
 {
+    Q_ASSERT(!isRemoved());
     if (isTerminated())
         return 0;
 
@@ -870,6 +969,7 @@ Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
 
 Stmt *BasicBlock::JUMP(BasicBlock *target)
 {
+    Q_ASSERT(!isRemoved());
     if (isTerminated())
         return 0;
 
@@ -877,10 +977,10 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     s->init(target);
     appendStatement(s);
 
-    assert(! out.contains(target));
+    Q_ASSERT(! out.contains(target));
     out.append(target);
 
-    assert(! target->in.contains(this));
+    Q_ASSERT(! target->in.contains(this));
     target->in.append(this);
 
     return s;
@@ -888,6 +988,7 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
 
 Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
 {
+    Q_ASSERT(!isRemoved());
     if (isTerminated())
         return 0;
 
@@ -900,16 +1001,16 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     s->init(cond, iftrue, iffalse);
     appendStatement(s);
 
-    assert(! out.contains(iftrue));
+    Q_ASSERT(! out.contains(iftrue));
     out.append(iftrue);
 
-    assert(! iftrue->in.contains(this));
+    Q_ASSERT(! iftrue->in.contains(this));
     iftrue->in.append(this);
 
-    assert(! out.contains(iffalse));
+    Q_ASSERT(! out.contains(iffalse));
     out.append(iffalse);
 
-    assert(! iffalse->in.contains(this));
+    Q_ASSERT(! iffalse->in.contains(this));
     iffalse->in.append(this);
 
     return s;
@@ -917,6 +1018,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
 
 Stmt *BasicBlock::RET(Temp *expr)
 {
+    Q_ASSERT(!isRemoved());
     if (isTerminated())
         return 0;
 
@@ -928,11 +1030,11 @@ Stmt *BasicBlock::RET(Temp *expr)
 
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 {
-    out << 'L' << index << ':';
+    out << 'L' << index() << ':';
     if (catchBlock)
-        out << " (catchBlock L" << catchBlock->index << ")";
+        out << " (catchBlock L" << catchBlock->index() << ")";
     out << endl;
-    foreach (Stmt *s, statements) {
+    foreach (Stmt *s, statements()) {
         out << '\t';
         s->dump(out, mode);
 
@@ -943,11 +1045,62 @@ void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
     }
 }
 
+void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
+{
+    Q_ASSERT(!isRemoved());
+    Q_ASSERT(newStatements.size() >= _statements.size());
+    _statements = newStatements;
+}
+
 void BasicBlock::appendStatement(Stmt *statement)
 {
+    Q_ASSERT(!isRemoved());
     if (nextLocation.isValid())
         statement->location = nextLocation;
-    statements.append(statement);
+    _statements.append(statement);
+}
+
+void BasicBlock::prependStatement(Stmt *stmt)
+{
+    Q_ASSERT(!isRemoved());
+    _statements.prepend(stmt);
+}
+
+void BasicBlock::insertStatementBefore(Stmt *before, Stmt *newStmt)
+{
+    int idx = _statements.indexOf(before);
+    Q_ASSERT(idx >= 0);
+    _statements.insert(idx, newStmt);
+}
+
+void BasicBlock::insertStatementBefore(int index, Stmt *newStmt)
+{
+    Q_ASSERT(index >= 0);
+    _statements.insert(index, newStmt);
+}
+
+void BasicBlock::insertStatementBeforeTerminator(Stmt *stmt)
+{
+    Q_ASSERT(!isRemoved());
+    _statements.insert(_statements.size() - 1, stmt);
+}
+
+void BasicBlock::replaceStatement(int index, Stmt *newStmt)
+{
+    Q_ASSERT(!isRemoved());
+    _statements[index] = newStmt;
+}
+
+void BasicBlock::removeStatement(Stmt *stmt)
+{
+    Q_ASSERT(!isRemoved());
+    _statements.remove(_statements.indexOf(stmt));
+}
+
+void BasicBlock::removeStatement(int idx)
+{
+    Q_ASSERT(!isRemoved());
+    _statements.remove(idx);
 }
 
 CloneExpr::CloneExpr(BasicBlock *block)

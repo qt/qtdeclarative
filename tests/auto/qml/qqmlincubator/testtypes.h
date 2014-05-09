@@ -63,6 +63,27 @@ private:
     int m_v;
 };
 
+class SelfRegisteringOuterType : public QObject
+{
+Q_OBJECT
+Q_PROPERTY(QObject* value READ value WRITE setValue);
+public:
+    SelfRegisteringOuterType();
+    ~SelfRegisteringOuterType();
+
+    static bool beenDeleted;
+
+    QObject *value() const { return m_v; }
+    void setValue(QObject *v) { m_v = v; }
+
+    static SelfRegisteringOuterType *me();
+
+private:
+    static SelfRegisteringOuterType *m_me;
+
+    QObject *m_v;
+};
+
 class CallbackRegisteringType : public QObject
 {
 Q_OBJECT

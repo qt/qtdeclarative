@@ -84,8 +84,8 @@
 /*!
  \fn QUrl QQmlAbstractUrlInterceptor::intercept(const QUrl& url, DataType type)
 
- A pure virtual function where you can intercept the url. The returned value is taken as the
- new value for the url. The type of url being intercepted is given by the type variable.
+ A pure virtual function where you can intercept the \a url. The returned value is taken as the
+ new value for the url. The type of url being intercepted is given by the \a type variable.
 
  Your implementation of this function must be thread-safe, as it can be called from multiple threads
  at the same time.

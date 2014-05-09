@@ -343,6 +343,8 @@ private slots:
 
     void requestActivate();
 
+    void testWindowVisibilityOrder();
+
     void blockClosing();
 
     void crashWhenHoverItemDeleted();
@@ -1132,6 +1134,43 @@ void tst_qquickwindow::animationsWhileHidden()
     QTRY_VERIFY(window->isVisible());
 }
 
+// When running on native Nvidia graphics cards on linux, the
+// distance field glyph pixels have a measurable, but not visible
+// pixel error. Use a custom compare function to avoid
+//
+// This was GT-216 with the ubuntu "nvidia-319" driver package.
+// llvmpipe does not show the same issue.
+//
+bool compareImages(const QImage &ia, const QImage &ib)
+{
+    if (ia.size() != ib.size())
+        qDebug() << "images are of different size" << ia.size() << ib.size();
+    Q_ASSERT(ia.size() == ib.size());
+    Q_ASSERT(ia.format() == ib.format());
+
+    int w = ia.width();
+    int h = ia.height();
+    const int tolerance = 5;
+    for (int y=0; y<h; ++y) {
+        const uint *as= (const uint *) ia.constScanLine(y);
+        const uint *bs= (const uint *) ib.constScanLine(y);
+        for (int x=0; x<w; ++x) {
+            uint a = as[x];
+            uint b = bs[x];
+
+            // No tolerance for error in the alpha.
+            if ((a & 0xff000000) != (b & 0xff000000))
+                return false;
+            if (qAbs(qRed(a) - qRed(b)) > tolerance)
+                return false;
+            if (qAbs(qRed(a) - qRed(b)) > tolerance)
+                return false;
+            if (qAbs(qRed(a) - qRed(b)) > tolerance)
+                return false;
+        }
+    }
+    return true;
+}
 
 void tst_qquickwindow::headless()
 {
@@ -1179,8 +1218,7 @@ void tst_qquickwindow::headless()
 
     // Verify that the visual output is the same
     QImage newContent = window->grabWindow();
-
-    QCOMPARE(originalContent, newContent);
+    QVERIFY(compareImages(newContent, originalContent));
 }
 
 void tst_qquickwindow::noUpdateWhenNothingChanges()
@@ -1600,7 +1638,8 @@ void tst_qquickwindow::requestActivate()
     QVERIFY(windows.at(0)->objectName() == "window2");
 
     window1->show();
-    window1->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(windows.at(0))); //We wait till window 2 comes up
+    window1->requestActivate();                 // and then transfer the focus to window1
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == window1);
     QVERIFY(window1->isActive() == true);
@@ -1626,6 +1665,54 @@ void tst_qquickwindow::requestActivate()
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == windows.at(0));
     QVERIFY(windows.at(0)->isActive());
+    delete window1;
+}
+
+void tst_qquickwindow::testWindowVisibilityOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("windoworder.qml"));
+    QQuickWindow *window1 = qobject_cast<QQuickWindow *>(component.create());
+    QQuickWindow *window2 = window1->property("win2").value<QQuickWindow*>();
+    QQuickWindow *window3 = window1->property("win3").value<QQuickWindow*>();
+    QQuickWindow *window4 = window1->property("win4").value<QQuickWindow*>();
+    QQuickWindow *window5 = window1->property("win5").value<QQuickWindow*>();
+    QVERIFY(window1);
+    QVERIFY(window2);
+    QVERIFY(window3);
+
+    QTest::qWaitForWindowExposed(window3);
+
+    QWindowList windows = QGuiApplication::topLevelWindows();
+    QTRY_COMPARE(windows.size(), 5);
+
+    QVERIFY(window3 == QGuiApplication::focusWindow());
+    QVERIFY(window1->isActive());
+    QVERIFY(window2->isActive());
+    QVERIFY(window3->isActive());
+
+    //Test if window4 is shown 2 seconds after the application startup
+    //with window4 visible window5 (transient child) should also become visible
+    QVERIFY(!window4->isVisible());
+    QVERIFY(!window5->isVisible());
+
+    window4->setVisible(true);
+
+    QTest::qWaitForWindowExposed(window5);
+    QVERIFY(window4->isVisible());
+    QVERIFY(window5->isVisible());
+    window4->hide();
+    window5->hide();
+
+    window3->hide();
+#if defined(Q_OS_OSX)
+    QEXPECT_FAIL("","Focus is not transferred to transient parent on window close (QTBUG-33423)", Continue);
+#endif
+    QTRY_COMPARE(window2 == QGuiApplication::focusWindow(), true);
+
+    window2->hide();
+    QTRY_COMPARE(window1 == QGuiApplication::focusWindow(), true);
 }
 
 void tst_qquickwindow::blockClosing()

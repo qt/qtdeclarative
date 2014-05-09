@@ -4,14 +4,18 @@ Rectangle {
     width: 240
     height: 320
 
-    ListView {
-        id: list
+    GridView {
+        id: grid
 
-        property real initialZ: 342
+        property real itemZ: 1
+        property real headerZ: 1
+        property real footerZ: 1
+        property real highlightZ: 0
 
         anchors.fill: parent
-        objectName: "list"
-        model: ListModel {}
+        objectName: "grid"
+        model: ListModel { ListElement { text: "text" } }
+        currentIndex: 0
 
         delegate: Text {
             objectName: "wrapper"
@@ -22,13 +26,11 @@ Rectangle {
         header: Rectangle {
             width: 240
             height: 30
-            z: list.initialZ
         }
 
         footer: Rectangle {
             width: 240
             height: 30
-            z: list.initialZ
         }
     }
 }
