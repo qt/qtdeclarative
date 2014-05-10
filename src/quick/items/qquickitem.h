@@ -43,7 +43,6 @@
 #define QQUICKITEM_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtQuick/qquickitemgrabresult.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlcomponent.h>
 

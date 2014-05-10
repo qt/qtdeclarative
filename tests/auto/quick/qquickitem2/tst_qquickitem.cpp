@@ -43,6 +43,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>

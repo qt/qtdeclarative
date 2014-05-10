@@ -43,6 +43,7 @@
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
+#include "qquickitemgrabresult.h"
 #include "qquickevents_p_p.h"
 #include "qquickrectangle_p.h"
 #include "qquickfocusscope_p.h"
