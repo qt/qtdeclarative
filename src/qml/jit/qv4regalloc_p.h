@@ -65,15 +65,18 @@ class RegisterAllocator
     QVector<LifeTimeInterval *> _fixedRegisterRanges, _fixedFPRegisterRanges;
 
     IR::LifeTimeIntervals::Ptr _lifeTimeIntervals;
-    QVector<LifeTimeInterval *> _unhandled, _active, _inactive, _handled;
+    typedef QVector<LifeTimeInterval *> Intervals;
+    Intervals _unhandled, _active, _inactive, _handled;
 
-    QHash<IR::Temp, int> _lastAssignedRegister;
-    QHash<IR::Temp, int> _assignedSpillSlots;
+    std::vector<int> _lastAssignedRegister;
+    std::vector<int> _assignedSpillSlots;
     QVector<int> _activeSpillSlots;
 
     Q_DISABLE_COPY(RegisterAllocator)
 
 public:
+    enum { Invalid = -1 };
+
     RegisterAllocator(const QVector<int> &normalRegisters, const QVector<int> &fpRegisters);
     ~RegisterAllocator();
 
@@ -85,8 +88,6 @@ private:
     void linearScan();
     void tryAllocateFreeReg(LifeTimeInterval &current, const int position);
     void allocateBlockedReg(LifeTimeInterval &current, const int position);
-    void longestAvailableReg(const QVector<int> &nextUses, int &reg, int &nextUsePos_reg,
-                             int lastUse) const;
     int nextIntersection(const LifeTimeInterval &current, const LifeTimeInterval &another,
                          const int position) const;
     int nextUse(const IR::Temp &t, int startPosition) const;
