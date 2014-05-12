@@ -3500,13 +3500,22 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
+    void setOutput(Temp *out)
+    {
+        Q_ASSERT(!output);
+        output = out;
+    }
+
 public:
-    QList<Temp> inputs;
-    QList<Temp> outputs;
+    std::vector<Temp *> inputs;
+    Temp *output;
+
+    InputOutputCollector()
+    { inputs.reserve(4); }
 
     void collect(Stmt *s) {
-        inputs.clear();
-        outputs.clear();
+        inputs.resize(0);
+        output = 0;
         s->accept(this);
     }
 
@@ -3516,7 +3525,7 @@ protected:
     virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *e) {
-        inputs.append(*e);
+        inputs.push_back(e);
     }
     virtual void visitArgLocal(ArgLocal *) {}
     virtual void visitClosure(Closure *) {}
@@ -3539,7 +3548,7 @@ protected:
     virtual void visitMove(Move *s) {
         s->source->accept(this);
         if (Temp *t = s->target->asTemp()) {
-            outputs.append(*t);
+            setOutput(t);
         } else {
             s->target->accept(this);
         }
@@ -3567,28 +3576,40 @@ protected:
 class LifeRanges {
     typedef QSet<Temp> LiveRegs;
 
-    QVector<LiveRegs> _liveIn;
-    QHash<Temp, LifeTimeInterval> _intervals;
+    std::vector<LiveRegs> _liveIn;
+    std::vector<LifeTimeInterval *> _intervals;
+    std::vector<LifeTimeInterval *> _finishedIntervals;
     typedef QVector<LifeTimeInterval> LifeTimeIntervals;
     LifeTimeIntervals _sortedIntervals;
 
+    LifeTimeInterval &interval(const Temp *temp)
+    {
+        LifeTimeInterval *&lti = _intervals[temp->index];
+        if (Q_UNLIKELY(!lti)) {
+            lti = new LifeTimeInterval;
+            lti->setTemp(*temp);
+        }
+        return *lti;
+    }
+
 public:
     LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
+        : _intervals(function->tempCount)
     {
         function->renumberForLifeRanges();
         _liveIn.resize(function->basicBlockCount());
+        _finishedIntervals.reserve(function->tempCount);
 
         for (int i = function->basicBlockCount() - 1; i >= 0; --i) {
             BasicBlock *bb = function->basicBlock(i);
             buildIntervals(bb, startEndLoops.value(bb, 0));
         }
 
-        _sortedIntervals.reserve(_intervals.size());
-        for (QHash<Temp, LifeTimeInterval>::const_iterator i = _intervals.begin(), ei = _intervals.end(); i != ei; ++i) {
-            LifeTimeIntervals::iterator lti = _sortedIntervals.insert(_sortedIntervals.end(), i.value());
-            lti->setTemp(i.key());
-        }
-        std::sort(_sortedIntervals.begin(), _sortedIntervals.end(), LifeTimeInterval::lessThan);
+        _sortedIntervals.reserve(_finishedIntervals.size());
+        for (unsigned i = _finishedIntervals.size(); i > 0;)
+            if (LifeTimeInterval *lti = _finishedIntervals[--i])
+                _sortedIntervals.append(*lti);
+        qDeleteAll(_intervals);
         _intervals.clear();
     }
 
@@ -3607,6 +3628,8 @@ public:
         for (int i = 0, ei = _liveIn.size(); i != ei; ++i) {
             qout << "L" << i <<" live-in: ";
             QList<Temp> live = QList<Temp>::fromSet(_liveIn.at(i));
+            if (live.isEmpty())
+                qout << "(none)";
             std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
@@ -3638,35 +3661,39 @@ private:
         QVector<Stmt *> statements = bb->statements();
 
         foreach (const Temp &opd, live)
-            _intervals[opd].addRange(statements.first()->id(), statements.last()->id());
+            interval(&opd).addRange(statements.first()->id(), statements.last()->id());
 
         InputOutputCollector collector;
         for (int i = statements.size() - 1; i >= 0; --i) {
-            Stmt *s = statements[i];
+            Stmt *s = statements.at(i);
             if (Phi *phi = s->asPhi()) {
                 LiveRegs::iterator it = live.find(*phi->targetTemp);
                 if (it == live.end()) {
                     // a phi node target that is only defined, but never used
-                    _intervals[*phi->targetTemp].setFrom(s);
+                    interval(phi->targetTemp).setFrom(s);
                 } else {
                     live.erase(it);
+                    _finishedIntervals.push_back(&interval(phi->targetTemp));
                 }
                 continue;
             }
             collector.collect(s);
-            foreach (const Temp &opd, collector.outputs) {
-                _intervals[opd].setFrom(s);
-                live.remove(opd);
+            if (Temp *opd = collector.output) {
+                LifeTimeInterval &lti = interval(opd);
+                lti.setFrom(s);
+                live.remove(lti.temp());
+                _finishedIntervals.push_back(&lti);
             }
-            foreach (const Temp &opd, collector.inputs) {
-                _intervals[opd].addRange(statements.first()->id(), s->id());
-                live.insert(opd);
+            for (unsigned i = 0, ei = collector.inputs.size(); i != ei; ++i) {
+                Temp *opd = collector.inputs[i];
+                interval(opd).addRange(statements.first()->id(), s->id());
+                live.insert(*opd);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
             foreach (const Temp &opd, live)
-                _intervals[opd].addRange(statements.first()->id(), loopEnd->terminator()->id());
+                interval(&opd).addRange(statements.first()->id(), loopEnd->terminator()->id());
         }
 
         _liveIn[bb->index()] = live;
