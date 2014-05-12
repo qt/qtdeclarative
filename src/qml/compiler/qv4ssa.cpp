@@ -3812,7 +3812,7 @@ void LifeTimeInterval::addRange(int from, int to) {
         p->start = qMin(p->start, from);
         p->end = qMax(p->end, to);
         while (_ranges.count() > 1) {
-            Range *p1 = &_ranges[1];
+            Range *p1 = p + 1;
             if (p->end + 1 < p1->start || p1->end + 1 < p->start)
                 break;
             p1->start = qMin(p->start, p1->start);

@@ -99,8 +99,8 @@ public:
     int end() const { return _end; }
     bool covers(int position) const
     {
-        foreach (const Range &r, _ranges) {
-            if (r.covers(position))
+        for (int i = 0, ei = _ranges.size(); i != ei; ++i) {
+            if (_ranges.at(i).covers(position))
                 return true;
         }
         return false;
