@@ -43,6 +43,7 @@
 #define QV4SSA_P_H
 
 #include "qv4jsir_p.h"
+#include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
 class QTextStream;
@@ -118,8 +119,8 @@ public:
     void setSplitFromInterval(bool isSplitFromInterval) { _isSplitFromInterval = isSplitFromInterval; }
 
     void dump(QTextStream &out) const;
-    static bool lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
-    static bool lessThanForTemp(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
+    static bool lessThan(const LifeTimeInterval *r1, const LifeTimeInterval *r2);
+    static bool lessThanForTemp(const LifeTimeInterval *r1, const LifeTimeInterval *r2);
 
     void validate() const {
 #if !defined(QT_NO_DEBUG)
@@ -134,6 +135,35 @@ public:
         }
 #endif
     }
+};
+
+class LifeTimeIntervals
+{
+    Q_DISABLE_COPY(LifeTimeIntervals)
+
+    LifeTimeIntervals(int sizeHint)
+    { _intervals.reserve(sizeHint + 32); }
+
+public:
+    typedef QSharedPointer<LifeTimeIntervals> Ptr;
+    static Ptr create(int sizeHint)
+    { return Ptr(new LifeTimeIntervals(sizeHint)); }
+
+    ~LifeTimeIntervals();
+
+    // takes ownership of the pointer
+    void add(LifeTimeInterval *interval)
+    { _intervals.append(interval); }
+
+    // After calling Optimizer::lifeTimeIntervals() the result will have all intervals in descending order of start position.
+    QVector<LifeTimeInterval *> intervals() const
+    { return _intervals; }
+
+    int size() const
+    { return _intervals.size(); }
+
+private:
+    QVector<LifeTimeInterval *> _intervals;
 };
 
 class Q_QML_PRIVATE_EXPORT Optimizer
@@ -151,7 +181,7 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
 
-    QVector<LifeTimeInterval> lifeTimeIntervals() const;
+    LifeTimeIntervals::Ptr lifeTimeIntervals() const;
 
     QSet<IR::Jump *> calculateOptionalJumps();
 

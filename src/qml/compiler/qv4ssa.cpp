@@ -3578,9 +3578,7 @@ class LifeRanges {
 
     std::vector<LiveRegs> _liveIn;
     std::vector<LifeTimeInterval *> _intervals;
-    std::vector<LifeTimeInterval *> _finishedIntervals;
-    typedef QVector<LifeTimeInterval> LifeTimeIntervals;
-    LifeTimeIntervals _sortedIntervals;
+    LifeTimeIntervals::Ptr _sortedIntervals;
 
     LifeTimeInterval &interval(const Temp *temp)
     {
@@ -3595,32 +3593,27 @@ class LifeRanges {
 public:
     LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
         : _intervals(function->tempCount)
+        , _sortedIntervals(LifeTimeIntervals::create(function->tempCount))
     {
         function->renumberForLifeRanges();
         _liveIn.resize(function->basicBlockCount());
-        _finishedIntervals.reserve(function->tempCount);
 
         for (int i = function->basicBlockCount() - 1; i >= 0; --i) {
             BasicBlock *bb = function->basicBlock(i);
             buildIntervals(bb, startEndLoops.value(bb, 0));
         }
 
-        _sortedIntervals.reserve(_finishedIntervals.size());
-        for (unsigned i = _finishedIntervals.size(); i > 0;)
-            if (LifeTimeInterval *lti = _finishedIntervals[--i])
-                _sortedIntervals.append(*lti);
-        qDeleteAll(_intervals);
         _intervals.clear();
     }
 
-    QVector<LifeTimeInterval> intervals() const { return _sortedIntervals; }
+    LifeTimeIntervals::Ptr intervals() const { return _sortedIntervals; }
 
     void dump() const
     {
         qout << "Life ranges:" << endl;
         qout << "Intervals:" << endl;
-        foreach (const LifeTimeInterval &range, _sortedIntervals) {
-            range.dump(qout);
+        foreach (const LifeTimeInterval *range, _sortedIntervals->intervals()) {
+            range->dump(qout);
             qout << endl;
         }
 
@@ -3673,8 +3666,8 @@ private:
                     interval(phi->targetTemp).setFrom(s);
                 } else {
                     live.erase(it);
-                    _finishedIntervals.push_back(&interval(phi->targetTemp));
                 }
+                _sortedIntervals->add(&interval(phi->targetTemp));
                 continue;
             }
             collector.collect(s);
@@ -3682,7 +3675,7 @@ private:
                 LifeTimeInterval &lti = interval(opd);
                 lti.setFrom(s);
                 live.remove(lti.temp());
-                _finishedIntervals.push_back(&lti);
+                _sortedIntervals->add(&lti);
             }
             for (unsigned i = 0, ei = collector.inputs.size(); i != ei; ++i) {
                 Temp *opd = collector.inputs[i];
@@ -3919,19 +3912,24 @@ void LifeTimeInterval::dump(QTextStream &out) const {
         out << " (register " << _reg << ")";
 }
 
-bool LifeTimeInterval::lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2) {
-    if (r1._ranges.first().start == r2._ranges.first().start) {
-        if (r1.isSplitFromInterval() == r2.isSplitFromInterval())
-            return r1._ranges.last().end < r2._ranges.last().end;
+bool LifeTimeInterval::lessThan(const LifeTimeInterval *r1, const LifeTimeInterval *r2) {
+    if (r1->_ranges.first().start == r2->_ranges.first().start) {
+        if (r1->isSplitFromInterval() == r2->isSplitFromInterval())
+            return r1->_ranges.last().end < r2->_ranges.last().end;
         else
-            return r1.isSplitFromInterval();
+            return r1->isSplitFromInterval();
     } else
-        return r1._ranges.first().start < r2._ranges.first().start;
+        return r1->_ranges.first().start < r2->_ranges.first().start;
 }
 
-bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval &r1, const LifeTimeInterval &r2)
+bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval *r1, const LifeTimeInterval *r2)
 {
-    return r1.temp() < r2.temp();
+    return r1->temp() < r2->temp();
+}
+
+LifeTimeIntervals::~LifeTimeIntervals()
+{
+    qDeleteAll(_intervals);
 }
 
 Optimizer::Optimizer(IR::Function *function)
@@ -4079,7 +4077,7 @@ void Optimizer::convertOutOfSSA() {
     }
 }
 
-QVector<LifeTimeInterval> Optimizer::lifeTimeIntervals() const
+LifeTimeIntervals::Ptr Optimizer::lifeTimeIntervals() const
 {
     Q_ASSERT(isInSSA());
 

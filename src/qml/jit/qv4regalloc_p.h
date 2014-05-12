@@ -62,9 +62,10 @@ class RegisterAllocator
     QVector<int> _fpRegisters;
     QScopedPointer<RegAllocInfo> _info;
 
-    QVector<LifeTimeInterval> _fixedRegisterRanges, _fixedFPRegisterRanges;
+    QVector<LifeTimeInterval *> _fixedRegisterRanges, _fixedFPRegisterRanges;
 
-    QVector<LifeTimeInterval> _unhandled, _active, _inactive, _handled;
+    IR::LifeTimeIntervals::Ptr _lifeTimeIntervals;
+    QVector<LifeTimeInterval *> _unhandled, _active, _inactive, _handled;
 
     QHash<IR::Temp, int> _lastAssignedRegister;
     QHash<IR::Temp, int> _assignedSpillSlots;
@@ -79,6 +80,7 @@ public:
     void run(IR::Function *function, const IR::Optimizer &opt);
 
 private:
+    LifeTimeInterval *cloneFixedInterval(int reg, bool isFP, const LifeTimeInterval &original);
     void prepareRanges();
     void linearScan();
     void tryAllocateFreeReg(LifeTimeInterval &current, const int position);

@@ -696,8 +696,10 @@ using namespace QT_PREPEND_NAMESPACE(QV4);
 
 namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
-    const QVector<LifeTimeInterval> &_intervals;
-    QVector<const LifeTimeInterval *> _unprocessed;
+    Q_DISABLE_COPY(ResolutionPhase)
+
+    QVector<LifeTimeInterval *> _intervals;
+    QVector<LifeTimeInterval *> _unprocessed;
     IR::Function *_function;
 #if !defined(QT_NO_DEBUG)
     RegAllocInfo *_info;
@@ -715,7 +717,7 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QVector<LifeTimeInterval> &intervals, IR::Function *function, RegAllocInfo *info,
+    ResolutionPhase(const QVector<LifeTimeInterval *> &intervals, IR::Function *function, RegAllocInfo *info,
                     const QHash<IR::Temp, int> &assignedSpillSlots,
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
@@ -731,10 +733,7 @@ public:
         Q_UNUSED(info)
 #endif
 
-        _unprocessed.resize(_intervals.size());
-        for (int i = 0, ei = _intervals.size(); i != ei; ++i)
-            _unprocessed[i] = &_intervals[i];
-
+        _unprocessed = _intervals;
         _liveAtStart.reserve(function->basicBlockCount());
         _liveAtEnd.reserve(function->basicBlockCount());
     }
@@ -1124,7 +1123,9 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc)
         qDebug() << "*** Running regalloc for function" << (function->name ? qPrintable(*function->name) : "NO NAME") << "***";
 
-    _unhandled = opt.lifeTimeIntervals();
+    _lifeTimeIntervals = opt.lifeTimeIntervals();
+
+    _unhandled = _lifeTimeIntervals->intervals();
     _handled.reserve(_unhandled.size());
 
     _info.reset(new RegAllocInfo);
@@ -1133,10 +1134,10 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc) {
         QTextStream qout(stdout, QIODevice::WriteOnly);
         qout << "Ranges:" << endl;
-        QVector<LifeTimeInterval> intervals = _unhandled;
-        std::sort(intervals.begin(), intervals.end(), LifeTimeInterval::lessThanForTemp);
-        foreach (const LifeTimeInterval &r, intervals) {
-            r.dump(qout);
+        QVector<LifeTimeInterval *> intervals = _unhandled;
+        std::reverse(intervals.begin(), intervals.end());
+        foreach (const LifeTimeInterval *r, intervals) {
+            r->dump(qout);
             qout << endl;
         }
         _info->dump();
@@ -1176,15 +1177,17 @@ static inline LifeTimeInterval createFixedInterval(int rangeCount)
     return i;
 }
 
-static inline LifeTimeInterval cloneFixedInterval(int reg, bool isFP, LifeTimeInterval lti)
+LifeTimeInterval *RegisterAllocator::cloneFixedInterval(int reg, bool isFP, const LifeTimeInterval &original)
 {
-    lti.setReg(reg);
-    lti.setFixedInterval(true);
+    LifeTimeInterval *lti = new LifeTimeInterval(original);
+    _lifeTimeIntervals->add(lti);
+    lti->setReg(reg);
+    lti->setFixedInterval(true);
 
     Temp t;
     t.init(Temp::PhysicalRegister, reg);
     t.type = isFP ? IR::DoubleType : IR::SInt32Type;
-    lti.setTemp(t);
+    lti->setTemp(t);
 
     return lti;
 }
@@ -1198,18 +1201,18 @@ void RegisterAllocator::prepareRanges()
     const int regCount = _normalRegisters.size();
     _fixedRegisterRanges.reserve(regCount);
     for (int reg = 0; reg < regCount; ++reg) {
-        LifeTimeInterval lti = cloneFixedInterval(reg, false, ltiWithCalls);
+        LifeTimeInterval *lti = cloneFixedInterval(reg, false, ltiWithCalls);
         _fixedRegisterRanges.append(lti);
-        if (lti.isValid())
+        if (lti->isValid())
             _active.append(lti);
     }
 
     const int fpRegCount = _fpRegisters.size();
     _fixedFPRegisterRanges.reserve(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
-        LifeTimeInterval lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
+        LifeTimeInterval *lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
         _fixedFPRegisterRanges.append(lti);
-        if (lti.isValid())
+        if (lti->isValid())
             _active.append(lti);
     }
 }
@@ -1217,18 +1220,18 @@ void RegisterAllocator::prepareRanges()
 void RegisterAllocator::linearScan()
 {
     while (!_unhandled.isEmpty()) {
-        LifeTimeInterval current = _unhandled.first();
-        _unhandled.removeFirst();
-        int position = current.start();
+        LifeTimeInterval *current = _unhandled.back();
+        _unhandled.pop_back();
+        int position = current->start();
 
         // check for intervals in active that are handled or inactive
         for (int i = 0; i < _active.size(); ) {
-            const LifeTimeInterval &it = _active.at(i);
-            if (it.end() < position) {
-                if (!it.isFixedInterval())
+            LifeTimeInterval *it = _active.at(i);
+            if (it->end() < position) {
+                if (!it->isFixedInterval())
                     _handled += it;
                 _active.remove(i);
-            } else if (!it.covers(position)) {
+            } else if (!it->covers(position)) {
                 _inactive += it;
                 _active.remove(i);
             } else {
@@ -1238,13 +1241,13 @@ void RegisterAllocator::linearScan()
 
         // check for intervals in inactive that are handled or active
         for (int i = 0; i < _inactive.size(); ) {
-            const LifeTimeInterval &it = _inactive.at(i);
-            if (it.end() < position) {
-                if (!it.isFixedInterval())
+            LifeTimeInterval *it = _inactive.at(i);
+            if (it->end() < position) {
+                if (!it->isFixedInterval())
                     _handled += it;
                 _inactive.remove(i);
-            } else if (it.covers(position)) {
-                if (it.reg() != LifeTimeInterval::Invalid) {
+            } else if (it->covers(position)) {
+                if (it->reg() != LifeTimeInterval::Invalid) {
                     _active += it;
                     _inactive.remove(i);
                 } else {
@@ -1257,33 +1260,33 @@ void RegisterAllocator::linearScan()
             }
         }
 
-        Q_ASSERT(!current.isFixedInterval());
+        Q_ASSERT(!current->isFixedInterval());
 
 #ifdef DEBUG_REGALLOC
         qDebug() << "** Position" << position;
 #endif // DEBUG_REGALLOC
 
-        if (_info->canHaveRegister(current.temp())) {
-            tryAllocateFreeReg(current, position);
-            if (current.reg() == LifeTimeInterval::Invalid)
-                allocateBlockedReg(current, position);
-            if (current.reg() != LifeTimeInterval::Invalid)
+        if (_info->canHaveRegister(current->temp())) {
+            tryAllocateFreeReg(*current, position);
+            if (current->reg() == LifeTimeInterval::Invalid)
+                allocateBlockedReg(*current, position);
+            if (current->reg() != LifeTimeInterval::Invalid)
                 _active += current;
         } else {
-            assignSpillSlot(current.temp(), current.start(), current.end());
+            assignSpillSlot(current->temp(), current->start(), current->end());
             _inactive += current;
             if (DebugRegAlloc)
-                qDebug() << "*** allocating stack slot" << _assignedSpillSlots[current.temp()]
-                         << "for %" << current.temp().index << "as it cannot be loaded in a register";
+                qDebug() << "*** allocating stack slot" << _assignedSpillSlots[current->temp()]
+                         << "for %" << current->temp().index << "as it cannot be loaded in a register";
         }
     }
 
-    foreach (const LifeTimeInterval &r, _active)
-        if (!r.isFixedInterval())
+    foreach (LifeTimeInterval *r, _active)
+        if (!r->isFixedInterval())
             _handled.append(r);
     _active.clear();
-    foreach (const LifeTimeInterval &r, _inactive)
-        if (!r.isFixedInterval())
+    foreach (LifeTimeInterval *r, _inactive)
+        if (!r->isFixedInterval())
             _handled.append(r);
     _inactive.clear();
 }
@@ -1319,30 +1322,30 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int 
     Q_ASSERT(freeUntilPos.size() > 0);
 
     const bool isPhiTarget = _info->isPhiTarget(current.temp());
-    foreach (const LifeTimeInterval &it, _active) {
-        if (it.isFP() == needsFPReg) {
-            if (!isPhiTarget && it.isFixedInterval() && !current.isSplitFromInterval()) {
-                const int idx = indexOfRangeCoveringPosition(it.ranges(), position);
-                if (it.ranges().at(idx).end == current.start()) {
-                    if (it.ranges().size() > idx + 1)
-                        freeUntilPos[it.reg()] = it.ranges().at(idx + 1).start;
+    foreach (const LifeTimeInterval *it, _active) {
+        if (it->isFP() == needsFPReg) {
+            if (!isPhiTarget && it->isFixedInterval() && !current.isSplitFromInterval()) {
+                const int idx = indexOfRangeCoveringPosition(it->ranges(), position);
+                if (it->ranges().at(idx).end == current.start()) {
+                    if (it->ranges().size() > idx + 1)
+                        freeUntilPos[it->reg()] = it->ranges().at(idx + 1).start;
                     continue;
                 }
             }
 
-            if (isPhiTarget || it.end() >= current.firstPossibleUsePosition(isPhiTarget))
-                freeUntilPos[it.reg()] = 0; // mark register as unavailable
+            if (isPhiTarget || it->end() >= current.firstPossibleUsePosition(isPhiTarget))
+                freeUntilPos[it->reg()] = 0; // mark register as unavailable
         }
     }
 
-    foreach (const LifeTimeInterval &it, _inactive) {
-        if (current.isSplitFromInterval() || it.isFixedInterval()) {
-            if (it.isFP() == needsFPReg && it.reg() != LifeTimeInterval::Invalid) {
-                const int intersectionPos = nextIntersection(current, it, position);
-                if (!isPhiTarget && it.isFixedInterval() && current.end() == intersectionPos)
-                    freeUntilPos[it.reg()] = qMin(freeUntilPos[it.reg()], intersectionPos + 1);
+    foreach (const LifeTimeInterval *it, _inactive) {
+        if (current.isSplitFromInterval() || it->isFixedInterval()) {
+            if (it->isFP() == needsFPReg && it->reg() != LifeTimeInterval::Invalid) {
+                const int intersectionPos = nextIntersection(current, *it, position);
+                if (!isPhiTarget && it->isFixedInterval() && current.end() == intersectionPos)
+                    freeUntilPos[it->reg()] = qMin(freeUntilPos[it->reg()], intersectionPos + 1);
                 else if (intersectionPos != -1)
-                    freeUntilPos[it.reg()] = qMin(freeUntilPos[it.reg()], intersectionPos);
+                    freeUntilPos[it->reg()] = qMin(freeUntilPos[it->reg()], intersectionPos);
             }
         }
     }
@@ -1402,7 +1405,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     const bool isPhiTarget = _info->isPhiTarget(current.temp());
     if (isPhiTarget && !current.isSplitFromInterval()) {
         split(current, position + 1, true);
-        _inactive.append(current);
+        _inactive.append(&current);
         return;
     }
 
@@ -1414,7 +1417,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     const bool definedAtCurrentPosition = !current.isSplitFromInterval() && current.start() == position;
 
     for (int i = 0, ei = _active.size(); i != ei; ++i) {
-        LifeTimeInterval &it = _active[i];
+        LifeTimeInterval &it = *_active[i];
         if (it.isFP() == needsFPReg) {
             int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
             if (nu == position && !definedAtCurrentPosition) {
@@ -1430,7 +1433,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     }
 
     for (int i = 0, ei = _inactive.size(); i != ei; ++i) {
-        LifeTimeInterval &it = _inactive[i];
+        LifeTimeInterval &it = *_inactive[i];
         if (current.isSplitFromInterval() || it.isFixedInterval()) {
             if (it.isFP() == needsFPReg && it.reg() != LifeTimeInterval::Invalid) {
                 if (nextIntersection(current, it, position) != -1) {
@@ -1455,7 +1458,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         }
         Q_ASSERT(!_info->useMustHaveReg(current.temp(), position));
         split(current, position + 1, true);
-        _inactive.append(current);
+        _inactive.append(&current);
     } else {
         // spill intervals that currently block reg
         if (DebugRegAlloc) {
@@ -1481,8 +1484,8 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
         // make sure that current does not intersect with the fixed interval for reg
-        const LifeTimeInterval &fixedRegRange = needsFPReg ? _fixedFPRegisterRanges.at(reg)
-                                                           : _fixedRegisterRanges.at(reg);
+        const LifeTimeInterval &fixedRegRange = needsFPReg ? *_fixedFPRegisterRanges.at(reg)
+                                                           : *_fixedRegisterRanges.at(reg);
         int ni = nextIntersection(current, fixedRegRange, position);
         if (ni != -1) {
             if (DebugRegAlloc) {
@@ -1550,16 +1553,16 @@ int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
     return -1;
 }
 
-static inline void insertSorted(QVector<LifeTimeInterval> &intervals, const LifeTimeInterval &newInterval)
+static inline void insertReverseSorted(QVector<LifeTimeInterval *> &intervals, LifeTimeInterval *newInterval)
 {
-    newInterval.validate();
-    for (int i = 0, ei = intervals.size(); i != ei; ++i) {
-        if (LifeTimeInterval::lessThan(newInterval, intervals.at(i))) {
-            intervals.insert(i, newInterval);
+    newInterval->validate();
+    for (int i = intervals.size(); i > 0;) {
+        if (LifeTimeInterval::lessThan(newInterval, intervals.at(--i))) {
+            intervals.insert(i + 1, newInterval);
             return;
         }
     }
-    intervals.append(newInterval);
+    intervals.insert(0, newInterval);
 }
 
 void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
@@ -1616,14 +1619,16 @@ void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
         if (current.reg() != LifeTimeInterval::Invalid)
             _info->addHint(current.temp(), current.reg());
         newInterval.setReg(LifeTimeInterval::Invalid);
-        insertSorted(_unhandled, newInterval);
+        LifeTimeInterval *newIntervalPtr = new LifeTimeInterval(newInterval);
+        _lifeTimeIntervals->add(newIntervalPtr);
+        insertReverseSorted(_unhandled, newIntervalPtr);
     }
 }
 
 void RegisterAllocator::splitInactiveAtEndOfLifetimeHole(int reg, bool isFPReg, int position)
 {
     for (int i = 0, ei = _inactive.size(); i != ei; ++i) {
-        LifeTimeInterval &interval = _inactive[i];
+        LifeTimeInterval &interval = *_inactive[i];
         if (interval.isFixedInterval())
             continue;
         if (isFPReg == interval.isFP() && interval.reg() == reg) {
@@ -1663,10 +1668,10 @@ void RegisterAllocator::dump() const
 
     {
         qout << "Ranges:" << endl;
-        QVector<LifeTimeInterval> handled = _handled;
+        QVector<LifeTimeInterval *> handled = _handled;
         std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
-        foreach (const LifeTimeInterval &r, handled) {
-            r.dump(qout);
+        foreach (const LifeTimeInterval *r, handled) {
+            r->dump(qout);
             qout << endl;
         }
     }

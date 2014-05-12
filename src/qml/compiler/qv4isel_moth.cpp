@@ -168,22 +168,20 @@ inline bool isBoolType(IR::Expr *e)
  */
 class AllocateStackSlots: protected ConvertTemps
 {
-    const QVector<IR::LifeTimeInterval> _intervals;
-    QVector<const IR::LifeTimeInterval *> _unhandled;
-    QVector<const IR::LifeTimeInterval *> _live;
+    IR::LifeTimeIntervals::Ptr _intervals;
+    QVector<IR::LifeTimeInterval *> _unhandled;
+    QVector<IR::LifeTimeInterval *> _live;
     QBitArray _slotIsInUse;
     IR::Function *_function;
 
 public:
-    AllocateStackSlots(const QVector<IR::LifeTimeInterval> &intervals)
+    AllocateStackSlots(const IR::LifeTimeIntervals::Ptr &intervals)
         : _intervals(intervals)
-        , _slotIsInUse(intervals.size(), false)
+        , _slotIsInUse(intervals->size(), false)
         , _function(0)
     {
         _live.reserve(8);
-        _unhandled.reserve(_intervals.size());
-        for (int i = _intervals.size() - 1; i >= 0; --i)
-            _unhandled.append(&_intervals.at(i));
+        _unhandled = _intervals->intervals();
     }
 
     void forFunction(IR::Function *function)
@@ -242,7 +240,7 @@ protected:
 
             // active new ranges:
             while (!_unhandled.isEmpty()) {
-                const IR::LifeTimeInterval *lti = _unhandled.last();
+                IR::LifeTimeInterval *lti = _unhandled.last();
                 if (lti->start() > s->id())
                     break; // we're done
                 Q_ASSERT(!_stackSlotForTemp.contains(lti->temp().index));
@@ -286,7 +284,7 @@ protected:
 
         int i = _unhandled.size() - 1;
         for (; i >= 0; --i) {
-            const IR::LifeTimeInterval *lti = _unhandled[i];
+            IR::LifeTimeInterval *lti = _unhandled[i];
             if (lti->temp() == t) {
                 _live.append(lti);
                 _unhandled.remove(i);
