@@ -498,7 +498,6 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
         return 0;
     m_sheetSize = QSizeF(image.size());
     m_material->texture = window()->createTextureFromImage(image);
-    m_material->texture->setFiltering(QSGTexture::Linear);
     m_spriteEngine->start(0);
     m_material->animT = 0;
     m_material->animX1 = m_spriteEngine->spriteX() / m_sheetSize.width();
@@ -677,6 +676,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
     m_material->animW = w;
     m_material->animH = h;
     m_material->animT = m_interpolate ? progress : 0.0;
+    m_material->texture->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 }
 
 QT_END_NAMESPACE
