@@ -423,7 +423,6 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
 #endif
         emit q->selectionChanged();
     }
-    q->updateCursorRectangle(true);
 }
 
 void QQuickTextControlPrivate::_q_updateCurrentCharFormatAndSelection()
@@ -1152,8 +1151,10 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
 #endif
 
         if (interactionFlags & Qt::TextEditable) {
-            if (cursor.position() != oldCursorPos)
+            if (cursor.position() != oldCursorPos) {
                 emit q->cursorPositionChanged();
+                q->updateCursorRectangle(true);
+            }
             _q_updateCurrentCharFormatAndSelection();
 #ifndef QT_NO_IM
             if (qGuiApp)
@@ -1161,6 +1162,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
 #endif
         } else if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
+            q->updateCursorRectangle(true);
         }
         selectionChanged(true);
         repaintOldAndNewSelection(oldSelection);
@@ -1255,6 +1257,7 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
             setClipboardSelection();
 #endif
             emit q->cursorPositionChanged();
+            q->updateCursorRectangle(true);
         }
     } else if (!sendMouseEventToInputContext(e, pos)) {
         e->ignore();
