@@ -189,16 +189,16 @@ which was then imported by the client), then a property of type
 \c ColorfulButton would also be valid.
 
 
-\section3 Values of Property Attributes
+\section3 Assigning Values to Property Attributes
 
-The value of a property of an object instance may specified in an
-object declaration in two separate ways:
+The value of a property of an object instance may specified in two separate ways:
 \list
   \li a value assignment on initialization
   \li an imperative value assignment
 \endlist
 
-The value in either case may be either a binding expression or a static value.
+In either case, the value may be either a \e static value or a \e {binding expression}
+value.
 
 \section4 Value Assignment on Initialization
 
@@ -251,10 +251,11 @@ Rectangle {
 }
 \endqml
 
-\section4 Valid Property Values
+\section3 Static Values and Binding Expression Values
 
 As previously noted, there are two kinds of values which may be assigned to a
-property: static values, and binding expression values.
+property: \e static values, and \e {binding expression} values.  The latter are
+also known as \l{Property Binding}{property bindings}.
 
 \table
     \header
@@ -263,20 +264,21 @@ property: static values, and binding expression values.
 
     \row
     \li Static Value
-    \li A value whose type matches (or can be converted to) that of
-        the property may be assigned to the property.
+    \li A constant value which does not depend on other properties.
 
     \row
     \li Binding Expression
-    \li A JavaScript expression which may be evaluated, whose result is a
-        value whose type matches (or can be converted to) that of the
-        property may be assigned to the property.  The expression will be
-        automatically re-evaluated (and the new result assigned to the
-        property) by the QML engine should the value of any properties accessed
-        during evaluation change.
+    \li A JavaScript expression which describes a property's relationship with
+        other properties.  The variables in this expression are called the
+        property's \e dependencies.
+
+        The QML engine enforces the relationship between a property and its
+        dependencies.  When any of the dependencies change in value, the QML
+        engine automatically re-evaluates the binding expression and assigns
+        the new result to the property.
 \endtable
 
-An example of these two types of values being assigned to properties follows:
+Here is an example that shows both kinds of values being assigned to properties:
 
 \qml
 import QtQuick 2.0
@@ -294,19 +296,11 @@ Rectangle {
 }
 \endqml
 
-In many cases, a string value may be converted automatically to a
-different type of value, as QML provides string converters for many property
-types (thus you can assign the string \c "red" to a color property).
-
-It is important to note that in order to assign a binding expression to a
-property in an imperative value assignment, the right-hand-side of
-the assignment (the binding expression) must be a function returned by the
-\l{Qt::binding()}{Qt.binding()} function, which returns a value of the
-appropriate type.  A binding expression value may be assigned to a property
-via an initialization value assignment without using that function (and, in
-fact, attempting to do so will result in an error).  See the documentation
-about \l{qtqml-syntax-propertybinding.html}{property binding} for more
-information on the topic.
+\note To assign a binding expression imperatively, the binding expression
+must be contained in a function that is passed into \l{Qt::binding()}{Qt.binding()},
+and then the value returned by Qt.binding() must be assigned to the property.
+In contrast, Qt.binding() must not be used when assigning a binding expression
+upon initialization. See \l{Property Binding} for more information.
 
 
 \section3 Type Safety
@@ -324,7 +318,7 @@ property int volume: "four"  // generates an error; the property's object will n
 Likewise if a property is assigned a value of the wrong type during run time,
 the new value will not be assigned, and an error will be generated.
 
-As noted in a previous section, some property types do not have a natural
+Some property types do not have a natural
 value representation, and for those property types the QML engine
 automatically performs string-to-typed-value conversion.  So, for example,
 even though properties of the \c color type store colors and not strings,

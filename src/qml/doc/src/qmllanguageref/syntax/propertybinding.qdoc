@@ -182,17 +182,15 @@ auto-updating to always be three times its width.
 
 \section2 Using \c this with Property Binding
 
-When creating a property binding from JavaScript, QML allows the use of the \c
-this keyword to refer to the object to which the property binding will be
-assigned. This allows one to explicitly refer to a property within an object
-when there may be ambiguity about the exact property that should be used for the
-binding.
+When creating a property binding from JavaScript, the \c this keyword can be used
+to refer to the object which receives the binding. This is helpful for resolving
+ambiguities with property names.
 
 For example, the \c Component.onCompleted handler below is defined within the
-scope of the \l Item, and references to \c width within this scope would refer
-to the \l Item's width, rather than that of the \l Rectangle. To bind the \l
-Rectangle's \c height to its own \c width, the function passed to Qt.binding()
-needs to explicitly refer to \c this.width rather than just \c width.
+scope of the \l Item. In this scope, \c width refers to the \l Item's width, not
+the \l Rectangle's width. To bind the \l Rectangle's \c height to its own \c width,
+the binding expression must explicitly refer to \c this.width (or alternatively,
+\c{rect.width}):
 
 \qml
 Item {
@@ -212,12 +210,7 @@ Item {
 }
 \endqml
 
-In this case, the function could also have referred to \c rect.width rather than
-\c this.width.
-
-Note that the value of \c this is not defined outside of its use in property binding.
+\note The value of \c this is not defined outside of property bindings.
 See \l {JavaScript Environment Restrictions} for details.
-
-
 */
 
