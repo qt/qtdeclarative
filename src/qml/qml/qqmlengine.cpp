@@ -69,7 +69,6 @@
 #include <private/qqmlenginecontrolservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
-#include <private/qv4profilerservice_p.h>
 #include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qstandardpaths.h>
@@ -823,7 +822,6 @@ void QQmlEnginePrivate::init()
         isDebugging = true;
         QQmlEngineDebugService::instance();
         QV4DebugService::instance();
-        QV4ProfilerService::instance();
         QQmlProfilerService::instance();
         QDebugMessageService::instance();
         QQmlEngineControlService::instance();

@@ -3012,6 +3012,10 @@ void tst_QQuickListView::cacheBuffer()
         controller.incubateWhile(&b);
     }
 
+    // negative cache buffer is ignored
+    listview->setCacheBuffer(-1);
+    QCOMPARE(listview->cacheBuffer(), 200);
+
     delete window;
     delete testObject;
 }
