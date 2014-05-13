@@ -174,6 +174,11 @@ class AllocateStackSlots: protected ConvertTemps
     QBitArray _slotIsInUse;
     IR::Function *_function;
 
+    int position(IR::Stmt *s) const
+    {
+        return _intervals->positionForStatement(s);
+    }
+
 public:
     AllocateStackSlots(const IR::LifeTimeIntervals::Ptr &intervals)
         : _intervals(intervals)
@@ -217,7 +222,7 @@ protected:
 
     virtual void process(IR::Stmt *s)
     {
-        Q_ASSERT(s->id() > 0);
+        Q_ASSERT(position(s) > 0);
 
 //        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
 
@@ -227,7 +232,7 @@ protected:
             // purge ranges no longer alive:
             for (int i = 0; i < _live.size(); ) {
                 const IR::LifeTimeInterval *lti = _live.at(i);
-                if (lti->end() < s->id()) {
+                if (lti->end() < position(s)) {
 //                    qDebug() << "\t - moving temp" << lti->temp().index << "to handled, freeing slot" << _stackSlotForTemp[lti->temp().index];
                     _live.remove(i);
                     Q_ASSERT(_slotIsInUse[_stackSlotForTemp[lti->temp().index]]);
@@ -241,7 +246,7 @@ protected:
             // active new ranges:
             while (!_unhandled.isEmpty()) {
                 IR::LifeTimeInterval *lti = _unhandled.last();
-                if (lti->start() > s->id())
+                if (lti->start() > position(s))
                     break; // we're done
                 Q_ASSERT(!_stackSlotForTemp.contains(lti->temp().index));
                 _stackSlotForTemp[lti->temp().index] = allocateFreeSlot();

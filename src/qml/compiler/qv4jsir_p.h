@@ -1045,7 +1045,6 @@ struct Function {
 
     unsigned getNewStatementId() { return _statementCount++; }
     unsigned statementCount() const { return _statementCount; }
-    void renumberForLifeRanges();
 
 private:
     QVector<BasicBlock *> _basicBlocks;

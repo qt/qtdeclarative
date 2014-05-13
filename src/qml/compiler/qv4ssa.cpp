@@ -3497,6 +3497,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
     W.applyToFunction();
 }
 
+// TODO: replace this class by DefUses
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
     void setOutput(Temp *out)
     {
@@ -3588,12 +3589,26 @@ class LifeRanges {
         return *lti;
     }
 
+    int position(IR::Stmt *s) const
+    {
+        return _sortedIntervals->positionForStatement(s);
+    }
+
+    int start(IR::BasicBlock *bb) const
+    {
+        return _sortedIntervals->startPosition(bb);
+    }
+
+    int end(IR::BasicBlock *bb) const
+    {
+        return _sortedIntervals->endPosition(bb);
+    }
+
 public:
     LifeRanges(IR::Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
         : _intervals(function->tempCount)
-        , _sortedIntervals(LifeTimeIntervals::create(function->tempCount))
     {
-        function->renumberForLifeRanges();
+        _sortedIntervals = LifeTimeIntervals::create(function);
         _liveIn.resize(function->basicBlockCount());
 
         for (int i = function->basicBlockCount() - 1; i >= 0; --i) {
@@ -3652,7 +3667,7 @@ private:
         QVector<Stmt *> statements = bb->statements();
 
         foreach (const Temp &opd, live)
-            interval(&opd).addRange(statements.first()->id(), statements.last()->id());
+            interval(&opd).addRange(start(bb), end(bb));
 
         InputOutputCollector collector;
         for (int i = statements.size() - 1; i >= 0; --i) {
@@ -3661,7 +3676,7 @@ private:
                 LiveRegs::iterator it = live.find(*phi->targetTemp);
                 if (it == live.end()) {
                     // a phi node target that is only defined, but never used
-                    interval(phi->targetTemp).setFrom(s);
+                    interval(phi->targetTemp).setFrom(position(s));
                 } else {
                     live.erase(it);
                 }
@@ -3671,20 +3686,20 @@ private:
             collector.collect(s);
             if (Temp *opd = collector.output) {
                 LifeTimeInterval &lti = interval(opd);
-                lti.setFrom(s);
+                lti.setFrom(position(s));
                 live.remove(lti.temp());
                 _sortedIntervals->add(&lti);
             }
             for (unsigned i = 0, ei = collector.inputs.size(); i != ei; ++i) {
                 Temp *opd = collector.inputs[i];
-                interval(opd).addRange(statements.first()->id(), s->id());
+                interval(opd).addRange(start(bb), position(s));
                 live.insert(*opd);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
             foreach (const Temp &opd, live)
-                interval(&opd).addRange(statements.first()->id(), loopEnd->terminator()->id());
+                interval(&opd).addRange(start(bb), position(loopEnd->terminator()));
         }
 
         _liveIn[bb->index()] = live;
@@ -3782,15 +3797,15 @@ private:
 };
 } // anonymous namespace
 
-void LifeTimeInterval::setFrom(Stmt *from) {
-    Q_ASSERT(from && from->id() > 0);
+void LifeTimeInterval::setFrom(int from) {
+    Q_ASSERT(from > 0);
 
     if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
-        _ranges.push_front(Range(from->id(), from->id()));
+        _ranges.push_front(Range(from, from));
         if (_end == Invalid)
-            _end = from->id();
+            _end = from;
     } else {
-        _ranges.first().start = from->id();
+        _ranges.first().start = from;
     }
 }
 
@@ -3923,6 +3938,26 @@ bool LifeTimeInterval::lessThan(const LifeTimeInterval *r1, const LifeTimeInterv
 bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval *r1, const LifeTimeInterval *r2)
 {
     return r1->temp() < r2->temp();
+}
+
+LifeTimeIntervals::LifeTimeIntervals(IR::Function *function)
+    : _basicBlockPosition(function->basicBlockCount())
+    , _positionForStatement(function->statementCount(), IR::Stmt::InvalidId)
+{
+    _intervals.reserve(function->tempCount + 32);
+
+    int id = 1;
+    foreach (BasicBlock *bb, function->basicBlocks()) {
+        _basicBlockPosition[bb->index()].start = id;
+
+        foreach (Stmt *s, bb->statements()) {
+            _positionForStatement[s->id()] = id;
+            if (!s->asPhi())
+                ++id;
+        }
+
+        _basicBlockPosition[bb->index()].end = id - 1;
+    }
 }
 
 LifeTimeIntervals::~LifeTimeIntervals()

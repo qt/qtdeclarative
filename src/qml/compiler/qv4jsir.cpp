@@ -494,21 +494,6 @@ void Function::renumberBasicBlocks()
         basicBlock(i)->changeIndex(i);
 }
 
-void Function::renumberForLifeRanges()
-{
-    //### TODO: check if this can be done in a more elegant way.
-
-    int id = 0;
-    foreach (BasicBlock *bb, basicBlocks()) {
-        foreach (Stmt *s, bb->statements()) {
-            if (s->asPhi())
-                s->_id = id + 1;
-            else
-                s->_id = ++id;
-        }
-    }
-}
-
 BasicBlock::~BasicBlock()
 {
     foreach (Stmt *s, _statements)

@@ -91,7 +91,7 @@ public:
     Temp temp() const { return _temp; }
     bool isFP() const { return _temp.type == IR::DoubleType; }
 
-    void setFrom(Stmt *from);
+    void setFrom(int from);
     void addRange(int from, int to);
     const Ranges &ranges() const { return _ranges; }
 
@@ -141,13 +141,12 @@ class LifeTimeIntervals
 {
     Q_DISABLE_COPY(LifeTimeIntervals)
 
-    LifeTimeIntervals(int sizeHint)
-    { _intervals.reserve(sizeHint + 32); }
+    LifeTimeIntervals(IR::Function *function);
 
 public:
     typedef QSharedPointer<LifeTimeIntervals> Ptr;
-    static Ptr create(int sizeHint)
-    { return Ptr(new LifeTimeIntervals(sizeHint)); }
+    static Ptr create(IR::Function *function)
+    { return Ptr(new LifeTimeIntervals(function)); }
 
     ~LifeTimeIntervals();
 
@@ -162,7 +161,44 @@ public:
     int size() const
     { return _intervals.size(); }
 
+    int positionForStatement(Stmt *stmt) const
+    {
+        Q_ASSERT(stmt->id() >= 0);
+        if (static_cast<unsigned>(stmt->id()) < _positionForStatement.size())
+            return _positionForStatement[stmt->id()];
+
+        return Stmt::InvalidId;
+    }
+
+    int startPosition(BasicBlock *bb) const
+    {
+        Q_ASSERT(bb->index() >= 0);
+        Q_ASSERT(static_cast<unsigned>(bb->index()) < _basicBlockPosition.size());
+
+        return _basicBlockPosition.at(bb->index()).start;
+    }
+
+    int endPosition(BasicBlock *bb) const
+    {
+        Q_ASSERT(bb->index() >= 0);
+        Q_ASSERT(static_cast<unsigned>(bb->index()) < _basicBlockPosition.size());
+
+        return _basicBlockPosition.at(bb->index()).end;
+    }
+
 private:
+    struct BasicBlockPositions {
+        int start;
+        int end;
+
+        BasicBlockPositions()
+            : start(IR::Stmt::InvalidId)
+            , end(IR::Stmt::InvalidId)
+        {}
+    };
+
+    std::vector<BasicBlockPositions> _basicBlockPosition;
+    std::vector<int> _positionForStatement;
     QVector<LifeTimeInterval *> _intervals;
 };
 
