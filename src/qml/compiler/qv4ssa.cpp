@@ -3107,8 +3107,10 @@ void purgeBB(BasicBlock *bb, IR::Function *func, DefUses &defUses, StatementWork
                     if (!outStmt)
                         continue;
                     if (Phi *phi = outStmt->asPhi()) {
-                        if (Temp *t = phi->d->incoming[idx]->asTemp())
+                        if (Temp *t = phi->d->incoming[idx]->asTemp()) {
                             defUses.removeUse(phi, *t);
+                            W += defUses.defStmt(*t);
+                        }
                         phi->d->incoming.remove(idx);
                         W += phi;
                     } else
@@ -3215,6 +3217,13 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
         Q_ASSERT(s);
 
         if (Phi *phi = s->asPhi()) {
+            // dead code elimination:
+            if (defUses.useCount(*phi->targetTemp) == 0) {
+                W += defUses.removeDefUses(phi);
+                W.remove(s);
+                continue;
+            }
+
             // constant propagation:
             if (Const *c = isConstPhi(phi)) {
                 replaceUses(phi->targetTemp, c, W);
@@ -3233,20 +3242,9 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 if (Temp *t2 = e->asTemp()) {
                     defUses.removeUse(s, *t2);
                     defUses.addUses(*t2, newT2Uses);
+                    W += defUses.defStmt(*t2);
                 }
                 defUses.removeDef(*t);
-                W.remove(s);
-                continue;
-            }
-
-            // dead code elimination:
-            if (defUses.useCount(*phi->targetTemp) == 0) {
-                foreach (Expr *in, phi->d->incoming) {
-                    if (Temp *t = in->asTemp())
-                        W += defUses.defStmt(*t);
-                }
-
-                defUses.removeDef(*phi->targetTemp);
                 W.remove(s);
                 continue;
             }
