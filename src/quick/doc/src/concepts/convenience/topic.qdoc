@@ -54,14 +54,11 @@ application performance.
 
 \section1 Dynamic Bindings
 
-Assigning binding expressions to properties is a fundamental concept of QML,
-and Qt Quick extends upon the idea with the \l Binding type.   While bindings
-are typically specified as property initialization assignments, the \l Binding
-type allows the target of a binding to be defined explicitly and separately
-from the definition of the binding expression itself.
-By declaring a \l Binding instance, the client can dynamically bind properties
-from arbitrary objects at run-time, and can modify the binding target when
-required (or when it becomes available).
+\l{Property Binding}{Property bindings} are a fundamental feature of QML.
+Typically, a property is initialized with its binding. However, the \l Binding
+type and \l {Qt::binding()}{Qt.binding()} function allows the client to
+dynamically bind properties from any object at run-time, and modify the binding
+target when required (or when it becomes available).
 
 \section1 Dynamic Signal Connections
 

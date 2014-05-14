@@ -148,8 +148,9 @@ Text {
 For maximum interoperability with QML, \b {any property that is writable should
 have an associated NOTIFY signal} that is emitted whenever the property value
 has changed. This allows the property to be used with \l{Property
-Binding}{property binding}, which is an essential feature of QML that enables
-specific values to be updated whenever an associated property changes.
+Binding}{property binding}, which is an essential feature of QML that enforces
+relationships between properties by automatically updating a property whenever
+any of its dependencies change in value.
 
 In the above example, the associated NOTIFY signal for the \c author property is
 \c authorChanged, as specified in the Q_PROPERTY() macro call. This means that
