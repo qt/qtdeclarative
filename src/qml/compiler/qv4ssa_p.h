@@ -58,7 +58,7 @@ public:
         int start;
         int end;
 
-        Range(int start = Invalid, int end = Invalid)
+        Range(int start = InvalidPosition, int end = InvalidPosition)
             : start(start)
             , end(end)
         {}
@@ -76,16 +76,17 @@ private:
     unsigned _isSplitFromInterval : 1;
 
 public:
-    enum { Invalid = -1 };
+    enum { InvalidPosition = -1 };
+    enum { InvalidRegister = -1 };
 
     explicit LifeTimeInterval(int rangeCapacity = 2)
-        : _end(Invalid)
-        , _reg(Invalid)
+        : _end(InvalidPosition)
+        , _reg(InvalidRegister)
         , _isFixedInterval(0)
         , _isSplitFromInterval(0)
     { _ranges.reserve(rangeCapacity); }
 
-    bool isValid() const { return _end != Invalid; }
+    bool isValid() const { return _end != InvalidRegister; }
 
     void setTemp(const Temp &temp) { this->_temp = temp; }
     Temp temp() const { return _temp; }
@@ -125,7 +126,7 @@ public:
     void validate() const {
 #if !defined(QT_NO_DEBUG)
         // Validate the new range
-        if (_end != Invalid) {
+        if (_end != InvalidPosition) {
             Q_ASSERT(!_ranges.isEmpty());
             foreach (const Range &range, _ranges) {
                 Q_ASSERT(range.start >= 0);
@@ -142,6 +143,7 @@ class LifeTimeIntervals
     Q_DISABLE_COPY(LifeTimeIntervals)
 
     LifeTimeIntervals(IR::Function *function);
+    void renumber(IR::Function *function);
 
 public:
     typedef QSharedPointer<LifeTimeIntervals> Ptr;
@@ -186,6 +188,11 @@ public:
         return _basicBlockPosition.at(bb->index()).end;
     }
 
+    int lastPosition() const
+    {
+        return _lastPosition;
+    }
+
 private:
     struct BasicBlockPositions {
         int start;
@@ -200,6 +207,7 @@ private:
     std::vector<BasicBlockPositions> _basicBlockPosition;
     std::vector<int> _positionForStatement;
     QVector<LifeTimeInterval *> _intervals;
+    int _lastPosition;
 };
 
 class Q_QML_PRIVATE_EXPORT Optimizer

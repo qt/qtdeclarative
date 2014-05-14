@@ -1174,6 +1174,7 @@ public:
     static QString escape(const QString &s);
 
 protected:
+    virtual void addStmtNr(Stmt *s);
     QString dumpStart(const Expr *e);
     const char *dumpEnd(const Expr *e);
     void printBlockStart(BasicBlock *bb);

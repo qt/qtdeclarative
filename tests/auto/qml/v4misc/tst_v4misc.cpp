@@ -139,7 +139,7 @@ void tst_v4misc::rangeSplitting_3()
     interval.validate();
     QCOMPARE(interval.end(), 71);
 
-    LifeTimeInterval newInterval = interval.split(64, LifeTimeInterval::Invalid);
+    LifeTimeInterval newInterval = interval.split(64, LifeTimeInterval::InvalidPosition);
     interval.validate();
     newInterval.validate();
     QVERIFY(!newInterval.isValid());

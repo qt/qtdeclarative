@@ -956,8 +956,7 @@ void IRPrinter::print(BasicBlock *bb)
         QTextStream os(&buf);
         QTextStream *prevOut = &os;
         std::swap(out, prevOut);
-        if (s->id() >= 0)
-            *out << s->id() << ": ";
+        addStmtNr(s);
         s->accept(this);
         if (s->location.isValid()) {
             out->flush();
@@ -1224,6 +1223,12 @@ QString IRPrinter::escape(const QString &s)
             r += ch;
     }
     return r;
+}
+
+void IRPrinter::addStmtNr(Stmt *s)
+{
+    if (s->id() >= 0)
+        *out << s->id() << ": ";
 }
 
 QString IRPrinter::dumpStart(const Expr *e)

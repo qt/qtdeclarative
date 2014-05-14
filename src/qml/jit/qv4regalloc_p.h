@@ -75,7 +75,7 @@ class RegisterAllocator
     Q_DISABLE_COPY(RegisterAllocator)
 
 public:
-    enum { Invalid = -1 };
+    enum { InvalidSpillSlot = -1 };
 
     RegisterAllocator(const QVector<int> &normalRegisters, const QVector<int> &fpRegisters);
     ~RegisterAllocator();
@@ -96,7 +96,7 @@ private:
     void assignSpillSlot(const IR::Temp &t, int startPos, int endPos);
     void resolve(IR::Function *function, const IR::Optimizer &opt);
 
-    void dump() const;
+    void dump(IR::Function *function) const;
 };
 
 } // end of namespace JIT

@@ -3497,7 +3497,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
     W.applyToFunction();
 }
 
-// TODO: replace this class by DefUses
+//### TODO: use DefUses from the optimizer, because it already has all this information
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
     void setOutput(Temp *out)
     {
@@ -3566,11 +3566,7 @@ protected:
  *   Linear Scan Register Allocation on SSA Form
  *   Christian Wimmer & Michael Franz, CGO'10, April 24-28, 2010
  *
- * There is one slight difference w.r.t. the phi-nodes: in the artice, the phi nodes are attached
- * to the basic-blocks. Therefore, in the algorithm in the article, the ranges for input parameters
- * for phi nodes run from their definition upto the branch instruction into the block with the phi
- * node. In our representation, phi nodes are mostly treaded as normal instructions, so we have to
- * enlarge the range to cover the phi node itself.
+ * See LifeTimeIntervals::renumber for details on the numbering.
  */
 class LifeRanges {
     typedef QSet<Temp> LiveRegs;
@@ -3589,7 +3585,12 @@ class LifeRanges {
         return *lti;
     }
 
-    int position(IR::Stmt *s) const
+    int defPosition(IR::Stmt *s) const
+    {
+        return usePosition(s) + 1;
+    }
+
+    int usePosition(IR::Stmt *s) const
     {
         return _sortedIntervals->positionForStatement(s);
     }
@@ -3676,7 +3677,7 @@ private:
                 LiveRegs::iterator it = live.find(*phi->targetTemp);
                 if (it == live.end()) {
                     // a phi node target that is only defined, but never used
-                    interval(phi->targetTemp).setFrom(position(s));
+                    interval(phi->targetTemp).setFrom(start(bb));
                 } else {
                     live.erase(it);
                 }
@@ -3684,22 +3685,24 @@ private:
                 continue;
             }
             collector.collect(s);
+            //### TODO: use DefUses from the optimizer, because it already has all this information
             if (Temp *opd = collector.output) {
                 LifeTimeInterval &lti = interval(opd);
-                lti.setFrom(position(s));
+                lti.setFrom(defPosition(s));
                 live.remove(lti.temp());
                 _sortedIntervals->add(&lti);
             }
+            //### TODO: use DefUses from the optimizer, because it already has all this information
             for (unsigned i = 0, ei = collector.inputs.size(); i != ei; ++i) {
                 Temp *opd = collector.inputs[i];
-                interval(opd).addRange(start(bb), position(s));
+                interval(opd).addRange(start(bb), usePosition(s));
                 live.insert(*opd);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
             foreach (const Temp &opd, live)
-                interval(&opd).addRange(start(bb), position(loopEnd->terminator()));
+                interval(&opd).addRange(start(bb), usePosition(loopEnd->terminator()));
         }
 
         _liveIn[bb->index()] = live;
@@ -3802,7 +3805,7 @@ void LifeTimeInterval::setFrom(int from) {
 
     if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
         _ranges.push_front(Range(from, from));
-        if (_end == Invalid)
+        if (_end == InvalidPosition)
             _end = from;
     } else {
         _ranges.first().start = from;
@@ -3847,7 +3850,7 @@ void LifeTimeInterval::addRange(int from, int to) {
 
 LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
 {
-    Q_ASSERT(atPosition < newStart || newStart == Invalid);
+    Q_ASSERT(atPosition < newStart || newStart == InvalidPosition);
 
     if (_ranges.isEmpty() || atPosition < _ranges.first().start)
         return LifeTimeInterval();
@@ -3876,7 +3879,7 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
     if (newInterval._ranges.first().end == atPosition)
         newInterval._ranges.removeFirst();
 
-    if (newStart == Invalid) {
+    if (newStart == InvalidPosition) {
         // the temp stays inactive for the rest of its lifetime
         newInterval = LifeTimeInterval();
     } else {
@@ -3921,7 +3924,7 @@ void LifeTimeInterval::dump(QTextStream &out) const {
         if (i > 0) out << ", ";
         out << _ranges[i].start << " - " << _ranges[i].end;
     }
-    if (_reg != Invalid)
+    if (_reg != InvalidRegister)
         out << " (register " << _reg << ")";
 }
 
@@ -3943,20 +3946,59 @@ bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval *r1, const LifeTim
 LifeTimeIntervals::LifeTimeIntervals(IR::Function *function)
     : _basicBlockPosition(function->basicBlockCount())
     , _positionForStatement(function->statementCount(), IR::Stmt::InvalidId)
+    , _lastPosition(0)
 {
-    _intervals.reserve(function->tempCount + 32);
+    _intervals.reserve(function->tempCount + 32); // we reserve a bit more space for intervals, because the register allocator will add intervals with fixed ranges for each register.
+    renumber(function);
+}
 
-    int id = 1;
+// Renumbering works as follows:
+//  - phi statements are not numbered
+//  - statement numbers start at 0 (zero) and increment get an even number (lastPosition + 2)
+//  - basic blocks start at firstStatementNumber - 1, or rephrased: lastPosition + 1
+//  - basic blocks end at the number of the last statement
+// And during life-time calculation the next rule is used:
+//  - any temporary starts its life-time at definingStatementPosition + 1
+//
+// This numbering simulates half-open intervals. For example:
+//   0: %1 = 1
+//   2: %2 = 2
+//   4: %3 = %1 + %2
+//   6: print(%3)
+// Here the half-open life-time intervals would be:
+//   %1: (0-4]
+//   %2: (2-4]
+//   %3: (4-6]
+// Instead, we use the even statement positions for uses of temporaries, and the odd positions for
+// their definitions:
+//   %1: [1-4]
+//   %2: [3-4]
+//   %3: [5-6]
+// This has the nice advantage that placing %3 (for example) is really easy: the start will
+// never overlap with the end of the uses of the operands used in the defining statement.
+//
+// The reason to start a basic-block at firstStatementPosition - 1 is to have correct start
+// positions for target temporaries of phi-nodes. Those temporaries will now start before the
+// first statement. This also means that any moves that get generated when transforming out of SSA
+// form, will not interfere with (read: overlap) any defining statements in the preceding
+// basic-block.
+void LifeTimeIntervals::renumber(IR::Function *function)
+{
     foreach (BasicBlock *bb, function->basicBlocks()) {
-        _basicBlockPosition[bb->index()].start = id;
+        if (bb->isRemoved())
+            continue;
+
+        _basicBlockPosition[bb->index()].start = _lastPosition + 1;
 
         foreach (Stmt *s, bb->statements()) {
-            _positionForStatement[s->id()] = id;
-            if (!s->asPhi())
-                ++id;
+            if (s->asPhi())
+                continue;
+
+            _lastPosition += 2;
+            _positionForStatement[s->id()] = _lastPosition;
         }
 
-        _basicBlockPosition[bb->index()].end = id - 1;
+        _basicBlockPosition[bb->index()].end = _lastPosition;
     }
 }
 
