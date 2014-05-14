@@ -844,7 +844,7 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
         default:
             break;
         }
-        grabber = c->mouseGrabberItem();
+        grabber = c ? c->mouseGrabberItem() : 0;
         if (grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this)
             grabMouse();
 
