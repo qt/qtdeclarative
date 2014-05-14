@@ -86,10 +86,9 @@ private:
     LifeTimeInterval *cloneFixedInterval(int reg, bool isFP, const LifeTimeInterval &original);
     void prepareRanges();
     void linearScan();
-    void tryAllocateFreeReg(LifeTimeInterval &current, const int position);
-    void allocateBlockedReg(LifeTimeInterval &current, const int position);
-    int nextIntersection(const LifeTimeInterval &current, const LifeTimeInterval &another,
-                         const int position) const;
+    void tryAllocateFreeReg(LifeTimeInterval &current);
+    void allocateBlockedReg(LifeTimeInterval &current);
+    int nextIntersection(const LifeTimeInterval &current, const LifeTimeInterval &another) const;
     int nextUse(const IR::Temp &t, int startPosition) const;
     void split(LifeTimeInterval &current, int beforePosition, bool skipOptionalRegisterUses =false);
     void splitInactiveAtEndOfLifetimeHole(int reg, bool isFPReg, int position);

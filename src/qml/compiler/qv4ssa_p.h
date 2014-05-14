@@ -107,8 +107,6 @@ public:
         return false;
     }
 
-    int firstPossibleUsePosition(bool isPhiTarget) const { return start() + (isSplitFromInterval() || isPhiTarget ? 0 : 1); }
-
     int reg() const { return _reg; }
     void setReg(int reg) { Q_ASSERT(!_isFixedInterval); _reg = reg; }
 

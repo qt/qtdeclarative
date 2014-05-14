@@ -117,7 +117,7 @@ class RegAllocInfo: public IRDecoder
     BasicBlock *_currentBB;
     Stmt *_currentStmt;
     std::vector<Def> _defs;
-    std::vector<QList<Use> > _uses;
+    std::vector<std::vector<Use> > _uses;
     std::vector<int> _calls;
     std::vector<QList<Temp> > _hints;
 
@@ -151,7 +151,7 @@ public:
         }
     }
 
-    QList<Use> uses(const Temp &t) const
+    const std::vector<Use> &uses(const Temp &t) const
     {
         return _uses[t.index];
     }
@@ -204,8 +204,8 @@ public:
                  << " have a register, and "
                  << (_defs[t].isPhiTarget ? "is" : "is NOT")
                  << " defined by a phi node), uses at: ";
-            const QList<Use> &uses = _uses[t];
-            for (int i = 0; i < uses.size(); ++i) {
+            const std::vector<Use> &uses = _uses[t];
+            for (unsigned i = 0; i < uses.size(); ++i) {
                 if (i > 0) qout << ", ";
                 qout << uses[i].pos;
                 if (uses[i].mustHaveRegister()) qout << "(R)"; else qout << "(S)";
@@ -692,7 +692,7 @@ private:
         if (!t)
             return;
         if (t && t->kind == Temp::VirtualRegister)
-            _uses[t->index].append(Use(usePosition(_currentStmt), flag));
+            _uses[t->index].push_back(Use(usePosition(_currentStmt), flag));
     }
 
     void addUses(ExprList *l, Use::RegisterFlag flag)
@@ -754,9 +754,12 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QVector<LifeTimeInterval *> &unprocessed, const LifeTimeIntervals::Ptr &intervals, IR::Function *function,
+    ResolutionPhase(const QVector<LifeTimeInterval *> &unprocessed,
+                    const LifeTimeIntervals::Ptr &intervals,
+                    IR::Function *function,
                     const std::vector<int> &assignedSpillSlots,
-                    const QVector<int> &intRegs, const QVector<int> &fpRegs)
+                    const QVector<int> &intRegs,
+                    const QVector<int> &fpRegs)
         : _intervals(intervals)
         , _function(function)
         , _assignedSpillSlots(assignedSpillSlots)
@@ -872,7 +875,7 @@ private:
 
             Q_ASSERT(!i->isFixedInterval());
             _intervalForTemp[i->temp()] = i;
-            qDebug()<<"-- Activating interval for temp"<<i->temp().index;
+//            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
             _unprocessed.removeFirst();
         }
@@ -1200,6 +1203,11 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
         _info->dump();
     }
 
+    if (DebugRegAlloc) {
+        qDebug() << "*** Before register allocation:";
+        QTextStream qout(stdout, QIODevice::WriteOnly);
+        IRPrinterWithPositions(&qout, _lifeTimeIntervals).print(function);
+    }
     prepareRanges();
 
     linearScan();
@@ -1213,8 +1221,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     function->tempCount = *std::max_element(_assignedSpillSlots.begin(), _assignedSpillSlots.end()) + 1;
 
     if (DebugRegAlloc) {
-        qDebug() << "*** Finished regalloc for function" << (function->name ? qPrintable(*function->name) : "NO NAME") << "***";
-        qDebug() << "*** Result:";
+        qDebug() << "*** Finished regalloc , result:";
         QTextStream qout(stdout, QIODevice::WriteOnly);
         IRPrinterWithPositions(&qout, _lifeTimeIntervals).print(function);
     }
@@ -1278,7 +1285,7 @@ void RegisterAllocator::linearScan()
     while (!_unhandled.isEmpty()) {
         LifeTimeInterval *current = _unhandled.back();
         _unhandled.pop_back();
-        int position = current->start();
+        const int position = current->start();
 
         // check for intervals in active that are handled or inactive
         for (int i = 0; i < _active.size(); ) {
@@ -1323,9 +1330,9 @@ void RegisterAllocator::linearScan()
 #endif // DEBUG_REGALLOC
 
         if (_info->canHaveRegister(current->temp())) {
-            tryAllocateFreeReg(*current, position);
+            tryAllocateFreeReg(*current);
             if (current->reg() == LifeTimeInterval::InvalidRegister)
-                allocateBlockedReg(*current, position);
+                allocateBlockedReg(*current);
             if (current->reg() != LifeTimeInterval::InvalidRegister)
                 _active += current;
         } else {
@@ -1368,6 +1375,24 @@ static inline int intersectionPosition(const LifeTimeInterval::Range &one, const
 static inline bool isFP(const Temp &t)
 { return t.type == DoubleType; }
 
+static inline bool candidateIsBetterFit(int bestSizeSoFar, int idealSize, int candidateSize)
+{
+    // If the candidateSize is larger than the current we take it only if the current size does not
+    // yet fit for the whole interval.
+    if (bestSizeSoFar < candidateSize && bestSizeSoFar < idealSize)
+        return true;
+
+    // If the candidateSize is smaller we only take it if it still fits the whole interval.
+    if (bestSizeSoFar > candidateSize && candidateSize >= idealSize)
+        return true;
+
+    // Other wise: no luck.
+    return false;
+}
+
+// Out of all available registers (with their next-uses), choose the one that fits the requested
+// duration best. This can return a register that is not free for the whole interval, but that's
+// fine: we just have to split the current interval.
 static void longestAvailableReg(int *nextUses, int nextUseCount, int &reg, int &freeUntilPos_reg, int lastUse)
 {
     reg = LifeTimeInterval::InvalidRegister;
@@ -1375,58 +1400,46 @@ static void longestAvailableReg(int *nextUses, int nextUseCount, int &reg, int &
 
     for (int candidate = 0, candidateEnd = nextUseCount; candidate != candidateEnd; ++candidate) {
         int fp = nextUses[candidate];
-        if ((freeUntilPos_reg < lastUse && fp > freeUntilPos_reg)
-                || (freeUntilPos_reg >= lastUse && fp >= lastUse && freeUntilPos_reg > fp)) {
+        if (candidateIsBetterFit(freeUntilPos_reg, lastUse, fp)) {
             reg = candidate;
             freeUntilPos_reg = fp;
         }
     }
 }
 
-#define ALLOC_INTS_ON_STACK(ty, ptr, sz, val) \
+#define CALLOC_ON_STACK(ty, ptr, sz, val) \
     Q_ASSERT(sz > 0); \
     ty *ptr = reinterpret_cast<ty *>(alloca(sizeof(ty) * (sz))); \
     for (ty *it = ptr, *eit = ptr + (sz); it != eit; ++it) \
         *it = val;
 
-
-void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int position)
+// Try to allocate a register that's currently free.
+void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
 {
     Q_ASSERT(!current.isFixedInterval());
     Q_ASSERT(current.reg() == LifeTimeInterval::InvalidRegister);
 
     const bool needsFPReg = isFP(current.temp());
     const int freeUntilPosCount = needsFPReg ? _fpRegisters.size() : _normalRegisters.size();
-    ALLOC_INTS_ON_STACK(int, freeUntilPos, freeUntilPosCount, INT_MAX);
+    CALLOC_ON_STACK(int, freeUntilPos, freeUntilPosCount, INT_MAX);
 
-    const bool isPhiTarget = _info->isPhiTarget(current.temp());
     for (Intervals::const_iterator i = _active.constBegin(), ei = _active.constEnd(); i != ei; ++i) {
         const LifeTimeInterval *it = *i;
-        if (it->isFP() == needsFPReg) {
-            if (!isPhiTarget && it->isFixedInterval() && !current.isSplitFromInterval()) {
-                const int idx = indexOfRangeCoveringPosition(it->ranges(), position);
-                if (it->ranges().at(idx).end == current.start()) {
-                    if (it->ranges().size() > idx + 1)
-                        freeUntilPos[it->reg()] = it->ranges().at(idx + 1).start;
-                    continue;
-                }
-            }
-
-            if (isPhiTarget || it->end() >= current.firstPossibleUsePosition(isPhiTarget))
-                freeUntilPos[it->reg()] = 0; // mark register as unavailable
-        }
+        if (it->isFP() == needsFPReg)
+            freeUntilPos[it->reg()] = 0; // mark register as unavailable
     }
 
     for (Intervals::const_iterator i = _inactive.constBegin(), ei = _inactive.constEnd(); i != ei; ++i) {
         const LifeTimeInterval *it = *i;
+        if (it->isFP() != needsFPReg)
+            continue; // different register type, so not applicable.
+        if (it->reg() == LifeTimeInterval::InvalidRegister)
+            continue; // this range does not block a register from being used, as it has no register assigned
+
         if (current.isSplitFromInterval() || it->isFixedInterval()) {
-            if (it->isFP() == needsFPReg && it->reg() != LifeTimeInterval::InvalidRegister) {
-                const int intersectionPos = nextIntersection(current, *it, position);
-                if (!isPhiTarget && it->isFixedInterval() && current.end() == intersectionPos)
-                    freeUntilPos[it->reg()] = qMin(freeUntilPos[it->reg()], intersectionPos + 1);
-                else if (intersectionPos != -1)
-                    freeUntilPos[it->reg()] = qMin(freeUntilPos[it->reg()], intersectionPos);
-            }
+            const int intersectionPos = nextIntersection(current, *it);
+            if (intersectionPos != -1)
+                freeUntilPos[it->reg()] = qMin(freeUntilPos[it->reg()], intersectionPos);
         }
     }
 
@@ -1441,18 +1454,19 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int 
             candidate = _lastAssignedRegister[hint.index];
 
         const int end = current.end();
-        if (candidate != LifeTimeInterval::InvalidRegister) {
-            if (current.isFP() == (hint.type == DoubleType)) {
-                int fp = freeUntilPos[candidate];
-                if ((freeUntilPos_reg < end && fp > freeUntilPos_reg)
-                        || (freeUntilPos_reg >= end && fp >= end && freeUntilPos_reg > fp)) {
-                    reg = candidate;
-                    freeUntilPos_reg = fp;
-                }
-            }
+        if (candidate == LifeTimeInterval::InvalidRegister)
+            continue; // the candidate has no register assigned, so it cannot be (re-)used
+        if (current.isFP() != isFP(hint))
+            continue;  // different register type, so not applicable.
+
+        const int fp = freeUntilPos[candidate];
+        if (candidateIsBetterFit(freeUntilPos_reg, end, fp)) {
+            reg = candidate;
+            freeUntilPos_reg = fp;
         }
     }
 
+    // None of the hinted registers could fit the interval, so try all registers next.
     if (reg == LifeTimeInterval::InvalidRegister)
         longestAvailableReg(freeUntilPos, freeUntilPosCount, reg, freeUntilPos_reg, current.end());
 
@@ -1469,6 +1483,14 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int 
         _lastAssignedRegister[current.temp().index] = reg;
     } else {
         // register available for the first part of the interval
+
+        // TODO: this is slightly inefficient in the following case:
+        //   %1 = something
+        //   some_call(%1)
+        //   %2 = %1 + 1
+        // Now %1 will get a register assigned, and will be spilled to the stack immediately. It
+        // would be better to check if there are actually uses in the range before the split.
+
         current.setReg(reg);
         _lastAssignedRegister[current.temp().index] = reg;
         if (DebugRegAlloc)
@@ -1477,13 +1499,20 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int 
     }
 }
 
-void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int position)
+// This gets called when all registers are currently in use.
+void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
 {
     Q_ASSERT(!current.isFixedInterval());
     Q_ASSERT(current.reg() == LifeTimeInterval::InvalidRegister);
+    const int position = current.start();
 
     const bool isPhiTarget = _info->isPhiTarget(current.temp());
     if (isPhiTarget && !current.isSplitFromInterval()) {
+        // Special case: storing to a phi-node's target will result in a single move. So, if we
+        // would spill another interval to the stack (that's 1 store), and then do the move for the
+        // phi target (at least 1 move or a load), that would result in 2 instructions. Instead, we
+        // force the phi-node's target to go to the stack immediately, which is always a single
+        // store.
         split(current, position + 1, true);
         _inactive.append(&current);
         return;
@@ -1491,37 +1520,43 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
 
     const bool needsFPReg = isFP(current.temp());
     const int nextUsePosCount = needsFPReg ? _fpRegisters.size() : _normalRegisters.size();
-    ALLOC_INTS_ON_STACK(int, nextUsePos, nextUsePosCount, INT_MAX);
+    CALLOC_ON_STACK(int, nextUsePos, nextUsePosCount, INT_MAX);
     QVector<LifeTimeInterval *> nextUseRangeForReg(nextUsePosCount, 0);
-
-    const bool definedAtCurrentPosition = !current.isSplitFromInterval() && current.start() == position;
 
     for (Intervals::const_iterator i = _active.constBegin(), ei = _active.constEnd(); i != ei; ++i) {
         LifeTimeInterval &it = **i;
-        if (it.isFP() == needsFPReg) {
-            int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
-            if (nu == position && !definedAtCurrentPosition) {
-                nextUsePos[it.reg()] = 0;
-            } else if (nu != -1 && nu < nextUsePos[it.reg()]) {
-                nextUsePos[it.reg()] = nu;
-                nextUseRangeForReg[it.reg()] = &it;
-            } else if (nu == -1 && nextUsePos[it.reg()] == INT_MAX) {
-                // in a loop, the range can be active, but only used before the current position (e.g. in a loop header or phi node)
-                nextUseRangeForReg[it.reg()] = &it;
-            }
+        if (it.isFP() != needsFPReg)
+            continue; // different register type, so not applicable.
+
+        const int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.start());
+        if (nu == position) {
+            nextUsePos[it.reg()] = 0;
+        } else if (nu != -1 && nu < nextUsePos[it.reg()]) {
+            nextUsePos[it.reg()] = nu;
+            nextUseRangeForReg[it.reg()] = &it;
+        } else if (nu == -1 && nextUsePos[it.reg()] == INT_MAX) {
+            // in a loop, the range can be active, but the result might only be used before the
+            // current position (e.g. the induction variable being used in the phi node in the loop
+            // header). So, we can use this register, but we need to remember to split the interval
+            // in order to have the edge-resolving generate a load at the edge going back to the
+            // loop header.
+            nextUseRangeForReg[it.reg()] = &it;
         }
     }
 
     for (Intervals::const_iterator i = _inactive.constBegin(), ei = _inactive.constEnd(); i != ei; ++i) {
         LifeTimeInterval &it = **i;
+        if (it.isFP() != needsFPReg)
+            continue; // different register type, so not applicable.
+        if (it.reg() == LifeTimeInterval::InvalidRegister)
+            continue; // this range does not block a register from being used, as it has no register assigned
+
         if (current.isSplitFromInterval() || it.isFixedInterval()) {
-            if (it.isFP() == needsFPReg && it.reg() != LifeTimeInterval::InvalidRegister) {
-                if (nextIntersection(current, it, position) != -1) {
-                    int nu = nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
-                    if (nu != -1 && nu < nextUsePos[it.reg()]) {
-                        nextUsePos[it.reg()] = nu;
-                        nextUseRangeForReg[it.reg()] = &it;
-                    }
+            if (nextIntersection(current, it) != -1) {
+                const int nu = nextUse(it.temp(), current.start());
+                if (nu != -1 && nu < nextUsePos[it.reg()]) {
+                    nextUsePos[it.reg()] = nu;
+                    nextUseRangeForReg[it.reg()] = &it;
                 }
             }
         }
@@ -1530,63 +1565,51 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     int reg, nextUsePos_reg;
     longestAvailableReg(nextUsePos, nextUsePosCount, reg, nextUsePos_reg, current.end());
 
-    if (current.start() > nextUsePos_reg) {
-        // all other intervals are used before current, so it is best to spill current itself
+    Q_ASSERT(current.start() <= nextUsePos_reg);
+
+    // spill interval that currently block reg
+    if (DebugRegAlloc) {
+        QTextStream out(stderr, QIODevice::WriteOnly);
+        out << "*** spilling intervals that block reg " <<reg<< " for interval ";
+        current.dump(out);
+        out << endl;
+    }
+    current.setReg(reg);
+    _lastAssignedRegister[current.temp().index] = reg;
+    LifeTimeInterval *nextUse = nextUseRangeForReg[reg];
+    Q_ASSERT(nextUse);
+    Q_ASSERT(!nextUse->isFixedInterval());
+
+    split(*nextUse, position);
+
+    // We might have chosen a register that is used by a range that has a hole in its life time.
+    // If that's the case, check if the current interval completely fits in the hole. Or rephrased:
+    // check if the current interval will use the register after that hole ends (so that range, and
+    // if so, split that interval so that it gets a new register assigned when it needs one.
+    splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
+
+    // make sure that current does not intersect with the fixed interval for reg
+    const LifeTimeInterval &fixedRegRange = needsFPReg ? *_fixedFPRegisterRanges.at(reg)
+                                                       : *_fixedRegisterRanges.at(reg);
+    int ni = nextIntersection(current, fixedRegRange);
+    if (ni != -1) {
         if (DebugRegAlloc) {
             QTextStream out(stderr, QIODevice::WriteOnly);
-            out << "*** splitting current for range ";current.dump(out);out<<endl;
+            out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
         }
-        Q_ASSERT(!_info->useMustHaveReg(current.temp(), position));
-        split(current, position + 1, true);
-        _inactive.append(&current);
-    } else {
-        // spill intervals that currently block reg
-        if (DebugRegAlloc) {
-            QTextStream out(stderr, QIODevice::WriteOnly);
-            out << "*** spilling intervals that block reg "<<reg<<" for interval ";current.dump(out);out<<endl;
-        }
-        current.setReg(reg);
-        _lastAssignedRegister[current.temp().index] = reg;
-        LifeTimeInterval *nextUse = nextUseRangeForReg[reg];
-        Q_ASSERT(nextUse);
-        Q_ASSERT(!nextUse->isFixedInterval());
-
-        if (_info->isUsedAt(nextUse->temp(), position)) {
-            Q_ASSERT(!_info->isUsedAt(current.temp(), position));
-            // the register is used (as an incoming parameter) at the current position, so split
-            // the interval immediately after the (use at the) current position
-            split(*nextUse, position + 1);
-        } else {
-            // the register was used before the current position
-            split(*nextUse, position);
-        }
-
-        splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
-
-        // make sure that current does not intersect with the fixed interval for reg
-        const LifeTimeInterval &fixedRegRange = needsFPReg ? *_fixedFPRegisterRanges.at(reg)
-                                                           : *_fixedRegisterRanges.at(reg);
-        int ni = nextIntersection(current, fixedRegRange, position);
-        if (ni != -1) {
-            if (DebugRegAlloc) {
-                QTextStream out(stderr, QIODevice::WriteOnly);
-                out << "***-- current range intersects with a fixed reg use at "<<ni<<", so splitting it."<<endl;
-            }
-            split(current, ni, true);
-        }
+        // current does overlap with a fixed interval, so split current before that intersection.
+        split(current, ni, true);
     }
 }
 
 int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
-                                        const LifeTimeInterval &another, const int position) const
+                                        const LifeTimeInterval &another) const
 {
     const LifeTimeInterval::Ranges &currentRanges = current.ranges();
-    int currentIt = indexOfRangeCoveringPosition(currentRanges, position);
-    if (currentIt == -1)
-        return -1;
+    int currentIt = 0;
 
     const LifeTimeInterval::Ranges &anotherRanges = another.ranges();
-    const int anotherItStart = indexOfRangeCoveringPosition(anotherRanges, position);
+    const int anotherItStart = indexOfRangeCoveringPosition(anotherRanges, current.start());
     if (anotherItStart == -1)
         return -1;
 
@@ -1605,11 +1628,12 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
     return -1;
 }
 
+/// Find the first use after the start position for the given temp.
 int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
 {
-    QList<Use> usePositions = _info->uses(t);
-    for (int i = 0, ei = usePositions.size(); i != ei; ++i) {
-        int usePos = usePositions[i].pos;
+    const std::vector<Use> &usePositions = _info->uses(t);
+    for (int i = 0, ei = usePositions.size(); i != ei; ++i) { //### FIXME: use an iterator
+        const int usePos = usePositions.at(i).pos;
         if (usePos >= startPosition)
             return usePos;
     }
@@ -1646,7 +1670,7 @@ void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
 
     int lastUse = firstPosition;
     int nextUse = -1;
-    QList<Use> usePositions = _info->uses(current.temp());
+    const std::vector<Use> &usePositions = _info->uses(current.temp());
     for (int i = 0, ei = usePositions.size(); i != ei; ++i) {
         const Use &usePosition = usePositions.at(i);
         const int usePos = usePosition.pos;
