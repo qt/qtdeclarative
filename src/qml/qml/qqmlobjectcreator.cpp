@@ -96,6 +96,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
     sharedState->allCreatedObjects.allocate(compiledData->totalObjectCount);
+    sharedState->allJavaScriptObjects = 0;
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
 
@@ -195,6 +196,13 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         sharedState->rootContext->isRootObjectInCreation = true;
     }
 
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
+
+    Q_ASSERT(sharedState->allJavaScriptObjects || topLevelCreator);
+    if (topLevelCreator)
+        sharedState->allJavaScriptObjects = scope.alloc(compiledData->totalObjectCount);
+
     QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
     for (QHash<int, int>::ConstIterator it = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
          it != end; ++it) {
@@ -208,8 +216,6 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context->setIdPropertyData(mapping);
 
     if (subComponentIndex == -1) {
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-        QV4::Scope scope(v4);
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
         context->importedScripts = scripts;
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
@@ -229,6 +235,9 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         ddata->compiledData = compiledData;
         ddata->compiledData->addref();
     }
+
+    if (topLevelCreator)
+        sharedState->allJavaScriptObjects = 0;
 
     phase = CreatingObjectsPhase2;
 
@@ -258,8 +267,11 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
-    QV4::ScopedValue scopeObjectProtector(valueScope, declarativeData->jsWrapper.value());
-    Q_UNUSED(scopeObjectProtector);
+
+    Q_ASSERT(topLevelCreator);
+    Q_ASSERT(!sharedState->allJavaScriptObjects);
+    sharedState->allJavaScriptObjects = valueScope.alloc(compiledData->totalObjectCount);
+
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
@@ -1150,9 +1162,12 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     qSwap(_scopeObject, scopeObject);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
+    Q_ASSERT(sharedState->allJavaScriptObjects);
+    QV4::ValueRef ref = QV4::ValueRef::fromRawValue(sharedState->allJavaScriptObjects++);
+    ref = QV4::QObjectWrapper::wrap(v4, instance);
+
     QV4::Scope valueScope(v4);
-    QV4::ScopedValue scopeObjectProtector(valueScope, ddata ? ddata->jsWrapper.value() : 0);
-    Q_UNUSED(scopeObjectProtector);
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, qmlScope));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();

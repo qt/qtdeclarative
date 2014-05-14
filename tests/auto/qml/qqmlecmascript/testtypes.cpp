@@ -300,6 +300,62 @@ static QObject *create_singletonWithEnum(QQmlEngine *, QJSEngine *)
     return new SingletonWithEnum;
 }
 
+QObjectContainer::QObjectContainer()
+    : widgetParent(0)
+    , gcOnAppend(false)
+{}
+
+QQmlListProperty<QObject> QObjectContainer::data()
+{
+    return QQmlListProperty<QObject>(this, 0, children_append, children_count, children_at, children_clear);
+}
+
+void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject *o)
+{
+    QObjectContainer *that = static_cast<QObjectContainer*>(prop->object);
+    that->dataChildren.append(o);
+    QObject::connect(o, SIGNAL(destroyed(QObject*)), prop->object, SLOT(childDestroyed(QObject*)));
+
+    if (that->gcOnAppend) {
+        QQmlEngine *engine = qmlEngine(that);
+        engine->collectGarbage();
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+    }
+}
+
+int QObjectContainer::children_count(QQmlListProperty<QObject> *prop)
+{
+    return static_cast<QObjectContainer*>(prop->object)->dataChildren.count();
+}
+
+QObject *QObjectContainer::children_at(QQmlListProperty<QObject> *prop, int index)
+{
+    return static_cast<QObjectContainer*>(prop->object)->dataChildren.at(index);
+}
+
+void QObjectContainer::children_clear(QQmlListProperty<QObject> *prop)
+{
+    QObjectContainer *that = static_cast<QObjectContainer*>(prop->object);
+    foreach (QObject *c, that->dataChildren)
+        QObject::disconnect(c, SIGNAL(destroyed(QObject*)), that, SLOT(childDestroyed(QObject*)));
+    that->dataChildren.clear();
+}
+
+void QObjectContainer::childDestroyed(QObject *child) {
+    dataChildren.removeAll(child);
+}
+
+void FloatingQObject::classBegin()
+{
+    setParent(0);
+}
+
+void FloatingQObject::componentComplete()
+{
+    Q_ASSERT(!parent());
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -381,6 +437,10 @@ void registerTypes()
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi2",1,0,"Data",testImportOrder_api2);
 
     qmlRegisterSingletonType<SingletonWithEnum>("Qt.test.singletonWithEnum", 1, 0, "SingletonWithEnum", create_singletonWithEnum);
+
+    qmlRegisterType<QObjectContainer>("Qt.test", 1, 0, "QObjectContainer");
+    qmlRegisterType<QObjectContainerWithGCOnAppend>("Qt.test", 1, 0, "QObjectContainerWithGCOnAppend");
+    qmlRegisterType<FloatingQObject>("Qt.test", 1, 0, "FloatingQObject");
 }
 
 #include "testtypes.moc"
