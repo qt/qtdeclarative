@@ -1774,10 +1774,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
                     pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("repeat-x")) {
                     pattern->patternRepeatX = true;
+                    pattern->patternRepeatY = false;
                 } else if (repetition == QStringLiteral("repeat-y")) {
+                    pattern->patternRepeatX = false;
                     pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("no-repeat")) {
-                    pattern->patternRepeatY = false;
+                    pattern->patternRepeatX = false;
                     pattern->patternRepeatY = false;
                 } else {
                     //TODO: exception: SYNTAX_ERR
