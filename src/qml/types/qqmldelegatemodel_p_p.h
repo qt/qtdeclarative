@@ -331,6 +331,8 @@ public:
         };
         QQmlDelegateModelGroup *m_groups[Compositor::MaximumGroupCount];
     };
+
+    QList<QPersistentModelIndex> m_storedPersistentIndexes;
 };
 
 class QQmlPartsModel : public QQmlInstanceModel, public QQmlDelegateModelGroupEmitter

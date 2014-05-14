@@ -8,13 +8,13 @@ qtHaveModule(gui):contains(QT_CONFIG, opengl(es1|es2)?) {
         quick \
         qmltest \
         particles
+
+    qtHaveModule(widgets): SUBDIRS += quickwidgets
 }
 
 SUBDIRS += \
     plugins \
     imports \
     qmldevtools
-
-qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += quickwidgets
 
 qmldevtools.CONFIG = host_build

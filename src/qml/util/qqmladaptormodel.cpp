@@ -467,8 +467,10 @@ public:
                                 vdm, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
             QObject::disconnect(aim, SIGNAL(modelReset()),
                                 vdm, SLOT(_q_modelReset()));
-            QObject::disconnect(aim, SIGNAL(layoutChanged()),
-                                vdm, SLOT(_q_layoutChanged()));
+            QObject::disconnect(aim, SIGNAL(layoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
+                                vdm, SLOT(_q_layoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
+            QObject::disconnect(aim, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
+                                vdm, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
         }
 
         const_cast<VDMAbstractItemModelDataType *>(this)->release();
@@ -920,8 +922,10 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm,
                               vdm, QQmlDelegateModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(modelReset()),
                               vdm, QQmlDelegateModel, SLOT(_q_modelReset()));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged()),
-                              vdm, QQmlDelegateModel, SLOT(_q_layoutChanged()));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
+                              vdm, QQmlDelegateModel, SLOT(_q_layoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
+                              vdm, QQmlDelegateModel, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
         } else {
             accessors = new VDMObjectDelegateDataType;
         }

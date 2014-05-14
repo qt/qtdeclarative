@@ -44,7 +44,6 @@
 #include "qqmldebugservice_p_p.h"
 #include "qqmlenginedebugservice_p.h"
 #include "qv4debugservice_p.h"
-#include "qv4profilerservice_p.h"
 #include "qdebugmessageservice_p.h"
 #include "qqmlprofilerservice_p.h"
 

@@ -2359,7 +2359,7 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     within the width of the item without wrapping is used.
     \li Text.VerticalFit - The largest size up to the size specified that fits
     the height of the item is used.
-    \li Text.Fit - The largest size up to the size specified the fits within the
+    \li Text.Fit - The largest size up to the size specified that fits within the
     width and height of the item is used.
     \endlist
 

@@ -43,6 +43,8 @@ import QtTest 1.0
 
 Item {
     id: top
+    height: 30
+    width: 60
 
     TextEdit {
         id: emptyText
@@ -82,6 +84,13 @@ Item {
 
     TextEdit {
         id: txtfunctions
+        text: "The quick brown fox"
+        height: 20
+        width: 50
+    }
+
+    TextEdit {
+        id: txtclipboard
         text: "The quick brown fox jumped over the lazy dog"
         height: 20
         width: 50
@@ -148,31 +157,51 @@ Item {
             compare(txtentry2.text, "hello World")
         }
 
-        function test_functions() {
+        function test_select_insert() {
             compare(txtfunctions.getText(4,9), "quick")
             txtfunctions.select(4,9);
             compare(txtfunctions.selectedText, "quick")
+            txtfunctions.insert(4, "very ")
+            compare(txtfunctions.text, "The very quick brown fox")
             txtfunctions.deselect();
             compare(txtfunctions.selectedText, "")
-            txtfunctions.select(4,9);
-            txtfunctions.cut();
-            compare(txtfunctions.text, "The  brown fox jumped over the lazy dog")
             txtfunctions.text = "Qt";
             txtfunctions.insert(txtfunctions.text.length, " ")
             compare(txtfunctions.text, "Qt ");
-            txtfunctions.cursorPosition = txtfunctions.text.length;
-            txtfunctions.paste();
+            txtfunctions.insert(txtfunctions.text.length, "quick")
             compare(txtfunctions.text, "Qt quick");
             txtfunctions.cursorPosition = txtfunctions.text.length;
             txtfunctions.selectWord();
             compare(txtfunctions.selectedText, "quick")
-            txtfunctions.copy();
             txtfunctions.selectAll();
             compare(txtfunctions.selectedText, "Qt quick")
             txtfunctions.deselect();
             compare(txtfunctions.selectedText, "")
-            txtfunctions.paste();
-            compare(txtfunctions.text, "Qt quickquick");
+        }
+
+        function test_clipboard() {
+            if (typeof(txtclipboard.copy) !== "function"
+             || typeof(txtclipboard.paste) !== "function"
+             || typeof(txtclipboard.cut) !== "function") {
+                skip("Clipboard is not supported on this platform.")
+            }
+            txtclipboard.select(4,10);
+            txtclipboard.cut();
+            compare(txtclipboard.text, "The brown fox jumped over the lazy dog")
+            txtclipboard.select(30,35)
+            txtclipboard.paste();
+            compare(txtclipboard.text, "The brown fox jumped over the quick dog")
+            txtclipboard.text = "Qt ";
+            txtclipboard.cursorPosition = txtclipboard.text.length;
+            txtclipboard.paste();
+            compare(txtclipboard.text, "Qt quick ");
+            txtclipboard.cursorPosition = txtclipboard.text.length-1;
+            txtclipboard.selectWord();
+            compare(txtclipboard.selectedText, "quick")
+            txtclipboard.copy();
+            txtclipboard.cursorPosition = txtclipboard.text.length;
+            txtclipboard.paste();
+            compare(txtclipboard.text, "Qt quick quick");
         }
 
         function test_linecounts() {

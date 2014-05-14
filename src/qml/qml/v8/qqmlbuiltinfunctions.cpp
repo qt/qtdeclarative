@@ -48,7 +48,6 @@
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
 
-#include <private/qv4profilerservice_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
