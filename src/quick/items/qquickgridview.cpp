@@ -640,8 +640,8 @@ void QQuickGridViewPrivate::layoutVisibleItems(int fromModelIndex)
         if (colPos != col * colSize()) {
             colPos = col * colSize();
             firstItem->setPosition(colPos, rowPos);
-            firstItem->setVisible(firstItem->rowPos() + rowSize() >= from && firstItem->rowPos() <= to);
         }
+        firstItem->setVisible(firstItem->rowPos() + rowSize() >= from && firstItem->rowPos() <= to);
         for (int i = 1; i < visibleItems.count(); ++i) {
             FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.at(i));
             if (++col >= columns) {
