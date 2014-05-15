@@ -76,6 +76,8 @@ public:
     void lock() { m_mutex.lock(); }
     void unlock() { m_mutex.unlock(); }
 
+    void windowNodesDestroyed();
+
 public Q_SLOTS:
     void itemDestroyed(QObject *);
 
@@ -92,6 +94,8 @@ public:
     QSet<QQuickItem *> m_deletedSinceLastFrame;
     QQuickWindow *m_window;
     QMutex m_mutex;
+
+    bool m_nodesAreInvalid;
 };
 
 QT_END_NAMESPACE

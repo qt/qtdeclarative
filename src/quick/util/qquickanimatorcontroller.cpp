@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickAnimatorController::QQuickAnimatorController()
     : m_window(0)
+    , m_nodesAreInvalid(false)
 {
 }
 
@@ -77,6 +78,26 @@ QQuickAnimatorController::~QQuickAnimatorController()
     foreach (QAbstractAnimationJob *job, m_starting.keys()) {
         if (!m_animatorRoots.contains(job))
             delete job;
+    }
+}
+
+static void qquickanimator_invalidate_node(QAbstractAnimationJob *job)
+{
+    if (job->isRenderThreadJob()) {
+        static_cast<QQuickAnimatorJob *>(job)->nodeWasDestroyed();
+    } else if (job->isGroup()) {
+        QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
+        for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
+            qquickanimator_invalidate_node(a);
+    }
+}
+
+void QQuickAnimatorController::windowNodesDestroyed()
+{
+    m_nodesAreInvalid = true;
+    for (QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *>::const_iterator it = m_animatorRoots.constBegin();
+         it != m_animatorRoots.constEnd(); ++it) {
+        qquickanimator_invalidate_node(it.key());
     }
 }
 
@@ -112,7 +133,7 @@ void QQuickAnimatorController::advance()
         m_window->update();
 }
 
-static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorController *c)
+static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorController *c, bool attachListener)
 {
     if (job->isRenderThreadJob()) {
         QQuickAnimatorJob *j = static_cast<QQuickAnimatorJob *>(job);
@@ -121,13 +142,14 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
         } else if (c->m_deletedSinceLastFrame.contains(j->target())) {
             j->targetWasDeleted();
         } else {
-            j->addAnimationChangeListener(c, QAbstractAnimationJob::StateChange);
+            if (attachListener)
+                j->addAnimationChangeListener(c, QAbstractAnimationJob::StateChange);
             j->initialize(c);
         }
     } else if (job->isGroup()) {
         QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
         for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
-            qquick_initialize_helper(a, c);
+            qquick_initialize_helper(a, c, attachListener);
     }
 }
 
@@ -147,7 +169,7 @@ void QQuickAnimatorController::beforeNodeSync()
     foreach (QQuickAnimatorProxyJob *proxy, m_starting) {
         QAbstractAnimationJob *job = proxy->job();
         job->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
-        qquick_initialize_helper(job, this);
+        qquick_initialize_helper(job, this, true);
         m_animatorRoots[job] = proxy;
         job->start();
         proxy->startedByController();
@@ -159,6 +181,18 @@ void QQuickAnimatorController::beforeNodeSync()
         job->stop();
     }
     m_stopping.clear();
+
+    // First sync after a window was hidden or otherwise invalidated.
+    // call initialize again to pick up new nodes..
+    if (m_nodesAreInvalid) {
+        for (QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *>::const_iterator it = m_animatorRoots.constBegin();
+             it != m_animatorRoots.constEnd(); ++it) {
+            qquick_initialize_helper(it.key(), this, false);
+        }
+        m_nodesAreInvalid = false;
+    }
+
+
 
     foreach (QQuickAnimatorJob *job, m_activeLeafAnimations) {
         if (!job->target())
