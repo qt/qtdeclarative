@@ -1146,10 +1146,68 @@ public:
 protected:
     const char* format();
 
+    // FIXME: the register encoding for single precision is not correct.
+
     unsigned sz() { return (m_opcode >> 8) & 0x1; }
     unsigned isSub() { return (m_opcode >> 6) & 0x1; }
     unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
     unsigned vn() { return ((m_opcode >> 16) & 0xf) | ((m_opcode >> 3) & 0x10); }
+    unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
+};
+
+class ARMv7DOpcodeVMUL : public ARMv7D32BitOpcode {
+public:
+    static const uint32_t s_mask =    0xffb00e50;
+    static const uint32_t s_pattern = 0xee200a00;
+
+    DEFINE_STATIC_FORMAT32(ARMv7DOpcodeVMUL, thisObj);
+
+protected:
+    const char* format();
+
+    // FIXME: the register encoding for single precision is not correct.
+
+    unsigned sz() { return (m_opcode >> 8) & 0x1; }
+    unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
+    unsigned vn() { return ((m_opcode >> 16) & 0xf) | ((m_opcode >> 3) & 0x10); }
+    unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
+};
+
+class ARMv7DOpcodeVCVT : public ARMv7D32BitOpcode {
+public:
+    static const uint32_t s_mask =    0xffb80a50;
+    static const uint32_t s_pattern = 0xeeb80a40;
+
+    DEFINE_STATIC_FORMAT32(ARMv7DOpcodeVCVT, thisObj);
+
+protected:
+    const char* format();
+
+    // FIXME: the register encoding for single precision is not correct.
+
+    unsigned sz() { return (m_opcode >> 8) & 0x1; }
+    unsigned op() { return (m_opcode >> 7) & 0x1; }
+    unsigned opc2() { return (m_opcode >> 16) & 0x7; }
+    unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
+    unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
+};
+
+class ARMv7DOpcodeVCMP : public ARMv7D32BitOpcode {
+public:
+    static const uint32_t s_mask =    0xffbf0e50;
+    static const uint32_t s_pattern = 0xeeb40a40;
+
+    DEFINE_STATIC_FORMAT32(ARMv7DOpcodeVCMP, thisObj);
+
+protected:
+    const char* format();
+
+    // FIXME: the register encoding for single precision is not correct.
+
+    unsigned sz() { return (m_opcode >> 8) & 0x1; }
+    unsigned e() { return (m_opcode >> 7) & 0x1; }
+    unsigned zero() { return (m_opcode >> 16) & 0x1; }
+    unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
     unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
 };
 

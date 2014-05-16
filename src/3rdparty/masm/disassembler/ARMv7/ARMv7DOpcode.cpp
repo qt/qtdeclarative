@@ -120,6 +120,9 @@ static Opcode32GroupInitializer opcode32BitGroupList[] = {
     OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeFPTransfer),
     OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVMSR),
     OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVADDVSUB),
+    OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVMUL),
+    OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVCVT),
+    OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVCMP),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeDataProcessingModifiedImmediate),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeConditionalBranchT3),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeBranchOrBranchLink),
@@ -1575,6 +1578,75 @@ const char* ARMv7DOpcodeVADDVSUB::format()
     appendFPRegisterName(regPrefix, vn());
     appendSeparator();
     appendFPRegisterName(regPrefix, vm());
+
+    return m_formatBuffer;
+}
+
+const char* ARMv7DOpcodeVMUL::format()
+{
+    char regPrefix = sz() ? 'd' : 's';
+    appendInstructionName("vmul");
+    appendFPRegisterName(regPrefix, vd());
+    appendSeparator();
+    appendFPRegisterName(regPrefix, vn());
+    appendSeparator();
+    appendFPRegisterName(regPrefix, vm());
+
+    return m_formatBuffer;
+}
+
+const char* ARMv7DOpcodeVCVT::format()
+{
+    char dregPrefix;
+    char mregPrefix;
+    const char *n1, *n2;
+
+    switch (opc2()) {
+    case 5:
+        n1 = op() ? "vcvtr.s32." : "vcvt.s32.";
+        n2 = sz() ? "f64" : "f32";
+        dregPrefix = 's';
+        mregPrefix = sz() ? 'd' : 's';
+        break;
+    case 4:
+        n1 = op() ? "vcvtr.u32." : "vcvt.u32.";
+        n2 = sz() ? "f64" : "f32";
+        dregPrefix = 's';
+        mregPrefix = sz() ? 'd' : 's';
+        break;
+    case 0:
+        n1 = sz() ? "vcvt.f64." : "vcvt.f32.";
+        n2 = op() ? "s32" : "u32";
+        dregPrefix = sz() ? 'd' : 's';
+        mregPrefix = 's';
+        break;
+    default:
+        n1 = "vcvt.?";
+        n2 = ".?";
+        break;
+    }
+
+    char buf[42];
+    snprintf(buf, 42, "%s%s", n1, n2);
+    appendInstructionName(buf);
+
+    appendFPRegisterName(dregPrefix, vd());
+    appendSeparator();
+    appendFPRegisterName(mregPrefix, vm());
+
+    return m_formatBuffer;
+}
+
+const char* ARMv7DOpcodeVCMP::format()
+{
+    char regPrefix = sz() ? 'd' : 's';
+    appendInstructionName(e() ? "vcmpe" : "vcmp");
+    appendFPRegisterName(regPrefix, vd());
+    appendSeparator();
+    if (zero())
+        appendString("#0.0");
+    else
+        appendFPRegisterName(regPrefix, vm());
 
     return m_formatBuffer;
 }
