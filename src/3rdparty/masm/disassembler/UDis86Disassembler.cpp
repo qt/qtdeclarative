@@ -41,7 +41,7 @@ template <> struct helper<4> {
 };
 template <> struct helper<8> {
     static void hex(char *str, size_t len, uint64_t pc)
-    { snprintf(str, len, "0x%lx", pc); }
+    { snprintf(str, len, "0x%llx", static_cast<unsigned long long>(pc)); }
 };
 inline void print(char *str, size_t len, uint64_t pc)
 { helper<sizeof(void*)>::hex(str, len, pc); }
