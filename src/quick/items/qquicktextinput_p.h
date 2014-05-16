@@ -355,11 +355,12 @@ public Q_SLOTS:
     void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
+    Q_REVISION(3) void ensureVisible(int position);
 
 private Q_SLOTS:
     void selectionChanged();
     void createCursor();
-    void updateCursorRectangle();
+    void updateCursorRectangle(bool scroll = true);
     void q_canPasteChanged();
     void q_updateAlignment();
     void triggerPreprocess();

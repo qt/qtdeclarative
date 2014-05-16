@@ -148,6 +148,7 @@ public:
 
     void init();
     void startCreatingCursor();
+    void ensureVisible(int position, int preeditCursor = 0, int preeditLength = 0);
     void updateHorizontalScroll();
     void updateVerticalScroll();
     bool determineHorizontalAlignment();

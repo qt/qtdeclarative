@@ -232,6 +232,8 @@ private slots:
     void baselineOffset_data();
     void baselineOffset();
 
+    void ensureVisible();
+
 private:
     void simulateKey(QWindow *, int key);
 
@@ -6462,6 +6464,50 @@ void tst_qquicktextinput::baselineOffset()
         if (setHeight >= 0)
             item->setHeight(setHeight);
     }
+}
+
+void tst_qquicktextinput::ensureVisible()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(input);
+
+    input->setWidth(QFontMetrics(input->font()).averageCharWidth() * 3);
+    input->setText("Hello World");
+
+    QTextLayout layout;
+    layout.setText(input->text());
+    layout.setFont(input->font());
+
+    if (!qmlDisableDistanceField()) {
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+    }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    input->ensureVisible(0);
+
+    QCOMPARE(input->boundingRect().x(), qreal(0));
+    QCOMPARE(input->boundingRect().y(), qreal(0));
+    QCOMPARE(input->boundingRect().width(), line.naturalTextWidth() + input->cursorRectangle().width());
+    QCOMPARE(input->boundingRect().height(), line.height());
+
+    QSignalSpy cursorSpy(input, SIGNAL(cursorRectangleChanged()));
+    QVERIFY(cursorSpy.isValid());
+
+    input->ensureVisible(input->length());
+
+    QCOMPARE(cursorSpy.count(), 1);
+
+    QCOMPARE(input->boundingRect().x(), input->width() - line.naturalTextWidth());
+    QCOMPARE(input->boundingRect().y(), qreal(0));
+    QCOMPARE(input->boundingRect().width(), line.naturalTextWidth() + input->cursorRectangle().width());
+    QCOMPARE(input->boundingRect().height(), line.height());
 }
 
 QTEST_MAIN(tst_qquicktextinput)

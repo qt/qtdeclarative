@@ -881,6 +881,8 @@ void QQuickTextInput::setFocusOnPress(bool b)
 
     Whether the TextInput should scroll when the text is longer than the width. By default this is
     set to true.
+
+    \sa ensureVisible()
 */
 bool QQuickTextInput::autoScroll() const
 {
@@ -1721,33 +1723,24 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
-void QQuickTextInputPrivate::updateHorizontalScroll()
+void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int preeditLength)
 {
     Q_Q(QQuickTextInput);
-#ifndef QT_NO_IM
-    QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
-    const int preeditLength = m_textLayout.preeditAreaText().length();
-#else
-    QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor);
-#endif
+    QTextLine textLine = m_textLayout.lineForTextPosition(position + preeditCursor);
     const qreal width = qMax<qreal>(0, q->width());
     qreal cix = 0;
     qreal widthUsed = 0;
-    if (currentLine.isValid()) {
-#ifndef QT_NO_IM
-        cix = currentLine.cursorToX(m_cursor + preeditLength);
-#else
-        cix = currentLine.cursorToX(m_cursor);
-#endif
+    if (textLine.isValid()) {
+        cix = textLine.cursorToX(position + preeditLength);
         const qreal cursorWidth = cix >= 0 ? cix : width - cix;
-        widthUsed = qMax(currentLine.naturalTextWidth(), cursorWidth);
+        widthUsed = qMax(textLine.naturalTextWidth(), cursorWidth);
     }
     int previousScroll = hscroll;
 
-    if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
+    if (widthUsed <= width) {
         hscroll = 0;
     } else {
-        Q_ASSERT(currentLine.isValid());
+        Q_ASSERT(textLine.isValid());
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
             hscroll = cix - width;
@@ -1767,7 +1760,7 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off to the left
-             cix = currentLine.cursorToX(m_cursor + qMax(0, m_preeditCursor - 1));
+             cix = textLine.cursorToX(position + qMax(0, preeditCursor - 1));
              if (cix < hscroll)
                  hscroll = cix;
         }
@@ -1775,6 +1768,20 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
     }
     if (previousScroll != hscroll)
         textLayoutDirty = true;
+}
+
+void QQuickTextInputPrivate::updateHorizontalScroll()
+{
+    if (autoScroll && m_echoMode != QQuickTextInput::NoEcho) {
+#ifndef QT_NO_IM
+        const int preeditLength = m_textLayout.preeditAreaText().length();
+        ensureVisible(m_cursor, m_preeditCursor, preeditLength);
+#else
+        ensureVisible(m_cursor);
+#endif
+    } else {
+        hscroll = 0;
+    }
 }
 
 void QQuickTextInputPrivate::updateVerticalScroll()
@@ -2634,14 +2641,16 @@ void QQuickTextInputPrivate::init()
     }
 }
 
-void QQuickTextInput::updateCursorRectangle()
+void QQuickTextInput::updateCursorRectangle(bool scroll)
 {
     Q_D(QQuickTextInput);
     if (!isComponentComplete())
         return;
 
-    d->updateHorizontalScroll();
-    d->updateVerticalScroll();
+    if (scroll) {
+        d->updateHorizontalScroll();
+        d->updateVerticalScroll();
+    }
     d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit cursorRectangleChanged();
@@ -4400,6 +4409,22 @@ void QQuickTextInputPrivate::deleteEndOfLine()
     addCommand(cmd);
     removeSelectedText();
     finishChange(priorState);
+}
+
+/*!
+    \qmlmethod QtQuick::TextInput::ensureVisible(int position)
+    \since 5.4
+
+    Scrolls the contents of the text input so that the specified character
+    \a position is visible inside the boundaries of the text input.
+
+    \sa autoScroll
+*/
+void QQuickTextInput::ensureVisible(int position)
+{
+    Q_D(QQuickTextInput);
+    d->ensureVisible(position);
+    updateCursorRectangle(false);
 }
 
 QT_END_NAMESPACE
