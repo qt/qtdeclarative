@@ -5267,7 +5267,7 @@ void tst_qquicktextedit::cursorRectangle_QTBUG_38947()
     window.show();
     window.requestActivate();
     QTest::qWaitForWindowExposed(&window);
-    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QQuickTextEdit *edit = window.rootObject()->findChild<QQuickTextEdit *>("textedit");
     QVERIFY(edit);
 
     QPoint from = edit->positionToRectangle(0).center().toPoint();
@@ -5276,7 +5276,7 @@ void tst_qquicktextedit::cursorRectangle_QTBUG_38947()
     QSignalSpy spy(edit, SIGNAL(cursorRectangleChanged()));
     QVERIFY(spy.isValid());
 
-    for (int i = i; i < edit->length() - 1; ++i) {
+    for (int i = 1; i < edit->length() - 1; ++i) {
         QRectF rect = edit->positionToRectangle(i);
         QTest::mouseMove(&window, rect.center().toPoint());
         QCOMPARE(edit->cursorRectangle(), rect);
