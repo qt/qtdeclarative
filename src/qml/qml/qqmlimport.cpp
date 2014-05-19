@@ -672,6 +672,8 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
             exists = QQmlFile::bundleFileExists(qmlUrl, typeLoader->engine());
         } else {
             exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(qmlUrl)).isEmpty();
+            if (!exists)
+                exists = QQmlMetaType::findCachedCompilationUnit(QUrl(qmlUrl));
         }
 
         if (exists) {
