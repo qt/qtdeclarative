@@ -268,7 +268,6 @@ static QVector<int> getIntRegisters()
 static QVector<int> getFpRegisters()
 {
     static const QVector<int> fpRegisters = QVector<int>()
-            << JSC::ARMRegisters::d1
             << JSC::ARMRegisters::d2
             << JSC::ARMRegisters::d3
             << JSC::ARMRegisters::d4
