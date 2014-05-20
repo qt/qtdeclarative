@@ -177,7 +177,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTranslate>(uri,major,minor,"Translate");
     qmlRegisterType<QQuickRotation>(uri,major,minor,"Rotation");
     qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");
-    qmlRegisterType<QQuickMatrix4x4>(uri,2,4,"Matrix4x4");
+    qmlRegisterType<QQuickMatrix4x4>(uri,2,3,"Matrix4x4");
     qmlRegisterType<QQuickText>(uri,major,minor,"Text");
     qmlRegisterType<QQuickTextEdit>(uri,major,minor,"TextEdit");
     qmlRegisterType<QQuickTextEdit,1>(uri,2,1,"TextEdit");

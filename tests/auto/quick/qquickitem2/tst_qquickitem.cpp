@@ -2196,7 +2196,7 @@ void tst_QQuickItem::transforms()
     QFETCH(QByteArray, qml);
     QFETCH(QTransform, transform);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.4\nItem { transform: "+qml+"}", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.3\nItem { transform: "+qml+"}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(item->itemTransform(0,0), transform);

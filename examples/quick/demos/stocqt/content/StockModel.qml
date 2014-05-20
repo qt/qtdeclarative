@@ -44,8 +44,6 @@ ListModel {
     id: model
     property string stockId: ""
     property string stockName: ""
-    property var startDate
-    property var endDate
     property string stockDataCycle: "d"
     property bool ready: false
     property real stockPrice: 0.0
@@ -56,19 +54,28 @@ ListModel {
     signal dataReady
 
     function indexOf(date) {
-        var end = new Date(model.get(0).date);
-        var start = new Date(model.get(model.count - 1).date);
-        if (end <= date)
-            return model.count -1;
+        var newest = new Date(model.get(0).date);
+        var oldest = new Date(model.get(model.count - 1).date);
+        if (newest <= date)
+            return -1;
 
-        if (start >= date)
-            return 0;
+        if (oldest >= date)
+            return model.count - 1;
 
+        var currDiff = 0;
+        var bestDiff = Math.abs(date.getTime() - newest.getTime());
+        var retval = 0;
         for (var i = 0; i < model.count; i++) {
             var d = new Date(model.get(i).date);
-            if ( d === date)
-                return i;
+            currDiff = Math.abs(d.getTime() - date.getTime());
+            if (currDiff < bestDiff) {
+                bestDiff = currDiff;
+                retval = i;
+            }
+            if (currDiff > bestDiff)
+                return retval;
         }
+
         return -1;
     }
 
@@ -76,11 +83,9 @@ ListModel {
         if (stockId === "")
             return;
 
-        if (startDate === undefined)
-            startDate = new Date(1995, 3, 25); //default: 25 April 1995
+        var startDate = new Date(2011, 4, 25);
 
-        if (endDate === undefined)
-            endDate = new Date(); //today
+        var endDate = new Date(); //today
 
         if (stockDataCycle !== "d" && stockDataCycle !== "w" && stockDataCycle !== "m")
             stockDataCycle = "d";
@@ -94,11 +99,11 @@ ListModel {
           */
         var request = "http://ichart.finance.yahoo.com/table.csv?";
         request += "s=" + stockId;
-        request += "&a=" + startDate.getDate();
-        request += "&b=" + startDate.getMonth();
+        request += "&a=" + startDate.getMonth();
+        request += "&b=" + startDate.getDate();
         request += "&c=" + startDate.getFullYear();
-        request += "&d=" + endDate.getDate();
-        request += "&e=" + endDate.getMonth();
+        request += "&d=" + endDate.getMonth();
+        request += "&e=" + endDate.getDate();
         request += "&f=" + endDate.getFullYear();
         request += "&g=" + stockDataCycle;
         request += "&ignore=.csv";
@@ -133,6 +138,10 @@ ListModel {
 
         model.ready = false;
         model.clear();
+
+        highestPrice = 0;
+        highestVolume = 0;
+
         var i = 1; //skip the first line
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
