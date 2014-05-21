@@ -2490,7 +2490,7 @@ void tst_qquicktextinput::copyAndPaste()
     QCOMPARE(textInput->selectedText(), QString("Hello world!"));
     QCOMPARE(textInput->selectedText().length(), 12);
     textInput->setCursorPosition(0);
-    QVERIFY(textInput->canPaste());
+    QTRY_VERIFY(textInput->canPaste());
     textInput->paste();
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
     QCOMPARE(textInput->text().length(), 24);
@@ -2544,7 +2544,7 @@ void tst_qquicktextinput::copyAndPaste()
     QClipboard *clipboard = QGuiApplication::clipboard();
     QVERIFY(clipboard);
     clipboard->clear();
-    QVERIFY(!textInput->canPaste());
+    QTRY_VERIFY(!textInput->canPaste());
 
     // test that copy functionality is disabled
     // when echo mode is set to hide text/password mode
@@ -2612,7 +2612,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
     QClipboard *clipboard = QGuiApplication::clipboard();
     QVERIFY(clipboard);
     clipboard->clear();
-    QVERIFY(!textInput->canPaste());
+    QTRY_VERIFY(!textInput->canPaste());
 
     // test that copy functionality is disabled
     // when echo mode is set to hide text/password mode
