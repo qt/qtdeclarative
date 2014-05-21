@@ -55,6 +55,8 @@
 #include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
 #include <QtGui/QOffscreenSurface>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 
 #ifdef Q_OS_WIN
 #  include <QtWidgets/QMessageBox>
@@ -89,7 +91,11 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     // Do not call create() on offscreenWindow.
     createOffscreenSurface();
 
-    setRenderToTexture();
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface))
+        setRenderToTexture();
+    else
+        qWarning("QQuickWidget is not supported on this platform.");
+
     engine = e;
 
     if (engine.isNull())
