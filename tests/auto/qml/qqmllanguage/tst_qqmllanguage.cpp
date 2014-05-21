@@ -1201,21 +1201,32 @@ void tst_qqmllanguage::inlineQmlComponents()
 // Tests that types that have an id property have it set
 void tst_qqmllanguage::idProperty()
 {
-    QQmlComponent component(&engine, testFileUrl("idProperty.qml"));
-    VERIFY_ERRORS(0);
-    MyContainer *object = qobject_cast<MyContainer *>(component.create());
-    QVERIFY(object != 0);
-    QCOMPARE(object->getChildren()->count(), 2);
-    MyTypeObject *child =
-        qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
-    QVERIFY(child != 0);
-    QCOMPARE(child->id(), QString("myObjectId"));
-    QCOMPARE(object->property("object"), QVariant::fromValue((QObject *)child));
+    {
+        QQmlComponent component(&engine, testFileUrl("idProperty.qml"));
+        VERIFY_ERRORS(0);
+        MyContainer *object = qobject_cast<MyContainer *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->getChildren()->count(), 2);
+        MyTypeObject *child =
+                qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
+        QVERIFY(child != 0);
+        QCOMPARE(child->id(), QString("myObjectId"));
+        QCOMPARE(object->property("object"), QVariant::fromValue((QObject *)child));
 
-    child =
-        qobject_cast<MyTypeObject *>(object->getChildren()->at(1));
-    QVERIFY(child != 0);
-    QCOMPARE(child->id(), QString("name.with.dots"));
+        child =
+                qobject_cast<MyTypeObject *>(object->getChildren()->at(1));
+        QVERIFY(child != 0);
+        QCOMPARE(child->id(), QString("name.with.dots"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("idPropertyMismatch.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY(!root.isNull());
+        QQmlContext *ctx = qmlContext(root.data());
+        QVERIFY(ctx);
+        QCOMPARE(ctx->nameForObject(root.data()), QString("root"));
+    }
 }
 
 // Tests automatic connection to notify signals if "onBlahChanged" syntax is used
