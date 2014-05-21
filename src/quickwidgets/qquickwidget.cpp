@@ -941,6 +941,20 @@ void QQuickWidget::wheelEvent(QWheelEvent *e)
 }
 #endif
 
+
+void QQuickWidget::focusInEvent(QFocusEvent * event)
+{
+    Q_D(QQuickWidget);
+    d->offscreenWindow->focusInEvent(event);
+}
+
+void QQuickWidget::focusOutEvent(QFocusEvent * event)
+{
+    Q_D(QQuickWidget);
+    d->offscreenWindow->focusOutEvent(event);
+}
+
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
