@@ -1916,6 +1916,11 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 #ifndef QT_NO_IM
 QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 {
+    return inputMethodQuery(property, QVariant());
+}
+
+QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
+{
     Q_D(const QQuickTextInput);
     switch (property) {
     case Qt::ImEnabled:
@@ -1945,6 +1950,16 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
             return QVariant(d->selectionEnd());
         else
             return QVariant(d->selectionStart());
+    case Qt::ImAbsolutePosition:
+        return QVariant(d->m_cursor);
+    case Qt::ImTextAfterCursor:
+        if (argument.isValid())
+            return QVariant(d->m_text.mid(d->m_cursor, argument.toInt()));
+        return QVariant(d->m_text.mid(d->m_cursor));
+    case Qt::ImTextBeforeCursor:
+        if (argument.isValid())
+            return QVariant(d->m_text.left(d->m_cursor).right(argument.toInt()));
+        return QVariant(d->m_text.left(d->m_cursor));
     default:
         return QQuickItem::inputMethodQuery(property);
     }
