@@ -69,6 +69,10 @@ struct Function;
 struct Lookup;
 struct RegExp;
 
+#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
+#pragma pack(push, 1)
+#endif
+
 struct Location
 {
     qint32 line;
@@ -79,29 +83,6 @@ struct Location
     inline bool operator<(const Location &other) const {
         return line < other.line ||
                (line == other.line && column < other.column);
-    }
-};
-
-struct TypeReference
-{
-    TypeReference(const Location &loc)
-        : location(loc)
-        , needsCreation(false)
-        , errorWhenNotFound(false)
-    {}
-    Location location; // first use
-    bool needsCreation : 1; // whether the type needs to be creatable or not
-    bool errorWhenNotFound: 1;
-};
-
-// map from name index to location of first use
-struct TypeReferenceMap : QHash<int, TypeReference>
-{
-    TypeReference &add(int nameIndex, const Location &loc) {
-        Iterator it = find(nameIndex);
-        if (it != end())
-            return *it;
-        return *insert(nameIndex, loc);
     }
 };
 
@@ -550,6 +531,33 @@ struct QmlUnit
 
     bool isSingleton() const {
         return header.flags & Unit::IsSingleton;
+    }
+};
+
+#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
+#pragma pack(pop)
+#endif
+
+struct TypeReference
+{
+    TypeReference(const Location &loc)
+        : location(loc)
+        , needsCreation(false)
+        , errorWhenNotFound(false)
+    {}
+    Location location; // first use
+    bool needsCreation : 1; // whether the type needs to be creatable or not
+    bool errorWhenNotFound: 1;
+};
+
+// map from name index to location of first use
+struct TypeReferenceMap : QHash<int, TypeReference>
+{
+    TypeReference &add(int nameIndex, const Location &loc) {
+        Iterator it = find(nameIndex);
+        if (it != end())
+            return *it;
+        return *insert(nameIndex, loc);
     }
 };
 
