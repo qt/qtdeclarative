@@ -146,6 +146,7 @@ private slots:
     void onCompleted();
     void onDestruction();
     void scriptString();
+    void scriptStringWithoutSourceCode();
     void defaultPropertyListOrder();
     void declaredPropertyValues();
     void dontDoubleCallClassBegin();
@@ -1929,6 +1930,54 @@ void tst_qqmllanguage::scriptString()
             QQmlExpression expr(ss, /*context*/0, &testScope);
             QCOMPARE(expr.evaluate().toInt(), int(42));
         }
+    }
+}
+
+void tst_qqmllanguage::scriptStringWithoutSourceCode()
+{
+    QUrl url = testFileUrl("scriptString7.qml");
+    {
+        QQmlEnginePrivate *eng = QQmlEnginePrivate::get(&engine);
+        QQmlTypeData *td = eng->typeLoader.getType(url);
+        Q_ASSERT(td);
+
+        QV4::CompiledData::QmlUnit *qmlUnit = td->compiledData()->qmlUnit;
+        Q_ASSERT(qmlUnit);
+        const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
+        QCOMPARE(qmlUnit->header.stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
+        quint32 i;
+        for (i = 0; i < rootObject->nBindings; ++i) {
+            const QV4::CompiledData::Binding *binding = rootObject->bindingTable() + i;
+            if (qmlUnit->header.stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
+                continue;
+            QCOMPARE(binding->valueAsScriptString(&qmlUnit->header), QString("intProperty"));
+            const_cast<QV4::CompiledData::Binding*>(binding)->stringIndex = 0; // empty string index
+            QVERIFY(binding->valueAsScriptString(&qmlUnit->header).isEmpty());
+            break;
+        }
+        QVERIFY(i < rootObject->nBindings);
+    }
+    QQmlComponent component(&engine, url);
+    VERIFY_ERRORS(0);
+
+    MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+    QVERIFY(object != 0);
+    QQmlScriptString ss = object->scriptProperty();
+    QVERIFY(!ss.isEmpty());
+    QCOMPARE(ss.stringLiteral(), QString());
+    bool ok;
+    QCOMPARE(ss.numberLiteral(&ok), qreal(0.));
+    QCOMPARE(ok, false);
+
+    const QQmlScriptStringPrivate *scriptPrivate = QQmlScriptStringPrivate::get(ss);
+    QVERIFY(scriptPrivate != 0);
+    QVERIFY(scriptPrivate->script.isEmpty());
+    QCOMPARE(scriptPrivate->scope, qobject_cast<QObject*>(object));
+    QCOMPARE(scriptPrivate->context, qmlContext(object));
+
+    {
+        QQmlExpression expr(ss, /*context*/0, object);
+        QCOMPARE(expr.evaluate().toInt(), int(100));
     }
 }
 
