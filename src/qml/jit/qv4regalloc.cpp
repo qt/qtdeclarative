@@ -640,6 +640,7 @@ protected: // IRDecoder
             if (Temp *t = e->asTemp()) {
                 addUses(t, Use::CouldHaveRegister);
                 addHint(s->targetTemp, t);
+                addHint(t, s->targetTemp);
             }
         }
     }
