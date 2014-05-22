@@ -49,6 +49,15 @@ ApplicationWindow {
 
     visible: true
 
+    Rectangle {
+        focus: true
+
+        Keys.onBackPressed: {
+            event.accepted = true
+            backButton.clicked()
+        }
+    }
+
     property real downloadProgress: 0
     property bool imageLoading: false
     property bool editMode: false
@@ -99,7 +108,14 @@ ApplicationWindow {
 
     ListView { anchors.fill: parent; model: albumVisualModel.parts.browser; interactive: false }
 
-    Button { id: backButton; label: qsTr("Back"); rotation: 3; x: parent.width - backButton.width - 6; y: -backButton.height - 8 }
+    Button {
+        id: backButton
+        label: qsTr("Back")
+        rotation: 3
+        x: parent.width - backButton.width - 6
+        y: -backButton.height - 8
+        visible: Qt.platform.os !== "android"
+    }
 
     Rectangle { id: photosShade; color: 'black'; width: parent.width; height: parent.height; opacity: 0; visible: opacity != 0.0 }
 
