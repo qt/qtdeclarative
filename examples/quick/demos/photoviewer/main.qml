@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,12 +39,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.2
+import QtQuick.Controls 1.1
 import QtQml.Models 2.1
 import "PhotoViewerCore"
 
-Rectangle {
+ApplicationWindow {
     id: mainWindow
+
+    visible: true
 
     property real downloadProgress: 0
     property bool imageLoading: false

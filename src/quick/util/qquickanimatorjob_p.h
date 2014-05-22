@@ -131,6 +131,7 @@ public:
     void targetWasDeleted();
     virtual void initialize(QQuickAnimatorController *controller);
     virtual void writeBack() = 0;
+    virtual void nodeWasDestroyed() = 0;
 
     bool isTransform() const { return m_isTransform; }
     bool isUniform() const { return m_isUniform; }
@@ -208,6 +209,7 @@ public:
 protected:
     QQuickTransformAnimatorJob();
     void initialize(QQuickAnimatorController *controller);
+    void nodeWasDestroyed();
 
     Helper *m_helper;
 };
@@ -256,6 +258,7 @@ public:
     void initialize(QQuickAnimatorController *controller);
     void updateCurrentTime(int time);
     void writeBack();
+    void nodeWasDestroyed();
 
 private:
     QSGOpacityNode *m_opacityNode;
@@ -275,6 +278,7 @@ public:
 
     void updateCurrentTime(int time);
     void writeBack();
+    void nodeWasDestroyed();
 
 private:
     QByteArray m_uniform;

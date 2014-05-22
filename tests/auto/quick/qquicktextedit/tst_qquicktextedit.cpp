@@ -207,6 +207,7 @@ private slots:
     void embeddedImages_data();
 
     void emptytags_QTBUG_22058();
+    void cursorRectangle_QTBUG_38947();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -5260,6 +5261,33 @@ void tst_qquicktextedit::emptytags_QTBUG_22058()
     event.setCommitString(">");
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("<b>Bold<>"));
+}
+
+void tst_qquicktextedit::cursorRectangle_QTBUG_38947()
+{
+    QQuickView window(testFileUrl("qtbug-38947.qml"));
+
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowExposed(&window);
+    QQuickTextEdit *edit = window.rootObject()->findChild<QQuickTextEdit *>("textedit");
+    QVERIFY(edit);
+
+    QPoint from = edit->positionToRectangle(0).center().toPoint();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, from);
+
+    QSignalSpy spy(edit, SIGNAL(cursorRectangleChanged()));
+    QVERIFY(spy.isValid());
+
+    for (int i = 1; i < edit->length() - 1; ++i) {
+        QRectF rect = edit->positionToRectangle(i);
+        QTest::mouseMove(&window, rect.center().toPoint());
+        QCOMPARE(edit->cursorRectangle(), rect);
+        QCOMPARE(spy.count(), i);
+    }
+
+    QPoint to = edit->positionToRectangle(edit->length() - 1).center().toPoint();
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, to);
 }
 
 QTEST_MAIN(tst_qquicktextedit)

@@ -120,6 +120,9 @@ protected:
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
 
+    virtual void focusInEvent(QFocusEvent * event);
+    virtual void focusOutEvent(QFocusEvent * event);
+
 #ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *);
 #endif

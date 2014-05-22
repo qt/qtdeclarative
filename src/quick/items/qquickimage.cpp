@@ -108,7 +108,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \inherits Item
     \brief Displays an image
 
-    The Image type display an image.
+    The Image type displays an image.
 
     The source of the image is specified as a URL using the \l source property.
     Images can be supplied in any of the standard image formats supported by Qt,

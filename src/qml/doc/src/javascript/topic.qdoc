@@ -38,14 +38,11 @@ JavaScript to quickly develop both user-interfaces and application logic.
 
 \section1 JavaScript Expressions
 
-QML has a deep JavaScript integration, and allows
-\l{Signal Attributes}{signal handlers}
-and \l{Method Attributes}{methods}
-to be defined in JavaScript.  One of the other fundamental concepts of QML is
-the ability to bind property values to the result of complex expressions which
-can include properties from other objects. These
-\l{Property Binding}{property bindings}
-are JavaScript expressions.
+QML has a deep JavaScript integration, and allows \l{Signal Attributes}
+{signal handlers} and \l{Method Attributes}{methods} to be defined in JavaScript.
+Another core feature of QML is the ability to specify and enforce relationships
+between object properties using \l{Property Binding}{property bindings}, which
+are also defined using JavaScript.
 
 See the documentation page titled
 \l{qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents}

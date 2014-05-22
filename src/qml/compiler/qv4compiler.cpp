@@ -82,11 +82,7 @@ void QV4::Compiler::StringTableGenerator::serialize(uint *stringTable, char *dat
 
         QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
         s->flags = 0; // ###
-        s->str.ref.atomic.store(-1);
-        s->str.size = qstr.length();
-        s->str.alloc = 0;
-        s->str.capacityReserved = false;
-        s->str.offset = sizeof(QArrayData);
+        s->size = qstr.length();
         memcpy(s + 1, qstr.constData(), (qstr.length() + 1)*sizeof(ushort));
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);

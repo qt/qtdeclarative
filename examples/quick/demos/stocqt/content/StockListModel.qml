@@ -43,104 +43,104 @@ import QtQuick 2.0
 ListModel {
     id: stocks
     // Data from : http://en.wikipedia.org/wiki/NASDAQ-100
-    ListElement {name: "Activision Blizzard"; stockId: "ATVI"}
-    ListElement {name: "Adobe Systems Incorporated"; stockId: "ADBE"}
-    ListElement {name: "Akamai Technologies, Inc"; stockId: "AKAM"}
-    ListElement {name: "Alexion Pharmaceuticals"; stockId: "ALXN"}
-    ListElement {name: "Altera Corporation"; stockId: "ALTR"}
-    ListElement {name: "Amazon.com, Inc."; stockId: "AMZN"}
-    ListElement {name: "Amgen Inc."; stockId: "AMGN"}
-    ListElement {name: "Apollo Group, Inc."; stockId: "APOL"}
-    ListElement {name: "Apple Inc."; stockId: "AAPL"}
-    ListElement {name: "Applied Materials, Inc."; stockId: "AMAT"}
-    ListElement {name: "Autodesk, Inc."; stockId: "ADSK"}
-    ListElement {name: "Automatic Data Processing, Inc."; stockId: "ADP"}
-    ListElement {name: "Baidu.com, Inc."; stockId: "BIDU"}
-    ListElement {name: "Bed Bath & Beyond Inc."; stockId: "BBBY"}
-    ListElement {name: "Biogen Idec, Inc"; stockId: "BIIB"}
-    ListElement {name: "BMC Software, Inc."; stockId: "BMC"}
-    ListElement {name: "Broadcom Corporation"; stockId: "BRCM"}
-    ListElement {name: "C. H. Robinson Worldwide, Inc."; stockId: "CHRW"}
-    ListElement {name: "CA, Inc."; stockId: "CA"}
-    ListElement {name: "Celgene Corporation"; stockId: "CELG"}
-    ListElement {name: "Cephalon, Inc."; stockId: "CEPH"}
-    ListElement {name: "Cerner Corporation"; stockId: "CERN"}
-    ListElement {name: "Check Point Software Technologies Ltd."; stockId: "CHKP"}
-    ListElement {name: "Cisco Systems, Inc."; stockId: "CSCO"}
-    ListElement {name: "Citrix Systems, Inc."; stockId: "CTXS"}
-    ListElement {name: "Cognizant Technology Solutions Corporation"; stockId: "CTSH"}
-    ListElement {name: "Comcast Corporation"; stockId: "CMCSA"}
-    ListElement {name: "Costco Wholesale Corporation"; stockId: "COST"}
-    ListElement {name: "Ctrip.com International, Ltd."; stockId: "CTRP"}
-    ListElement {name: "Dell Inc."; stockId: "DELL"}
-    ListElement {name: "DENTSPLY International Inc."; stockId: "XRAY"}
-    ListElement {name: "DirecTV"; stockId: "DTV"}
-    ListElement {name: "Dollar Tree, Inc."; stockId: "DLTR"}
-    ListElement {name: "eBay Inc."; stockId: "EBAY"}
-    ListElement {name: "Electronic Arts Inc."; stockId: "ERTS"}
-    ListElement {name: "Expedia, Inc."; stockId: "EXPE"}
-    ListElement {name: "Expeditors International of Washington, Inc."; stockId: "EXPD"}
-    ListElement {name: "Express Scripts, Inc."; stockId: "ESRX"}
-    ListElement {name: "F5 Networks, Inc."; stockId: "FFIV"}
-    ListElement {name: "Fastenal Company"; stockId: "FAST"}
-    ListElement {name: "First Solar, Inc."; stockId: "FSLR"}
-    ListElement {name: "Fiserv, Inc."; stockId: "FISV"}
-    ListElement {name: "Flextronics International Ltd."; stockId: "FLEX"}
-    ListElement {name: "FLIR Systems, Inc."; stockId: "FLIR"}
-    ListElement {name: "Garmin Ltd."; stockId: "GRMN"}
-    ListElement {name: "Gilead Sciences, Inc."; stockId: "GILD"}
-    ListElement {name: "Google Inc."; stockId: "GOOG"}
-    ListElement {name: "Green Mountain Coffee Roasters, Inc."; stockId: "GMCR"}
-    ListElement {name: "Henry Schein, Inc."; stockId: "HSIC"}
-    ListElement {name: "Illumina, Inc."; stockId: "ILMN"}
-    ListElement {name: "Infosys Technologies"; stockId: "INFY"}
-    ListElement {name: "Intel Corporation"; stockId: "INTC"}
-    ListElement {name: "Intuit, Inc."; stockId: "INTU"}
-    ListElement {name: "Intuitive Surgical Inc."; stockId: "ISRG"}
-    ListElement {name: "Joy Global Inc."; stockId: "JOYG"}
-    ListElement {name: "KLA Tencor Corporation"; stockId: "KLAC"}
-    ListElement {name: "Lam Research Corporation"; stockId: "LRCX"}
-    ListElement {name: "Liberty Media Corporation, Interactive Series A"; stockId: "LINTA"}
-    ListElement {name: "Life Technologies Corporation"; stockId: "LIFE"}
-    ListElement {name: "Linear Technology Corporation"; stockId: "LLTC"}
-    ListElement {name: "Marvell Technology Group, Ltd."; stockId: "MRVL"}
-    ListElement {name: "Mattel, Inc."; stockId: "MAT"}
-    ListElement {name: "Maxim Integrated Products"; stockId: "MXIM"}
-    ListElement {name: "Microchip Technology Incorporated"; stockId: "MCHP"}
-    ListElement {name: "Micron Technology, Inc."; stockId: "MU"}
-    ListElement {name: "Microsoft Corporation"; stockId: "MSFT"}
-    ListElement {name: "Mylan, Inc."; stockId: "MYL"}
-    ListElement {name: "NetApp, Inc."; stockId: "NTAP"}
-    ListElement {name: "Netflix, Inc."; stockId: "NFLX"}
-    ListElement {name: "News Corporation, Ltd."; stockId: "NWSA"}
-    ListElement {name: "NII Holdings, Inc."; stockId: "NIHD"}
-    ListElement {name: "NVIDIA Corporation"; stockId: "NVDA"}
-    ListElement {name: "O'Reilly Automotive, Inc."; stockId: "ORLY"}
-    ListElement {name: "Oracle Corporation"; stockId: "ORCL"}
-    ListElement {name: "PACCAR Inc."; stockId: "PCAR"}
-    ListElement {name: "Paychex, Inc."; stockId: "PAYX"}
-    ListElement {name: "Priceline.com, Incorporated"; stockId: "PCLN"}
-    ListElement {name: "Qiagen N.V."; stockId: "QGEN"}
-    ListElement {name: "QUALCOMM Incorporated"; stockId: "QCOM"}
-    ListElement {name: "Research in Motion Limited"; stockId: "RIMM"}
-    ListElement {name: "Ross Stores Inc."; stockId: "ROST"}
-    ListElement {name: "SanDisk Corporation"; stockId: "SNDK"}
-    ListElement {name: "Seagate Technology Holdings"; stockId: "STX"}
-    ListElement {name: "Sears Holdings Corporation"; stockId: "SHLD"}
-    ListElement {name: "Sigma-Aldrich Corporation"; stockId: "SIAL"}
-    ListElement {name: "Staples Inc."; stockId: "SPLS"}
-    ListElement {name: "Starbucks Corporation"; stockId: "SBUX"}
-    ListElement {name: "Stericycle, Inc"; stockId: "SRCL"}
-    ListElement {name: "Symantec Corporation"; stockId: "SYMC"}
-    ListElement {name: "Teva Pharmaceutical Industries Ltd."; stockId: "TEVA"}
-    ListElement {name: "Urban Outfitters, Inc."; stockId: "URBN"}
-    ListElement {name: "VeriSign, Inc."; stockId: "VRSN"}
-    ListElement {name: "Vertex Pharmaceuticals"; stockId: "VRTX"}
-    ListElement {name: "Virgin Media, Inc."; stockId: "VMED"}
-    ListElement {name: "Vodafone Group, plc."; stockId: "VOD"}
-    ListElement {name: "Warner Chilcott, Ltd."; stockId: "WCRX"}
-    ListElement {name: "Whole Foods Market, Inc."; stockId: "WFM"}
-    ListElement {name: "Wynn Resorts Ltd."; stockId: "WYNN"}
-    ListElement {name: "Xilinx, Inc."; stockId: "XLNX"}
-    ListElement {name: "Yahoo! Inc."; stockId: "YHOO"}
+    ListElement {name: "Apple Inc."; stockId: "AAPL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Adobe Systems Inc."; stockId: "ADBE"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Analog Devices, Inc."; stockId: "ADI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Automatic Data Processing, Inc."; stockId: "ADP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Autodesk, Inc."; stockId: "ADSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Akamai Technologies, Inc."; stockId: "AKAM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Altera Corp."; stockId: "ALTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Alexion Pharmaceuticals, Inc."; stockId: "ALXN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Applied Materials, Inc."; stockId: "AMAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Amgen Inc."; stockId: "AMGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Amazon.com Inc."; stockId: "AMZN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Activision Blizzard, Inc."; stockId: "ATVI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Avago Technologies Limited"; stockId: "AVGO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Bed Bath & Beyond Inc."; stockId: "BBBY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Baidu, Inc."; stockId: "BIDU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Biogen Idec Inc."; stockId: "BIIB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Broadcom Corp."; stockId: "BRCM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "CA Technologies"; stockId: "CA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Celgene Corporation"; stockId: "CELG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cerner Corporation"; stockId: "CERN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Check Point Software Technologies Ltd."; stockId: "CHKP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "CH Robinson Worldwide Inc."; stockId: "CHRW"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Charter Communications, Inc."; stockId: "CHTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Comcast Corporation"; stockId: "CMCSA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Costco Wholesale Corporation"; stockId: "COST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cisco Systems, Inc."; stockId: "CSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Catamaran Corporation"; stockId: "CTRX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cognizant Technology Solutions Corporation"; stockId: "CTSH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Citrix Systems, Inc."; stockId: "CTXS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Discovery Communications, Inc."; stockId: "DISCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Dish Network Corp."; stockId: "DISH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Dollar Tree, Inc."; stockId: "DLTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "DIRECTV"; stockId: "DTV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "eBay Inc."; stockId: "EBAY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Equinix, Inc."; stockId: "EQIX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Express Scripts Holding Company"; stockId: "ESRX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Expeditors International of Washington Inc."; stockId: "EXPD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Expedia Inc."; stockId: "EXPE"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Fastenal Company"; stockId: "FAST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Facebook, Inc."; stockId: "FB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "F5 Networks, Inc."; stockId: "FFIV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Fiserv, Inc."; stockId: "FISV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Twenty-First Century Fox, Inc."; stockId: "FOXA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Gilead Sciences Inc."; stockId: "GILD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Keurig Green Mountain, Inc."; stockId: "GMCR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Google Inc."; stockId: "GOOG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Google Inc."; stockId: "GOOGL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Garmin Ltd."; stockId: "GRMN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Henry Schein, Inc."; stockId: "HSIC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Illumina Inc."; stockId: "ILMN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Intel Corporation"; stockId: "INTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Intuit Inc."; stockId: "INTU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Intuitive Surgical, Inc."; stockId: "ISRG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "KLA-Tencor Corporation"; stockId: "KLAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Kraft Foods Group, Inc."; stockId: "KRFT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Global plc"; stockId: "LBTYA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Interactive Corporation"; stockId: "LINTA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Linear Technology Corporation"; stockId: "LLTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Media Corporation"; stockId: "LMCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Marriott International, Inc."; stockId: "MAR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mattel, Inc"; stockId: "MAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mondelez International, Inc."; stockId: "MDLZ"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Monster Beverage Corporation"; stockId: "MNST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Microsoft Corporation"; stockId: "MSFT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Micron Technology Inc."; stockId: "MU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Maxim Integrated Products, Inc."; stockId: "MXIM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mylan, Inc."; stockId: "MYL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Netflix, Inc."; stockId: "NFLX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NetApp, Inc."; stockId: "NTAP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NVIDIA Corporation"; stockId: "NVDA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NXP Semiconductors NV"; stockId: "NXPI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "O'Reilly Automotive Inc."; stockId: "ORLY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Paychex, Inc."; stockId: "PAYX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "PACCAR Inc."; stockId: "PCAR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "The Priceline Group Inc."; stockId: "PCLN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "QUALCOMM Incorporated"; stockId: "QCOM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Regeneron Pharmaceuticals, Inc."; stockId: "REGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Ross Stores Inc."; stockId: "ROST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "SBA Communications Corp."; stockId: "SBAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Starbucks Corporation"; stockId: "SBUX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Sigma-Aldrich Corporation"; stockId: "SIAL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Sirius XM Holdings Inc."; stockId: "SIRI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "SanDisk Corp."; stockId: "SNDK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Staples, Inc."; stockId: "SPLS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Stericycle, Inc."; stockId: "SRCL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Seagate Technology Public Limited Company"; stockId: "STX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Symantec Corporation"; stockId: "SYMC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "TripAdvisor Inc."; stockId: "TRIP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Tractor Supply Company"; stockId: "TSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Tesla Motors, Inc."; stockId: "TSLA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Texas Instruments Inc."; stockId: "TXN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Viacom, Inc."; stockId: "VIAB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "VimpelCom Ltd."; stockId: "VIP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Vodafone Group Public Limited Company"; stockId: "VOD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Verisk Analytics, Inc."; stockId: "VRSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Vertex Pharmaceuticals Incorporated"; stockId: "VRTX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Western Digital Corporation"; stockId: "WDC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Whole Foods Market, Inc."; stockId: "WFM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Wynn Resorts Ltd."; stockId: "WYNN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Xilinx Inc."; stockId: "XLNX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
 }

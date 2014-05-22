@@ -57,30 +57,28 @@ QML \l{QML Object Types}{object types} defined in \l{QML Documents}
 {QML documents} can make use of JavaScript expressions which implement program
 logic.  There are four ways that JavaScript can be used in a QML document:
 
-\list
-  \li \l{Property Attributes}{properties} can be
-      assigned \l{Property Binding}{bindings} which are defined with
-      JavaScript expressions, and which are automatically evaluated by the
-      \l{QQmlEngine}{QML engine} when any properties accessed in the binding
-      change, in order to ensure always-up-to-date property values.  Binding
-      expressions can also perform function evaluation as an explicit side
-      effect
-  \li \l{Signal Attributes}{signal handlers} can be defined
+\list 1
+  \li Relationships between \l{Property Attributes}{properties} are described
+      using JavaScript expressions in \l{Property Binding}{property bindings}.
+      When any of a property's \e dependencies change, the property is
+      automatically updated too, according to the specified relationship.
+  \li \l{Signal Attributes}{Signal handlers} can be defined
       which are automatically evaluated when the object emits the associated
-      signal
-  \li \l{Method Attributes}{custom methods} can be defined
-      in QML files as JavaScript functions
+      signal.
+  \li \l{Method Attributes}{Custom methods} can be defined
+      in QML files as JavaScript functions.
   \li JavaScript files providing functions and variables can be
       \l{Importing JavaScript Resources in QML}{imported} in a QML
-      document
+      document.
 \endlist
 
 
 
 \section2 Property Bindings
 
-During startup, the QML engine will set up and initialize the property
-bindings. The JavaScript conditional operator is a valid property binding.
+In the following example, the \l Rectangle's \c color depends on the
+\l MouseArea's \c pressed property. This relationship is described using a
+conditional expression:
 
 \qml
 import QtQuick 2.0
@@ -100,7 +98,9 @@ Rectangle {
 
 In fact, any JavaScript expression (no matter how complex) may be used in a
 property binding definition, as long as the result of the expression is a
-value whose type can be assigned to the property.
+value whose type can be assigned to the property.  This includes side effects.
+However, complex bindings and side effects are discouraged because they can
+reduce the performance, readability, and maintainability of the code.
 
 There are two ways to define a property binding: the first (and most common)
 is, as previously shown, in a \l{QML Object Attributes#Value Assignment on Initialization}
