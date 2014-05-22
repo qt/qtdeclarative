@@ -66,6 +66,7 @@ private slots:
     void assignObjectToIterator();
     void iterateNonObject();
     void iterateOverObjectFromDeletedEngine();
+    void iterateWithNext();
 };
 
 tst_QJSValueIterator::tst_QJSValueIterator()
@@ -513,6 +514,32 @@ void tst_QJSValueIterator::iterateOverObjectFromDeletedEngine()
 
     QVERIFY(it.name().isEmpty());
     QVERIFY(it.value().isUndefined());
+
+}
+
+void tst_QJSValueIterator::iterateWithNext()
+{
+    QJSEngine engine;
+    QJSValue value = engine.newObject();
+    value.setProperty("one", 1);
+    value.setProperty("two", 2);
+    value.setProperty("three", 3);
+
+    QStringList list;
+    list << QStringLiteral("one") << QStringLiteral("three") << QStringLiteral("two");
+
+    int counter = 0;
+    QJSValueIterator it(value);
+    QStringList actualList;
+    while (it.next()) {
+        ++counter;
+        actualList << it.name();
+    }
+
+    std::sort(actualList.begin(), actualList.end());
+
+    QCOMPARE(counter, 3);
+    QCOMPARE(list, actualList);
 
 }
 

@@ -135,12 +135,9 @@ bool QJSValueIterator::hasNext() const
 
 /*!
     Advances the iterator by one position.
-    Returns true if there is at least one item ahead of the iterator
-    (i.e. the iterator is \e not at the back of the property sequence);
+    Returns true if there was at least one item ahead of the iterator
+    (i.e. the iterator was \e not already at the back of the property sequence);
     otherwise returns false.
-
-    Calling this function on an iterator located at the back of the
-    container leads to undefined results.
 
     \sa hasNext(), name()
 */
@@ -159,7 +156,7 @@ bool QJSValueIterator::next()
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
     it->it.next(d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
-    return !!d_ptr->nextName || d_ptr->nextIndex != UINT_MAX;
+    return !!d_ptr->currentName || d_ptr->currentIndex != UINT_MAX;
 }
 
 /*!

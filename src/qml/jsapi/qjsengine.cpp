@@ -235,7 +235,7 @@ void QJSEngine::collectGarbage()
     Evaluates \a program, using \a lineNumber as the base line number,
     and returns the result of the evaluation.
 
-    The script code will be evaluated in the current context.
+    The script code will be evaluated in the context of the global object.
 
     The evaluation of \a program can cause an exception in the
     engine; in this case the return value will be the exception
@@ -261,8 +261,11 @@ void QJSEngine::collectGarbage()
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ExecutionContext *ctx = d->m_v4Engine->currentContext();
+    QV4::ExecutionEngine *v4 = d->m_v4Engine;
+    QV4::Scope scope(v4);
+    QV4::ExecutionContext *ctx = v4->currentContext();
+    if (ctx != v4->rootContext)
+        ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);
 
     QV4::Script script(ctx, program, fileName, lineNumber);
@@ -273,7 +276,9 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         result = script.run();
     if (scope.engine->hasException)
         result = ctx->catchException();
-    return new QJSValuePrivate(d->m_v4Engine, result);
+    if (ctx != v4->rootContext)
+        v4->popContext();
+    return new QJSValuePrivate(v4, result);
 }
 
 /*!

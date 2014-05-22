@@ -74,6 +74,11 @@ public:
 
     bool isAccessible() const;
 
+    // Action Interface
+    QStringList actionNames() const;
+    void doAction(const QString &actionName);
+    QStringList keyBindingsForAction(const QString &actionName) const;
+
     // Value Interface
     QVariant currentValue() const;
     void setCurrentValue(const QVariant &value);

@@ -157,6 +157,8 @@ private slots:
 
     void dynamicProperties();
 
+    void scopeOfEvaluate();
+
 signals:
     void testSignal();
 };
@@ -3009,6 +3011,43 @@ void tst_QJSEngine::dynamicProperties()
         wrapper.setProperty("someRandomProperty", 42);
         QVERIFY(!wrapper.hasProperty("someRandomProperty"));
     }
+}
+
+class EvaluateWrapper : public QObject
+{
+    Q_OBJECT
+public:
+    EvaluateWrapper(QJSEngine *engine)
+        : engine(engine)
+    {}
+
+public slots:
+    QJSValue cppEvaluate(const QString &program)
+    {
+        return engine->evaluate(program);
+    }
+
+private:
+    QJSEngine *engine;
+};
+
+void tst_QJSEngine::scopeOfEvaluate()
+{
+    QJSEngine engine;
+    QJSValue wrapper = engine.newQObject(new EvaluateWrapper(&engine));
+
+    engine.evaluate("testVariable = 42");
+
+    QJSValue function = engine.evaluate("(function(evalWrapper){\n"
+                                        "var testVariable = 100; \n"
+                                        "try { \n"
+                                        "    return evalWrapper.cppEvaluate(\"(function() { return testVariable; })\")\n"
+                                        "           ()\n"
+                                        "} catch (e) {}\n"
+                                        "})");
+    QVERIFY(function.isCallable());
+    QJSValue result = function.call(QJSValueList() << wrapper);
+    QCOMPARE(result.toInt(), 42);
 }
 
 QTEST_MAIN(tst_QJSEngine)

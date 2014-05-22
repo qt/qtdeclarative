@@ -193,6 +193,28 @@ bool QAccessibleQuickItem::isAccessible() const
     return item()->d_func()->isAccessible;
 }
 
+QStringList QAccessibleQuickItem::actionNames() const
+{
+    QStringList actions = QQmlAccessible::actionNames();
+    if (state().focusable)
+        actions.append(QAccessibleActionInterface::setFocusAction());
+    return actions;
+}
+
+void QAccessibleQuickItem::doAction(const QString &actionName)
+{
+    if (actionName == QAccessibleActionInterface::setFocusAction()) {
+        item()->forceActiveFocus();
+    } else {
+        QQmlAccessible::doAction(actionName);
+    }
+}
+
+QStringList QAccessibleQuickItem::keyBindingsForAction(const QString &actionName) const
+{
+    return QQmlAccessible::keyBindingsForAction(actionName);
+}
+
 QString QAccessibleQuickItem::text(QAccessible::Text textType) const
 {
     // handles generic behavior not specific to an item

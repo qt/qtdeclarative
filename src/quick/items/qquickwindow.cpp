@@ -687,6 +687,13 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
     touchEvent->setTouchPoints(touchPoints);
 }
 
+
+static inline bool windowHasFocus(QQuickWindow *win)
+{
+    const QWindow *focusWindow = QGuiApplication::focusWindow();
+    return win == focusWindow || QQuickRenderControl::renderWindowFor(win) == focusWindow;
+}
+
 /*!
 Set the focus inside \a scope to be \a item.
 If the scope contains the active focus item, it will be changed to \a item.
@@ -762,7 +769,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        if (item != contentItem || QGuiApplication::focusWindow() == q) {
+        if (item != contentItem || windowHasFocus(q)) {
             itemPrivate->focus = true;
             changed << item;
         }
@@ -2522,6 +2529,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
     QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
     for (; it != parentlessItems.end(); ++it)
         cleanupNodesOnShutdown(*it);
+    animationController->windowNodesDestroyed();
     q->cleanupSceneGraph();
 }
 

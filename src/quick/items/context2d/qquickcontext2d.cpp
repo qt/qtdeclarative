@@ -1774,10 +1774,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
                     pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("repeat-x")) {
                     pattern->patternRepeatX = true;
+                    pattern->patternRepeatY = false;
                 } else if (repetition == QStringLiteral("repeat-y")) {
+                    pattern->patternRepeatX = false;
                     pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("no-repeat")) {
-                    pattern->patternRepeatY = false;
+                    pattern->patternRepeatX = false;
                     pattern->patternRepeatY = false;
                 } else {
                     //TODO: exception: SYNTAX_ERR
@@ -3316,7 +3318,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(QV4::CallCont
         qreal y = ctx->callData->args[1].toNumber();
         qreal w = ctx->callData->args[2].toNumber();
         qreal h = ctx->callData->args[3].toNumber();
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(w))
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "getImageData(): Invalid arguments");
 
         if (w <= 0 || h <= 0)

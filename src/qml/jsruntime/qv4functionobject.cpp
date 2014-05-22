@@ -326,8 +326,8 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 
     ScopedCallData callData(scope, ctx->callData->argc ? ctx->callData->argc - 1 : 0);
     if (ctx->callData->argc) {
-        std::copy(ctx->callData->args + 1,
-                  ctx->callData->args + ctx->callData->argc, callData->args);
+        for (int i = 1; i < ctx->callData->argc; ++i)
+            callData->args[i - 1] = ctx->callData->args[i];
     }
     callData->thisObject = ctx->argument(0);
     return o->call(callData);

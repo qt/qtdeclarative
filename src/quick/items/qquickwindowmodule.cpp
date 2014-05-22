@@ -175,6 +175,7 @@ void QQuickWindowModule::defineModule()
 
     qmlRegisterType<QQuickWindow>(uri, 2, 0, "Window");
     qmlRegisterRevision<QWindow,1>(uri, 2, 1);
+    qmlRegisterRevision<QWindow,2>(uri, 2, 2);
     qmlRegisterRevision<QQuickWindow,1>(uri, 2, 1);//Type moved to a subclass, but also has new members
     qmlRegisterRevision<QQuickWindow,2>(uri, 2, 2);
     qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");

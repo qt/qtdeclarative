@@ -5705,10 +5705,12 @@ void QQuickItem::setAntialiasing(bool aa)
 {
     Q_D(QQuickItem);
 
-    bool changed = (aa != antialiasing());
-    d->antialiasingValid = true;
+    if (!d->antialiasingValid) {
+        d->antialiasingValid = true;
+        d->antialiasing = d->implicitAntialiasing;
+    }
 
-    if (!changed)
+    if (aa == d->antialiasing)
         return;
 
     d->antialiasing = aa;

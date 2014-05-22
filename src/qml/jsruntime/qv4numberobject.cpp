@@ -227,7 +227,7 @@ ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
     int fdigits = -1;
 
     if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
-        int fdigits = ctx->callData->args[0].toInt32();
+        fdigits = ctx->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
             return ctx->throwRangeError(error);

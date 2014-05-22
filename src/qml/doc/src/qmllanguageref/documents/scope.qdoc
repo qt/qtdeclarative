@@ -105,11 +105,9 @@ ListView {
 
 \section1 Binding Scope Object
 
-Property bindings are the most common use of JavaScript in QML.  Property
-bindings associate the result of a JavaScript expression with a property of an
-object.  The object to which the bound property belongs is known as the binding's
-scope object.  In this QML simple declaration the \l Item object is the
-binding's scope object.
+An object which has a \l{Property Binding}{property binding} is known has the
+binding's \e{scope object}.  In the following example, the \l Item object is
+the binding's scope object.
 
 \code
 Item {
