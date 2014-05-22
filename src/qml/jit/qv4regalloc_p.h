@@ -55,6 +55,25 @@ namespace JIT {
 
 class RegAllocInfo;
 
+// This class implements a linear-scan register allocator, with a couple of tweaks:
+//  - Second-chance allocation is used when an interval becomes active after a spill, which results
+//    in fewer differences between edges, and hence fewer moves before jumps.
+//  - Use positions are flagged with either "must have" register or "could have" register. This is
+//    used to decide whether a register is really needed when a temporary is used after a spill
+//    occurred.
+//  - Fixed intervals are used to denotate IR positions where certain registers are needed in order
+//    to implement the operation, and cannot be used by a temporary on that position. An example is
+//    caller saved registers, where the call will use/clobber those registers.
+//  - Hints are used to indicate which registers could be used to generate more compact code. An
+//    example is an addition, where one (or both) operands' life-time ends at that instruction. In
+//    this case, re-using an operand register for the result will result in an in-place add.
+//  - SSA form properties are used:
+//      - to simplify life-times (two temporaries will never interfere as long as their intervals
+//        are not split), resulting in a slightly faster algorithm;
+//      - when a temporary needs to be spilled, it is done directly after calculating it, so that
+//        1 store is generated even if multiple spills/splits happen.
+//      - phi-node elimination (SSA form deconstruction) is done when resolving differences between
+//        CFG edges
 class RegisterAllocator
 {
     typedef IR::LifeTimeInterval LifeTimeInterval;

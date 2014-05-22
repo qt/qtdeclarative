@@ -1326,6 +1326,8 @@ protected:
     }
 };
 
+// This function converts the IR to semi-pruned SSA form. For details about SSA and the algorightm,
+// see [Appel]. For the changes needed for semi-pruned SSA form, and for its advantages, see [Briggs].
 void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defUses)
 {
 #if defined(SHOW_SSA)
