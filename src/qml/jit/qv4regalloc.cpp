@@ -743,8 +743,8 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     IR::Function *_function;
     const std::vector<int> &_assignedSpillSlots;
     QHash<IR::Temp, const LifeTimeInterval *> _intervalForTemp;
-    const QVector<int> &_intRegs;
-    const QVector<int> &_fpRegs;
+    const QVector<const RegisterInfo *> &_intRegs;
+    const QVector<const RegisterInfo *> &_fpRegs;
 
     Stmt *_currentStmt;
     QVector<Move *> _loads;
@@ -758,8 +758,8 @@ public:
                     const LifeTimeIntervals::Ptr &intervals,
                     IR::Function *function,
                     const std::vector<int> &assignedSpillSlots,
-                    const QVector<int> &intRegs,
-                    const QVector<int> &fpRegs)
+                    const QVector<const RegisterInfo *> &intRegs,
+                    const QVector<const RegisterInfo *> &fpRegs)
         : _intervals(intervals)
         , _function(function)
         , _assignedSpillSlots(assignedSpillSlots)
@@ -857,10 +857,11 @@ private:
         if (i->reg() == LifeTimeInterval::InvalidRegister)
             return;
 
-        int pReg = platformRegister(*i);
+        const RegisterInfo *pReg = platformRegister(*i);
+        Q_ASSERT(pReg);
         int spillSlot = _assignedSpillSlots[i->temp().index];
         if (spillSlot != RegisterAllocator::InvalidSpillSlot)
-            _stores.append(generateSpill(spillSlot, i->temp().type, pReg));
+            _stores.append(generateSpill(spillSlot, i->temp().type, pReg->reg<int>()));
     }
 
     void addNewIntervals(int position)
@@ -950,8 +951,7 @@ private:
                             if (it2->temp() == *t
                                     && it2->reg() != LifeTimeInterval::InvalidRegister
                                     && it2->covers(predecessorEnd)) {
-                                moveFrom = createTemp(Temp::PhysicalRegister,
-                                                      platformRegister(*it2), t->type);
+                                moveFrom = createPhysicalRegister(it2, t->type);
                                 break;
                             }
                         }
@@ -966,8 +966,7 @@ private:
                     if (predIt->temp() == it->temp()) {
                         if (predIt->reg() != LifeTimeInterval::InvalidRegister
                                 && predIt->covers(predecessorEnd)) {
-                            moveFrom = createTemp(Temp::PhysicalRegister, platformRegister(*predIt),
-                                                  predIt->temp().type);
+                            moveFrom = createPhysicalRegister(predIt, predIt->temp().type);
                         } else {
                             int spillSlot = _assignedSpillSlots[predIt->temp().index];
                             if (spillSlot != -1)
@@ -1023,7 +1022,7 @@ private:
                     continue; // it has a life-time hole here.
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it->temp().type);
             } else {
-                moveTo = createTemp(Temp::PhysicalRegister, platformRegister(*it), it->temp().type);
+                moveTo = createPhysicalRegister(it, it->temp().type);
             }
 
             // add move to mapping
@@ -1057,12 +1056,19 @@ private:
         return t;
     }
 
-    int platformRegister(const LifeTimeInterval &i) const
+    Temp *createPhysicalRegister(const LifeTimeInterval *i, Type type) const
+    {
+        const RegisterInfo *ri = platformRegister(*i);
+        Q_ASSERT(ri);
+        return createTemp(Temp::PhysicalRegister, ri->reg<int>(), type);
+    }
+
+    const RegisterInfo *platformRegister(const LifeTimeInterval &i) const
     {
         if (i.isFP())
-            return _fpRegs.value(i.reg(), -1);
+            return _fpRegs.value(i.reg(), 0);
         else
-            return _intRegs.value(i.reg(), -1);
+            return _intRegs.value(i.reg(), 0);
     }
 
     Move *generateSpill(int spillSlot, Type type, int pReg) const
@@ -1097,16 +1103,18 @@ protected:
 
         if (_currentStmt != 0 && i->start() == usePosition(_currentStmt)) {
             Q_ASSERT(i->isSplitFromInterval());
-            int pReg = platformRegister(*i);
-            _loads.append(generateUnspill(i->temp(), pReg));
+            const RegisterInfo *pReg = platformRegister(*i);
+            Q_ASSERT(pReg);
+            _loads.append(generateUnspill(i->temp(), pReg->reg<int>()));
         }
 
         if (i->reg() != LifeTimeInterval::InvalidRegister &&
                 (i->covers(defPosition(_currentStmt)) ||
                  i->covers(usePosition(_currentStmt)))) {
-            int pReg = platformRegister(*i);
+            const RegisterInfo *pReg = platformRegister(*i);
+            Q_ASSERT(pReg);
             t->kind = Temp::PhysicalRegister;
-            t->index = pReg;
+            t->index = pReg->reg<unsigned>();
         } else {
             int stackSlot = _assignedSpillSlots[t->index];
             Q_ASSERT(stackSlot >= 0);
@@ -1160,13 +1168,21 @@ protected:
 };
 } // anonymous namespace
 
-RegisterAllocator::RegisterAllocator(const QVector<int> &normalRegisters, const QVector<int> &fpRegisters)
-    : _normalRegisters(normalRegisters)
-    , _fpRegisters(fpRegisters)
+RegisterAllocator::RegisterAllocator(const QV4::JIT::RegisterInformation &registerInformation)
+    : _registerInformation(registerInformation)
 {
-    Q_ASSERT(normalRegisters.size() >= 2);
-    Q_ASSERT(fpRegisters.size() >= 2);
-    _active.reserve((normalRegisters.size() + fpRegisters.size()) * 2);
+    for (int i = 0, ei = registerInformation.size(); i != ei; ++i) {
+        const RegisterInfo &regInfo = registerInformation.at(i);
+        if (regInfo.useForRegAlloc()) {
+            if (regInfo.isRegularRegister())
+                _normalRegisters.append(&regInfo);
+            else
+                _fpRegisters.append(&regInfo);
+        }
+    }
+    Q_ASSERT(_normalRegisters.size() >= 2);
+    Q_ASSERT(_fpRegisters.size() >= 2);
+    _active.reserve((_normalRegisters.size() + _fpRegisters.size()) * 2);
     _inactive.reserve(_active.size());
 }
 

@@ -363,32 +363,6 @@ public: // utility functions
     {
         return getCalleeSavedRegisters().size();
     }
-
-    static QVector<int> getIntRegisters()
-    {
-        // TODO: change the register allocator to cope with caller/callee saved registers
-        static QVector<int> intRegs;
-        if (intRegs.isEmpty()) {
-            foreach (const RegisterInfo &info, getRegisterInfo())
-                if (info.isRegularRegister() && info.useForRegAlloc())
-                    intRegs.append(info.reg<int>());
-        }
-
-        return intRegs;
-    }
-
-    static QVector<int> getFpRegisters()
-    {
-        // TODO: change the register allocator to cope with caller/callee saved registers
-        static QVector<int> fpRegs;
-        if (fpRegs.isEmpty()) {
-            foreach (const RegisterInfo &info, getRegisterInfo())
-                if (info.isFloatingPoint() && info.useForRegAlloc())
-                    fpRegs.append(info.reg<int>());
-        }
-
-        return fpRegs;
-    }
 };
 
 } // JIT namespace

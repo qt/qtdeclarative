@@ -44,6 +44,7 @@
 #include "qv4global_p.h"
 #include "qv4isel_p.h"
 #include "qv4ssa_p.h"
+#include "qv4registerinfo_p.h"
 
 #include <config.h>
 
@@ -58,8 +59,9 @@ class RegisterAllocator
 {
     typedef IR::LifeTimeInterval LifeTimeInterval;
 
-    QVector<int> _normalRegisters;
-    QVector<int> _fpRegisters;
+    const RegisterInformation &_registerInformation;
+    QVector<const RegisterInfo *> _normalRegisters;
+    QVector<const RegisterInfo *> _fpRegisters;
     QScopedPointer<RegAllocInfo> _info;
 
     QVector<LifeTimeInterval *> _fixedRegisterRanges, _fixedFPRegisterRanges;
@@ -77,7 +79,7 @@ class RegisterAllocator
 public:
     enum { InvalidSpillSlot = -1 };
 
-    RegisterAllocator(const QVector<int> &normalRegisters, const QVector<int> &fpRegisters);
+    RegisterAllocator(const RegisterInformation &registerInformation);
     ~RegisterAllocator();
 
     void run(IR::Function *function, const IR::Optimizer &opt);
