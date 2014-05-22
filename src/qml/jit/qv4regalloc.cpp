@@ -1280,19 +1280,23 @@ void RegisterAllocator::prepareRanges()
     const int regCount = _normalRegisters.size();
     _fixedRegisterRanges.reserve(regCount);
     for (int reg = 0; reg < regCount; ++reg) {
-        LifeTimeInterval *lti = cloneFixedInterval(reg, false, ltiWithCalls);
-        _fixedRegisterRanges.append(lti);
-        if (lti->isValid())
-            _active.append(lti);
+        if (_normalRegisters.at(reg)->isCallerSaved()) {
+            LifeTimeInterval *lti = cloneFixedInterval(reg, false, ltiWithCalls);
+            _fixedRegisterRanges.append(lti);
+            if (lti->isValid())
+                _active.append(lti);
+        }
     }
 
     const int fpRegCount = _fpRegisters.size();
     _fixedFPRegisterRanges.reserve(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
-        LifeTimeInterval *lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
-        _fixedFPRegisterRanges.append(lti);
-        if (lti->isValid())
-            _active.append(lti);
+        if (_fpRegisters.at(fpReg)->isCallerSaved()) {
+            LifeTimeInterval *lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
+            _fixedFPRegisterRanges.append(lti);
+            if (lti->isValid())
+                _active.append(lti);
+        }
     }
 }
 

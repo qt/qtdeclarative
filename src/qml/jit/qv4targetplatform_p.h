@@ -61,6 +61,13 @@ namespace JIT {
 //    restore ebx (which holds the GOT ptr) before a call
 //  - All (supported) ARM platforms, where the only variety is the platform specific usage of r9,
 //    and the frame-pointer in Thumb/Thumb2 v.s. ARM mode.
+//
+// Specific handling of ebx when it holds the GOT:
+// In this case we can use it, but it needs to be restored when doing a call. So, the handling is as
+// follows: it is marked as caller saved, meaning the value in it won't survive a call. When
+// calculating the list of callee saved registers in getCalleeSavedRegisters (which is used to
+// generate push/pop instructions in the prelude/postlude), we add ebx too. Then when synthesizing
+// a call, we add a load it right before emitting the call instruction.
 class TargetPlatform
 {
 public:
@@ -81,7 +88,7 @@ public:
         typedef RegisterInfo RI;
         return RegisterInformation()
                 << RI(JSC::X86Registers::edx, QStringLiteral("edx"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
-                << RI(JSC::X86Registers::ebx, QStringLiteral("ebx"),   RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::ebx, QStringLiteral("ebx"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::edi, QStringLiteral("edi"),   RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::esi, QStringLiteral("esi"),   RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::xmm2, QStringLiteral("xmm2"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
@@ -351,6 +358,12 @@ public: // utility functions
         static RegisterInformation regs;
         if (regs.isEmpty()) {
             foreach (const RegisterInfo &info, getRegisterInfo()) {
+#if defined(RESTORE_EBX_ON_CALL)
+                if (info.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+                    regs.append(info);
+                    continue;
+                }
+#endif // RESTORE_EBX_ON_CALL
                 if (info.isCalleeSaved())
                     regs.append(info);
             }
