@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -214,91 +214,6 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
-#if (CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))) || (CPU(X86) && OS(LINUX))
-#  define REGALLOC_IS_SUPPORTED
-static QVector<int> getIntRegisters()
-{
-#  if CPU(X86) && OS(LINUX) // x86 with linux
-    static const QVector<int> intRegisters = QVector<int>()
-            << JSC::X86Registers::edx
-            << JSC::X86Registers::ebx;
-#  else // x86_64 with linux or with macos
-    static const QVector<int> intRegisters = QVector<int>()
-            << JSC::X86Registers::ebx
-            << JSC::X86Registers::edi
-            << JSC::X86Registers::esi
-            << JSC::X86Registers::edx
-            << JSC::X86Registers::r9
-            << JSC::X86Registers::r8
-            << JSC::X86Registers::r13
-            << JSC::X86Registers::r15;
-#  endif
-    return intRegisters;
-}
-
-static QVector<int> getFpRegisters()
-{
-// linux/x86_64, linux/x86, and macos/x86_64:
-    static const QVector<int> fpRegisters = QVector<int>()
-            << JSC::X86Registers::xmm2
-            << JSC::X86Registers::xmm3
-            << JSC::X86Registers::xmm4
-            << JSC::X86Registers::xmm5
-            << JSC::X86Registers::xmm6
-            << JSC::X86Registers::xmm7;
-    return fpRegisters;
-}
-
-#elif CPU(ARM) && OS(LINUX)
-    // Note: this is not generic for all ARM platforms. Specifically, r9 is platform dependent
-    // (e.g. iOS reserves it). See the ARM GNU Linux abi for details.
-#  define REGALLOC_IS_SUPPORTED
-static QVector<int> getIntRegisters()
-{
-    static const QVector<int> intRegisters = QVector<int>()
-            << JSC::ARMRegisters::r1
-            << JSC::ARMRegisters::r2
-            << JSC::ARMRegisters::r3
-            << JSC::ARMRegisters::r4
-            << JSC::ARMRegisters::r8
-            << JSC::ARMRegisters::r9;
-    return intRegisters;
-}
-
-static QVector<int> getFpRegisters()
-{
-    static const QVector<int> fpRegisters = QVector<int>()
-            << JSC::ARMRegisters::d1
-            << JSC::ARMRegisters::d2
-            << JSC::ARMRegisters::d3
-            << JSC::ARMRegisters::d4
-            << JSC::ARMRegisters::d5
-            << JSC::ARMRegisters::d6;
-    return fpRegisters;
-}
-#elif CPU(X86) && OS(WINDOWS)
-#  define REGALLOC_IS_SUPPORTED
-static QVector<int> getIntRegisters()
-{
-    static const QVector<int> intRegisters = QVector<int>()
-            << JSC::X86Registers::edx
-            << JSC::X86Registers::ebx;
-    return intRegisters;
-}
-
-static QVector<int> getFpRegisters()
-{
-    static const QVector<int> fpRegisters = QVector<int>()
-            << JSC::X86Registers::xmm2
-            << JSC::X86Registers::xmm3
-            << JSC::X86Registers::xmm4
-            << JSC::X86Registers::xmm5
-            << JSC::X86Registers::xmm6
-            << JSC::X86Registers::xmm7;
-    return fpRegisters;
-}
-#endif
-
 void InstructionSelection::run(int functionIndex)
 {
     IR::Function *function = irModule->functions[functionIndex];
@@ -308,13 +223,10 @@ void InstructionSelection::run(int functionIndex)
     IR::Optimizer opt(_function);
     opt.run(qmlEngine);
 
-#ifdef REGALLOC_IS_SUPPORTED
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
-    if (opt.isInSSA() && withRegisterAllocator) {
-        RegisterAllocator(getIntRegisters(), getFpRegisters()).run(_function, opt);
-    } else
-#endif // REGALLOC_IS_SUPPORTED
-    {
+    if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
+        RegisterAllocator(Assembler::getIntRegisters(), Assembler::getFpRegisters()).run(_function, opt);
+    } else {
         if (opt.isInSSA())
             // No register allocator available for this platform, or env. var was set, so:
             opt.convertOutOfSSA();

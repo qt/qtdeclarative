@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -47,6 +47,7 @@
 #include "private/qv4isel_util_p.h"
 #include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
+#include "qv4targetplatform_p.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QStack>
@@ -123,157 +124,11 @@ struct ExceptionCheck<void (*)(QV4::NoThrowContext *, A, B, C)> {
     enum { NeedsCheck = 0 };
 };
 
-class Assembler : public JSC::MacroAssembler
+class Assembler : public JSC::MacroAssembler, public TargetPlatform
 {
 public:
     Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
               int maxArgCountForBuiltins);
-
-#if CPU(X86)
-
-#undef VALUE_FITS_IN_REGISTER
-#undef ARGUMENTS_IN_REGISTERS
-
-#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-
-    static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
-    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const RegisterID LocalsRegister = JSC::X86Registers::edi;
-    static const RegisterID ContextRegister = JSC::X86Registers::esi;
-    static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
-    static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
-    static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
-    static const FPRegisterID FPGpr1 = JSC::X86Registers::xmm1;
-
-    static const int RegisterSize = 4;
-
-    static const int RegisterArgumentCount = 0;
-    static RegisterID registerForArgument(int)
-    {
-        Q_ASSERT(false);
-        // Not reached.
-        return JSC::X86Registers::eax;
-    }
-
-    // Return address is pushed onto stack by the CPU.
-    static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
-    static const int StackShadowSpace = 0;
-    inline void platformEnterStandardStackFrame() {}
-    inline void platformLeaveStandardStackFrame() {}
-#elif CPU(X86_64)
-
-#define VALUE_FITS_IN_REGISTER
-#define ARGUMENTS_IN_REGISTERS
-#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-
-    static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
-    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const RegisterID LocalsRegister = JSC::X86Registers::r12;
-    static const RegisterID ContextRegister = JSC::X86Registers::r14;
-    static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
-    static const RegisterID ScratchRegister = JSC::X86Registers::r10;
-    static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
-    static const FPRegisterID FPGpr1 = JSC::X86Registers::xmm1;
-
-    static const int RegisterSize = 8;
-
-#if OS(WINDOWS)
-    static const int RegisterArgumentCount = 4;
-    static RegisterID registerForArgument(int index)
-    {
-        static RegisterID regs[RegisterArgumentCount] = {
-            JSC::X86Registers::ecx,
-            JSC::X86Registers::edx,
-            JSC::X86Registers::r8,
-            JSC::X86Registers::r9
-        };
-        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
-        return regs[index];
-    };
-    static const int StackShadowSpace = 32;
-#else // Unix
-    static const int RegisterArgumentCount = 6;
-    static RegisterID registerForArgument(int index)
-    {
-        static RegisterID regs[RegisterArgumentCount] = {
-            JSC::X86Registers::edi,
-            JSC::X86Registers::esi,
-            JSC::X86Registers::edx,
-            JSC::X86Registers::ecx,
-            JSC::X86Registers::r8,
-            JSC::X86Registers::r9
-        };
-        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
-        return regs[index];
-    };
-    static const int StackShadowSpace = 0;
-#endif
-
-    // Return address is pushed onto stack by the CPU.
-    static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
-    inline void platformEnterStandardStackFrame() {}
-    inline void platformLeaveStandardStackFrame() {}
-#elif CPU(ARM)
-
-#undef VALUE_FITS_IN_REGISTER
-#define ARGUMENTS_IN_REGISTERS
-#undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-
-    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp; // r13
-    static const RegisterID StackFrameRegister = JSC::ARMRegisters::fp; // r11
-    static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
-    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
-    static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
-    static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
-
-    static const int RegisterSize = 4;
-
-    static const RegisterID RegisterArgument1 = JSC::ARMRegisters::r0;
-    static const RegisterID RegisterArgument2 = JSC::ARMRegisters::r1;
-    static const RegisterID RegisterArgument3 = JSC::ARMRegisters::r2;
-    static const RegisterID RegisterArgument4 = JSC::ARMRegisters::r3;
-
-    static const int RegisterArgumentCount = 4;
-    static RegisterID registerForArgument(int index)
-    {
-        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
-        return static_cast<RegisterID>(JSC::ARMRegisters::r0 + index);
-    };
-
-    // Registers saved in platformEnterStandardStackFrame below.
-    static const int StackSpaceAllocatedUponFunctionEntry = 5 * RegisterSize;
-    static const int StackShadowSpace = 0;
-    inline void platformEnterStandardStackFrame()
-    {
-        // Move the register arguments onto the stack as if they were
-        // pushed by the caller, just like on ia32. This gives us consistent
-        // access to the parameters if we need to.
-        push(JSC::ARMRegisters::r3);
-        push(JSC::ARMRegisters::r2);
-        push(JSC::ARMRegisters::r1);
-        push(JSC::ARMRegisters::r0);
-        push(JSC::ARMRegisters::lr);
-    }
-    inline void platformLeaveStandardStackFrame()
-    {
-        pop(JSC::ARMRegisters::lr);
-        addPtr(TrustedImm32(4 * RegisterSize), StackPointerRegister);
-    }
-#else
-#error The JIT needs to be ported to this platform.
-#endif
-    static const int calleeSavedRegisterCount;
-
-#if CPU(X86) || CPU(X86_64)
-    static const int StackAlignment = 16;
-#elif CPU(ARM)
-    // Per AAPCS
-    static const int StackAlignment = 8;
-#else
-#error Stack alignment unknown for this platform.
-#endif
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -318,7 +173,7 @@ public:
     {
     public:
         StackLayout(IR::Function *function, int maxArgCountForBuiltins)
-            : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
+            : calleeSavedRegCount(Assembler::calleeSavedRegisterCount() + 1)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedRegCount(maxArgCountForBuiltins)
@@ -351,7 +206,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * calleeSavedRegisterCount;
+            int frameSize = RegisterSize * calleeSavedRegisterCount();
             frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
 
             Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
@@ -1014,10 +869,8 @@ public:
         prepareRelativeCall(function, this);
         loadArgumentOnStackOrRegister<0>(arg1);
 
-#if (OS(LINUX) && CPU(X86) && (defined(__PIC__) || defined(__PIE__))) || \
-    (OS(WINDOWS) && CPU(X86))
-        load32(Address(StackFrameRegister, -int(sizeof(void*))),
-               JSC::X86Registers::ebx); // restore the GOT ptr
+#ifdef RESTORE_EBX_ON_CALL
+        load32(ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
 #endif
 
         callAbsolute(functionName, function);

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -90,58 +90,6 @@ QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int fu
         return 0;
     return handle->chunk();
 }
-
-
-
-/* Platform/Calling convention/Architecture specific section */
-
-#if CPU(X86_64)
-#  if OS(LINUX) || OS(MAC_OS_X)
-static const Assembler::RegisterID calleeSavedRegisters[] = {
-    JSC::X86Registers::ebx,
-    JSC::X86Registers::r12, // LocalsRegister
-    JSC::X86Registers::r13,
-    JSC::X86Registers::r14, // ContextRegister
-    JSC::X86Registers::r15
-};
-#  elif OS(WINDOWS)
-static const Assembler::RegisterID calleeSavedRegisters[] = {
-    JSC::X86Registers::ebx,
-    JSC::X86Registers::esi,
-    JSC::X86Registers::edi,
-    JSC::X86Registers::r12, // LocalsRegister
-    JSC::X86Registers::r13,
-    JSC::X86Registers::r14, // ContextRegister
-    JSC::X86Registers::r15
-};
-#  endif
-#endif
-
-#if CPU(X86)
-static const Assembler::RegisterID calleeSavedRegisters[] = {
-    JSC::X86Registers::ebx, // temporary register
-    JSC::X86Registers::esi, // ContextRegister
-    JSC::X86Registers::edi  // LocalsRegister
-};
-#endif
-
-#if CPU(ARM)
-static const Assembler::RegisterID calleeSavedRegisters[] = {
-    JSC::ARMRegisters::r11,
-    JSC::ARMRegisters::r10,
-    JSC::ARMRegisters::r9,
-    JSC::ARMRegisters::r8,
-    JSC::ARMRegisters::r7,
-    JSC::ARMRegisters::r6,
-    JSC::ARMRegisters::r5,
-    JSC::ARMRegisters::r4
-};
-#endif
-
-const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeof(calleeSavedRegisters[0]);
-
-/* End of platform/calling convention/architecture specific section */
-
 
 const Assembler::VoidType Assembler::Void;
 
@@ -295,7 +243,7 @@ void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
 
 void Assembler::enterStandardStackFrame()
 {
-    platformEnterStandardStackFrame();
+    platformEnterStandardStackFrame(this);
 
     // ### FIXME: Handle through calleeSavedRegisters mechanism
     // or eliminate StackFrameRegister altogether.
@@ -306,16 +254,18 @@ void Assembler::enterStandardStackFrame()
 
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    for (int i = 0; i < calleeSavedRegisterCount; ++i)
-        storePtr(calleeSavedRegisters[i], Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
+    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
+    for (int i = 0; i < calleeSavedRegisterCount(); ++i)
+        storePtr(calleeSavedRegisters[i].reg<RegisterID>(), Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
 
 }
 
 void Assembler::leaveStandardStackFrame()
 {
     // restore the callee saved registers
-    for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
-        loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
+    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
+    for (int i = calleeSavedRegisterCount() - 1; i >= 0; --i)
+        loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i].reg<RegisterID>());
 
     int frameSize = _stackLayout.calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
@@ -328,7 +278,7 @@ void Assembler::leaveStandardStackFrame()
 #endif
 
     pop(StackFrameRegister);
-    platformLeaveStandardStackFrame();
+    platformLeaveStandardStackFrame(this);
 }
 
 
