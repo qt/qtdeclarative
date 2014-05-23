@@ -103,7 +103,9 @@ QSGBindableFboId::QSGBindableFboId(GLuint id)
 
 void QSGBindableFboId::bind() const
 {
-    QOpenGLContext::currentContext()->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    QOpenGLContext *context = QOpenGLContext::currentContext();
+    context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    QOpenGLContextPrivate::get(context)->current_fbo = m_id;
 }
 
 /*!
