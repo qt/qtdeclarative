@@ -1759,10 +1759,21 @@ QString QQmlPropertyValidator::bindingAsString(int objectIndex, const QV4::Compi
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
 
-static bool compareNameIndices(const QV4::CompiledData::Binding *binding, quint32 name)
+struct BindingFinder
 {
-    return binding->propertyNameIndex < name;
-}
+    bool operator()(quint32 name, const QV4::CompiledData::Binding *binding) const
+    {
+        return name < binding->propertyNameIndex;
+    }
+    bool operator()(const QV4::CompiledData::Binding *binding, quint32 name) const
+    {
+        return binding->propertyNameIndex < name;
+    }
+    bool operator()(const QV4::CompiledData::Binding *lhs, const QV4::CompiledData::Binding *rhs) const
+    {
+        return lhs->propertyNameIndex < rhs->propertyNameIndex;
+    }
+};
 
 bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty)
 {
@@ -1810,7 +1821,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
             return false;
         }
 
-        GroupPropertyVector::const_iterator pos = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, compareNameIndices);
+        GroupPropertyVector::const_iterator pos = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, BindingFinder());
         groupProperties.insert(pos, binding);
     }
 
@@ -1923,7 +1934,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
 
         if (pd) {
-            GroupPropertyVector::const_iterator assignedGroupProperty = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, compareNameIndices);
+            GroupPropertyVector::const_iterator assignedGroupProperty = std::lower_bound(groupProperties.constBegin(), groupProperties.constEnd(), binding->propertyNameIndex, BindingFinder());
             const bool assigningToGroupProperty = assignedGroupProperty != groupProperties.constEnd() && !(binding->propertyNameIndex < (*assignedGroupProperty)->propertyNameIndex);
 
             if (!pd->isWritable()
