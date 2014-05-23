@@ -415,6 +415,7 @@ QSGRenderContext *QSGRenderContext::from(QOpenGLContext *context)
 
 void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 {
+    engine->ref.ref();
     m_fontEnginesToClean << engine;
 }
 
@@ -493,6 +494,8 @@ void QSGRenderContext::invalidate()
     for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
          end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
         (*it)->clearGlyphCache(m_gl);
+        if (!(*it)->ref.deref())
+            delete *it;
     }
     m_fontEnginesToClean.clear();
 
