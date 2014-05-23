@@ -95,6 +95,41 @@ protected:
             *out << ": ";
     }
 };
+
+class IRPrinterWithRegisters: public IRPrinterWithPositions
+{
+    const RegisterInformation &_registerInformation;
+    QHash<int, const RegisterInfo *> _infoForRegister;
+
+public:
+    IRPrinterWithRegisters(QTextStream *out, const LifeTimeIntervals::Ptr &intervals,
+                           const RegisterInformation &registerInformation)
+        : IRPrinterWithPositions(out, intervals)
+        , _registerInformation(registerInformation)
+    {
+        for (int i = 0, ei = _registerInformation.size(); i != ei; ++i)
+            _infoForRegister.insert(_registerInformation.at(i).reg<int>(),
+                                    &_registerInformation.at(i));
+    }
+
+protected:
+    void visitTemp(Temp *e)
+    {
+        switch (e->kind) {
+        case Temp::PhysicalRegister: {
+            const RegisterInfo *ri = _infoForRegister.value(e->index, 0);
+            if (ri) {
+                *out << dumpStart(e);
+                *out << ri->prettyName();
+                *out << dumpEnd(e);
+                break;
+            }
+        }
+        default:
+            IRPrinterWithPositions::visitTemp(e);
+        }
+    }
+};
 }
 
 class RegAllocInfo: public IRDecoder
@@ -1237,10 +1272,13 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 
     function->tempCount = *std::max_element(_assignedSpillSlots.begin(), _assignedSpillSlots.end()) + 1;
 
-    if (DebugRegAlloc) {
+    if (DebugRegAlloc)
         qDebug() << "*** Finished regalloc , result:";
+
+    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    if (showCode) {
         QTextStream qout(stdout, QIODevice::WriteOnly);
-        IRPrinterWithPositions(&qout, _lifeTimeIntervals).print(function);
+        IRPrinterWithRegisters(&qout, _lifeTimeIntervals, _registerInformation).print(function);
     }
 }
 

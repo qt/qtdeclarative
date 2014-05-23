@@ -75,6 +75,7 @@ public:
 
     bool isValid() const { return _reg != InvalidRegister; }
     template <typename T> T reg() const { return static_cast<T>(_reg); }
+    QString prettyName() const { return _prettyName; }
     bool isCallerSaved() const { return _savedBy == CallerSaved; }
     bool isCalleeSaved() const { return _savedBy == CalleeSaved; }
     bool isFloatingPoint() const { return _type == FloatingPointRegister; }

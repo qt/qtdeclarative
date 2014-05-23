@@ -231,8 +231,8 @@ void InstructionSelection::run(int functionIndex)
             // No register allocator available for this platform, or env. var was set, so:
             opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
+        IR::Optimizer::showMeTheCode(_function);
     }
-    IR::Optimizer::showMeTheCode(_function);
     QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
