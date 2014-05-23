@@ -78,6 +78,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAccessibleAttached : public QObject
     Q_PROPERTY(QAccessible::Role role READ role WRITE setRole NOTIFY roleChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged FINAL)
+    Q_PROPERTY(bool ignored READ ignored WRITE setIgnored NOTIFY ignoredChanged FINAL)
 
 public:
     Q_ENUMS(QAccessible::Role QAccessible::Event)
@@ -193,6 +194,7 @@ public:
     }
 
     QAccessible::State state() { return m_state; }
+    bool ignored() const;
 
 public Q_SLOTS:
     void valueChanged() {
@@ -204,10 +206,13 @@ public Q_SLOTS:
         QAccessible::updateAccessibility(&ev);
     }
 
+    void setIgnored(bool ignored);
+
 Q_SIGNALS:
     void roleChanged();
     void nameChanged();
     void descriptionChanged();
+    void ignoredChanged();
 
 private:
     QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
@@ -216,6 +221,7 @@ private:
     QAccessible::State m_state;
     QString m_name;
     QString m_description;
+    bool m_ignored;
 
 public:
     using QObject::property;

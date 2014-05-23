@@ -187,6 +187,33 @@ QT_BEGIN_NAMESPACE
 
     By default this property is \c false.
 */
+/*! \qmlproperty bool QtQuick::Accessible::ignored
+    \brief This property holds whether this item should be ignored by the accessibility framework.
+
+    Sometimes an item is part of a group of items that should be treated as one. For example two labels might be
+    visually placed next to each other, but separate items. For accessibility purposes they should be treated as one
+    and thus they are represented by a third invisible item with the right geometry.
+
+    For example a speed display adds "m/s" as a smaller label:
+    \qml
+    Row {
+        Label {
+            id: speedLabel
+            text: "Speed: 5"
+            Accessible.ignored: true
+        }
+        Label {
+            text: qsTr("m/s")
+            Accessible.ignored: true
+        }
+        Accessible.role: Accessible.StaticText
+        Accessible.name: speedLabel.text + " meters per second"
+    }
+    \endqml
+
+    \since 5.4
+    By default this property is \c false.
+*/
 /*! \qmlproperty bool QtQuick::Accessible::multiLine
     \brief This property holds whether this item has multiple text lines.
 
@@ -266,6 +293,19 @@ QQuickAccessibleAttached::~QQuickAccessibleAttached()
 QQuickAccessibleAttached *QQuickAccessibleAttached::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickAccessibleAttached(obj);
+}
+
+bool QQuickAccessibleAttached::ignored() const
+{
+    return !item()->d_func()->isAccessible;
+}
+
+void QQuickAccessibleAttached::setIgnored(bool ignored)
+{
+    if (m_ignored != ignored) {
+        item()->d_func()->isAccessible = !ignored;
+        emit ignoredChanged();
+    }
 }
 
 QT_END_NAMESPACE
