@@ -93,6 +93,7 @@ public:
                    ;
     }
 
+#  define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 #  undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
@@ -167,6 +168,7 @@ public:
                    ;
     }
 
+#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 #define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
@@ -225,6 +227,7 @@ public:
                    ;
     }
 
+#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 #define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
@@ -309,6 +312,7 @@ public:
         // TODO: someone should check what's up with d8-d15: are they alway available, and are they caller or callee saved?
     }
 
+#undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 #undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
