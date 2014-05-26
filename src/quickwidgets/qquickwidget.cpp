@@ -107,6 +107,10 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->addView(q);
 
+#ifndef QT_NO_DRAGANDDROP
+    q->setAcceptDrops(true);
+#endif
+
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
@@ -960,13 +964,22 @@ void QQuickWidget::focusOutEvent(QFocusEvent * event)
     d->offscreenWindow->focusOutEvent(event);
 }
 
-
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
     Q_D(QQuickWidget);
 
     switch (e->type()) {
+#ifndef QT_NO_DRAGANDDROP
+    case QEvent::Drop:
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+        // Drag/drop events only have local pos, so no need to map,
+        // but QQuickWindow::event() does not return true
+        d->offscreenWindow->event(e);
+        return e->isAccepted();
+#endif
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:
