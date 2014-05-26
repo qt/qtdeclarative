@@ -64,7 +64,7 @@ namespace JIT {
 class TargetPlatform
 {
 public:
-#if CPU(X86) && (OS(LINUX) || OS(WINDOWS))
+#if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX))
     enum { RegAllocIsSupported = 1 };
 
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
@@ -106,7 +106,7 @@ public:
     static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
 
-#if OS(WINDOWS) || \
+#if OS(WINDOWS) || OS(QNX) || \
     (OS(LINUX) && (defined(__PIC__) || defined(__PIE__)))
 
 #define RESTORE_EBX_ON_CALL
