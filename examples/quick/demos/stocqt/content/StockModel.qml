@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,6 @@ ListModel {
     property bool ready: false
     property real stockPrice: 0.0
     property real stockPriceChanged: 0.0
-    property real highestPrice: 0
-    property real highestVolume: 0
 
     signal dataReady
 
@@ -111,10 +109,6 @@ ListModel {
     }
 
     function createStockPrice(r) {
-        if (highestPrice < r[2])
-            highestPrice = r[2];
-        if (highestVolume < r[5])
-            highestVolume = r[5];
         return {
                 "date": r[0],
                 "open":r[1],
@@ -138,10 +132,6 @@ ListModel {
 
         model.ready = false;
         model.clear();
-
-        highestPrice = 0;
-        highestVolume = 0;
-
         var i = 1; //skip the first line
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
