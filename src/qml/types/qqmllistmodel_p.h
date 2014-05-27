@@ -144,8 +144,11 @@ private:
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QVector<int> &roles);
+    void emitItemsAboutToBeRemoved(int index, int count);
     void emitItemsRemoved(int index, int count);
+    void emitItemsAboutToBeInserted(int index, int count);
     void emitItemsInserted(int index, int count);
+    void emitItemsAboutToBeMoved(int from, int to, int n);
     void emitItemsMoved(int from, int to, int n);
 };
 
