@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -32,44 +32,81 @@
     \image qml-animations-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to animation. Each example is
-    a small QML file emphasizing a particular type or feature.
+    \e Animation is a collection of small QML examples relating to animation.
+    Each example is a small QML file emphasizing a particular type or feature.
 
-    ColorAnimation demonstrates using a color animation to fade a sky from day to night.
+    For more information about animations, visit
+    \l{Important Concepts in Qt Quick - States, Transitions and Animations}.
+
+    \include examples-run.qdocinc
+
+    \section1 ColorAnimation
+
+    \e ColorAnimation uses color animations to fade a sky from day to
+    night.
     \snippet animation/basics/color-animation.qml 0
 
-    PropertyAnimation demonstrates using a number animation to bounce a circle up and down.
+    \section1 PropertyAnimation
+
+    \e PropertyAnimation uses number animations to bounce a
+    circle up and down.
     \snippet animation/basics/property-animation.qml 0
 
-    Animators demonstrates using a animators to bounce an icon up and down.
+    \section1 Animators
+
+    \e Animators uses animators to bounce an icon up and down.
     \snippet animation/basics/animators.qml 0
 
-    Behaviors demonstrates using behaviors to animate moving a rectangle to whereever you click.
+    \section1 Behaviors
+
+    \e Behaviors uses behaviors to move a rectangle to where you click.
     \snippet animation/behaviors/behavior-example.qml 0
 
-    Wiggly Text demonstrates using more complex behaviors to animate and wiggle some text around as you drag it.
-    It does this by assigning a complex binding to each letter:
+    \section1 Wiggly Text
+
+    \e{Wiggly Text} demonstrates using more complex behaviors to animate and
+    wiggle some text around as you drag it. It does this by assigning a complex
+    binding to each letter:
     \snippet animation/behaviors/wigglytext.qml 0
-    Then, it uses behaviors to animate the movement on each letter:
+
+    Then, it uses behaviors to animate the movement of each letter:
     \snippet animation/behaviors/wigglytext.qml 1
 
-    Tv Tennis demonstrates using more complex behaviors to get paddles following a ball for an infinite game.
-    Again a binding which depends on other values is applied to the position and a behavior provided the animation.
+    \section1 Tv Tennis
+
+    \e{Tv Tennis} uses complex behaviors to make the paddles follow a ball to
+    simulate an infinite tennis game. Again, a binding which depends on other
+    values is applied to the position and a behavior provided the animation.
     \snippet animation/behaviors/tvtennis.qml 0
 
-    Easing Curves shows off all the easing curves available in Qt Quick animations.
+    \section1 Easing Curves
 
-    States demonstrates how the properties of an item can vary between states.
+    \e{Easing Curves} shows off all the easing curves available in Qt Quick
+    animations.
+
+    \section1 States
+
+    \e States demonstrates how the properties of an item can vary between
+    \l{Qt Quick States}{states}.
+
     It defines several states:
     \snippet animation/states/states.qml 0
-    Note that there is also the implicit 'base state' from properties set directly on objects.
 
-    Transitions takes the States example and animates the property changes by setting transitions:
+    \section1 Transitions
+
+    \e Transitions takes the States example and animates the property changes
+    by setting transitions:
     \snippet animation/states/transitions.qml 0
 
-    PathAnimation animates an image along a beizer curve using a PathAnimation.
+    \section1 PathAnimation
+
+    \e PathAnimation animates an image along a bezier curve using a
+    \l PathAnimation.
     \snippet animation/pathanimation/pathanimation.qml 0
 
-    PathInterpolator animates an image along the same beizer curve, using a PathInterpolator instead.
+    \section1 PathInterpolator
+
+    \e PathInterpolator animates an image along the same bezier curve, using a
+    \l PathInterpolator instead.
     \snippet animation/pathinterpolator/pathinterpolator.qml 0
 */

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -32,27 +32,49 @@
     \image qml-canvas-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to Canvas item. Each example is
-    a small QML file emphasizing a particular type or feature.
+    \e Canvas is a collection of small QML examples relating to the \l Canvas
+    type. Each example is a small QML file emphasizing a particular type or
+    feature.
 
-    Red heart demonstrates using a bezierCurve API to stroke and fill a red heart.
+    \include examples-run.qdocinc
+
+    \section1 Red heart
+
+    \e{Red heart} uses the bezier curve API to stroke and fill a red heart.
     \snippet canvas/bezierCurve/bezierCurve.qml 0
 
-    Talk bubble demonstrates using a quadraticCurveTo API to stroke and fill a customized talk bubble:
+    \section1 Talk bubble
+
+    \e{Talk bubble} uses the quadraticCurveTo() API to stroke and fill a
+    customized talk bubble:
     \snippet canvas/quadraticCurveTo/quadraticCurveTo.qml 0
-    This example also demonstrates the fillText API:
+
+    This example also demonstrates the fillText() API:
     \snippet canvas/quadraticCurveTo/quadraticCurveTo.qml 1
 
-    Squircle demonstrates using a collection of simple moveTo/lineTo path APIs to draw a smooth squircle.
+    \section1 Squircle
 
-    Rounded rectangle demonstrates using a collection if lineTo/arcTo path APIs to draw a rounded rectangle.
+    \e Squircle uses a collection of simple moveTo() and lineTo() path APIs to
+    draw a smooth squircle.
 
-    Smile face demonstrates using several complex path APIs to draw an fill a smile face.
+    \section1 Rounded rectangle
 
-    Clip demonstrates using clip API to clip a given image.
+    \e{Rounded rectangle} uses a collection of lineTo() and arcTo() path APIs to
+    draw a rounded rectangle.
+
+    \section1 Smile face
+
+    \e{Smile face} uses several paths to draw and fill a smiling face.
+
+    \section1 Clip
+
+    \e Clip uses the clip API to clip a given image.
     \snippet canvas/clip/clip.qml 0
 
-    Tiger demonstrates using SVG path API to draw a tiger with a collection of SVG path strings.
+    \section1 Tiger
+
+    \e Tiger uses the SVG path API to draw a tiger with a collection
+    of SVG path strings.
     \snippet canvas/tiger/tiger.qml 0
 
 */

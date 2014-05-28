@@ -30,9 +30,15 @@
     \brief This is a collection of XMLHttpRequest examples
     \image qml-xmlhttprequest-example.png
 
-    This is a collection of small QML examples relating to XML HTTP request functionality.
+    \e XMLHttpRequest contains a small QML example demonstrating \l{Qt QML}'s
+    XMLHTTPRequest functionality. For more information, visit the section about
+    \l{QML Global Object#XMLHttpRequest}{XMLHttpRequest}.
 
-    Get data demos sending get XML request and showing the received header and XML body.
+    \include examples-run.qdocinc
 
+    \section1 Get data
+
+    \e{Get data} uses the XMLHttpRequest API to fetch an XML document from a
+    server. It displays the header of the HTTP response and the body of the XML
+    document.
 */
-
