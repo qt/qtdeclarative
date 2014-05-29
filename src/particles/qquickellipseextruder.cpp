@@ -82,7 +82,13 @@ QPointF QQuickEllipseExtruder::extrude(const QRectF & r)
 
 bool QQuickEllipseExtruder::contains(const QRectF &bounds, const QPointF &point)
 {
-    return bounds.contains(point);//TODO: Ellipse
+    if (!bounds.contains(point))
+        return false;
+
+    QPointF relPoint(bounds.center() - point);
+    qreal xa = relPoint.x()/bounds.width();
+    qreal yb = relPoint.y()/bounds.height();
+    return  (xa * xa + yb * yb) < 0.25;
 }
 
 QT_END_NAMESPACE
