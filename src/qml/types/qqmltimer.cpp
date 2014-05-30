@@ -49,7 +49,10 @@
 
 QT_BEGIN_NAMESPACE
 
-
+namespace {
+    const QEvent::Type QEvent_MaybeTick = QEvent::Type(QEvent::User + 1);
+    const QEvent::Type QEvent_Triggered = QEvent::Type(QEvent::User + 2);
+}
 
 class QQmlTimerPrivate : public QObjectPrivate, public QAnimationJobChangeListener
 {
@@ -57,10 +60,18 @@ class QQmlTimerPrivate : public QObjectPrivate, public QAnimationJobChangeListen
 public:
     QQmlTimerPrivate()
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
-        , classBegun(false), componentComplete(false), firstTick(true) {}
+        , classBegun(false), componentComplete(false), firstTick(true), awaitingTick(false) {}
 
     virtual void animationFinished(QAbstractAnimationJob *);
-    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { Q_Q(QQmlTimer); q->ticked(); }
+    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { maybeTick(); }
+
+    void maybeTick() {
+        Q_Q(QQmlTimer);
+        if (!awaitingTick) {
+            awaitingTick = true;
+            QCoreApplication::postEvent(q, new QEvent(QEvent_MaybeTick));
+        }
+    }
 
     int interval;
     QPauseAnimationJob pause;
@@ -70,6 +81,7 @@ public:
     bool classBegun : 1;
     bool componentComplete : 1;
     bool firstTick : 1;
+    bool awaitingTick : 1;
 };
 
 /*!
@@ -281,10 +293,8 @@ void QQmlTimer::update()
         d->pause.setLoopCount(d->repeating ? -1 : 1);
         d->pause.setDuration(d->interval);
         d->pause.start();
-        if (d->triggeredOnStart && d->firstTick) {
-            QCoreApplication::removePostedEvents(this, QEvent::MetaCall);
-            QMetaObject::invokeMethod(this, "ticked", Qt::QueuedConnection);
-        }
+        if (d->triggeredOnStart && d->firstTick)
+            d->maybeTick();
     }
 }
 
@@ -316,6 +326,23 @@ void QQmlTimer::ticked()
     d->firstTick = false;
 }
 
+/*!
+    \internal
+ */
+bool QQmlTimer::event(QEvent *e)
+{
+    Q_D(QQmlTimer);
+    if (e->type() == QEvent_MaybeTick) {
+        d->awaitingTick = false;
+        ticked();
+        return true;
+    } else if (e->type() == QEvent_Triggered) {
+        emit triggered();
+        return true;
+    }
+    return QObject::event(e);
+}
+
 void QQmlTimerPrivate::animationFinished(QAbstractAnimationJob *)
 {
     Q_Q(QQmlTimer);
@@ -323,7 +350,7 @@ void QQmlTimerPrivate::animationFinished(QAbstractAnimationJob *)
         return;
     running = false;
     firstTick = false;
-    emit q->triggered();
+    QCoreApplication::postEvent(q, new QEvent(QEvent_Triggered));
     emit q->runningChanged();
 }
 

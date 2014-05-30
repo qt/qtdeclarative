@@ -81,6 +81,8 @@ protected:
     void classBegin();
     void componentComplete();
 
+    bool event(QEvent *);
+
 public Q_SLOTS:
     void start();
     void stop();
