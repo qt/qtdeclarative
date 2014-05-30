@@ -117,9 +117,23 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
+void QQuickWidgetPrivate::stopRenderControl()
+{
+    if (!context) // this is not an error, could be called before creating the context, or multiple times
+        return;
+
+    bool success = context->makeCurrent(offscreenSurface);
+    if (!success) {
+        qWarning("QQuickWidget::stopRenderControl could not make context current");
+        return;
+    }
+
+    renderControl->stop();
+}
+
 void QQuickWidgetPrivate::handleWindowChange()
 {
-    renderControl->stop();
+    stopRenderControl();
     destroyContext();
 }
 
@@ -143,10 +157,17 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
-    delete offscreenSurface;
+
+    stopRenderControl();
+
+    // context and offscreenSurface are current at this stage, if the context was created.
+    Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
     delete offscreenWindow;
     delete renderControl;
     delete fbo;
+
+    delete offscreenSurface;
+    destroyContext();
 }
 
 void QQuickWidgetPrivate::createOffscreenSurface()
@@ -628,9 +649,6 @@ void QQuickWidgetPrivate::createContext()
 
 void QQuickWidgetPrivate::destroyContext()
 {
-    if (!context)
-        return;
-    renderControl->invalidate();
     delete context;
     context = 0;
 }
@@ -906,17 +924,7 @@ void QQuickWidget::showEvent(QShowEvent *)
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-
-    if (!d->context) {
-        qWarning("QQuickWidget::hideEvent with no context");
-        return;
-    }
-    bool success = d->context->makeCurrent(d->offscreenSurface);
-    if (!success) {
-        qWarning("QQuickWidget::hideEvent could not make context current");
-        return;
-    }
-    d->renderControl->stop();
+    d->stopRenderControl();
 }
 
 /*! \reimp */

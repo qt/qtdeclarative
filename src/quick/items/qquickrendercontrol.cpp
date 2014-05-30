@@ -120,13 +120,13 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
     // surface belonging to window. In fact window may not have a native
     // window/surface at all.
 
-    QQuickWindowPrivate::get(d->window)->context->initialize(gl);
+    d->rc->initialize(gl);
 }
 
 void QQuickRenderControl::invalidate()
 {
     Q_D(QQuickRenderControl);
-    QQuickWindowPrivate::get(d->window)->context->invalidate();
+    d->rc->invalidate();
 }
 
 /*!
