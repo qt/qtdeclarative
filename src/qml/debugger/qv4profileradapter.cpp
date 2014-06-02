@@ -58,26 +58,47 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QList<QV4::Profiling::FunctionCallProperties>)),
-            this, SLOT(receiveData(QList<QV4::Profiling::FunctionCallProperties>)));
+    connect(engine->profiler, SIGNAL(dataReady(QList<QV4::Profiling::FunctionCallProperties>,
+                                               QList<QV4::Profiling::MemoryAllocationProperties>)),
+            this, SLOT(receiveData(QList<QV4::Profiling::FunctionCallProperties>,
+                                   QList<QV4::Profiling::MemoryAllocationProperties>)));
 }
 
+qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages)
+{
+    QByteArray message;
+    while (!memory_data.empty() && memory_data.front().timestamp <= until) {
+        QQmlDebugStream d(&message, QIODevice::WriteOnly);
+        QV4::Profiling::MemoryAllocationProperties &props = memory_data.front();
+        d << props.timestamp << MemoryAllocation << props.type << props.size;
+        memory_data.pop_front();
+        messages.append(message);
+    }
+    return memory_data.empty() ? -1 : memory_data.front().timestamp;
+}
 
 qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     QByteArray message;
     while (true) {
         while (!stack.empty() && (data.empty() || stack.top() <= data.front().start)) {
-            if (stack.top() > until)
-                return stack.top();
+            if (stack.top() > until) {
+                qint64 memory_next = appendMemoryEvents(until, messages);
+                return memory_next == -1 ? stack.top() : qMin(stack.top(), memory_next);
+            }
+            appendMemoryEvents(stack.top(), messages);
             QQmlDebugStream d(&message, QIODevice::WriteOnly);
             d << stack.pop() << RangeEnd << Javascript;
             messages.append(message);
         }
         while (!data.empty() && (stack.empty() || data.front().start < stack.top())) {
-            if (data.front().start > until)
-                return data.front().start;
             const QV4::Profiling::FunctionCallProperties &props = data.front();
+            if (props.start > until) {
+                qint64 memory_next = appendMemoryEvents(until, messages);
+                return memory_next == -1 ? props.start : qMin(props.start, memory_next);
+            }
+            appendMemoryEvents(props.start, messages);
+
             QQmlDebugStream d_start(&message, QIODevice::WriteOnly);
             d_start << props.start << RangeStart << Javascript;
             messages.push_back(message);
@@ -95,13 +116,15 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             data.pop_front();
         }
         if (stack.empty() && data.empty())
-            return -1;
+            return appendMemoryEvents(until, messages);
     }
 }
 
-void QV4ProfilerAdapter::receiveData(const QList<QV4::Profiling::FunctionCallProperties> &new_data)
+void QV4ProfilerAdapter::receiveData(const QList<QV4::Profiling::FunctionCallProperties> &new_data,
+        const QList<QV4::Profiling::MemoryAllocationProperties> &new_memory_data)
 {
     data = new_data;
+    memory_data = new_memory_data;
     stack.clear();
     service->dataReady(this);
 }

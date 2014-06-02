@@ -57,6 +57,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "qv4alloca_p.h"
+#include "qv4profiling_p.h"
 
 #ifdef V4_USE_VALGRIND
 #include <valgrind/valgrind.h>
@@ -102,6 +103,7 @@ struct MemoryManager::Data
 
     struct LargeItem {
         LargeItem *next;
+        size_t size;
         void *data;
 
         Managed *managed() {
@@ -149,8 +151,10 @@ struct MemoryManager::Data
 
     ~Data()
     {
-        for (QVector<Chunk>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
+        for (QVector<Chunk>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i) {
+            Q_V4_PROFILE_DEALLOC(engine, 0, i->memory.size(), Profiling::HeapPage);
             i->memory.deallocate();
+        }
     }
 };
 
@@ -190,9 +194,12 @@ Managed *MemoryManager::alloc(std::size_t size)
     // doesn't fit into a small bucket
     if (size >= MemoryManager::Data::MaxItemSize) {
         // we use malloc for this
-        MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(malloc(size + sizeof(MemoryManager::Data::LargeItem)));
+        MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(
+                malloc(Q_V4_PROFILE_ALLOC(engine(), size + sizeof(MemoryManager::Data::LargeItem),
+                                          Profiling::LargeItem)));
         memset(item, 0, size + sizeof(MemoryManager::Data::LargeItem));
         item->next = m_d->largeItems;
+        item->size = size;
         m_d->largeItems = item;
         return item->managed();
     }
@@ -218,7 +225,9 @@ Managed *MemoryManager::alloc(std::size_t size)
         std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
-        allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
+        allocation.memory = PageAllocation::allocate(
+                    Q_V4_PROFILE_ALLOC(engine(), allocSize, Profiling::HeapPage),
+                    OSAllocator::JSGCHeapPages);
         allocation.chunkSize = int(size);
         m_d->heapChunks.append(allocation);
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
@@ -247,6 +256,7 @@ Managed *MemoryManager::alloc(std::size_t size)
 #ifdef V4_USE_VALGRIND
     VALGRIND_MEMPOOL_ALLOC(this, m, size);
 #endif
+    Q_V4_PROFILE_ALLOC(engine(), size, Profiling::SmallItem);
 
     ++m_d->allocCount[pos];
     ++m_d->totalAlloc;
@@ -363,7 +373,8 @@ void MemoryManager::sweep(bool lastSweep)
             m->internalClass->vtable->destroy(m);
 
         *last = i->next;
-        free(i);
+        free(Q_V4_PROFILE_DEALLOC(engine(), i, i->size + sizeof(Data::LargeItem),
+                                  Profiling::LargeItem));
         i = *last;
     }
 
@@ -409,6 +420,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
                 VALGRIND_DISABLE_ERROR_REPORTING;
                 VALGRIND_MEMPOOL_FREE(this, m);
 #endif
+                Q_V4_PROFILE_DEALLOC(engine(), m, size, Profiling::SmallItem);
                 *f = m;
             }
         }

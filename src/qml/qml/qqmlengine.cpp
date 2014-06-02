@@ -585,9 +585,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (incubationController) incubationController->d = 0;
     incubationController = 0;
 
-    delete rootContext;
-    rootContext = 0;
-
     for(QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator iter = propertyCache.begin(); iter != propertyCache.end(); ++iter)
         (*iter)->release();
     for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
@@ -918,6 +915,9 @@ QQmlEngine::~QQmlEngine()
     QList<QQmlType*> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     foreach (QQmlType *currType, singletonTypes)
         currType->singletonInstanceInfo()->destroy(this);
+
+    delete d->rootContext;
+    d->rootContext = 0;
 }
 
 /*! \fn void QQmlEngine::quit()

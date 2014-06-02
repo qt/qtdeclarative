@@ -54,6 +54,12 @@ namespace QV4 {
 
 namespace Profiling {
 
+enum MemoryType {
+    HeapPage,
+    LargeItem,
+    SmallItem
+};
+
 struct FunctionCallProperties {
     qint64 start;
     qint64 end;
@@ -61,6 +67,12 @@ struct FunctionCallProperties {
     QString file;
     int line;
     int column;
+};
+
+struct MemoryAllocationProperties {
+    qint64 timestamp;
+    qint64 size;
+    MemoryType type;
 };
 
 class FunctionCall {
@@ -101,6 +113,14 @@ private:
     qint64 m_end;
 };
 
+#define Q_V4_PROFILE_ALLOC(engine, size, type)\
+    (engine->profiler && engine->profiler->enabled ?\
+        engine->profiler->trackAlloc(size, type) : size)
+
+#define Q_V4_PROFILE_DEALLOC(engine, pointer, size, type) \
+    (engine->profiler && engine->profiler->enabled ?\
+        engine->profiler->trackDealloc(pointer, size, type) : pointer)
+
 #define Q_V4_PROFILE(engine, ctx, function)\
     ((engine->profiler && engine->profiler->enabled) ?\
         Profiling::FunctionCallProfiler::profileCall(engine->profiler, ctx, function) :\
@@ -112,6 +132,20 @@ class Q_QML_EXPORT Profiler : public QObject {
 public:
     Profiler();
 
+    size_t trackAlloc(size_t size, MemoryType type)
+    {
+        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
+        m_memory_data.append(allocation);
+        return size;
+    }
+
+    void *trackDealloc(void *pointer, size_t size, MemoryType type)
+    {
+        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)-size, type};
+        m_memory_data.append(allocation);
+        return pointer;
+    }
+
     bool enabled;
 
 public slots:
@@ -121,11 +155,13 @@ public slots:
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
-    void dataReady(const QList<QV4::Profiling::FunctionCallProperties> &);
+    void dataReady(const QList<QV4::Profiling::FunctionCallProperties> &,
+                   const QList<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
     QElapsedTimer m_timer;
     QVector<FunctionCall> m_data;
+    QList<MemoryAllocationProperties> m_memory_data;
 
     friend class FunctionCallProfiler;
 };
@@ -160,10 +196,12 @@ public:
 } // namespace Profiling
 } // namespace QV4
 
+Q_DECLARE_TYPEINFO(QV4::Profiling::MemoryAllocationProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QList<QV4::Profiling::FunctionCallProperties>)
+Q_DECLARE_METATYPE(QList<QV4::Profiling::MemoryAllocationProperties>)
 
 #endif // QV4PROFILING_H

@@ -63,7 +63,9 @@ FunctionCallProperties FunctionCall::resolve() const
 Profiler::Profiler() : enabled(false)
 {
     static int metatype = qRegisterMetaType<QList<QV4::Profiling::FunctionCallProperties> >();
+    static int metatype2 = qRegisterMetaType<QList<QV4::Profiling::MemoryAllocationProperties> >();
     Q_UNUSED(metatype);
+    Q_UNUSED(metatype2);
     m_timer.start();
 }
 
@@ -87,7 +89,7 @@ void Profiler::reportData()
         FunctionCallProperties props = call.resolve();
         resolved.insert(std::upper_bound(resolved.begin(), resolved.end(), props, comp), props);
     }
-    emit dataReady(resolved);
+    emit dataReady(resolved, m_memory_data);
 }
 
 void Profiler::startProfiling()

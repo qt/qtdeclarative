@@ -418,7 +418,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 ExecutionEngine::~ExecutionEngine()
 {
     delete debugger;
+    debugger = 0;
     delete profiler;
+    profiler = 0;
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;

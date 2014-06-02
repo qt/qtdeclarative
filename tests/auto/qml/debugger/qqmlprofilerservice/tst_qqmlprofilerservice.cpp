@@ -79,6 +79,7 @@ public:
         Complete, // end of transmission
         PixmapCacheEvent,
         SceneGraphFrame,
+        MemoryAllocation,
 
         MaximumMessage
     };
@@ -129,6 +130,12 @@ public:
         SceneGraphWindowsPolishFrame,
 
         MaximumSceneGraphFrameType
+    };
+
+    enum MemoryType {
+        HeapPage,
+        LargeItem,
+        SmallItem
     };
 
     QQmlProfilerClient(QQmlDebugConnection *connection)
@@ -301,6 +308,12 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         case QQmlProfilerClient::SceneGraphWindowsPolishFrame: stream >> subtime_1; break;
         }
         break;
+    }
+    case QQmlProfilerClient::MemoryAllocation: {
+        stream >> data.detailType;
+        qint64 amount;
+        stream >> amount;
+        return;
     }
     default:
         QString failMsg = QString("Unknown message type:") + data.messageType;

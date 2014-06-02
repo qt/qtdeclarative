@@ -67,6 +67,7 @@ struct QQmlProfilerDefinitions {
         Complete, // end of transmission
         PixmapCacheEvent,
         SceneGraphFrame,
+        MemoryAllocation,
 
         MaximumMessage
     };
