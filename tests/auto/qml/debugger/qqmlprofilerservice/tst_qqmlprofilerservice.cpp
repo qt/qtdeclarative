@@ -361,6 +361,27 @@ void tst_QQmlProfilerService::checkTraceReceived()
 void tst_QQmlProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
+        qDebug() << "Synchronous Messages:" << m_client->synchronousMessages.count();
+        int i = 0;
+        foreach (const QQmlProfilerData &data, m_client->synchronousMessages) {
+            qDebug() << i++ << data.time << data.messageType << data.detailType << data.detailData
+                     << data.line << data.column;
+        }
+        qDebug() << " ";
+        qDebug() << "Asynchronous Messages:" << m_client->asynchronousMessages.count();
+        i = 0;
+        foreach (const QQmlProfilerData &data, m_client->asynchronousMessages) {
+            qDebug() << i++ << data.time << data.messageType << data.detailType << data.detailData
+                     << data.framerate << data.animationcount << data.line << data.column;
+        }
+        qDebug() << " ";
+        qDebug() << "Pixmap Cache Messages:" << m_client->pixmapMessages.count();
+        i = 0;
+        foreach (const QQmlProfilerData &data, m_client->pixmapMessages) {
+            qDebug() << i++ << data.time << data.messageType << data.detailType << data.detailData
+                     << data.line << data.column;
+        }
+        qDebug() << " ";
         qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
         qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
         qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
