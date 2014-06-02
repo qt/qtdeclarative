@@ -97,7 +97,8 @@ namespace {
     // Returns -1 if not found, returns index to first character after the name if found.
     int qt_search_for_variable(const char *s, int length, int index, VariableQualifier &decl,
                                int &typeIndex, int &typeLength,
-                               int &nameIndex, int &nameLength)
+                               int &nameIndex, int &nameLength,
+                               QQuickShaderEffectCommon::Key::ShaderType shaderType)
     {
         enum Identifier {
             QualifierIdentifier, // Base state
@@ -124,6 +125,7 @@ namespace {
                 int idLength = index - idIndex;
 
                 const int attrLen = sizeof("attribute") - 1;
+                const int inLen = sizeof("in") - 1;
                 const int uniLen = sizeof("uniform") - 1;
                 const int loLen = sizeof("lowp") - 1;
                 const int medLen = sizeof("mediump") - 1;
@@ -132,6 +134,10 @@ namespace {
                 switch (expected) {
                 case QualifierIdentifier:
                     if (idLength == attrLen && qstrncmp("attribute", s + idIndex, attrLen) == 0) {
+                        decl = AttributeQualifier;
+                        expected = PrecisionIdentifier;
+                    } else if (shaderType == QQuickShaderEffectCommon::Key::VertexShader
+                               && idLength == inLen && qstrncmp("in", s + idIndex, inLen) == 0) {
                         decl = AttributeQualifier;
                         expected = PrecisionIdentifier;
                     } else if (idLength == uniLen && qstrncmp("uniform", s + idIndex, uniLen) == 0) {
@@ -287,7 +293,7 @@ void QQuickShaderEffectCommon::lookThroughShaderCode(QQuickItem *item, Key::Shad
     const char *s = code.constData();
     VariableQualifier decl = AttributeQualifier;
     while ((index = qt_search_for_variable(s, code.size(), index, decl, typeIndex, typeLength,
-                                           nameIndex, nameLength)) != -1)
+                                           nameIndex, nameLength, shaderType)) != -1)
     {
         if (decl == AttributeQualifier) {
             if (shaderType == Key::VertexShader)
