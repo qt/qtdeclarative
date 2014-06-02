@@ -382,36 +382,44 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 
     QString fileName = QQmlFile::urlToLocalFileOrQrc(url);
 
-    QFile f(fileName);
-    if (f.open(QIODevice::ReadOnly)) {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+    QV4::Scope scope(v4);
+    QScopedPointer<QV4::Script> program;
+
+    WorkerScript *script = workers.value(id);
+    if (!script)
+        return;
+    script->source = url;
+
+    QV4::Scoped<QV4::Object> activation(scope, getWorker(script));
+    if (!activation)
+        return;
+
+    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
+        QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
+        program.reset(new QV4::Script(v4, activation, jsUnit));
+    } else {
+        QFile f(fileName);
+        if (!f.open(QIODevice::ReadOnly)) {
+            qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
+            return;
+        }
+
         QByteArray data = f.readAll();
         QString sourceCode = QString::fromUtf8(data);
         QmlIR::Document::removeScriptPragmas(sourceCode);
 
-        WorkerScript *script = workers.value(id);
-        if (!script)
-            return;
-        script->source = url;
+        program.reset(new QV4::Script(v4, activation, sourceCode, url.toString()));
+        program->parse();
+    }
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
-        QV4::Scope scope(v4);
+    if (!v4->hasException)
+        program->run();
 
-        QV4::Scoped<QV4::Object> activation(scope, getWorker(script));
-        if (!activation)
-            return;
-
-        QV4::Script program(v4, activation, sourceCode, url.toString());
-
+    if (v4->hasException) {
         QV4::ExecutionContext *ctx = v4->currentContext();
-        program.parse();
-        if (!v4->hasException)
-            program.run();
-        if (v4->hasException) {
-            QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
-            reportScriptException(script, error);
-        }
-    } else {
-        qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+        reportScriptException(script, error);
     }
 }
 
