@@ -672,6 +672,8 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
             exists = QQmlFile::bundleFileExists(qmlUrl, typeLoader->engine());
         } else {
             exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(qmlUrl)).isEmpty();
+            if (!exists)
+                exists = QQmlMetaType::findCachedCompilationUnit(QUrl(qmlUrl));
         }
 
         if (exists) {
@@ -1849,17 +1851,21 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
             // This is an 'identified' module
             if (typeNamespace != uri) {
                 // The namespace for type registrations must match the URI for locating the module
-                QQmlError error;
-                error.setDescription(tr("Module namespace '%1' does not match import URI '%2'").arg(typeNamespace).arg(uri));
-                errors->prepend(error);
+                if (errors) {
+                    QQmlError error;
+                    error.setDescription(tr("Module namespace '%1' does not match import URI '%2'").arg(typeNamespace).arg(uri));
+                    errors->prepend(error);
+                }
                 return false;
             }
 
             if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace)) {
                 // Other modules have already installed to this namespace
-                QQmlError error;
-                error.setDescription(tr("Namespace '%1' has already been used for type registration").arg(typeNamespace));
-                errors->prepend(error);
+                if (errors) {
+                    QQmlError error;
+                    error.setDescription(tr("Namespace '%1' has already been used for type registration").arg(typeNamespace));
+                    errors->prepend(error);
+                }
                 return false;
             } else {
                 QQmlMetaType::protectNamespace(typeNamespace);

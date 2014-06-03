@@ -6,11 +6,7 @@ PUBLICTESTS += \
     qqmlinspector \
     qqmlprofilerservice \
     qpacketprotocol \
-#    qv4profilerservice \
-#    qdebugmessageservice \
     qqmlenginedebuginspectorintegrationtest \
-    qqmlinspector \
-    qqmlprofilerservice \
     qqmlenginecontrol
 
 PRIVATETESTS += \

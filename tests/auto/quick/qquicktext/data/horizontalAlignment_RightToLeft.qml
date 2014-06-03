@@ -9,7 +9,7 @@ Rectangle {
 
     Rectangle {
         anchors.centerIn: parent
-        width: 180
+        width: parent.width
         height: 20
         color: "green"
 

@@ -93,6 +93,7 @@ public:
 
     void init(QQmlEngine* e = 0);
     void handleWindowChange();
+    void stopRenderControl();
 
     QSize rootObjectSize() const;
 

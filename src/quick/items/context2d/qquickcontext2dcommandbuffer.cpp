@@ -215,7 +215,8 @@ void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, const QQuickCont
    if (state.globalCompositeOperation != p->compositionMode())
        p->setCompositionMode(state.globalCompositeOperation);
 
-   p->setClipPath(state.clipPath);
+   if (state.clip)
+       p->setClipPath(state.clipPath);
 }
 
 static void qt_drawImage(QPainter *p, QQuickContext2D::State& state, QImage image, const QRectF& sr, const QRectF& dr, bool shadow = false)

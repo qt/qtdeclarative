@@ -352,6 +352,7 @@ QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, QFontEngine::Glyp
 
 QSGTextMaskMaterial::~QSGTextMaskMaterial()
 {
+    delete m_texture;
 }
 
 void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)

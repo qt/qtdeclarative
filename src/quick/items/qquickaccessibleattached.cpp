@@ -56,16 +56,39 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-visual-utility
     \ingroup accessibility
 
-    This class is part of \l {Accessibility for Qt Quick Applications}.
+    This class is part of the \l {Accessibility for Qt Quick Applications}.
 
     Items the user interacts with or that give information to the user
-    need to expose their information in a semantic way.
+    need to expose their information to the accessibility framework.
     Then assistive tools can make use of that information to enable
     users to interact with the application in various ways.
-
     This enables Qt Quick applications to be used with screen-readers for example.
 
-    The most important properties to set are \l name and \l role.
+    The most important properties are \l name, \l description and \l role.
+
+    Example implementation of a simple button:
+    \qml
+    Rectangle {
+        id: myButton
+        Text {
+            id: label
+            text: "next"
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: label.text
+        Accessible.description: "shows the next page"
+        function accessiblePressAction() {
+            // do a button click
+        }
+    }
+    \endqml
+    The \l role is set to \c Button to indicate the type of control.
+    \l Accessible.name is the most important information and bound to the text on the button.
+    The name is a short and consise description of the control and should reflect the visual label.
+    In this case it is not clear what the button does with the name only, so \l description contains
+    an explanation.
+    There is also a function \c accessiblePressAction() which can be invoked by assistive tools to trigger
+    the button. This function needs to have the same effect as tapping or clicking the button would have.
 
     \sa Accessibility
 */
@@ -94,25 +117,7 @@ QT_BEGIN_NAMESPACE
 
     This flags sets the semantic type of the widget.
     A button for example would have "Button" as type.
-    The value must be one of \l QAccessible::Role .
-    Example:
-    \qml
-    Item {
-        id: myButton
-
-        Text {
-            id: label
-            // ...
-        }
-
-        Accessible.name: label.text
-        Accessible.role: Accessible.Button
-
-        function accessiblePressAction() {
-            //...
-        }
-    }
-    \endqml
+    The value must be one of \l QAccessible::Role.
 
     Some roles have special semantics.
     In order to implement check boxes for example a "checked" property is expected.
@@ -120,74 +125,116 @@ QT_BEGIN_NAMESPACE
     \table
     \header
         \li \b {Role}
-        \li \b {Expected property}
-        \li
-
+        \li \b {Properties and functions}
+        \li \b {Explanation}
     \row
-        \li Button
-        \li function accessiblePressAction
-        \li Called when the button receives a press action. The implementation should visually simulate a button click and perform the button action.
+        \li All interactive elements
+        \li \l focusable and \l focused
+        \li All elements that the user can interact with should have focusable set to \c true and
+            set \l focus to \c true when they have the focus. This is important even for applications
+            that run on touch-only devices since screen readers often implement a virtual focus that
+            can be moved from item to item.
     \row
-       \li CheckBox, Radiobutton
-       \li checked
+        \li Button, CheckBox, RadioButton
+        \li \c accessiblePressAction()
+        \li A button should have a function with the name \c accessiblePressAction.
+            This function may be called by an assistive tool such as a screen-reader.
+            The implementation needs to behave the same as a mouse click or tap on the button.
+    \row
+       \li CheckBox, RadioButton
+       \li \l checkable, \l checked
        \li The check state of the check box. Updated on Press, Check and Uncheck actions.
     \row
        \li Slider, SpinBox, Dial, ScrollBar
-       \li value, minimumValue, maximumValue, stepSize
-       \li value will be updated on increase and decrase actions, in accordance with the other properties
-
+       \li \c value, \c minimumValue, \c maximumValue, \c stepSize
+       \li These properties reflect the state and possible values for the elements.
+    \row
+       \li Slider, SpinBox, Dial, ScrollBar
+       \li \c accessibleIncreaseAction(), \c accessibleDecreaseAction()
+       \li Actions to increase and decrease the value of the element.
     \endtable
 */
 
-/*! \qmlproperty bool focusable
+/*! \qmlproperty bool QtQuick::Accessible::focusable
     \brief This property holds whether this item is focusable.
 
-    By default, this property is false except for items where the role is one of
-    CheckBox, RadioButton, Button, MenuItem, PageTab, EditableText, SpinBox, ComboBox,
-    Terminal or ScrollBar.
+    By default, this property is \c false except for items where the role is one of
+    \c CheckBox, \c RadioButton, \c Button, \c MenuItem, \c PageTab, \c EditableText, \c SpinBox, \c ComboBox,
+    \c Terminal or \c ScrollBar.
+    \sa focused
 */
-/*! \qmlproperty bool focused
+/*! \qmlproperty bool QtQuick::Accessible::focused
     \brief This property holds whether this item currently has the active focus.
 
-    By default, this property is false, but it will return true for items that
-    have \l QQuickItem::hasActiveFocus() returning true.
+    By default, this property is \c false, but it will return \c true for items that
+    have \l QQuickItem::hasActiveFocus() returning \c true.
+    \sa focusable
 */
-/*! \qmlproperty bool checkable
+/*! \qmlproperty bool QtQuick::Accessible::checkable
     \brief This property holds whether this item is checkable (like a check box or some buttons).
+
+    By default this property is \c false.
+    \sa checked
 */
-/*! \qmlproperty bool checked
+/*! \qmlproperty bool QtQuick::Accessible::checked
     \brief This property holds whether this item is currently checked.
+
+    By default this property is \c false.
+    \sa checkable
 */
-/*! \qmlproperty bool editable
+/*! \qmlproperty bool QtQuick::Accessible::editable
     \brief This property holds whether this item has editable text.
+
+    By default this property is \c false.
 */
-/*! \qmlproperty bool multiLine
+/*! \qmlproperty bool QtQuick::Accessible::multiLine
     \brief This property holds whether this item has multiple text lines.
+
+    By default this property is \c false.
 */
-/*! \qmlproperty bool readOnly
-    \brief This property holds whether this item while being of type \l QAccessible::EditableText
-    is set to read-only.
+/*! \qmlproperty bool QtQuick::Accessible::readOnly
+    \brief This property indicates that a text field is read only.
+
+    It is relevant when the role is \l QAccessible::EditableText and set to be read-only.
+    By default this property is \c false.
 */
-/*! \qmlproperty bool selected
+/*! \qmlproperty bool QtQuick::Accessible::selected
     \brief This property holds whether this item is selected.
+
+    By default this property is \c false.
+    \sa selectable
 */
-/*! \qmlproperty bool selectable
+/*! \qmlproperty bool QtQuick::Accessible::selectable
     \brief This property holds whether this item can be selected.
+
+    By default this property is \c false.
+    \sa selected
 */
-/*! \qmlproperty bool pressed
+/*! \qmlproperty bool QtQuick::Accessible::pressed
     \brief This property holds whether this item is pressed (for example a button during a mouse click).
+
+    By default this property is \c false.
 */
-/*! \qmlproperty bool checkStateMixed
+/*! \qmlproperty bool QtQuick::Accessible::checkStateMixed
     \brief This property holds whether this item is in the partially checked state.
+
+    By default this property is \c false.
+    \sa checked, checkable
 */
-/*! \qmlproperty bool defaultButton
+/*! \qmlproperty bool QtQuick::Accessible::defaultButton
     \brief This property holds whether this item is the default button of a dialog.
+
+    By default this property is \c false.
 */
-/*! \qmlproperty bool passwordEdit
+/*! \qmlproperty bool QtQuick::Accessible::passwordEdit
     \brief This property holds whether this item is a password text edit.
+
+    By default this property is \c false.
 */
-/*! \qmlproperty bool selectableText
+/*! \qmlproperty bool QtQuick::Accessible::selectableText
     \brief This property holds whether this item contains selectable text.
+
+    By default this property is \c false.
 */
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)

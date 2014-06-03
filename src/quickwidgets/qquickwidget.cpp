@@ -86,7 +86,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     Q_Q(QQuickWidget);
 
     renderControl = new QQuickWidgetRenderControl(q);
-    offscreenWindow = new QQuickWindow(renderControl);
+    offscreenWindow = renderControl->createOffscreenWindow();
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
     createOffscreenSurface();
@@ -107,15 +107,33 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->addView(q);
 
+#ifndef QT_NO_DRAGANDDROP
+    q->setAcceptDrops(true);
+#endif
+
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
+void QQuickWidgetPrivate::stopRenderControl()
+{
+    if (!context) // this is not an error, could be called before creating the context, or multiple times
+        return;
+
+    bool success = context->makeCurrent(offscreenSurface);
+    if (!success) {
+        qWarning("QQuickWidget::stopRenderControl could not make context current");
+        return;
+    }
+
+    renderControl->stop();
+}
+
 void QQuickWidgetPrivate::handleWindowChange()
 {
-    renderControl->stop();
+    stopRenderControl();
     destroyContext();
 }
 
@@ -139,10 +157,17 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
-    delete offscreenSurface;
+
+    stopRenderControl();
+
+    // context and offscreenSurface are current at this stage, if the context was created.
+    Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
     delete offscreenWindow;
     delete renderControl;
     delete fbo;
+
+    delete offscreenSurface;
+    destroyContext();
 }
 
 void QQuickWidgetPrivate::createOffscreenSurface()
@@ -624,9 +649,6 @@ void QQuickWidgetPrivate::createContext()
 
 void QQuickWidgetPrivate::destroyContext()
 {
-    if (!context)
-        return;
-    renderControl->invalidate();
     delete context;
     context = 0;
 }
@@ -635,8 +657,6 @@ void QQuickWidget::createFramebufferObject()
 {
     Q_D(QQuickWidget);
 
-    if (d->fbo)
-        delete d->fbo;
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
@@ -650,6 +670,8 @@ void QQuickWidget::createFramebufferObject()
     }
 
     context->makeCurrent(d->offscreenSurface);
+
+    delete d->fbo;
     d->fbo = new QOpenGLFramebufferObject(size() * window()->devicePixelRatio());
     d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     d->offscreenWindow->setRenderTarget(d->fbo);
@@ -902,17 +924,7 @@ void QQuickWidget::showEvent(QShowEvent *)
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-
-    if (!d->context) {
-        qWarning("QQuickWidget::hideEvent with no context");
-        return;
-    }
-    bool success = d->context->makeCurrent(d->offscreenSurface);
-    if (!success) {
-        qWarning("QQuickWidget::hideEvent could not make context current");
-        return;
-    }
-    d->renderControl->stop();
+    d->stopRenderControl();
 }
 
 /*! \reimp */
@@ -960,13 +972,22 @@ void QQuickWidget::focusOutEvent(QFocusEvent * event)
     d->offscreenWindow->focusOutEvent(event);
 }
 
-
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
     Q_D(QQuickWidget);
 
     switch (e->type()) {
+#ifndef QT_NO_DRAGANDDROP
+    case QEvent::Drop:
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+        // Drag/drop events only have local pos, so no need to map,
+        // but QQuickWindow::event() does not return true
+        d->offscreenWindow->event(e);
+        return e->isAccepted();
+#endif
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:

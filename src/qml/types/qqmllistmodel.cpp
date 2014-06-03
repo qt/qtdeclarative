@@ -1694,13 +1694,20 @@ void QQmlListModel::emitItemsChanged(int index, int count, const QVector<int> &r
     }
 }
 
+void QQmlListModel::emitItemsAboutToBeRemoved(int index, int count)
+{
+    if (count <= 0 || !m_mainThread)
+        return;
+
+    beginRemoveRows(QModelIndex(), index, index + count - 1);
+}
+
 void QQmlListModel::emitItemsRemoved(int index, int count)
 {
     if (count <= 0)
         return;
 
     if (m_mainThread) {
-            beginRemoveRows(QModelIndex(), index, index + count - 1);
             endRemoveRows();
             emit countChanged();
     } else {
@@ -1711,13 +1718,20 @@ void QQmlListModel::emitItemsRemoved(int index, int count)
     }
 }
 
+void QQmlListModel::emitItemsAboutToBeInserted(int index, int count)
+{
+    if (count <= 0 || !m_mainThread)
+        return;
+
+    beginInsertRows(QModelIndex(), index, index + count - 1);
+}
+
 void QQmlListModel::emitItemsInserted(int index, int count)
 {
     if (count <= 0)
         return;
 
     if (m_mainThread) {
-        beginInsertRows(QModelIndex(), index, index + count - 1);
         endInsertRows();
         emit countChanged();
     } else {
@@ -1726,13 +1740,20 @@ void QQmlListModel::emitItemsInserted(int index, int count)
     }
 }
 
+void QQmlListModel::emitItemsAboutToBeMoved(int from, int to, int n)
+{
+    if (n <= 0 || !m_mainThread)
+        return;
+
+    beginMoveRows(QModelIndex(), from, from + n - 1, QModelIndex(), to > from ? to + n : to);
+}
+
 void QQmlListModel::emitItemsMoved(int from, int to, int n)
 {
     if (n <= 0)
         return;
 
     if (m_mainThread) {
-        beginMoveRows(QModelIndex(), from, from + n - 1, QModelIndex(), to > from ? to + n : to);
         endMoveRows();
     } else {
         int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
@@ -1872,6 +1893,8 @@ void QQmlListModel::clear()
 {
     int cleared = count();
 
+    emitItemsAboutToBeRemoved(0, cleared);
+
     if (m_dynamicRoles) {
         for (int i=0 ; i < m_modelObjects.count() ; ++i)
             delete m_modelObjects[i];
@@ -1903,6 +1926,8 @@ void QQmlListModel::remove(QQmlV4Function *args)
             qmlInfo(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+removeCount).arg(count());
             return;
         }
+
+        emitItemsAboutToBeRemoved(index, removeCount);
 
         if (m_dynamicRoles) {
             for (int i=0 ; i < removeCount ; ++i)
@@ -1952,6 +1977,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
             QV4::ScopedObject argObject(scope);
 
             int objectArrayLength = objectArray->getLength();
+            emitItemsAboutToBeInserted(index, objectArrayLength);
             for (int i=0 ; i < objectArrayLength ; ++i) {
                 argObject = objectArray->getIndexed(i);
 
@@ -1963,6 +1989,8 @@ void QQmlListModel::insert(QQmlV4Function *args)
             }
             emitItemsInserted(index, objectArrayLength);
         } else if (argObject) {
+            emitItemsAboutToBeInserted(index, 1);
+
             if (m_dynamicRoles) {
                 m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
             } else {
@@ -2000,6 +2028,8 @@ void QQmlListModel::move(int from, int to, int n)
         qmlInfo(this) << tr("move: out of range");
         return;
     }
+
+    emitItemsAboutToBeMoved(from, to, n);
 
     if (m_dynamicRoles) {
 
@@ -2056,6 +2086,8 @@ void QQmlListModel::append(QQmlV4Function *args)
             int objectArrayLength = objectArray->getLength();
 
             int index = count();
+            emitItemsAboutToBeInserted(index, objectArrayLength);
+
             for (int i=0 ; i < objectArrayLength ; ++i) {
                 argObject = objectArray->getIndexed(i);
 
@@ -2072,9 +2104,12 @@ void QQmlListModel::append(QQmlV4Function *args)
 
             if (m_dynamicRoles) {
                 index = m_modelObjects.count();
+                emitItemsAboutToBeInserted(index, 1);
                 m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
             } else {
-                index = m_listModel->append(argObject, args->engine());
+                index = m_listModel->elementCount();
+                emitItemsAboutToBeInserted(index, 1);
+                m_listModel->append(argObject, args->engine());
             }
 
             emitItemsInserted(index, 1);
@@ -2169,6 +2204,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
 
 
     if (index == count()) {
+        emitItemsAboutToBeInserted(index, 1);
 
         if (m_dynamicRoles) {
             m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object), this));

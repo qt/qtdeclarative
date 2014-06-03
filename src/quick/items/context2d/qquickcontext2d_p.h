@@ -123,6 +123,7 @@ public:
             , strokePatternRepeatX(false)
             , strokePatternRepeatY(false)
             , invertibleCTM(true)
+            , clip(false)
             , fillRule(Qt::WindingFill)
             , globalAlpha(1.0)
             , lineWidth(1)
@@ -150,6 +151,7 @@ public:
         bool strokePatternRepeatX:1;
         bool strokePatternRepeatY:1;
         bool invertibleCTM:1;
+        bool clip:1;
         Qt::FillRule fillRule;
         qreal globalAlpha;
         qreal lineWidth;

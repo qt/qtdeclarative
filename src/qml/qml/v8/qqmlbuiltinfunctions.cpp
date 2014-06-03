@@ -980,12 +980,13 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     QQmlEngine *engine = v8engine->engine();
 
     QQmlContextData *context = v8engine->callingContext();
+    Q_ASSERT(context);
     QQmlContext *effectiveContext = 0;
     if (context->isPragmaLibraryContext)
         effectiveContext = engine->rootContext();
     else
         effectiveContext = context->asQQmlContext();
-    Q_ASSERT(context && effectiveContext);
+    Q_ASSERT(effectiveContext);
 
     QString qml = ctx->callData->args[0].toQStringNoThrow();
     if (qml.isEmpty())
@@ -1086,10 +1087,10 @@ ReturnedValue QtObject::method_createComponent(CallContext *ctx)
     QQmlEngine *engine = v8engine->engine();
 
     QQmlContextData *context = v8engine->callingContext();
+    Q_ASSERT(context);
     QQmlContextData *effectiveContext = context;
     if (context->isPragmaLibraryContext)
         effectiveContext = 0;
-    Q_ASSERT(context);
 
     QString arg = ctx->callData->args[0].toQStringNoThrow();
     if (arg.isEmpty())

@@ -163,6 +163,7 @@ void QQuickItemParticle::tick(int time)
     m_deletables.clear();
 
     foreach (QQuickParticleData* d, m_loadables){
+        Q_ASSERT(d);
         if (m_stasis.contains(d->delegate))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one

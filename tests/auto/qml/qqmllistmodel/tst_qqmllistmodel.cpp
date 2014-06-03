@@ -132,6 +132,7 @@ private slots:
     void empty_element_warning_data();
     void datetime();
     void datetime_data();
+    void about_to_be_signals();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1304,6 +1305,134 @@ void tst_qqmllistmodel::datetime()
     QVariant result = e.evaluate();
     QDateTime dtResult = result.toDateTime();
     QVERIFY(expected == dtResult);
+}
+
+class RowTester : public QObject
+{
+    Q_OBJECT
+public:
+    RowTester(QAbstractItemModel *model) : QObject(model), model(model)
+    {
+        reset();
+        connect(model, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)), this, SLOT(rowsAboutToBeInserted()));
+        connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(rowsInserted()));
+        connect(model, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)), this, SLOT(rowsAboutToBeRemoved()));
+        connect(model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(rowsRemoved()));
+        connect(model, SIGNAL(rowsAboutToBeMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rowsAboutToBeMoved()));
+        connect(model, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rowsMoved()));
+    }
+
+    void reset()
+    {
+        rowsAboutToBeInsertedCalls = 0;
+        rowsAboutToBeInsertedCount = 0;
+        rowsInsertedCalls = 0;
+        rowsInsertedCount = 0;
+        rowsAboutToBeRemovedCalls = 0;
+        rowsAboutToBeRemovedCount = 0;
+        rowsRemovedCalls = 0;
+        rowsRemovedCount = 0;
+        rowsAboutToBeMovedCalls = 0;
+        rowsAboutToBeMovedData.clear();
+        rowsMovedCalls = 0;
+        rowsMovedData.clear();
+    }
+
+    int rowsAboutToBeInsertedCalls;
+    int rowsAboutToBeInsertedCount;
+    int rowsInsertedCalls;
+    int rowsInsertedCount;
+    int rowsAboutToBeRemovedCalls;
+    int rowsAboutToBeRemovedCount;
+    int rowsRemovedCalls;
+    int rowsRemovedCount;
+    int rowsAboutToBeMovedCalls;
+    QVariantList rowsAboutToBeMovedData;
+    int rowsMovedCalls;
+    QVariantList rowsMovedData;
+
+private slots:
+    void rowsAboutToBeInserted()
+    {
+        rowsAboutToBeInsertedCalls++;
+        rowsAboutToBeInsertedCount = model->rowCount();
+    }
+
+    void rowsInserted()
+    {
+        rowsInsertedCalls++;
+        rowsInsertedCount = model->rowCount();
+    }
+
+    void rowsAboutToBeRemoved()
+    {
+        rowsAboutToBeRemovedCalls++;
+        rowsAboutToBeRemovedCount = model->rowCount();
+    }
+
+    void rowsRemoved()
+    {
+        rowsRemovedCalls++;
+        rowsRemovedCount = model->rowCount();
+    }
+
+    void rowsAboutToBeMoved()
+    {
+        rowsAboutToBeMovedCalls++;
+        for (int i = 0; i < model->rowCount(); ++i)
+            rowsAboutToBeMovedData += model->data(model->index(i, 0), 0);
+    }
+
+    void rowsMoved()
+    {
+        rowsMovedCalls++;
+        for (int i = 0; i < model->rowCount(); ++i)
+            rowsMovedData += model->data(model->index(i, 0), 0);
+    }
+
+private:
+    QAbstractItemModel *model;
+};
+
+void tst_qqmllistmodel::about_to_be_signals()
+{
+    QQmlEngine engine;
+    QQmlListModel model;
+    QQmlEngine::setContextForObject(&model,engine.rootContext());
+
+    RowTester tester(&model);
+
+    QQmlExpression e1(engine.rootContext(), &model, "{append({'test':0})}");
+    e1.evaluate();
+
+    QCOMPARE(tester.rowsAboutToBeInsertedCalls, 1);
+    QCOMPARE(tester.rowsAboutToBeInsertedCount, 0);
+    QCOMPARE(tester.rowsInsertedCalls, 1);
+    QCOMPARE(tester.rowsInsertedCount, 1);
+
+    QQmlExpression e2(engine.rootContext(), &model, "{append({'test':1})}");
+    e2.evaluate();
+
+    QCOMPARE(tester.rowsAboutToBeInsertedCalls, 2);
+    QCOMPARE(tester.rowsAboutToBeInsertedCount, 1);
+    QCOMPARE(tester.rowsInsertedCalls, 2);
+    QCOMPARE(tester.rowsInsertedCount, 2);
+
+    QQmlExpression e3(engine.rootContext(), &model, "{move(0, 1, 1)}");
+    e3.evaluate();
+
+    QCOMPARE(tester.rowsAboutToBeMovedCalls, 1);
+    QCOMPARE(tester.rowsAboutToBeMovedData, QVariantList() << 0.0 << 1.0);
+    QCOMPARE(tester.rowsMovedCalls, 1);
+    QCOMPARE(tester.rowsMovedData, QVariantList() << 1.0 << 0.0);
+
+    QQmlExpression e4(engine.rootContext(), &model, "{remove(0, 2)}");
+    e4.evaluate();
+
+    QCOMPARE(tester.rowsAboutToBeRemovedCalls, 1);
+    QCOMPARE(tester.rowsAboutToBeRemovedCount, 2);
+    QCOMPARE(tester.rowsRemovedCalls, 1);
+    QCOMPARE(tester.rowsRemovedCount, 0);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

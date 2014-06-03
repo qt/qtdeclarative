@@ -142,7 +142,7 @@ void QQuickAnimationController::setProgress(qreal progress)
 }
 
 /*!
-    \qmlproperty real QtQuick::AnimationController::animation
+    \qmlproperty Animation QtQuick::AnimationController::animation
     \default
 
     This property holds the animation to be controlled by the AnimationController.
