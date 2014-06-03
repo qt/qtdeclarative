@@ -61,6 +61,7 @@ struct QQmlProfilerData
     int column;         //used by RangeLocation
     int framerate;      //used by animation events
     int animationcount; //used by animation events
+    qint64 amount;      //used by heap events
 
     QByteArray toByteArray() const;
 };
@@ -145,6 +146,7 @@ public:
 
     QList<QQmlProfilerData> qmlMessages;
     QList<QQmlProfilerData> javascriptMessages;
+    QList<QQmlProfilerData> jsHeapMessages;
     QList<QQmlProfilerData> asynchronousMessages;
     QList<QQmlProfilerData> pixmapMessages;
 
@@ -182,6 +184,7 @@ private:
 
     void connect(bool block, const QString &testFile);
     void checkTraceReceived();
+    void checkJsHeap();
 
 private slots:
     void cleanup();
@@ -312,9 +315,8 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
     }
     case QQmlProfilerClient::MemoryAllocation: {
         stream >> data.detailType;
-        qint64 amount;
-        stream >> amount;
-        return;
+        stream >> data.amount;
+        break;
     }
     default:
         QString failMsg = QString("Unknown message type:") + data.messageType;
@@ -327,6 +329,8 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
     else if (data.messageType == QQmlProfilerClient::SceneGraphFrame ||
             data.messageType == QQmlProfilerClient::Event)
         asynchronousMessages.append(data);
+    else if (data.messageType == QQmlProfilerClient::MemoryAllocation)
+        jsHeapMessages.append(data);
     else if (data.detailType == QQmlProfilerClient::Javascript)
         javascriptMessages.append(data);
     else
@@ -370,6 +374,48 @@ void tst_QQmlProfilerService::checkTraceReceived()
     QCOMPARE(m_client->asynchronousMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
+void tst_QQmlProfilerService::checkJsHeap()
+{
+    QVERIFY2(m_client->jsHeapMessages.count() > 0, "no JavaScript heap messages received");
+
+    bool seen_alloc = false;
+    bool seen_small = false;
+    bool seen_large = false;
+    qint64 allocated = 0;
+    qint64 used = 0;
+    foreach (const QQmlProfilerData &message, m_client->jsHeapMessages) {
+        switch (message.detailType) {
+        case QQmlProfilerClient::HeapPage:
+            allocated += message.amount;
+            seen_alloc = true;
+            break;
+        case QQmlProfilerClient::SmallItem:
+            used += message.amount;
+            seen_small = true;
+            break;
+        case QQmlProfilerClient::LargeItem:
+            allocated += message.amount;
+            used += message.amount;
+            seen_large = true;
+            break;
+        }
+
+        QVERIFY2(used >= 0, QString::fromLatin1("Negative memory usage seen: %1")
+                 .arg(used).toUtf8().constData());
+
+        QVERIFY2(allocated >= 0, QString::fromLatin1("Negative memory allocation seen: %1")
+                 .arg(allocated).toUtf8().constData());
+
+        QVERIFY2(used <= allocated,
+                 QString::fromLatin1("More memory usage than allocation seen: %1 > %2")
+                 .arg(used).arg(allocated).toUtf8().constData());
+    }
+
+    QVERIFY2(seen_alloc, "No heap allocation seen");
+    QVERIFY2(seen_small, "No small item seen");
+    QVERIFY2(seen_large, "No large item seen");
+}
+
 void tst_QQmlProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
@@ -401,6 +447,12 @@ void tst_QQmlProfilerService::cleanup()
                      << data.line << data.column;
         }
         qDebug() << " ";
+        qDebug() << "Javascript Heap Messages:" << m_client->jsHeapMessages.count();
+        i = 0;
+        foreach (const QQmlProfilerData &data, m_client->jsHeapMessages) {
+            qDebug() << i++ << data.time << data.messageType << data.detailType;
+        }
+        qDebug() << " ";
         qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
         qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
         qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
@@ -423,6 +475,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
     m_client->setTraceState(true);
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 }
 
 void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
@@ -435,6 +488,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
     m_client->setTraceState(true);
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 }
 
 void tst_QQmlProfilerService::nonBlockingConnect()
@@ -446,6 +500,7 @@ void tst_QQmlProfilerService::nonBlockingConnect()
     m_client->setTraceState(true);
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 }
 
 void tst_QQmlProfilerService::pixmapCacheData()
@@ -464,6 +519,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
     m_client->setTraceState(false);
 
     checkTraceReceived();
+    checkJsHeap();
     QVERIFY2(m_client->pixmapMessages.count() >= 4,
              QString::number(m_client->pixmapMessages.count()).toUtf8().constData());
 
@@ -500,6 +556,7 @@ void tst_QQmlProfilerService::scenegraphData()
     m_client->setTraceState(false);
 
     checkTraceReceived();
+    checkJsHeap();
 
     // check that at least one frame was rendered
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
@@ -529,6 +586,7 @@ void tst_QQmlProfilerService::profileOnExit()
     m_client->setTraceState(true);
 
     checkTraceReceived();
+    checkJsHeap();
 }
 
 void tst_QQmlProfilerService::controlFromJS()
@@ -539,6 +597,7 @@ void tst_QQmlProfilerService::controlFromJS()
 
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 }
 
 void tst_QQmlProfilerService::signalSourceLocation()
@@ -552,6 +611,7 @@ void tst_QQmlProfilerService::signalSourceLocation()
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 
     QVERIFY2(m_client->qmlMessages.count() >= 16,
              QString::number(m_client->qmlMessages.count()).toUtf8().constData());
@@ -582,6 +642,7 @@ void tst_QQmlProfilerService::javascript()
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
     m_client->setTraceState(false);
     checkTraceReceived();
+    checkJsHeap();
 
     QVERIFY2(m_client->javascriptMessages.count() >= 22,
              QString::number(m_client->javascriptMessages.count()).toUtf8().constData());
