@@ -109,9 +109,8 @@ steps such as use cases and introductory material. For more information about Qt
 \section2 Extending QML
 
 The following tutorials show how a QML-based application can be combined with
-C++ code using the \l{Qt QML} module. The \l{Running the Examples} section
-has more information about opening the examples from within Qt Creator. For
-information about extending QML, visit the \l{Integrating QML and C++} page.
+C++ code using the \l{Qt QML} module. For information about extending QML, visit
+the \l{Integrating QML and C++} page.
 
 \annotatedlist{qmlextendingexamples}
 
@@ -119,8 +118,7 @@ information about extending QML, visit the \l{Integrating QML and C++} page.
 
 Examples are small applications which show how to implement various Qt Quick
 features. The examples run on various platforms and are opened from within Qt
-Creator. The \l{Running the Examples} section has more information about opening
-the examples from within Qt Creator.
+Creator.
 
 \div {class="landingicons"}
     \div {class="icons1of3"}
