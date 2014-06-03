@@ -86,7 +86,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     Q_Q(QQuickWidget);
 
     renderControl = new QQuickWidgetRenderControl(q);
-    offscreenWindow = new QQuickWindow(renderControl);
+    offscreenWindow = renderControl->createOffscreenWindow();
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
     createOffscreenSurface();

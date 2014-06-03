@@ -239,10 +239,29 @@ void QQuickRenderControl::setWindow(QQuickWindow *window)
     d->window = window;
 }
 
+/*!
+  Returns the offscreen window.
+ */
+
 QQuickWindow *QQuickRenderControl::window() const
 {
     Q_D(const QQuickRenderControl);
     return d->window;
+}
+
+/*!
+  Create an offscreen QQuickWindow for this render control,
+  unless the render control already has a window().
+
+  Returns the offscreen window if one is created, otherwise returns null.
+  The caller takes ownership of the window, and is responsible for deleting it.
+ */
+QQuickWindow *QQuickRenderControl::createOffscreenWindow()
+{
+    Q_D(QQuickRenderControl);
+    if (!d->window)
+        return new QQuickWindow(this);
+    return 0;
 }
 
 /*!

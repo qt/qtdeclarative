@@ -63,6 +63,7 @@ public:
     ~QQuickRenderControl();
 
     QQuickWindow *window() const;
+    QQuickWindow *createOffscreenWindow();
     virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return 0; }
     static QWindow *renderWindowFor(QQuickWindow *win, QPoint *offset = 0);
 
