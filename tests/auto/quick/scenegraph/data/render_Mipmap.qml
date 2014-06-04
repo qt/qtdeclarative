@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 import QtQuick 2.3
+import QtQuick.Window 2.2
 
 /*
     The test verifies that scaled down mipmapped images contains
@@ -39,8 +40,8 @@ import QtQuick 2.3
 
     #samples: 2
                  PixelPos     R    G    B    Error-tolerance
-    #final:        0   0     0.33 0.33 0.33        0.1
-    #final:        1   0     0.33 0.33 0.33        0.1
+    #final:        0   0     0.25 0.25 0.25        0.1
+    #final:        1   0     0.25 0.25 0.25        0.1
 */
 
 RenderTestBase
@@ -52,7 +53,7 @@ RenderTestBase
         source: "mipmap_small.png"
         mipmap: true
         smooth: false
-        scale: 1 / width;
+        scale: 1 / (width * Screen.devicePixelRatio);
     }
 
     Image {
@@ -62,7 +63,7 @@ RenderTestBase
         source: "mipmap_large.png"
         mipmap: true
         smooth: false
-        scale: 1 / width;
+        scale: 1 / (width * Screen.devicePixelRatio);
     }
 
     onEnterFinalStage: finalStageComplete = true;

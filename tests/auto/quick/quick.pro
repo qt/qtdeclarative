@@ -74,7 +74,8 @@ QUICKTESTS =  \
     qquickview \
     qquickcanvasitem \
     qquickscreen \
-    touchmouse
+    touchmouse \
+    scenegraph
 
 
 SUBDIRS += $$PUBLICTESTS
