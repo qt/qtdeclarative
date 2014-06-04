@@ -43,7 +43,7 @@
 
 #include <QtQuick>
 
-#include <private/qsgcontext_p.h>
+#include <private/qopenglcontext_p.h>
 
 
 #include <QtQml>
@@ -168,7 +168,7 @@ void tst_SceneGraph::manyWindows_data()
 
 struct ShareContextResetter {
 public:
-    ~ShareContextResetter() { QSGContext::setSharedOpenGLContext(0); }
+    ~ShareContextResetter() { QOpenGLContextPrivate::setGlobalShareContext(0); }
 };
 
 void tst_SceneGraph::manyWindows()
@@ -181,7 +181,7 @@ void tst_SceneGraph::manyWindows()
     ShareContextResetter cleanup; // To avoid dangling pointer in case of test-failure.
     if (shared) {
         sharedGLContext.create();
-        QSGContext::setSharedOpenGLContext(&sharedGLContext);
+        QOpenGLContextPrivate::setGlobalShareContext(&sharedGLContext);
     }
 
     QScopedPointer<QWindow> parent;
@@ -328,7 +328,8 @@ void tst_SceneGraph::render_data()
           << "data/render_StackingOrder.qml"
           << "data/render_Mipmap.qml"
           << "data/render_ImageFiltering.qml"
-          << "data/render_bug37555.qml"
+          << "data/render_bug37422.qml"
+          << "data/render_OpacityThroughBatchRoot.qml"
         ;
 
     QRegExp sampleCount("#samples: *(\\d+)");
