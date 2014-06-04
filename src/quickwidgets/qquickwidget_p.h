@@ -107,6 +107,7 @@ public:
     QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
     QOpenGLFramebufferObject *fbo;
+    QOpenGLFramebufferObject *resolvedFbo;
     QOpenGLContext *context;
 
     QQuickWidget::ResizeMode resizeMode;
