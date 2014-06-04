@@ -298,7 +298,7 @@ bool QQmlTypeCompiler::compile()
 void QQmlTypeCompiler::recordError(const QQmlError &error)
 {
     QQmlError e = error;
-    e.setUrl(compiledData->url);
+    e.setUrl(url());
     errors << e;
 }
 

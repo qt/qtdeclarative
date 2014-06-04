@@ -592,7 +592,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QQmlCompiledData *cc, int start
     d->cc = cc;
     cc->addref();
     d->start = start;
-    d->url = cc->url;
+    d->url = cc->url();
     d->progress = 1.0;
 }
 

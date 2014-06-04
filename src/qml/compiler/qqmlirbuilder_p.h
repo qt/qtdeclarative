@@ -343,7 +343,7 @@ struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
     IRBuilder(const QSet<QString> &illegalNames);
-    bool generateFromQml(const QString &code, const QString &url, const QString &urlString, Document *output);
+    bool generateFromQml(const QString &code, const QString &url, Document *output);
 
     static bool isSignalPropertyName(const QString &name);
 
@@ -420,7 +420,6 @@ public:
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
-    QString url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
 };
 

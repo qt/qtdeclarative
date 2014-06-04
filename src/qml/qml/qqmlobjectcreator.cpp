@@ -179,8 +179,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     context = new QQmlContextData;
     context->isInternal = true;
-    context->url = compiledData->url;
-    context->urlString = compiledData->name;
+    context->url = compiledData->url();
+    context->urlString = compiledData->fileName();
     context->imports = compiledData->importCache;
     context->imports->addref();
     context->setParent(parentContext);
@@ -384,7 +384,7 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
         QString string = binding->valueAsString(&qmlUnit->header);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compiledData->url.resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -579,7 +579,7 @@ void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(&qmlUnit->header);
-            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->url.resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             argv[0] = reinterpret_cast<void *>(&value);
@@ -1006,7 +1006,7 @@ void QQmlObjectCreator::setupFunctions()
 void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setUrl(compiledData->url);
+    error.setUrl(compiledData->url());
     error.setLine(location.line);
     error.setColumn(location.column);
     error.setDescription(description);
@@ -1063,7 +1063,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->component);
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(typeRef->component->name,
+            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(typeRef->component->fileName(),
                     context->url, obj->location.line, obj->location.column));
             if (typeRef->component->qmlUnit->isSingleton())
             {

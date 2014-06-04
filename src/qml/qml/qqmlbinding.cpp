@@ -106,7 +106,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
         Q_ASSERT(typeData);
 
         if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            url = cdata->name;
+            url = cdata->fileName();
             if (scriptPrivate->bindingId != QQmlBinding::Invalid)
                 runtimeFunction = cdata->compilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
         }

@@ -558,9 +558,8 @@ IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
 {
 }
 
-bool IRBuilder::generateFromQml(const QString &code, const QString &url, const QString &urlString, Document *output)
+bool IRBuilder::generateFromQml(const QString &code, const QString &url, Document *output)
 {
-    this->url = url;
     QQmlJS::AST::UiProgram *program = 0;
     {
         QQmlJS::Lexer lexer(&output->jsParserEngine);
@@ -574,7 +573,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, const Q
             foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
 
                 if (m.isWarning()) {
-                    qWarning("%s:%d : %s", qPrintable(urlString), m.loc.startLine, qPrintable(m.message));
+                    qWarning("%s:%d : %s", qPrintable(url), m.loc.startLine, qPrintable(m.message));
                     continue;
                 }
 

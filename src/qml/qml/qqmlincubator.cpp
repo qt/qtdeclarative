@@ -283,7 +283,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     if (!compiledData)
         return;
 
-    QML_MEMORY_SCOPE_URL(compiledData->url);
+    QML_MEMORY_SCOPE_URL(compiledData->url());
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 
@@ -297,7 +297,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
 
     if (!guardOk) {
         QQmlError error;
-        error.setUrl(compiledData->url);
+        error.setUrl(compiledData->url());
         error.setDescription(QQmlComponent::tr("Object destroyed during incubation"));
         errors << error;
         progress = QQmlIncubatorPrivate::Completed;

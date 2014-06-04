@@ -161,7 +161,7 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                d->url = cdata->name;
+                d->url = cdata->fileName();
                 d->line = scriptPrivate->lineNumber;
                 d->column = scriptPrivate->columnNumber;
 

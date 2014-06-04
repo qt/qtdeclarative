@@ -2207,7 +2207,7 @@ void QQmlTypeData::dataReceived(const Data &data)
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
-    if (!compiler.generateFromQml(code, finalUrlString(), finalUrlString(), m_document.data())) {
+    if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
         foreach (const QQmlJS::DiagnosticMessage &msg, compiler.errors) {
             QQmlError e;
@@ -2332,10 +2332,8 @@ void QQmlTypeData::compile()
     Q_ASSERT(m_compiledData == 0);
 
     m_compiledData = new QQmlCompiledData(typeLoader()->engine());
-    m_compiledData->url = finalUrl();
-    m_compiledData->name = finalUrlString();
 
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler, m_compiledData->name);
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler, finalUrlString());
 
     QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, m_document.data());
     if (!compiler.compile()) {

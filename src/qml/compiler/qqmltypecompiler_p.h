@@ -84,7 +84,7 @@ public:
 
     const QV4::CompiledData::QmlUnit *qmlUnit() const;
 
-    QUrl url() const { return compiledData->url; }
+    QUrl url() const { return typeData->finalUrl(); }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
     QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
