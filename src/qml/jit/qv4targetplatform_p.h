@@ -64,7 +64,7 @@ namespace JIT {
 class TargetPlatform
 {
 public:
-#if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX))
+#if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX) || OS(FREEBSD))
     enum { RegAllocIsSupported = 1 };
 
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
@@ -133,7 +133,7 @@ public:
 
 #endif // Windows on x86
 
-#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X))
+#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD))
     enum { RegAllocIsSupported = 1 };
 
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
