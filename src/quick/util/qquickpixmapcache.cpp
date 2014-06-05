@@ -1182,6 +1182,17 @@ void QQuickPixmap::setImage(const QImage &p)
         d = new QQuickPixmapData(this, textureFactoryForImage(p));
 }
 
+void QQuickPixmap::setPixmap(const QQuickPixmap &other)
+{
+    clear();
+
+    if (other.d) {
+        d = other.d;
+        d->addref();
+        d->declarativePixmaps.insert(this);
+    }
+}
+
 int QQuickPixmap::width() const
 {
     if (d && d->textureFactory)
@@ -1303,6 +1314,14 @@ void QQuickPixmap::clear(QObject *obj)
         d->release();
         d = 0;
     }
+}
+
+bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize)
+{
+    QQuickPixmapKey key = { &url, &requestSize };
+    QQuickPixmapStore *store = pixmapStore();
+
+    return store->m_cache.contains(key);
 }
 
 bool QQuickPixmap::connectFinished(QObject *object, const char *method)

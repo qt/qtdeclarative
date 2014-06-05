@@ -52,6 +52,36 @@
 #include <QtNetwork/qnetworkreply.h>
 
 QT_BEGIN_NAMESPACE
+
+QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine)
+{
+    if (!_movie)
+        return 0;
+
+    int current = _movie->currentFrameNumber();
+    if (!frameMap.contains(current)) {
+        QUrl requestedUrl;
+        QQuickPixmap *pixmap = 0;
+        if (engine && !_movie->fileName().isEmpty()) {
+            requestedUrl.setUrl(QString::fromUtf8("quickanimatedimage://%1#%2")
+                                .arg(_movie->fileName())
+                                .arg(current));
+        }
+        if (!requestedUrl.isEmpty()) {
+            if (QQuickPixmap::isCached(requestedUrl, QSize()))
+                pixmap = new QQuickPixmap(engine, requestedUrl);
+            else
+                pixmap = new QQuickPixmap(requestedUrl, _movie->currentImage());
+        } else {
+            pixmap = new QQuickPixmap;
+            pixmap->setImage(_movie->currentImage());
+        }
+        frameMap.insert(current, pixmap);
+    }
+
+    return frameMap.value(current);
+}
+
 /*!
     \qmltype AnimatedImage
     \instantiates QQuickAnimatedImage
@@ -111,6 +141,8 @@ QQuickAnimatedImage::~QQuickAnimatedImage()
     if (d->reply)
         d->reply->deleteLater();
     delete d->_movie;
+    qDeleteAll(d->frameMap);
+    d->frameMap.clear();
 }
 
 /*!
@@ -230,6 +262,10 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
         d->reply->deleteLater();
         d->reply = 0;
     }
+
+    d->setImage(QImage());
+    qDeleteAll(d->frameMap);
+    d->frameMap.clear();
 
     d->oldPlaying = isPlaying();
     if (d->_movie) {
@@ -357,7 +393,7 @@ void QQuickAnimatedImage::movieRequestFinished()
         d->_movie->jumpToFrame(d->preset_currentframe);
         d->preset_currentframe = 0;
     }
-    d->setImage(d->_movie->currentPixmap().toImage());
+    d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();
@@ -372,7 +408,7 @@ void QQuickAnimatedImage::movieUpdate()
     Q_D(QQuickAnimatedImage);
 
     if (d->_movie) {
-        d->setImage(d->_movie->currentPixmap().toImage());
+        d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
         emit frameChanged();
     }
 }

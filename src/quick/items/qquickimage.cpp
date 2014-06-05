@@ -184,6 +184,17 @@ void QQuickImagePrivate::setImage(const QImage &image)
     q->update();
 }
 
+void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
+{
+    Q_Q(QQuickImage);
+    pix.setPixmap(pixmap);
+
+    q->pixmapChange();
+    status = pix.isNull() ? QQuickImageBase::Null : QQuickImageBase::Ready;
+
+    q->update();
+}
+
 /*!
     \qmlproperty enumeration QtQuick::Image::fillMode
 

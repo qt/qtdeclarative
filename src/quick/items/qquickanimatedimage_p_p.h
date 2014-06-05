@@ -72,6 +72,8 @@ public:
     {
     }
 
+    QQuickPixmap *infoForCurrentFrame(QQmlEngine *engine);
+
     bool playing;
     bool paused;
     int preset_currentframe;
@@ -79,6 +81,7 @@ public:
     QNetworkReply *reply;
     int redirectCount;
     bool oldPlaying;
+    QMap<int, QQuickPixmap *> frameMap;
 };
 
 QT_END_NAMESPACE

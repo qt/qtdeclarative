@@ -101,6 +101,7 @@ public:
     const QSize &requestSize() const;
     QImage image() const;
     void setImage(const QImage &);
+    void setPixmap(const QQuickPixmap &other);
 
     QQuickTextureFactory *textureFactory() const;
 
@@ -122,6 +123,7 @@ public:
     bool connectDownloadProgress(QObject *, int);
 
     static void purgeCache();
+    static bool isCached(const QUrl &url, const QSize &requestSize);
 
 private:
     Q_DISABLE_COPY(QQuickPixmap)

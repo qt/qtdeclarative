@@ -71,6 +71,7 @@ public:
     qreal paintedWidth;
     qreal paintedHeight;
     void setImage(const QImage &img);
+    void setPixmap(const QQuickPixmap &pixmap);
 
     bool pixmapChanged : 1;
     bool mipmap : 1;
