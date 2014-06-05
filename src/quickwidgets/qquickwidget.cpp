@@ -89,7 +89,6 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     offscreenWindow = renderControl->createOffscreenWindow();
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
-    createOffscreenSurface();
 
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface))
         setRenderToTexture();
@@ -166,17 +165,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
     delete renderControl;
     delete fbo;
 
-    delete offscreenSurface;
     destroyContext();
-}
-
-void QQuickWidgetPrivate::createOffscreenSurface()
-{
-    delete offscreenSurface;
-    offscreenSurface = 0;
-    offscreenSurface = new QOffscreenSurface;
-    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
-    offscreenSurface->create();
 }
 
 void QQuickWidgetPrivate::execute()
@@ -641,6 +630,13 @@ void QQuickWidgetPrivate::createContext()
         return;
     }
 
+    offscreenSurface = new QOffscreenSurface;
+    // Pass the context's format(), which, now that the underlying platform context is created,
+    // contains a QSurfaceFormat representing the _actual_ format of the underlying
+    // configuration. This is essential to get a surface that is compatible with the context.
+    offscreenSurface->setFormat(context->format());
+    offscreenSurface->create();
+
     if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
@@ -649,6 +645,8 @@ void QQuickWidgetPrivate::createContext()
 
 void QQuickWidgetPrivate::destroyContext()
 {
+    delete offscreenSurface;
+    offscreenSurface = 0;
     delete context;
     context = 0;
 }
@@ -1044,10 +1042,7 @@ void QQuickWidget::setFormat(const QSurfaceFormat &format)
     newFormat.setDepthBufferSize(qMax(newFormat.depthBufferSize(), currentFormat.depthBufferSize()));
     newFormat.setStencilBufferSize(qMax(newFormat.stencilBufferSize(), currentFormat.stencilBufferSize()));
     newFormat.setAlphaBufferSize(qMax(newFormat.alphaBufferSize(), currentFormat.alphaBufferSize()));
-    if (currentFormat != newFormat) {
-        d->offscreenWindow->setFormat(newFormat);
-        d->createOffscreenSurface();
-    }
+    d->offscreenWindow->setFormat(newFormat);
 }
 
 /*!
