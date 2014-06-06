@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS =   quickwidget
+SUBDIRS = quickwidget \
+          qquickviewcomparison
