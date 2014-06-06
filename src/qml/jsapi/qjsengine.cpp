@@ -50,6 +50,7 @@
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4runtime_p.h"
+#include <private/qqmlbuiltinfunctions_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -229,6 +230,45 @@ QJSEngine::~QJSEngine()
 void QJSEngine::collectGarbage()
 {
     d->m_v4Engine->memoryManager->runGC();
+}
+
+/*!
+  \since 5.4
+
+  Installs translator functions on the given \a object, or on the Global
+  Object if no object is specified.
+
+  The relation between script translator functions and C++ translator
+  functions is described in the following table:
+
+    \table
+    \header \li Script Function \li Corresponding C++ Function
+    \row    \li qsTr()       \li QObject::tr()
+    \row    \li QT_TR_NOOP() \li QT_TR_NOOP()
+    \row    \li qsTranslate() \li QCoreApplication::translate()
+    \row    \li QT_TRANSLATE_NOOP() \li QT_TRANSLATE_NOOP()
+    \row    \li qsTrId() \li qtTrId()
+    \row    \li QT_TRID_NOOP() \li QT_TRID_NOOP()
+    \endtable
+
+  \sa {Internationalization with Qt}
+*/
+void QJSEngine::installTranslatorFunctions(const QJSValue &object)
+{
+    QV4::ExecutionEngine *v4 = d->m_v4Engine;
+    QV4::Scope scope(v4);
+    QJSValuePrivate *vp = QJSValuePrivate::get(object);
+    QV4::ScopedObject obj(scope, vp->getValue(v4));
+    if (!obj)
+        obj = v4->globalObject;
+#ifndef QT_NO_TRANSLATION
+    obj->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
+    obj->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
+    obj->defineDefaultProperty(QStringLiteral("qsTr"), QV4::GlobalExtensions::method_qsTr);
+    obj->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), QV4::GlobalExtensions::method_qsTrNoOp);
+    obj->defineDefaultProperty(QStringLiteral("qsTrId"), QV4::GlobalExtensions::method_qsTrId);
+    obj->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
+#endif
 }
 
 /*!

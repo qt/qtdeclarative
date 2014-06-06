@@ -89,6 +89,8 @@ public:
 
     void collectGarbage();
 
+    void installTranslatorFunctions(const QJSValue &object = QJSValue());
+
     QV8Engine *handle() const { return d; }
 
 private:

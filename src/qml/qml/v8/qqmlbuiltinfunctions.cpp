@@ -47,6 +47,7 @@
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
+#include <QFileInfo>
 
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
@@ -1709,13 +1710,31 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
         V4THROW_ERROR("qsTr(): third argument (n) must be a number");
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    QQmlContextData *ctxt = v8engine->callingContext();
-
-    QString path = ctxt->url.toString();
-    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-    int lastDot = path.lastIndexOf(QLatin1Char('.'));
-    int length = lastDot - (lastSlash + 1);
-    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
+    QString context;
+    if (QQmlContextData *ctxt = v8engine->callingContext()) {
+        QString path = ctxt->url.toString();
+        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+        int lastDot = path.lastIndexOf(QLatin1Char('.'));
+        int length = lastDot - (lastSlash + 1);
+        context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
+    } else if (QV4::ExecutionContext *parentCtx = ctx->parent) {
+        // The first non-empty source URL in the call stack determines the translation context.
+        while (parentCtx && context.isEmpty()) {
+            if (QV4::CompiledData::CompilationUnit *unit = parentCtx->compilationUnit) {
+                QString fileName = unit->fileName();
+                QUrl url(unit->fileName());
+                if (url.isValid() && url.isRelative()) {
+                    context = url.fileName();
+                } else {
+                    context = QQmlFile::urlToLocalFileOrQrc(fileName);
+                    if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
+                        context = fileName;
+                }
+                context = QFileInfo(context).baseName();
+            }
+            parentCtx = parentCtx->parent;
+        }
+    }
 
     QString text = ctx->callData->args[0].toQStringNoThrow();
     QString comment;
