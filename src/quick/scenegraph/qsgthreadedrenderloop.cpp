@@ -1233,6 +1233,8 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
             }
             if (w)
                 polishAndSync(w);
+            else
+                killTimer(te->timerId());
         }
         return true;
     }
