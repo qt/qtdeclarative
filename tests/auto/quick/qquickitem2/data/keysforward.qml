@@ -58,7 +58,7 @@ Item {
         objectName: "primary"
         property var pressedKeys: []
         property var releasedKeys: []
-        Keys.forwardTo: secondaryTarget
+        Keys.forwardTo: [ secondaryTarget, extraTarget ]
         Keys.onPressed: { event.accepted = event.key === Qt.Key_P; var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
         Keys.onReleased: { event.accepted = event.key === Qt.Key_P; var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
 
@@ -80,5 +80,9 @@ Item {
         property var releasedKeys: []
         Keys.onPressed: { event.accepted = event.key === Qt.Key_S; var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
         Keys.onReleased: { event.accepted = event.key === Qt.Key_S; var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
+    }
+
+    Item {
+        id: extraTarget
     }
 }
