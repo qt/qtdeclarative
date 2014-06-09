@@ -644,6 +644,7 @@ void QSGRenderContext::compile(QSGMaterialShader *shader, QSGMaterial *material,
 
 void QSGRenderContext::initialize(QSGMaterialShader *shader)
 {
+    shader->program()->bind();
     shader->initialize();
 }
 
