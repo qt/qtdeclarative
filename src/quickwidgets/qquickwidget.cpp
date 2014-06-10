@@ -1006,13 +1006,18 @@ bool QQuickWidget::event(QEvent *e)
     switch (e->type()) {
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::Drop:
-    case QEvent::DragEnter:
     case QEvent::DragMove:
     case QEvent::DragLeave:
         // Drag/drop events only have local pos, so no need to map,
         // but QQuickWindow::event() does not return true
         d->offscreenWindow->event(e);
         return e->isAccepted();
+    case QEvent::DragEnter:
+        // Don't reject drag events for the entire widget when one
+        // item rejects the drag enter
+        d->offscreenWindow->event(e);
+        e->accept();
+        return true;
 #endif
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
