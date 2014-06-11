@@ -28,7 +28,7 @@ qhp.QtQml.subprojects.examples.indexTitle = Qt Quick Examples and Tutorials
 qhp.QtQml.subprojects.examples.selectors = fake:example
 qhp.QtQml.subprojects.qmltypes.title = QML Types
 qhp.QtQml.subprojects.qmltypes.indexTitle = Qt QML QML Types
-qhp.QtQml.subprojects.qmltypes.selectors = fake:qmlclass
+qhp.QtQml.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQml.subprojects.qmltypes.sortPages = true
 
 
