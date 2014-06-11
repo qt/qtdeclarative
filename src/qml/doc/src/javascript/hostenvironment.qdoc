@@ -135,8 +135,8 @@ var initialPosition = { rootObject.x, rootObject.y }
 \endcode
 
 This restriction exists as the QML environment is not yet fully established.
-To run code after the environment setup has completed, refer to
-\l {Running JavaScript at Startup}.
+To run code after the environment setup has completed, see
+\l {JavaScript in Application Startup Code}.
 
 \li The value of \c this is currently undefined in QML in the majority of contexts.
 
