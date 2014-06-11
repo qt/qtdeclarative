@@ -89,7 +89,6 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     offscreenWindow = renderControl->createOffscreenWindow();
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
-    createOffscreenSurface();
 
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface))
         setRenderToTexture();
@@ -144,6 +143,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , offscreenSurface(0)
     , renderControl(0)
     , fbo(0)
+    , resolvedFbo(0)
     , context(0)
     , resizeMode(QQuickWidget::SizeViewToRootObject)
     , initialSize(0,0)
@@ -164,19 +164,10 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
     Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
     delete offscreenWindow;
     delete renderControl;
+    delete resolvedFbo;
     delete fbo;
 
-    delete offscreenSurface;
     destroyContext();
-}
-
-void QQuickWidgetPrivate::createOffscreenSurface()
-{
-    delete offscreenSurface;
-    offscreenSurface = 0;
-    offscreenSurface = new QOffscreenSurface;
-    offscreenSurface->setFormat(offscreenWindow->requestedFormat());
-    offscreenSurface->create();
 }
 
 void QQuickWidgetPrivate::execute()
@@ -237,6 +228,12 @@ void QQuickWidgetPrivate::renderSceneGraph()
     renderControl->sync();
     renderControl->render();
     glFlush();
+
+    if (resolvedFbo) {
+        QRect rect(QPoint(0, 0), fbo->size());
+        QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
+    }
+
     context->doneCurrent();
     q->update();
 }
@@ -641,6 +638,13 @@ void QQuickWidgetPrivate::createContext()
         return;
     }
 
+    offscreenSurface = new QOffscreenSurface;
+    // Pass the context's format(), which, now that the underlying platform context is created,
+    // contains a QSurfaceFormat representing the _actual_ format of the underlying
+    // configuration. This is essential to get a surface that is compatible with the context.
+    offscreenSurface->setFormat(context->format());
+    offscreenSurface->create();
+
     if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
@@ -649,6 +653,8 @@ void QQuickWidgetPrivate::createContext()
 
 void QQuickWidgetPrivate::destroyContext()
 {
+    delete offscreenSurface;
+    offscreenSurface = 0;
     delete context;
     context = 0;
 }
@@ -671,10 +677,22 @@ void QQuickWidget::createFramebufferObject()
 
     context->makeCurrent(d->offscreenSurface);
 
+    int samples = d->offscreenWindow->requestedFormat().samples();
+    if (!QOpenGLExtensions(context).hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample))
+        samples = 0;
+
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    format.setSamples(samples);
+
+    QSize fboSize = size() * window()->devicePixelRatio();
+
     delete d->fbo;
-    d->fbo = new QOpenGLFramebufferObject(size() * window()->devicePixelRatio());
-    d->fbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    d->fbo = new QOpenGLFramebufferObject(fboSize, format);
     d->offscreenWindow->setRenderTarget(d->fbo);
+
+    if (samples > 0)
+        d->resolvedFbo = new QOpenGLFramebufferObject(fboSize);
 
     // Sanity check: The window must not have an underlying platform window.
     // Having one would mean create() was called and platforms that only support
@@ -685,9 +703,10 @@ void QQuickWidget::createFramebufferObject()
 void QQuickWidget::destroyFramebufferObject()
 {
     Q_D(QQuickWidget);
-    if (d->fbo)
-        delete d->fbo;
+    delete d->fbo;
     d->fbo = 0;
+    delete d->resolvedFbo;
+    d->resolvedFbo = 0;
 }
 
 QQuickWidget::ResizeMode QQuickWidget::resizeMode() const
@@ -772,7 +791,8 @@ GLuint QQuickWidgetPrivate::textureId() const
                    << "Consider setting Qt::AA_DontCreateNativeWidgetSiblings";
         return 0;
     }
-    return fbo ? fbo->texture() : 0;
+    return resolvedFbo ? resolvedFbo->texture()
+        : (fbo ? fbo->texture() : 0);
 }
 
 /*!
@@ -986,13 +1006,18 @@ bool QQuickWidget::event(QEvent *e)
     switch (e->type()) {
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::Drop:
-    case QEvent::DragEnter:
     case QEvent::DragMove:
     case QEvent::DragLeave:
         // Drag/drop events only have local pos, so no need to map,
         // but QQuickWindow::event() does not return true
         d->offscreenWindow->event(e);
         return e->isAccepted();
+    case QEvent::DragEnter:
+        // Don't reject drag events for the entire widget when one
+        // item rejects the drag enter
+        d->offscreenWindow->event(e);
+        e->accept();
+        return true;
 #endif
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
@@ -1044,10 +1069,7 @@ void QQuickWidget::setFormat(const QSurfaceFormat &format)
     newFormat.setDepthBufferSize(qMax(newFormat.depthBufferSize(), currentFormat.depthBufferSize()));
     newFormat.setStencilBufferSize(qMax(newFormat.stencilBufferSize(), currentFormat.stencilBufferSize()));
     newFormat.setAlphaBufferSize(qMax(newFormat.alphaBufferSize(), currentFormat.alphaBufferSize()));
-    if (currentFormat != newFormat) {
-        d->offscreenWindow->setFormat(newFormat);
-        d->createOffscreenSurface();
-    }
+    d->offscreenWindow->setFormat(newFormat);
 }
 
 /*!

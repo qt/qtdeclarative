@@ -2561,6 +2561,7 @@ class YarrGenerator : private MacroAssembler {
 #if CPU(ARM_TRADITIONAL)
         push(ARMRegisters::r8); // scratch register
 #endif
+        push(addressTempRegister);
         if (compileMode == IncludeSubpatterns)
             move(ARMRegisters::r3, output);
 #elif CPU(SH4)
@@ -2588,6 +2589,7 @@ class YarrGenerator : private MacroAssembler {
         pop(X86Registers::ebx);
         pop(X86Registers::ebp);
 #elif CPU(ARM)
+        pop(addressTempRegister);
 #if CPU(ARM_TRADITIONAL)
         pop(ARMRegisters::r8); // scratch register
 #endif
