@@ -74,10 +74,12 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 // Decide whether to enable or disable the JIT
 
 // White list architectures
+//
+// NOTE: This should match the logic in qv4targetplatform_p.h!
 
-#if defined(Q_PROCESSOR_X86)
+#if defined(Q_PROCESSOR_X86) && (defined(Q_OS_WINDOWS) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD))
 #define V4_ENABLE_JIT
-#elif defined(Q_PROCESSOR_X86_64)
+#elif defined(Q_PROCESSOR_X86_64) && (defined(Q_OS_WINDOWS) || defined(Q_OS_LINUX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
 #define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_ARM_32)
 

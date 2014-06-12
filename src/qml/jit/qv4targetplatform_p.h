@@ -68,6 +68,8 @@ namespace JIT {
 // calculating the list of callee saved registers in getCalleeSavedRegisters (which is used to
 // generate push/pop instructions in the prelude/postlude), we add ebx too. Then when synthesizing
 // a call, we add a load it right before emitting the call instruction.
+//
+// NOTE: When adding new architecture, do not forget to whitelist it in qv4global_p.h!
 class TargetPlatform
 {
 public:
@@ -115,7 +117,7 @@ public:
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
 
 #if OS(WINDOWS) || OS(QNX) || \
-    (OS(LINUX) && (defined(__PIC__) || defined(__PIE__)))
+    ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
 
 #define RESTORE_EBX_ON_CALL
     static JSC::MacroAssembler::Address ebxAddressOnStack()
