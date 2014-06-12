@@ -376,6 +376,7 @@ void QQmlInstantiator::setModel(const QVariant &v)
     if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->instanceModel;
+            prevModel = 0;
             d->ownModel = false;
         }
         d->instanceModel = vim;

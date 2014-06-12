@@ -640,7 +640,7 @@ public:
     inline ArrayElementLessThan(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn)
         : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
 
-    bool operator()(const Value &v1, const Value &v2) const;
+    bool operator()(Value v1, Value v2) const;
 
 private:
     ExecutionContext *m_context;
@@ -649,7 +649,7 @@ private:
 };
 
 
-bool ArrayElementLessThan::operator()(const Value &v1, const Value &v2) const
+bool ArrayElementLessThan::operator()(Value v1, Value v2) const
 {
     Scope scope(m_context);
 
