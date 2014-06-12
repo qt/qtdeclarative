@@ -451,9 +451,7 @@ void MemoryManager::runGC()
         mark();
         sweep();
     } else {
-        int totalMem = 0;
-        for (int i = 0; i < m_d->heapChunks.size(); ++i)
-            totalMem += m_d->heapChunks.at(i).memory.size();
+        int totalMem = getAllocatedMem();
 
         QTime t;
         t.start();
@@ -479,10 +477,10 @@ void MemoryManager::runGC()
     m_d->totalAlloc = 0;
 }
 
-uint MemoryManager::getUsedMem()
+size_t MemoryManager::getUsedMem() const
 {
-    uint usedMem = 0;
-    for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
+    size_t usedMem = 0;
+    for (QVector<Data::Chunk>::const_iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
         char *chunkStart = reinterpret_cast<char *>(i->memory.base());
         char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
         for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
@@ -493,6 +491,22 @@ uint MemoryManager::getUsedMem()
         }
     }
     return usedMem;
+}
+
+size_t MemoryManager::getAllocatedMem() const
+{
+    size_t total = 0;
+    for (int i = 0; i < m_d->heapChunks.size(); ++i)
+        total += m_d->heapChunks.at(i).memory.size();
+    return total;
+}
+
+size_t MemoryManager::getLargeItemsMem() const
+{
+    size_t total = 0;
+    for (const Data::LargeItem *i = m_d->largeItems; i != 0; i = i->next)
+        total += i->size;
+    return total;
 }
 
 MemoryManager::~MemoryManager()

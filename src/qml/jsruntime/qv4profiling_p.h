@@ -130,7 +130,7 @@ class Q_QML_EXPORT Profiler : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(Profiler)
 public:
-    Profiler();
+    Profiler(QV4::ExecutionEngine *engine);
 
     size_t trackAlloc(size_t size, MemoryType type)
     {
@@ -159,6 +159,7 @@ signals:
                    const QList<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
+    QV4::ExecutionEngine *m_engine;
     QElapsedTimer m_timer;
     QVector<FunctionCall> m_data;
     QList<MemoryAllocationProperties> m_memory_data;

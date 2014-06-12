@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4profiling_p.h"
+#include "qv4mm_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -60,7 +61,7 @@ FunctionCallProperties FunctionCall::resolve() const
 }
 
 
-Profiler::Profiler() : enabled(false)
+Profiler::Profiler(QV4::ExecutionEngine *engine) : enabled(false), m_engine(engine)
 {
     static int metatype = qRegisterMetaType<QList<QV4::Profiling::FunctionCallProperties> >();
     static int metatype2 = qRegisterMetaType<QList<QV4::Profiling::MemoryAllocationProperties> >();
@@ -96,6 +97,22 @@ void Profiler::startProfiling()
 {
     if (!enabled) {
         m_data.clear();
+        m_memory_data.clear();
+
+        qint64 timestamp = m_timer.nsecsElapsed();
+        MemoryAllocationProperties heap = {timestamp,
+                                           (qint64)m_engine->memoryManager->getAllocatedMem(),
+                                           HeapPage};
+        m_memory_data.append(heap);
+        MemoryAllocationProperties small = {timestamp,
+                                            (qint64)m_engine->memoryManager->getUsedMem(),
+                                            SmallItem};
+        m_memory_data.append(small);
+        MemoryAllocationProperties large = {timestamp,
+                                            (qint64)m_engine->memoryManager->getLargeItemsMem(),
+                                            LargeItem};
+        m_memory_data.append(large);
+
         enabled = true;
     }
 }

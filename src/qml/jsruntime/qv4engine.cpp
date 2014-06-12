@@ -453,7 +453,7 @@ void ExecutionEngine::enableDebugger()
 void ExecutionEngine::enableProfiler()
 {
     Q_ASSERT(!profiler);
-    profiler = new QV4::Profiling::Profiler();
+    profiler = new QV4::Profiling::Profiler(this);
 }
 
 void ExecutionEngine::initRootContext()

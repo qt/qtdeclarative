@@ -113,6 +113,10 @@ public:
 
     void registerDeletable(GCDeletable *d);
 
+    size_t getUsedMem() const;
+    size_t getAllocatedMem() const;
+    size_t getLargeItemsMem() const;
+
 protected:
     /// expects size to be aligned
     // TODO: try to inline
@@ -129,7 +133,6 @@ private:
     void mark();
     void sweep(bool lastSweep = false);
     void sweep(char *chunkStart, std::size_t chunkSize, size_t size);
-    uint getUsedMem();
 
 protected:
     QScopedPointer<Data> m_d;
