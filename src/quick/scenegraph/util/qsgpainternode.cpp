@@ -116,6 +116,10 @@ QSGPainterNode::QSGPainterNode(QQuickPaintedItem *item)
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
+
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QString::fromLatin1("QQuickPaintedItem(%1):%2").arg(QString::fromLatin1(item->metaObject()->className())).arg(item->objectName()));
+#endif
 }
 
 QSGPainterNode::~QSGPainterNode()
