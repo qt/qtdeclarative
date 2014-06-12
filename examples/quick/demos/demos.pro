@@ -5,8 +5,8 @@ SUBDIRS = samegame \
             tweetsearch \
             maroon \
             photosurface \
+            rssnews \
             stocqt
 
 EXAMPLE_FILES = \
-    photoviewer \
-    rssnews
+    photoviewer
