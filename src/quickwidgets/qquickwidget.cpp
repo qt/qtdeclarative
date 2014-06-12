@@ -310,6 +310,7 @@ QQuickWidget::QQuickWidget(QWidget *parent)
 : QWidget(*(new QQuickWidgetPrivate), parent, 0)
 {
     setMouseTracking(true);
+    setFocusPolicy(Qt::StrongFocus);
     d_func()->init();
 }
 
@@ -322,6 +323,7 @@ QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
 : QWidget(*(new QQuickWidgetPrivate), parent, 0)
 {
     setMouseTracking(true);
+    setFocusPolicy(Qt::StrongFocus);
     d_func()->init();
     setSource(source);
 }
@@ -339,6 +341,7 @@ QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
     : QWidget(*(new QQuickWidgetPrivate), parent, 0)
 {
     setMouseTracking(true);
+    setFocusPolicy(Qt::StrongFocus);
     Q_ASSERT(engine);
     d_func()->init(engine);
 }
