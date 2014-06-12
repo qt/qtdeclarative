@@ -1036,7 +1036,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (snapMode == QQuickGridView::NoSnap && highlightRange != QQuickGridView::StrictlyEnforceRange)
             data.flickTarget = maxExtent;
     }
-    bool overShoot = boundsBehavior == QQuickFlickable::DragAndOvershootBounds;
+    bool overShoot = boundsBehavior & QQuickFlickable::OvershootBounds;
     if (maxDistance > 0 || overShoot) {
         // This mode requires the grid to stop exactly on a row boundary.
         qreal v = velocity;

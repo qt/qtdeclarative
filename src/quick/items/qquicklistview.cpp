@@ -1572,7 +1572,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (snapMode == QQuickListView::NoSnap && highlightRange != QQuickListView::StrictlyEnforceRange)
             data.flickTarget = maxExtent;
     }
-    bool overShoot = boundsBehavior == QQuickFlickable::DragAndOvershootBounds;
+    bool overShoot = boundsBehavior & QQuickFlickable::OvershootBounds;
     if (maxDistance > 0 || overShoot) {
         // These modes require the list to stop exactly on an item boundary.
         // The initial flick will estimate the boundary to stop on.

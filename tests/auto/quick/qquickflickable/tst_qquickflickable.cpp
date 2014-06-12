@@ -231,6 +231,12 @@ void tst_qquickflickable::boundsBehavior()
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
     QCOMPARE(spy.count(),3);
 
+    flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
+    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::OvershootBounds);
+    QCOMPARE(spy.count(),4);
+    flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
+    QCOMPARE(spy.count(),4);
+
     delete flickable;
 }
 

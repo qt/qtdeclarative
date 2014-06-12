@@ -319,7 +319,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         maxDistance = qAbs(maxExtent - data.move.value());
         data.flickTarget = maxExtent;
     }
-    if (maxDistance > 0 || boundsBehavior == QQuickFlickable::DragAndOvershootBounds) {
+    if (maxDistance > 0 || boundsBehavior & QQuickFlickable::OvershootBounds) {
         qreal v = velocity;
         if (maxVelocity != -1 && maxVelocity < qAbs(v)) {
             if (v < 0)
@@ -339,7 +339,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         accel = v2 / (2.0f * qAbs(dist));
 
         resetTimeline(data);
-        if (boundsBehavior == QQuickFlickable::DragAndOvershootBounds)
+        if (boundsBehavior & QQuickFlickable::OvershootBounds)
             timeline.accel(data.move, v, accel);
         else
             timeline.accel(data.move, v, accel, maxDistance);
@@ -1011,7 +1011,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             // the estimate to be altered
             const qreal minY = vData.dragMinBound + vData.startMargin;
             const qreal maxY = vData.dragMaxBound - vData.endMargin;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds) {
+            if (!(boundsBehavior & QQuickFlickable::DragOverBounds)) {
                 if (fuzzyLessThanOrEqualTo(newY, maxY)) {
                     newY = maxY;
                     rejectY = vData.pressPos == maxY && vData.move.value() == maxY && dy < 0;
@@ -1045,7 +1045,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds) {
+            if (!(boundsBehavior & QQuickFlickable::DragOverBounds)) {
                 if (fuzzyLessThanOrEqualTo(newX, maxX)) {
                     newX = maxX;
                     rejectX = hData.pressPos == maxX && hData.move.value() == maxX && dx < 0;
@@ -1627,6 +1627,8 @@ QQmlListProperty<QQuickItem> QQuickFlickable::flickableChildren()
     of the flickable, and flicks will not overshoot.
     \li Flickable.DragOverBounds - the contents can be dragged beyond the boundary
     of the Flickable, but flicks will not overshoot.
+    \li Flickable.OvershootBounds - the contents can overshoot the boundary when flicked,
+    but the content cannot be dragged beyond the boundary of the flickable. (since \c{QtQuick 2.5})
     \li Flickable.DragAndOvershootBounds (default) - the contents can be dragged
     beyond the boundary of the Flickable, and can overshoot the
     boundary when flicked.

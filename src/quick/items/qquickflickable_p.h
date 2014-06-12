@@ -94,7 +94,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "flickableData")
 
     Q_ENUMS(FlickableDirection)
-    Q_ENUMS(BoundsBehavior)
+    Q_FLAGS(BoundsBehavior)
 
 public:
     QQuickFlickable(QQuickItem *parent=0);
@@ -103,7 +103,14 @@ public:
     QQmlListProperty<QObject> flickableData();
     QQmlListProperty<QQuickItem> flickableChildren();
 
-    enum BoundsBehavior { StopAtBounds, DragOverBounds, DragAndOvershootBounds };
+    enum BoundsBehaviorFlag {
+        StopAtBounds = 0x0,
+        DragOverBounds = 0x1,
+        OvershootBounds = 0x2,
+        DragAndOvershootBounds = DragOverBounds | OvershootBounds
+    };
+    Q_DECLARE_FLAGS(BoundsBehavior, BoundsBehaviorFlag)
+
     BoundsBehavior boundsBehavior() const;
     void setBoundsBehavior(BoundsBehavior);
 
