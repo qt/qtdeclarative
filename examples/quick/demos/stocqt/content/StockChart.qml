@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -44,25 +44,39 @@ Rectangle {
     id: chart
     width: 320
     height: 200
-    color: "transparent"
 
-    property var _months: [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
     property var stockModel: null
     property var startDate: new Date()
     property var endDate: new Date()
     property string activeChart: "year"
     property var settings
+    property int gridSize: 4
+    property real gridStep: gridSize ? (width - canvas.tickMargin) / gridSize : canvas.xGridStep
 
     function update() {
         endDate = new Date();
-        if (chart.activeChart === "year")
-            chart.startDate = new Date(chart.endDate.getFullYear() - 1, chart.endDate.getMonth(), chart.endDate.getDate());
-        else if (chart.activeChart === "month")
-            chart.startDate = new Date(chart.endDate.getFullYear() , chart.endDate.getMonth() -1, chart.endDate.getDate());
-        else if (chart.activeChart === "week")
-            chart.startDate = new Date(chart.endDate.getFullYear() , chart.endDate.getMonth(), chart.endDate.getDate() - 7);
-        else
+        if (chart.activeChart === "year") {
+            chart.startDate = new Date(chart.endDate.getFullYear() - 1,
+                                       chart.endDate.getMonth(),
+                                       chart.endDate.getDate());
+            chart.gridSize = 12;
+        }
+        else if (chart.activeChart === "month") {
+            chart.startDate = new Date(chart.endDate.getFullYear(),
+                                       chart.endDate.getMonth() - 1,
+                                       chart.endDate.getDate());
+            gridSize = 0;
+        }
+        else if (chart.activeChart === "week") {
+            chart.startDate = new Date(chart.endDate.getFullYear(),
+                                       chart.endDate.getMonth(),
+                                       chart.endDate.getDate() - 7);
+            gridSize = 0;
+        }
+        else {
             chart.startDate = new Date(2005, 3, 25);
+            gridSize = 4;
+        }
 
         canvas.requestPaint();
     }
@@ -121,40 +135,42 @@ Rectangle {
     Text {
         id: fromDate
         color: "#000000"
-        width: 50
         font.family: "Open Sans"
-        font.pointSize: 10
-        wrapMode: Text.WordWrap
+        font.pointSize: 8
         anchors.left: parent.left
-        anchors.leftMargin: 20
         anchors.bottom: parent.bottom
-        text: _months[startDate.getMonth()] + "\n" + startDate.getFullYear()
+        text: "| " + startDate.toDateString()
     }
 
     Text {
         id: toDate
         color: "#000000"
-        font.pointSize: 10
-        width: 50
-        wrapMode: Text.WordWrap
+        font.family: "Open Sans"
+        font.pointSize: 8
         anchors.right: parent.right
-        anchors.leftMargin: 20
+        anchors.rightMargin: canvas.tickMargin
         anchors.bottom: parent.bottom
-        text: _months[endDate.getMonth()] + "\n" + endDate.getFullYear()
+        text: endDate.toDateString() + " |"
     }
 
     Canvas {
         id: canvas
+
+        // Uncomment below lines to use OpenGL hardware accelerated rendering.
+        // See Canvas documentation for available options.
+        // renderTarget: Canvas.FramebufferObject
+        // renderStrategy: Canvas.Threaded
+
         anchors.top: activeChartRow.bottom
-        anchors.left: chart.left
-        anchors.right: chart.right
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.bottom: fromDate.top
-        antialiasing: true
 
         property int pixelSkip: 1
+        property int numPoints: 1
+        property int tickMargin: 32
 
-        property real xGridOffset: width / 13
-        property real xGridStep: width / 4
+        property real xGridStep: (width - tickMargin) / numPoints
         property real yGridOffset: height / 26
         property real yGridStep: height / 12
 
@@ -173,16 +189,17 @@ Rectangle {
             // Vertical grid lines
             var height = 35 * canvas.height / 36;
             var yOffset = canvas.height - height;
-            for (i = 0; i < 4; i++) {
-                ctx.moveTo(canvas.xGridOffset + i * canvas.xGridStep, yOffset);
-                ctx.lineTo(canvas.xGridOffset + i * canvas.xGridStep, height);
+            var xOffset = 0;
+            for (i = 0; i < chart.gridSize; i++) {
+                ctx.moveTo(xOffset + i * chart.gridStep, yOffset);
+                ctx.lineTo(xOffset + i * chart.gridStep, height);
             }
             ctx.stroke();
 
             // Right ticks
             ctx.strokeStyle = "#666666";
             ctx.beginPath();
-            var xStart = 35 * canvas.width / 36;
+            var xStart = canvas.width - tickMargin;
             ctx.moveTo(xStart, 0);
             ctx.lineTo(xStart, canvas.height);
             for (i = 0; i < 12; i++) {
@@ -197,7 +214,30 @@ Rectangle {
             ctx.restore();
         }
 
-        function drawPrice(ctx, from, to, color, price, points, highest)
+        function drawScales(ctx, high, low, vol)
+        {
+            ctx.save();
+            ctx.strokeStyle = "#888888";
+            ctx.font = "10px Open Sans"
+            ctx.beginPath();
+
+            // prices on y-axis
+            var x = canvas.width - tickMargin + 3;
+            var priceStep = (high - low) / 9.0;
+            for (var i = 0; i < 10; i += 2) {
+                var price = parseFloat(high - i * priceStep).toFixed(1);
+                ctx.text(price, x, canvas.yGridOffset + i * yGridStep - 2);
+            }
+
+            // highest volume
+            ctx.text(vol, 0, canvas.yGridOffset + 9 * yGridStep + 12);
+
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawPrice(ctx, from, to, color, price, points, highest, lowest)
         {
             ctx.save();
             ctx.globalAlpha = 0.7;
@@ -206,15 +246,19 @@ Rectangle {
             ctx.beginPath();
 
             var end = points.length;
-            var xOffset = canvas.width / 36
+
+            var range = highest - lowest;
+            if (range == 0) {
+                range = 1;
+            }
 
             for (var i = 0; i < end; i += pixelSkip) {
-                var x = 34 * points[i].x / 36 + xOffset;
+                var x = points[i].x;
                 var y = points[i][price];
+                var h = 9 * yGridStep;
 
-                y = canvas.height * y/highest;
-                y = canvas.height - y;
-                y = 9 * y / 12 + yGridOffset; // Scaling to graph area
+                y = h * (lowest - y)/range + h + yGridOffset;
+
                 if (i == 0) {
                     ctx.moveTo(x, y);
                 } else {
@@ -229,44 +273,65 @@ Rectangle {
         {
             ctx.save();
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.6;
-            ctx.strokeStyle = Qt.rgba(0.8, 0.8, 0.8, 1);
-            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.8;
+            ctx.lineWidth = 0;
+            ctx.beginPath();
 
             var end = points.length;
-            for (var i = 0; i < end; i+=pixelSkip) {
-                var x = points[i].x;
-                var y = points[i][price];
-                y = canvas.height * (1 - y/highest);
-                y = 3 * y / 13;
-                ctx.fillRect(x, canvas.height - y, canvas.width/points.length, y);
+            var margin = 0;
+
+            if (chart.activeChart === "month" || chart.activeChart === "week") {
+                margin = 8;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowBlur = 3.5;
+                ctx.shadowColor = Qt.darker(color);
             }
+
+            // To match the volume graph with price grid, skip drawing the initial
+            // volume of the first day on chart.
+            for (var i = 1; i < end; i += pixelSkip) {
+                var x = points[i - 1].x;
+                var y = points[i][price];
+                y = canvas.height * (y / highest);
+                y = 3 * y / 12;
+                ctx.fillRect(x, canvas.height - y + yGridOffset,
+                             canvas.xGridStep - margin, y);
+            }
+
+            ctx.stroke();
             ctx.restore();
         }
 
         onPaint: {
-            var ctx = canvas.getContext("2d");
+            if (!stockModel.ready) {
+                return;
+            }
 
+            numPoints = stockModel.indexOf(chart.startDate);
+
+            if (chart.gridSize == 0)
+                chart.gridSize = numPoints
+
+            var ctx = canvas.getContext("2d");
             ctx.globalCompositeOperation = "source-over";
             ctx.lineWidth = 1;
 
             drawBackground(ctx);
 
-            if (!stockModel.ready) {
-                return;
-            }
-
-            var last = stockModel.indexOf(chart.startDate);
-            var first = 0;
-
-            var highestPrice = stockModel.highestPrice;
-            var highestVolume = stockModel.highestVolume;
+            var highestPrice = 0;
+            var highestVolume = 0;
+            var lowestPrice = -1;
             var points = [];
-            var step = canvas.width / (last + 0);
-            for (var i = last, j = 0; i >= 0 ; i -= pixelSkip, j += pixelSkip) {
+            for (var i = numPoints, j = 0; i >= 0 ; i -= pixelSkip, j += pixelSkip) {
                 var price = stockModel.get(i);
+                if (parseFloat(highestPrice) < parseFloat(price.high))
+                    highestPrice = price.high;
+                if (parseInt(highestVolume, 10) < parseInt(price.volume, 10))
+                    highestVolume = price.volume;
+                if (lowestPrice < 0 || parseFloat(lowestPrice) > parseFloat(price.low))
+                    lowestPrice = price.low;
                 points.push({
-                                x: j * step,
+                                x: j * xGridStep,
                                 open: price.open,
                                 close: price.close,
                                 high: price.high,
@@ -276,14 +341,16 @@ Rectangle {
             }
 
             if (settings.drawHighPrice)
-                drawPrice(ctx, first, last, settings.highColor, "high", points, highestPrice);
+                drawPrice(ctx, 0, numPoints, settings.highColor, "high", points, highestPrice, lowestPrice);
             if (settings.drawLowPrice)
-                drawPrice(ctx, first, last, settings.lowColor, "low", points, highestPrice);
+                drawPrice(ctx, 0, numPoints, settings.lowColor, "low", points, highestPrice, lowestPrice);
             if (settings.drawOpenPrice)
-                drawPrice(ctx, first, last,settings.openColor, "open", points, highestPrice);
+                drawPrice(ctx, 0, numPoints,settings.openColor, "open", points, highestPrice, lowestPrice);
             if (settings.drawClosePrice)
-                drawPrice(ctx, first, last, settings.closeColor, "close", points, highestPrice);
-            drawVolume(ctx, first, last, settings.volumeColor, "volume", points, highestVolume);
+                drawPrice(ctx, 0, numPoints, settings.closeColor, "close", points, highestPrice, lowestPrice);
+
+            drawVolume(ctx, 0, numPoints, settings.volumeColor, "volume", points, highestVolume);
+            drawScales(ctx, highestPrice, lowestPrice, highestVolume);
         }
     }
 }
