@@ -418,7 +418,7 @@ void Updater::visitTransformNode(Node *n)
         // The only change in this subtree is ourselves and we are a batch root, so
         // only update subroots and return, saving tons of child-processing (flickable-panning)
 
-        if (!n->becameBatchRoot && m_added == 0 && m_force_update == 0 && dirty && (n->dirtyState & ~QSGNode::DirtyMatrix) == 0) {
+        if (!n->becameBatchRoot && m_added == 0 && m_force_update == 0 && m_opacityChange == 0 && dirty && (n->dirtyState & ~QSGNode::DirtyMatrix) == 0) {
             BatchRootInfo *info = renderer->batchRootInfo(n);
             for (QSet<Node *>::const_iterator it = info->subRoots.constBegin();
                  it != info->subRoots.constEnd(); ++it) {
@@ -2020,6 +2020,8 @@ void Renderer::renderMergedBatch(const Batch *batch)
               << " root:" << batch->root;
         if (batch->drawSets.size() > 1)
             debug << "sets:" << batch->drawSets.size();
+        if (!batch->isOpaque)
+            debug << "opacity:" << e->node->inheritedOpacity();
         batch->uploadedThisFrame = false;
     }
 

@@ -87,7 +87,6 @@ public:
     void createContext();
     void destroyContext();
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
-    void createOffscreenSurface();
 
     GLuint textureId() const Q_DECL_OVERRIDE;
 
@@ -108,6 +107,7 @@ public:
     QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
     QOpenGLFramebufferObject *fbo;
+    QOpenGLFramebufferObject *resolvedFbo;
     QOpenGLContext *context;
 
     QQuickWidget::ResizeMode resizeMode;

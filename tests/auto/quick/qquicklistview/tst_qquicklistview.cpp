@@ -221,6 +221,7 @@ private slots:
 
     void typedModel();
     void displayMargin();
+    void negativeDisplayMargin();
 
     void highlightItemGeometryChanges();
 
@@ -7199,6 +7200,49 @@ void tst_QQuickListView::displayMargin()
     // the first delegate should now be outside the begin margin
     listview->positionViewAtIndex(4, QQuickListView::Beginning);
     QCOMPARE(delegateVisible(item0), false);
+
+    delete window;
+}
+
+void tst_QQuickListView::negativeDisplayMargin()
+{
+    QQuickItem *item;
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("negativeDisplayMargin.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *listview = window->rootObject();
+    QQuickListView *innerList = findItem<QQuickListView>(window->rootObject(), "innerList");
+    QVERIFY(innerList != 0);
+
+    QTRY_COMPARE(innerList->property("createdItems").toInt(), 11);
+    QCOMPARE(innerList->property("destroyedItem").toInt(), 0);
+
+    QQuickItem *content = innerList->contentItem();
+    QVERIFY(content != 0);
+
+    QVERIFY(item = findItem<QQuickItem>(content, "delegate", 0));
+    QCOMPARE(delegateVisible(item), true);
+
+    QVERIFY(item = findItem<QQuickItem>(content, "delegate", 7));
+    QCOMPARE(delegateVisible(item), true);
+
+    QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
+    QCOMPARE(delegateVisible(item), false);
+
+    // Flick until contentY means that delegate8 should be visible
+    listview->setProperty("contentY", 500);
+    QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
+    QTRY_COMPARE(delegateVisible(item), true);
+
+    listview->setProperty("contentY", 1000);
+    QTRY_VERIFY(item = findItem<QQuickItem>(content, "delegate", 14));
+    QTRY_COMPARE(delegateVisible(item), true);
+
+    listview->setProperty("contentY", 0);
+    QTRY_VERIFY(item = findItem<QQuickItem>(content, "delegate", 4));
+    QTRY_COMPARE(delegateVisible(item), true);
 
     delete window;
 }

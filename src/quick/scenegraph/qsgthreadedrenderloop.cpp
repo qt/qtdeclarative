@@ -1199,6 +1199,8 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
             Window *w = windowForTimer(te->timerId());
             if (w)
                 polishAndSync(w);
+            else
+                killTimer(te->timerId());
         }
         return true;
     }

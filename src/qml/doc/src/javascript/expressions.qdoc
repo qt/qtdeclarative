@@ -37,44 +37,36 @@ Object} includes a number of helper methods that simplify building UIs and
 interacting with the QML environment.
 
 The JavaScript environment provided by QML is stricter than that in a web
-browser.  For example, in QML you cannot add, or modify, members of the
+browser.  For example, in QML you cannot add to, or modify, members of the
 JavaScript global object.  In regular JavaScript, it is possible to do this
 accidentally by using a variable without declaring it. In QML this will throw
-an exception, so all local variables should be explicitly declared.  See
+an exception, so all local variables must be explicitly declared.  See
 \l{JavaScript Environment Restrictions} for a complete description of the
 restrictions on JavaScript code executed from QML.
 
-There are various ways in which JavaScript expressions may be defined and used
-in QML, including property bindings, signal handlers, custom methods and
-JavaScript imports.
-
-
-
-
-\section1 JavaScript Expressions in QML Objects
-
-QML \l{QML Object Types}{object types} defined in \l{QML Documents}
-{QML documents} can make use of JavaScript expressions which implement program
-logic.  There are four ways that JavaScript can be used in a QML document:
+Various parts of \l{QML Documents}{QML documents} can contain JavaScript code:
 
 \list 1
-  \li Relationships between \l{Property Attributes}{properties} are described
-      using JavaScript expressions in \l{Property Binding}{property bindings}.
-      When any of a property's \e dependencies change, the property is
-      automatically updated too, according to the specified relationship.
-  \li \l{Signal Attributes}{Signal handlers} can be defined
-      which are automatically evaluated when the object emits the associated
-      signal.
-  \li \l{Method Attributes}{Custom methods} can be defined
-      in QML files as JavaScript functions.
-  \li JavaScript files providing functions and variables can be
-      \l{Importing JavaScript Resources in QML}{imported} in a QML
-      document.
+  \li The body of \l{Property Binding}{property bindings}. These JavaScript
+      expressions describe relationships between QML object \l{Property Attributes}
+      {properties}. When any of a property's \e dependencies change, the property
+      is automatically updated too, according to the specified relationship.
+  \li The body of \l{Signal Attributes}{Signal handlers}. These JavaScript
+      statements are automatically evaluated whenever a QML object emits the
+      associated signal.
+  \li The definition of \l{Method Attributes}{custom methods}. JavaScript functions
+      that are defined within the body of a QML object become methods of that
+      object.
+  \li Standalone \l{Importing JavaScript Resources in QML}{JavaScript resource
+      (.js) files}. These files are actually separate from QML documents, but
+      they can be imported into QML documents. Functions and variables that are
+      defined within the imported files can be used in property bindings, signal
+      handlers, and custom methods.
 \endlist
 
 
 
-\section2 Property Bindings
+\section1 JavaScript in Property Bindings
 
 In the following example, the \l Rectangle's \c color depends on the
 \l MouseArea's \c pressed property. This relationship is described using a
@@ -136,7 +128,7 @@ bindings differ from value assignments.
 
 
 
-\section2 Signal Handlers
+\section1 JavaScript in Signal Handlers
 
 QML object types can emit signals in reaction to certain events occurring.
 Those signals can be handled by signal handler functions, which can be defined
@@ -188,7 +180,7 @@ to define the implementation of signal handlers in QML with JavaScript.
 
 
 
-\section2 JavaScript Expressions in Functions
+\section1 JavaScript in Standalone Functions
 
 Program logic can also be defined in JavaScript functions.  These functions can
 be defined inline in QML documents (as custom methods) or externally in
@@ -196,12 +188,12 @@ imported JavaScript files.
 
 
 
-\section3 Custom Methods
+\section2 JavaScript in Custom Object Methods
 
 Custom methods can be defined in QML documents and may be called from signal
 handlers, property bindings, or functions in other QML objects.  Methods
-defined in this way are often referred to as "inline JavaScript functions" as
-their implementation is included in the QML object type definition
+defined in this way are often referred to as \e{inline JavaScript functions}
+because their implementation is included in the QML object type definition
 (QML document), as opposed to an external JavaScript file.
 
 An example of an inline custom method is as follows:
@@ -225,7 +217,7 @@ Item {
 }
 \endqml
 
-The factorial function will run whenever the MouseArea detects a clicked signal.
+The factorial function will run whenever the MouseArea detects a \c clicked signal.
 
 Importantly, custom methods defined inline in a QML document are exposed to
 other objects, and therefore inline functions on the root object in a QML
@@ -238,7 +230,7 @@ to define custom methods in QML with JavaScript code implementations.
 
 
 
-\section3 Functions in Imported JavaScript Files
+\section2 Functions in Imported JavaScript Files
 
 Non-trivial program logic is best separated into external JavaScript files.
 These files can be imported into QML files using an \c import statement, in
@@ -263,7 +255,7 @@ the section about \l{Importing JavaScript Resources in QML}.
 
 
 
-\section3 Connecting Signals to JavaScript Functions
+\section2 Connecting Signals to JavaScript Functions
 
 QML object types which emit signals also provide default signal handlers for
 their signals, as described in a previous section.  Sometimes, however, a
@@ -292,23 +284,26 @@ See \l{qtqml-syntax-signals.html}
 
 
 
-\section1 Running JavaScript at Startup
+\section1 JavaScript in Application Startup Code
 
 It is occasionally necessary to run some imperative code at application (or
 component instance) startup.  While it is tempting to just include the startup
 script as \e {global code} in an external script file, this can have severe
 limitations as the QML environment may not have been fully established.  For
 example, some objects might not have been created or some
-\l {Property Binding}{property bindings} may not have been run.
-\l {JavaScript Environment Restrictions} covers the exact limitations of global
+\l {Property Binding}{property bindings} may not have been established. See
+\l {JavaScript Environment Restrictions} for the exact limitations of global
 script code.
 
-Every QML object has an \e attached \l Component property that references the
-component within which the object was instantiated.  Every \l Component
-will emit a \c completed signal, and thus every object can define an
-implementation for the \c onCompleted() handler which can be used to trigger the
-execution of script code at startup after the QML environment has been
-completely established. For example:
+A QML object will emit the \c{Component.completed} \l{Signal and Handler Event
+System#Attached Signal Handlers}{attached signal} when its instantiation is
+complete.  JavaScript code in the corresponding \c{Component.onCompleted} handler
+runs after the object is instantiated.  Thus, the best place to write application
+startup code is in the \c{Component.onCompleted} handler of the top-level level
+object, because this object emits \c{Component.completed} when the QML environment
+is fully established.
+
+For example:
 
 \qml
 import QtQuick 2.0
@@ -346,7 +341,7 @@ signal just before being destroyed.
 \section1 Scarce Resources in JavaScript
 
 As described in the documentation for \l{QML Basic Types}, a \c var type
-property may hold a "scarce resource" (image or pixmap).  There are several
+property may hold a \e{scarce resource} (image or pixmap).  There are several
 important semantics of scarce resources which should be noted:
 
 \list

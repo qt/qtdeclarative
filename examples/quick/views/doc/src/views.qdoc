@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -28,55 +28,86 @@
 /*!
     \title Qt Quick Examples - Views
     \example views
-    \brief This is a collection of QML model/view examples
+    \brief This is a collection of QML model-view examples.
     \image qml-modelviews-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the \l {Qt Quick} view types.
+    \e Views is a collection of small QML examples relating to model and view
+    functionality. They demonstrate how to show data from a model using the
+    Qt Quick view types. For more information, visit the
+    \l{Models and Views in Qt Quick} page.
 
-    \section2 GridView and PathView demonstrate usage of these types to display views.
+    \include examples-run.qdocinc
+
+    \section1 GridView and PathView
+
+    \e GridView and \e PathView demonstrate usage of these types to display
+    views.
     \snippet views/gridview/gridview-example.qml 0
 
-    \section2 Dynamic List demonstrates animation of runtime additions and removals to a ListView.
+    \section1 Dynamic List
 
-    The ListView.onAdd signal handler runs an animation when new items are added to the
-    view, and the ListView.onRemove another when they are removed.
+    \e{Dynamic List} demonstrates animation of runtime additions and removals to
+    a \l ListView.
+
+    The ListView.onAdd signal handler runs an animation when new items are added
+    to the view, and the ListView.onRemove another when they are removed.
     \snippet views/listview/dynamiclist.qml 0
     \snippet views/listview/dynamiclist.qml 1
 
-    \section2 Expanding Delegates demonstrates delegates that expand when activated.
+    \section2 Expanding Delegates
 
-    It has a complex delegate the size and appearance of which can change, displacing
-    other items in the view.
+    \e{Expanding Delegates} demonstrates delegates that expand when activated.
+
+    It has a complex delegate the size and appearance of which can change,
+    displacing other items in the view.
     \snippet views/listview/expandingdelegates.qml 0
     \snippet views/listview/expandingdelegates.qml 1
     \snippet views/listview/expandingdelegates.qml 2
     \snippet views/listview/expandingdelegates.qml 3
 
-    \section2 Highlight demonstrates adding a custom highlight to a ListView.
+    \section1 Highlight
+
+    \e Highlight demonstrates adding a custom highlight to a \l ListView.
     \snippet views/listview/highlight.qml 0
 
-    \section2 Highlight Ranges shows the three different highlight range modes of ListView.
+    \section1 Highlight Ranges
+
+    \e{Highlight Ranges} shows the three different highlight range modes of
+    ListView.
     \snippet views/listview/highlightranges.qml 0
     \snippet views/listview/highlightranges.qml 1
     \snippet views/listview/highlightranges.qml 2
 
-    \section2 Sections demonstrates the various section headers and footers available to ListView.
+    \section1 Sections
+
+    \e Sections demonstrates the various section headers and footers available
+    to \l ListView.
     \snippet views/listview/sections.qml 0
 
-    \section2 Packages demonstrates using Packages to transition delegates between two views.
+    \section1 Packages
 
-    It has a Package which defines delegate items for each view and an item that can
-    be transferred between delegates.
+    \e Packages uses the \l Package type to transition delegates between
+    two views.
+
+    It has a Package object which defines delegate items for each view and an
+    item that can be transferred between delegates.
 
     \snippet views/package/Delegate.qml 0
 
-    A DelegateModel allows the individual views to access their specific items from
-    the shared package delegate.
+    A \l DelegateModel allows the individual views to access their specific
+    items from the shared package delegate.
 
     \snippet views/package/view.qml 0
 
-    \section2 ObjectModel uses an ObjectModel for the model instead of a ListModel.
+    \section1 ObjectModel
+
+    \e ObjectModel uses an ObjectModel for the model instead of a \l ListModel.
 
     \snippet views/objectmodel/objectmodel.qml 0
+
+    \section1 Display Margins
+
+    \e{Display Margins} uses delegates to display items and implements a simple
+    header and footer components.
 */

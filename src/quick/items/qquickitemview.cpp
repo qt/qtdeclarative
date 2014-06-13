@@ -481,7 +481,7 @@ void QQuickItemView::setDisplayMarginBeginning(int margin)
     if (d->displayMarginBeginning != margin) {
         d->displayMarginBeginning = margin;
         if (isComponentComplete()) {
-            d->refillOrLayout();
+            d->forceLayoutPolish();
         }
         emit displayMarginBeginningChanged();
     }
@@ -499,7 +499,7 @@ void QQuickItemView::setDisplayMarginEnd(int margin)
     if (d->displayMarginEnd != margin) {
         d->displayMarginEnd = margin;
         if (isComponentComplete()) {
-            d->refillOrLayout();
+            d->forceLayoutPolish();
         }
         emit displayMarginEndChanged();
     }

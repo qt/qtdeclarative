@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -39,50 +39,52 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.2
 
-Item {
+/*
+    This test verifies that when we have an update to opacity above
+    a batch root, the opacity of the batch root's children is rendered
+    correctly. The Text element has 1000 glyphs in it, which is needed
+    for contentRoot to become a batch root when the scale changes.
+
+    #samples: 2
+                 PixelPos     R    G    B    Error-tolerance
+    #base:        50  50     0.0  0.0  1.0       0.0
+    #final:       50  50     0.5  0.5  1.0       0.05
+*/
+
+RenderTestBase {
     id: root
 
-    property alias source: source
-    property alias primaryTarget: primaryTarget
-    property alias secondaryTarget: secondaryTarget
-
-    property var pressedKeys: []
-    property var releasedKeys: []
-    Keys.onPressed: { var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
-    Keys.onReleased: { var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
-
     Item {
-        id: primaryTarget
-        objectName: "primary"
-        property var pressedKeys: []
-        property var releasedKeys: []
-        Keys.forwardTo: [ secondaryTarget, extraTarget ]
-        Keys.onPressed: { event.accepted = event.key === Qt.Key_P; var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
-        Keys.onReleased: { event.accepted = event.key === Qt.Key_P; var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
+        id: failRoot;
+        property alias itemScale: contentItem.scale
 
         Item {
-            id: source
-            objectName: "source"
-            property var pressedKeys: []
-            property var releasedKeys: []
-            Keys.forwardTo: primaryTarget
-            Keys.onPressed: { var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
-            Keys.onReleased: { var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
+            id: contentItem
+            width: 100
+            height: 100
+            Rectangle {
+                width: 100
+                height: 100
+                color: "blue"
+                Text {
+                    id: input
+                    color: "black"
+                    Component.onCompleted: { for (var i = 0; i<1000; ++i) input.text += 'x' }
+                }
+            }
         }
     }
 
-    Item {
-        id: secondaryTarget
-        objectName: "secondary"
-        property var pressedKeys: []
-        property var releasedKeys: []
-        Keys.onPressed: { event.accepted = event.key === Qt.Key_S; var keys = pressedKeys; keys.push(event.key); pressedKeys = keys }
-        Keys.onReleased: { event.accepted = event.key === Qt.Key_S; var keys = releasedKeys; keys.push(event.key); releasedKeys = keys }
+    SequentialAnimation {
+        id: unifiedAnimation;
+        NumberAnimation { properties: "opacity,itemScale"; duration: 256; from: 1; to: 0.5; target: failRoot }
+        ScriptAction { script: root.finalStageComplete = true; }
     }
 
-    Item {
-        id: extraTarget
+    onEnterFinalStage: {
+        unifiedAnimation.running = true;
     }
+
 }

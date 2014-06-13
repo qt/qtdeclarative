@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -31,11 +31,19 @@
     \image qml-draganddrop-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to drag and drop functionality.
+    \e{Drag and Drop} is a collection of small QML examples relating to drag
+    and drop functionality. For more information, visit the \l{Drag and Drop}
+    page.
 
-    \section2 Tiles adds drag and drop to simple rectangles, which you can drag into a specific grid.
+    \include examples-run.qdocinc
 
-    It has a DragTile component which uses a MouseArea to move an item when dragged:
+    \section1 Tiles
+
+    \e Tiles adds drag and drop to simple rectangles, which you can drag into a
+    specific grid.
+
+    It has a DragTile component which uses a MouseArea to move an item when
+    dragged:
 
     \snippet draganddrop/tiles/DragTile.qml 0
     \snippet draganddrop/tiles/DragTile.qml 1
@@ -44,15 +52,15 @@
 
     \snippet draganddrop/tiles/DropTile.qml 0
 
-    The keys property of the DropArea will only allow an item with matching key in
-    it's Drag.keys property to be dropped on it.
+    The keys property of the DropArea will only allow an item with a matching
+    key in its Drag.keys property to be dropped on it.
 
-    \section2 GridView adds drag and drop to a GridView, allowing you to reorder the list.
+    \section1 GridView
 
-    It uses a DelegateModel to move a delegate item to the position of another item
-    it is dragged over.
+    \e GridView adds drag and drop to a \l GridView, allowing you to reorder the
+    list. It also uses a \l DelegateModel to move a delegate item to the
+    position of another item it is dragged over.
 
     \snippet draganddrop/views/gridview.qml 0
     \snippet draganddrop/views/gridview.qml 1
 */
-

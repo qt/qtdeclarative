@@ -3,7 +3,7 @@ uniform highp mat4 matrix;
 uniform highp mat4 rotation;
 
 // w -> apply 3d rotation and projection
-uniform lowp vec4 tweak;
+uniform mediump vec4 tweak;
 
 varying mediump vec2 pos;
 
