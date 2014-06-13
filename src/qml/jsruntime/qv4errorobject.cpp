@@ -287,7 +287,7 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) EvalErrorObject::Data(m->engine(), v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<EvalErrorObject>(m->engine(), v))->asReturnedValue();
 }
 
 RangeErrorCtor::Data::Data(ExecutionContext *scope)
@@ -300,7 +300,7 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) RangeErrorObject::Data(scope.engine, v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<RangeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 ReferenceErrorCtor::Data::Data(ExecutionContext *scope)
@@ -313,7 +313,7 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) ReferenceErrorObject::Data(scope.engine, v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<ReferenceErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 SyntaxErrorCtor::Data::Data(ExecutionContext *scope)
@@ -326,7 +326,7 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) SyntaxErrorObject::Data(scope.engine, v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<SyntaxErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 TypeErrorCtor::Data::Data(ExecutionContext *scope)
@@ -339,7 +339,7 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) TypeErrorObject::Data(scope.engine, v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<TypeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 URIErrorCtor::Data::Data(ExecutionContext *scope)
@@ -352,7 +352,7 @@ ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (new (m->engine()) URIErrorObject::Data(scope.engine, v))->asReturnedValue();
+    return (m->engine()->memoryManager->alloc<URIErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj)

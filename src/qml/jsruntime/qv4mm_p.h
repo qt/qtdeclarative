@@ -99,8 +99,56 @@ public:
     inline Managed *allocManaged(std::size_t size)
     {
         size = align(size);
-        Managed *o = alloc(size);
+        Managed *o = allocData(size);
         return o;
+    }
+
+    template <typename ManagedType>
+    ManagedType *alloc()
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data();
+        return t;
+    }
+
+    template <typename ManagedType, typename Arg1>
+    ManagedType *alloc(Arg1 arg1)
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data(arg1);
+        return t;
+    }
+
+    template <typename ManagedType, typename Arg1, typename Arg2>
+    ManagedType *alloc(Arg1 arg1, Arg2 arg2)
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
+        return t;
+    }
+
+    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
+    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
+        return t;
+    }
+
+    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
+        return t;
+    }
+
+    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    {
+        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
+        return t;
     }
 
     bool isGCBlocked() const;
@@ -120,7 +168,7 @@ public:
 protected:
     /// expects size to be aligned
     // TODO: try to inline
-    Managed *alloc(std::size_t size);
+    Managed *allocData(std::size_t size);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);

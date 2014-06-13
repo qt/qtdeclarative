@@ -1256,7 +1256,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    return (new (ctx->d()->engine) QQmlBindingFunction::Data(f))->asReturnedValue();
+    return (ctx->d()->engine->memoryManager->alloc<QQmlBindingFunction>(f))->asReturnedValue();
 }
 
 
@@ -1587,10 +1587,10 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(QStringLiteral("print"), ConsoleObject::method_log);
     globalObject->defineDefaultProperty(QStringLiteral("gc"), method_gc);
 
-    ScopedObject console(scope, new (v4) QV4::ConsoleObject::Data(v4));
+    ScopedObject console(scope, v4->memoryManager->alloc<QV4::ConsoleObject>(v4));
     globalObject->defineDefaultProperty(QStringLiteral("console"), console);
 
-    ScopedObject qt(scope, new (v4) QV4::QtObject::Data(v4, qmlEngine));
+    ScopedObject qt(scope, v4->memoryManager->alloc<QV4::QtObject>(v4, qmlEngine));
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension

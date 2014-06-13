@@ -75,7 +75,7 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId,
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlListWrapper> r(scope, new (v4) QmlListWrapper::Data(v8));
+    Scoped<QmlListWrapper> r(scope, v4->memoryManager->alloc<QmlListWrapper>(v8));
     r->d()->object = object;
     r->d()->propertyType = propType;
     void *args[] = { &r->d()->property, 0 };
@@ -88,7 +88,7 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObje
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlListWrapper> r(scope, new (v4) QmlListWrapper::Data(v8));
+    Scoped<QmlListWrapper> r(scope, v4->memoryManager->alloc<QmlListWrapper>(v8));
     r->d()->object = prop.object;
     r->d()->property = prop;
     r->d()->propertyType = propType;

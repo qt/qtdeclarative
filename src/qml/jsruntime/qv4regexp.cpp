@@ -42,6 +42,7 @@
 #include "qv4regexp_p.h"
 #include "qv4engine_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4mm_p.h"
 
 using namespace QV4;
 
@@ -49,7 +50,7 @@ RegExpCache::~RegExpCache()
 {
     for (RegExpCache::Iterator it = begin(), e = end();
          it != e; ++it)
-        it.value()->cache = 0;
+        it.value()->d()->cache = 0;
     clear();
 }
 
@@ -70,22 +71,22 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-RegExp::Data* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
+RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
 {
     RegExpCacheKey key(pattern, ignoreCase, multiline);
 
     RegExpCache *cache = engine->regExpCache;
     if (cache) {
-        if (RegExp::Data *result = cache->value(key))
+        if (RegExp *result = cache->value(key))
             return result;
     }
 
-    RegExp::Data *result = new (engine) RegExp::Data(engine, pattern, ignoreCase, multiline);
+    RegExp *result = engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline);
 
     if (!cache)
         cache = engine->regExpCache = new RegExpCache;
 
-    result->cache = cache;
+    result->d()->cache = cache;
     cache->insert(key, result);
 
     return result;

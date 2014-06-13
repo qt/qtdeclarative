@@ -71,6 +71,7 @@
 #include "qv4memberdata_p.h"
 
 #include <QtCore/QTextStream>
+#include <QDateTime>
 
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
@@ -258,13 +259,13 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     memberDataClass = InternalClass::create(this, MemberData::staticVTable(), 0);
 
-    ScopedObject objectPrototype(scope, new (this) ObjectPrototype::Data(InternalClass::create(this, ObjectPrototype::staticVTable(), 0)));
+    ScopedObject objectPrototype(scope, memoryManager->alloc<ObjectPrototype>(InternalClass::create(this, ObjectPrototype::staticVTable(), 0)));
     objectClass = InternalClass::create(this, Object::staticVTable(), objectPrototype);
     Q_ASSERT(objectClass->vtable == Object::staticVTable());
 
     arrayClass = InternalClass::create(this, ArrayObject::staticVTable(), objectPrototype);
     arrayClass = arrayClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
-    ScopedObject arrayPrototype(scope, new (this) ArrayPrototype::Data(arrayClass));
+    ScopedObject arrayPrototype(scope, memoryManager->alloc<ArrayPrototype>(arrayClass));
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
     simpleArrayDataClass = InternalClass::create(this, SimpleArrayData::staticVTable(), 0);
@@ -279,73 +280,73 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     initRootContext();
 
-    ScopedObject stringPrototype(scope, new (this) StringPrototype::Data(InternalClass::create(this, StringPrototype::staticVTable(), objectPrototype)));
+    ScopedObject stringPrototype(scope, memoryManager->alloc<StringPrototype>(InternalClass::create(this, StringPrototype::staticVTable(), objectPrototype)));
     stringObjectClass = InternalClass::create(this, String::staticVTable(), stringPrototype);
 
-    ScopedObject numberPrototype(scope, new (this) NumberPrototype::Data(InternalClass::create(this, NumberPrototype::staticVTable(), objectPrototype)));
+    ScopedObject numberPrototype(scope, memoryManager->alloc<NumberPrototype>(InternalClass::create(this, NumberPrototype::staticVTable(), objectPrototype)));
     numberClass = InternalClass::create(this, NumberObject::staticVTable(), numberPrototype);
 
-    ScopedObject booleanPrototype(scope, new (this) BooleanPrototype::Data(InternalClass::create(this, BooleanPrototype::staticVTable(), objectPrototype)));
+    ScopedObject booleanPrototype(scope, memoryManager->alloc<BooleanPrototype>(InternalClass::create(this, BooleanPrototype::staticVTable(), objectPrototype)));
     booleanClass = InternalClass::create(this, BooleanObject::staticVTable(), booleanPrototype);
 
-    ScopedObject datePrototype(scope, new (this) DatePrototype::Data(InternalClass::create(this, DatePrototype::staticVTable(), objectPrototype)));
+    ScopedObject datePrototype(scope, memoryManager->alloc<DatePrototype>(InternalClass::create(this, DatePrototype::staticVTable(), objectPrototype)));
     dateClass = InternalClass::create(this, DateObject::staticVTable(), datePrototype);
 
     InternalClass *functionProtoClass = InternalClass::create(this, FunctionObject::staticVTable(), objectPrototype);
     uint index;
     functionProtoClass = functionProtoClass->addMember(id_prototype, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
-    ScopedObject functionPrototype(scope, new (this) FunctionPrototype::Data(functionProtoClass));
+    ScopedObject functionPrototype(scope, memoryManager->alloc<FunctionPrototype>(functionProtoClass));
     functionClass = InternalClass::create(this, FunctionObject::staticVTable(), functionPrototype);
     functionClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == FunctionObject::Index_Prototype);
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
-    Scoped<RegExpPrototype> regExpPrototype(scope, new (this) RegExpPrototype::Data(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype)));
+    Scoped<RegExpPrototype> regExpPrototype(scope, memoryManager->alloc<RegExpPrototype>(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype)));
     regExpClass = InternalClass::create(this, RegExpObject::staticVTable(), regExpPrototype.getPointer());
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    ScopedObject errorPrototype(scope, new (this) ErrorPrototype::Data(InternalClass::create(this, ErrorObject::staticVTable(), objectPrototype)));
+    ScopedObject errorPrototype(scope, memoryManager->alloc<ErrorPrototype>(InternalClass::create(this, ErrorObject::staticVTable(), objectPrototype)));
     errorClass = InternalClass::create(this, ErrorObject::staticVTable(), errorPrototype);
-    ScopedObject evalErrorPrototype(scope, new (this) EvalErrorPrototype::Data(errorClass));
+    ScopedObject evalErrorPrototype(scope, memoryManager->alloc<EvalErrorPrototype>(errorClass));
     evalErrorClass = InternalClass::create(this, EvalErrorObject::staticVTable(), evalErrorPrototype);
-    ScopedObject rangeErrorPrototype(scope, new (this) RangeErrorPrototype::Data(errorClass));
+    ScopedObject rangeErrorPrototype(scope, memoryManager->alloc<RangeErrorPrototype>(errorClass));
     rangeErrorClass = InternalClass::create(this, RangeErrorObject::staticVTable(), rangeErrorPrototype);
-    ScopedObject referenceErrorPrototype(scope, new (this) ReferenceErrorPrototype::Data(errorClass));
+    ScopedObject referenceErrorPrototype(scope, memoryManager->alloc<ReferenceErrorPrototype>(errorClass));
     referenceErrorClass = InternalClass::create(this, ReferenceErrorObject::staticVTable(), referenceErrorPrototype);
-    ScopedObject syntaxErrorPrototype(scope, new (this) SyntaxErrorPrototype::Data(errorClass));
+    ScopedObject syntaxErrorPrototype(scope, memoryManager->alloc<SyntaxErrorPrototype>(errorClass));
     syntaxErrorClass = InternalClass::create(this, SyntaxErrorObject::staticVTable(), syntaxErrorPrototype);
-    ScopedObject typeErrorPrototype(scope, new (this) TypeErrorPrototype::Data(errorClass));
+    ScopedObject typeErrorPrototype(scope, memoryManager->alloc<TypeErrorPrototype>(errorClass));
     typeErrorClass = InternalClass::create(this, TypeErrorObject::staticVTable(), typeErrorPrototype);
-    ScopedObject uRIErrorPrototype(scope, new (this) URIErrorPrototype::Data(errorClass));
+    ScopedObject uRIErrorPrototype(scope, memoryManager->alloc<URIErrorPrototype>(errorClass));
     uriErrorClass = InternalClass::create(this, URIErrorObject::staticVTable(), uRIErrorPrototype);
 
-    ScopedObject variantPrototype(scope, new (this) VariantPrototype::Data(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype)));
+    ScopedObject variantPrototype(scope, memoryManager->alloc<VariantPrototype>(InternalClass::create(this, VariantPrototype::staticVTable(), objectPrototype)));
     variantClass = InternalClass::create(this, VariantObject::staticVTable(), variantPrototype);
     Q_ASSERT(variantClass->prototype == variantPrototype);
     Q_ASSERT(variantPrototype->internalClass()->prototype == objectPrototype);
 
-    sequencePrototype = ScopedValue(scope, new (this) SequencePrototype::Data(arrayClass));
+    sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass));
 
-    objectCtor = static_cast<HeapObject *>(new (this) ObjectCtor::Data(rootContext));
-    stringCtor = static_cast<HeapObject *>(new (this) StringCtor::Data(rootContext));
-    numberCtor = static_cast<HeapObject *>(new (this) NumberCtor::Data(rootContext));
-    booleanCtor = static_cast<HeapObject *>(new (this) BooleanCtor::Data(rootContext));
-    arrayCtor = static_cast<HeapObject *>(new (this) ArrayCtor::Data(rootContext));
-    functionCtor = static_cast<HeapObject *>(new (this) FunctionCtor::Data(rootContext));
-    dateCtor = static_cast<HeapObject *>(new (this) DateCtor::Data(rootContext));
-    regExpCtor = static_cast<HeapObject *>(new (this) RegExpCtor::Data(rootContext));
-    errorCtor = static_cast<HeapObject *>(new (this) ErrorCtor::Data(rootContext));
-    evalErrorCtor = static_cast<HeapObject *>(new (this) EvalErrorCtor::Data(rootContext));
-    rangeErrorCtor = static_cast<HeapObject *>(new (this) RangeErrorCtor::Data(rootContext));
-    referenceErrorCtor = static_cast<HeapObject *>(new (this) ReferenceErrorCtor::Data(rootContext));
-    syntaxErrorCtor = static_cast<HeapObject *>(new (this) SyntaxErrorCtor::Data(rootContext));
-    typeErrorCtor = static_cast<HeapObject *>(new (this) TypeErrorCtor::Data(rootContext));
-    uRIErrorCtor = static_cast<HeapObject *>(new (this) URIErrorCtor::Data(rootContext));
+    objectCtor = memoryManager->alloc<ObjectCtor>(rootContext);
+    stringCtor = memoryManager->alloc<StringCtor>(rootContext);
+    numberCtor = memoryManager->alloc<NumberCtor>(rootContext);
+    booleanCtor = memoryManager->alloc<BooleanCtor>(rootContext);
+    arrayCtor = memoryManager->alloc<ArrayCtor>(rootContext);
+    functionCtor = memoryManager->alloc<FunctionCtor>(rootContext);
+    dateCtor = memoryManager->alloc<DateCtor>(rootContext);
+    regExpCtor = memoryManager->alloc<RegExpCtor>(rootContext);
+    errorCtor = memoryManager->alloc<ErrorCtor>(rootContext);
+    evalErrorCtor = memoryManager->alloc<EvalErrorCtor>(rootContext);
+    rangeErrorCtor = memoryManager->alloc<RangeErrorCtor>(rootContext);
+    referenceErrorCtor = memoryManager->alloc<ReferenceErrorCtor>(rootContext);
+    syntaxErrorCtor = memoryManager->alloc<SyntaxErrorCtor>(rootContext);
+    typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(rootContext);
+    uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(rootContext);
 
     static_cast<ObjectPrototype *>(objectPrototype.getPointer())->init(this, objectCtor.asObject());
     static_cast<StringPrototype *>(stringPrototype.getPointer())->init(this, stringCtor.asObject());
@@ -390,15 +391,15 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (this) MathObject::Data(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (this) JsonObject::Data(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    evalFunction = Scoped<EvalFunction>(scope, new (this) EvalFunction::Data(rootContext));
+    evalFunction = Scoped<EvalFunction>(scope, memoryManager->alloc<EvalFunction>(rootContext));
     globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
@@ -477,32 +478,32 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext::Data *g = new (this) GlobalContext::Data(this);
-    g->callData = rootContext->d()->callData;
+    GlobalContext *g = memoryManager->alloc<GlobalContext>(this);
+    g->d()->callData = rootContext->d()->callData;
 
-    Q_ASSERT(currentContext() == reinterpret_cast<GlobalContext *>(g));
-    return reinterpret_cast<GlobalContext *>(g);
+    Q_ASSERT(currentContext() == g);
+    return g;
 }
 
 
 Returned<Object> *ExecutionEngine::newObject()
 {
     Scope scope(this);
-    ScopedObject object(scope, new (this) Object::Data(this));
+    ScopedObject object(scope, memoryManager->alloc<Object>(this));
     return object->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
 {
     Scope scope(this);
-    ScopedObject object(scope, new (this) Object::Data(internalClass));
+    ScopedObject object(scope, memoryManager->alloc<Object>(internalClass));
     return object->asReturned<Object>();
 }
 
 Returned<String> *ExecutionEngine::newString(const QString &s)
 {
     Scope scope(this);
-    return ScopedString(scope, new (this) String::Data(this, s))->asReturned<String>();
+    return ScopedString(scope, memoryManager->alloc<String>(this, s))->asReturned<String>();
 }
 
 String *ExecutionEngine::newIdentifier(const QString &text)
@@ -513,28 +514,28 @@ String *ExecutionEngine::newIdentifier(const QString &text)
 Returned<Object> *ExecutionEngine::newStringObject(const ValueRef value)
 {
     Scope scope(this);
-    Scoped<StringObject> object(scope, new (this) StringObject::Data(this, value));
+    Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, value));
     return object->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newNumberObject(const ValueRef value)
 {
     Scope scope(this);
-    Scoped<NumberObject> object(scope, new (this) NumberObject::Data(this, value));
+    Scoped<NumberObject> object(scope, memoryManager->alloc<NumberObject>(this, value));
     return object->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newBooleanObject(const ValueRef value)
 {
     Scope scope(this);
-    ScopedObject object(scope, new (this) BooleanObject::Data(this, value));
+    ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, value));
     return object->asReturned<Object>();
 }
 
 Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, new (this) ArrayObject::Data(this));
+    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this));
 
     if (count) {
         if (count < 0x1000)
@@ -547,14 +548,14 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
 Returned<ArrayObject> *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, new (this) ArrayObject::Data(this, list));
+    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this, list));
     return object->asReturned<ArrayObject>();
 }
 
 Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, new (this) ArrayObject::Data(ic));
+    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(ic));
     return object->asReturned<ArrayObject>();
 }
 
@@ -562,14 +563,14 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
 Returned<DateObject> *ExecutionEngine::newDateObject(const ValueRef value)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, new (this) DateObject::Data(this, value));
+    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, value));
     return object->asReturned<DateObject>();
 }
 
 Returned<DateObject> *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, new (this) DateObject::Data(this, dt));
+    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, dt));
     return object->asReturned<DateObject>();
 }
 
@@ -591,21 +592,21 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
 Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
     Scope scope(this);
-    Scoped<RegExpObject> object(scope, new (this) RegExpObject::Data(this, re, global));
+    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re, global));
     return object->asReturned<RegExpObject>();
 }
 
 Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
     Scope scope(this);
-    Scoped<RegExpObject> object(scope, new (this) RegExpObject::Data(this, re));
+    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re));
     return object->asReturned<RegExpObject>();
 }
 
 Returned<Object> *ExecutionEngine::newErrorObject(const ValueRef value)
 {
     Scope scope(this);
-    ScopedObject object(scope, new (this) ErrorObject::Data(errorClass, value));
+    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(errorClass, value));
     return object->asReturned<Object>();
 }
 
@@ -613,14 +614,14 @@ Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedString s(scope, newString(message));
-    ScopedObject error(scope, new (this) SyntaxErrorObject::Data(this, s));
+    ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, s));
     return error->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
-    ScopedObject error(scope, new (this) SyntaxErrorObject::Data(this, message, fileName, line, column));
+    ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, message, fileName, line, column));
     return error->asReturned<Object>();
 }
 
@@ -628,14 +629,14 @@ Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message, 
 Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) ReferenceErrorObject::Data(this, message));
+    ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message));
     return o->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) ReferenceErrorObject::Data(this, message, fileName, lineNumber, columnNumber));
+    ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message, fileName, lineNumber, columnNumber));
     return o->asReturned<Object>();
 }
 
@@ -643,35 +644,35 @@ Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &messag
 Returned<Object> *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) TypeErrorObject::Data(this, message));
+    ScopedObject o(scope, memoryManager->alloc<TypeErrorObject>(this, message));
     return o->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) RangeErrorObject::Data(this, message));
+    ScopedObject o(scope, memoryManager->alloc<RangeErrorObject>(this, message));
     return o->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newURIErrorObject(const ValueRef message)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) URIErrorObject::Data(this, message));
+    ScopedObject o(scope, memoryManager->alloc<URIErrorObject>(this, message));
     return o->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
 {
     Scope scope(this);
-    ScopedObject o(scope, new (this) VariantObject::Data(this, v));
+    ScopedObject o(scope, memoryManager->alloc<VariantObject>(this, v));
     return o->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, new (this) ForEachIteratorObject::Data(ctx, o));
+    ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(ctx, o));
     return obj->asReturned<Object>();
 }
 
@@ -828,8 +829,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
             delete [] oldAccessors;
         }
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, new (scope.engine) ArgumentsGetterFunction::Data(rootContext, i));
-            argumentsAccessors[i].set = ScopedValue(scope, new (scope.engine) ArgumentsSetterFunction::Data(rootContext, i));
+            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(rootContext, i));
+            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(rootContext, i));
         }
     }
 }

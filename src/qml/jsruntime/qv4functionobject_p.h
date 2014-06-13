@@ -51,6 +51,7 @@
 #include "qv4property_p.h"
 #include "qv4function_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4mm_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -150,7 +151,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return v.asFunctionObject();
     }
 
-    static Data *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
     ReturnedValue protoProperty() { return memberData()[Index_Prototype].asReturnedValue(); }
 
@@ -193,7 +194,7 @@ struct FunctionPrototype: FunctionObject
     static ReturnedValue method_bind(CallContext *ctx);
 };
 
-struct BuiltinFunction: FunctionObject {
+struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
     struct Data : FunctionObject::Data {
         Data(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
         ReturnedValue (*code)(CallContext *);
@@ -203,9 +204,9 @@ struct BuiltinFunction: FunctionObject {
     } __data;
     V4_OBJECT
 
-    static BuiltinFunction::Data *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
+    static BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
-        return new (scope->engine()) Data(scope, name, code);
+        return scope->engine()->memoryManager->alloc<BuiltinFunction>(scope, name, code);
     }
 
     static ReturnedValue construct(Managed *, CallData *);
@@ -277,9 +278,9 @@ struct BoundFunction: FunctionObject {
     } __data;
     V4_OBJECT
 
-    static BoundFunction::Data *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
+    static BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
     {
-        return new (scope->engine()) Data(scope, target, boundThis, boundArgs);
+        return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     FunctionObject *target() { return d()->target; }

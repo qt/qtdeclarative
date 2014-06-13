@@ -170,7 +170,6 @@ public:
         return jsStackTop->managed();
     }
 
-
     IdentifierTable *identifierTable;
 
     QV4::Debugging::Debugger *debugger;

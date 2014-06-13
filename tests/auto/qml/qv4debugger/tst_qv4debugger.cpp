@@ -89,7 +89,7 @@ public:
         QV4::Scope scope(v4);
 
         QV4::Scoped<QV4::String> name(scope, v4->newString(functionName));
-        QV4::ScopedValue function(scope, v4->newBuiltinFunction(v4->rootContext, name, injectedFunction));
+        QV4::ScopedValue function(scope, BuiltinFunction::create(v4->rootContext, name, injectedFunction));
         v4->globalObject->put(name, function);
     }
 
@@ -393,7 +393,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
 
 static QV4::ReturnedValue someCall(QV4::CallContext *ctx)
 {
-    ctx->engine->debugger->removeBreakPoint("removeBreakPointForNextInstruction", 2);
+    ctx->d()->engine->debugger->removeBreakPoint("removeBreakPointForNextInstruction", 2);
     return QV4::Encode::undefined();
 }
 

@@ -83,7 +83,7 @@ ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, 
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope valueScope(v4);
 
-    Scoped<QmlContextWrapper> w(valueScope, new (v4) QmlContextWrapper::Data(v8, ctxt, scope));
+    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->alloc<QmlContextWrapper>(v8, ctxt, scope));
     return w.asReturnedValue();
 }
 
@@ -97,7 +97,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, new (v4) QmlContextWrapper::Data(v8, context, 0, true));
+    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->alloc<QmlContextWrapper>(v8, context, (QObject*)0, true));
     w->d()->isNullWrapper = true;
     return w.asReturnedValue();
 }
@@ -415,7 +415,7 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
     if (!d()->idObjectsWrapper) {
         ExecutionEngine *v4 = engine();
         Scope scope(v4);
-        Scoped<QQmlIdObjectsArray> a(scope, new (v4) QQmlIdObjectsArray::Data(v4, this));
+        Scoped<QQmlIdObjectsArray> a(scope, v4->memoryManager->alloc<QQmlIdObjectsArray>(v4, this));
         d()->idObjectsWrapper = a.getPointer();
     }
     return d()->idObjectsWrapper->asReturnedValue();

@@ -104,7 +104,7 @@ struct RegExp : public Managed
     bool ignoreCase() const { return d()->ignoreCase; }
     bool multiLine() const { return d()->multiLine; }
 
-    static RegExp::Data* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
+    static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
 
     bool isValid() const { return d()->byteCode.get(); }
 
@@ -146,7 +146,7 @@ inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
 inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
 { return qHash(key.pattern, seed); }
 
-class RegExpCache : public QHash<RegExpCacheKey, RegExp::Data *>
+class RegExpCache : public QHash<RegExpCacheKey, RegExp*>
 {
 public:
     ~RegExpCache();

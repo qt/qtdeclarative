@@ -99,7 +99,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, Typ
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope, new (v4) QmlTypeWrapper::Data(v8));
+    Scoped<QmlTypeWrapper> w(scope, v4->memoryManager->alloc<QmlTypeWrapper>(v8));
     w->d()->mode = mode; w->d()->object = o; w->d()->type = t;
     return w.asReturnedValue();
 }
@@ -113,7 +113,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope, new (v4) QmlTypeWrapper::Data(v8));
+    Scoped<QmlTypeWrapper> w(scope, v4->memoryManager->alloc<QmlTypeWrapper>(v8));
     w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t; w->d()->importNamespace = importNamespace;
     t->addref();
     return w.asReturnedValue();

@@ -208,7 +208,6 @@ struct Q_QML_PRIVATE_EXPORT Managed
             return reinterpret_cast<Managed *>(const_cast<Data *>(this))->asReturnedValue();
         }
 
-        void *operator new(size_t size, ExecutionEngine *e);
         void *operator new(size_t, Managed *m) { return m; }
         void *operator new(size_t, Managed::Data *m) { return m; }
     };

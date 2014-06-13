@@ -173,14 +173,14 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-FunctionObject::Data *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
 {
     if (function->needsActivation() ||
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
-        return new (scope->d()->engine) ScriptFunction::Data(scope, function);
-    return new (scope->d()->engine) SimpleScriptFunction::Data(scope, function, createProto);
+        return scope->d()->engine->memoryManager->alloc<ScriptFunction>(scope, function);
+    return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);

@@ -120,7 +120,7 @@ struct QQuickRootItemMarker : public QV4::Object
 
     V4_OBJECT
 
-    static Data *create(QQmlEngine *engine, QQuickWindow *window);
+    static QQuickRootItemMarker *create(QQmlEngine *engine, QQuickWindow *window);
 
     static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 

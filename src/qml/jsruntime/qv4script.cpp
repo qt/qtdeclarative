@@ -141,7 +141,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, new (engine) QV4::QmlBindingWrapper::Data(engine->rootContext, qmlScopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(engine->rootContext, qmlScopeObject));
 
     if (!signalParameters.isEmpty()) {
         if (error)
@@ -150,7 +150,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
         QV4::ScopedString s(valueScope);
         int index = 0;
         foreach (const QByteArray &param, signalParameters) {
-            QV4::ScopedFunctionObject g(valueScope, new (engine) QV4::IndexedBuiltinFunction::Data(wrapper->context(), index++, signalParameterGetter));
+            QV4::ScopedFunctionObject g(valueScope, engine->memoryManager->alloc<QV4::IndexedBuiltinFunction>(wrapper->context(), index++, signalParameterGetter));
             p->setGetter(g);
             p->setSetter(0);
             s = engine->newString(QString::fromUtf8(param));
@@ -206,7 +206,7 @@ Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *
         vmFunction = compilationUnit->linkToEngine(v4);
         Q_ASSERT(vmFunction);
         Scope valueScope(v4);
-        ScopedObject holder(valueScope, new (v4) CompilationUnitHolder::Data(v4, compilationUnit));
+        ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
     } else
         vmFunction = 0;
@@ -278,7 +278,7 @@ void Script::parse()
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
-        ScopedObject holder(valueScope, new (v4) CompilationUnitHolder::Data(v4, compilationUnit));
+        ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
     }
 
@@ -332,7 +332,7 @@ ReturnedValue Script::run()
         return vmFunction->code(scope, vmFunction->codeData);
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
-        ScopedFunctionObject f(valueScope, new (engine) QmlBindingWrapper::Data(scope, vmFunction, qmlObj));
+        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
         ScopedCallData callData(valueScope, 0);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -408,7 +408,7 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->d()->engine;
     Scope valueScope(v4);
     ScopedObject qmlObj(valueScope, qml.value());
-    ScopedObject v(valueScope, new (v4) QmlBindingWrapper::Data(scope, vmFunction, qmlObj));
+    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
     return v.asReturnedValue();
 }
 

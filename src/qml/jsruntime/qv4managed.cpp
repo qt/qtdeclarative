@@ -175,11 +175,3 @@ bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;
 }
-
-
-void *Managed::Data::operator new(size_t size, ExecutionEngine *e)
-{
-    assert(e);
-
-    return e->memoryManager->allocManaged(size);
-}

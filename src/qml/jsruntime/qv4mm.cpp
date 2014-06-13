@@ -178,7 +178,7 @@ MemoryManager::MemoryManager()
 #endif
 }
 
-Managed *MemoryManager::alloc(std::size_t size)
+Managed *MemoryManager::allocData(std::size_t size)
 {
     if (m_d->aggressiveGC)
         runGC();

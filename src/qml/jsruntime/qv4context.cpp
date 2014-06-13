@@ -89,20 +89,20 @@ HeapObject *ExecutionContext::newCallContext(FunctionObject *function, CallData 
     return c;
 }
 
-HeapObject *ExecutionContext::newWithContext(Object *with)
+WithContext *ExecutionContext::newWithContext(Object *with)
 {
-    return new (d()->engine) WithContext::Data(d()->engine, with);
+    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
 }
 
-HeapObject *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
+CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
 {
-    return new (d()->engine) CatchContext::Data(d()->engine, exceptionVarName, exceptionValue);
+    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
 }
 
-HeapObject *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
+CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
-    CallContext::Data *c = reinterpret_cast<CallContext::Data *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
-    new (c) CallContext::Data(d()->engine, qml, f);
+    CallContext *c = reinterpret_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
+    new (c->d()) CallContext::Data(d()->engine, qml, f);
     return c;
 }
 

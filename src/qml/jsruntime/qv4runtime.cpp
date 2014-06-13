@@ -514,7 +514,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionContext *ctx, const ValueR
             return pright->asReturnedValue();
         if (!pright->stringValue()->d()->length())
             return pleft->asReturnedValue();
-        return (new (ctx->engine()) String::Data(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+        return (ctx->engine()->memoryManager->alloc<String>(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -530,7 +530,7 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
             return right->asReturnedValue();
         if (!right->stringValue()->d()->length())
             return left->asReturnedValue();
-        return (new (ctx->engine()) String::Data(ctx->d()->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
+        return (ctx->engine()->memoryManager->alloc<String>(ctx->d()->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
     }
 
     Scope scope(ctx);
@@ -547,7 +547,7 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
         return pright->asReturnedValue();
     if (!pright->stringValue()->d()->length())
         return pleft->asReturnedValue();
-    return (new (ctx->engine()) String::Data(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+    return (ctx->engine()->memoryManager->alloc<String>(ctx->d()->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
 }
 
 void Runtime::setProperty(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value)
@@ -1192,7 +1192,7 @@ QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionContext *ctx)
 {
     Q_ASSERT(ctx->d()->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
-    return (new (c->engine()) ArgumentsObject::Data(c))->asReturnedValue();
+    return (c->engine()->memoryManager->alloc<ArgumentsObject>(c))->asReturnedValue();
 }
 
 #endif // V4_BOOTSTRAP

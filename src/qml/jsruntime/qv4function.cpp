@@ -45,6 +45,7 @@
 #include "qv4value_inl_p.h"
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
+#include "qv4mm_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -73,7 +74,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                 break;
             }
             // duplicate arguments, need some trick to store them
-            arg = (s = new (engine) String::Data(engine, arg, engine->newString(QString(0xfffe))->getPointer())).getPointer();
+            arg = (s = engine->memoryManager->alloc<String>(engine, arg, engine->newString(QString(0xfffe))->getPointer())).getPointer();
         }
     }
 

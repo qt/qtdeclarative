@@ -226,6 +226,7 @@ DEFINE_OBJECT_VTABLE(NamedNodeMap);
 
 class NodeList : public Object
 {
+public:
     struct Data : Object::Data {
         Data(ExecutionEngine *engine, NodeImpl *data)
             : Object::Data(engine)
@@ -247,7 +248,6 @@ class NodeList : public Object
     } __data;
 
     V4_OBJECT
-public:
 
     // JS API
     static void destroy(Managed *that) {
@@ -265,6 +265,7 @@ DEFINE_OBJECT_VTABLE(NodeList);
 
 class NodePrototype : public Object
 {
+public:
     struct Data : Object::Data {
         Data(ExecutionEngine *engine)
             : Object::Data(engine)
@@ -288,7 +289,6 @@ class NodePrototype : public Object
         }
     };
     V4_OBJECT
-public:
 
     static void initClass(ExecutionEngine *engine);
 
@@ -614,7 +614,7 @@ ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
     Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->nodePrototype.isUndefined()) {
-        ScopedObject p(scope, new (v4) NodePrototype::Data(v4));
+        ScopedObject p(scope, v4->memoryManager->alloc<NodePrototype>(v4));
         d->nodePrototype = p;
         v4->v8Engine->freezeObject(p);
     }
@@ -626,7 +626,7 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    Scoped<Node> instance(scope, new (v4) Node::Data(v4, data));
+    Scoped<Node> instance(scope, v4->memoryManager->alloc<Node>(v4, data));
     ScopedObject p(scope);
 
     switch (data->type) {
@@ -901,7 +901,7 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
         return Encode::null();
     }
 
-    ScopedObject instance(scope, new (v4) Node::Data(v4, document));
+    ScopedObject instance(scope, v4->memoryManager->alloc<Node>(v4, document));
     ScopedObject p(scope);
     instance->setPrototype((p = Document::prototype(v4)).getPointer());
     return instance.asReturnedValue();
@@ -964,7 +964,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 ReturnedValue NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    return (new (v4) NamedNodeMap::Data(v4, data, list))->asReturnedValue();
+    return (v4->memoryManager->alloc<NamedNodeMap>(v4, data, list))->asReturnedValue();
 }
 
 ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -1006,7 +1006,7 @@ ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    return (new (v4) NodeList::Data(v4, data))->asReturnedValue();
+    return (v4->memoryManager->alloc<NodeList>(v4, data))->asReturnedValue();
 }
 
 ReturnedValue Document::method_documentElement(CallContext *ctx)
@@ -1680,7 +1680,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
-        Scoped<QQmlXMLHttpRequestWrapper> w(scope, new (that->engine()) QQmlXMLHttpRequestWrapper::Data(that->engine(), r));
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, that->engine()->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(that->engine(), r));
         w->setPrototype(ctor->d()->proto);
         return w.asReturnedValue();
     }
@@ -2007,7 +2007,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4) QQmlXMLHttpRequestCtor::Data(v4));
+    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->alloc<QQmlXMLHttpRequestCtor>(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
     v4->globalObject->defineReadonlyProperty(s.getPointer(), ctor);
 

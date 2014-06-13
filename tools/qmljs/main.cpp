@@ -197,9 +197,9 @@ int main(int argc, char *argv[])
         QV4::Scope scope(ctx);
 
         QV4::ScopedObject globalObject(scope, vm.globalObject);
-        QV4::ScopedObject print(scope, new (scope.engine) builtins::Print::Data(ctx));
+        QV4::ScopedObject print(scope, vm.memoryManager->alloc<builtins::Print>(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
-        QV4::ScopedObject gc(scope, new (scope.engine) builtins::GC::Data(ctx));
+        QV4::ScopedObject gc(scope, vm.memoryManager->alloc<builtins::GC>(ctx));
         globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
         foreach (const QString &fn, args) {
