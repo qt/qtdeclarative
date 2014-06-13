@@ -45,11 +45,32 @@
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
 
+
+
 //! [1]
+class SquircleRenderer : public QObject {
+    Q_OBJECT
+public:
+    SquircleRenderer() : m_t(0), m_program(0) { }
+    ~SquircleRenderer();
+
+    void setT(qreal t) { m_t = t; }
+    void setViewportSize(const QSize &size) { m_viewportSize = size; }
+
+public slots:
+    void paint();
+
+private:
+    QSize m_viewportSize;
+    qreal m_t;
+    QOpenGLShaderProgram *m_program;
+};
+//! [1]
+
+//! [2]
 class Squircle : public QQuickItem
 {
     Q_OBJECT
-
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
 
 public:
@@ -62,19 +83,16 @@ signals:
     void tChanged();
 
 public slots:
-    void paint();
-    void cleanup();
     void sync();
+    void cleanup();
 
 private slots:
     void handleWindowChanged(QQuickWindow *win);
 
 private:
-    QOpenGLShaderProgram *m_program;
-
     qreal m_t;
-    qreal m_thread_t;
+    SquircleRenderer *m_renderer;
 };
-//! [1]
+//! [2]
 
 #endif // SQUIRCLE_H

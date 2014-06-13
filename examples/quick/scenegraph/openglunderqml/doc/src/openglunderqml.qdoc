@@ -50,54 +50,40 @@
     in the QML file and this value is used by the OpenGL shader
     program that draws the squircles.
 
+    \snippet scenegraph/openglunderqml/squircle.h 2
+
+    First of all, we need an object we can expose to QML. This is a
+    subclass of QQuickItem so we can easily access \l QQuickItem::window().
+
     \snippet scenegraph/openglunderqml/squircle.h 1
 
-    First of all, we need a QObject with a slot to connect the signals
-    to. We subclass QQuickItem in order to use the \l
-    QQuickItem::window() which holds the window instance we want to
-    connect to.
+    Then we need an object to take care of the rendering. This
+    instance needs to be separated from the QQuickItem because the
+    item lives in the GUI thread and the rendering potentially happens
+    on the render thread. Since we want to connect to \l
+    QQuickWindow::beforeRendering(), we make the renderer a QObject.
+    The renderer contains a copy of all the state it needs,
+    independent of the GUI thread.
 
-    We use two values of \c t. The variable \c m_t is the property
-    value as it exists in the GUI thread. The \c m_thread_t value is a
-    copy of \c m_t for use in the rendering thread. We need an
-    explicit copy because the scene graph can render in one thread
-    while updating properties on the GUI thread in preparation for the
-    next frame. If we had used only one value, the animation could
-    have updated the value to that of the next frame before we got a
-    chance to render it.
-
-    \note In this example, a wrong value for \c t will have minimal
-    consequences, but we emphasize that rendering and GUI thread
-    objects and values must stay separate to avoid race conditions,
-    undesired behavior and in the worst case, crashes.
+    \note Don't be tempted to merge the two objects into
+    one. QQuickItems may be deleted on the GUI thread while the render
+    thread is rendering.
 
     Lets move on to the implementation.
 
     \snippet scenegraph/openglunderqml/squircle.cpp 7
 
     The constructor of the \c Squircle class simply initializes the
-    values. The shader program will be initialized during rendering
-    later.
-
-    \snippet scenegraph/openglunderqml/squircle.cpp 8
-
-    The property setter checks that the value has indeed changed
-    before updating its internal variable. It then calls \l
-    QQuickWindow::update() which will trigger another frame to be
-    rendered. Note that the setter might be called during
-    initialization, before the object has been entered into the scene
-    and before it has a window.
+    values and connects to the window changed signal which we will use
+    to prepare our renderer.
 
     \snippet scenegraph/openglunderqml/squircle.cpp 1
-    \snippet scenegraph/openglunderqml/squircle.cpp 2
 
-    For our paint function to be called, we need to connect to the
-    window's signals. When Squircle object is populated into the
-    scene, the windowChanged signal is emitted. In our handler,
-    we connect \l QQuickWindow::beforeRendering() to
-    \c paint() to do the rendering, and \l
-    QQuickWindow::beforeSynchronizing() to \c sync() to copy the state
-    of the \c t property for the upcoming frame.
+    Once we have a window, we attach to the \l
+    QQuickWindow::beforeSynchronizing() signal which we will use to
+    create the renderer and to copy state into it safely. We also
+    connect to the \l QQuickWindow::sceneGraphInvalidated() signal to
+    handle the cleanup of the renderer.
 
     \note Since the Squircle object has affinity to the GUI thread and
     the signals are emitted from the rendering thread, it is crucial
@@ -113,18 +99,35 @@
     graph, we need to turn this clearing off. This means that we need
     to clear ourselves in the \c paint() function.
 
+    \snippet scenegraph/openglunderqml/squircle.cpp 9
+
+    We use the \c sync() function to initialize the renderer and to
+    copy the state in our item into the renderer. When the renderer is
+    created, we also connect the \l QQuickWindow::beforeRendering() to
+    the renderer's \c paint() slot.
+
+    \note The \l QQuickWindow::beforeSynchronizing() signal is emitted
+    on the rendering thread while the GUI thread is blocked, so it is
+    safe to simply copy the value without any additional protection.
+
+    \snippet scenegraph/openglunderqml/squircle.cpp 6
+
+    In the \c cleanup() function we delete the renderer which in turn
+    cleans up its own resources.
+
+    \snippet scenegraph/openglunderqml/squircle.cpp 8
+
+    When the value of \c t changes, we call \l QQuickWindow::update()
+    rather than \l QQuickItem::update() because the former will force
+    the entire window to be redrawn, even when the scene graph has not
+    changed since the last frame.
+
     \snippet scenegraph/openglunderqml/squircle.cpp 4
 
-    The first thing we do in the \c paint() function is to
-    initialize the shader program. By initializing the shader program
-    here, we make sure that the OpenGL context is bound and that we
-    are on the correct thread.
-
-    We also connect to the QOpenGLContext::aboutToBeDestroyed()
-    signal, so that we can clean up the shader program when the
-    context is destroyed. Again, this is a \l Qt::DirectConnection as
-    all rendering related operations must happen on the rendering
-    thread.
+    In the SquircleRenderer's \c paint() function we start by
+    initializing the shader program. By initializing the shader
+    program here, we make sure that the OpenGL context is bound and
+    that we are on the correct thread.
 
     \snippet scenegraph/openglunderqml/squircle.cpp 5
 
@@ -133,18 +136,10 @@
     attributes we used so that the OpenGL context is in a "clean"
     state for the scene graph to pick it up.
 
-    \snippet scenegraph/openglunderqml/squircle.cpp 6
-
-    In the \c cleanup() function we delete the program.
-
-    \snippet scenegraph/openglunderqml/squircle.cpp 9
-
-    We use the \c sync() function to copy the state of the
-    object in the GUI thread into the rendering thread.
-
-    The signal is emitted on the rendering thread while the GUI
-    thread is blocked, so it is safe to simply copy the value without
-    any additional protection.
+    \note If tracking the changes in the OpenGL context's state is not
+    feasible, one can use the function \l
+    QQuickWindow::resetOpenGLState() which will reset all state that
+    the scene graph relies on.
 
     \snippet scenegraph/openglunderqml/main.cpp 1
 
