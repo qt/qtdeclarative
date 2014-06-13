@@ -117,7 +117,7 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
     if (newType < Sparse) {
         size += sizeof(SimpleArrayData);
         SimpleArrayData *newData = static_cast<SimpleArrayData *>(o->engine()->memoryManager->allocManaged(size));
-        new (newData) SimpleArrayData(o->engine());
+        new (newData->d()) SimpleArrayData::Data(o->engine());
         newData->setAlloc(alloc - offset);
         newData->setType(newType);
         newData->setArrayData(reinterpret_cast<Value *>(newData + 1) + offset);
@@ -128,7 +128,7 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
     } else {
         size += sizeof(SparseArrayData);
         SparseArrayData *newData = static_cast<SparseArrayData *>(o->engine()->memoryManager->allocManaged(size));
-        new (newData) SparseArrayData(o->engine());
+        new (newData->d()) SparseArrayData::Data(o->engine());
         newData->setAlloc(alloc);
         newData->setType(newType);
         newData->setArrayData(reinterpret_cast<Value *>(newData + 1));

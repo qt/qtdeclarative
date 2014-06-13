@@ -57,6 +57,10 @@ namespace QV4 {
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
+        Data *d() { return &static_cast<Data &>(Managed::data); }
+
 
 struct ArrayData;
 
@@ -80,11 +84,6 @@ struct ArrayVTable
 
 struct Q_QML_EXPORT ArrayData : public Managed
 {
-    ArrayData(InternalClass *ic)
-        : Managed(ic)
-    {
-    }
-
     enum Type {
         Simple = 0,
         Complex = 1,
@@ -92,24 +91,33 @@ struct Q_QML_EXPORT ArrayData : public Managed
         Custom = 3
     };
 
-    struct Data {
+    struct Data : public Managed::Data {
+        Data(InternalClass *ic)
+            : Managed::Data(ic)
+        {}
         uint alloc;
         Type type;
         PropertyAttributes *attrs;
         Value *arrayData;
     };
-    Data data;
+    struct {
+        uint alloc;
+        Type type;
+        PropertyAttributes *attrs;
+        Value *arrayData;
+    } __data;
+    V4_MANAGED(Managed)
 
-    uint alloc() const { return data.alloc; }
-    uint &alloc() { return data.alloc; }
-    void setAlloc(uint a) { data.alloc = a; }
-    Type type() const { return data.type; }
-    void setType(Type t) { data.type = t; }
-    PropertyAttributes *attrs() const { return data.attrs; }
-    void setAttrs(PropertyAttributes *a) { data.attrs = a; }
-    Value *arrayData() const { return data.arrayData; }
-    Value *&arrayData() { return data.arrayData; }
-    void setArrayData(Value *v) { data.arrayData = v; }
+    uint alloc() const { return d()->alloc; }
+    uint &alloc() { return d()->alloc; }
+    void setAlloc(uint a) { d()->alloc = a; }
+    Type type() const { return d()->type; }
+    void setType(Type t) { d()->type = t; }
+    PropertyAttributes *attrs() const { return d()->attrs; }
+    void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
+    Value *arrayData() const { return d()->arrayData; }
+    Value *&arrayData() { return d()->arrayData; }
+    void setArrayData(Value *v) { d()->arrayData = v; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
     bool isSparse() const { return this && type() == Sparse; }
@@ -151,22 +159,24 @@ struct Q_QML_EXPORT ArrayData : public Managed
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 {
-    V4_ARRAYDATA
 
-    SimpleArrayData(ExecutionEngine *engine)
-        : ArrayData(engine->simpleArrayDataClass)
-    {}
-
-    struct Data {
+    struct Data : public ArrayData::Data {
+        Data(ExecutionEngine *engine)
+            : ArrayData::Data(engine->simpleArrayDataClass)
+        {}
         uint len;
         uint offset;
     };
-    Data data;
+    struct {
+        uint len;
+        uint offset;
+    } __data;
+    V4_ARRAYDATA
 
-    uint &len() { return data.len; }
-    uint len() const { return data.len; }
-    uint &offset() { return data.offset; }
-    uint offset() const { return data.offset; }
+    uint &len() { return d()->len; }
+    uint len() const { return d()->len; }
+    uint &offset() { return d()->offset; }
+    uint offset() const { return d()->offset; }
 
     static void getHeadRoom(Object *o);
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
@@ -187,22 +197,24 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
 {
-    V4_ARRAYDATA
+    struct Data : public ArrayData::Data {
+        Data(ExecutionEngine *engine)
+            : ArrayData::Data(engine->emptyClass)
+        { setVTable(staticVTable()); }
 
-    SparseArrayData(ExecutionEngine *engine)
-        : ArrayData(engine->emptyClass)
-    { setVTable(staticVTable()); }
-
-    struct Data {
         uint freeList;
         SparseArray *sparse;
     };
-    Data data;
+    struct {
+        uint freeList;
+        SparseArray *sparse;
+    } __data;
+    V4_ARRAYDATA
 
-    uint &freeList() { return data.freeList; }
-    uint freeList() const { return data.freeList; }
-    SparseArray *sparse() const { return data.sparse; }
-    void setSparse(SparseArray *s) { data.sparse = s; }
+    uint &freeList() { return d()->freeList; }
+    uint freeList() const { return d()->freeList; }
+    SparseArray *sparse() const { return d()->sparse; }
+    void setSparse(SparseArray *s) { d()->sparse = s; }
 
     static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
