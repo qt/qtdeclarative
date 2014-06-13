@@ -98,7 +98,7 @@ struct ForEachIteratorObject: Object {
         ObjectIterator it;
         Value workArea[2];
     } __data;
-    V4_OBJECT
+    V4_OBJECT(Object)
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }

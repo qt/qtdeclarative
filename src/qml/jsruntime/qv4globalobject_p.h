@@ -54,7 +54,7 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
         Data(ExecutionContext *scope);
     };
 
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     ReturnedValue evalCall(CallData *callData, bool directCall);
 

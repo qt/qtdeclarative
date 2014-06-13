@@ -118,7 +118,7 @@ struct QQuickRootItemMarker : public QV4::Object
         QQuickWindow *window;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static QQuickRootItemMarker *create(QQmlEngine *engine, QQuickWindow *window);
 

@@ -94,7 +94,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
         QQmlIdObjectsArray *idObjectsWrapper;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
     static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
@@ -130,7 +130,7 @@ struct QQmlIdObjectsArray : public Object
         QmlContextWrapper *contextWrapper;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void markObjects(Managed *that, ExecutionEngine *engine);

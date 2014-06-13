@@ -90,7 +90,7 @@ struct RegExp : public Managed
         bool ignoreCase;
         bool multiLine;
     } __data;
-    V4_MANAGED
+    V4_MANAGED(Managed)
     Q_MANAGED_TYPE(RegExp)
 
 

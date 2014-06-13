@@ -62,7 +62,7 @@ struct ArgumentsGetterFunction: FunctionObject
     struct {
         uint index;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     uint index() const { return d()->index; }
 
@@ -83,7 +83,7 @@ struct ArgumentsSetterFunction: FunctionObject
     struct {
         uint index;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     uint index() const { return d()->index; }
 
@@ -103,7 +103,7 @@ struct ArgumentsObject: Object {
         bool fullyCreated;
         Members mappedArguments;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(Object)
     Q_MANAGED_TYPE(ArgumentsObject)
 
     CallContext *context() const { return d()->context; }

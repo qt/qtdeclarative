@@ -184,7 +184,7 @@ struct CompilationUnitHolder : public Object
         QV4::CompiledData::CompilationUnit *unit;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
 
     static void destroy(Managed *that)

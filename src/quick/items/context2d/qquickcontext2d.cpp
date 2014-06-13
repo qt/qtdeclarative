@@ -490,7 +490,7 @@ struct QQuickJSContext2D : public QV4::Object
     struct {
         QQuickContext2D* context;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_globalAlpha(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_globalAlpha(QV4::CallContext *ctx);
@@ -538,7 +538,7 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
 
 struct QQuickJSContext2DPrototype : public QV4::Object
 {
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 public:
     static QQuickJSContext2DPrototype *create(QV4::ExecutionEngine *engine)
     {
@@ -663,7 +663,7 @@ struct QQuickContext2DStyle : public QV4::Object
         bool patternRepeatY:1;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue gradient_proto_addColorStop(QV4::CallContext *ctx);
 protected:
@@ -887,7 +887,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
         QImage image;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static void destroy(QV4::Managed *that) {
         static_cast<QQuickJSContext2DPixelData *>(that)->d()->~Data();
@@ -921,7 +921,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     struct {
         QV4::Value pixelData;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_width(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_height(QV4::CallContext *ctx);

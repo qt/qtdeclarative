@@ -286,7 +286,7 @@ struct QV4ParticleData : public QV4::Object
         QQuickParticleData* datum;//TODO: Guard needed?
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 };
 
 DEFINE_OBJECT_VTABLE(QV4ParticleData);

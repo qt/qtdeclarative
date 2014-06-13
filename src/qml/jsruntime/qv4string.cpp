@@ -108,7 +108,7 @@ static uint toArrayIndex(const char *ch, const char *end, bool *ok)
 
 const ObjectVTable String::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(String),
+    DEFINE_MANAGED_VTABLE_INT(String, 0),
     0,
     0,
     get,

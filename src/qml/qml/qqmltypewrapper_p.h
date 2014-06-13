@@ -91,7 +91,7 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
         const void *importNamespace;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 private:
 
 public:

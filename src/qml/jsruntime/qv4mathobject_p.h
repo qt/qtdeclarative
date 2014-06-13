@@ -53,7 +53,7 @@ struct MathObject: Object
         Data(InternalClass *ic);
     };
 
-    V4_OBJECT
+    V4_OBJECT(Object)
     Q_MANAGED_TYPE(MathObject)
 
     static ReturnedValue method_abs(CallContext *context);

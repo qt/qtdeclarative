@@ -47,7 +47,7 @@ using namespace QV4;
 
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData),
+    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData, 0),
     SimpleArrayData::Simple,
     SimpleArrayData::reallocate,
     SimpleArrayData::get,
@@ -64,7 +64,7 @@ const ArrayVTable SimpleArrayData::static_vtbl =
 
 const ArrayVTable SparseArrayData::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(SparseArrayData),
+    DEFINE_MANAGED_VTABLE_INT(SparseArrayData, 0),
     ArrayData::Sparse,
     SparseArrayData::reallocate,
     SparseArrayData::get,

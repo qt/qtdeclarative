@@ -61,7 +61,7 @@ struct StringObject: Object {
         Value value;
         mutable Property tmpProperty;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(Object)
     Q_MANAGED_TYPE(StringObject)
 
 
@@ -79,7 +79,7 @@ struct StringCtor: FunctionObject
     struct Data : FunctionObject::Data {
         Data(ExecutionContext *scope);
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

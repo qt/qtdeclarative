@@ -54,7 +54,7 @@ struct ObjectCtor: FunctionObject
     struct Data : FunctionObject::Data {
         Data(ExecutionContext *scope);
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

@@ -75,7 +75,7 @@ struct QtObject : Object
         QObject *application;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
 
     static ReturnedValue method_isQtObject(CallContext *ctx);
@@ -167,7 +167,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
         QQmlSourceLocation bindingLocation;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::FunctionObject)
 
     void initBindingLocation(); // from caller stack trace
 

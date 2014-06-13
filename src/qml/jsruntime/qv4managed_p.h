@@ -62,9 +62,10 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
-#define V4_MANAGED \
+#define V4_MANAGED(superClass) \
     public: \
         Q_MANAGED_CHECK \
+        typedef superClass SuperClass; \
         static const QV4::ManagedVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
         template <typename T> \
@@ -73,9 +74,10 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
 
-#define V4_OBJECT \
+#define V4_OBJECT(superClass) \
     public: \
         Q_MANAGED_CHECK \
+        typedef superClass SuperClass; \
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         template <typename T> \
@@ -102,6 +104,7 @@ struct GCDeletable
 
 struct ManagedVTable
 {
+    const ManagedVTable * const parent;
     uint isExecutionContext : 1;
     uint isString : 1;
     uint isObject : 1;
@@ -135,9 +138,9 @@ struct ObjectVTable
     void (*advanceIterator)(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
-
-#define DEFINE_MANAGED_VTABLE_INT(classname) \
+#define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
+    parentVTable, \
     classname::IsExecutionContext,   \
     classname::IsString,   \
     classname::IsObject,   \
@@ -146,20 +149,20 @@ struct ObjectVTable
     classname::IsArrayData,   \
     0,                                          \
     classname::MyType,                          \
-    #classname,                                 \
+    #classname, \
     Q_VTABLE_FUNCTION(classname, destroy),                                    \
     markObjects,                                \
     isEqualTo                                  \
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \
-const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname)
+const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0)
 
 
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    DEFINE_MANAGED_VTABLE_INT(classname), \
+    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.managedVTable), \
     call,                                       \
     construct,                                  \
     get,                                        \
@@ -212,7 +215,7 @@ struct Q_QML_PRIVATE_EXPORT Managed
         void *operator new(size_t, Managed::Data *m) { return m; }
     };
     Data data;
-    V4_MANAGED
+    V4_MANAGED(Managed)
     enum {
         IsExecutionContext = false,
         IsString = false,
@@ -272,7 +275,13 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
-        return internalClass()->vtable == T::staticVTable() ? static_cast<T *>(this) : 0;
+        const ManagedVTable *vt = internalClass()->vtable;
+        while (vt) {
+            if (vt == T::staticVTable())
+                return static_cast<T *>(this);
+            vt = vt->parent;
+        }
+        return 0;
     }
     template <typename T>
     const T *as() const {
@@ -282,7 +291,13 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
-        return internalClass()->vtable == T::staticVTable() ? static_cast<const T *>(this) : 0;
+        const ManagedVTable *vt = internalClass()->vtable;
+        while (vt) {
+            if (vt == T::staticVTable())
+                return static_cast<T *>(this);
+            vt = vt->parent;
+        }
+        return 0;
     }
 
     String *asString() { return internalClass()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }

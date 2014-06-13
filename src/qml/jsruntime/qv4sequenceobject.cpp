@@ -202,7 +202,7 @@ struct QQmlSequence : public QV4::Object
         bool isReference;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
     Q_MANAGED_TYPE(QmlSequence)
 public:
 

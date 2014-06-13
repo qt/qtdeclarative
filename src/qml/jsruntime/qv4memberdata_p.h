@@ -65,7 +65,7 @@ struct MemberData : Managed
         Value data[1];
     } __data;
 
-    V4_MANAGED
+    V4_MANAGED(Managed)
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }

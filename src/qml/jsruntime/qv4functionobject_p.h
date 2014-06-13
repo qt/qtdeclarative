@@ -110,7 +110,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         Function *function;
 
     } __data;
-    V4_OBJECT
+    V4_OBJECT(Object)
     Q_MANAGED_TYPE(FunctionObject)
     enum {
         IsFunctionObject = true
@@ -173,7 +173,7 @@ struct FunctionCtor: FunctionObject
         Data(ExecutionContext *scope);
     };
 
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -184,7 +184,7 @@ struct FunctionPrototype: FunctionObject
     struct Data : FunctionObject::Data {
         Data(InternalClass *ic);
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     void init(ExecutionEngine *engine, Object *ctor);
 
@@ -202,7 +202,7 @@ struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
     struct {
         ReturnedValue (*code)(CallContext *);
     } __data;
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
@@ -230,7 +230,7 @@ struct IndexedBuiltinFunction: FunctionObject
         ReturnedValue (*code)(CallContext *, uint index);
         uint index;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *)
     {
@@ -245,7 +245,7 @@ struct SimpleScriptFunction: FunctionObject {
     struct Data : FunctionObject::Data {
         Data(ExecutionContext *scope, Function *function, bool createProto);
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -257,7 +257,7 @@ struct ScriptFunction: SimpleScriptFunction {
     struct Data : SimpleScriptFunction::Data {
         Data(ExecutionContext *scope, Function *function);
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -276,7 +276,7 @@ struct BoundFunction: FunctionObject {
         Value boundThis;
         Members boundArgs;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
     {

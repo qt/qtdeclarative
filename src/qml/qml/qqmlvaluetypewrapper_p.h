@@ -81,7 +81,7 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
         mutable QQmlValueType *type;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
 public:
 

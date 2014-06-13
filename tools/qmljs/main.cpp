@@ -78,7 +78,7 @@ struct Print: FunctionObject
             setVTable(staticVTable());
         }
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue call(Managed *, CallData *callData)
     {
@@ -105,7 +105,7 @@ struct GC: public FunctionObject
         }
 
     };
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue call(Managed *m, CallData *)
     {

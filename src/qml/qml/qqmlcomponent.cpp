@@ -1094,7 +1094,7 @@ struct QmlIncubatorObject : public QV4::Object
         QV4::Value statusChanged;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_statusChanged(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_statusChanged(QV4::CallContext *ctx);

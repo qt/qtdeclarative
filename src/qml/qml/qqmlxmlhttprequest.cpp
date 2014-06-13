@@ -209,7 +209,7 @@ public:
         NodeImpl *d;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
@@ -247,7 +247,7 @@ public:
         NodeImpl *d;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     // JS API
     static void destroy(Managed *that) {
@@ -288,7 +288,7 @@ public:
             o->defineAccessorProperty(QStringLiteral("attributes"), method_get_attributes, 0);
         }
     };
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     static void initClass(ExecutionEngine *engine);
 
@@ -339,7 +339,7 @@ struct Node : public Object
     struct {
         NodeImpl *d;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(Object)
 
 
     // JS API
@@ -1629,7 +1629,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
         QQmlXMLHttpRequest *request;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     static void destroy(Managed *that) {
         that->as<QQmlXMLHttpRequestWrapper>()->d()->~Data();
@@ -1664,7 +1664,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Object *proto;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
     static void markObjects(Managed *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->d()->proto)

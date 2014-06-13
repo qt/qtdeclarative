@@ -48,6 +48,7 @@ using namespace QV4;
 
 const ManagedVTable Managed::static_vtbl =
 {
+    0,
     Managed::IsExecutionContext,
     Managed::IsString,
     Managed::IsObject,

@@ -55,7 +55,7 @@ struct BooleanCtor: FunctionObject
         Data(ExecutionContext *scope);
     };
 
-    V4_OBJECT
+    V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

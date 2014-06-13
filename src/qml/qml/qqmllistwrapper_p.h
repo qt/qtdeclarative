@@ -84,7 +84,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
         int propertyType;
     } __data;
 
-    V4_OBJECT
+    V4_OBJECT(Object)
 
     static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
     static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);

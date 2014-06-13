@@ -72,7 +72,7 @@ struct QmlValueTypeReference : public QmlValueTypeWrapper
         QPointer<QObject> object;
         int property;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(QmlValueTypeWrapper)
 };
 
 DEFINE_OBJECT_VTABLE(QmlValueTypeReference);
@@ -88,7 +88,7 @@ struct QmlValueTypeCopy : public QmlValueTypeWrapper
     {
         QVariant value;
     } __data;
-    V4_OBJECT
+    V4_OBJECT(QmlValueTypeWrapper)
 };
 
 DEFINE_OBJECT_VTABLE(QmlValueTypeCopy);

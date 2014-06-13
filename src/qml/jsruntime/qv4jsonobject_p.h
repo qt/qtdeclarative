@@ -55,7 +55,7 @@ struct JsonObject : Object {
         Data(InternalClass *ic);
     };
     Q_MANAGED_TYPE(JsonObject)
-    V4_OBJECT
+    V4_OBJECT(Object)
 private:
     typedef QSet<QV4::Object *> V4ObjectSet;
 public:
