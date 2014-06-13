@@ -467,14 +467,20 @@ inline Returned<T> *Value::as()
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 {
-    val = t->asReturnedValue();
+    m = t;
+#if QT_POINTER_SIZE == 4
+    tag = Managed_Type;
+#endif
     return *this;
 }
 
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
 {
-    val = v.ptr->val;
+    m = v.ptr->managed();
+#if QT_POINTER_SIZE == 4
+    tag = Managed_Type;
+#endif
     return *this;
 }
 

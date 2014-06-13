@@ -430,7 +430,10 @@ struct TypedValue : public Value
 {
     template<typename X>
     TypedValue &operator =(X *x) {
-        val = Value::fromManaged(x).val;
+        m = x;
+#if QT_POINTER_SIZE == 4
+        tag = Managed_Type;
+#endif
     }
     TypedValue &operator =(T *t);
     TypedValue &operator =(const Scoped<T> &v);
