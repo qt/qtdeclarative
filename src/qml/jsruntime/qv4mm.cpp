@@ -195,7 +195,7 @@ Managed *MemoryManager::alloc(std::size_t size)
     if (size >= MemoryManager::Data::MaxItemSize) {
         // we use malloc for this
         MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(
-                malloc(Q_V4_PROFILE_ALLOC(engine(), size + sizeof(MemoryManager::Data::LargeItem),
+                malloc(Q_V4_PROFILE_ALLOC(m_d->engine, size + sizeof(MemoryManager::Data::LargeItem),
                                           Profiling::LargeItem)));
         memset(item, 0, size + sizeof(MemoryManager::Data::LargeItem));
         item->next = m_d->largeItems;
@@ -226,7 +226,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(
-                    Q_V4_PROFILE_ALLOC(engine(), allocSize, Profiling::HeapPage),
+                    Q_V4_PROFILE_ALLOC(m_d->engine, allocSize, Profiling::HeapPage),
                     OSAllocator::JSGCHeapPages);
         allocation.chunkSize = int(size);
         m_d->heapChunks.append(allocation);
@@ -256,7 +256,7 @@ Managed *MemoryManager::alloc(std::size_t size)
 #ifdef V4_USE_VALGRIND
     VALGRIND_MEMPOOL_ALLOC(this, m, size);
 #endif
-    Q_V4_PROFILE_ALLOC(engine(), size, Profiling::SmallItem);
+    Q_V4_PROFILE_ALLOC(m_d->engine, size, Profiling::SmallItem);
 
     ++m_d->allocCount[pos];
     ++m_d->totalAlloc;
@@ -373,7 +373,7 @@ void MemoryManager::sweep(bool lastSweep)
             m->internalClass->vtable->destroy(m);
 
         *last = i->next;
-        free(Q_V4_PROFILE_DEALLOC(engine(), i, i->size + sizeof(Data::LargeItem),
+        free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
                                   Profiling::LargeItem));
         i = *last;
     }
@@ -420,7 +420,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
                 VALGRIND_DISABLE_ERROR_REPORTING;
                 VALGRIND_MEMPOOL_FREE(this, m);
 #endif
-                Q_V4_PROFILE_DEALLOC(engine(), m, size, Profiling::SmallItem);
+                Q_V4_PROFILE_DEALLOC(m_d->engine, m, size, Profiling::SmallItem);
                 *f = m;
             }
         }
@@ -552,11 +552,6 @@ void MemoryManager::registerDeletable(GCDeletable *d)
     m_d->deletable = d;
 }
 
-ExecutionEngine *MemoryManager::engine() const
-{
-    return m_d->engine;
-}
-
 #ifdef DETAILED_MM_STATS
 void MemoryManager::willAllocate(std::size_t size)
 {
@@ -571,8 +566,8 @@ void MemoryManager::willAllocate(std::size_t size)
 
 void MemoryManager::collectFromJSStack() const
 {
-    Value *v = engine()->jsStackBase;
-    Value *top = engine()->jsStackTop;
+    Value *v = m_d->engine->jsStackBase;
+    Value *top = m_d->engine->jsStackTop;
     while (v < top) {
         Managed *m = v->asManaged();
         if (m && m->inUse)

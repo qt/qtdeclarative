@@ -122,8 +122,6 @@ protected:
     // TODO: try to inline
     Managed *alloc(std::size_t size);
 
-    ExecutionEngine *engine() const;
-
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);
 #endif // DETAILED_MM_STATS
