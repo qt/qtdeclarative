@@ -358,18 +358,13 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    // global function
-    if (!scope)
-        return;
-
-    ExecutionEngine *v4 = scope->engine;
-
     needsActivation = function->needsActivation();
     strictMode = function->isStrict();
 
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount()));
 
     if (scope->strictMode) {
+        ExecutionEngine *v4 = scope->engine;
         Property pd(v4->thrower, v4->thrower);
         insertMember(scope->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         insertMember(scope->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
