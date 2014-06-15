@@ -1162,24 +1162,28 @@ ReturnedValue Runtime::objectLiteral(QV4::ExecutionContext *ctx, const QV4::Valu
     for (uint i = 0; i < klass->size; ++i)
         o->memberData[i] = *args++;
 
-    ScopedValue entry(scope);
-    for (int i = 0; i < arrayValueCount; ++i) {
-        uint idx = args->toUInt32();
-        ++args;
-        entry = *args++;
-        o->arraySet(idx, entry);
+    if (arrayValueCount > 0) {
+        ScopedValue entry(scope);
+        for (int i = 0; i < arrayValueCount; ++i) {
+            uint idx = args->toUInt32();
+            ++args;
+            entry = *args++;
+            o->arraySet(idx, entry);
+        }
     }
 
-    ScopedProperty pd(scope);
     uint arrayGetterSetterCount = arrayGetterSetterCountAndFlags & ((1 << 30) - 1);
-    for (uint i = 0; i < arrayGetterSetterCount; ++i) {
-        uint idx = args->toUInt32();
-        ++args;
-        pd->value = *args;
-        ++args;
-        pd->set = *args;
-        ++args;
-        o->arraySet(idx, pd, Attr_Accessor);
+    if (arrayGetterSetterCount > 0) {
+        ScopedProperty pd(scope);
+        for (uint i = 0; i < arrayGetterSetterCount; ++i) {
+            uint idx = args->toUInt32();
+            ++args;
+            pd->value = *args;
+            ++args;
+            pd->set = *args;
+            ++args;
+            o->arraySet(idx, pd, Attr_Accessor);
+        }
     }
 
     return o.asReturnedValue();
