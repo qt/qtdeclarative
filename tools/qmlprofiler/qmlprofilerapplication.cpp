@@ -117,6 +117,10 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
                                                      QmlEventLocation,int,int,int)),
             &m_profilerData, SLOT(addPixmapCacheEvent(QQmlProfilerService::PixmapEventType,qint64,
                                                       QmlEventLocation,int,int,int)));
+    connect(&m_qmlProfilerClient, SIGNAL(memoryAllocation(QQmlProfilerService::MemoryType,qint64,
+                                                          qint64)),
+            &m_profilerData, SLOT(addMemoryEvent(QQmlProfilerService::MemoryType,qint64,
+                                                 qint64)));
 
     connect(&m_qmlProfilerClient, SIGNAL(complete()), this, SLOT(qmlComplete()));
 

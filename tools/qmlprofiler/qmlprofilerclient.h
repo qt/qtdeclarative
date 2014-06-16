@@ -108,6 +108,7 @@ signals:
                          qint64 numericData4, qint64 numericData5);
     void pixmapCache(QQmlProfilerService::PixmapEventType, qint64 time,
                      const QmlEventLocation &location, int width, int height, int refCount);
+    void memoryAllocation(QQmlProfilerService::MemoryType type, qint64 time, qint64 amount);
 
 protected:
     virtual void messageReceived(const QByteArray &);

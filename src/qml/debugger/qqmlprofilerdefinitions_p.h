@@ -43,6 +43,7 @@
 #define QQMLPROFILERDEFINITIONS_P_H
 
 #include <private/qtqmlglobal_p.h>
+#include <private/qv4profiling_p.h>
 
 //
 //  W A R N I N G
@@ -127,6 +128,8 @@ struct QQmlProfilerDefinitions {
 
         MaximumSceneGraphFrameType
     };
+
+    typedef QV4::Profiling::MemoryType MemoryType;
 };
 
 QT_END_NAMESPACE
