@@ -84,10 +84,15 @@ void tst_QPacketProtocol::init()
     QVERIFY(m_server->listen(QHostAddress("127.0.0.1")));
 
     m_client = new QTcpSocket(this);
+
+    QSignalSpy serverSpy(m_server, SIGNAL(newConnection()));
+    QSignalSpy clientSpy(m_client, SIGNAL(connected()));
+
     m_client->connectToHost(m_server->serverAddress(), m_server->serverPort());
 
-    QVERIFY(m_client->waitForConnected());
-    QVERIFY(m_server->waitForNewConnection(10000));
+    QVERIFY(clientSpy.count() > 0 || clientSpy.wait());
+    QVERIFY(serverSpy.count() > 0 || serverSpy.wait());
+
     m_serverConn = m_server->nextPendingConnection();
 }
 
