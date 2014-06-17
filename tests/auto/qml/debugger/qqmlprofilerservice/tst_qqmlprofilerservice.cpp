@@ -143,7 +143,8 @@ public:
     {
     }
 
-    QList<QQmlProfilerData> synchronousMessages;
+    QList<QQmlProfilerData> qmlMessages;
+    QList<QQmlProfilerData> javascriptMessages;
     QList<QQmlProfilerData> asynchronousMessages;
     QList<QQmlProfilerData> pixmapMessages;
 
@@ -324,14 +325,12 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
     if (data.messageType == QQmlProfilerClient::PixmapCacheEvent)
         pixmapMessages.append(data);
     else if (data.messageType == QQmlProfilerClient::SceneGraphFrame ||
-            (data.messageType == QQmlProfilerClient::Event &&
-                (data.detailType == QQmlProfilerClient::FramePaint ||
-                 data.detailType == QQmlProfilerClient::AnimationFrame ||
-                 data.detailType == QQmlProfilerClient::Mouse ||
-                 data.detailType == QQmlProfilerClient::Key)))
+            data.messageType == QQmlProfilerClient::Event)
         asynchronousMessages.append(data);
+    else if (data.detailType == QQmlProfilerClient::Javascript)
+        javascriptMessages.append(data);
     else
-        synchronousMessages.append(data);
+        qmlMessages.append(data);
 }
 
 void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
@@ -360,23 +359,30 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 void tst_QQmlProfilerService::checkTraceReceived()
 {
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
-    QVERIFY(m_client->synchronousMessages.count());
+    QVERIFY(m_client->asynchronousMessages.count());
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->synchronousMessages.first().messageType, (int)QQmlProfilerClient::Event);
-    QCOMPARE(m_client->synchronousMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+    QCOMPARE(m_client->asynchronousMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->asynchronousMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->synchronousMessages.last().messageType, (int)QQmlProfilerClient::Event);
-    QCOMPARE(m_client->synchronousMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+    QCOMPARE(m_client->asynchronousMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->asynchronousMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
 void tst_QQmlProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
-        qDebug() << "Synchronous Messages:" << m_client->synchronousMessages.count();
+        qDebug() << "QML Messages:" << m_client->qmlMessages.count();
         int i = 0;
-        foreach (const QQmlProfilerData &data, m_client->synchronousMessages) {
+        foreach (const QQmlProfilerData &data, m_client->qmlMessages) {
+            qDebug() << i++ << data.time << data.messageType << data.detailType << data.detailData
+                     << data.line << data.column;
+        }
+        qDebug() << " ";
+        qDebug() << "JavaScript Messages:" << m_client->javascriptMessages.count();
+        i = 0;
+        foreach (const QQmlProfilerData &data, m_client->javascriptMessages) {
             qDebug() << i++ << data.time << data.messageType << data.detailType << data.detailData
                      << data.line << data.column;
         }
@@ -547,22 +553,22 @@ void tst_QQmlProfilerService::signalSourceLocation()
     m_client->setTraceState(false);
     checkTraceReceived();
 
-    QVERIFY2(m_client->synchronousMessages.count() >= 20,
-             QString::number(m_client->synchronousMessages.count()).toUtf8().constData());
+    QVERIFY2(m_client->qmlMessages.count() >= 16,
+             QString::number(m_client->qmlMessages.count()).toUtf8().constData());
 
-    QCOMPARE(m_client->synchronousMessages[14].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->synchronousMessages[14].detailType, (int)QQmlProfilerClient::HandlingSignal);
-    QVERIFY2(m_client->synchronousMessages[14].detailData.endsWith("signalSourceLocation.qml"),
-             m_client->synchronousMessages[14].detailData.toUtf8().constData());
-    QCOMPARE(m_client->synchronousMessages[14].line, 8);
-    QCOMPARE(m_client->synchronousMessages[14].column, 28);
+    QCOMPARE(m_client->qmlMessages[13].messageType, (int)QQmlProfilerClient::RangeLocation);
+    QCOMPARE(m_client->qmlMessages[13].detailType, (int)QQmlProfilerClient::HandlingSignal);
+    QVERIFY2(m_client->qmlMessages[13].detailData.endsWith("signalSourceLocation.qml"),
+             m_client->qmlMessages[13].detailData.toUtf8().constData());
+    QCOMPARE(m_client->qmlMessages[13].line, 8);
+    QCOMPARE(m_client->qmlMessages[13].column, 28);
 
-    QCOMPARE(m_client->synchronousMessages[19].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->synchronousMessages[19].detailType, (int)QQmlProfilerClient::HandlingSignal);
-    QVERIFY2(m_client->synchronousMessages[19].detailData.endsWith("signalSourceLocation.qml"),
-             m_client->synchronousMessages[19].detailData.toUtf8().constData());
-    QCOMPARE(m_client->synchronousMessages[19].line, 7);
-    QCOMPARE(m_client->synchronousMessages[19].column, 21);
+    QCOMPARE(m_client->qmlMessages[15].messageType, (int)QQmlProfilerClient::RangeLocation);
+    QCOMPARE(m_client->qmlMessages[15].detailType, (int)QQmlProfilerClient::HandlingSignal);
+    QVERIFY2(m_client->qmlMessages[15].detailData.endsWith("signalSourceLocation.qml"),
+             m_client->qmlMessages[15].detailData.toUtf8().constData());
+    QCOMPARE(m_client->qmlMessages[15].line, 7);
+    QCOMPARE(m_client->qmlMessages[15].column, 21);
 }
 
 void tst_QQmlProfilerService::javascript()
@@ -577,26 +583,26 @@ void tst_QQmlProfilerService::javascript()
     m_client->setTraceState(false);
     checkTraceReceived();
 
-    QVERIFY2(m_client->synchronousMessages.count() >= 36,
-             QString::number(m_client->synchronousMessages.count()).toUtf8().constData());
+    QVERIFY2(m_client->javascriptMessages.count() >= 22,
+             QString::number(m_client->javascriptMessages.count()).toUtf8().constData());
 
-    QCOMPARE(m_client->synchronousMessages[32].messageType, (int)QQmlProfilerClient::RangeStart);
-    QCOMPARE(m_client->synchronousMessages[32].detailType, (int)QQmlProfilerClient::Javascript);
+    QCOMPARE(m_client->javascriptMessages[6].messageType, (int)QQmlProfilerClient::RangeStart);
+    QCOMPARE(m_client->javascriptMessages[6].detailType, (int)QQmlProfilerClient::Javascript);
 
-    QCOMPARE(m_client->synchronousMessages[33].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->synchronousMessages[33].detailType, (int)QQmlProfilerClient::Javascript);
-    QVERIFY2(m_client->synchronousMessages[33].detailData.endsWith("javascript.qml"),
-             m_client->synchronousMessages[33].detailData.toUtf8().constData());
-    QCOMPARE(m_client->synchronousMessages[33].line, 4);
-    QCOMPARE(m_client->synchronousMessages[33].column, 5);
+    QCOMPARE(m_client->javascriptMessages[7].messageType, (int)QQmlProfilerClient::RangeLocation);
+    QCOMPARE(m_client->javascriptMessages[7].detailType, (int)QQmlProfilerClient::Javascript);
+    QVERIFY2(m_client->javascriptMessages[7].detailData.endsWith("javascript.qml"),
+             m_client->javascriptMessages[7].detailData.toUtf8().constData());
+    QCOMPARE(m_client->javascriptMessages[7].line, 4);
+    QCOMPARE(m_client->javascriptMessages[7].column, 5);
 
-    QCOMPARE(m_client->synchronousMessages[34].messageType, (int)QQmlProfilerClient::RangeData);
-    QCOMPARE(m_client->synchronousMessages[34].detailType, (int)QQmlProfilerClient::Javascript);
-    QVERIFY2(m_client->synchronousMessages[34].detailData == "something",
-             m_client->synchronousMessages[34].detailData.toUtf8().constData());
+    QCOMPARE(m_client->javascriptMessages[8].messageType, (int)QQmlProfilerClient::RangeData);
+    QCOMPARE(m_client->javascriptMessages[8].detailType, (int)QQmlProfilerClient::Javascript);
+    QVERIFY2(m_client->javascriptMessages[8].detailData == "something",
+             m_client->javascriptMessages[8].detailData.toUtf8().constData());
 
-    QCOMPARE(m_client->synchronousMessages[35].messageType, (int)QQmlProfilerClient::RangeEnd);
-    QCOMPARE(m_client->synchronousMessages[35].detailType, (int)QQmlProfilerClient::Javascript);
+    QCOMPARE(m_client->javascriptMessages[21].messageType, (int)QQmlProfilerClient::RangeEnd);
+    QCOMPARE(m_client->javascriptMessages[21].detailType, (int)QQmlProfilerClient::Javascript);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

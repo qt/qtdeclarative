@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -27,44 +27,61 @@
 /*!
     \title Qt Quick Examples - Text
     \example text
-    \brief This is a collection of QML examples relating to text
+    \brief This is a collection of QML examples relating to text.
     \image qml-text-example.png
     \ingroup qtquickexamples
 
-    This is a collection of  small QML examples relating to text. Each example is
-    a small QML file, usually containing or emphasizing a particular type or
+    \e Text is a collection of small QML examples relating to text. Each example
+    is a small QML file, usually containing or emphasizing a particular type or
     feature. You can run and observe the behavior of each example.
 
-    'Hello' shows how to change and animate the letter spacing of a Text type.
-    It uses a sequential animation to first animate the font.letterSpacing property
-    from 0 to 50 over 3 seconds and then move the text to a random position on screen:
+    \section1 Hello
+
+    \e Hello shows how to change and animate the letter spacing of a \l Text
+    type. It uses a sequential animation to first animate the font.letterSpacing
+    property from \c 0 to \c 50 over three seconds and then move the text to a
+    random position on screen:
     \snippet text/fonts/hello.qml letterspacing
 
-    'Fonts' shows different ways of using fonts with the Text type.
+    \section1 Fonts
+
+    \e Fonts shows different ways of using fonts with the \l Text type.
     Simply by name, using the font.family property directly:
     \snippet text/fonts/fonts.qml name
-    or using a FontLoader type:
+
+    or using a \l FontLoader type:
     \snippet text/fonts/fonts.qml fontloader
+
     or using a FontLoader and specifying a local font file:
     \snippet text/fonts/fonts.qml fontloaderlocal
+
     or finally using a FontLoader and specifying a remote font file:
     \snippet text/fonts/fonts.qml fontloaderremote
 
-    'Available Fonts' shows how to use the QML \l{QtQml::Qt}{Qt} global object and a list view
-    to display all the fonts available on the system.
-    The ListView type uses the list of fonts available as its model:
+    \section1 Available Fonts
+
+    \e{Available Fonts} shows how to use the QML \l{QtQml::Qt}{Qt} global object
+    and a list view to display all the fonts available on the system.
+    The \l ListView type uses the list of fonts available as its model:
     \snippet text/fonts/availableFonts.qml model
+
     Inside the delegate, the font family is set with the modelData:
     \snippet text/fonts/availableFonts.qml delegate
 
-    'Banner' is a simple example showing how to create a banner using a row of text
-    types and a NumberAnimation.
+    \section1 Banner
 
-    'Img tag' shows different ways of displaying images in a text types using
-    the <img> tag.
+    \e Banner is a simple example showing how to create a banner using a row of
+    text types and a \l NumberAnimation.
 
-    'Text Layout' shows how to create a more complex layout for a text item.
-    This example lays out the text in two columns using the onLineLaidOut handler
-    that allows you to position and resize each line:
+    \section1 Img tag
+
+    \e{Img tag} shows different ways of displaying images in text objects using
+    the \c{<img>} tag.
+
+    \section1 Text Layout
+
+    \e{Text Layout} shows how to create a more complex layout for a text item.
+    This example lays out the text in two columns using the onLineLaidOut
+    handler that allows you to position and resize each line:
     \snippet text/styledtext-layout.qml layout
 */

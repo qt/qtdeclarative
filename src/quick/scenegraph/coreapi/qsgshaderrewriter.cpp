@@ -52,7 +52,6 @@ namespace QSGShaderRewriter {
 struct Tokenizer {
 
     enum Token {
-        Token_Invalid,
         Token_Void,
         Token_OpenBrace,
         Token_CloseBrace,
@@ -75,7 +74,6 @@ struct Tokenizer {
 };
 
 const char *Tokenizer::NAMES[] = {
-    "Invalid",
     "Void",
     "OpenBrace",
     "CloseBrace",
@@ -167,7 +165,7 @@ Tokenizer::Token Tokenizer::next()
         }
     }
 
-    return Token_Invalid;
+    return Token_EOF;
 }
 
 }

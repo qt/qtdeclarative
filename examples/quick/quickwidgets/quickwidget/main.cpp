@@ -58,12 +58,14 @@ private:
 MainWindow::MainWindow()
    : m_quickWidget(new QQuickWidget)
 {
+    QSurfaceFormat format;
     if (QCoreApplication::arguments().contains(QStringLiteral("--coreprofile"))) {
-        QSurfaceFormat format;
         format.setVersion(4, 4);
         format.setProfile(QSurfaceFormat::CoreProfile);
-        m_quickWidget->setFormat(format);
     }
+    if (QCoreApplication::arguments().contains(QStringLiteral("--multisample")))
+        format.setSamples(4);
+    m_quickWidget->setFormat(format);
 
     QMdiArea *centralWidget = new QMdiArea;
 

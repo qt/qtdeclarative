@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -27,12 +27,18 @@
 /*!
     \title Qt Quick Examples - externaldraganddrop
     \example externaldraganddrop
-    \brief This is an example of drag and drop between Qml and other applications
+    \brief This is an example of drag-and-drop among QML applications.
     \image qml-dnd2-example.png
     \ingroup qtquickexamples
 
-    This example shows you how to respond to do drag and drop using MouseArea and DropArea.
+    \e externaldraganddrop demonstrates how to perform drag and
+    drop with \l MouseArea and \l DropArea.
 
-    Drag text between boxes, out of boxes into other applications, and from other applications into the boxes. Use option/ctrl to copy rather than move text when dragging between boxes.
+    The example allows you to drag the text to other boxes, out of boxes into
+    other applications, and from other applications into the boxes. Use the
+    option or CTRL keys to copy rather than move text when dragging between
+    boxes.
+
+    \include examples-run.qdocinc
 
 */

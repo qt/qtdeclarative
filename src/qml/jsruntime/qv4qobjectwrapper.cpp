@@ -1407,7 +1407,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
 {
     int argumentCount = callArgs->argc;
 
-    const QQmlPropertyData *best = 0;
+    QQmlPropertyData best;
     int bestParameterScore = INT_MAX;
     int bestMatchScore = INT_MAX;
 
@@ -1453,7 +1453,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
-            best = attempt;
+            best = *attempt;
             bestParameterScore = methodParameterScore;
             bestMatchScore = methodMatchScore;
         }
@@ -1463,10 +1463,10 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
 
     } while((attempt = RelatedMethod(object, attempt, dummy)) != 0);
 
-    if (best) {
+    if (best.isValid()) {
         if (valueTypeObject)
             valueTypeObject->setValue(valueTypeValue);
-        return CallPrecise(object, *best, engine, callArgs);
+        return CallPrecise(object, best, engine, callArgs);
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         const QQmlPropertyData *candidate = &data;

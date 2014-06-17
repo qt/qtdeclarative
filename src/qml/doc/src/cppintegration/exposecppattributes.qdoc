@@ -106,6 +106,8 @@ public:
     QString author() const {
         return m_author;
     }
+signals:
+    void authorChanged();
 private:
     QString m_author;
 };

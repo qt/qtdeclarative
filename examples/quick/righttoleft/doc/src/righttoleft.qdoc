@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -31,9 +31,18 @@
     \image qml-righttoleft-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to right to left(RTL) localization support.
+    \e{Right to Left} is a collection of small QML examples relating to
+    right to left (RTL) localization support. For more information,
+    visit \l{Right-to-left User Interfaces}.
 
-    Layout direction shows RTL layouting.
-    Layout mirroring shows automatic mirroring of horizontal layouts in RTL locales.
-    Text Alignment shows automatic mirroring of text alignment in RTL locales.
+    These are the examples in Right to Left:
+    \list
+    \li \e{Layout Direction} - shows RTL layout direction
+    \li \e{Layout Mirroring} - shows automatic mirroring of horizontal layouts
+        in RTL locales
+    \li \e{Text Alignment} - shows automatic mirroring of text alignment in RTL
+        locales
+    \endlist
+
+    \include examples-run.qdocinc
 */

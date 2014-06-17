@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -31,5 +31,13 @@
     \image qml-keyinteraction-example.png
     \ingroup qtquickexamples
 
-    This example demonstrates combining various methods of interacting with keyboard focus.
+    \e{Keyboard Focus in Qt Quick} combines various methods of
+    handling keyboard focus. For more information, visit
+    \l{Keyboard Focus in Qt Quick}.
+
+    \include examples-run.qdocinc
+
+    Using the keyboard arrow keys, the focus shifts to the menus and
+    the \l GridView.
+
 */
