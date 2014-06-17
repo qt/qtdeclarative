@@ -153,6 +153,10 @@ QQmlObjectCreator::~QQmlObjectCreator()
             if (ps)
                 ps->d = 0;
         }
+        while (sharedState->componentAttached) {
+            QQmlComponentAttached *a = sharedState->componentAttached;
+            a->rem();
+        }
         delete sharedState.data();
     }
 }
@@ -1252,6 +1256,11 @@ void QQmlObjectCreator::clear()
 
     while (!sharedState->allCreatedObjects.isEmpty())
         delete sharedState->allCreatedObjects.pop();
+
+    while (sharedState->componentAttached) {
+        QQmlComponentAttached *a = sharedState->componentAttached;
+        a->rem();
+    }
 
     phase = Done;
 }
