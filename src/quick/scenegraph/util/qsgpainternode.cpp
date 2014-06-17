@@ -53,19 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QT_MINIMUM_DYNAMIC_FBO_SIZE 64
-
-static inline int qt_next_power_of_two(int v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    ++v;
-    return v;
-}
+#define QT_MINIMUM_DYNAMIC_FBO_SIZE 64U
 
 QSGPainterTexture::QSGPainterTexture()
     : QSGPlainTexture()
@@ -322,8 +310,8 @@ void QSGPainterNode::updateFBOSize()
     int fboWidth;
     int fboHeight;
     if (m_fastFBOResizing) {
-        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qt_next_power_of_two(m_size.width()));
-        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qt_next_power_of_two(m_size.height()));
+        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_size.width() - 1));
+        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_size.height() - 1));
     } else {
         QSize minimumFBOSize = m_context->sceneGraphContext()->minimumFBOSize();
         fboWidth = qMax(minimumFBOSize.width(), m_size.width());

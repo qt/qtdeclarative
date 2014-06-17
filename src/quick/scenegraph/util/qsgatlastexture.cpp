@@ -43,6 +43,7 @@
 
 #include <QtCore/QVarLengthArray>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QtMath>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QGuiApplication>
@@ -67,18 +68,6 @@ static QElapsedTimer qsg_renderer_timer;
 namespace QSGAtlasTexture
 {
 
-static inline int qsg_powerOfTwo(int v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    ++v;
-    return v;
-}
-
 static int qsg_envInt(const char *name, int defaultValue)
 {
     QByteArray content = qgetenv(name);
@@ -98,8 +87,8 @@ Manager::Manager()
     int max;
     gl->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
 
-    int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512, qsg_powerOfTwo(surfaceSize.width()))));
-    int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512, qsg_powerOfTwo(surfaceSize.height()))));
+    int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512U, qNextPowerOfTwo(surfaceSize.width() - 1))));
+    int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512U, qNextPowerOfTwo(surfaceSize.height() - 1))));
 
     if (surface->surfaceClass() == QSurface::Window) {
         QWindow *window = static_cast<QWindow *>(surface);
