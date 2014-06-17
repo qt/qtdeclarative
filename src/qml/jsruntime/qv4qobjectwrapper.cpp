@@ -962,6 +962,8 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *
     const QObjectList &children = parent->children();
     for (int i = 0; i < children.count(); ++i) {
         QObject *child = children.at(i);
+        if (!child)
+            continue;
         QQmlData *ddata = QQmlData::get(child, /*create*/false);
         if (ddata)
             ddata->jsWrapper.markOnce(e);
