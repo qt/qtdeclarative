@@ -150,7 +150,7 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
         // QQmlEngine *engine = qmlContext(this)->engine();
         QQmlComponent component(engine, QUrl::fromLocalFile("MyItem.qml"));
         QQuickItem *childItem = qobject_cast<QQuickItem*>(component.create());
-        childItem->setParent(this);
+        childItem->setParentItem(this);
     }
     \endcode
 
