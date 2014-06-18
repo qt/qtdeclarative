@@ -8,7 +8,7 @@ QT_PRIVATE = testlib-private quick qml-private  gui core-private
 # inheriting CONFIG+=console transitively. Make it explicit.
 MODULE_CONFIG = console
 
-!contains(QT_CONFIG, no-widgets) {
+qtHaveModule(widgets) {
     QT += widgets
     DEFINES += QT_QMLTEST_WITH_WIDGETS
 }
