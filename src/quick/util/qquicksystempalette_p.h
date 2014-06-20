@@ -102,11 +102,6 @@ public:
 
 Q_SIGNALS:
     void paletteChanged();
-
-private:
-    bool eventFilter(QObject *watched, QEvent *event);
-    bool event(QEvent *event);
-
 };
 
 QT_END_NAMESPACE

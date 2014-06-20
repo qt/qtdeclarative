@@ -50,7 +50,6 @@ QT_BEGIN_NAMESPACE
 class QQuickSystemPalettePrivate : public QObjectPrivate
 {
 public:
-    QPalette palette;
     QPalette::ColorGroup group;
 };
 
@@ -85,9 +84,8 @@ QQuickSystemPalette::QQuickSystemPalette(QObject *parent)
     : QObject(*(new QQuickSystemPalettePrivate), parent)
 {
     Q_D(QQuickSystemPalette);
-    d->palette = QGuiApplication::palette();
     d->group = QPalette::Active;
-    qApp->installEventFilter(this);
+    connect(qApp, SIGNAL(paletteChanged(QPalette)), this, SIGNAL(paletteChanged()));
 }
 
 QQuickSystemPalette::~QQuickSystemPalette()
@@ -103,7 +101,7 @@ QQuickSystemPalette::~QQuickSystemPalette()
 QColor QQuickSystemPalette::window() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Window);
+    return QGuiApplication::palette().color(d->group, QPalette::Window);
 }
 
 /*!
@@ -115,7 +113,7 @@ QColor QQuickSystemPalette::window() const
 QColor QQuickSystemPalette::windowText() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::WindowText);
+    return QGuiApplication::palette().color(d->group, QPalette::WindowText);
 }
 
 /*!
@@ -127,7 +125,7 @@ QColor QQuickSystemPalette::windowText() const
 QColor QQuickSystemPalette::base() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Base);
+    return QGuiApplication::palette().color(d->group, QPalette::Base);
 }
 
 /*!
@@ -139,7 +137,7 @@ QColor QQuickSystemPalette::base() const
 QColor QQuickSystemPalette::text() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Text);
+    return QGuiApplication::palette().color(d->group, QPalette::Text);
 }
 
 /*!
@@ -151,7 +149,7 @@ QColor QQuickSystemPalette::text() const
 QColor QQuickSystemPalette::alternateBase() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::AlternateBase);
+    return QGuiApplication::palette().color(d->group, QPalette::AlternateBase);
 }
 
 /*!
@@ -163,7 +161,7 @@ QColor QQuickSystemPalette::alternateBase() const
 QColor QQuickSystemPalette::button() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Button);
+    return QGuiApplication::palette().color(d->group, QPalette::Button);
 }
 
 /*!
@@ -175,7 +173,7 @@ QColor QQuickSystemPalette::button() const
 QColor QQuickSystemPalette::buttonText() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::ButtonText);
+    return QGuiApplication::palette().color(d->group, QPalette::ButtonText);
 }
 
 /*!
@@ -187,7 +185,7 @@ QColor QQuickSystemPalette::buttonText() const
 QColor QQuickSystemPalette::light() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Light);
+    return QGuiApplication::palette().color(d->group, QPalette::Light);
 }
 
 /*!
@@ -199,7 +197,7 @@ QColor QQuickSystemPalette::light() const
 QColor QQuickSystemPalette::midlight() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Midlight);
+    return QGuiApplication::palette().color(d->group, QPalette::Midlight);
 }
 
 /*!
@@ -211,7 +209,7 @@ QColor QQuickSystemPalette::midlight() const
 QColor QQuickSystemPalette::dark() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Dark);
+    return QGuiApplication::palette().color(d->group, QPalette::Dark);
 }
 
 /*!
@@ -223,7 +221,7 @@ QColor QQuickSystemPalette::dark() const
 QColor QQuickSystemPalette::mid() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Mid);
+    return QGuiApplication::palette().color(d->group, QPalette::Mid);
 }
 
 /*!
@@ -235,7 +233,7 @@ QColor QQuickSystemPalette::mid() const
 QColor QQuickSystemPalette::shadow() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Shadow);
+    return QGuiApplication::palette().color(d->group, QPalette::Shadow);
 }
 
 /*!
@@ -247,7 +245,7 @@ QColor QQuickSystemPalette::shadow() const
 QColor QQuickSystemPalette::highlight() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::Highlight);
+    return QGuiApplication::palette().color(d->group, QPalette::Highlight);
 }
 
 /*!
@@ -259,7 +257,7 @@ QColor QQuickSystemPalette::highlight() const
 QColor QQuickSystemPalette::highlightedText() const
 {
     Q_D(const QQuickSystemPalette);
-    return d->palette.color(d->group, QPalette::HighlightedText);
+    return QGuiApplication::palette().color(d->group, QPalette::HighlightedText);
 }
 
 /*!
@@ -286,28 +284,6 @@ void QQuickSystemPalette::setColorGroup(QQuickSystemPalette::ColorGroup colorGro
     Q_D(QQuickSystemPalette);
     d->group = (QPalette::ColorGroup)colorGroup;
     emit paletteChanged();
-}
-
-bool QQuickSystemPalette::eventFilter(QObject *watched, QEvent *event)
-{
-    if (watched == qApp) {
-        if (event->type() == QEvent::ApplicationPaletteChange) {
-            QGuiApplication::postEvent(this, new QEvent(QEvent::ApplicationPaletteChange));
-            return false;
-        }
-    }
-    return QObject::eventFilter(watched, event);
-}
-
-bool QQuickSystemPalette::event(QEvent *event)
-{
-    Q_D(QQuickSystemPalette);
-    if (event->type() == QEvent::ApplicationPaletteChange) {
-        d->palette = QGuiApplication::palette();
-        emit paletteChanged();
-        return true;
-    }
-    return QObject::event(event);
 }
 
 QT_END_NAMESPACE
