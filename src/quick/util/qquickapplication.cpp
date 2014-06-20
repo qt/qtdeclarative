@@ -55,13 +55,11 @@ class QQuickApplicationPrivate : public QQmlApplicationPrivate
     Q_DECLARE_PUBLIC(QQuickApplication)
 public:
     QQuickApplicationPrivate()
-        : isActive(QGuiApplication::focusWindow() != 0),
-          direction(QGuiApplication::layoutDirection())
+        : direction(QGuiApplication::layoutDirection())
     {
     }
 
 private:
-    bool isActive;
     Qt::LayoutDirection direction;
 };
 
@@ -78,6 +76,8 @@ QQuickApplication::QQuickApplication(QObject *parent)
 
         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
                 this, SIGNAL(stateChanged(Qt::ApplicationState)));
+        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+                this, SIGNAL(activeChanged()));
     }
 }
 
@@ -87,8 +87,7 @@ QQuickApplication::~QQuickApplication()
 
 bool QQuickApplication::active() const
 {
-    Q_D(const QQuickApplication);
-    return d->isActive;
+    return QGuiApplication::applicationState() == Qt::ApplicationActive;
 }
 
 Qt::LayoutDirection QQuickApplication::layoutDirection() const
@@ -110,20 +109,7 @@ Qt::ApplicationState QQuickApplication::state() const
 bool QQuickApplication::eventFilter(QObject *, QEvent *event)
 {
     Q_D(QQuickApplication);
-    if ((event->type() == QEvent::ApplicationActivate) ||
-        (event->type() == QEvent::ApplicationDeactivate) ||
-        (event->type() == QEvent::ApplicationStateChange)) {
-        bool wasActive = d->isActive;
-        if (event->type() == QEvent::ApplicationStateChange) {
-            QApplicationStateChangeEvent * e= static_cast<QApplicationStateChangeEvent*>(event);
-            d->isActive = e->applicationState() == Qt::ApplicationActive;
-        } else {
-            d->isActive = (event->type() == QEvent::ApplicationActivate);
-        }
-        if (d->isActive != wasActive) {
-            emit activeChanged();
-        }
-    } else if (event->type() == QEvent::ApplicationLayoutDirectionChange) {
+    if (event->type() == QEvent::ApplicationLayoutDirectionChange) {
         Qt::LayoutDirection newDirection = QGuiApplication::layoutDirection();
         if (d->direction != newDirection) {
             d->direction = newDirection;
