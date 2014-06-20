@@ -50,30 +50,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickApplicationPrivate : public QQmlApplicationPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickApplication)
-public:
-    QQuickApplicationPrivate()
-        : direction(QGuiApplication::layoutDirection())
-    {
-    }
-
-private:
-    Qt::LayoutDirection direction;
-};
-
 /*
     This object and its properties are documented as part of the Qt object,
     in qqmlengine.cpp
 */
 
 QQuickApplication::QQuickApplication(QObject *parent)
-    : QQmlApplication(*new QQuickApplicationPrivate(), parent)
+    : QQmlApplication(parent)
 {
     if (qApp) {
-        qApp->installEventFilter(this);
-
+        connect(qApp, SIGNAL(layoutDirectionChanged(Qt::LayoutDirection)),
+                this, SIGNAL(layoutDirectionChanged()));
         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
                 this, SIGNAL(stateChanged(Qt::ApplicationState)));
         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
@@ -92,8 +79,7 @@ bool QQuickApplication::active() const
 
 Qt::LayoutDirection QQuickApplication::layoutDirection() const
 {
-    Q_D(const QQuickApplication);
-    return d->direction;
+    return QGuiApplication::layoutDirection();
 }
 
 bool QQuickApplication::supportsMultipleWindows() const
@@ -104,19 +90,6 @@ bool QQuickApplication::supportsMultipleWindows() const
 Qt::ApplicationState QQuickApplication::state() const
 {
     return QGuiApplication::applicationState();
-}
-
-bool QQuickApplication::eventFilter(QObject *, QEvent *event)
-{
-    Q_D(QQuickApplication);
-    if (event->type() == QEvent::ApplicationLayoutDirectionChange) {
-        Qt::LayoutDirection newDirection = QGuiApplication::layoutDirection();
-        if (d->direction != newDirection) {
-            d->direction = newDirection;
-            emit layoutDirectionChanged();
-        }
-    }
-    return false;
 }
 
 QT_END_NAMESPACE

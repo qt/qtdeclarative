@@ -50,7 +50,6 @@
 QT_BEGIN_NAMESPACE
 
 
-class QQuickApplicationPrivate;
 class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
@@ -73,10 +72,7 @@ Q_SIGNALS:
     void stateChanged(Qt::ApplicationState state);
 
 private:
-    bool eventFilter(QObject *, QEvent *event);
-
     Q_DISABLE_COPY(QQuickApplication)
-    Q_DECLARE_PRIVATE(QQuickApplication)
 };
 
 QT_END_NAMESPACE
