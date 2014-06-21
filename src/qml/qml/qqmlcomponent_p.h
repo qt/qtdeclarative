@@ -106,15 +106,13 @@ public:
 
     struct ConstructionState {
         ConstructionState()
-            : creator(0)
-            , completePending(false)
+            : completePending(false)
         {}
         ~ConstructionState()
         {
-            delete creator;
         }
 
-        QQmlObjectCreator *creator;
+        QScopedPointer<QQmlObjectCreator> creator;
         QList<QQmlError> errors;
         bool completePending;
     };
