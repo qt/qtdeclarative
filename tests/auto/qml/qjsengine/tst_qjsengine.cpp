@@ -178,6 +178,8 @@ private slots:
     void translateScriptUnicodeIdBased();
     void translateFromBuiltinCallback();
 
+    void privateMethods();
+
 signals:
     void testSignal();
 };
@@ -3546,6 +3548,41 @@ void tst_QJSEngine::translateFromBuiltinCallback()
     // qsTr() needs to walk to the outer-most (global) frame before it finds
     // a translation context, and this should not crash.
     eng.evaluate("[10,20].forEach(foo)", "script.js");
+}
+
+class ObjectWithPrivateMethods : public QObject
+{
+    Q_OBJECT
+private slots:
+    void myPrivateMethod() {}
+};
+
+void tst_QJSEngine::privateMethods()
+{
+    ObjectWithPrivateMethods object;
+    QJSEngine engine;
+    QJSValue jsWrapper = engine.newQObject(&object);
+    QQmlEngine::setObjectOwnership(&object, QQmlEngine::CppOwnership);
+
+    QSet<QString> privateMethods;
+    {
+        const QMetaObject *mo = object.metaObject();
+        for (int i = 0; i < mo->methodCount(); ++i) {
+            const QMetaMethod method = mo->method(i);
+            if (method.access() == QMetaMethod::Private)
+                privateMethods << QString::fromUtf8(method.name());
+        }
+    }
+
+    QVERIFY(privateMethods.contains("myPrivateMethod"));
+    QVERIFY(privateMethods.contains("_q_reregisterTimers"));
+    privateMethods << QStringLiteral("deleteLater") << QStringLiteral("destroyed");
+
+    QJSValueIterator it(jsWrapper);
+    while (it.hasNext()) {
+        it.next();
+        QVERIFY(!privateMethods.contains(it.name()));
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)

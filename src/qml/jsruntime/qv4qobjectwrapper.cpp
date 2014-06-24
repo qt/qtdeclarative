@@ -710,6 +710,11 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
 
 void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, Property *p, PropertyAttributes *attributes)
 {
+    // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
+    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
+    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
+    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+
     name = (String *)0;
     *index = UINT_MAX;
 
@@ -726,9 +731,13 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef n
             return;
         }
         const int methodCount = mo->methodCount();
-        if (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
-            name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
+        while (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
+            const int index = it->arrayIndex - propertyCount;
+            const QMetaMethod method = mo->method(index);
             ++it->arrayIndex;
+            if (method.access() == QMetaMethod::Private || index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)
+                continue;
+            name = that->engine()->newString(QString::fromUtf8(method.name()));
             *attributes = QV4::Attr_Data;
             p->value = that->get(name);
             return;
