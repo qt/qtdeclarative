@@ -979,9 +979,11 @@ void QSGThreadedRenderLoop::maybeUpdate(Window *w)
     if (!QCoreApplication::instance())
         return;
 
-    Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || m_lockedForSync,
-               "QQuickItem::update()",
-               "Function can only be called from GUI thread or during QQuickItem::updatePaintNode()");
+    QThread *current = QThread::currentThread();
+    if (current != QCoreApplication::instance()->thread() && (current != w->thread || !m_lockedForSync)) {
+        qWarning() << "Updates can only be scheduled from GUI thread or from QQuickItem::updatePaintNode()";
+        return;
+    }
 
     QSG_GUI_DEBUG(w->window, "maybeUpdate...");
     if (!w || !w->thread->isRunning()) {
