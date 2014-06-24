@@ -79,6 +79,7 @@ private slots:
     void initParent();
     void dynamicModelCrash();
     void visualItemModelCrash();
+    void invalidContextCrash();
 };
 
 class TestObject : public QObject
@@ -742,6 +743,48 @@ void tst_QQuickRepeater::visualItemModelCrash()
     window->setSource(testFileUrl("visualitemmodel.qml"));
     qApp->processEvents();
     delete window;
+}
+
+class BadModel : public QAbstractListModel
+{
+public:
+    ~BadModel()
+    {
+        beginResetModel();
+        endResetModel();
+    }
+
+    QVariant data(const QModelIndex &, int) const { return QVariant(); }
+    int rowCount(const QModelIndex &) const { return 0; }
+};
+
+
+void tst_QQuickRepeater::invalidContextCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("invalidContextCrash.qml"));
+
+    BadModel* model = new BadModel;
+    engine.rootContext()->setContextProperty("badModel", model);
+
+    QScopedPointer<QObject> root(component.create());
+    QCOMPARE(root->children().count(), 1);
+    QObject *repeater = root->children().first();
+
+    // Make sure the model comes first in the child list, so it will be
+    // deleted first and then the repeater. During deletion the QML context
+    // has been deleted already and is invalid.
+    model->setParent(root.data());
+    repeater->setParent(0);
+    repeater->setParent(root.data());
+
+    QCOMPARE(root->children().count(), 2);
+    QVERIFY(root->children().at(0) == model);
+    QVERIFY(root->children().at(1) == repeater);
+
+    // Delete the root object, which will invalidate/delete the QML context
+    // and then delete the child QObjects, which may try to access the context.
+    root.reset(0);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

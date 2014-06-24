@@ -303,7 +303,7 @@ public:
     QQmlListCompositor m_compositor;
     QQmlComponent *m_delegate;
     QQmlDelegateModelItemMetaType *m_cacheMetaType;
-    QQmlContext *m_context;
+    QPointer<QQmlContext> m_context;
     QQmlDelegateModelParts *m_parts;
     QQmlDelegateModelGroupEmitterList m_pendingParts;
 

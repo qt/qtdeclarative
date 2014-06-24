@@ -903,7 +903,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
     if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
         qWarning() << "DelegateModel::item: index out range" << index << m_compositor.count(group);
         return 0;
-    } else if (!m_context->isValid()) {
+    } else if (!m_context || !m_context->isValid()) {
         return 0;
     }
 
@@ -946,7 +946,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
             cacheItem->incubationTask->index[i] = it.index[i];
 
         QQmlContextData *ctxt = new QQmlContextData;
-        ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_context));
+        ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_context.data()));
         ctxt->contextObject = cacheItem;
         cacheItem->contextData = ctxt;
 
@@ -1409,7 +1409,7 @@ void QQmlDelegateModelPrivate::emitModelUpdated(const QQmlChangeSet &changeSet, 
 
 void QQmlDelegateModelPrivate::emitChanges()
 {
-    if (m_transaction || !m_complete || !m_context->isValid())
+    if (m_transaction || !m_complete || !m_context || !m_context->isValid())
         return;
 
     m_transaction = true;
@@ -1594,7 +1594,7 @@ QQmlDelegateModelAttached *QQmlDelegateModel::qmlAttachedProperties(QObject *obj
 
 bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const QV4::ValueRef object, int groups)
 {
-    if (!m_context->isValid())
+    if (!m_context || !m_context->isValid())
         return false;
 
     QQmlDelegateModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), -1);
@@ -2433,7 +2433,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         return QQmlV4Handle(QV4::Encode::undefined());
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
-    if (!model->m_context->isValid()) {
+    if (!model->m_context || !model->m_context->isValid()) {
         return QQmlV4Handle(QV4::Encode::undefined());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
