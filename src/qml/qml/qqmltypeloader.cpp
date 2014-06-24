@@ -148,6 +148,7 @@ public:
     void loadWithStaticData(QQmlDataBlob *b, const QByteArray &);
     void loadWithStaticDataAsync(QQmlDataBlob *b, const QByteArray &);
     void loadWithCachedUnit(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
+    void loadWithCachedUnitAsync(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
     void callCompleted(QQmlDataBlob *b);
     void callDownloadProgressChanged(QQmlDataBlob *b, qreal p);
     void initializeEngine(QQmlExtensionInterface *, const char *);
@@ -785,6 +786,12 @@ void QQmlDataLoaderThread::loadWithCachedUnit(QQmlDataBlob *b, const QQmlPrivate
     callMethodInThread(&This::loadWithCachedUnitThread, b, unit);
 }
 
+void QQmlDataLoaderThread::loadWithCachedUnitAsync(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit)
+{
+    b->addref();
+    postMethodToThread(&This::loadWithCachedUnitThread, b, unit);
+}
+
 void QQmlDataLoaderThread::callCompleted(QQmlDataBlob *b)
 {
     b->addref();
@@ -979,7 +986,7 @@ void QQmlDataLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &da
     }
 }
 
-void QQmlDataLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlDataLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode)
 {
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlDataLoader::loadWithUnitFcatory(%s, data): %s thread", qPrintable(blob->m_url.toString()),
@@ -992,12 +999,18 @@ void QQmlDataLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::C
         unlock();
         loadWithCachedUnitThread(blob, unit);
         lock();
-    } else {
+    } else if (mode == PreferSynchronous) {
         unlock();
         m_thread->loadWithCachedUnit(blob, unit);
         lock();
         if (!blob->isCompleteOrError())
             blob->m_data.setIsAsync(true);
+    } else {
+        Q_ASSERT(mode == Asynchronous);
+        blob->m_data.setIsAsync(true);
+        unlock();
+        m_thread->loadWithCachedUnitAsync(blob, unit);
+        lock();
     }
 }
 
@@ -1601,7 +1614,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
-            QQmlDataLoader::loadWithCachedUnit(typeData, cachedUnit);
+            QQmlDataLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
             QQmlDataLoader::load(typeData, mode);
         }
