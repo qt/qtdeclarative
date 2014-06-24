@@ -711,7 +711,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     }
 
     bool shouldUseDesignMetrics = renderType != QQuickText::NativeRendering;
-
+    if (!visibleImgTags.isEmpty())
+        visibleImgTags.clear();
     layout.setCacheEnabled(true);
     QTextOption textOption = layout.textOption();
     if (textOption.alignment() != q->effectiveHAlign()
