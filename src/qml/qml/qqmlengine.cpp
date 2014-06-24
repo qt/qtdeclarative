@@ -2306,20 +2306,17 @@ static inline QString shellNormalizeFileName(const QString &name)
 // The correct declaration of the SHGetPathFromIDList symbol is
 // being used in mingw-w64 as of r6215, which is a v3 snapshot.
 #if defined(Q_CC_MINGW) && (!defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 3)
-    ITEMIDLIST file;
-    if (FAILED(SHParseDisplayName(nameC, NULL, &file, 0, NULL)))
-        return name;
-    TCHAR buffer[MAX_PATH];
-    if (!SHGetPathFromIDList(&file, buffer))
+    ITEMIDLIST *file;
+    if (FAILED(SHParseDisplayName(nameC, NULL, reinterpret_cast<LPITEMIDLIST>(&file), 0, NULL)))
         return name;
 #else
     PIDLIST_ABSOLUTE file;
     if (FAILED(SHParseDisplayName(nameC, NULL, &file, 0, NULL)))
         return name;
+#endif
     TCHAR buffer[MAX_PATH];
     if (!SHGetPathFromIDList(file, buffer))
         return name;
-#endif
     QString canonicalName = QString::fromWCharArray(buffer);
     // Upper case drive letter
     if (canonicalName.size() > 2 && canonicalName.at(1) == QLatin1Char(':'))
