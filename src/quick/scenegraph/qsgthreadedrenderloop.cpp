@@ -1277,10 +1277,12 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
 
     QImage result;
     w->thread->mutex.lock();
+    m_locked = true;
     QSG_GUI_DEBUG(w->window, " - locking, posting grab event");
     w->thread->postEvent(new WMGrabEvent(window, &result));
     w->thread->waitCondition.wait(&w->thread->mutex);
     QSG_GUI_DEBUG(w->window, " - locking, grab done, unlocking");
+    m_locked = false;
     w->thread->mutex.unlock();
 
     QSG_GUI_DEBUG(w->window, " - grab complete");
