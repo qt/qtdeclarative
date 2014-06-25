@@ -2244,7 +2244,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
         // generate single literal value assignment to a list property if required
         if (property->propType == qMetaTypeId<QList<qreal> >()) {
             if (binding->type != QV4::CompiledData::Binding::Type_Number) {
-                recordError(binding->valueLocation, tr("Invalid property assignment: real or array of reals expected"));
+                recordError(binding->valueLocation, tr("Invalid property assignment: number or array of numbers expected"));
                 return false;
             }
             break;

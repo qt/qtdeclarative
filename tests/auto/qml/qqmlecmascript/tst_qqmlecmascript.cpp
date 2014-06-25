@@ -5548,7 +5548,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
-    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2 << 3));
     QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
     QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
     QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
@@ -5576,7 +5576,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->intListProperty(), (QList<int>() << 1));
-    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1));
     QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
     QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html"))));
     delete object;
@@ -5588,7 +5588,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
-    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2 << 3));
     QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
     QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
     QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
@@ -5616,7 +5616,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->intListProperty(), (QList<int>() << 1));
-    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1));
     QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
     QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html"))));
     delete object;

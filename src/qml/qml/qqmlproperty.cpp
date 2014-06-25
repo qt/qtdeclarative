@@ -1427,7 +1427,8 @@ bool QQmlPropertyPrivate::write(QObject *object,
                 list << value.toInt();
                 v = QVariant::fromValue<QList<int> >(list);
                 ok = true;
-            } else if (variantType == QVariant::Double && propertyType == qMetaTypeId<QList<qreal> >()) {
+            } else if ((variantType == QVariant::Double || variantType == QVariant::Int)
+                       && (propertyType == qMetaTypeId<QList<qreal> >())) {
                 QList<qreal> list;
                 list << value.toReal();
                 v = QVariant::fromValue<QList<qreal> >(list);

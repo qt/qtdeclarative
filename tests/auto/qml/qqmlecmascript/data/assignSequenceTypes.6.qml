@@ -4,7 +4,7 @@ import Qt.test 1.0
 MySequenceConversionObject {
     Component.onCompleted: {
         intListProperty = 1;
-        qrealListProperty = 1.1;
+        qrealListProperty = 1;
         boolListProperty = false;
         urlListProperty = Qt.resolvedUrl("example.html");
     }
