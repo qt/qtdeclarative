@@ -93,14 +93,14 @@ public slots:
         }
 
         m_renderFbo->bind();
-        glViewport(0, 0, m_size.width(), m_size.height());
+        context->functions()->glViewport(0, 0, m_size.width(), m_size.height());
 
         m_logoRenderer->render();
 
         // We need to flush the contents to the FBO before posting
         // the texture to the other thread, otherwise, we might
         // get unexpected results.
-        glFlush();
+        context->functions()->glFlush();
 
         m_renderFbo->bindDefault();
         qSwap(m_renderFbo, m_displayFbo);

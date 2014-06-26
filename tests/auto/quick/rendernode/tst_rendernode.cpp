@@ -44,6 +44,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qopenglcontext.h>
+#include <QtGui/qopenglfunctions.h>
 #include <QtGui/qscreen.h>
 #include <private/qsgrendernode_p.h>
 
@@ -86,8 +87,8 @@ public:
     virtual void render(const RenderState &)
     {
         // If clip has been set, scissoring will make sure the right area is cleared.
-        glClearColor(color.redF(), color.greenF(), color.blueF(), 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        QOpenGLContext::currentContext()->functions()->glClearColor(color.redF(), color.greenF(), color.blueF(), 1.0f);
+        QOpenGLContext::currentContext()->functions()->glClear(GL_COLOR_BUFFER_BIT);
     }
 
     QColor color;
@@ -129,9 +130,11 @@ private:
     QColor m_color;
 };
 
-class MessUpNode : public QSGRenderNode
+class MessUpNode : public QSGRenderNode, protected QOpenGLFunctions
 {
 public:
+    MessUpNode() : initialized(false) { }
+
     virtual StateFlags changedStates()
     {
         return StateFlags(DepthState) | StencilState | ScissorState | ColorState | BlendState
@@ -140,17 +143,17 @@ public:
 
     virtual void render(const RenderState &)
     {
+        if (!initialized) {
+            initializeOpenGLFunctions();
+            initialized = true;
+        }
         // Don't draw anything, just mess up the state
         glViewport(10, 10, 10, 10);
         glDisable(GL_SCISSOR_TEST);
         glDepthMask(true);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_EQUAL);
-#if defined(QT_OPENGL_ES)
         glClearDepthf(1);
-#else
-        glClearDepth(1);
-#endif
         glClearStencil(42);
         glClearColor(1.0f, 0.5f, 1.0f, 0.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -163,6 +166,8 @@ public:
         glFrontFace(frontFace == GL_CW ? GL_CCW : GL_CW);
         glEnable(GL_CULL_FACE);
     }
+
+    bool initialized;
 };
 
 class MessUpItem : public QQuickItem

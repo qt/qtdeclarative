@@ -44,6 +44,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qopenglcontext.h>
+#include <QtGui/qopenglfunctions.h>
 
 #include "../../shared/util.h"
 
@@ -107,13 +108,13 @@ tst_QQuickItemLayer::tst_QQuickItemLayer()
     window.create();
     context.create();
     context.makeCurrent(&window);
-    const char *vendor = (const char *)glGetString(GL_VENDOR);
-    const char *renderer = (const char *)glGetString(GL_RENDERER);
+    const char *vendor = (const char *)context.functions()->glGetString(GL_VENDOR);
+    const char *renderer = (const char *)context.functions()->glGetString(GL_RENDERER);
     m_isMesaSoftwareRasterizer = strcmp(vendor, "Mesa Project") == 0
             && strcmp(renderer, "Software Rasterizer") == 0;
     if (m_isMesaSoftwareRasterizer) {
         // Expects format: <OpenGL version> Mesa <Mesa version>[-devel] [...]
-        const char *version = (const char *)glGetString(GL_VERSION);
+        const char *version = (const char *)context.functions()->glGetString(GL_VERSION);
         QList<QByteArray> list = QByteArray(version).split(' ');
         if (list.size() >= 3) {
             list = list.at(2).split('-').at(0).split('.');

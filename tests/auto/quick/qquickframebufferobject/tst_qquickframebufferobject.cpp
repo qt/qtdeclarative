@@ -45,6 +45,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
+#include <QtGui/qopenglfunctions.h>
 
 #include <QtQuick/QQuickFramebufferObject>
 
@@ -62,7 +63,7 @@ struct FrameInfo {
     QSize fboSize;
 } frameInfo;
 
-class ColorRenderer : public QQuickFramebufferObject::Renderer
+class ColorRenderer : public QQuickFramebufferObject::Renderer, protected QOpenGLFunctions
 {
 public:
     void render();
@@ -142,6 +143,7 @@ void ColorRenderer::synchronize(QQuickFramebufferObject *item)
 
 QOpenGLFramebufferObject *ColorRenderer::createFramebufferObject(const QSize &size)
 {
+    initializeOpenGLFunctions();
     frameInfo.createFBOCount++;
     QOpenGLFramebufferObjectFormat format;
     if (msaa)

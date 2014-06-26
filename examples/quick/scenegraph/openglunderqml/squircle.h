@@ -44,9 +44,10 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QOpenGLFunctions>
 
 //! [1]
-class Squircle : public QQuickItem
+class Squircle : public QQuickItem, protected QOpenGLFunctions
 {
     Q_OBJECT
 

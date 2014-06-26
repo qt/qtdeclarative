@@ -91,6 +91,8 @@ void Squircle::handleWindowChanged(QQuickWindow *win)
 void Squircle::paint()
 {
     if (!m_program) {
+        initializeOpenGLFunctions();
+
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                            "attribute highp vec4 vertices;"
