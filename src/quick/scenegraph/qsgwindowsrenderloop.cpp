@@ -58,22 +58,13 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
-// #define QSG_RENDER_LOOP_DEBUG
+#define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP) << x;
 
-#ifdef QSG_RENDER_LOOP_DEBUG
-static QElapsedTimer qsg_debug_timer;
-#  define RLDEBUG(x) qDebug("(%6d) %s : %4d - %s", (int) qsg_debug_timer.elapsed(), __FILE__, __LINE__, x)
-#else
-#  define RLDEBUG(x)
-#endif
-
-#ifndef QSG_NO_RENDER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer qsg_render_timer;
-#define QSG_RENDER_TIMING_SAMPLE(sampleName) qint64 sampleName = 0; if (qsg_render_timing || QQuickProfiler::enabled) sampleName = qsg_render_timer.nsecsElapsed()
-#else
-#define QSG_RENDER_TIMING_SAMPLE(sampleName)
-#endif
+#define QSG_RENDER_TIMING_SAMPLE(sampleName) \
+    qint64 sampleName = 0;                                                  \
+    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled)   \
+        sampleName = qsg_render_timer.nsecsElapsed()
 
 
 QSGWindowsRenderLoop::QSGWindowsRenderLoop()
@@ -82,10 +73,6 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
     , m_updateTimer(0)
     , m_animationTimer(0)
 {
-#ifdef QSG_RENDER_LOOP_DEBUG
-    qsg_debug_timer.start();
-#endif
-
     m_rc = m_sg->createRenderContext();
 
     m_animationDriver = m_sg->createAnimationDriver(m_sg);
@@ -100,9 +87,7 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
 
     RLDEBUG("Windows Render Loop created");
 
-#ifndef QSG_NO_RENDER_TIMIMG
     qsg_render_timer.start();
-#endif
 }
 
 QSGWindowsRenderLoop::~QSGWindowsRenderLoop()
@@ -174,8 +159,6 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
     // By preparing the GL context here, it is feasible (if the app
     // is quick enough) to have a perfect first frame.
     if (!m_gl) {
-        QSG_RENDER_TIMING_SAMPLE(time_start);
-
         RLDEBUG(" - creating GL context");
         m_gl = new QOpenGLContext();
         m_gl->setFormat(window->requestedFormat());
@@ -192,27 +175,11 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
 
         QQuickWindowPrivate::get(window)->fireOpenGLContextCreated(m_gl);
 
-        QSG_RENDER_TIMING_SAMPLE(time_created);
         RLDEBUG(" - making current");
         bool current = m_gl->makeCurrent(window);
         RLDEBUG(" - initializing SG");
-        QSG_RENDER_TIMING_SAMPLE(time_current);
         if (current)
             m_rc->initialize(m_gl);
-
-#ifndef QSG_NO_RENDER_TIMING
-        if (qsg_render_timing) {
-            qDebug("WindowsRenderLoop: GL=%d ms, makeCurrent=%d ms, SG=%d ms",
-                   int((time_created - time_start)/1000000),
-                   int((time_current - time_created)/1000000),
-                   int((qsg_render_timer.nsecsElapsed() - time_current)/1000000));
-        }
-        Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphWindowsRenderShow, (
-                time_created - time_start,
-                time_current - time_created,
-                qsg_render_timer.nsecsElapsed() - time_current));
-#endif
-
     }
 
     WindowData data;
@@ -405,14 +372,12 @@ void QSGWindowsRenderLoop::render()
         m_animationDriver->advance();
         RLDEBUG("animations advanced");
 
-#ifndef QSG_NO_RENDER_TIMING
-        if (qsg_render_timing) {
-            qDebug("WindowsRenderLoop: animations=%d ms",
-                   int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
-        }
+        qCDebug(QSG_LOG_TIME_RENDERLOOP,
+                "animations ticked in %dms",
+                int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
+
         Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphWindowsAnimations, (
                 qsg_render_timer.nsecsElapsed() - time_start));
-#endif
 
         // It is not given that animations triggered another maybeUpdate()
         // and thus another render pass, so to keep things running,
@@ -470,16 +435,13 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     RLDEBUG(" - frameDone");
     d->fireFrameSwapped();
 
-#ifndef QSG_NO_RENDER_TIMING
-        if (qsg_render_timing) {
-            qDebug("WindowsRenderLoop(t=%d): window=%p, polish=%d ms, sync=%d ms, render=%d ms, swap=%d ms",
-                   int(qsg_render_timer.elapsed()),
-                   window,
-                   int((time_polished - time_start)/1000000),
-                   int((time_synced - time_polished)/1000000),
-                   int((time_rendered - time_synced)/1000000),
-                   int((time_swapped - time_rendered)/1000000));
-        }
+    qCDebug(QSG_LOG_TIME_RENDERLOOP()).nospace()
+            << "Frame rendered with 'windows' renderloop in: " << time_swapped << "ms"
+            << ", polish=" << (time_polished - time_start) / 1000000
+            << ", sync=" << (time_synced - time_polished) / 1000000
+            << ", render=" << (time_rendered - time_synced) / 1000000
+            << ", swap=" << (time_swapped - time_rendered) / 1000000
+            << " - " << window;
 
         Q_QUICK_SG_PROFILE2(QQuickProfiler::SceneGraphWindowsPolishFrame,
                             QQuickProfiler::SceneGraphRenderLoopFrame, (
@@ -487,7 +449,6 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
                 time_rendered - time_synced,
                 time_swapped - time_rendered,
                 time_polished - time_start));
-#endif
 }
 
 QT_END_NAMESPACE

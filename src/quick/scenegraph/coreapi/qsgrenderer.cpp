@@ -63,12 +63,9 @@ QT_BEGIN_NAMESPACE
 
 static bool qsg_sanity_check = qgetenv("QSG_SANITY_CHECK").toInt();
 
-#ifndef QSG_NO_RENDER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer frameTimer;
 static qint64 preprocessTime;
 static qint64 updatePassTime;
-#endif
 
 void QSGBindable::clear(QSGRenderer::ClearMode mode) const
 {
@@ -226,22 +223,18 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_is_rendering = true;
 
 
-#ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled() || QQuickProfiler::enabled;
     if (profileFrames)
         frameTimer.start();
     qint64 bindTime = 0;
     qint64 renderTime = 0;
-#endif
 
     m_bindable = &bindable;
     preprocess();
 
     bindable.bind();
-#ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
         bindTime = frameTimer.nsecsElapsed();
-#endif
 
     // Sanity check that attribute registers are disabled
     if (qsg_sanity_check) {
@@ -257,10 +250,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     }
 
     render();
-#ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
-#endif
 
     glDisable(GL_SCISSOR_TEST);
     m_is_rendering = false;
@@ -277,15 +268,13 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         m_index_buffer_bound = false;
     }
 
-#ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing) {
-        qDebug(" - Breakdown of render time: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d",
-               int(preprocessTime / 1000000),
-               int((updatePassTime - preprocessTime) / 1000000),
-               int((bindTime - updatePassTime) / 1000000),
-               int((renderTime - bindTime) / 1000000),
-               int(renderTime / 1000000));
-    }
+    qCDebug(QSG_LOG_TIME_RENDERER,
+            "time in renderer: total=%dms, preprocess=%d, updates=%d, binding=%d, rendering=%d",
+            int(renderTime / 1000000),
+            int(preprocessTime / 1000000),
+            int((updatePassTime - preprocessTime) / 1000000),
+            int((bindTime - updatePassTime) / 1000000),
+            int((renderTime - bindTime) / 1000000));
 
     Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRendererFrame, (
             preprocessTime,
@@ -293,7 +282,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
             bindTime - updatePassTime,
             renderTime - bindTime));
 
-#endif
 }
 
 void QSGRenderer::setProjectionMatrixToDeviceRect()
@@ -374,19 +362,14 @@ void QSGRenderer::preprocess()
         }
     }
 
-#ifndef QSG_NO_RENDER_TIMING
-    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled()|| QQuickProfiler::enabled;
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
-#endif
 
     nodeUpdater()->updateStates(m_root_node);
 
-#ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();
-#endif
-
 }
 
 void QSGRenderer::addNodesToPreprocess(QSGNode *node)

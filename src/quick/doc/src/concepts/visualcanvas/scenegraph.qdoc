@@ -325,7 +325,29 @@ framebuffer object (FBO), so the rendering is a two-step
 operation. First rasterize the surface, then draw the surface. Using
 scene graph API directly is always significantly faster.
 
+\section1 Logging Support
 
+The scene graph has support for a number of logging categories. These
+can be useful in tracking down both performance issues and bugs in
+addition to being helpful to Qt contributors.
+
+\list
+
+\li \c {qt.scenegraph.time.texture} - logs the time spent doing texture uploads
+
+\li \c {qt.scenegraph.time.compilation} - logs the time spent doing shader compilation
+
+\li \c {qt.scenegraph.time.renderer} - logs the time spent in the various steps of the renderer
+
+\li \c {qt.scenegraph.time.renderloop} - logs the time spent in the various steps of the render loop
+
+\li \c {qt.scenegraph.time.glyph} - logs the time spent preparing distance field glyphs
+
+\li \c {qt.scenegraph.info} - logs general information about various parts of the scene graph and the graphics stack
+
+\li \c {qt.scenegraph.renderloop} - creates a detailed log of the various stages involved in rendering. This log mode is primarily useful for developers working on Qt.
+
+\endlist
 
 \section1 Scene Graph Backend
 

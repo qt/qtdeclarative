@@ -50,6 +50,7 @@
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
+#include <QtQuick/private/qsgrenderloop_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -92,6 +93,30 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 */
 
 QT_BEGIN_NAMESPACE
+
+// Used for very high-level info about the renderering and gl context
+// Includes GL_VERSION, type of render loop, atlas size, etc.
+Q_LOGGING_CATEGORY(QSG_LOG_INFO,                "qt.scenegraph.info")
+
+// Used to debug the renderloop logic. Primarily useful for platform integrators
+// and when investigating the render loop logic.
+Q_LOGGING_CATEGORY(QSG_LOG_RENDERLOOP,          "qt.scenegraph.renderloop")
+
+
+// GLSL shader compilation
+Q_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION,    "qt.scenegraph.time.compilation")
+
+// polish, animations, sync, render and swap in the render loop
+Q_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP,     "qt.scenegraph.time.renderloop")
+
+// Texture uploads and swizzling
+Q_LOGGING_CATEGORY(QSG_LOG_TIME_TEXTURE,        "qt.scenegraph.time.texture")
+
+// Glyph preparation (only for distance fields atm)
+Q_LOGGING_CATEGORY(QSG_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph")
+
+// Timing inside the renderer base class
+Q_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
 
 class QSGContextPrivate : public QObjectPrivate
 {
@@ -161,6 +186,15 @@ QSGContext::QSGContext(QObject *parent) :
         d->distanceFieldAntialiasing = QSGGlyphNode::LowQualitySubPixelAntialiasing;
     else if (mode == "gray")
         d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+
+    // Adds compatibility with Qt 5.3 and earlier's QSG_RENDER_TIMING
+    if (qEnvironmentVariableIsSet("QSG_RENDER_TIMING")) {
+        ((QLoggingCategory &) QSG_LOG_TIME_GLYPH()).setEnabled(QtDebugMsg, true);
+        ((QLoggingCategory &) QSG_LOG_TIME_TEXTURE()).setEnabled(QtDebugMsg, true);
+        ((QLoggingCategory &) QSG_LOG_TIME_RENDERER()).setEnabled(QtDebugMsg, true);
+        ((QLoggingCategory &) QSG_LOG_TIME_RENDERLOOP()).setEnabled(QtDebugMsg, true);
+        ((QLoggingCategory &) QSG_LOG_TIME_COMPILATION()).setEnabled(QtDebugMsg, true);
+    }
 }
 
 
@@ -204,20 +238,20 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
     }
 
     static bool dumped = false;
-    if (!dumped && qEnvironmentVariableIsSet("QSG_INFO")) {
+    if (!dumped && QSG_LOG_INFO().isDebugEnabled()) {
         dumped = true;
         QSurfaceFormat format = renderContext->openglContext()->format();
         QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-        qDebug() << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
-        qDebug() << "Depth Buffer:      " << format.depthBufferSize();
-        qDebug() << "Stencil Buffer:    " << format.stencilBufferSize();
-        qDebug() << "Samples:           " << format.samples();
-        qDebug() << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
-        qDebug() << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
-        qDebug() << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
+        qCDebug(QSG_LOG_INFO) << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
+        qCDebug(QSG_LOG_INFO) << "Depth Buffer:      " << format.depthBufferSize();
+        qCDebug(QSG_LOG_INFO) << "Stencil Buffer:    " << format.stencilBufferSize();
+        qCDebug(QSG_LOG_INFO) << "Samples:           " << format.samples();
+        qCDebug(QSG_LOG_INFO) << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
+        qCDebug(QSG_LOG_INFO) << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
+        qCDebug(QSG_LOG_INFO) << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
         QSet<QByteArray> exts = renderContext->openglContext()->extensions();
         QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
-        qDebug() << "GL_EXTENSIONS:    " << all.constData();
+        qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
     }
 
     d->mutex.unlock();

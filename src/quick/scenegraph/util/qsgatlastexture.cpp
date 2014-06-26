@@ -62,10 +62,7 @@ QT_BEGIN_NAMESPACE
 #endif
 
 
-#ifndef QSG_NO_RENDER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer qsg_renderer_timer;
-#endif
 
 namespace QSGAtlasTexture
 {
@@ -116,8 +113,7 @@ Manager::Manager()
     m_atlas_size_limit = qsg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
     m_atlas_size = QSize(w, h);
 
-    if (qEnvironmentVariableIsSet("QSG_INFO"))
-        qDebug() << "QSG: texture atlas dimensions:" << w << "x" << h;
+    qCDebug(QSG_LOG_INFO, "texture atlas dimensions: %dx%d", w, h);
 }
 
 
@@ -388,11 +384,9 @@ void Atlas::bind(QSGTexture::Filtering filtering)
     // Upload all pending images..
     for (int i=0; i<m_pending_uploads.size(); ++i) {
 
-#ifndef QSG_NO_RENDER_TIMING
-        bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
+        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() || QQuickProfiler::enabled;
         if (profileFrames)
             qsg_renderer_timer.start();
-#endif
 
         if (m_externalFormat == GL_BGRA &&
                 !m_use_bgra_fallback) {
@@ -401,13 +395,9 @@ void Atlas::bind(QSGTexture::Filtering filtering)
             upload(m_pending_uploads.at(i));
         }
 
-#ifndef QSG_NO_RENDER_TIMING
-        if (qsg_render_timing) {
-            qDebug("   - AtlasTexture(%dx%d), uploaded in %d ms",
-                   m_pending_uploads.at(i)->image().width(),
-                   m_pending_uploads.at(i)->image().height(),
-                   (int) (qsg_renderer_timer.elapsed()));
-        }
+        qCDebug(QSG_LOG_TIME_TEXTURE).nospace() << "atlastexture uploaded in: " << qsg_renderer_timer.elapsed()
+                                           << "ms (" << m_pending_uploads.at(i)->image().width() << "x"
+                                           << m_pending_uploads.at(i)->image().height() << ")";
 
         Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
                 0,  // bind (not relevant)
@@ -415,7 +405,6 @@ void Atlas::bind(QSGTexture::Filtering filtering)
                 0,  // swizzle (not relevant)
                 qsg_renderer_timer.nsecsElapsed(), // (upload all of the above)
                 0)); // mipmap (not used ever...)
-#endif
     }
 
     GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;
