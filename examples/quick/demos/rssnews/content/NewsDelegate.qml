@@ -39,11 +39,11 @@
 ****************************************************************************/
 
 import QtQuick 2.2
-import QtQuick.Layouts 1.1
 
-ColumnLayout {
+Column {
     id: delegate
     width: delegate.ListView.view.width
+    spacing: 8
 
     // Returns a string representing how long ago an event occurred
     function timeSinceEvent(pubDate) {
@@ -77,13 +77,15 @@ ColumnLayout {
         return result;
     }
 
-    RowLayout {
-        Layout.maximumWidth: parent.width
+    Item { height: 8; width: delegate.width }
 
-        ColumnLayout {
-            Layout.alignment: Qt.AlignTop
+    Row {
+        width: parent.width
+        spacing: 8
 
+        Column {
             Item {
+                width: 4
                 height: titleText.font.pixelSize / 4
             }
 
@@ -97,7 +99,7 @@ ColumnLayout {
             id: titleText
 
             text: title
-            Layout.maximumWidth: delegate.width - titleImage.width
+            width: delegate.width - titleImage.width
             wrapMode: Text.WordWrap
             font.pixelSize: 26
             font.bold: true
@@ -105,11 +107,10 @@ ColumnLayout {
     }
 
     Text {
-        Layout.maximumWidth: delegate.width
+        width: delegate.width
         font.pixelSize: 12
         textFormat: Text.RichText
         font.italic: true
-        Layout.alignment: Qt.AlignLeft
         text: timeSinceEvent(pubDate) + " (<a href=\"" + link + "\">Link</a>)"
         onLinkActivated: {
             Qt.openUrlExternally(link)
@@ -120,7 +121,7 @@ ColumnLayout {
         id: descriptionText
 
         text: description
-        Layout.maximumWidth: parent.width
+        width: parent.width
         wrapMode: Text.WordWrap
         font.pixelSize: 14
         textFormat: Text.StyledText
