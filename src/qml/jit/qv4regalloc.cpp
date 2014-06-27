@@ -99,7 +99,8 @@ protected:
 class IRPrinterWithRegisters: public IRPrinterWithPositions
 {
     const RegisterInformation &_registerInformation;
-    QHash<int, const RegisterInfo *> _infoForRegister;
+    QHash<int, const RegisterInfo *> _infoForRegularRegister;
+    QHash<int, const RegisterInfo *> _infoForFPRegister;
 
 public:
     IRPrinterWithRegisters(QTextStream *out, const LifeTimeIntervals::Ptr &intervals,
@@ -108,8 +109,12 @@ public:
         , _registerInformation(registerInformation)
     {
         for (int i = 0, ei = _registerInformation.size(); i != ei; ++i)
-            _infoForRegister.insert(_registerInformation.at(i).reg<int>(),
-                                    &_registerInformation.at(i));
+            if (_registerInformation.at(i).isRegularRegister())
+                _infoForRegularRegister.insert(_registerInformation.at(i).reg<int>(),
+                                               &_registerInformation.at(i));
+            else
+                _infoForFPRegister.insert(_registerInformation.at(i).reg<int>(),
+                                          &_registerInformation.at(i));
     }
 
 protected:
@@ -117,7 +122,8 @@ protected:
     {
         switch (e->kind) {
         case Temp::PhysicalRegister: {
-            const RegisterInfo *ri = _infoForRegister.value(e->index, 0);
+            const RegisterInfo *ri = e->type == DoubleType ? _infoForFPRegister.value(e->index, 0)
+                                                           : _infoForRegularRegister.value(e->index, 0);
             if (ri) {
                 *out << dumpStart(e);
                 *out << ri->prettyName();
