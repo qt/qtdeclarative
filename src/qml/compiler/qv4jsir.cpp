@@ -771,6 +771,14 @@ void BasicBlock::prependStatement(Stmt *stmt)
     _statements.prepend(stmt);
 }
 
+void BasicBlock::prependStatements(const QVector<Stmt *> &stmts)
+{
+    Q_ASSERT(!isRemoved());
+    QVector<Stmt *> newStmts = stmts;
+    newStmts += _statements;
+    _statements = newStmts;
+}
+
 void BasicBlock::insertStatementBefore(Stmt *before, Stmt *newStmt)
 {
     int idx = _statements.indexOf(before);

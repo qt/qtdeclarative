@@ -820,6 +820,7 @@ public:
 
     void appendStatement(Stmt *statement);
     void prependStatement(Stmt *stmt);
+    void prependStatements(const QVector<Stmt *> &stmts);
     void insertStatementBefore(Stmt *before, Stmt *newStmt);
     void insertStatementBefore(int index, Stmt *newStmt);
     void insertStatementBeforeTerminator(Stmt *stmt);

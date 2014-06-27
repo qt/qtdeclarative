@@ -3944,7 +3944,9 @@ class ConvertArgLocals: protected StmtVisitor, protected ExprVisitor
 public:
     ConvertArgLocals(IR::Function *function)
         : function(function)
+        , convertArgs(!function->usesArgumentsObject)
     {
+        tempForFormal.resize(function->formals.size(), -1);
         tempForLocal.resize(function->locals.size(), -1);
     }
 
@@ -3953,10 +3955,35 @@ public:
         if (function->variablesCanEscape())
             return;
 
+        QVector<Stmt *> extraMoves;
+        if (convertArgs) {
+            const int formalCount = function->formals.size();
+            extraMoves.reserve(formalCount + function->basicBlock(0)->statementCount());
+            extraMoves.resize(formalCount);
+
+            for (int i = 0; i != formalCount; ++i) {
+                const int newTemp = function->tempCount++;
+                tempForFormal[i] = newTemp;
+
+                ArgLocal *source = function->New<ArgLocal>();
+                source->init(ArgLocal::Formal, i, 0);
+
+                Temp *target = function->New<Temp>();
+                target->init(Temp::VirtualRegister, newTemp);
+
+                Move *m = function->NewStmt<Move>();
+                m->init(target, source);
+                extraMoves[i] = m;
+            }
+        }
+
         foreach (BasicBlock *bb, function->basicBlocks())
             if (!bb->isRemoved())
                 foreach (Stmt *s, bb->statements())
                     s->accept(this);
+
+        if (convertArgs && function->formals.size() > 0)
+            function->basicBlock(0)->prependStatements(extraMoves);
 
         function->locals.clear();
     }
@@ -4000,6 +4027,10 @@ private:
                 Temp *t = function->New<Temp>();
                 t->init(Temp::VirtualRegister, fetchTempForLocal(al->index));
                 e = t;
+            } else if (convertArgs && al->kind == ArgLocal::Formal) {
+                Temp *t = function->New<Temp>();
+                t->init(Temp::VirtualRegister, fetchTempForFormal(al->index));
+                e = t;
             }
         } else {
             e->accept(this);
@@ -4014,7 +4045,14 @@ private:
         return ref;
     }
 
+    int fetchTempForFormal(int formal)
+    {
+        return tempForFormal[formal];
+    }
+
     IR::Function *function;
+    bool convertArgs;
+    std::vector<int> tempForFormal;
     std::vector<int> tempForLocal;
 };
 } // anonymous namespace
@@ -4252,6 +4290,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
 
         ConvertArgLocals(function).toTemps();
+        showMeTheCode(function);
 
         // Calculate the dominator tree:
         DominatorTree df(function);
