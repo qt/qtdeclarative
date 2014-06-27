@@ -419,7 +419,7 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 #endif
     app.setApplicationName("QtQmlViewer");
-    app.setOrganizationName("Qt Project");
+    app.setOrganizationName("QtProject");
     app.setOrganizationDomain("qt-project.org");
 
 #ifndef QT_NO_TRANSLATION

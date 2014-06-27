@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
     }
 
     app->setApplicationName("Qml Runtime");
-    app->setOrganizationName("Qt Project");
+    app->setOrganizationName("QtProject");
     app->setOrganizationDomain("qt-project.org");
 
     qmlRegisterType<Config>("QmlRuntime.Config", VERSION_MAJ, VERSION_MIN, "Configuration");

@@ -45,7 +45,7 @@
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
     QGuiApplication app(argc,argv);\
-    app.setOrganizationName("Qt Project");\
+    app.setOrganizationName("QtProject");\
     app.setOrganizationDomain("qt-project.org");\
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
