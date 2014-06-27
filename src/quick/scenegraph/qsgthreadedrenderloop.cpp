@@ -886,6 +886,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         w = &m_windows.last();
     }
 
+    // set this early as we'll be rendering shortly anyway and this avoids
+    // specialcasing exposure in polishAndSync.
+    w->thread->window = window;
+
     if (w->window->width() <= 0 || w->window->height() <= 0
             || !w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
 #ifndef QT_NO_DEBUG
@@ -1074,7 +1078,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     QSG_GUI_DEBUG(w->window, "polishAndSync()");
 
     QQuickWindow *window = w->window;
-    if (!window->isExposed() || !window->isVisible() || window->size().isEmpty()) {
+    if (!w->thread || !w->thread->window) {
         QSG_GUI_DEBUG(w->window, " - not exposed, aborting...");
         killTimer(w->timerId);
         w->timerId = 0;
@@ -1093,7 +1097,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
         QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
         w = windowFor(m_windows, window);
     }
-    if (!w) {
+    if (!w || !w->thread || !w->thread->window) {
         QSG_GUI_DEBUG(w->window, " - removed after event flushing..");
         killTimer(w->timerId);
         w->timerId = 0;
