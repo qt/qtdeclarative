@@ -264,6 +264,8 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
 
     QQuickDropEvent dragTargetEvent(d, event);
     emit entered(&dragTargetEvent);
+    if (!event->isAccepted())
+        return;
 
     d->containsDrag = true;
     if (QQuickDragMimeData *dragMime = qobject_cast<QQuickDragMimeData *>(const_cast<QMimeData *>(mimeData)))
