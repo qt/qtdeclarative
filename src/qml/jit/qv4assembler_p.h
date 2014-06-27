@@ -283,8 +283,8 @@ public:
         ConstantTable(Assembler *as): _as(as) {}
 
         int add(const QV4::Primitive &v);
-        ImplicitAddress loadValueAddress(IR::Const *c, RegisterID baseReg);
-        ImplicitAddress loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
+        Address loadValueAddress(IR::Const *c, RegisterID baseReg);
+        Address loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
         void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
 
     private:

@@ -343,24 +343,9 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     return isNoDbl;
 }
 
-#if !defined(QT_NO_DEBUG) || defined(QT_FORCE_ASSERTS)
-namespace {
-inline bool isPregOrConst(IR::Expr *e)
-{
-    if (IR::Temp *t = e->asTemp())
-        return t->kind == IR::Temp::PhysicalRegister;
-    return e->asConst() != 0;
-}
-} // anonymous namespace
-#endif
-
 Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
                                                    IR::Expr *left, IR::Expr *right)
 {
-    Q_ASSERT(isPregOrConst(left));
-    Q_ASSERT(isPregOrConst(right));
-    Q_ASSERT(left->asConst() == 0 || right->asConst() == 0);
-
     Assembler::DoubleCondition cond;
     switch (op) {
     case IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
@@ -377,7 +362,7 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
     if (invertCondition)
         cond = JSC::MacroAssembler::invert(cond);
 
-    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left), toDoubleRegister(right));
+    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
 }
 
 

@@ -1541,17 +1541,15 @@ int Assembler::ConstantTable::add(const Primitive &v)
     return idx;
 }
 
-Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(IR::Const *c,
-                                                                      RegisterID baseReg)
+Assembler::Address Assembler::ConstantTable::loadValueAddress(IR::Const *c, RegisterID baseReg)
 {
     return loadValueAddress(convertToValue(c), baseReg);
 }
 
-Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(const Primitive &v,
-                                                                      RegisterID baseReg)
+Assembler::Address Assembler::ConstantTable::loadValueAddress(const Primitive &v, RegisterID baseReg)
 {
     _toPatch.append(_as->moveWithPatch(TrustedImmPtr(0), baseReg));
-    ImplicitAddress addr(baseReg);
+    Address addr(baseReg);
     addr.offset = add(v) * sizeof(QV4::Primitive);
     Q_ASSERT(addr.offset >= 0);
     return addr;

@@ -3887,13 +3887,22 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                             continue;
                         }
                     }
-                    if (rightConst) { // mask right hand side of shift operations
+                    if (rightConst) {
                         switch (binop->op) {
                         case OpLShift:
                         case OpRShift:
-                        case OpURShift:
-                            rightConst->value = QV4::Primitive::toInt32(rightConst->value) & 0x1f;
-                            rightConst->type = SInt32Type;
+                            if (double v = QV4::Primitive::toInt32(rightConst->value) & 0x1f) {
+                                // mask right hand side of shift operations
+                                rightConst->value = v;
+                                rightConst->type = SInt32Type;
+                            } else {
+                                // shifting a value over 0 bits is a move:
+                                if (rightConst->value == 0) {
+                                    m->source = binop->left;
+                                    W += m;
+                                }
+                            }
+
                             break;
                         default:
                             break;
