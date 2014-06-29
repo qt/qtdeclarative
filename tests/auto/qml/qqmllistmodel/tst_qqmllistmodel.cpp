@@ -106,6 +106,7 @@ private slots:
     void get_nested_data();
     void crash_model_with_multiple_roles();
     void crash_model_with_unknown_roles();
+    void crash_model_with_dynamic_roles();
     void set_model_cache();
     void property_changes();
     void property_changes_data();
@@ -126,6 +127,7 @@ private slots:
     void stringifyModelEntry();
     void qobjectTrackerForDynamicModelObjects();
     void crash_append_empty_array();
+    void dynamic_roles_crash_QTBUG_38907();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -984,6 +986,97 @@ void tst_qqmllistmodel::crash_model_with_unknown_roles()
     model->index(0, 0, QModelIndex()).data(Qt::UserRole);
 }
 
+//QTBUG-35639
+void tst_qqmllistmodel::crash_model_with_dynamic_roles()
+{
+    {
+        // setting a dynamic role to a QObject value, then triggering dtor
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+
+        // delete the root item, which will cause the model dtor to run
+        // previously, this would crash as it attempted to delete testObj.
+        delete rootItem;
+    }
+
+    {
+        // setting a dynamic role to a QObject value, then triggering
+        // DynamicRoleModelNode::updateValues() to trigger unsafe qobject_cast
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+
+        QMetaObject::invokeMethod(model, "setElementAgain");
+
+        delete rootItem;
+    }
+
+    {
+        // setting a dynamic role to a QObject value, then triggering
+        // DynamicRoleModelNodeMetaObject::propertyWrite()
+
+        /*
+           XXX TODO: I couldn't reproduce this one simply - I think it
+           requires a WorkerScript sync() call, and that's non-trivial.
+           I thought I could do it simply via:
+
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+        QObject *testObj2 = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj2));
+
+           But it turns out that that doesn't work (the setValue() call within
+           setProperty() doesn't seem to trigger the right codepath, for some
+           reason), and you can't trigger it manually via:
+
+        QObject *testObj2 = new QObject;
+        void *a[] = { testObj2, 0 };
+        QMetaObject::metacall(dynamicNodeModel, QMetaObject::WriteProperty, 0, a);
+
+           because the dynamicNodeModel for that index cannot be retrieved
+           using the public API.
+
+           But, anyway, I think the above two test cases are sufficient to
+           show that QObject* values should be guarded internally.
+        */
+    }
+}
+
 //QTBUG-15190
 void tst_qqmllistmodel::set_model_cache()
 {
@@ -1554,6 +1647,24 @@ void tst_qqmllistmodel::crash_append_empty_array()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
     QCOMPARE(spy.count(), 0);
+}
+
+void tst_qqmllistmodel::dynamic_roles_crash_QTBUG_38907()
+{
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("qtbug38907.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(item != 0);
+
+    QVariant retVal;
+
+    QMetaObject::invokeMethod(item.data(),
+                              "exec",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, retVal));
+
+    QVERIFY(retVal.toBool());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

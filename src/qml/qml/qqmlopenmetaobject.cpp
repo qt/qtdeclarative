@@ -187,14 +187,22 @@ public:
     struct Property {
     private:
         QVariant m_value;
+        QPointer<QObject> qobjectTracker;
     public:
         bool valueSet = false;
 
-        const QVariant &value() const { return m_value; }
+        QVariant value() const {
+            if (QMetaType::typeFlags(m_value.userType()) & QMetaType::PointerToQObject
+                && qobjectTracker.isNull())
+                return QVariant::fromValue<QObject*>(nullptr);
+            return m_value;
+        }
         QVariant &valueRef() { return m_value; }
         void setValue(const QVariant &v) {
             m_value = v;
             valueSet = true;
+            if (QMetaType::typeFlags(v.userType()) & QMetaType::PointerToQObject)
+                qobjectTracker = m_value.value<QObject*>();
         }
     };
 
