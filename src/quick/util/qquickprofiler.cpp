@@ -88,7 +88,7 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
                     // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
                     case QQuickProfiler::SceneGraphRendererFrame: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
                     // AdaptationLayerFrame: glyphCount (which is an integer), glyphRenderTime, glyphStoreTime
-                    case QQuickProfiler::SceneGraphAdaptationLayerFrame: ds << (int)subtime_1 << subtime_2 << subtime_3; break;
+                    case QQuickProfiler::SceneGraphAdaptationLayerFrame: ds << subtime_1 << subtime_2 << subtime_3; break;
                     // ContextFrame: compiling material time
                     case QQuickProfiler::SceneGraphContextFrame: ds << subtime_1; break;
                     // RenderLoop: syncTime, renderTime, swapTime
