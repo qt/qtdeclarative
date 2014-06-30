@@ -367,8 +367,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     cd->polishItems();
 
-    if (profileFrames)
+    if (profileFrames) {
         polishTime = renderTimer.nsecsElapsed();
+        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishFrame, (polishTime));
+    }
 
     emit window->afterAnimating();
 
@@ -409,8 +411,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         lastFrameTime = QTime::currentTime();
     }
 
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRenderLoopFrame, (
-            syncTime,
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
+            syncTime - polishTime,
             renderTime - syncTime,
             swapTime));
 

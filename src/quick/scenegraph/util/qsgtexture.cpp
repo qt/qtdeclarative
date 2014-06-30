@@ -625,7 +625,7 @@ void QSGPlainTexture::bind()
                     (int) qsg_renderer_timer.elapsed(),
                     m_texture_size.width(),
                     m_texture_size.height());
-            Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTextureDeletion, (
+            Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTextureDeletion, (
                     qsg_renderer_timer.nsecsElapsed()));
         }
         m_texture_id = 0;
@@ -726,7 +726,7 @@ void QSGPlainTexture::bind()
                 int((mipmapTime - uploadTime)/1000000));
     }
 
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
             bindTime,
             convertTime - bindTime,
             swizzleTime - convertTime,

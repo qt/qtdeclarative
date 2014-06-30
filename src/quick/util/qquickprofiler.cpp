@@ -103,8 +103,8 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
                     case QQuickProfiler::SceneGraphWindowsRenderShow: ds << subtime_1 << subtime_2 << subtime_3; break;
                     // WindowsAnimations: update time
                     case QQuickProfiler::SceneGraphWindowsAnimations: ds << subtime_1; break;
-                    // WindowsRenderWindow: polish time; always comes packed after a RenderLoop
-                    case QQuickProfiler::SceneGraphWindowsPolishFrame: ds << subtime_4; break;
+                    // non-threaded rendering: polish time
+                    case QQuickProfiler::SceneGraphPolishFrame: ds << subtime_1; break;
                     default:break;
                 }
                 break;

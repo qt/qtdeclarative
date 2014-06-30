@@ -605,7 +605,7 @@ void QSGRenderThread::syncAndRender()
             int(threadTimer.elapsed() - renderTime / 1000000));
 
 
-        Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRenderLoopFrame, (
+        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
                 syncTime,
                 renderTime - syncTime,
                 threadTimer.nsecsElapsed() - renderTime));
@@ -1141,7 +1141,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
             << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
             << " - (on Gui thread) " << window;
 
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphPolishAndSync, (
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishAndSync, (
             polishTime,
             waitTime - polishTime,
             syncTime - waitTime,

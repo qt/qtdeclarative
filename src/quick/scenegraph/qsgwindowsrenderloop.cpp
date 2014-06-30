@@ -376,7 +376,7 @@ void QSGWindowsRenderLoop::render()
                 "animations ticked in %dms",
                 int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
 
-        Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphWindowsAnimations, (
+        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphWindowsAnimations, (
                 qsg_render_timer.nsecsElapsed() - time_start));
 
         // It is not given that animations triggered another maybeUpdate()
@@ -418,6 +418,8 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     d->polishItems();
     QSG_RENDER_TIMING_SAMPLE(time_polished);
 
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishFrame, (time_polished - time_start));
+
     emit window->afterAnimating();
 
     RLDEBUG(" - syncing");
@@ -443,12 +445,10 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
             << ", swap=" << (time_swapped - time_rendered) / 1000000
             << " - " << window;
 
-        Q_QUICK_SG_PROFILE2(QQuickProfiler::SceneGraphWindowsPolishFrame,
-                            QQuickProfiler::SceneGraphRenderLoopFrame, (
+        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
                 time_synced - time_polished,
                 time_rendered - time_synced,
-                time_swapped - time_rendered,
-                time_polished - time_start));
+                time_swapped - time_rendered));
 }
 
 QT_END_NAMESPACE

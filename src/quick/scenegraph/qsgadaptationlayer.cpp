@@ -190,7 +190,7 @@ void QSGDistanceFieldGlyphCache::update()
                 int(renderTime / 1000000),
                 int((now - (renderTime / 1000000))));
     }
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphAdaptationLayerFrame, (
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphAdaptationLayerFrame, (
             count,
             renderTime,
             qsg_render_timer.nsecsElapsed() - renderTime));

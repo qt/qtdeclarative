@@ -399,7 +399,7 @@ void Atlas::bind(QSGTexture::Filtering filtering)
                                            << "ms (" << m_pending_uploads.at(i)->image().width() << "x"
                                            << m_pending_uploads.at(i)->image().height() << ")";
 
-        Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
+        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
                 0,  // bind (not relevant)
                 0,  // convert (not relevant)
                 0,  // swizzle (not relevant)

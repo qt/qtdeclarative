@@ -276,7 +276,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
             int((bindTime - updatePassTime) / 1000000),
             int((renderTime - bindTime) / 1000000));
 
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphRendererFrame, (
+    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRendererFrame, (
             preprocessTime,
             updatePassTime - preprocessTime,
             bindTime - updatePassTime,

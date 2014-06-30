@@ -123,7 +123,7 @@ struct QQmlProfilerDefinitions {
         SceneGraphPolishAndSync,
         SceneGraphWindowsRenderShow,
         SceneGraphWindowsAnimations,
-        SceneGraphWindowsPolishFrame,
+        SceneGraphPolishFrame,
 
         MaximumSceneGraphFrameType
     };

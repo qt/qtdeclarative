@@ -71,10 +71,8 @@ QT_BEGIN_NAMESPACE
 #define Q_QUICK_PROFILE(Method)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::Method)
 
-#define Q_QUICK_SG_PROFILE2(Type1, Type2, Params)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::sceneGraphFrame<Type1, Type2> Params))
-
-#define Q_QUICK_SG_PROFILE1(Type, Params) Q_QUICK_SG_PROFILE2(Type, Type, Params)
+#define Q_QUICK_SG_PROFILE(Type, Params)\
+    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::sceneGraphFrame<Type> Params))
 
 
 // This struct is somewhat dangerous to use:
@@ -170,12 +168,12 @@ public:
         }
     }
 
-    template<SceneGraphFrameType FrameType1, SceneGraphFrameType FrameType2>
+    template<SceneGraphFrameType FrameType>
     static void sceneGraphFrame(qint64 value1, qint64 value2 = -1, qint64 value3 = -1,
                                 qint64 value4 = -1, qint64 value5 = -1)
     {
         s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(), 1 << SceneGraphFrame,
-                1 << FrameType1 | 1 << FrameType2, value1, value2, value3, value4, value5));
+                1 << FrameType, value1, value2, value3, value4, value5));
     }
 
     template<PixmapEventType PixmapState>
