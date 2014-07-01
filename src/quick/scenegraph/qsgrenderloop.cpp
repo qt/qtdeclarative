@@ -396,7 +396,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     qint64 swapTime = 0;
     if (profileFrames)
-        swapTime = renderTimer.nsecsElapsed() - renderTime;
+        swapTime = renderTimer.nsecsElapsed();
 
     if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
@@ -414,7 +414,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
             syncTime - polishTime,
             renderTime - syncTime,
-            swapTime));
+            swapTime - renderTime));
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
