@@ -105,13 +105,6 @@ SOURCES += \
     $$PWD/qv4string.cpp \
     $$PWD/qv4value.cpp
 
-# Use SSE2 floating point math on 32 bit instead of the default
-# 387 to make test results pass on 32 and on 64 bit builds.
-linux-g++*:isEqual(QT_ARCH,i386) {
-    QMAKE_CFLAGS += -march=pentium4 -msse2 -mfpmath=sse
-    QMAKE_CXXFLAGS += -march=pentium4 -msse2 -mfpmath=sse
-}
-
 valgrind {
     DEFINES += V4_USE_VALGRIND
 }
