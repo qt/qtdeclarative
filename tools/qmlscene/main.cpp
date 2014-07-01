@@ -460,7 +460,7 @@ int main(int argc, char ** argv)
     if (options.contextSharing) {
         shareContext.reset(new QOpenGLContext);
         shareContext->create();
-        QOpenGLContextPrivate::setGlobalShareContext(shareContext.data());
+        qt_gl_set_global_share_context(shareContext.data());
     }
 
     int exitCode = 0;

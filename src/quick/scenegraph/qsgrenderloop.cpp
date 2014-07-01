@@ -334,8 +334,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!gl) {
         gl = new QOpenGLContext();
         gl->setFormat(window->requestedFormat());
-        if (QOpenGLContextPrivate::globalShareContext())
-            gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
+        if (qt_gl_global_share_context())
+            gl->setShareContext(qt_gl_global_share_context());
         if (!gl->create()) {
             const bool isEs = gl->isOpenGLES();
             delete gl;

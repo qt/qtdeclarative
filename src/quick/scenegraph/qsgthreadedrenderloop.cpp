@@ -889,8 +889,8 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
 
         if (!w->thread->gl) {
             w->thread->gl = new QOpenGLContext();
-            if (QOpenGLContextPrivate::globalShareContext())
-                w->thread->gl->setShareContext(QOpenGLContextPrivate::globalShareContext());
+            if (qt_gl_global_share_context())
+                w->thread->gl->setShareContext(qt_gl_global_share_context());
             w->thread->gl->setFormat(w->window->requestedFormat());
             if (!w->thread->gl->create()) {
                 const bool isEs = w->thread->gl->isOpenGLES();
