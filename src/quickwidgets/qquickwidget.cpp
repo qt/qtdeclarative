@@ -869,7 +869,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         d->fakeHidden = true;
         return;
     }
-    if (d->fakeHidden) {
+    if (d->fakeHidden && d->context) {
         //restart rendering
         d->fakeHidden = false;
         d->renderControl->sync();
@@ -887,7 +887,14 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     }
 
     context->makeCurrent(d->offscreenSurface);
+
+    if (d->fakeHidden) {
+        d->fakeHidden = false;
+        d->renderControl->sync();
+    }
+
     d->renderControl->render();
+
     context->functions()->glFlush();
     context->doneCurrent();
 }
