@@ -2943,6 +2943,8 @@ void tst_qquicktext::fontSizeMode()
     // Font size reduced to fit within the width of the item.
     qreal horizontalFitWidth = myText->contentWidth();
     qreal horizontalFitHeight = myText->contentHeight();
+    if (QGuiApplication::platformName() == QStringLiteral("windows"))
+        QEXPECT_FAIL("styled", "QTBUG-39961", Abort);
     QVERIFY(horizontalFitWidth <= myText->width() + 2); // rounding
     QVERIFY(horizontalFitHeight <= myText->height() + 2);
 
@@ -3447,6 +3449,8 @@ void tst_qquicktext::multilengthStrings()
     myText->setSize(QSizeF(mediumWidth, mediumHeight));
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
 
+    if (QGuiApplication::platformName() == QStringLiteral("windows"))
+        QEXPECT_FAIL("Wrap", "QTBUG-39961", Abort);
     QCOMPARE(myText->contentWidth(), mediumWidth);
     QCOMPARE(myText->contentHeight(), mediumHeight);
     QCOMPARE(myText->truncated(), true);
