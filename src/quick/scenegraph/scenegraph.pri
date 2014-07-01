@@ -10,12 +10,15 @@ HEADERS += \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnode_p.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
+    $$PWD/coreapi/qsgabstractrenderer.h \
+    $$PWD/coreapi/qsgabstractrenderer_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
     $$PWD/coreapi/qsgrendernode_p.h \
     $$PWD/coreapi/qsggeometry_p.h \
     $$PWD/coreapi/qsgmaterialshader_p.h
 
 SOURCES += \
+    $$PWD/coreapi/qsgabstractrenderer.cpp \
     $$PWD/coreapi/qsgbatchrenderer.cpp \
     $$PWD/coreapi/qsggeometry.cpp \
     $$PWD/coreapi/qsgmaterial.cpp \
@@ -30,6 +33,8 @@ HEADERS += \
     $$PWD/util/qsgareaallocator_p.h \
     $$PWD/util/qsgatlastexture_p.h \
     $$PWD/util/qsgdepthstencilbuffer_p.h \
+    $$PWD/util/qsgengine.h \
+    $$PWD/util/qsgengine_p.h \
     $$PWD/util/qsgflatcolormaterial.h \
     $$PWD/util/qsgsimplematerial.h \
     $$PWD/util/qsgsimplerectnode.h \
@@ -48,6 +53,7 @@ SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
     $$PWD/util/qsgatlastexture.cpp \
     $$PWD/util/qsgdepthstencilbuffer.cpp \
+    $$PWD/util/qsgengine.cpp \
     $$PWD/util/qsgflatcolormaterial.cpp \
     $$PWD/util/qsgsimplerectnode.cpp \
     $$PWD/util/qsgsimpletexturenode.cpp \

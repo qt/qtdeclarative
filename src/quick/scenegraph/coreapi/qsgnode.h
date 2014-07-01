@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 #define QSG_RUNTIME_DESCRIPTION
 #endif
 
+class QSGAbstractRenderer;
 class QSGRenderer;
 
 class QSGNode;
@@ -298,11 +299,11 @@ public:
 private:
     void notifyNodeChange(QSGNode *node, DirtyState state);
 
-    friend class QSGRenderer;
+    friend class QSGAbstractRenderer;
     friend class QSGNode;
     friend class QSGGeometryNode;
 
-    QList<QSGRenderer *> m_renderers;
+    QList<QSGAbstractRenderer *> m_renderers;
 };
 
 

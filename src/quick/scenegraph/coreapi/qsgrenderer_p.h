@@ -42,53 +42,27 @@
 #ifndef QSGRENDERER_P_H
 #define QSGRENDERER_P_H
 
-#include <qcolor.h>
-#include <qset.h>
-#include <qhash.h>
-
+#include "qsgabstractrenderer.h"
+#include "qsgabstractrenderer_p.h"
 #include "qsgnode.h"
 #include "qsgmaterial.h"
-#include <QtQuick/qsgtexture.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGMaterialShader;
-struct QSGMaterialType;
-class QOpenGLFramebufferObject;
-class TextureReference;
 class QSGBindable;
 class QSGNodeUpdater;
 
 Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
 Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QObject
+class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QSGAbstractRenderer
 {
-    Q_OBJECT
 public:
-    enum ClearModeBit
-    {
-        ClearColorBuffer    = 0x0001,
-        ClearDepthBuffer    = 0x0002,
-        ClearStencilBuffer  = 0x0004
-    };
-    Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
 
     QSGRenderer(QSGRenderContext *context);
     virtual ~QSGRenderer();
-
-    void setRootNode(QSGRootNode *node);
-    QSGRootNode *rootNode() const { return m_root_node; }
-
-    void setDeviceRect(const QRect &rect) { m_device_rect = rect; }
-    inline void setDeviceRect(const QSize &size) { setDeviceRect(QRect(QPoint(), size)); }
-    QRect deviceRect() const { return m_device_rect; }
-
-    void setViewportRect(const QRect &rect) { m_viewport_rect = rect; }
-    inline void setViewportRect(const QSize &size) { setViewportRect(QRect(QPoint(), size)); }
-    QRect viewportRect() const { return m_viewport_rect; }
 
     // Accessed by QSGMaterialShader::RenderState.
     QMatrix4x4 currentProjectionMatrix() const { return m_current_projection_matrix; }
@@ -99,35 +73,21 @@ public:
 
     void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
     qreal devicePixelRatio() const { return m_device_pixel_ratio; }
-
-    virtual void setProjectionMatrixToRect(const QRectF &rect);
-    void setProjectionMatrix(const QMatrix4x4 &matrix);
-    QMatrix4x4 projectionMatrix() const { return m_projection_matrix; }
-    bool isMirrored() const { return m_mirrored; }
-
-    void setClearColor(const QColor &color);
-    QColor clearColor() const { return m_clear_color; }
-
     QSGRenderContext *context() const { return m_context; }
 
-    void renderScene();
+    bool isMirrored() const;
     void renderScene(const QSGBindable &bindable);
-    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+    virtual void renderScene(GLuint fboId = 0) Q_DECL_FINAL Q_DECL_OVERRIDE;
+    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
 
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
 
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
 
-    void setClearMode(ClearMode mode) { m_clear_mode = mode; }
-    ClearMode clearMode() const { return m_clear_mode; }
-
     virtual void setCustomRenderMode(const QByteArray &) { };
 
     void clearChangedFlag() { m_changed_emitted = false; }
-
-Q_SIGNALS:
-    void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 
 protected:
     virtual void render() = 0;
@@ -141,8 +101,6 @@ protected:
 
     void markNodeDirtyState(QSGNode *node, QSGNode::DirtyState state) { node->m_dirtyState |= state; }
 
-    QColor m_clear_color;
-    ClearMode m_clear_mode;
     QMatrix4x4 m_current_projection_matrix;
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
@@ -152,31 +110,22 @@ protected:
     QSGRenderContext *m_context;
 
 private:
-    QSGRootNode *m_root_node;
     QSGNodeUpdater *m_node_updater;
 
-    QRect m_device_rect;
-    QRect m_viewport_rect;
-
     QSet<QSGNode *> m_nodes_to_preprocess;
-
-    QMatrix4x4 m_projection_matrix;
 
     const QSGBindable *m_bindable;
 
     uint m_changed_emitted : 1;
-    uint m_mirrored : 1;
     uint m_is_rendering : 1;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
 
 class Q_QUICK_PRIVATE_EXPORT QSGBindable
 {
 public:
     virtual ~QSGBindable() { }
     virtual void bind() const = 0;
-    virtual void clear(QSGRenderer::ClearMode mode) const;
+    virtual void clear(QSGAbstractRenderer::ClearMode mode) const;
     virtual void reactivate() const;
 };
 

@@ -97,6 +97,7 @@ public:
 
     QOpenGLContext *openglContext() const { return m_gl; }
     QSGContext *sceneGraphContext() const { return m_sg; }
+    bool isValid() const { return m_gl; }
 
     virtual void initialize(QOpenGLContext *context);
     virtual void invalidate();
@@ -117,6 +118,7 @@ public:
     virtual void compile(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
     virtual void initialize(QSGMaterialShader *shader);
 
+    void setAttachToGLContext(bool attach);
     void registerFontengineForCleanup(QFontEngine *engine);
 
     static QSGRenderContext *from(QOpenGLContext *context);
@@ -146,6 +148,7 @@ protected:
 
     bool m_brokenIBOs;
     bool m_serializedRender;
+    bool m_attachToGLContext;
 };
 
 

@@ -363,6 +363,7 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
     , m_distanceFieldCacheManager(0)
     , m_brokenIBOs(false)
     , m_serializedRender(false)
+    , m_attachToGLContext(true)
 {
 }
 
@@ -384,12 +385,7 @@ void QSGRenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fboId)
     if (m_serializedRender)
         qsg_framerender_mutex.lock();
 
-    if (fboId) {
-        QSGBindableFboId bindable(fboId);
-        renderer->renderScene(bindable);
-    } else {
-        renderer->renderScene();
-    }
+    renderer->renderScene(fboId);
 
     if (m_serializedRender)
         qsg_framerender_mutex.unlock();
@@ -441,6 +437,12 @@ QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRaw
     return cache;
 }
 
+void QSGRenderContext::setAttachToGLContext(bool attach)
+{
+    Q_ASSERT(!isValid());
+    m_attachToGLContext = attach;
+}
+
 #define QSG_RENDERCONTEXT_PROPERTY "_q_sgrendercontext"
 
 QSGRenderContext *QSGRenderContext::from(QOpenGLContext *context)
@@ -473,7 +475,10 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
 
     Q_ASSERT_X(!m_gl, "QSGRenderContext::initialize", "already initialized!");
     m_gl = context;
-    m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
+    if (m_attachToGLContext) {
+        Q_ASSERT(!context->property(QSG_RENDERCONTEXT_PROPERTY).isValid());
+        context->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
+    }
     m_sg->renderContextInitialized(this);
 
 #ifdef Q_OS_LINUX
@@ -541,7 +546,8 @@ void QSGRenderContext::invalidate()
     delete m_distanceFieldCacheManager;
     m_distanceFieldCacheManager = 0;
 
-    m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
+    if (m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
+        m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
     m_gl = 0;
 
     m_sg->renderContextInvalidated(this);

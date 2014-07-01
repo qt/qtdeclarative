@@ -40,18 +40,9 @@
 ****************************************************************************/
 
 #include "qsgrenderer_p.h"
-#include "qsgnode.h"
-#include "qsgmaterial.h"
 #include "qsgnodeupdater_p.h"
-#include "qsggeometry_p.h"
-
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgshadersourcebuilder_p.h>
 
 #include <qopenglframebufferobject.h>
-#include <QtGui/qguiapplication.h>
-
-#include <qdatetime.h>
 
 #include <private/qquickprofiler_p.h>
 
@@ -63,12 +54,12 @@ static QElapsedTimer frameTimer;
 static qint64 preprocessTime;
 static qint64 updatePassTime;
 
-void QSGBindable::clear(QSGRenderer::ClearMode mode) const
+void QSGBindable::clear(QSGAbstractRenderer::ClearMode mode) const
 {
     GLuint bits = 0;
-    if (mode & QSGRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
-    if (mode & QSGRenderer::ClearDepthBuffer) bits |= GL_DEPTH_BUFFER_BIT;
-    if (mode & QSGRenderer::ClearStencilBuffer) bits |= GL_STENCIL_BUFFER_BIT;
+    if (mode & QSGAbstractRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
+    if (mode & QSGAbstractRenderer::ClearDepthBuffer) bits |= GL_DEPTH_BUFFER_BIT;
+    if (mode & QSGAbstractRenderer::ClearStencilBuffer) bits |= GL_STENCIL_BUFFER_BIT;
     QOpenGLContext::currentContext()->functions()->glClear(bits);
 }
 
@@ -118,18 +109,13 @@ void QSGBindableFboId::bind() const
 
 
 QSGRenderer::QSGRenderer(QSGRenderContext *context)
-    : QObject()
-    , m_clear_color(Qt::transparent)
-    , m_clear_mode(ClearColorBuffer | ClearDepthBuffer)
-    , m_current_opacity(1)
+    : m_current_opacity(1)
     , m_current_determinant(1)
     , m_device_pixel_ratio(1)
     , m_context(context)
-    , m_root_node(0)
     , m_node_updater(0)
     , m_bindable(0)
     , m_changed_emitted(false)
-    , m_mirrored(false)
     , m_is_rendering(false)
 {
 }
@@ -169,37 +155,30 @@ void QSGRenderer::setNodeUpdater(QSGNodeUpdater *updater)
     m_node_updater = updater;
 }
 
-
-void QSGRenderer::setRootNode(QSGRootNode *node)
+bool QSGRenderer::isMirrored() const
 {
-    if (m_root_node == node)
-        return;
-    if (m_root_node) {
-        m_root_node->m_renderers.removeOne(this);
-        nodeChanged(m_root_node, QSGNode::DirtyNodeRemoved);
-    }
-    m_root_node = node;
-    if (m_root_node) {
-        Q_ASSERT(!m_root_node->m_renderers.contains(this));
-        m_root_node->m_renderers << this;
-        nodeChanged(m_root_node, QSGNode::DirtyNodeAdded);
-    }
+    QMatrix4x4 matrix = projectionMatrix();
+    // Mirrored relative to the usual Qt coordinate system with origin in the top left corner.
+    return matrix(0, 0) * matrix(1, 1) - matrix(0, 1) * matrix(1, 0) > 0;
 }
 
-
-void QSGRenderer::renderScene()
+void QSGRenderer::renderScene(GLuint fboId)
 {
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const { QOpenGLFramebufferObject::bindDefault(); }
-    } b;
-    renderScene(b);
+    if (fboId) {
+        QSGBindableFboId bindable(fboId);
+        renderScene(bindable);
+    } else {
+        class B : public QSGBindable
+        {
+        public:
+            void bind() const { QOpenGLFramebufferObject::bindDefault(); }
+        } bindable;
+        renderScene(bindable);
+    }
 }
-
 void QSGRenderer::renderScene(const QSGBindable &bindable)
 {
-    if (!m_root_node)
+    if (!rootNode())
         return;
 
     m_is_rendering = true;
@@ -255,30 +234,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
 }
 
-void QSGRenderer::setProjectionMatrixToRect(const QRectF &rect)
-{
-    QMatrix4x4 matrix;
-    matrix.ortho(rect.x(),
-                 rect.x() + rect.width(),
-                 rect.y() + rect.height(),
-                 rect.y(),
-                 1,
-                 -1);
-    setProjectionMatrix(matrix);
-}
-
-void QSGRenderer::setProjectionMatrix(const QMatrix4x4 &matrix)
-{
-    m_projection_matrix = matrix;
-    // Mirrored relative to the usual Qt coordinate system with origin in the top left corner.
-    m_mirrored = matrix(0, 0) * matrix(1, 1) - matrix(0, 1) * matrix(1, 0) > 0;
-}
-
-void QSGRenderer::setClearColor(const QColor &color)
-{
-    m_clear_color = color;
-}
-
 /*!
     Updates internal data structures and emits the sceneGraphChanged() signal.
 
@@ -309,7 +264,8 @@ void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGRenderer::preprocess()
 {
-    Q_ASSERT(m_root_node);
+    QSGRootNode *root = rootNode();
+    Q_ASSERT(root);
 
     // We need to take a copy here, in case any of the preprocess calls deletes a node that
     // is in the preprocess list and thus, changes the m_nodes_to_preprocess behind our backs
@@ -319,7 +275,7 @@ void QSGRenderer::preprocess()
     for (QSet<QSGNode *>::const_iterator it = items.constBegin();
          it != items.constEnd(); ++it) {
         QSGNode *n = *it;
-        if (!nodeUpdater()->isNodeBlocked(n, m_root_node)) {
+        if (!nodeUpdater()->isNodeBlocked(n, root)) {
             n->preprocess();
         }
     }
@@ -328,7 +284,7 @@ void QSGRenderer::preprocess()
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
 
-    nodeUpdater()->updateStates(m_root_node);
+    nodeUpdater()->updateStates(root);
 
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();

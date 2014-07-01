@@ -350,9 +350,9 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     // Copy the current state of clearing from window into renderer.
     renderer->setClearColor(clearColor);
-    QSGRenderer::ClearMode mode = QSGRenderer::ClearStencilBuffer | QSGRenderer::ClearDepthBuffer;
+    QSGAbstractRenderer::ClearMode mode = QSGAbstractRenderer::ClearStencilBuffer | QSGAbstractRenderer::ClearDepthBuffer;
     if (clearBeforeRendering)
-        mode |= QSGRenderer::ClearColorBuffer;
+        mode |= QSGAbstractRenderer::ClearColorBuffer;
     renderer->setClearMode(mode);
 
     renderer->setCustomRenderMode(customRenderMode);
