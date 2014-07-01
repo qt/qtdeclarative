@@ -246,11 +246,29 @@ public:
                 if (set.blockNumbers)
                     numberIt = set.blockNumbers->begin();
                 else
-                    flagIt = std::distance(set.blockFlags->begin(),
-                                           std::find(set.blockFlags->begin(),
-                                                     set.blockFlags->end(),
-                                                     true));
+                    findNextWithFlags(0);
             }
+        }
+
+        void findNextWithFlags(size_t start)
+        {
+            flagIt = std::distance(set.blockFlags->begin(),
+                                   std::find(set.blockFlags->begin() + start,
+                                             set.blockFlags->end(),
+                                             true));
+
+            // The ++operator of std::vector<bool>::iterator in libc++ has a bug when using it on an
+            // iterator pointing to the last element. It will not be set to ::end(), but beyond
+            // that. (It will be set to the first multiple of the native word size that is bigger
+            // than size().)
+            //
+            // See http://llvm.org/bugs/show_bug.cgi?id=19663
+            //
+            // As we use the size to for our end() iterator, take the minimum of the size and the
+            // distance for the flagIt:
+            flagIt = qMin(flagIt, set.blockFlags->size());
+
+            Q_ASSERT(flagIt <= set.blockFlags->size());
         }
 
     public:
@@ -282,10 +300,7 @@ public:
             if (set.blockNumbers)
                 ++numberIt;
             else
-                flagIt = std::distance(set.blockFlags->begin(),
-                                       std::find(set.blockFlags->begin() + flagIt + 1,
-                                                 set.blockFlags->end(),
-                                                 true));
+                findNextWithFlags(flagIt + 1);
 
             return *this;
         }
