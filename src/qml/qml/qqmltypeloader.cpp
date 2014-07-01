@@ -897,11 +897,20 @@ QQmlDataLoader::QQmlDataLoader(QQmlEngine *engine)
 /*! \internal */
 QQmlDataLoader::~QQmlDataLoader()
 {
+    invalidate();
+}
+
+void QQmlDataLoader::invalidate()
+{
     for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
         (*iter)->release();
+    m_networkReplies.clear();
 
-    shutdownThread();
-    delete m_thread;
+    if (m_thread) {
+        shutdownThread();
+        delete m_thread;
+        m_thread = 0;
+    }
 }
 
 void QQmlDataLoader::lock()
@@ -1228,7 +1237,7 @@ void QQmlDataLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::Cached
 
 void QQmlDataLoader::shutdownThread()
 {
-    if (!m_thread->isShutdown())
+    if (m_thread && !m_thread->isShutdown())
         m_thread->shutdown();
 }
 

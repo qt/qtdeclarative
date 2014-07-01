@@ -904,6 +904,8 @@ QQmlEngine::~QQmlEngine()
     if (d->isDebugging)
         QQmlDebugServer::instance()->removeEngine(this);
 
+    d->typeLoader.invalidate();
+
     // Emit onDestruction signals for the root context before
     // we destroy the contexts, engine, Singleton Types etc. that
     // may be required to handle the destruction signal.

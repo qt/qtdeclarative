@@ -233,6 +233,7 @@ public:
 
     QQmlEngine *engine() const;
     void initializeEngine(QQmlExtensionInterface *, const char *);
+    void invalidate();
 
 protected:
     void shutdownThread();
