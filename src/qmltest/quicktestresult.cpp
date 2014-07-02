@@ -694,6 +694,12 @@ QObject *QuickTestResult::grabImage(QQuickItem *item)
     }
     return 0;
 }
+
+QObject *QuickTestResult::findChild(QObject *parent, const QString &objectName)
+{
+    return parent ? parent->findChild<QObject*>(objectName) : 0;
+}
+
 namespace QTest {
     void qtest_qParseArgs(int argc, char *argv[], bool qml);
 };

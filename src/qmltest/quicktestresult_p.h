@@ -147,6 +147,8 @@ public Q_SLOTS:
 
     QObject *grabImage(QQuickItem *item);
 
+    QObject *findChild(QObject *parent, const QString &objectName);
+
 public:
     // Helper functions for the C++ main() shell.
     static void parseArgs(int argc, char *argv[]);

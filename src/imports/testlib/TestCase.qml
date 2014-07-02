@@ -638,6 +638,21 @@ Item {
     }
 
     /*!
+        \since 5.4
+        \qmlmethod QtObject TestCase::findChild(parent, objectName)
+
+        Returns the first child of \a parent with \a objectName,
+        or \c null if no such item exists. Children are searched recursively.
+
+        \code
+        compare(findChild(item, "childObject"), expectedChildObject);
+        \endcode
+    */
+    function findChild(parent, objectName) {
+        return qtest_results.findChild(parent, objectName);
+    }
+
+    /*!
         \qmlmethod TestCase::tryCompare(obj, property, expected, timeout = 5000, message = "")
 
         Fails the current test case if the specified \a property on \a obj
