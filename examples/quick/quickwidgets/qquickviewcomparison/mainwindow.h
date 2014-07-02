@@ -38,19 +38,43 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-ListModel {
-    ListElement { name: "Top Stories"; feed: "news.yahoo.com/rss/topstories"; image: "images/TopStories.jpg" }
-    ListElement { name: "World"; feed: "news.yahoo.com/rss/world"; image: "images/World.jpg" }
-    ListElement { name: "Europe"; feed: "news.yahoo.com/rss/europe"; image: "images/Europe.jpg" }
-    ListElement { name: "Asia"; feed: "news.yahoo.com/rss/asia"; image: "images/Asia.jpg" }
-    ListElement { name: "U.S. National"; feed: "news.yahoo.com/rss/us"; image: "images/USNational.jpg"  }
-    ListElement { name: "Politics"; feed: "news.yahoo.com/rss/politics"; image: "images/Politics.jpg" }
-    ListElement { name: "Business"; feed: "news.yahoo.com/rss/business"; image: "images/Business.jpg" }
-    ListElement { name: "Technology"; feed: "news.yahoo.com/rss/tech"; image: "images/Technology.jpg" }
-    ListElement { name: "Entertainment"; feed: "news.yahoo.com/rss/entertainment"; image: "images/Entertainment.jpg" }
-    ListElement { name: "Health"; feed: "news.yahoo.com/rss/health"; image: "images/Health.jpg" }
-    ListElement { name: "Science"; feed: "news.yahoo.com/rss/science"; image: "images/Science.jpg" }
-    ListElement { name: "Sports"; feed: "news.yahoo.com/rss/sports"; image: "images/Sports.jpg" }
-}
+#include <QWidget>
+#include <QQuickWidget>
+#include <QQuickView>
+
+QT_FORWARD_DECLARE_CLASS(QRadioButton)
+QT_FORWARD_DECLARE_CLASS(QCheckBox)
+QT_FORWARD_DECLARE_CLASS(QLabel)
+QT_FORWARD_DECLARE_CLASS(QLayout)
+
+class MainWindow : public QWidget
+{
+public:
+    MainWindow();
+
+protected:
+    void resizeEvent(QResizeEvent*);
+private slots:
+    void updateView();
+    void onStatusChangedView(QQuickView::Status status);
+    void onStatusChangedWidget(QQuickWidget::Status status);
+    void onSceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+
+private:
+    void switchTo(QWidget *view);
+
+    QRadioButton *m_radioView;
+    QRadioButton *m_radioWidget;
+    QCheckBox *m_checkboxMultiSample;
+    QLabel *m_labelStatus;
+    QLayout *m_containerLayout;
+    QWidget *m_currentView;
+    QObject *m_currentRootObject;
+    QLabel *m_overlayLabel;
+    QCheckBox *m_checkboxOverlayVisible;
+};
+
+#endif

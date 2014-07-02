@@ -150,7 +150,7 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
         // QQmlEngine *engine = qmlContext(this)->engine();
         QQmlComponent component(engine, QUrl::fromLocalFile("MyItem.qml"));
         QQuickItem *childItem = qobject_cast<QQuickItem*>(component.create());
-        childItem->setParent(this);
+        childItem->setParentItem(this);
     }
     \endcode
 
@@ -880,7 +880,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
-    state.creator = new QQmlObjectCreator(context, cc, creationContext);
+    state.creator.reset(new QQmlObjectCreator(context, cc, creationContext));
     rv = state.creator->create(start);
     if (!rv)
         state.errors = state.creator->errors;
@@ -920,7 +920,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     Q_ASSERT(ddata->deferredData);
     QQmlData::DeferredData *deferredData = ddata->deferredData;
     QQmlContextData *creationContext = 0;
-    state->creator = new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext);
+    state->creator.reset(new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext));
     if (!state->creator->populateDeferredProperties(object))
         state->errors << state->creator->errors;
 }
