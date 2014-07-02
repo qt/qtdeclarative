@@ -58,9 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-//#define RENDERER_DEBUG
-//#define QT_GL_NO_SCISSOR_TEST
-
 static bool qsg_sanity_check = qgetenv("QSG_SANITY_CHECK").toInt();
 
 static QElapsedTimer frameTimer;
@@ -80,16 +77,6 @@ void QSGBindable::clear(QSGRenderer::ClearMode mode) const
 void QSGBindable::reactivate() const
 {
     QOpenGLContext::currentContext()->functions()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-}
-
-QSGBindableFbo::QSGBindableFbo(QOpenGLFramebufferObject *fbo) : m_fbo(fbo)
-{
-}
-
-
-void QSGBindableFbo::bind() const
-{
-    m_fbo->bind();
 }
 
 QSGBindableFboId::QSGBindableFboId(GLuint id)
@@ -146,8 +133,6 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_changed_emitted(false)
     , m_mirrored(false)
     , m_is_rendering(false)
-    , m_vertex_buffer_bound(false)
-    , m_index_buffer_bound(false)
 {
     initializeOpenGLFunctions();
 }
@@ -258,16 +243,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_changed_emitted = false;
     m_bindable = 0;
 
-    if (m_vertex_buffer_bound) {
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_vertex_buffer_bound = false;
-    }
-
-    if (m_index_buffer_bound) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        m_index_buffer_bound = false;
-    }
-
     qCDebug(QSG_LOG_TIME_RENDERER,
             "time in renderer: total=%dms, preprocess=%d, updates=%d, binding=%d, rendering=%d",
             int(renderTime / 1000000),
@@ -282,11 +257,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
             bindTime - updatePassTime,
             renderTime - bindTime));
 
-}
-
-void QSGRenderer::setProjectionMatrixToDeviceRect()
-{
-    setProjectionMatrixToRect(m_device_rect);
 }
 
 void QSGRenderer::setProjectionMatrixToRect(const QRectF &rect)
@@ -339,10 +309,6 @@ void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         m_changed_emitted = true;
         emit sceneGraphChanged();
     }
-}
-
-void QSGRenderer::materialChanged(QSGGeometryNode *, QSGMaterial *, QSGMaterial *)
-{
 }
 
 void QSGRenderer::preprocess()
@@ -475,15 +441,6 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                 glDepthMask(GL_FALSE);
 
-                if (m_vertex_buffer_bound) {
-                    glBindBuffer(GL_ARRAY_BUFFER, 0);
-                    m_vertex_buffer_bound = false;
-                }
-                if (m_index_buffer_bound) {
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-                    m_index_buffer_bound = false;
-                }
-
                 m_clip_program.bind();
                 m_clip_program.enableAttributeArray(0);
 
@@ -524,184 +481,6 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
 }
 
 
-
-static inline int size_of_type(GLenum type)
-{
-    static int sizes[] = {
-        sizeof(char),
-        sizeof(unsigned char),
-        sizeof(short),
-        sizeof(unsigned short),
-        sizeof(int),
-        sizeof(unsigned int),
-        sizeof(float),
-        2,
-        3,
-        4,
-        sizeof(double)
-    };
-    Q_ASSERT(type >= GL_BYTE && type <= 0x140A); // the value of GL_DOUBLE
-    return sizes[type - GL_BYTE];
-}
-
-
-class QSGRendererVBOGeometryData : public QSGGeometryData
-{
-public:
-    QSGRendererVBOGeometryData()
-        : vertexBuffer(0)
-        , indexBuffer(0)
-    {
-    }
-
-    ~QSGRendererVBOGeometryData()
-    {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        if (!ctx)
-            return;
-        QOpenGLFunctions *func = ctx->functions();
-        if (vertexBuffer)
-            func->glDeleteBuffers(1, &vertexBuffer);
-        if (indexBuffer)
-            func->glDeleteBuffers(1, &indexBuffer);
-    }
-
-    GLuint vertexBuffer;
-    GLuint indexBuffer;
-
-    static QSGRendererVBOGeometryData *get(const QSGGeometry *g) {
-        QSGRendererVBOGeometryData *gd = static_cast<QSGRendererVBOGeometryData *>(QSGGeometryData::data(g));
-        if (!gd) {
-            gd = new QSGRendererVBOGeometryData;
-            QSGGeometryData::install(g, gd);
-        }
-        return gd;
-    }
-
-};
-
-static inline GLenum qt_drawTypeForPattern(QSGGeometry::DataPattern p)
-{
-    Q_ASSERT(p > 0 && p <= 3);
-    static GLenum drawTypes[] = { 0,
-                                  GL_STREAM_DRAW,
-                                  GL_DYNAMIC_DRAW,
-                                  GL_STATIC_DRAW
-                            };
-    return drawTypes[p];
-}
-
-
-/*!
-    Issues the GL draw call for the geometry \a g using the material \a shader.
-
-    The function assumes that attributes have been bound and set up prior
-    to making this call.
-
-    \internal
- */
-
-void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
-{
-    const void *vertexData;
-    int vertexByteSize = g->vertexCount() * g->sizeOfVertex();
-    if (g->vertexDataPattern() != QSGGeometry::AlwaysUploadPattern && vertexByteSize > 1024) {
-
-        // The base pointer for a VBO is 0
-        vertexData = 0;
-
-        bool updateData = QSGGeometryData::hasDirtyVertexData(g);
-        QSGRendererVBOGeometryData *gd = QSGRendererVBOGeometryData::get(g);
-        if (!gd->vertexBuffer) {
-            glGenBuffers(1, &gd->vertexBuffer);
-            updateData = true;
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, gd->vertexBuffer);
-        m_vertex_buffer_bound = true;
-
-        if (updateData) {
-            glBufferData(GL_ARRAY_BUFFER, vertexByteSize, g->vertexData(),
-                         qt_drawTypeForPattern(g->vertexDataPattern()));
-            QSGGeometryData::clearDirtyVertexData(g);
-        }
-
-    } else {
-        if (m_vertex_buffer_bound) {
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            m_vertex_buffer_bound = false;
-        }
-        vertexData = g->vertexData();
-    }
-
-    // Bind the vertices to attributes...
-    char const *const *attrNames = shader->attributeNames();
-    int offset = 0;
-    for (int j = 0; attrNames[j]; ++j) {
-        if (!*attrNames[j])
-            continue;
-        Q_ASSERT_X(j < g->attributeCount(), "QSGRenderer::bindGeometry()", "Geometry lacks attribute required by material");
-        const QSGGeometry::Attribute &a = g->attributes()[j];
-        Q_ASSERT_X(j == a.position, "QSGRenderer::bindGeometry()", "Geometry does not have continuous attribute positions");
-
-#if defined(QT_OPENGL_ES_2)
-        GLboolean normalize = a.type != GL_FLOAT;
-#else
-        GLboolean normalize = a.type != GL_FLOAT && a.type != GL_DOUBLE;
-#endif
-        glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (char *) vertexData + offset);
-        offset += a.tupleSize * size_of_type(a.type);
-    }
-
-    // Set up the indices...
-    const void *indexData;
-    if (g->indexDataPattern() != QSGGeometry::AlwaysUploadPattern && g->indexCount() > 512) {
-
-        // Base pointer for a VBO is 0
-        indexData = 0;
-
-        bool updateData = QSGGeometryData::hasDirtyIndexData(g);
-        QSGRendererVBOGeometryData *gd = QSGRendererVBOGeometryData::get(g);
-        if (!gd->indexBuffer) {
-            glGenBuffers(1, &gd->indexBuffer);
-            updateData = true;
-        }
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gd->indexBuffer);
-        m_index_buffer_bound = true;
-
-        if (updateData) {
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         g->indexCount() * g->sizeOfIndex(),
-                         g->indexData(),
-                         qt_drawTypeForPattern(g->indexDataPattern()));
-            QSGGeometryData::clearDirtyIndexData(g);
-        }
-
-    } else {
-        if (m_index_buffer_bound) {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-            m_index_buffer_bound = false;
-        }
-        indexData = g->indexData();
-    }
-
-    // Set the line width if applicable
-    if (g->drawingMode() == GL_LINES || g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP) {
-        glLineWidth(g->lineWidth());
-    }
-
-    // draw the stuff...
-    if (g->indexCount()) {
-        glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), indexData);
-    } else {
-        glDrawArrays(g->drawingMode(), 0, g->vertexCount());
-    }
-
-    // We leave buffers bound for now... They will be reset by bind on next draw() or
-    // set back to 0 if next draw is not using VBOs
-
-}
 
 /*!
     \class QSGNodeDumper

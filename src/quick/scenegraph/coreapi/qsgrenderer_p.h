@@ -111,7 +111,6 @@ public:
     void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
     qreal devicePixelRatio() const { return m_device_pixel_ratio; }
 
-    void setProjectionMatrixToDeviceRect();
     virtual void setProjectionMatrixToRect(const QRectF &rect);
     void setProjectionMatrix(const QMatrix4x4 &matrix);
     QMatrix4x4 projectionMatrix() const { return m_projection_matrix; }
@@ -125,7 +124,6 @@ public:
     void renderScene();
     void renderScene(const QSGBindable &bindable);
     virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
-    virtual void materialChanged(QSGGeometryNode *node, QSGMaterial *from, QSGMaterial *to);
 
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
@@ -143,8 +141,6 @@ Q_SIGNALS:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 
 protected:
-    void draw(const QSGMaterialShader *material, const QSGGeometry *g);
-
     virtual void render() = 0;
     QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
 
@@ -187,9 +183,6 @@ private:
     uint m_changed_emitted : 1;
     uint m_mirrored : 1;
     uint m_is_rendering : 1;
-
-    uint m_vertex_buffer_bound : 1;
-    uint m_index_buffer_bound : 1;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
@@ -201,15 +194,6 @@ public:
     virtual void bind() const = 0;
     virtual void clear(QSGRenderer::ClearMode mode) const;
     virtual void reactivate() const;
-};
-
-class QSGBindableFbo : public QSGBindable
-{
-public:
-    QSGBindableFbo(QOpenGLFramebufferObject *fbo);
-    virtual void bind() const;
-private:
-    QOpenGLFramebufferObject *m_fbo;
 };
 
 class QSGBindableFboId : public QSGBindable
