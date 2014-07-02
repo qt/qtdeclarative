@@ -47,6 +47,7 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquickloader_p.h>
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
 #include "../shared/viewtestutil.h"
@@ -348,6 +349,8 @@ private slots:
     void blockClosing();
 
     void crashWhenHoverItemDeleted();
+
+    void unloadSubWindow();
 
     void qobjectEventFilter_touch();
     void qobjectEventFilter_key();
@@ -1750,6 +1753,26 @@ void tst_qquickwindow::crashWhenHoverItemDeleted()
     for (int i = 99; i < 102; ++i) {
         QTest::mouseMove(window, QPoint(0, i));
     }
+}
+
+// QTBUG-33436
+void tst_qquickwindow::unloadSubWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("unloadSubWindow.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QQuickWindow *transient = Q_NULLPTR;
+    QTRY_VERIFY(transient = window->property("transientWindow").value<QQuickWindow*>());
+    QTest::qWaitForWindowExposed(transient);
+
+    // Unload the inner window (in nested Loaders) and make sure it doesn't crash
+    QQuickLoader *loader = window->property("loader1").value<QQuickLoader*>();
+    loader->setActive(false);
+    QTRY_VERIFY(!transient->isVisible());
 }
 
 // QTBUG-32004

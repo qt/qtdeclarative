@@ -1,112 +1,159 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** $QT_BEGIN_LICENSE:BSD$
+** You may use this file under the terms of the BSD license as follows:
 **
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** "Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are
+** met:
+**   * Redistributions of source code must retain the above copyright
+**     notice, this list of conditions and the following disclaimer.
+**   * Redistributions in binary form must reproduce the above copyright
+**     notice, this list of conditions and the following disclaimer in
+**     the documentation and/or other materials provided with the
+**     distribution.
+**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
+**     of its contributors may be used to endorse or promote products derived
+**     from this software without specific prior written permission.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.2
 import QtQuick.XmlListModel 2.0
-import "content"
+import QtQuick.Window 2.1
+import "./content"
 
 Rectangle {
     id: window
-    width: 800; height: 480
 
-    property string currentFeed: "rss.news.yahoo.com/rss/topstories"
-    property bool loading: feedModel.status == XmlListModel.Loading
+    width: 800
+    height: 480
+
+    property string currentFeed: rssFeeds.get(0).feed
+    property bool loading: feedModel.status === XmlListModel.Loading
+    property bool isPortrait: Screen.primaryOrientation === Qt.PortraitOrientation
+
+    onLoadingChanged: {
+        if (feedModel.status == XmlListModel.Ready)
+            list.positionViewAtBeginning()
+    }
 
     RssFeeds { id: rssFeeds }
 
     XmlListModel {
         id: feedModel
+
         source: "http://" + window.currentFeed
-        query: "/rss/channel/item"
+        query: "/rss/channel/item[child::media:content]"
+        namespaceDeclarations: "declare namespace media = 'http://search.yahoo.com/mrss/';"
 
         XmlRole { name: "title"; query: "title/string()" }
+        // Remove any links from the description
+        XmlRole { name: "description"; query: "fn:replace(description/string(), '\&lt;a href=.*\/a\&gt;', '')" }
+        XmlRole { name: "image"; query: "media:content/@url/string()" }
         XmlRole { name: "link"; query: "link/string()" }
-        XmlRole { name: "description"; query: "description/string()" }
+        XmlRole { name: "pubDate"; query: "pubDate/string()" }
     }
 
-    Row {
-        Rectangle {
-            width: 220; height: window.height
-            color: "#efefef"
+    ListView {
+        id: categories
+        property int itemWidth: 190
 
-            ListView {
-                focus: true
-                id: categories
-                anchors.fill: parent
-                model: rssFeeds
-                footer: quitButtonDelegate
-                delegate: CategoryDelegate {}
-                highlight: Rectangle { color: "steelblue" }
-                highlightMoveVelocity: 9999999
-            }
-            ScrollBar {
-                scrollArea: categories; height: categories.height; width: 8
-                anchors.right: categories.right
-            }
-        }
-        ListView {
-            id: list
-            width: window.width - 220; height: window.height
-            model: feedModel
-            delegate: NewsDelegate {}
-        }
+        width: isPortrait ? parent.width : itemWidth
+        height: isPortrait ? itemWidth : parent.height
+        orientation: isPortrait ? ListView.Horizontal : ListView.Vertical
+        anchors.top: parent.top
+        model: rssFeeds
+        delegate: CategoryDelegate { itemSize: categories.itemWidth }
+        spacing: 3
     }
+
+    ScrollBar {
+        id: listScrollBar
+
+        orientation: isPortrait ? Qt.Horizontal : Qt.Vertical
+        height: isPortrait ? 8 : categories.height;
+        width: isPortrait ? categories.width : 8
+        scrollArea: categories;
+        anchors.right: categories.right
+    }
+
+    ListView {
+        id: list
+
+        anchors.left: isPortrait ? window.left : categories.right
+        anchors.right: closeButton.left
+        anchors.top: isPortrait ? categories.bottom : window.top
+        anchors.bottom: window.bottom
+        anchors.leftMargin: 30
+        anchors.rightMargin: 4
+        clip: isPortrait
+        model: feedModel
+        footer: footerText
+        delegate: NewsDelegate {}
+    }
+
+    ScrollBar {
+        scrollArea: list
+        width: 8
+        anchors.right: window.right
+        anchors.top: isPortrait ? categories.bottom : window.top
+        anchors.bottom: window.bottom
+    }
+
     Component {
-        id: quitButtonDelegate
-        Item {
-            width: categories.width; height: 60
+        id: footerText
+
+        Rectangle {
+            width: parent.width
+            height: closeButton.height
+            color: "lightgray"
+
             Text {
-                text: "Quit"
-                font { family: "Helvetica"; pixelSize: 16; bold: true }
-                anchors {
-                    left: parent.left; leftMargin: 15
-                    verticalCenter: parent.verticalCenter
-                }
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Qt.quit()
+                text: "RSS Feed from Yahoo News"
+                anchors.centerIn: parent
+                font.pixelSize: 14
             }
         }
     }
-    ScrollBar { scrollArea: list; height: list.height; width: 8; anchors.right: window.right }
-    Rectangle { x: 220; height: window.height; width: 1; color: "#cccccc" }
+
+    Image {
+        id: closeButton
+        source: "content/images/btn_close.png"
+        scale: 0.8
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 4
+        opacity: (isPortrait && categories.moving) ? 0.2 : 1.0
+        Behavior on opacity {
+            NumberAnimation { duration: 300; easing.type: Easing.OutSine }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                Qt.quit()
+            }
+        }
+    }
 }

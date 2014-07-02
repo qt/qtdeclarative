@@ -91,7 +91,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     init(parentContext);
 
     sharedState = new QQmlObjectCreatorSharedState;
-    sharedState.setFlag(); // We own it, so we must delete it
+    topLevelCreator = true;
     sharedState->componentAttached = 0;
     sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
@@ -115,6 +115,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     init(parentContext);
 
     sharedState = inheritedSharedState;
+    topLevelCreator = false;
 }
 
 void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
@@ -139,9 +140,9 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
 
 QQmlObjectCreator::~QQmlObjectCreator()
 {
-    if (sharedState.flag()) {
+    if (topLevelCreator) {
         {
-            QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
+            QQmlObjectCreatorRecursionWatcher watcher(this);
         }
         for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
             QQmlAbstractBinding *b = sharedState->allCreatedBindings.at(i);
@@ -153,7 +154,10 @@ QQmlObjectCreator::~QQmlObjectCreator()
             if (ps)
                 ps->d = 0;
         }
-        delete sharedState.data();
+        while (sharedState->componentAttached) {
+            QQmlComponentAttached *a = sharedState->componentAttached;
+            a->rem();
+        }
     }
 }
 
@@ -1177,7 +1181,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     Q_ASSERT(phase == ObjectsCreated || phase == Finalizing);
     phase = Finalizing;
 
-    QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher(sharedState.data());
+    QQmlObjectCreatorRecursionWatcher watcher(this);
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     {
@@ -1262,6 +1266,11 @@ void QQmlObjectCreator::clear()
     while (!sharedState->allCreatedObjects.isEmpty())
         delete sharedState->allCreatedObjects.pop();
 
+    while (sharedState->componentAttached) {
+        QQmlComponentAttached *a = sharedState->componentAttached;
+        a->rem();
+    }
+
     phase = Done;
 }
 
@@ -1334,3 +1343,10 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 }
 
 
+
+
+QQmlObjectCreatorRecursionWatcher::QQmlObjectCreatorRecursionWatcher(QQmlObjectCreator *creator)
+    : sharedState(creator->sharedState)
+    , watcher(creator->sharedState.data())
+{
+}

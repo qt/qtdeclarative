@@ -47,9 +47,8 @@
 
 //! [7]
 Squircle::Squircle()
-    : m_program(0)
-    , m_t(0)
-    , m_thread_t(0)
+    : m_t(0)
+    , m_renderer(0)
 {
     connect(this, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(handleWindowChanged(QQuickWindow*)));
 }
@@ -71,24 +70,46 @@ void Squircle::setT(qreal t)
 void Squircle::handleWindowChanged(QQuickWindow *win)
 {
     if (win) {
-//! [1]
-        // Connect the beforeRendering signal to our paint function.
-        // Since this call is executed on the rendering thread it must be
-        // a Qt::DirectConnection
-//! [2]
-        connect(win, SIGNAL(beforeRendering()), this, SLOT(paint()), Qt::DirectConnection);
         connect(win, SIGNAL(beforeSynchronizing()), this, SLOT(sync()), Qt::DirectConnection);
-//! [2]
-
+        connect(win, SIGNAL(sceneGraphInvalidated()), this, SLOT(cleanup()), Qt::DirectConnection);
+//! [1]
         // If we allow QML to do the clearing, they would clear what we paint
         // and nothing would show.
 //! [3]
         win->setClearBeforeRendering(false);
     }
 }
+//! [3]
 
-//! [3] //! [4]
-void Squircle::paint()
+//! [6]
+void Squircle::cleanup()
+{
+    if (m_renderer) {
+        delete m_renderer;
+        m_renderer = 0;
+    }
+}
+
+SquircleRenderer::~SquircleRenderer()
+{
+    delete m_program;
+}
+//! [6]
+
+//! [9]
+void Squircle::sync()
+{
+    if (!m_renderer) {
+        m_renderer = new SquircleRenderer();
+        connect(window(), SIGNAL(beforeRendering()), m_renderer, SLOT(paint()), Qt::DirectConnection);
+    }
+    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
+    m_renderer->setT(m_t);
+}
+//! [9]
+
+//! [4]
+void SquircleRenderer::paint()
 {
     if (!m_program) {
         initializeOpenGLFunctions();
@@ -114,8 +135,6 @@ void Squircle::paint()
         m_program->bindAttributeLocation("vertices", 0);
         m_program->link();
 
-        connect(window()->openglContext(), SIGNAL(aboutToBeDestroyed()),
-                this, SLOT(cleanup()), Qt::DirectConnection);
     }
 //! [4] //! [5]
     m_program->bind();
@@ -129,12 +148,9 @@ void Squircle::paint()
         1, 1
     };
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
-    m_program->setUniformValue("t", (float) m_thread_t);
+    m_program->setUniformValue("t", (float) m_t);
 
-    qreal ratio = window()->devicePixelRatio();
-    int w = int(ratio * window()->width());
-    int h = int(ratio * window()->height());
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glDisable(GL_DEPTH_TEST);
 
@@ -150,21 +166,3 @@ void Squircle::paint()
     m_program->release();
 }
 //! [5]
-
-//! [6]
-void Squircle::cleanup()
-{
-    if (m_program) {
-        delete m_program;
-        m_program = 0;
-    }
-}
-//! [6]
-
-//! [9]
-void Squircle::sync()
-{
-    m_thread_t = m_t;
-}
-//! [9]
-

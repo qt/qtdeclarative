@@ -55,7 +55,7 @@ are also provided by the \c QtQuick namespace which may be imported as
 follows:
 
 \qml
-import QtQuick 2.2
+import QtQuick 2.3
 \endqml
 
 See the \l{Qt Quick} module documentation for more information about the \c
