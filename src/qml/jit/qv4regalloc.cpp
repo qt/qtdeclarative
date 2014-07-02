@@ -217,10 +217,18 @@ public:
     const std::vector<int> &calls() const { return _calls; }
     const QList<Temp> &hints(const Temp &t) const { return _hints[t.index]; }
     void addHint(const Temp &t, int physicalRegister)
+    { addHint(t, Temp::PhysicalRegister, physicalRegister); }
+
+    void addHint(const Temp &t, Temp::Kind kind, int hintedIndex)
     {
+        QList<Temp> &hints = _hints[t.index];
+        foreach (const Temp &hint, hints)
+            if (hint.index == hintedIndex)
+                return;
+
         Temp hint;
-        hint.init(Temp::PhysicalRegister, physicalRegister);
-        _hints[t.index].append(hint);
+        hint.init(kind, hintedIndex);
+        hints.append(hint);
     }
 
     void dump() const
@@ -233,13 +241,15 @@ public:
 
         qout << "RegAllocInfo:" << endl << "Defs/uses:" << endl;
         for (unsigned t = 0; t < _defs.size(); ++t) {
+            const std::vector<Use> &uses = _uses[t];
+            if (uses.empty())
+                continue;
             qout << "%" << t <<": "
                  << " ("
                  << (_defs[t].canHaveReg ? "can" : "can NOT")
                  << " have a register, and "
                  << (_defs[t].isPhiTarget ? "is" : "is NOT")
                  << " defined by a phi node), uses at: ";
-            const std::vector<Use> &uses = _uses[t];
             for (unsigned i = 0; i < uses.size(); ++i) {
                 if (i > 0) qout << ", ";
                 qout << uses[i].pos;
@@ -257,6 +267,8 @@ public:
 
         qout << "Hints:" << endl;
         for (unsigned t = 0; t < _hints.size(); ++t) {
+            if (_uses[t].empty())
+                continue;
             qout << "\t%" << t << ": ";
             QList<Temp> hints = _hints[t];
             for (int i = 0; i < hints.size(); ++i) {
@@ -754,9 +766,9 @@ private:
         if (!hinted || hinted->kind != Temp::VirtualRegister)
             return;
         if (hint1 && hint1->kind == Temp::VirtualRegister && hinted->type == hint1->type)
-            _hints[hinted->index].append(*hint1);
+            addHint(*hinted, Temp::VirtualRegister, hint1->index);
         if (hint2 && hint2->kind == Temp::VirtualRegister && hinted->type == hint2->type)
-            _hints[hinted->index].append(*hint2);
+            addHint(*hinted, Temp::VirtualRegister, hint2->index);
     }
 };
 
