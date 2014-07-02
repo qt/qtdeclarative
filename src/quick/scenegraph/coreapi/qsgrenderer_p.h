@@ -42,12 +42,9 @@
 #ifndef QSGRENDERER_P_H
 #define QSGRENDERER_P_H
 
+#include <qcolor.h>
 #include <qset.h>
 #include <qhash.h>
-
-#include <qcolor.h>
-#include <qopenglfunctions.h>
-#include <qopenglshaderprogram.h>
 
 #include "qsgnode.h"
 #include "qsgmaterial.h"
@@ -67,18 +64,10 @@ class QSGNodeUpdater;
 Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
 Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
+class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QObject
 {
     Q_OBJECT
 public:
-    enum ClipTypeBit
-    {
-        NoClip = 0x00,
-        ScissorClip = 0x01,
-        StencilClip = 0x02
-    };
-    Q_DECLARE_FLAGS(ClipType, ClipTypeBit)
-
     enum ClearModeBit
     {
         ClearColorBuffer    = 0x0001,
@@ -142,7 +131,6 @@ Q_SIGNALS:
 
 protected:
     virtual void render() = 0;
-    QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
 
     const QSGBindable *bindable() const { return m_bindable; }
 
@@ -160,8 +148,6 @@ protected:
     qreal m_current_opacity;
     qreal m_current_determinant;
     qreal m_device_pixel_ratio;
-    QRect m_current_scissor_rect;
-    int m_current_stencil_value;
 
     QSGRenderContext *m_context;
 
@@ -175,8 +161,6 @@ private:
     QSet<QSGNode *> m_nodes_to_preprocess;
 
     QMatrix4x4 m_projection_matrix;
-    QOpenGLShaderProgram m_clip_program;
-    int m_clip_matrix_id;
 
     const QSGBindable *m_bindable;
 

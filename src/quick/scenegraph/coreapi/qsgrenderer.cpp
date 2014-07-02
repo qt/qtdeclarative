@@ -48,7 +48,6 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgshadersourcebuilder_p.h>
 
-#include <QOpenGLShaderProgram>
 #include <qopenglframebufferobject.h>
 #include <QtGui/qguiapplication.h>
 
@@ -125,7 +124,6 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_current_opacity(1)
     , m_current_determinant(1)
     , m_device_pixel_ratio(1)
-    , m_current_stencil_value(0)
     , m_context(context)
     , m_root_node(0)
     , m_node_updater(0)
@@ -134,7 +132,6 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_mirrored(false)
     , m_is_rendering(false)
 {
-    initializeOpenGLFunctions();
 }
 
 
@@ -224,10 +221,10 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     // Sanity check that attribute registers are disabled
     if (qsg_sanity_check) {
         GLint count = 0;
-        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
+        QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
         GLint enabled;
         for (int i=0; i<count; ++i) {
-            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+            QOpenGLContext::currentContext()->functions()->glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
             if (enabled) {
                 qWarning("QSGRenderer: attribute %d is enabled, this can lead to memory corruption and crashes.", i);
             }
@@ -238,7 +235,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
 
-    glDisable(GL_SCISSOR_TEST);
     m_is_rendering = false;
     m_changed_emitted = false;
     m_bindable = 0;
@@ -353,133 +349,6 @@ void QSGRenderer::removeNodesToPreprocess(QSGNode *node)
     if (node->flags() & QSGNode::UsePreprocess)
         m_nodes_to_preprocess.remove(node);
 }
-
-
-/*!
-    Convenience function to set up the stencil buffer for clipping based on \a clip.
-
-    If the clip is a pixel aligned rectangle, this function will use glScissor instead
-    of stencil.
- */
-
-QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
-{
-    if (!clip) {
-        glDisable(GL_STENCIL_TEST);
-        glDisable(GL_SCISSOR_TEST);
-        return NoClip;
-    }
-
-    ClipType clipType = NoClip;
-
-    glDisable(GL_SCISSOR_TEST);
-
-    m_current_stencil_value = 0;
-    m_current_scissor_rect = QRect();
-    while (clip) {
-        QMatrix4x4 m = m_current_projection_matrix;
-        if (clip->matrix())
-            m *= *clip->matrix();
-
-        // TODO: Check for multisampling and pixel grid alignment.
-        bool isRectangleWithNoPerspective = clip->isRectangular()
-                && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
-        bool noRotate = qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0));
-        bool isRotate90 = qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1));
-
-        if (isRectangleWithNoPerspective && (noRotate || isRotate90)) {
-            QRectF bbox = clip->clipRect();
-            qreal invW = 1 / m(3, 3);
-            qreal fx1, fy1, fx2, fy2;
-            if (noRotate) {
-                fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
-                fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
-                fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
-                fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
-            } else {
-                Q_ASSERT(isRotate90);
-                fx1 = (bbox.bottom() * m(0, 1) + m(0, 3)) * invW;
-                fy1 = (bbox.left() * m(1, 0) + m(1, 3)) * invW;
-                fx2 = (bbox.top() * m(0, 1) + m(0, 3)) * invW;
-                fy2 = (bbox.right() * m(1, 0) + m(1, 3)) * invW;
-            }
-
-            if (fx1 > fx2)
-                qSwap(fx1, fx2);
-            if (fy1 > fy2)
-                qSwap(fy1, fy2);
-
-            GLint ix1 = qRound((fx1 + 1) * m_device_rect.width() * qreal(0.5));
-            GLint iy1 = qRound((fy1 + 1) * m_device_rect.height() * qreal(0.5));
-            GLint ix2 = qRound((fx2 + 1) * m_device_rect.width() * qreal(0.5));
-            GLint iy2 = qRound((fy2 + 1) * m_device_rect.height() * qreal(0.5));
-
-            if (!(clipType & ScissorClip)) {
-                m_current_scissor_rect = QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
-                glEnable(GL_SCISSOR_TEST);
-                clipType |= ScissorClip;
-            } else {
-                m_current_scissor_rect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
-            }
-            glScissor(m_current_scissor_rect.x(), m_current_scissor_rect.y(),
-                      m_current_scissor_rect.width(), m_current_scissor_rect.height());
-        } else {
-            if (!(clipType & StencilClip)) {
-                if (!m_clip_program.isLinked()) {
-                    QSGShaderSourceBuilder::initializeProgramFromFiles(
-                        &m_clip_program,
-                        QStringLiteral(":/scenegraph/shaders/stencilclip.vert"),
-                        QStringLiteral(":/scenegraph/shaders/stencilclip.frag"));
-                    m_clip_program.bindAttributeLocation("vCoord", 0);
-                    m_clip_program.link();
-                    m_clip_matrix_id = m_clip_program.uniformLocation("matrix");
-                }
-
-                glClearStencil(0);
-                glClear(GL_STENCIL_BUFFER_BIT);
-                glEnable(GL_STENCIL_TEST);
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                glDepthMask(GL_FALSE);
-
-                m_clip_program.bind();
-                m_clip_program.enableAttributeArray(0);
-
-                clipType |= StencilClip;
-            }
-
-            glStencilFunc(GL_EQUAL, m_current_stencil_value, 0xff); // stencil test, ref, test mask
-            glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // stencil fail, z fail, z pass
-
-            const QSGGeometry *g = clip->geometry();
-            Q_ASSERT(g->attributeCount() > 0);
-            const QSGGeometry::Attribute *a = g->attributes();
-            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), g->vertexData());
-
-            m_clip_program.setUniformValue(m_clip_matrix_id, m);
-            if (g->indexCount()) {
-                glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
-            } else {
-                glDrawArrays(g->drawingMode(), 0, g->vertexCount());
-            }
-
-            ++m_current_stencil_value;
-        }
-
-        clip = clip->clipList();
-    }
-
-    if (clipType & StencilClip) {
-        m_clip_program.disableAttributeArray(0);
-        glStencilFunc(GL_EQUAL, m_current_stencil_value, 0xff); // stencil test, ref, test mask
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // stencil fail, z fail, z pass
-        bindable()->reactivate();
-    } else {
-        glDisable(GL_STENCIL_TEST);
-    }
-
-    return clipType;
-}
-
 
 
 /*!

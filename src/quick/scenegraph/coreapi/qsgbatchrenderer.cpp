@@ -750,11 +750,14 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_renderOrderRebuildUpper(-1)
     , m_currentMaterial(0)
     , m_currentShader(0)
+    , m_currentStencilValue(0)
+    , m_clipMatrixId(0)
     , m_currentClip(0)
     , m_currentClipType(NoClip)
     , m_vao(0)
     , m_visualizeMode(VisualizeNothing)
 {
+    initializeOpenGLFunctions();
     setNodeUpdater(new Updater(this));
 
     m_shaderManager = ctx->findChild<ShaderManager *>(QStringLiteral("__qt_ShaderManager"), Qt::FindDirectChildrenOnly);
@@ -1912,6 +1915,132 @@ void Renderer::uploadBatch(Batch *b)
             b->uploadedThisFrame = true;
 }
 
+/*!
+ * Convenience function to set up the stencil buffer for clipping based on \a clip.
+ *
+ * If the clip is a pixel aligned rectangle, this function will use glScissor instead
+ * of stencil.
+ */
+Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
+{
+    if (!clip) {
+        glDisable(GL_STENCIL_TEST);
+        glDisable(GL_SCISSOR_TEST);
+        return NoClip;
+    }
+
+    ClipType clipType = NoClip;
+
+    glDisable(GL_SCISSOR_TEST);
+
+    m_currentStencilValue = 0;
+    m_currentScissorRect = QRect();
+    while (clip) {
+        QMatrix4x4 m = m_current_projection_matrix;
+        if (clip->matrix())
+            m *= *clip->matrix();
+
+        // TODO: Check for multisampling and pixel grid alignment.
+        bool isRectangleWithNoPerspective = clip->isRectangular()
+                && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
+        bool noRotate = qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0));
+        bool isRotate90 = qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1));
+
+        if (isRectangleWithNoPerspective && (noRotate || isRotate90)) {
+            QRectF bbox = clip->clipRect();
+            qreal invW = 1 / m(3, 3);
+            qreal fx1, fy1, fx2, fy2;
+            if (noRotate) {
+                fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
+                fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
+                fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
+                fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
+            } else {
+                Q_ASSERT(isRotate90);
+                fx1 = (bbox.bottom() * m(0, 1) + m(0, 3)) * invW;
+                fy1 = (bbox.left() * m(1, 0) + m(1, 3)) * invW;
+                fx2 = (bbox.top() * m(0, 1) + m(0, 3)) * invW;
+                fy2 = (bbox.right() * m(1, 0) + m(1, 3)) * invW;
+            }
+
+            if (fx1 > fx2)
+                qSwap(fx1, fx2);
+            if (fy1 > fy2)
+                qSwap(fy1, fy2);
+
+            QRect deviceRect = this->deviceRect();
+
+            GLint ix1 = qRound((fx1 + 1) * deviceRect.width() * qreal(0.5));
+            GLint iy1 = qRound((fy1 + 1) * deviceRect.height() * qreal(0.5));
+            GLint ix2 = qRound((fx2 + 1) * deviceRect.width() * qreal(0.5));
+            GLint iy2 = qRound((fy2 + 1) * deviceRect.height() * qreal(0.5));
+
+            if (!(clipType & ScissorClip)) {
+                m_currentScissorRect = QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
+                glEnable(GL_SCISSOR_TEST);
+                clipType |= ScissorClip;
+            } else {
+                m_currentScissorRect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
+            }
+            glScissor(m_currentScissorRect.x(), m_currentScissorRect.y(),
+                      m_currentScissorRect.width(), m_currentScissorRect.height());
+        } else {
+            if (!(clipType & StencilClip)) {
+                if (!m_clipProgram.isLinked()) {
+                    QSGShaderSourceBuilder::initializeProgramFromFiles(
+                        &m_clipProgram,
+                        QStringLiteral(":/scenegraph/shaders/stencilclip.vert"),
+                        QStringLiteral(":/scenegraph/shaders/stencilclip.frag"));
+                    m_clipProgram.bindAttributeLocation("vCoord", 0);
+                    m_clipProgram.link();
+                    m_clipMatrixId = m_clipProgram.uniformLocation("matrix");
+                }
+
+                glClearStencil(0);
+                glClear(GL_STENCIL_BUFFER_BIT);
+                glEnable(GL_STENCIL_TEST);
+                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                glDepthMask(GL_FALSE);
+
+                m_clipProgram.bind();
+                m_clipProgram.enableAttributeArray(0);
+
+                clipType |= StencilClip;
+            }
+
+            glStencilFunc(GL_EQUAL, m_currentStencilValue, 0xff); // stencil test, ref, test mask
+            glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // stencil fail, z fail, z pass
+
+            const QSGGeometry *g = clip->geometry();
+            Q_ASSERT(g->attributeCount() > 0);
+            const QSGGeometry::Attribute *a = g->attributes();
+            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), g->vertexData());
+
+            m_clipProgram.setUniformValue(m_clipMatrixId, m);
+            if (g->indexCount()) {
+                glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
+            } else {
+                glDrawArrays(g->drawingMode(), 0, g->vertexCount());
+            }
+
+            ++m_currentStencilValue;
+        }
+
+        clip = clip->clipList();
+    }
+
+    if (clipType & StencilClip) {
+        m_clipProgram.disableAttributeArray(0);
+        glStencilFunc(GL_EQUAL, m_currentStencilValue, 0xff); // stencil test, ref, test mask
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // stencil fail, z fail, z pass
+        bindable()->reactivate();
+    } else {
+        glDisable(GL_STENCIL_TEST);
+    }
+
+    return clipType;
+}
+
 void Renderer::updateClip(const QSGClipNode *clipList, const Batch *batch)
 {
     if (clipList != m_currentClip && Q_LIKELY(!debug_noclip)) {
@@ -2485,8 +2614,8 @@ void Renderer::renderRenderNode(Batch *batch)
     state.projectionMatrix = &pm;
     state.scissorEnabled = m_currentClipType & ScissorClip;
     state.stencilEnabled = m_currentClipType & StencilClip;
-    state.scissorRect = m_current_scissor_rect;
-    state.stencilValue = m_current_stencil_value;
+    state.scissorRect = m_currentScissorRect;
+    state.stencilValue = m_currentStencilValue;
 
     QSGNode *xform = e->renderNode->parent();
     QMatrix4x4 matrix;

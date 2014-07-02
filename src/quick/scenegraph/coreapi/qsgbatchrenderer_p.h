@@ -406,7 +406,7 @@ public:
     QSGRenderContext *context;
 };
 
-class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
+class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer, public QOpenGLFunctions
 {
 public:
     Renderer(QSGRenderContext *);
@@ -426,6 +426,14 @@ protected:
     void render();
 
 private:
+    enum ClipTypeBit
+    {
+        NoClip = 0x00,
+        ScissorClip = 0x01,
+        StencilClip = 0x02
+    };
+    Q_DECLARE_FLAGS(ClipType, ClipTypeBit)
+
     enum RebuildFlag {
         BuildRenderListsForTaggedRoots      = 0x0001,
         BuildRenderLists                    = 0x0002,
@@ -457,6 +465,7 @@ private:
     void renderBatches();
     void renderMergedBatch(const Batch *batch);
     void renderUnmergedBatch(const Batch *batch);
+    ClipType updateStencilClip(const QSGClipNode *clip);
     void updateClip(const QSGClipNode *clipList, const Batch *batch);
     const QMatrix4x4 &matrixForRoot(Node *node);
     void renderRenderNode(Batch *batch);
@@ -518,6 +527,11 @@ private:
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
+
+    QRect m_currentScissorRect;
+    int m_currentStencilValue;
+    QOpenGLShaderProgram m_clipProgram;
+    int m_clipMatrixId;
     const QSGClipNode *m_currentClip;
     ClipType m_currentClipType;
 
