@@ -141,7 +141,7 @@ public:
 
     void *trackDealloc(void *pointer, size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)-size, type};
+        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
         m_memory_data.append(allocation);
         return pointer;
     }
