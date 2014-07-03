@@ -49,7 +49,9 @@
 
 QT_BEGIN_NAMESPACE
 
-// #define QSG_RUNTIME_DESCRIPTION
+#ifndef QT_NO_DEBUG
+#define QSG_RUNTIME_DESCRIPTION
+#endif
 
 class QSGRenderer;
 
@@ -183,9 +185,7 @@ protected:
     QScopedPointer<QSGNodePrivate> d_ptr;
 };
 
-#ifdef QSG_RUNTIME_DESCRIPTION
 void Q_QUICK_EXPORT qsgnode_set_description(QSGNode *node, const QString &description);
-#endif
 
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
 {

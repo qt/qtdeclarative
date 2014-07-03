@@ -668,12 +668,15 @@ void QSGNode::markDirty(DirtyState bits)
     }
 }
 
-#ifdef QSG_RUNTIME_DESCRIPTION
 void qsgnode_set_description(QSGNode *node, const QString &description)
 {
+#ifdef QSG_RUNTIME_DESCRIPTION
     QSGNodePrivate::setDescription(node, description);
-}
+#else
+    Q_UNUSED(node);
+    Q_UNUSED(description);
 #endif
+}
 
 /*!
     \class QSGBasicGeometryNode
