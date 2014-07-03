@@ -56,6 +56,11 @@ public:
     mutable QHash<QOpenGLShader::ShaderType, QByteArray> m_sources;
 };
 
+#ifndef QT_NO_DEBUG
+Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_material_failure();
+Q_QUICK_PRIVATE_EXPORT void qsg_set_material_failure();
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QSGMATERIALSHADER_P_H

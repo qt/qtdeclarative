@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgtexturematerial_p.h"
+#include "qsgtexture_p.h"
 
 #include <QtGui/qopenglshaderprogram.h>
 #include <QtGui/qopenglfunctions.h>
@@ -79,6 +80,11 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     QSGOpaqueTextureMaterial *oldTx = static_cast<QSGOpaqueTextureMaterial *>(oldEffect);
 
     QSGTexture *t = tx->texture();
+
+#ifndef QT_NO_DEBUG
+    if (!qsg_safeguard_texture(t))
+        return;
+#endif
 
     t->setFiltering(tx->filtering());
 

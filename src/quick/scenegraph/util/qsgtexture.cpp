@@ -48,6 +48,8 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 
+#include <private/qsgmaterialshader_p.h>
+
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !defined(__UCLIBC__)
 #define CAN_BACKTRACE_EXECINFO
 #endif
@@ -271,6 +273,23 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     \internal
  */
 
+#ifndef QT_NO_DEBUG
+Q_GLOBAL_STATIC(QSet<QSGTexture *>, qsg_valid_texture_set)
+Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
+
+bool qsg_safeguard_texture(QSGTexture *texture)
+{
+    QMutexLocker locker(qsg_valid_texture_mutex());
+    if (!qsg_valid_texture_set()->contains(texture)) {
+        qWarning() << "Invalid texture accessed:" << (void *) texture;
+        qsg_set_material_failure();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return false;
+    }
+    return true;
+}
+#endif
+
 /*!
     Constructs the QSGTexture base class.
  */
@@ -280,6 +299,9 @@ QSGTexture::QSGTexture()
 #ifndef QT_NO_DEBUG
     if (qsg_leak_check)
         qt_debug_add_texture(this);
+
+    QMutexLocker locker(qsg_valid_texture_mutex());
+    qsg_valid_texture_set()->insert(this);
 #endif
 }
 
@@ -291,6 +313,9 @@ QSGTexture::~QSGTexture()
 #ifndef QT_NO_DEBUG
     if (qsg_leak_check)
         qt_debug_remove_texture(this);
+
+    QMutexLocker locker(qsg_valid_texture_mutex());
+    qsg_valid_texture_set()->remove(this);
 #endif
 }
 

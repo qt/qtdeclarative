@@ -113,6 +113,8 @@ protected:
     uint m_retain_image: 1;
 };
 
+Q_QUICK_PRIVATE_EXPORT bool qsg_safeguard_texture(QSGTexture *);
+
 QT_END_NAMESPACE
 
 #endif // QSGTEXTURE_P_H

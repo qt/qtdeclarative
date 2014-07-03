@@ -46,6 +46,21 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_DEBUG
+bool qsg_material_failure = false;
+bool qsg_test_and_clear_material_failure()
+{
+    bool fail = qsg_material_failure;
+    qsg_material_failure = false;
+    return fail;
+}
+
+void qsg_set_material_failure()
+{
+    qsg_material_failure = true;
+}
+#endif
+
 const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType type) const
 {
     QStringList files = m_sourceFiles[type];

@@ -64,6 +64,9 @@ class TextureReference;
 class QSGBindable;
 class QSGNodeUpdater;
 
+Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
+Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
+
 class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
 {
     Q_OBJECT

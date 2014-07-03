@@ -46,6 +46,7 @@
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
+#include <QtQuick/private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -136,6 +137,12 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 functions->glActiveTexture(GL_TEXTURE0 + idx);
                 if (QSGTextureProvider *provider = material->textureProviders.at(idx)) {
                     if (QSGTexture *texture = provider->texture()) {
+
+#ifndef QT_NO_DEBUG
+                        if (!qsg_safeguard_texture(texture))
+                            continue;
+#endif
+
                         if (loc >= 0) {
                             QRectF r = texture->normalizedTextureSubRect();
                             program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());

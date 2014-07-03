@@ -56,6 +56,7 @@
 #include <QtGui/QOpenGLFunctions_1_0>
 
 #include <private/qquickprofiler_p.h>
+#include "qsgmaterialshader_p.h"
 
 #include <algorithm>
 
@@ -2058,6 +2059,19 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
     program->updateState(state(dirty), material, m_currentMaterial);
 
+#ifndef QT_NO_DEBUG
+    if (qsg_test_and_clear_material_failure()) {
+        qDebug() << "QSGMaterial::updateState triggered an error (merged), batch will be skipped:";
+        Element *ee = e;
+        while (ee) {
+            qDebug() << "   -" << ee->node;
+            ee = ee->nextInBatch;
+        }
+        QSGNodeDumper::dump(rootNode());
+        qFatal("Aborting: scene graph is invalid...");
+    }
+#endif
+
     m_currentMaterial = material;
 
     QSGGeometry* g = gn->geometry();
@@ -2164,6 +2178,16 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         }
 
         program->updateState(state(dirty), material, m_currentMaterial);
+
+#ifndef QT_NO_DEBUG
+    if (qsg_test_and_clear_material_failure()) {
+        qDebug() << "QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:";
+        qDebug() << "   - offending node is" << e->node;
+        QSGNodeDumper::dump(rootNode());
+        qFatal("Aborting: scene graph is invalid...");
+        return;
+    }
+#endif
 
         // We don't need to bother with asking each node for its material as they
         // are all identical (compare==0) since they are in the same batch.
