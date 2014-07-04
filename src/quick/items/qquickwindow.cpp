@@ -2868,6 +2868,11 @@ QOpenGLContext *QQuickWindow::openglContext() const
     has been invalidated and all user resources tied to that context
     should be released.
 
+    The OpenGL context of this window will be bound when this function
+    is called. The only exception is if the native OpenGL has been
+    destroyed outside Qt's control, for instance through
+    EGL_CONTEXT_LOST.
+
     This signal will be emitted from the scene graph rendering thread.
  */
 

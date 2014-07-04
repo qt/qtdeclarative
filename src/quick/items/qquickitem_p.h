@@ -297,6 +297,7 @@ public:
     static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
     void _q_resourceObjectDeleted(QObject *);
+    void _q_windowChanged(QQuickWindow *w);
 
     enum ChangeType {
         Geometry = 0x01,
