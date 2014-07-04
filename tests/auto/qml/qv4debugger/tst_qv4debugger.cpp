@@ -266,6 +266,7 @@ private slots:
     void removePendingBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
+    void conditionalBreakPoint();
 
     // context access:
     void readArguments();
@@ -410,6 +411,29 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
 
     evaluateJavaScript(script, "removeBreakPointForNextInstruction");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
+}
+
+void tst_qv4debugger::conditionalBreakPoint()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function test() {\n"
+            "    for (var i = 0; i < 15; ++i) {\n"
+            "        var x = i;\n"
+            "    }\n"
+            "}\n"
+            "test()\n";
+
+    m_debuggerAgent->addBreakPoint("conditionalBreakPoint", 3, /*enabled*/true, QStringLiteral("i > 10"));
+    evaluateJavaScript(script, "conditionalBreakPoint");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 4);
+    QV4::Debugging::Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(state.fileName, QString("conditionalBreakPoint"));
+    QCOMPARE(state.lineNumber, 3);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 2);
+    QVERIFY(m_debuggerAgent->m_capturedLocals[0].contains(QStringLiteral("i")));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["i"].toInt(), 11);
 }
 
 void tst_qv4debugger::readArguments()

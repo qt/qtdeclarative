@@ -405,7 +405,7 @@ public:
 
     void clearHandles(QV4::ExecutionEngine *engine)
     {
-        collector.reset(new VariableCollector(engine));
+        theCollector.reset(new VariableCollector(engine));
     }
 
     QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
@@ -414,18 +414,18 @@ public:
         QJsonObject frame;
         frame[QLatin1String("index")] = frameNr;
         frame[QLatin1String("debuggerFrame")] = false;
-        frame[QLatin1String("func")] = collector->addFunctionRef(stackFrame.function);
-        frame[QLatin1String("script")] = collector->addScriptRef(stackFrame.source);
+        frame[QLatin1String("func")] = theCollector->addFunctionRef(stackFrame.function);
+        frame[QLatin1String("script")] = theCollector->addScriptRef(stackFrame.source);
         frame[QLatin1String("line")] = stackFrame.line - 1;
         if (stackFrame.column >= 0)
             frame[QLatin1String("column")] = stackFrame.column;
 
         QJsonArray properties;
-        collector->setDestination(&properties);
-        if (debugger->collectThisInContext(collector.data(), frameNr)) {
+        theCollector->setDestination(&properties);
+        if (debugger->collectThisInContext(theCollector.data(), frameNr)) {
             QJsonObject obj;
             obj[QLatin1String("properties")] = properties;
-            frame[QLatin1String("receiver")] = collector->addObjectRef(obj, false);
+            frame[QLatin1String("receiver")] = theCollector->addObjectRef(obj, false);
         }
 
         QJsonArray scopes;
@@ -473,7 +473,7 @@ public:
         QJsonObject scope;
 
         QJsonArray properties;
-        collector->collectScope(&properties, debugger, frameNr, scopeNr);
+        theCollector->collectScope(&properties, debugger, frameNr, scopeNr);
 
         QJsonObject anonymous;
         anonymous[QLatin1String("properties")] = properties;
@@ -482,16 +482,21 @@ public:
         scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
         scope[QLatin1String("index")] = scopeNr;
         scope[QLatin1String("frameIndex")] = frameNr;
-        scope[QLatin1String("object")] = collector->addObjectRef(anonymous, true);
+        scope[QLatin1String("object")] = theCollector->addObjectRef(anonymous, true);
 
         return scope;
     }
 
-    QJsonValue lookup(int refId) const { return collector->lookup(refId); }
+    QJsonValue lookup(int refId) const { return theCollector->lookup(refId); }
 
     QJsonArray buildRefs()
     {
-        return collector->retrieveRefsToInclude();
+        return theCollector->retrieveRefsToInclude();
+    }
+
+    VariableCollector *collector() const
+    {
+        return theCollector.data();
     }
 
     void selectFrame(int frameNr)
@@ -501,7 +506,7 @@ public:
     { return theSelectedFrame; }
 
 private:
-    QScopedPointer<VariableCollector> collector;
+    QScopedPointer<VariableCollector> theCollector;
     int theSelectedFrame;
 
     void addHandler(V8CommandHandler* handler);
@@ -959,6 +964,67 @@ public:
         // response will be send by
     }
 };
+
+// Request:
+// {
+//   "seq": 4,
+//   "type": "request",
+//   "command": "evaluate",
+//   "arguments": {
+//     "expression": "a",
+//     "frame": 0
+//   }
+// }
+//
+// Response:
+// {
+//   "body": {
+//     "handle": 3,
+//     "type": "number",
+//     "value": 1
+//   },
+//   "command": "evaluate",
+//   "refs": [],
+//   "request_seq": 4,
+//   "running": false,
+//   "seq": 5,
+//   "success": true,
+//   "type": "response"
+// }
+//
+// The "value" key in "body" is the result of evaluating the expression in the request.
+class V8EvaluateRequest: public V8CommandHandler
+{
+public:
+    V8EvaluateRequest(): V8CommandHandler(QStringLiteral("evaluate")) {}
+
+    virtual void handleRequest()
+    {
+        //decypher the payload:
+        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
+        QString expression = arguments.value(QStringLiteral("expression")).toString();
+        const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
+
+        QV4::Debugging::Debugger *debugger = debugServicePrivate->debuggerAgent.firstDebugger();
+        Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
+
+        VariableCollector *collector = debugServicePrivate->collector();
+        QJsonArray dest;
+        collector->setDestination(&dest);
+        debugger->evaluateExpression(frame, expression, collector);
+
+        const int ref = dest.at(0).toObject().value(QStringLiteral("value")).toObject()
+                .value(QStringLiteral("ref")).toInt();
+
+        // response:
+        addCommand();
+        addRequestSequence();
+        addSuccess(true);
+        addRunning();
+        addBody(collector->lookup(ref).toObject());
+        addRefs();
+    }
+};
 } // anonymous namespace
 
 QV4DebugServicePrivate::QV4DebugServicePrivate()
@@ -978,8 +1044,7 @@ QV4DebugServicePrivate::QV4DebugServicePrivate()
     addHandler(new V8DisconnectRequest);
     addHandler(new V8SetExceptionBreakRequest);
     addHandler(new V8ScriptsRequest);
-
-    // TODO: evaluate
+    addHandler(new V8EvaluateRequest);
 }
 
 void QV4DebugServicePrivate::addHandler(V8CommandHandler* handler)

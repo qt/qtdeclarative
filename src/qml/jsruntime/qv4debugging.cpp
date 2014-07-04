@@ -45,6 +45,7 @@
 #include "qv4function_p.h"
 #include "qv4instr_moth_p.h"
 #include "qv4runtime_p.h"
+#include "qv4script_p.h"
 #include <iostream>
 
 #include <algorithm>
@@ -53,29 +54,74 @@ using namespace QV4;
 using namespace QV4::Debugging;
 
 namespace {
-class EvalJob: public Debugger::Job
+class JavaScriptJob: public Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     const QString &script;
 
 public:
-    EvalJob(QV4::ExecutionEngine *engine, const QString &script)
+    JavaScriptJob(QV4::ExecutionEngine *engine, const QString &script)
         : engine(engine)
         , script(script)
     {}
 
-    ~EvalJob() {}
-
     void run()
     {
-        // TODO
-        qDebug() << "Evaluating script:" << script;
-        Q_UNUSED(engine);
+        QV4::Scope scope(engine);
+        QV4::ExecutionContext *ctx = engine->currentContext();
+        ContextStateSaver ctxSaver(ctx);
+        QV4::ScopedValue result(scope);
+
+        QV4::Script script(ctx, this->script);
+        script.strictMode = ctx->d()->strictMode;
+        script.inheritContext = false;
+        script.parse();
+        if (!scope.engine->hasException)
+            result = script.run();
+        if (scope.engine->hasException)
+            result = ctx->catchException();
+        handleResult(result);
+    }
+
+protected:
+    virtual void handleResult(QV4::ScopedValue &result) = 0;
+};
+
+class EvalJob: public JavaScriptJob
+{
+    bool result;
+
+public:
+    EvalJob(QV4::ExecutionEngine *engine, const QString &script)
+        : JavaScriptJob(engine, script)
+        , result(false)
+    {}
+
+    virtual void handleResult(QV4::ScopedValue &result)
+    {
+        this->result = result->toBoolean();
     }
 
     bool resultAsBoolean() const
     {
-        return true;
+        return result;
+    }
+};
+
+class ExpressionEvalJob: public JavaScriptJob
+{
+    Debugger::Collector *collector;
+
+public:
+    ExpressionEvalJob(ExecutionEngine *engine, const QString &expression, Debugger::Collector *collector)
+        : JavaScriptJob(engine, expression)
+        , collector(collector)
+    {
+    }
+
+    virtual void handleResult(QV4::ScopedValue &result)
+    {
+        collector->collect(QStringLiteral("body"), result);
     }
 };
 
@@ -444,6 +490,19 @@ QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
     return types;
 }
 
+
+void Debugger::evaluateExpression(int frameNr, const QString &expression, Debugger::Collector *resultsCollector)
+{
+    Q_ASSERT(state() == Paused);
+    Q_UNUSED(frameNr);
+
+    Q_ASSERT(m_runningJob == 0);
+    ExpressionEvalJob job(m_engine, expression, resultsCollector);
+    m_runningJob = &job;
+    m_runningJob->run();
+    m_runningJob = 0;
+}
+
 void Debugger::maybeBreakAtInstruction()
 {
     if (m_runningJob) // do not re-enter when we're doing a job for the debugger.
@@ -481,6 +540,8 @@ void Debugger::maybeBreakAtInstruction()
 
 void Debugger::enteringFunction()
 {
+    if (m_runningJob)
+        return;
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
@@ -490,6 +551,8 @@ void Debugger::enteringFunction()
 
 void Debugger::leavingFunction(const ReturnedValue &retVal)
 {
+    if (m_runningJob)
+        return;
     Q_UNUSED(retVal); // TODO
 
     QMutexLocker locker(&m_lock);
@@ -560,6 +623,7 @@ bool Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
     EvalJob evilJob(m_engine, condition);
     m_runningJob = &evilJob;
     m_runningJob->run();
+    m_runningJob = 0;
 
     return evilJob.resultAsBoolean();
 }

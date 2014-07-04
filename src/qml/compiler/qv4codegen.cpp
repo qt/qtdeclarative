@@ -1950,7 +1950,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     IR::BasicBlock *entryBlock = function->newBasicBlock(0);
     IR::BasicBlock *exitBlock = function->newBasicBlock(0, IR::Function::DontInsertBlock);
-    function->hasDirectEval = _env->hasDirectEval || _env->compilationMode == EvalCode;
+    function->hasDirectEval = _env->hasDirectEval || _env->compilationMode == EvalCode
+            || _module->debugMode; // Conditional breakpoints are like eval in the function
     function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->usesThis = _env->usesThis;
     function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);

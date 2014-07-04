@@ -357,27 +357,6 @@ EvalFunction::Data::Data(ExecutionContext *scope)
 
 ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 {
-    struct ContextStateSaver {
-        ExecutionContext *savedContext;
-        bool strictMode;
-        ExecutionContext::EvalCode *evalCode;
-        CompiledData::CompilationUnit *compilationUnit;
-
-        ContextStateSaver(ExecutionContext *context)
-            : savedContext(context)
-            , strictMode(context->d()->strictMode)
-            , evalCode(context->d()->currentEvalCode)
-            , compilationUnit(context->d()->compilationUnit)
-        {}
-
-        ~ContextStateSaver()
-        {
-            savedContext->d()->strictMode = strictMode;
-            savedContext->d()->currentEvalCode = evalCode;
-            savedContext->d()->compilationUnit = compilationUnit;
-        }
-    };
-
     if (callData->argc < 1)
         return Encode::undefined();
 

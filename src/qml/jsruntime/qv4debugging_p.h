@@ -181,6 +181,8 @@ public:
     void collectReturnedValue(Collector *collector) const;
     QVector<ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
+    void evaluateExpression(int frameNr, const QString &expression, Collector *resultsCollector);
+
 public: // compile-time interface
     void maybeBreakAtInstruction();
 

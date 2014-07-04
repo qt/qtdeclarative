@@ -187,7 +187,7 @@ private slots:
     void setBreakpointInScriptOnComment();
     void setBreakpointInScriptOnEmptyLine();
     void setBreakpointInScriptOnOptimizedBinding();
-//    void setBreakpointInScriptWithCondition(); // Not supported yet.
+    void setBreakpointInScriptWithCondition();
     void setBreakpointInScriptThatQuits();
     //void setBreakpointInFunction(); //NOT SUPPORTED
 //    void setBreakpointOnEvent();
@@ -1082,13 +1082,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(BREAKPOINTRELOCATION_QMLFILE));
 }
 
-#if 0
 void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 {
-    QFAIL("conditional breakpoints are not yet supported");
-
-    //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
-
     int out = 10;
     int sourceLine = 50;
     QVERIFY(init(CONDITION_QMLFILE));
@@ -1102,23 +1097,26 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
     QString jsonString = client->response;
     QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
-    QVariantMap body = value.value("body").toMap();
+    {
+        QVariantMap body = value.value("body").toMap();
+        int frameIndex = body.value("index").toInt();
 
-    int frameIndex = body.value("index").toInt();
-
-    //Verify the value of 'result'
-    client->evaluate(QLatin1String("a"),frameIndex);
-
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+        //Verify the value of 'result'
+        client->evaluate(QLatin1String("a"),frameIndex);
+        QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+    }
 
     jsonString = client->response;
-    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QJSValue val = client->parser.call(QJSValueList() << QJSValue(jsonString));
+    QVERIFY(val.isObject());
+    QJSValue body = val.property(QStringLiteral("body"));
+    QVERIFY(body.isObject());
+    val = body.property("value");
+    QVERIFY(val.isNumber());
 
-    body = value.value("body").toMap();
-
-    QVERIFY(body.value("value").toInt() > out);
+    const int a = val.toInt();
+    QVERIFY(a > out);
 }
-#endif
 
 void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 {

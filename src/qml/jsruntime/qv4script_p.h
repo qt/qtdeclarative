@@ -55,6 +55,30 @@ namespace QV4 {
 
 struct ExecutionContext;
 
+struct ContextStateSaver {
+    ExecutionContext *savedContext;
+    bool strictMode;
+    Lookup *lookups;
+    CompiledData::CompilationUnit *compilationUnit;
+    int lineNumber;
+
+    ContextStateSaver(ExecutionContext *context)
+        : savedContext(context)
+        , strictMode(context->d()->strictMode)
+        , lookups(context->d()->lookups)
+        , compilationUnit(context->d()->compilationUnit)
+        , lineNumber(context->d()->lineNumber)
+    {}
+
+    ~ContextStateSaver()
+    {
+        savedContext->d()->strictMode = strictMode;
+        savedContext->d()->lookups = lookups;
+        savedContext->d()->compilationUnit = compilationUnit;
+        savedContext->d()->lineNumber = lineNumber;
+    }
+};
+
 struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     struct Data : FunctionObject::Data {
         Data(ExecutionContext *scope, Function *f, Object *qml);

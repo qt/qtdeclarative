@@ -287,27 +287,6 @@ void Script::parse()
 
 ReturnedValue Script::run()
 {
-    struct ContextStateSaver {
-        ExecutionContext *savedContext;
-        bool strictMode;
-        Lookup *lookups;
-        CompiledData::CompilationUnit *compilationUnit;
-
-        ContextStateSaver(ExecutionContext *context)
-            : savedContext(context)
-            , strictMode(context->d()->strictMode)
-            , lookups(context->d()->lookups)
-            , compilationUnit(context->d()->compilationUnit)
-        {}
-
-        ~ContextStateSaver()
-        {
-            savedContext->d()->strictMode = strictMode;
-            savedContext->d()->lookups = lookups;
-            savedContext->d()->compilationUnit = compilationUnit;
-        }
-    };
-
     if (!parsed)
         parse();
     if (!vmFunction)
