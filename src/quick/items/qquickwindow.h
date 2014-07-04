@@ -50,6 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QRunnable;
 class QQuickItem;
 class QSGTexture;
 class QInputMethodEvent;
@@ -77,6 +78,14 @@ public:
         TextureHasMipmaps       = 0x0002,
         TextureOwnsGLTexture    = 0x0004,
         TextureCanUseAtlas      = 0x0008
+    };
+
+    enum RenderStage {
+        BeforeSynchronizingStage,
+        AfterSynchronizingStage,
+        BeforeRenderingStage,
+        AfterRenderingStage,
+        AfterSwapStage
     };
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
@@ -145,6 +154,8 @@ public:
     QString glslVersion() const;
     bool glslIsCoreProfile() const;
 
+    void scheduleRenderJob(QRunnable *job, RenderStage schedule);
+
 Q_SIGNALS:
     void frameSwapped();
     Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
@@ -196,6 +207,7 @@ private Q_SLOTS:
     void cleanupSceneGraph();
     void forcePolish();
     void setTransientParent_helper(QQuickWindow *window);
+    void runJobsAfterSwap();
 
 private:
     friend class QQuickItem;

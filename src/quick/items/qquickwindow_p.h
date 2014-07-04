@@ -256,6 +256,15 @@ public:
     static bool defaultFormatInitialized;
     static QSurfaceFormat defaultFormat;
 
+    QMutex renderJobMutex;
+    QList<QRunnable *> beforeSynchronizingJobs;
+    QList<QRunnable *> afterSynchronizingJobs;
+    QList<QRunnable *> beforeRenderingJobs;
+    QList<QRunnable *> afterRenderingJobs;
+    QList<QRunnable *> afterSwapJobs;
+
+    void runAndClearJobs(QList<QRunnable *> *jobs);
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
