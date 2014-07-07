@@ -47,6 +47,8 @@
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
+#include <QtGui/qopenglcontext.h>
+#include <QtGui/qopenglfunctions.h>
 
 #include <private/qsgmaterialshader_p.h>
 
@@ -283,7 +285,7 @@ bool qsg_safeguard_texture(QSGTexture *texture)
     if (!qsg_valid_texture_set()->contains(texture)) {
         qWarning() << "Invalid texture accessed:" << (void *) texture;
         qsg_set_material_failure();
-        glBindTexture(GL_TEXTURE_2D, 0);
+        QOpenGLContext::currentContext()->functions()->glBindTexture(GL_TEXTURE_2D, 0);
         return false;
     }
     return true;
