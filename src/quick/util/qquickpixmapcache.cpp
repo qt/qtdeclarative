@@ -804,8 +804,10 @@ void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
 
     shrinkCache(-1); // Shrink the cache in case it has become larger than cache_limit
 
-    if (m_timerId == -1 && m_unreferencedPixmaps && !m_destroying)
+    if (m_timerId == -1 && m_unreferencedPixmaps
+            && !m_destroying && !QCoreApplication::closingDown()) {
         m_timerId = startTimer(CACHE_EXPIRE_TIME * 1000);
+    }
 }
 
 void QQuickPixmapStore::referencePixmap(QQuickPixmapData *data)
