@@ -59,7 +59,7 @@ MainWindow::MainWindow()
     m_radioWidget = new QRadioButton(tr("QQuickWidget (indirect through framebuffer objects)"));
     vbox->addWidget(m_radioView);
     vbox->addWidget(m_radioWidget);
-    m_radioView->setChecked(true);
+    m_radioWidget->setChecked(true);
     connect(m_radioView, &QRadioButton::toggled, this, &MainWindow::updateView);
     connect(m_radioWidget, &QRadioButton::toggled, this, &MainWindow::updateView);
     groupBox->setLayout(vbox);
