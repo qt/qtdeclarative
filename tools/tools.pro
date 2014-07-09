@@ -10,7 +10,8 @@ qmlimportscanner.CONFIG = host_build
     SUBDIRS += \
         qml \
         qmlprofiler \
-        qmlbundle
+        qmlbundle \
+        qmllint
     qtHaveModule(quick) {
         !static: SUBDIRS += qmlscene qmlplugindump
         qtHaveModule(widgets): SUBDIRS += qmleasing
