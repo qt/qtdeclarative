@@ -181,7 +181,7 @@ plugin MyPluginLibrary
         \li C++ Plugin Class
         \li
             \code
-              classname <C++ plugin class>
+classname <C++ plugin class>
             \endcode
         \li Provides the class name of the C++ plugin used by the module.
 
