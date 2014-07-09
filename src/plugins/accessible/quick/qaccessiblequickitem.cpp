@@ -184,7 +184,7 @@ QAccessible::Role QAccessibleQuickItem::role() const
     bool ok;
     QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
     if (!ok)    // Not sure if this check is needed.
-        role = QAccessible::Pane;
+        role = QAccessible::Client;
     return role;
 }
 
