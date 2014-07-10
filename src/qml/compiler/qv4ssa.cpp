@@ -2866,22 +2866,55 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
 //    }
 class LoopDetection
 {
-    const DominatorTree &dt;
+    enum { DebugLoopDetection = 0 };
 
     Q_DISABLE_COPY(LoopDetection)
+
+public:
+    struct LoopInfo
+    {
+        BasicBlock *loopHeader;
+        QVector<BasicBlock *> loopBody;
+        QVector<LoopInfo *> nestedLoops;
+        LoopInfo *parentLoop;
+
+        LoopInfo(BasicBlock *loopHeader = 0)
+            : loopHeader(loopHeader)
+            , parentLoop(0)
+        {}
+
+        bool isValid() const
+        { return loopHeader != 0; }
+
+        void addNestedLoop(LoopInfo *nested)
+        {
+            Q_ASSERT(nested);
+            Q_ASSERT(!nestedLoops.contains(nested));
+            Q_ASSERT(nested->parentLoop == 0);
+            nested->parentLoop = this;
+            nestedLoops.append(nested);
+        }
+    };
 
 public:
     LoopDetection(const DominatorTree &dt)
         : dt(dt)
     {}
 
-    void run()
+    ~LoopDetection()
     {
+        qDeleteAll(loopInfos);
+    }
+
+    void run(IR::Function *function)
+    {
+        std::vector<BasicBlock *> backedges;
+        backedges.reserve(4);
+
         foreach (BasicBlock *bb, dt.calculateDFNodeIterOrder()) {
             Q_ASSERT(!bb->isRemoved());
 
-            std::vector<BasicBlock *> backedges;
-            backedges.reserve(4);
+            backedges.clear();
 
             foreach (BasicBlock *in, bb->in)
                 if (dt.dominates(bb, in))
@@ -2891,6 +2924,43 @@ public:
                 subLoop(bb, backedges);
             }
         }
+
+        createLoopInfos(function);
+        dumpLoopInfo();
+    }
+
+    void dumpLoopInfo() const
+    {
+        if (!DebugLoopDetection)
+            return;
+
+        foreach (LoopInfo *info, loopInfos) {
+            qDebug() << "Loop header:" << info->loopHeader->index()
+                     << "for loop" << quint64(info);
+            foreach (BasicBlock *bb, info->loopBody)
+                qDebug() << "    " << bb->index();
+            foreach (LoopInfo *nested, info->nestedLoops)
+                qDebug() << "    sub loop:" << quint64(nested);
+            qDebug() << "     parent loop:" << quint64(info->parentLoop);
+        }
+    }
+
+    QVector<LoopInfo *> allLoops() const
+    { return loopInfos; }
+
+    // returns all loop headers for loops that have no nested loops.
+    QVector<LoopInfo *> innermostLoops() const
+    {
+        QVector<LoopInfo *> inner(loopInfos);
+
+        for (int i = 0; i < inner.size(); ) {
+            if (inner.at(i)->nestedLoops.isEmpty())
+                ++i;
+            else
+                inner.remove(i);
+        }
+
+        return inner;
     }
 
 private:
@@ -2898,7 +2968,9 @@ private:
     {
         loopHead->markAsGroupStart();
 
-        std::vector<BasicBlock *> worklist(backedges.begin(), backedges.end());
+        std::vector<BasicBlock *> worklist;
+        worklist.reserve(backedges.size() + 8);
+        worklist.insert(worklist.end(), backedges.begin(), backedges.end());
         while (!worklist.empty()) {
             BasicBlock *predIt = worklist.back();
             worklist.pop_back();
@@ -2936,6 +3008,38 @@ private:
                     worklist.push_back(bb);
             }
         }
+    }
+
+private:
+    const DominatorTree &dt;
+    QVector<LoopInfo *> loopInfos;
+
+    void createLoopInfos(IR::Function *function)
+    {
+        foreach (BasicBlock *bb, function->basicBlocks()) {
+            if (bb->isRemoved())
+                continue;
+            if (BasicBlock *loopHeader = bb->containingGroup())
+                findLoop(loopHeader)->loopBody.append(bb);
+        }
+
+        foreach (LoopInfo *info, loopInfos) {
+            if (BasicBlock *containingLoopHeader = info->loopHeader->containingGroup())
+                findLoop(containingLoopHeader)->addNestedLoop(info);
+        }
+    }
+
+    LoopInfo *findLoop(BasicBlock *loopHeader)
+    {
+        foreach (LoopInfo *info, loopInfos) {
+            if (info->loopHeader == loopHeader)
+                return info;
+        }
+
+        LoopInfo *info = new LoopInfo;
+        info->loopHeader = loopHeader;
+        loopInfos.append(info);
+        return info;
     }
 };
 
@@ -3460,12 +3564,34 @@ bool tryOptimizingComparison(Expr *&expr)
     return false;
 }
 
-void cfg2dot(IR::Function *f)
+void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = QVector<LoopDetection::LoopInfo *>())
 {
+    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    if (!showCode)
+        return;
+
+    struct Util {
+        static void genLoop(LoopDetection::LoopInfo *loop)
+        {
+            qout << "  subgraph \"cluster" << quint64(loop) << "\" {\n";
+            qout << "    L" << loop->loopHeader->index() << ";\n";
+            foreach (BasicBlock *bb, loop->loopBody)
+                qout << "    L" << bb->index() << ";\n";
+            foreach (LoopDetection::LoopInfo *nested, loop->nestedLoops)
+                genLoop(nested);
+            qout << "  }\n";
+        }
+    };
+
     QString name;
     if (f->name) name = *f->name;
     else name = QString::fromLatin1("%1").arg((unsigned long long)f);
     qout << "digraph \"" << name << "\" { ordering=out;\n";
+
+    foreach (LoopDetection::LoopInfo *l, loops) {
+        if (l->parentLoop == 0)
+            Util::genLoop(l);
+    }
 
     foreach (BasicBlock *bb, f->basicBlocks()) {
         if (bb->isRemoved())
@@ -4557,7 +4683,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         cleanupBasicBlocks(function);
 //        showMeTheCode(function);
 
-        LoopDetection(df).run();
+        LoopDetection(df).run(function);
         showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
