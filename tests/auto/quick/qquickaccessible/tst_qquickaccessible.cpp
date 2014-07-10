@@ -281,7 +281,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QVERIFY(item);
     QCOMPARE(item->childCount(), 2);
     QCOMPARE(item->rect().size(), QSize(400, 400));
-    QCOMPARE(item->role(), QAccessible::Pane);
+    QCOMPARE(item->role(), QAccessible::Client);
     QCOMPARE(iface->indexOfChild(item), 0);
 
     QAccessibleInterface *text = item->child(0);

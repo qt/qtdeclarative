@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 import QtQuick 2.2
-import QtGraphicalEffects 1.0
 
 Rectangle {
     id: delegate
@@ -54,56 +53,21 @@ Rectangle {
         source: image
     }
 
-    Item {
-        id: title
-        anchors.fill: parent
+    Text {
+        id: titleText
 
-        Text {
-            id: titleText
-
-            anchors {
-                left: parent.left; leftMargin: 20
-                right: parent.right; rightMargin: 20
-                top: parent.top; topMargin: 20
-            }
-            font { pixelSize: 18; bold: true }
-            text: name
-            color: selected ? "#ffffff" : "#ebebdd"
-            Behavior on color { ColorAnimation { duration: 150 } }
+        anchors {
+            left: parent.left; leftMargin: 20
+            right: parent.right; rightMargin: 20
+            top: parent.top; topMargin: 20
         }
 
-        DropShadow {
-            source: titleText
-            anchors.fill: titleText
-            horizontalOffset: selected ? 3 : 1
-            verticalOffset: selected ? 3 : 1
-            radius: 4
-            color: "#2f1000"
-            samples: 8
-
-            Behavior on horizontalOffset { NumberAnimation { duration: 300 } }
-            Behavior on verticalOffset   { NumberAnimation { duration: 300 } }
-        }
-
-        states: [
-            State {
-                name: "selected"
-                when: selected
-                PropertyChanges { target: title; scale: "1.1" }
-            }]
-
-        transitions: [
-            Transition {
-                to: "selected"
-                SequentialAnimation {
-                    id: titleAnimation
-                    PropertyAnimation { target: title; property: "scale"; duration: 300 }
-                }
-            },
-            Transition {
-                to: ""
-                animations: titleAnimation
-            }]
+        font { pixelSize: 18; bold: true }
+        text: name
+        color: selected ? "#ffffff" : "#ebebdd"
+        scale: selected ? 1.15 : 1.0
+        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on scale { PropertyAnimation { duration: 300 } }
     }
 
     BusyIndicator {

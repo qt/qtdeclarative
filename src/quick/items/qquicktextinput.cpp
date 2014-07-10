@@ -87,7 +87,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     On Mac OS X, the Up/Down key bindings for Home/End are explicitly disabled.
     If you want such bindings (on any platform), you will need to construct them in QML.
 
-    \sa TextEdit, Text, {declarative/text/textselection}{Text Selection example}
+    \sa TextEdit, Text
 */
 QQuickTextInput::QQuickTextInput(QQuickItem* parent)
 : QQuickImplicitSizeItem(*(new QQuickTextInputPrivate), parent)

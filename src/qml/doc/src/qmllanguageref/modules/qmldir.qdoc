@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -181,7 +181,7 @@ plugin MyPluginLibrary
         \li C++ Plugin Class
         \li
             \code
-              classname <C++ plugin class>
+classname <C++ plugin class>
             \endcode
         \li Provides the class name of the C++ plugin used by the module.
 
@@ -264,10 +264,6 @@ The versioning system ensures that a given QML file will work regardless of the
 version of installed software, since a versioned import \e only imports types
 for that version, leaving other identifiers available, even if the actual
 installed version might otherwise provide those identifiers.
-
-See \l{examples/qml/plugins} for an example that uses C++
-plugins.
-
 
 \section1 Example of a qmldir File
 

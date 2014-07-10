@@ -93,8 +93,12 @@ void QSGRenderLoop::cleanup()
     foreach (QQuickWindow *w, s_instance->windows()) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(w);
         if (wd->windowManager == s_instance) {
+           // windowDestroyed() triggers a sendPostedEvent(DeferredDelete),
+           // so wd will be null if the window was deleteLater()'ed
+           bool wasDeleted = wd->wasDeleted;
            s_instance->windowDestroyed(w);
-           wd->windowManager = 0;
+           if (!wasDeleted)
+               wd->windowManager = 0;
         }
     }
     delete s_instance;

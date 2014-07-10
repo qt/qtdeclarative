@@ -153,7 +153,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
 
-    \sa {declarative/imageelements/image}{Image example}, QQuickImageProvider
+    \sa {Qt Quick Examples - Image Elements}, QQuickImageProvider
 */
 
 QQuickImage::QQuickImage(QQuickItem *parent)
@@ -288,7 +288,7 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     Note that \c clip is \c false by default which means that the item might
     paint outside its bounding rectangle even if the fillMode is set to \c PreserveAspectCrop.
 
-    \sa {declarative/imageelements/image}{Image example}
+    \sa {Qt Quick Examples - Image Elements}
 */
 QQuickImage::FillMode QQuickImage::fillMode() const
 {

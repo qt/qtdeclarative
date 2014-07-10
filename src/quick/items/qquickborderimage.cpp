@@ -138,7 +138,7 @@ QT_BEGIN_NAMESPACE
     to use \l{BorderImage::horizontalTileMode}{BorderImage.Round} instead of
     \l{BorderImage::horizontalTileMode}{BorderImage.Repeat} in cases like these.
 
-    The \l{declarative/imageelements/borderimage}{BorderImage example} shows how a BorderImage
+    The Border Image example in \l{Qt Quick Examples - Image Elements} shows how a BorderImage
     can be used to simulate a shadow effect on a rectangular item.
 
     \section1 Image Loading

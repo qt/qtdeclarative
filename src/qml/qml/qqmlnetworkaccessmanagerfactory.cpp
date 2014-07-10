@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
 
     The \l {Qt Quick 1} version of this class is named QDeclarativeNetworkAccessManagerFactory.
 
-    \sa {qml/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
+    \sa {C++ Extensions: Network Access Manager Factory Example}{Network Access Manager Factory Example}
 */
 
 /*!

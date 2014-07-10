@@ -150,7 +150,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     \note Setting the state of an object from within another state of the same object is
     not allowed.
 
-    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States},
+    \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States},
     {Animation and Transitions in Qt Quick}{Transitions}, {Qt QML}
 */
 QQuickState::QQuickState(QObject *parent)

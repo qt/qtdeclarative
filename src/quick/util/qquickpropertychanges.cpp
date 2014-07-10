@@ -132,7 +132,7 @@ QT_BEGIN_NAMESPACE
     changed implicitly through their parent's state, they should be set explicitly in all PropertyChanges.
     An item will still not be enabled/visible if one of its parents is not enabled or visible.
 
-    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, {Qt QML}
+    \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt QML}
 */
 
 /*!

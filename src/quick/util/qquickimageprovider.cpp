@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -203,9 +203,8 @@ QImage QQuickTextureFactory::image() const
 
     \image imageprovider.png
 
-    A complete example is available in Qt's
-    \l {qml/imageprovider}{examples/quick/imageprovider}
-    directory. Note the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
+    See the \l {imageprovider}{Image Provider Example} for the complete implementation.
+    Note that the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
 
 

@@ -57,7 +57,7 @@ to a QStringList:
 \snippet models/stringlistmodel/main.cpp 0
 
 The complete source code for this example is available in
-\l {quick/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel}
+\l {models/stringlistmodel}{examples/quick/models/stringlistmodel}
 within the Qt install directory.
 
 \b{Note:} There is no way for the view to know that the contents of a QStringList
@@ -94,7 +94,7 @@ object, as they are easily available via the \c modelData
 object.
 
 The complete source code for this example is available in
-\l {quick/modelviews/objectlistmodel}{examples/quick/modelviews/objectlistmodel}
+\l {models/objectlistmodel}{examples/quick/models/objectlistmodel}
 within the Qt install directory.
 
 Note: There is no way for the view to know that the contents of a QList
@@ -140,7 +140,7 @@ QAbstractItemModel::beginInsertRows(), and so on. See the \l {Model subclassing 
 more information.
 
 The complete source code for this example is available in
-\l {quick/modelviews/abstractitemmodel}{examples/quick/modelviews/abstractitemmodel}
+\l {models/abstractitemmodel}{examples/quick/models/abstractitemmodel}
 within the Qt install directory.
 
 QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML

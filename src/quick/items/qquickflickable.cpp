@@ -677,7 +677,7 @@ is finished.
     \dots 8
     \snippet qml/flickableScrollbar.qml 1
 
-    \sa {declarative/customitems/scrollbar}{scrollbar example}
+    \sa {customitems/scrollbar}{UI Components: Scrollbar Example}
 */
 QQuickFlickable::QQuickFlickable(QQuickItem *parent)
   : QQuickItem(*(new QQuickFlickablePrivate), parent)
@@ -1374,15 +1374,15 @@ void QQuickFlickablePrivate::replayDelayedPress()
         delayedPressTimer.stop();
 
         // If we have the grab, release before delivering the event
-        QQuickWindow *w = q->window();
-        if (w && (w->mouseGrabberItem() == q)) {
-            q->ungrabMouse();
-        }
+        if (QQuickWindow *w = q->window()) {
+            if (w->mouseGrabberItem() == q)
+                q->ungrabMouse();
 
-        // Use the event handler that will take care of finding the proper item to propagate the event
-        replayingPressEvent = true;
-        QQuickWindowPrivate::get(w)->deliverMouseEvent(mouseEvent.data());
-        replayingPressEvent = false;
+            // Use the event handler that will take care of finding the proper item to propagate the event
+            replayingPressEvent = true;
+            QQuickWindowPrivate::get(w)->deliverMouseEvent(mouseEvent.data());
+            replayingPressEvent = false;
+        }
     }
 }
 
