@@ -264,16 +264,23 @@ class DominatorTree
     typedef int BasicBlockIndex;
     enum { InvalidBasicBlockIndex = -1 };
 
+    struct Data
+    {
+        int N;
+        std::vector<int> dfnum; // BasicBlock index -> dfnum
+        std::vector<int> vertex;
+        std::vector<BasicBlockIndex> parent; // BasicBlock index -> parent BasicBlock index
+        std::vector<BasicBlockIndex> ancestor; // BasicBlock index -> ancestor BasicBlock index
+        std::vector<BasicBlockIndex> best; // BasicBlock index -> best BasicBlock index
+        std::vector<BasicBlockIndex> semi; // BasicBlock index -> semi dominator BasicBlock index
+        std::vector<BasicBlockIndex> samedom; // BasicBlock index -> same dominator BasicBlock index
+
+        Data(): N(0) {}
+    };
+
     IR::Function *function;
-    int N;
-    std::vector<int> dfnum; // BasicBlock index -> dfnum
-    std::vector<int> vertex;
-    std::vector<BasicBlockIndex> parent; // BasicBlock index -> parent BasicBlock index
-    std::vector<BasicBlockIndex> ancestor; // BasicBlock index -> ancestor BasicBlock index
-    std::vector<BasicBlockIndex> best; // BasicBlock index -> best BasicBlock index
-    std::vector<BasicBlockIndex> semi; // BasicBlock index -> semi dominator BasicBlock index
+    QScopedPointer<Data> d;
     std::vector<BasicBlockIndex> idom; // BasicBlock index -> immediate dominator BasicBlock index
-    std::vector<BasicBlockIndex> samedom; // BasicBlock index -> same dominator BasicBlock index
     std::vector<BasicBlockSet> DF; // BasicBlock index -> dominator frontier
 
     struct DFSTodo {
@@ -292,17 +299,17 @@ class DominatorTree
 
     void DFS(BasicBlockIndex node) {
         std::vector<DFSTodo> worklist;
-        worklist.reserve(vertex.capacity() / 2);
+        worklist.reserve(d->vertex.capacity() / 2);
         DFSTodo todo(node, InvalidBasicBlockIndex);
 
         while (true) {
             BasicBlockIndex n = todo.node;
 
-            if (dfnum[n] == 0) {
-                dfnum[n] = N;
-                vertex[N] = n;
-                parent[n] = todo.parent;
-                ++N;
+            if (d->dfnum[n] == 0) {
+                d->dfnum[n] = d->N;
+                d->vertex[d->N] = n;
+                d->parent[n] = todo.parent;
+                ++d->N;
                 const QVector<BasicBlock *> &out = function->basicBlock(n)->out;
                 for (int i = out.size() - 1; i > 0; --i)
                     worklist.push_back(DFSTodo(out[i]->index(), n));
@@ -329,20 +336,20 @@ class DominatorTree
 
     BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v, std::vector<BasicBlockIndex> &worklist) {
         worklist.clear();
-        for (BasicBlockIndex it = v; it != InvalidBasicBlockIndex; it = ancestor[it])
+        for (BasicBlockIndex it = v; it != InvalidBasicBlockIndex; it = d->ancestor[it])
             worklist.push_back(it);
 
         if (worklist.size() < 2)
-            return best[v];
+            return d->best[v];
 
         BasicBlockIndex b = InvalidBasicBlockIndex;
         BasicBlockIndex last = worklist.back();
         Q_ASSERT(worklist.size() <= INT_MAX);
         for (int it = static_cast<int>(worklist.size()) - 2; it >= 0; --it) {
             BasicBlockIndex bbIt = worklist[it];
-            ancestor[bbIt] = last;
-            BasicBlockIndex &best_it = best[bbIt];
-            if (b != InvalidBasicBlockIndex && dfnum[semi[b]] < dfnum[semi[best_it]])
+            d->ancestor[bbIt] = last;
+            BasicBlockIndex &best_it = d->best[bbIt];
+            if (b != InvalidBasicBlockIndex && d->dfnum[d->semi[b]] < d->dfnum[d->semi[best_it]])
                 best_it = b;
             else
                 b = best_it;
@@ -351,57 +358,57 @@ class DominatorTree
     }
 
     void link(BasicBlockIndex p, BasicBlockIndex n) {
-        ancestor[n] = p;
-        best[n] = n;
+        d->ancestor[n] = p;
+        d->best[n] = n;
     }
 
     void calculateIDoms() {
         Q_ASSERT(function->basicBlock(0)->in.isEmpty());
 
         const int bbCount = function->basicBlockCount();
-        vertex = std::vector<int>(bbCount, InvalidBasicBlockIndex);
-        parent = std::vector<int>(bbCount, InvalidBasicBlockIndex);
-        dfnum = std::vector<int>(bbCount, 0);
-        semi = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
-        ancestor = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        d->vertex = std::vector<int>(bbCount, InvalidBasicBlockIndex);
+        d->parent = std::vector<int>(bbCount, InvalidBasicBlockIndex);
+        d->dfnum = std::vector<int>(bbCount, 0);
+        d->semi = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        d->ancestor = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
         idom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
-        samedom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
-        best = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        d->samedom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
+        d->best = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
 
         QHash<BasicBlockIndex, std::vector<BasicBlockIndex> > bucket;
         bucket.reserve(bbCount);
 
         DFS(function->basicBlock(0)->index());
-        Q_ASSERT(N == function->liveBasicBlocksCount());
+        Q_ASSERT(d->N == function->liveBasicBlocksCount());
 
         std::vector<BasicBlockIndex> worklist;
-        worklist.reserve(vertex.capacity() / 2);
+        worklist.reserve(d->vertex.capacity() / 2);
 
-        for (int i = N - 1; i > 0; --i) {
-            BasicBlockIndex n = vertex[i];
-            BasicBlockIndex p = parent[n];
+        for (int i = d->N - 1; i > 0; --i) {
+            BasicBlockIndex n = d->vertex[i];
+            BasicBlockIndex p = d->parent[n];
             BasicBlockIndex s = p;
 
             foreach (BasicBlock *v, function->basicBlock(n)->in) {
                 BasicBlockIndex ss = InvalidBasicBlockIndex;
-                if (dfnum[v->index()] <= dfnum[n])
+                if (d->dfnum[v->index()] <= d->dfnum[n])
                     ss = v->index();
                 else
-                    ss = semi[ancestorWithLowestSemi(v->index(), worklist)];
-                if (dfnum[ss] < dfnum[s])
+                    ss = d->semi[ancestorWithLowestSemi(v->index(), worklist)];
+                if (d->dfnum[ss] < d->dfnum[s])
                     s = ss;
             }
-            semi[n] = s;
+            d->semi[n] = s;
             bucket[s].push_back(n);
             link(p, n);
             if (bucket.contains(p)) {
                 foreach (BasicBlockIndex v, bucket[p]) {
                     BasicBlockIndex y = ancestorWithLowestSemi(v, worklist);
-                    BasicBlockIndex semi_v = semi[v];
-                    if (semi[y] == semi_v)
+                    BasicBlockIndex semi_v = d->semi[v];
+                    if (d->semi[y] == semi_v)
                         idom[v] = semi_v;
                     else
-                        samedom[v] = y;
+                        d->samedom[v] = y;
                 }
                 bucket.remove(p);
             }
@@ -412,14 +419,14 @@ class DominatorTree
             qDebug("\tL%d: ancestor = %d, semi = %d, samedom = %d", i, ancestor[i], semi[i], samedom[i]);
 #endif // SHOW_SSA
 
-        for (int i = 1; i < N; ++i) {
-            BasicBlockIndex n = vertex[i];
+        for (int i = 1; i < d->N; ++i) {
+            BasicBlockIndex n = d->vertex[i];
             Q_ASSERT(n != InvalidBasicBlockIndex);
             Q_ASSERT(!bucket.contains(n));
-            Q_ASSERT(ancestor[n] != InvalidBasicBlockIndex
-                        && ((semi[n] != InvalidBasicBlockIndex
-                                && dfnum[ancestor[n]] <= dfnum[semi[n]]) || semi[n] == n));
-            BasicBlockIndex sdn = samedom[n];
+            Q_ASSERT(d->ancestor[n] != InvalidBasicBlockIndex
+                        && ((d->semi[n] != InvalidBasicBlockIndex
+                                && d->dfnum[d->ancestor[n]] <= d->dfnum[d->semi[n]]) || d->semi[n] == n));
+            BasicBlockIndex sdn = d->samedom[n];
             if (sdn != InvalidBasicBlockIndex)
                 idom[n] = idom[sdn];
         }
@@ -432,7 +439,18 @@ class DominatorTree
         std::vector<BasicBlockIndex> todo;
     };
 
+public:
+    DominatorTree(IR::Function *function)
+        : function(function)
+        , d(new Data)
+    {
+        calculateIDoms();
+        d.reset();
+    }
+
     void computeDF() {
+        DF.resize(function->basicBlockCount());
+
         // compute children of each node in the dominator tree
         std::vector<std::vector<BasicBlockIndex> > children; // BasicBlock index -> children
         children.resize(function->basicBlockCount());
@@ -451,7 +469,7 @@ class DominatorTree
         std::vector<NodeProgress> nodeStatus;
         nodeStatus.resize(function->basicBlockCount());
         std::vector<BasicBlockIndex> worklist;
-        worklist.reserve(function->basicBlockCount() * 2);
+        worklist.reserve(function->basicBlockCount());
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
@@ -542,22 +560,15 @@ class DominatorTree
 #endif // !QT_NO_DEBUG
     }
 
-public:
-    DominatorTree(IR::Function *function)
-        : function(function)
-        , N(0)
-    {
-        DF.resize(function->basicBlockCount());
-        calculateIDoms();
-        computeDF();
-    }
-
     const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
         return DF[n->index()];
     }
 
     BasicBlock *immediateDominator(BasicBlock *bb) const {
-        return function->basicBlock(idom[bb->index()]);
+        const BasicBlockIndex idx = idom[bb->index()];
+        if (idx == -1)
+            return 0;
+        return function->basicBlock(idx);
     }
 
     void dumpImmediateDominators() const
@@ -582,6 +593,7 @@ public:
     void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
     {
         Q_ASSERT(bb->index() >= 0);
+        Q_ASSERT(!newDominator || newDominator->index() >= 0);
 
         if (static_cast<std::vector<BasicBlockIndex>::size_type>(bb->index()) >= idom.size()) {
             // This is a new block, probably introduced by edge splitting. So, we'll have to grow
@@ -589,7 +601,7 @@ public:
             idom.resize(function->basicBlockCount(), InvalidBasicBlockIndex);
         }
 
-        idom[bb->index()] = newDominator->index();
+        idom[bb->index()] = newDominator ? newDominator->index() : 0;
     }
 
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
@@ -4490,6 +4502,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
         // Calculate the dominator tree:
         DominatorTree df(function);
+        df.computeDF();
 
         verifyCFG(function);
         verifyImmediateDominators(df, function);
