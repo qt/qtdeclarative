@@ -45,6 +45,7 @@
 #include "qquickbehavior_p.h"
 #include "qquicksmoothedanimation_p.h"
 #include "qquickfontloader_p.h"
+#include "qquickfontmetrics_p.h"
 #include "qquickpropertychanges_p.h"
 #include "qquickspringanimation_p.h"
 #include "qquickstategroup_p.h"
@@ -106,4 +107,6 @@ void QQuickUtilModule::defineModule()
 
     qRegisterMetaType<QKeySequence::StandardKey>();
     qmlRegisterUncreatableType<QKeySequence, 2>("QtQuick", 2, 2, "StandardKey", QStringLiteral("Cannot create an instance of StandardKey."));
+
+    qmlRegisterType<QQuickFontMetrics>("QtQuick", 2, 4, "FontMetrics");
 }
