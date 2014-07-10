@@ -248,7 +248,13 @@ public:
     }
 };
 
-class DominatorTree {
+class DominatorTree
+{
+    enum {
+        DebugDominatorFrontiers = 0,
+        DebugImmediateDominators = 0
+    };
+
     typedef int BasicBlockIndex;
     enum { InvalidBasicBlockIndex = -1 };
 
@@ -412,19 +418,7 @@ class DominatorTree {
                 idom[n] = idom[sdn];
         }
 
-#if defined(SHOW_SSA)
-        qout << "Immediate dominators:" << endl;
-        foreach (BasicBlock *to, nodes) {
-            qout << '\t';
-            BasicBlockIndex from = idom.at(to->index);
-            if (from != InvalidBasicBlockIndex)
-                qout << from;
-            else
-                qout << "(none)";
-            qout << " -> " << to->index << endl;
-        }
-        qout << "N = " << N << endl;
-#endif // SHOW_SSA
+        dumpImmediateDominators();
     }
 
     struct NodeProgress {
@@ -503,19 +497,23 @@ class DominatorTree {
             }
         }
 
-#if defined(SHOW_SSA)
-        qout << "Dominator Frontiers:" << endl;
-        foreach (BasicBlock *n, nodes) {
-            qout << "\tDF[" << n->index << "]: {";
-            QList<BasicBlock *> SList = DF[n->index].values();
-            for (int i = 0; i < SList.size(); ++i) {
-                if (i > 0)
-                    qout << ", ";
-                qout << SList[i]->index;
+        if (DebugDominatorFrontiers) {
+            qout << "Dominator Frontiers:" << endl;
+            foreach (BasicBlock *n, function->basicBlocks()) {
+                if (n->isRemoved())
+                    continue;
+
+                qout << "\tDF[" << n->index() << "]: {";
+                const BasicBlockSet &SList = DF[n->index()];
+                for (BasicBlockSet::const_iterator i = SList.begin(), ei = SList.end(); i != ei; ++i) {
+                    if (i != SList.begin())
+                        qout << ", ";
+                    qout << (*i)->index();
+                }
+                qout << "}" << endl;
             }
-            qout << "}" << endl;
         }
-#endif // SHOW_SSA
+
 #if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
         foreach (BasicBlock *n, nodes) {
             const BasicBlockSet &fBlocks = DF[n->index];
@@ -558,12 +556,21 @@ public:
 
     void dumpImmediateDominators() const
     {
-        qDebug() << "Immediate dominators for" << idom.size() << "nodes:";
-        for (size_t i = 0, ei = idom.size(); i != ei; ++i)
-            if (idom[i] == InvalidBasicBlockIndex)
-                qDebug("\tnone -> L%d", int(i));
-            else
-                qDebug("\tL%d -> L%d", idom[i], int(i));
+        if (DebugImmediateDominators) {
+            qout << "Immediate dominators:" << endl;
+            foreach (BasicBlock *to, function->basicBlocks()) {
+                if (to->isRemoved())
+                    continue;
+
+                qout << '\t';
+                BasicBlockIndex from = idom.at(to->index());
+                if (from != InvalidBasicBlockIndex)
+                    qout << from;
+                else
+                    qout << "(none)";
+                qout << " -> " << to->index() << endl;
+            }
+        }
     }
 
     void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
@@ -1984,7 +1991,10 @@ protected:
     }
 };
 
-class TypeInference: public StmtVisitor, public ExprVisitor {
+class TypeInference: public StmtVisitor, public ExprVisitor
+{
+    enum { DebugTypeInference = 0 };
+
     QQmlEnginePrivate *qmlEngine;
     const DefUses &_defUses;
     typedef std::vector<DiscoveredType> TempTypes;
@@ -2022,19 +2032,25 @@ public:
             if (s->asJump())
                 continue;
 
-#if defined(SHOW_SSA)
-            qout<<"Typing stmt ";s->dump(qout);qout<<endl;
-#endif
+            if (DebugTypeInference) {
+                qout<<"Typing stmt ";
+                IRPrinter(&qout).print(s);
+                qout<<endl;
+            }
 
             if (!run(s)) {
                 *_worklist += s;
-#if defined(SHOW_SSA)
-                qout<<"Pushing back stmt: ";
-                s->dump(qout);qout<<endl;
+                if (DebugTypeInference) {
+                    qout<<"Pushing back stmt: ";
+                    IRPrinter(&qout).print(s);
+                    qout<<endl;
+                }
             } else {
-                qout<<"Finished: ";
-                s->dump(qout);qout<<endl;
-#endif
+                if (DebugTypeInference) {
+                    qout<<"Finished: ";
+                    IRPrinter(&qout).print(s);
+                    qout<<endl;
+                }
             }
         }
 
@@ -2074,20 +2090,22 @@ private:
 
     void setType(Expr *e, DiscoveredType ty) {
         if (Temp *t = e->asTemp()) {
-#if defined(SHOW_SSA)
-            qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
-#endif
+            if (DebugTypeInference)
+                qout << "Setting type for temp " << t->index
+                     << " to " << typeName(Type(ty.type)) << " (" << ty.type << ")"
+                     << endl;
+
             DiscoveredType &it = _tempTypes[t->index];
             if (it != ty) {
                 it = ty;
 
-#if defined(SHOW_SSA)
-                foreach (Stmt *s, _defUses.uses(*t)) {
-                    qout << "Pushing back dependent stmt: ";
-                    s->dump(qout);
-                    qout << endl;
+                if (DebugTypeInference) {
+                    foreach (Stmt *s, _defUses.uses(*t)) {
+                        qout << "Pushing back dependent stmt: ";
+                        IRPrinter(&qout).print(s);
+                        qout<<endl;
+                    }
                 }
-#endif
 
                 *_worklist += _defUses.uses(*t);
             }
