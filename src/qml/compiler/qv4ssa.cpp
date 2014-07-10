@@ -69,6 +69,12 @@ using namespace IR;
 
 namespace {
 
+#ifdef QT_NO_DEBUG
+enum { DoVerification = 0 };
+#else
+enum { DoVerification = 1 };
+#endif
+
 Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 #define qout *qout()
 
@@ -2616,7 +2622,7 @@ public:
 
                     bb->insertStatementBefore(conversion.stmt, extraMove);
 
-                    *conversion.expr = bb->CONVERT(tmp, conversion.targetType);
+                    *conversion.expr = bb->CONVERT(CloneExpr::cloneTemp(tmp, f), conversion.targetType);
                     _defUses.addUse(*tmp, move);
                 } else {
                     Q_UNREACHABLE();
@@ -3441,6 +3447,32 @@ bool tryOptimizingComparison(Expr *&expr)
 
     return false;
 }
+
+void cfg2dot(IR::Function *f)
+{
+    QString name;
+    if (f->name) name = *f->name;
+    else name = QString::fromLatin1("%1").arg((unsigned long long)f);
+    qout << "digraph \"" << name << "\" { ordering=out;\n";
+
+    foreach (BasicBlock *bb, f->basicBlocks()) {
+        if (bb->isRemoved())
+            continue;
+
+        int idx = bb->index();
+        qout << "  L" << idx << " [label=\"L" << idx << "\"";
+        if (idx == 0 || bb->terminator()->asRet())
+            qout << ", shape=doublecircle";
+        else
+            qout << ", shape=circle";
+        qout << "];\n";
+        foreach (BasicBlock *out, bb->out)
+            qout << "  L" << idx << " -> L" << out->index() << "\n";
+    }
+
+    qout << "}\n" << flush;
+}
+
 } // anonymous namespace
 
 void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
@@ -4073,6 +4105,152 @@ private:
     std::vector<int> tempForFormal;
     std::vector<int> tempForLocal;
 };
+
+static void verifyCFG(IR::Function *function)
+{
+    if (!DoVerification)
+        return;
+
+    foreach (BasicBlock *bb, function->basicBlocks()) {
+        if (bb->isRemoved()) {
+            Q_ASSERT(bb->in.isEmpty());
+            Q_ASSERT(bb->out.isEmpty());
+            continue;
+        }
+
+        Q_ASSERT(function->basicBlock(bb->index()) == bb);
+
+        // Check the terminators:
+        if (Jump *jump = bb->terminator()->asJump()) {
+            Q_UNUSED(jump);
+            Q_ASSERT(jump->target);
+            Q_ASSERT(!jump->target->isRemoved());
+            Q_ASSERT(bb->out.size() == 1);
+            Q_ASSERT(bb->out.first() == jump->target);
+        } else if (CJump *cjump = bb->terminator()->asCJump()) {
+            Q_UNUSED(cjump);
+            Q_ASSERT(bb->out.size() == 2);
+            Q_ASSERT(cjump->iftrue);
+            Q_ASSERT(!cjump->iftrue->isRemoved());
+            Q_ASSERT(cjump->iftrue == bb->out[0]);
+            Q_ASSERT(cjump->iffalse);
+            Q_ASSERT(!cjump->iffalse->isRemoved());
+            Q_ASSERT(cjump->iffalse == bb->out[1]);
+        } else if (bb->terminator()->asRet()) {
+            Q_ASSERT(bb->out.size() == 0);
+        } else {
+            Q_UNREACHABLE();
+        }
+
+        // Check the outgoing edges:
+        foreach (BasicBlock *out, bb->out) {
+            Q_UNUSED(out);
+            Q_ASSERT(!out->isRemoved());
+            Q_ASSERT(out->in.contains(bb));
+        }
+
+        // Check the incoming edges:
+        foreach (BasicBlock *in, bb->in) {
+            Q_UNUSED(in);
+            Q_ASSERT(!in->isRemoved());
+            Q_ASSERT(in->out.contains(bb));
+        }
+    }
+}
+
+static void verifyImmediateDominators(const DominatorTree &dt, IR::Function *function)
+{
+    if (!DoVerification)
+        return;
+
+    cfg2dot(function);
+    dt.dumpImmediateDominators();
+    DominatorTree referenceTree(function);
+
+    foreach (BasicBlock *bb, function->basicBlocks()) {
+        if (bb->isRemoved())
+            continue;
+
+        BasicBlock *idom = dt.immediateDominator(bb);
+        BasicBlock *referenceIdom = referenceTree.immediateDominator(bb);
+        Q_UNUSED(idom);
+        Q_UNUSED(referenceIdom);
+        Q_ASSERT(idom == referenceIdom);
+    }
+}
+
+static void verifyNoPointerSharing(IR::Function *function)
+{
+    if (!DoVerification)
+        return;
+
+    class : public StmtVisitor, public ExprVisitor {
+    public:
+        void operator()(IR::Function *f)
+        {
+            foreach (BasicBlock *bb, f->basicBlocks()) {
+                if (bb->isRemoved())
+                    continue;
+
+                foreach (Stmt *s, bb->statements())
+                    s->accept(this);
+            }
+        }
+
+    protected:
+        virtual void visitExp(Exp *s) { check(s); s->expr->accept(this); }
+        virtual void visitMove(Move *s) { check(s); s->target->accept(this); s->source->accept(this); }
+        virtual void visitJump(Jump *s) { check(s); }
+        virtual void visitCJump(CJump *s) { check(s); s->cond->accept(this); }
+        virtual void visitRet(Ret *s) { check(s); s->expr->accept(this); }
+        virtual void visitPhi(Phi *s)
+        {
+            check(s);
+            s->targetTemp->accept(this);
+            foreach (Expr *e, s->d->incoming)
+                e->accept(this);
+        }
+
+        virtual void visitConst(Const *e) { check(e); }
+        virtual void visitString(IR::String *e) { check(e); }
+        virtual void visitRegExp(IR::RegExp *e) { check(e); }
+        virtual void visitName(Name *e) { check(e); }
+        virtual void visitTemp(Temp *e) { check(e); }
+        virtual void visitArgLocal(ArgLocal *e) { check(e); }
+        virtual void visitClosure(Closure *e) { check(e); }
+        virtual void visitConvert(Convert *e) { check(e); e->expr->accept(this); }
+        virtual void visitUnop(Unop *e) { check(e); e->expr->accept(this); }
+        virtual void visitBinop(Binop *e) { check(e); e->left->accept(this); e->right->accept(this); }
+        virtual void visitCall(Call *e) { check(e); e->base->accept(this); check(e->args); }
+        virtual void visitNew(New *e) { check(e); e->base->accept(this); check(e->args); }
+        virtual void visitSubscript(Subscript *e) { check(e); e->base->accept(this); e->index->accept(this); }
+        virtual void visitMember(Member *e) { check(e); e->base->accept(this); }
+
+        void check(ExprList *l)
+        {
+            for (ExprList *it = l; it; it = it->next)
+                check(it->expr);
+        }
+
+    private:
+        void check(Stmt *s)
+        {
+            Q_ASSERT(!stmts.contains(s));
+            stmts.insert(s);
+        }
+
+        void check(Expr *e)
+        {
+            Q_ASSERT(!exprs.contains(e));
+            exprs.insert(e);
+        }
+
+        QSet<Stmt *> stmts;
+        QSet<Expr *> exprs;
+    } V;
+    V(function);
+}
+
 } // anonymous namespace
 
 void LifeTimeInterval::setFrom(int from) {
@@ -4313,6 +4491,9 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         // Calculate the dominator tree:
         DominatorTree df(function);
 
+        verifyCFG(function);
+        verifyImmediateDominators(df, function);
+
         DefUses defUses(function);
 
 //        qout << "Converting to SSA..." << endl;
@@ -4337,6 +4518,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 //        qout << "Doing type propagation..." << endl;
         TypePropagation(defUses).run(function, worklist);
 //        showMeTheCode(function);
+        verifyNoPointerSharing(function);
 
         // Transform the CFG into edge-split SSA.
 //        qout << "Starting edge splitting..." << endl;
