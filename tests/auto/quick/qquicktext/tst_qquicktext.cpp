@@ -2813,7 +2813,7 @@ void tst_qquicktext::imgTagsAlign()
     QFETCH(QString, align);
     QString componentStr = "import QtQuick 2.0\nText { text: \"This is a test <img src=\\\"" + src + "\\\" align=\\\"" + align + "\\\"> of image.\" }";
     QQmlComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile("."));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != 0);
@@ -2838,7 +2838,7 @@ void tst_qquicktext::imgTagsMultipleImages()
     QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.png\\\" width=\\\"60\\\" height=\\\"60\\\" > and another one<img src=\\\"data/images/heart200.png\\\" width=\\\"85\\\" height=\\\"85\\\">.\" }";
 
     QQmlComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile("."));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != 0);
@@ -2899,8 +2899,8 @@ void tst_qquicktext::imgTagsError()
     QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.pn\\\" width=\\\"60\\\" height=\\\"60\\\">.\" }";
 
     QQmlComponent textComponent(&engine);
-    QTest::ignoreMessage(QtWarningMsg, "file::2:1: QML Text: Cannot open: file:data/images/starfish_2.pn");
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:2:1: QML Text: Cannot open: file:data/images/starfish_2.pn");
+    textComponent.setData(componentStr.toLatin1(), QUrl("file:"));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != 0);

@@ -488,7 +488,7 @@ void tst_qqmlengine::outputWarningsToStandardError()
     delete o;
 
     QCOMPARE(messageHandler.messages().count(), 1);
-    QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>: Unable to assign [undefined] to int"));
+    QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>:1:48: Unable to assign [undefined] to int"));
     messageHandler.clear();
 
     engine.setOutputWarningsToStandardError(false);

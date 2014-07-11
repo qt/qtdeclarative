@@ -348,7 +348,7 @@ void tst_qqmlcontext::setContextProperty()
         QQmlContext ctxt(engine.rootContext());
         ctxt.setContextProperty("ctxtProp", QVariant());
 
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: TypeError: Cannot read property 'a' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:1: TypeError: Cannot read property 'a' of undefined");
         QObject *obj = component.create(&ctxt);
 
         QVariant v = obj->property("obj");

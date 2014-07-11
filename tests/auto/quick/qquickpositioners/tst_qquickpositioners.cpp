@@ -1857,7 +1857,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1865,7 +1865,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1879,7 +1879,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1887,7 +1887,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1901,7 +1901,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1909,7 +1909,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1917,7 +1917,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     messageHandler.clear();
     delete item;
 
@@ -1925,7 +1925,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(messageHandler.messages().size(), 1);
-    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
+    QCOMPARE(messageHandler.messages().back(), QString("<Unknown File>:2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     delete item;
 }
 

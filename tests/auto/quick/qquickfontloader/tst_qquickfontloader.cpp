@@ -130,7 +130,7 @@ void tst_qquickfontloader::localFont()
 void tst_qquickfontloader::failLocalFont()
 {
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFileUrl("dummy.ttf").toString() + "\" }";
-    QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + testFileUrl("dummy.ttf").toString() + "\"").toUtf8().constData());
+    QTest::ignoreMessage(QtWarningMsg, QString("<Unknown File>:2:1: QML FontLoader: Cannot load font: \"" + testFileUrl("dummy.ttf").toString() + "\"").toUtf8().constData());
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
@@ -174,7 +174,7 @@ void tst_qquickfontloader::redirWebFont()
 void tst_qquickfontloader::failWebFont()
 {
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" SERVER_ADDR "/nonexist.ttf\" }";
-    QTest::ignoreMessage(QtWarningMsg, "file::2:1: QML FontLoader: Cannot load font: \"" SERVER_ADDR "/nonexist.ttf\"");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:2:1: QML FontLoader: Cannot load font: \"" SERVER_ADDR "/nonexist.ttf\"");
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());

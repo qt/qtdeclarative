@@ -451,7 +451,7 @@ void tst_QQmlPropertyMap::disallowExtending()
     obj.reset(component.create());
     QVERIFY(obj.isNull());
     QCOMPARE(component.errors().count(), 1);
-    QCOMPARE(component.errors().at(0).toString(), QStringLiteral("<Unknown File>: Fully dynamic types cannot declare new properties."));
+    QCOMPARE(component.errors().at(0).toString(), QStringLiteral("<Unknown File>:3:1: Fully dynamic types cannot declare new properties."));
 }
 
 void tst_QQmlPropertyMap::QTBUG_35906()

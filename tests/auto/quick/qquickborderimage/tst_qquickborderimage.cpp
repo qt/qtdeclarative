@@ -131,10 +131,10 @@ void tst_qquickborderimage::imageSource_data()
 
     QTest::newRow("local") << testFileUrl("colors.png").toString() << false << "";
     QTest::newRow("local not found") << testFileUrl("no-such-file.png").toString() << false
-        << "file::2:1: QML BorderImage: Cannot open: " + testFileUrl("no-such-file.png").toString();
+        << "<Unknown File>:2:1: QML BorderImage: Cannot open: " + testFileUrl("no-such-file.png").toString();
     QTest::newRow("remote") << SERVER_ADDR "/colors.png" << true << "";
     QTest::newRow("remote not found") << SERVER_ADDR "/no-such-file.png" << true
-        << "file::2:1: QML BorderImage: Error downloading " SERVER_ADDR "/no-such-file.png - server replied: Not found";
+        << "<Unknown File>:2:1: QML BorderImage: Error downloading " SERVER_ADDR "/no-such-file.png - server replied: Not found";
 }
 
 void tst_qquickborderimage::imageSource()

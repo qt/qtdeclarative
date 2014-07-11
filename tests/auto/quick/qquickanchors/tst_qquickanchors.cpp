@@ -310,55 +310,55 @@ void tst_qquickanchors::illegalSets_data()
 
     QTest::newRow("H - too many anchors")
         << "Rectangle { id: rect; Rectangle { anchors.left: rect.left; anchors.right: rect.right; anchors.horizontalCenter: rect.horizontalCenter } }"
-        << "file::2:23: QML Rectangle: Cannot specify left, right, and horizontalCenter anchors at the same time.";
+        << "<Unknown File>:2:23: QML Rectangle: Cannot specify left, right, and horizontalCenter anchors at the same time.";
 
     foreach (const QString &side, QStringList() << "left" << "right") {
         QTest::newRow("H - anchor to V")
             << QString("Rectangle { Rectangle { anchors.%1: parent.top } }").arg(side)
-            << "file::2:13: QML Rectangle: Cannot anchor a horizontal edge to a vertical edge.";
+            << "<Unknown File>:2:13: QML Rectangle: Cannot anchor a horizontal edge to a vertical edge.";
 
         QTest::newRow("H - anchor to non parent/sibling")
             << QString("Rectangle { Item { Rectangle { id: rect } } Rectangle { anchors.%1: rect.%1 } }").arg(side)
-            << "file::2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
+            << "<Unknown File>:2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
 
         QTest::newRow("H - anchor to self")
             << QString("Rectangle { id: rect; anchors.%1: rect.%1 }").arg(side)
-            << "file::2:1: QML Rectangle: Cannot anchor item to self.";
+            << "<Unknown File>:2:1: QML Rectangle: Cannot anchor item to self.";
     }
 
 
     QTest::newRow("V - too many anchors")
         << "Rectangle { id: rect; Rectangle { anchors.top: rect.top; anchors.bottom: rect.bottom; anchors.verticalCenter: rect.verticalCenter } }"
-        << "file::2:23: QML Rectangle: Cannot specify top, bottom, and verticalCenter anchors at the same time.";
+        << "<Unknown File>:2:23: QML Rectangle: Cannot specify top, bottom, and verticalCenter anchors at the same time.";
 
     QTest::newRow("V - too many anchors with baseline")
         << "Rectangle { Text { id: text1; text: \"Hello\" } Text { anchors.baseline: text1.baseline; anchors.top: text1.top; } }"
-        << "file::2:47: QML Text: Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.";
+        << "<Unknown File>:2:47: QML Text: Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.";
 
     foreach (const QString &side, QStringList() << "top" << "bottom" << "baseline") {
 
         QTest::newRow("V - anchor to H")
             << QString("Rectangle { Rectangle { anchors.%1: parent.left } }").arg(side)
-            << "file::2:13: QML Rectangle: Cannot anchor a vertical edge to a horizontal edge.";
+            << "<Unknown File>:2:13: QML Rectangle: Cannot anchor a vertical edge to a horizontal edge.";
 
         QTest::newRow("V - anchor to non parent/sibling")
             << QString("Rectangle { Item { Rectangle { id: rect } } Rectangle { anchors.%1: rect.%1 } }").arg(side)
-            << "file::2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
+            << "<Unknown File>:2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
 
         QTest::newRow("V - anchor to self")
             << QString("Rectangle { id: rect; anchors.%1: rect.%1 }").arg(side)
-            << "file::2:1: QML Rectangle: Cannot anchor item to self.";
+            << "<Unknown File>:2:1: QML Rectangle: Cannot anchor item to self.";
     }
 
 
     QTest::newRow("centerIn - anchor to non parent/sibling")
         << "Rectangle { Item { Rectangle { id: rect } } Rectangle { anchors.centerIn: rect} }"
-        << "file::2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
+        << "<Unknown File>:2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
 
 
     QTest::newRow("fill - anchor to non parent/sibling")
         << "Rectangle { Item { Rectangle { id: rect } } Rectangle { anchors.fill: rect} }"
-        << "file::2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
+        << "<Unknown File>:2:45: QML Rectangle: Cannot anchor to an item that isn't a parent or sibling.";
 }
 
 void tst_qquickanchors::reset()

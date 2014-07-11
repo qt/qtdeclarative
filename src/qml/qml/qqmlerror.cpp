@@ -249,16 +249,17 @@ QString QQmlError::toString() const
     QUrl u(url());
     int l(line());
 
-    if (u.isEmpty()) {
+    if (u.isEmpty() || (u.isLocalFile() && u.path().isEmpty()))
         rv = QLatin1String("<Unknown File>");
-    } else if (l != -1) {
-        rv = u.toString() + QLatin1Char(':') + QString::number(l);
+    else
+        rv = u.toString();
+
+    if (l != -1) {
+        rv += QLatin1Char(':') + QString::number(l);
 
         int c(column());
         if (c != -1)
             rv += QLatin1Char(':') + QString::number(c);
-    } else {
-        rv = u.toString();
     }
 
     rv += QLatin1String(": ") + description();
