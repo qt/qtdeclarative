@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.4
 
 Rectangle {
     id: box
@@ -49,10 +49,12 @@ Rectangle {
         width: 120; height: 120
         anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 10
         color: "red"
+        opacity: redSquareMouseArea.containsPress ? 0.6 : 1.0
 
         Text { text: "Click"; font.pixelSize: 16; anchors.centerIn: parent }
 
         MouseArea {
+            id: redSquareMouseArea
             anchors.fill: parent
             hoverEnabled: true
             property string buttonID

@@ -73,6 +73,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 #ifndef QT_NO_CURSOR
     Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged)
 #endif
+    Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 1)
 
 public:
     QQuickMouseArea(QQuickItem *parent=0);
@@ -86,6 +87,7 @@ public:
 
     bool hovered() const;
     bool pressed() const;
+    bool containsPress() const;
 
     Qt::MouseButtons pressedButtons() const;
 
@@ -135,6 +137,7 @@ Q_SIGNALS:
     void entered();
     void exited();
     void canceled();
+    Q_REVISION(1) void containsPressChanged();
 
 protected:
     void setHovered(bool);

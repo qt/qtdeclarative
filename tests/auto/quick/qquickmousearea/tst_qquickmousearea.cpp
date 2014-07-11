@@ -123,6 +123,8 @@ private slots:
     void moveAndReleaseWithoutPress();
     void nestedStopAtBounds();
     void nestedStopAtBounds_data();
+    void containsPress_data();
+    void containsPress();
 
 private:
     void acceptedButton_data();
@@ -1682,6 +1684,69 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
     QTRY_COMPARE(outer->drag()->active(), false);
     QTRY_COMPARE(inner->drag()->active(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+}
+
+void tst_QQuickMouseArea::containsPress_data()
+{
+    QTest::addColumn<bool>("hoverEnabled");
+
+    QTest::newRow("hover enabled") << true;
+    QTest::newRow("hover disaabled") << false;
+}
+
+void tst_QQuickMouseArea::containsPress()
+{
+    QFETCH(bool, hoverEnabled);
+
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("containsPress.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea != 0);
+
+    QSignalSpy containsPressSpy(mouseArea, SIGNAL(containsPressChanged()));
+
+    mouseArea->setHoverEnabled(hoverEnabled);
+
+    QTest::mouseMove(&window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->containsPress(), false);
+
+    QTest::mouseMove(&window, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), hoverEnabled);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->containsPress(), false);
+
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTRY_COMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->containsPress(), true);
+    QCOMPARE(containsPressSpy.count(), 1);
+
+    QTest::mouseMove(&window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
+    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->containsPress(), false);
+    QCOMPARE(containsPressSpy.count(), 2);
+
+    QTest::mouseMove(&window, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->containsPress(), true);
+    QCOMPARE(containsPressSpy.count(), 3);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), hoverEnabled);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->containsPress(), false);
+    QCOMPARE(containsPressSpy.count(), 4);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)

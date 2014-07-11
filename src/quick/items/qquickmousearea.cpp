@@ -860,6 +860,7 @@ void QQuickMouseArea::ungrabMouse()
 
         emit canceled();
         emit pressedChanged();
+        emit containsPressChanged();
         emit pressedButtonsChanged();
 
         if (d->hovered && !isUnderMouse()) {
@@ -917,6 +918,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
                     ungrabMouse();
                 emit canceled();
                 emit pressedChanged();
+                emit containsPressChanged();
                 if (d->hovered) {
                     d->hovered = false;
                     emit hoveredChanged();
@@ -1062,6 +1064,24 @@ bool QQuickMouseArea::pressed() const
     return d->pressed;
 }
 
+/*!
+    \qmlproperty bool QtQuick::MouseArea::containsPress
+    \since 5.4
+    This is a convenience property equivalent to \c {pressed && containsMouse},
+    i.e. it holds whether any of the \l acceptedButtons are currently pressed
+    and the mouse is currently within the MouseArea.
+
+    This property is particularly useful for highlighting an item while the mouse
+    is pressed within its bounds.
+
+    \sa pressed, containsMouse
+*/
+bool QQuickMouseArea::containsPress() const
+{
+    Q_D(const QQuickMouseArea);
+    return d->pressed && d->hovered;
+}
+
 void QQuickMouseArea::setHovered(bool h)
 {
     Q_D(QQuickMouseArea);
@@ -1069,6 +1089,8 @@ void QQuickMouseArea::setHovered(bool h)
         d->hovered = h;
         emit hoveredChanged();
         d->hovered ? emit entered() : emit exited();
+        if (d->pressed)
+            emit containsPressChanged();
     }
 }
 
@@ -1128,15 +1150,19 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p)
             emit mouseXChanged(&me);
             me.setPosition(d->lastPos);
             emit mouseYChanged(&me);
-            if (!oldPressed)
+            if (!oldPressed) {
                 emit pressedChanged();
+                emit containsPressChanged();
+            }
             emit pressedButtonsChanged();
         } else {
             d->pressed &= ~button;
             emit released(&me);
             me.setPosition(d->lastPos);
-            if (!d->pressed)
+            if (!d->pressed) {
                 emit pressedChanged();
+                emit containsPressChanged();
+            }
             emit pressedButtonsChanged();
             if (isclick && !d->longPress && !d->doubleClick){
                 me.setAccepted(d->isClickConnected());

@@ -40,7 +40,9 @@
     \section1 MouseArea Behavior
 
     When you click inside the red square, the \l Text type will list several
-    properties of that click which are available to QML.
+    properties of that click which are available to QML. The opacity of the
+    red square will be reduced while the mouse is pressed and remains inside
+    the MouseArea.
 
     Signals are emitted by the MouseArea when clicks or other discrete
     operations occur within it.
