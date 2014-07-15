@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,21 +26,13 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-qmltypereference.html
+\qmlmodule QtQuick 2.3
 \title Qt Quick QML Types
 \ingroup qmlmodules
-\brief Description of the QML types provided by the Qt Quick module
+\brief Provides graphical QML types.
 
-The \c QtQuick QML module provides a variety of QML types for creating user
-interfaces and applications with QML.  This page lists every QML type provided
-by this module, organized according to category and purpose.
-
-
-\target importing-qtquick
-\section1 Importing Qt Quick
-
-The types provided by the \l {Qt Quick} module are only available in a QML document
-if that document imports the \c QtQuick namespace.
+The \l{Qt Quick} module provides graphical primitive types. These types are only
+available in a QML document if that document imports the \c QtQuick namespace.
 
 The current version of the \c QtQuick module is version 2.3, and thus it may be
 imported via the following statement:
@@ -49,10 +41,10 @@ imported via the following statement:
 import QtQuick 2.3
 \endqml
 
-See the \l {Qt Quick} module documentation for more
+Visit the \l {Qt Quick} module documentation for more
 information about the concepts which are central to \c QtQuick.
 
-\section2 Submodules
+\section1 Submodules
 
     Qt Quick includes several submodules which contain additional types.
 
@@ -71,7 +63,9 @@ information about the concepts which are central to \c QtQuick.
     UI components
     \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used
     to arrange items in the user interface
+    \li \l{Qt Quick Test QML Types}{Tests} - types for testing QML applications.
     \endlist
+
 \target basic-types
 \section1 Basic Types
 
@@ -79,259 +73,17 @@ There are a number of basic types that are
 \l{qtqml-typesystem-basictypes.html#basic-types-provided-by-the-qml-language}
 {supported by default in the QML language}.
 
-In addition, the \c QtQuick module provides the following basic types:
+In addition, the \c QtQuick import provides the following basic types:
 \annotatedlist qtquickbasictypes
-\target object-types
+
 \section1 Object Types
 
-All of the object types provided by \c QtQuick are based on the \l{Item} type,
-which itself derives from \l{QtQml::QtObject}{QtObject}.  \l{Qt QML QML Types#Object Types}
-{QML object types} provided by the Qt QML module
-(such as \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also available when
-you import \c QtQuick.
-\target visual-types
-\section2 Visual Types
+All  object types provided by the \c QtQuick import are based on the \l{Item}
+type, which itself derives from \l{QtQml::QtObject}{QtObject}. \l{Qt QML QML
+Types#Object Types} {QML object types} provided by the Qt QML module (such as
+\l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also
+available when you import \c QtQuick.
 
-\list
-\li \l {Item} - Basic visual object type inherited by visual object types (visual items)
-\li \l {Rectangle} - A rectangle type
-\li \l {Image} - For incorporating bitmaps into a scene
-\li \l {BorderImage} - Allows the use of images as borders
-\li \l {AnimatedImage} - For playing animations stored as an animated GIF
-\li \l {AnimatedSprite} - For playing animations stored as a series of frames
-\li \l {SpriteSequence} - For playing and transitioning between multiple animations stored as a series of frames
-\li \l {Text} - For inserting formatted text into a scene
-\li \l {Window} - Provides a top-level window
-\endlist
-
-Visual Item Utility
-\list
-\li \l {Accessible} - Attached property to make components accessible
-\li \l {Gradient} - For defining a color gradient
-\li \l {GradientStop} - Used to define a color within a \l {Gradient}
-\li \l {SystemPalette} - Provides access to the Qt palettes
-\li \l {Screen} - Provides information about the screen on which an \l {Item} is displayed
-\li \l {Sprite} - Specifies sprite animations for other Items to display
-\li \l {FontLoader} - Loads fonts by name or URL
-\endlist
-
-Visual Item Generation
-
-\list
-\li \l {Repeater} - Uses a model to create multiple Item instances
-\li \l {Loader} - Eases on-demand loading of Items
-\endlist
-
-Visual Item Transformations
-\list
-\li \l {Transform} - Allows specification of advanced transformations on Items
-\li \l {Scale} - Assigns item scaling behaviors
-\li \l {Rotation} - Assigns item rotation behaviors
-\li \l {Translate} - Assigns item translation behaviors
-\endlist
-
-\target user-input
-\section2 User Input
-
-\list
-\li \l {MouseArea} - Sets up an area for mouse interaction
-\li \l {Keys} - Provides components with attached properties to handle key input.
-\li \l {KeyNavigation} - Supports key navigation by arrow keys
-\li \l {FocusScope} - Mediates keyboard focus changes
-\li \l {Flickable} - Provides a surface that can be "flicked"
-\li \l {PinchArea} - Enables simple pinch gesture handling
-\li \l {MultiPointTouchArea} - Enables handling of multiple touch points
-\li \l {Drag} - For specifying drag and drop events for visual items
-\li \l {DropArea} - For specifying drag and drop event handling in an area
-\li \l {TextInput} - Captures user key input
-\li \l {TextEdit} - Displays multiple lines of editable formatted text
-\endlist
-
-Text Input Utility
-
-\list
-\li \l {IntValidator} - Validates values as integers
-\li \l {DoubleValidator} - Validates real values
-\li \l {RegExpValidator} - Validator for string regular expressions
-\endlist
-
-User Input Events
-\list
-\li \l {TouchPoint} - Describes a touch point in a MultiPointTouchArea
-\li \l {PinchEvent} - Specifies information about a pinch event
-\li \l {WheelEvent} - Provides information about a mouse wheel event
-\li \l {MouseEvent} - Provides information about a mouse click event
-\li \l {KeyEvent} - Provides information about a key press event
-\li \l {DragEvent} -Provides information about a drag event
-\endlist
-\target positioning
-\section2 Positioning
-
-\list
-\li \l {Positioner} - Attached property which provides information about where an Item has been positioned
-\li \l {Column} - Arranges its children vertically
-\li \l {Row} - Arranges its children horizontally
-\li \l {Grid} - Positions its children in a grid
-\li \l {Flow} - Positions its children with wrapping support
-\li \l {LayoutMirroring} - Attached property used to mirror layout behavior
-\endlist
-\target states-transitions-and-animations
-\section2 States, Transitions and Animations
-
-States
-\list
-\li \l {State} - Defines sets of configurations of objects and properties
-\li \l {PropertyChanges} - Describes property changes within a state
-\li \l {StateGroup} - Contains a set of states and state transitions
-\li \l {StateChangeScript} - Allows script binding in a state
-\li \l {ParentChange} - Re-parent an Item in a state change
-\li \l {AnchorChanges} - Change the anchors of an item in a state
-\endlist
-
-Transitions and Animations
-\list
-\li \l {Transition} - Animates transitions during state changes
-\li \l {ViewTransition} - Specifies items under transition in a view
-\li \l {SequentialAnimation} - Runs animations sequentially
-\li \l {ParallelAnimation} - Runs animations in parallel
-\li \l {Behavior} - Specifies a default animation for property changes
-\li \l {PropertyAction} - Sets immediate property changes during animation
-\li \l {PauseAnimation} - Introduces a pause in an animation
-\li \l {SmoothedAnimation} - Allows a property to smoothly track a value
-\li \l {SpringAnimation} - Allows a property to track a value in a spring-like motion
-\li \l {ScriptAction} - Runs scripts during an animation
-\endlist
-
-Type-specific Animations
-\list
-\li \l {PropertyAnimation} - Animates property changes
-\li \l {NumberAnimation} - Animates properties of type qreal
-\li \l {Vector3dAnimation} - Animates properties of type QVector3d
-\li \l {ColorAnimation} - Animates color changes
-\li \l {RotationAnimation} - Animates rotations
-\li \l {ParentAnimation} - Animates parent changes
-\li \l {AnchorAnimation} - Animates anchor changes
-\li \l {PathAnimation} - Animates position along a path
-\li \l {XAnimator} - Animates x position asynchronously
-\li \l {YAnimator} - Animates y position asynchronously
-\li \l {ScaleAnimator} - Animates scale asynchronously
-\li \l {RotationAnimator} - Animates rotation asynchronously
-\li \l {OpacityAnimator} - Animates opacity asynchronously
-\li \l {UniformAnimator} - Animates a \l ShaderEffect uniform asynchronously
-\endlist
-
-Lower-level Animation Types
-\list
-\li \l {PathInterpolator} - Allows manual animation along a path
-\li \l {AnimationController} - Allows manual control of animation progress
-\endlist
-
-Animation paths
-\list
-\li \l {Path} - Defines a path used by \l {PathView}
-\li \l {PathLine} - Defines a line in \l {Path}
-\li \l {PathQuad} - Defines a quadratic Bezier curve in a \l {Path}
-\li \l {PathCubic} - Defines a cubic Bezier curve in a \l {Path}
-\li \l {PathArc} - Defines an arc in a \l {Path}
-\li \l {PathCurve} - Defines a point on a Catmull-Rom curve in a \l {Path}
-\li \l {PathSvg} - Defines a sub-path specified as a SVG path data string in a \l {Path}
-\li \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
-\li \l {PathPercent} - Modifies the item distribution along a \l {Path}
-\endlist
-\target model-view-types-and-data-storage-and-access
-\section2 Model/View Types And Data Storage And Access
-
-QML Lists and Models
-
-The \l{Qt QML Models QML Types}{Qt QML Models} submodule provides the types for
-structuring data with models and lists.
-\list
-\li \l{ListModel} - Defines a list of data
-\li \l{ListElement} - Defines a data item in a \l{ListModel}
-\endlist
-
-These QML types are part of Qt Quick for backwards compatibility, but for
-newer applications, \l{Qt QML Models QML Types}{Qt QML Models} provides
-the same functionality.
-\list
-\li \l {VisualItemModel} - Contains items that already defines its own visual delegate
-\li \l {VisualDataModel} - Encapsulates a model and a delegate
-\li \l {VisualDataGroup} - Encapsulates a filtered set of visual data items
-\endlist
-
-XML Lists
-\list
-\li \l {XmlListModel} - Specifies a model using XPath expressions
-\li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
-\endlist
-
-Views
-\list
-\li \l {ListView} - Provides a list visualization of a model
-\li \l {GridView} - Provides a grid visualization of a model
-\li \l {PathView} - Visualizes a model's contents along a path. See \l Path for more information.
-\li \l {Package} - Collection that enables sharing of items within different views
-\endlist
-
-Data Storage
-\list
-\li \l {Qt Quick Local Storage QML Types}{QtQuick.LocalStorage 2} - Singleton
-type providing simplified SQL access
-\endlist
-\target graphical-effects
-\section2 Graphical Effects
-
-\list
-\li \l {Flipable} - Provides a surface that produces "flipping" effects
-\li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
-\li \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
-\li \l {GridMesh} - Generates a grid mesh of vertices for use by ShaderEffect
-\li The \l{Qt Quick Particles QML Types}{QtQuick.Particles 2} module provides a
-set of Particle System types for Qt Quick 2
-\endlist
-\target convenience-types
-\section2 Convenience Types
-
-\list
-\li \l {Connections} - Explicitly connects signals and signal handlers
-\li \l {Binding} - Binds any value to any property
-\li \l {Timer} - Provides timed triggers
-\li \l {WorkerScript} - Enables the use of threads in a Qt Quick application
-\endlist
-\target canvas-similar-to-html5-canvas
-\section2 Canvas (similar to HTML5 canvas)
-
-\list
-\li \l {Canvas} - Provides a 2D canvas type similar to the HTML5 canvas
-\li \l {Context2D} - Provides 2D context for shapes on a Canvas item
-\li \l {CanvasGradient} - Allows specification of a gradient on a Canvas
-\li \l {CanvasPixelArray} - Allows specification of a pixel array for use in a Canvas
-\li \l {CanvasImageData} - Allows specification of image data for use in a Canvas
-\li \l {TextMetrics} - Provides text and font measurement data for use in a Canvas
-\endlist
-
-\target qttest-types
-\section2 QtTest Types
-
-\list
-\li \l {QtTest::TestCase}{TestCase} - Represents a unit test case
-\li \l {QtTest::SignalSpy}{SignalSpy} - Enables introspection of signal emission
-\endlist
-
-*/
-
-/*!
-\qmlmodule QtQuick 2.3
-\title Qt Quick QML Types
-\brief This module provides graphical primitives for use in QML.
-
-The \l{Qt Quick} module provides graphical primitive types. They can be used with the following import
-\code
-import QtQuick 2.3
-\endcode
-
-For a more detailed listing of types in the \c {QtQuick} import, see the \l{Qt Quick QML Types} page.
-For more details about the module itself, see the \l{Qt Quick} module page.
 */
 
 /*!

@@ -1,6 +1,6 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -76,34 +76,15 @@ Essentials from the \l{QML Applications} page.
 
 To find out more about using the QML language, see the \l{Qt QML} module documentation.
 
-
-\section1 Qt Quick Module Documentation
+\section1 C++ Extension Points
 
 \list
-    \li \l{Qt Quick QML Types}
-        \list
-        \li \l{importing-qtquick}{Importing QtQuick}
-        \li \l{basic-types}{Basic Types}
-        \li \l{object-types}{Object Types}
-            \list
-            \li \l{visual-types}{Visual Types}
-            \li \l{user-input}{User Input}
-            \li \l{positioning}{Positioning}
-            \li \l{states-transitions-and-animations}{States, Transitions And Animations}
-            \li \l{model-view-types-and-data-storage-and-access}{Model/View Types And Data Storage And Access}
-            \li \l{graphical-effects}{Graphical Effects}
-            \li \l{convenience-types}{Convenience Types}
-            \li \l{canvas-similar-to-html5-canvas}{Canvas (similar to HTML5 Canvas)}
-            \endlist
-        \endlist
-
     \li \l{C++ Extension Points Provided By Qt Quick}{C++ Extension Points}
         \list
         \li \l{user-defined-qquickitem-derived-types}{Creating User-Defined QQuickItem-Derived Types}
         \li \l{scene-graph-related-classes}{Scene Graph-Related Classes}
         \li \l{pixmap-and-threaded-image-support}{Pixmap and Threaded Image Support}
         \endlist
-
 \endlist
 
 \section1 Reference Documentation

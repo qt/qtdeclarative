@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -36,9 +36,7 @@ for example, haptic feedback and sounds to notify the user of changes in the
 state of an application), visual objects in a user-interface are able to convey
 a huge amount of information to the user at a glance.
 
-See the \l{qtquick-qmltypereference.html}{Qt Quick QML type reference} for the
-complete list of visual object types provided by Qt Quick.
+See the \l{Qt Quick QML Types} page for the complete list of visual object types
+provided by Qt Quick.
 
 */
-
-
