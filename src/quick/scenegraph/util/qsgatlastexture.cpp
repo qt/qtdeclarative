@@ -274,6 +274,9 @@ void Atlas::uploadBgra(Texture *texture)
     const QRect &r = texture->atlasSubRect();
     QImage image = texture->image();
 
+    if (image.isNull())
+        return;
+
     if (image.format() != QImage::Format_ARGB32_Premultiplied
             && image.format() != QImage::Format_RGB32) {
         image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
