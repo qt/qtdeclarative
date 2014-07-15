@@ -96,6 +96,8 @@ void registerTypes()
     qmlRegisterCustomType<CustomBinding>("Test", 1, 0, "CustomBinding", new CustomBindingParser);
     qmlRegisterCustomType<SimpleObjectWithCustomParser>("Test", 1, 0, "SimpleObjectWithCustomParser", new SimpleObjectCustomParser);
 
+    qmlRegisterCustomExtendedType<SimpleObjectWithCustomParser, SimpleObjectExtension>("Test", 1, 0, "SimpleExtendedObjectWithCustomParser", new SimpleObjectCustomParser);
+
     qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
 }
 

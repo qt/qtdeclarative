@@ -63,6 +63,44 @@ private:
     int m_value;
 };
 
+class AbstractExtensionObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int abstractProperty READ abstractProperty WRITE setAbstractProperty NOTIFY abstractPropertyChanged)
+public:
+
+    AbstractExtensionObject(QObject *parent = 0) : QObject(parent), m_abstractProperty(-1) {}
+
+    void setAbstractProperty(int abstractProperty) { m_abstractProperty = abstractProperty; emit abstractPropertyChanged(); }
+    int abstractProperty() const { return m_abstractProperty; }
+
+    virtual void shouldBeImplemented() = 0;
+
+signals:
+    void abstractPropertyChanged();
+
+private:
+    int m_abstractProperty;
+};
+
+class ImplementedExtensionObject : public AbstractExtensionObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int implementedProperty READ implementedProperty WRITE setImplementedProperty NOTIFY implementedPropertyChanged)
+public:
+    ImplementedExtensionObject(QObject *parent = 0) : AbstractExtensionObject(parent), m_implementedProperty(883) {}
+    void shouldBeImplemented() {}
+
+    void setImplementedProperty(int implementedProperty) { m_implementedProperty = implementedProperty; emit implementedPropertyChanged(); }
+    int implementedProperty() const { return m_implementedProperty; }
+
+signals:
+    void implementedPropertyChanged();
+
+private:
+    int m_implementedProperty;
+};
+
 class ExtensionObject : public QObject
 {
     Q_OBJECT
@@ -319,6 +357,9 @@ void registerTypes()
     qmlRegisterType<MyDeleteObject>("Qt.test", 1,0, "MyDeleteObject");
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
     qmlRegisterType<MyWorkerObject>("Qt.test", 1,0, "MyWorkerObject");
+
+    qmlRegisterExtendedUncreatableType<AbstractExtensionObject, ExtensionObject>("Qt.test", 1,0, "AbstractExtensionObject", QStringLiteral("Abstracts are uncreatable"));
+    qmlRegisterType<ImplementedExtensionObject>("Qt.test", 1,0, "ImplementedExtensionObject");
 
     // test scarce resource property binding post-evaluation optimization
     // and for testing memory usage in property var circular reference test

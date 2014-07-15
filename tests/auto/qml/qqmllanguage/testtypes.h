@@ -1144,6 +1144,25 @@ private:
     int m_customBindingsCount;
 };
 
+class SimpleObjectExtension : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int extendedProperty READ extendedProperty WRITE setExtendedProperty NOTIFY extendedPropertyChanged)
+public:
+    SimpleObjectExtension(QObject *parent = 0)
+        : QObject(parent)
+        , m_extendedProperty(1584)
+    {}
+
+    void setExtendedProperty(int extendedProperty) { m_extendedProperty = extendedProperty; emit extendedPropertyChanged(); }
+    int extendedProperty() const { return m_extendedProperty; }
+
+signals:
+   void extendedPropertyChanged();
+private:
+   int m_extendedProperty;
+};
+
 class SimpleObjectCustomParser : public QQmlCustomParser
 {
     virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) {}

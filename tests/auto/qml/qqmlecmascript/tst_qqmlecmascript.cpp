@@ -122,6 +122,8 @@ private slots:
     void selfDeletingBinding();
     void extendedObjectPropertyLookup();
     void extendedObjectPropertyLookup2();
+    void uncreatableExtendedObjectFailureCheck();
+    void extendedObjectPropertyLookup3();
     void scriptErrors();
     void functionErrors();
     void propertyAssignmentErrors();
@@ -1829,6 +1831,38 @@ void tst_qqmlecmascript::extendedObjectPropertyLookup2()
 
     QVariant returnValue;
     QVERIFY(QMetaObject::invokeMethod(object, "getValue", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), 42);
+
+    delete object;
+}
+
+/*
+Test failure when trying to create and uncreatable extended type object.
+ */
+void tst_qqmlecmascript::uncreatableExtendedObjectFailureCheck()
+{
+    QQmlComponent component(&engine, testFileUrl("uncreatableExtendedObjectFailureCheck.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object == 0);
+}
+
+/*
+Test that an subclass of an uncreatable extended object contains all the required properties.
+ */
+void tst_qqmlecmascript::extendedObjectPropertyLookup3()
+{
+    QQmlComponent component(&engine, testFileUrl("extendedObjectPropertyLookup3.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(object, "getAbstractProperty", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), -1);
+    QVERIFY(QMetaObject::invokeMethod(object, "getImplementedProperty", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), 883);
+    QVERIFY(QMetaObject::invokeMethod(object, "getExtendedProperty", Q_RETURN_ARG(QVariant, returnValue)));
     QCOMPARE(returnValue.toInt(), 42);
 
     delete object;

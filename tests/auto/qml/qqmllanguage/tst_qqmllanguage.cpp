@@ -232,6 +232,7 @@ private slots:
     void customParserBindingScopes();
     void customParserEvaluateEnum();
     void customParserProperties();
+    void customParserWithExtendedObject();
 
     void preservePropertyCacheOnGroupObjects();
     void propertyCacheInSync();
@@ -3721,6 +3722,24 @@ void tst_qqmllanguage::customParserProperties()
     QCOMPARE(testObject->intProperty(), 42);
     QCOMPARE(testObject->property("qmlString").toString(), QStringLiteral("Hello"));
     QVERIFY(!testObject->property("someObject").isNull());
+}
+
+void tst_qqmllanguage::customParserWithExtendedObject()
+{
+    QQmlComponent component(&engine, testFile("customExtendedParserProperties.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    SimpleObjectWithCustomParser *testObject = qobject_cast<SimpleObjectWithCustomParser*>(o.data());
+    QVERIFY(testObject);
+    QCOMPARE(testObject->customBindingsCount(), 0);
+    QCOMPARE(testObject->intProperty(), 42);
+    QCOMPARE(testObject->property("qmlString").toString(), QStringLiteral("Hello"));
+    QVERIFY(!testObject->property("someObject").isNull());
+
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(o.data(), "getExtendedProperty", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), 1584);
 }
 
 void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()

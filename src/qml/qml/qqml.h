@@ -198,6 +198,44 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+template<typename T, typename E>
+int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+{
+    QML_GETTYPENAMES
+
+    QQmlAttachedPropertiesFunc attached = QQmlPrivate::attachedPropertiesFunc<E>();
+    const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>();
+    if (!attached) {
+        attached = QQmlPrivate::attachedPropertiesFunc<T>();
+        attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<T>();
+    }
+
+    QQmlPrivate::RegisterType type = {
+        0,
+
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+        0, 0,
+        reason,
+
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+
+        attached,
+        attachedMetaObject,
+
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
+
+        QQmlPrivate::createParent<E>, &E::staticMetaObject,
+
+        0,
+        0
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
 template<typename T>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
@@ -406,6 +444,45 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
         0, 0,
+
+        parser,
+        0
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
+template<typename T, typename E>
+int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor,
+                          const char *qmlName, QQmlCustomParser *parser)
+{
+    QML_GETTYPENAMES
+
+    QQmlAttachedPropertiesFunc attached = QQmlPrivate::attachedPropertiesFunc<E>();
+    const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>();
+    if (!attached) {
+        attached = QQmlPrivate::attachedPropertiesFunc<T>();
+        attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<T>();
+    }
+
+    QQmlPrivate::RegisterType type = {
+        0,
+
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+        sizeof(T), QQmlPrivate::createInto<T>,
+        QString(),
+
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+
+        attached,
+        attachedMetaObject,
+
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
+
+        QQmlPrivate::createParent<E>, &E::staticMetaObject,
 
         parser,
         0

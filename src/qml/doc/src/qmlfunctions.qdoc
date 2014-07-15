@@ -157,6 +157,44 @@
 */
 
 /*!
+  \fn int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
+  \relates QQmlEgine
+
+  This template function registers the C++ type and its extension
+  in the QML system with the name \a qmlName in the library imported
+  from \a uri having version number composed from \a versionMajor and
+  \a versionMinor.
+
+  While the type has a name and a type, it cannot be created, and the
+  given error \a message will result if creation is attempted.
+
+  This is useful where the type is only intended for providing attached
+  properties, enum values or an abstract base class with its extension.
+
+  Returns the QML type id.
+
+  #include <QtQml> to use this function.
+
+  \sa qmlRegisterUncreatableType()
+*/
+
+/*!
+  \fn int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, QQmlCustomParser *parser)
+  \relates QQmlEgine
+
+  This template function registers the C++ type and its extension
+  in the QML system with the name \a qmlName in the library imported
+  from \a uri having version number composed from \a versionMajor and
+  \a versionMinor. Properties from the C++ type or its extension that
+  cannot be resolved directly by the QML system will be resolved using
+  the \a parser provided.
+
+  Returns the QML type id.
+
+  #include <QtQml> to use this function.
+*/
+
+/*!
   \fn int qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
   \relates QQmlEngine
 
