@@ -165,6 +165,43 @@ Item {
                 }
             }
         }
+
+        // unshift
+        msco.stringListProperty = [ "one", "two" ]
+        var unshiftedVal = msco.stringListProperty.unshift("zero")
+        expected = [ "zero", "one", "two" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        expected = 3
+        if (msco.stringListProperty.length != expected) success = false
+        msco.stringListProperty = [ ]
+        msco.stringListProperty.unshift("zero", "one")
+        expected = [ "zero", "one" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        expected = 2
+        if (msco.stringListProperty.length != expected) success = false
+
+        // shift
+        msco.stringListProperty = [ "one", "two", "three" ]
+        var shiftVal = msco.stringListProperty.shift()
+        expected = [ "two", "three" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        expected = "one"
+        if (shiftVal != expected) success = false
+        shiftVal = msco.stringListProperty.shift()
+        expected = [ "three" ]
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        expected = "two"
+        if (shiftVal != expected) success = false
+        shiftVal = msco.stringListProperty.shift()
+        expected = 0
+        if (msco.stringListProperty.length != expected) success = false;
+        expected = "three"
+        if (shiftVal != expected) success = false
+        shiftVal = msco.stringListProperty.shift()
+        expected = 0
+        if (msco.stringListProperty.length != expected) success = false;
+        expected = undefined
+        if (shiftVal != expected) success = false
     }
 
     property variant variantList: [ 1, 2, 3, 4, 5 ];
