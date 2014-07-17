@@ -46,7 +46,6 @@
 #include <QtQml/private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
-#include <QtWidgets/QLineEdit>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/private/qobject_p.h>
