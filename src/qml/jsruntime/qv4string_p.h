@@ -53,7 +53,7 @@ struct Identifier;
 
 struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
-    struct Data : Managed::Data {
+    struct Q_QML_PRIVATE_EXPORT Data : Managed::Data {
         Data(ExecutionEngine *engine, const QString &text);
         Data(ExecutionEngine *engine, String *l, String *n);
         ~Data() {

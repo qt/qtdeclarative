@@ -190,7 +190,7 @@ struct FunctionPrototype: FunctionObject
 };
 
 struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
-    struct Data : FunctionObject::Data {
+    struct Q_QML_EXPORT Data : FunctionObject::Data {
         Data(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
         ReturnedValue (*code)(CallContext *);
     };
