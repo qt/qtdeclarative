@@ -57,10 +57,6 @@ struct StringObject: Object {
         // ### get rid of tmpProperty
         mutable Property tmpProperty;
     };
-    struct {
-        Value value;
-        mutable Property tmpProperty;
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(StringObject)
 

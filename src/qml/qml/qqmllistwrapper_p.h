@@ -77,13 +77,6 @@ struct Q_QML_EXPORT QmlListWrapper : Object
         QQmlListProperty<QObject> property;
         int propertyType;
     };
-    struct {
-        QV8Engine *v8;
-        QPointer<QObject> object;
-        QQmlListProperty<QObject> property;
-        int propertyType;
-    } __data;
-
     V4_OBJECT(Object)
 
     static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);

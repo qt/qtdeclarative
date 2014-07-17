@@ -79,17 +79,6 @@ struct RegExp : public Managed
         bool ignoreCase;
         bool multiLine;
     };
-    struct {
-        QString pattern;
-        OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
-#if ENABLE(YARR_JIT)
-        JSC::Yarr::YarrCodeBlock jitCode;
-#endif
-        RegExpCache *cache;
-        int subPatternCount;
-        bool ignoreCase;
-        bool multiLine;
-    } __data;
     V4_MANAGED(Managed)
     Q_MANAGED_TYPE(RegExp)
 

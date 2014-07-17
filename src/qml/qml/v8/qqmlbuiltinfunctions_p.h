@@ -70,11 +70,6 @@ struct QtObject : Object
         QObject *platform;
         QObject *application;
     };
-    struct {
-        QObject *platform;
-        QObject *application;
-    } __data;
-
     V4_OBJECT(Object)
 
 
@@ -162,11 +157,6 @@ struct QQmlBindingFunction : public QV4::FunctionObject
         // Set when the binding is created later
         QQmlSourceLocation bindingLocation;
     };
-    struct {
-        QV4::FunctionObject *originalFunction;
-        QQmlSourceLocation bindingLocation;
-    } __data;
-
     V4_OBJECT(QV4::FunctionObject)
 
     void initBindingLocation(); // from caller stack trace

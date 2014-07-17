@@ -204,11 +204,6 @@ public:
         QList<NodeImpl *> list; // Only used in NamedNodeMap
         NodeImpl *d;
     };
-    struct {
-        QList<NodeImpl *> list; // Only used in NamedNodeMap
-        NodeImpl *d;
-    } __data;
-
     V4_OBJECT(Object)
 
     // C++ API
@@ -243,10 +238,6 @@ public:
         }
         NodeImpl *d;
     };
-    struct {
-        NodeImpl *d;
-    } __data;
-
     V4_OBJECT(Object)
 
     // JS API
@@ -336,9 +327,6 @@ struct Node : public Object
         }
         NodeImpl *d;
     };
-    struct {
-        NodeImpl *d;
-    } __data;
     V4_OBJECT(Object)
 
 
@@ -1625,10 +1613,6 @@ struct QQmlXMLHttpRequestWrapper : public Object
         }
         QQmlXMLHttpRequest *request;
     };
-    struct {
-        QQmlXMLHttpRequest *request;
-    } __data;
-
     V4_OBJECT(Object)
 
     static void destroy(Managed *that) {
@@ -1660,10 +1644,6 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         }
         Object *proto;
     };
-    struct {
-        Object *proto;
-    } __data;
-
     V4_OBJECT(FunctionObject)
     static void markObjects(Managed *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();

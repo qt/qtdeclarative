@@ -460,15 +460,15 @@ void ExecutionEngine::enableProfiler()
 
 void ExecutionEngine::initRootContext()
 {
-    GlobalContext::Data *r = reinterpret_cast<GlobalContext::Data *>(memoryManager->allocManaged(sizeof(GlobalContext) + sizeof(CallData)));
-    new (r) GlobalContext::Data(this);
-    r->callData = reinterpret_cast<CallData *>(r + 1);
-    r->callData->tag = QV4::Value::_Integer_Type;
-    r->callData->argc = 0;
-    r->callData->thisObject = globalObject;
-    r->callData->args[0] = Encode::undefined();
+    GlobalContext *r = static_cast<GlobalContext*>(memoryManager->allocManaged(sizeof(GlobalContext::Data) + sizeof(CallData)));
+    new (r->d()) GlobalContext::Data(this);
+    r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
+    r->d()->callData->tag = QV4::Value::_Integer_Type;
+    r->d()->callData->argc = 0;
+    r->d()->callData->thisObject = globalObject;
+    r->d()->callData->args[0] = Encode::undefined();
 
-    rootContext = reinterpret_cast<GlobalContext *>(r);
+    rootContext = r;
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)

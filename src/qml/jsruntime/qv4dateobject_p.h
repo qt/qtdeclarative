@@ -67,9 +67,6 @@ struct DateObject: Object {
         }
         Value value;
     };
-    struct {
-        Value value;
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(DateObject)
 

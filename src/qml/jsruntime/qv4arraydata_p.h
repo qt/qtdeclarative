@@ -100,12 +100,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
         PropertyAttributes *attrs;
         Value *arrayData;
     };
-    struct {
-        uint alloc;
-        Type type;
-        PropertyAttributes *attrs;
-        Value *arrayData;
-    } __data;
     V4_MANAGED(Managed)
 
     uint alloc() const { return d()->alloc; }
@@ -167,10 +161,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
         uint len;
         uint offset;
     };
-    struct {
-        uint len;
-        uint offset;
-    } __data;
     V4_ARRAYDATA
 
     uint &len() { return d()->len; }
@@ -205,10 +195,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         uint freeList;
         SparseArray *sparse;
     };
-    struct {
-        uint freeList;
-        SparseArray *sparse;
-    } __data;
     V4_ARRAYDATA
 
     uint &freeList() { return d()->freeList; }

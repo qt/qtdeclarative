@@ -105,11 +105,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
         ExecutionContext *scope;
         Function *function;
     };
-    struct {
-        ExecutionContext *scope;
-        Function *function;
-
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(FunctionObject)
     enum {
@@ -199,9 +194,6 @@ struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
         Data(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *));
         ReturnedValue (*code)(CallContext *);
     };
-    struct {
-        ReturnedValue (*code)(CallContext *);
-    } __data;
     V4_OBJECT(FunctionObject)
 
     static BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
@@ -226,10 +218,6 @@ struct IndexedBuiltinFunction: FunctionObject
         ReturnedValue (*code)(CallContext *, uint index);
         uint index;
     };
-    struct {
-        ReturnedValue (*code)(CallContext *, uint index);
-        uint index;
-    } __data;
     V4_OBJECT(FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *)
@@ -271,11 +259,6 @@ struct BoundFunction: FunctionObject {
         Value boundThis;
         Members boundArgs;
     };
-    struct {
-        FunctionObject *target;
-        Value boundThis;
-        Members boundArgs;
-    } __data;
     V4_OBJECT(FunctionObject)
 
     static BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)

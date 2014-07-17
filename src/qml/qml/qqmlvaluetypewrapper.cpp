@@ -67,11 +67,6 @@ struct QmlValueTypeReference : public QmlValueTypeWrapper
         QPointer<QObject> object;
         int property;
     };
-    struct
-    {
-        QPointer<QObject> object;
-        int property;
-    } __data;
     V4_OBJECT(QmlValueTypeWrapper)
 };
 
@@ -84,10 +79,6 @@ struct QmlValueTypeCopy : public QmlValueTypeWrapper
         Data(QV8Engine *engine);
         QVariant value;
     };
-    struct
-    {
-        QVariant value;
-    } __data;
     V4_OBJECT(QmlValueTypeWrapper)
 };
 

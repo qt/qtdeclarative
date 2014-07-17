@@ -72,11 +72,6 @@ struct ErrorObject: Object {
         StackTrace stackTrace;
         String *stack;
     };
-    struct {
-        StackTrace stackTrace;
-        String *stack;
-    } __data;
-
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(ErrorObject)
 

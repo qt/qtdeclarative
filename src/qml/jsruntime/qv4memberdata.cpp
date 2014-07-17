@@ -58,10 +58,10 @@ void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
     uint s = size();
     if (idx >= s) {
         int newAlloc = qMax((uint)4, 2*idx);
-        uint alloc = sizeof(MemberData) + (newAlloc)*sizeof(Value);
-        MemberData *newMemberData = reinterpret_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
+        uint alloc = sizeof(MemberData::Data) + (newAlloc)*sizeof(Value);
+        MemberData *newMemberData = static_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
         if (d())
-            memcpy(newMemberData, d(), sizeof(MemberData) + s*sizeof(Value));
+            memcpy(newMemberData, d(), sizeof(MemberData::Data) + s*sizeof(Value));
         else
             new (newMemberData) MemberData(e->memberDataClass);
         newMemberData->d()->size = newAlloc;

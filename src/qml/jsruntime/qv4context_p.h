@@ -117,22 +117,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         int lineNumber;
 
     };
-    struct {
-        ContextType type;
-        bool strictMode;
-
-        CallData *callData;
-
-        ExecutionEngine *engine;
-        ExecutionContext *parent;
-        ExecutionContext *outer;
-        Lookup *lookups;
-        CompiledData::CompilationUnit *compilationUnit;
-        EvalCode *currentEvalCode;
-
-        int lineNumber;
-    } __data;
-
     V4_MANAGED(Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
@@ -202,12 +186,6 @@ struct CallContext : public ExecutionContext
         Value *locals;
         Object *activation;
     };
-    struct {
-        FunctionObject *function;
-        int realArgumentCount;
-        Value *locals;
-        Object *activation;
-    } __data;
     V4_MANAGED(ExecutionContext)
 
     // formals are in reverse order
@@ -230,9 +208,6 @@ struct GlobalContext : public ExecutionContext
         Data(ExecutionEngine *engine);
         Object *global;
     };
-    struct {
-        Object *global;
-    } __data;
     V4_MANAGED(ExecutionContext)
 
 };
@@ -244,10 +219,6 @@ struct CatchContext : public ExecutionContext
         StringValue exceptionVarName;
         Value exceptionValue;
     };
-    struct {
-        StringValue exceptionVarName;
-        Value exceptionValue;
-    } __data;
     V4_MANAGED(ExecutionContext)
 };
 
@@ -257,9 +228,6 @@ struct WithContext : public ExecutionContext
         Data(ExecutionEngine *engine, Object *with);
         Object *withObject;
     };
-    struct {
-        Object *withObject;
-    } __data;
     V4_MANAGED(ExecutionContext)
 };
 
@@ -315,7 +283,7 @@ inline Scope::Scope(ExecutionContext *ctx)
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
+    ((sizeof(CallContext::Data) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
 
 } // namespace QV4
 

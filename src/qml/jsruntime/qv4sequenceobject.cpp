@@ -195,13 +195,6 @@ struct QQmlSequence : public QV4::Object
         int propertyIndex;
         bool isReference;
     };
-    struct {
-        mutable Container container;
-        QPointer<QObject> object;
-        int propertyIndex;
-        bool isReference;
-    } __data;
-
     V4_OBJECT(QV4::Object)
     Q_MANAGED_TYPE(QmlSequence)
 public:

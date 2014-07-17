@@ -113,10 +113,6 @@ struct Q_QML_EXPORT Object: Managed {
         Members memberData;
         ArrayData *arrayData;
     };
-    struct {
-        Members memberData;
-        ArrayData *arrayData;
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(Object)
 
@@ -333,9 +329,6 @@ struct BooleanObject: Object {
         }
         Value value;
     };
-    struct {
-        Value value;
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(BooleanObject)
 
@@ -356,9 +349,6 @@ struct NumberObject: Object {
         }
         Value value;
     };
-    struct {
-        Value value;
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(NumberObject)
 

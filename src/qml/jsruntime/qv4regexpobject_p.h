@@ -72,11 +72,6 @@ struct RegExpObject: Object {
         RegExp *value;
         bool global;
     };
-    struct {
-        RegExp *value;
-        bool global;
-    } __data;
-
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(RegExpObject)
 
@@ -117,13 +112,6 @@ struct RegExpCtor: FunctionObject
         int lastMatchEnd;
         void clearLastMatch();
     };
-    struct {
-        Value lastMatch;
-        StringValue lastInput;
-        int lastMatchStart;
-        int lastMatchEnd;
-    } __data;
-
     V4_OBJECT(FunctionObject)
 
     Value lastMatch() { return d()->lastMatch; }

@@ -84,16 +84,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
         QPointer<QObject> scopeObject;
         QQmlIdObjectsArray *idObjectsWrapper;
     };
-    struct {
-        bool readOnly;
-        bool ownsContext;
-        bool isNullWrapper;
-
-        QQmlGuardedContextData context;
-        QPointer<QObject> scopeObject;
-        QQmlIdObjectsArray *idObjectsWrapper;
-    } __data;
-
     V4_OBJECT(Object)
 
     static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
@@ -126,10 +116,6 @@ struct QQmlIdObjectsArray : public Object
         Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
         QmlContextWrapper *contextWrapper;
     };
-    struct {
-        QmlContextWrapper *contextWrapper;
-    } __data;
-
     V4_OBJECT(Object)
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);

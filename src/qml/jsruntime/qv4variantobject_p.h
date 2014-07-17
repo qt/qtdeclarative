@@ -77,11 +77,6 @@ struct VariantObject : Object
         bool isScarce() const;
         int vmePropertyReferenceCount;
     };
-    struct __Data : public ExecutionEngine::ScarceResourceData
-    {
-        int vmePropertyReferenceCount;
-    } __data;
-
     V4_OBJECT(Object)
 
     static QVariant toVariant(const ValueRef v);

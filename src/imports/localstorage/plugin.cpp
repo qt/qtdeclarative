@@ -122,19 +122,6 @@ public:
         QSqlQuery sqlQuery; // type == Rows
         bool forwardOnly; // type == Rows
     };
-    struct {
-        Type type;
-        QSqlDatabase database;
-
-        QString version; // type == Database
-
-        bool inTransaction; // type == Query
-        bool readonly;   // type == Query
-
-        QSqlQuery sqlQuery; // type == Rows
-        bool forwardOnly; // type == Rows
-    } __data;
-
     V4_OBJECT(Object)
 
     static QQmlSqlDatabaseWrapper *create(QV8Engine *engine)

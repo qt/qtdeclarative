@@ -81,19 +81,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     private:
         QChar *recursiveAppend(QChar *ch) const;
     };
-    struct {
-        union {
-            mutable QStringData *text;
-            mutable String *left;
-        };
-        union {
-            mutable Identifier *identifier;
-            mutable String *right;
-        };
-        mutable uint stringHash;
-        mutable uint largestSubLength;
-        uint len;
-    } __data;
     // ### FIXME: Should this be a V4_OBJECT
     V4_OBJECT(QV4::Managed)
     Q_MANAGED_TYPE(String)

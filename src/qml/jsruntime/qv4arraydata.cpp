@@ -131,23 +131,23 @@ void ArrayData::realloc(Object *o, Type newType, uint offset, uint alloc, bool e
         size += alloc*sizeof(PropertyAttributes);
 
     if (newType < Sparse) {
-        size += sizeof(SimpleArrayData);
+        size += sizeof(SimpleArrayData::Data);
         SimpleArrayData *newData = static_cast<SimpleArrayData *>(o->engine()->memoryManager->allocManaged(size));
         new (newData->d()) SimpleArrayData::Data(o->engine());
         newData->setAlloc(alloc - offset);
         newData->setType(newType);
-        newData->setArrayData(reinterpret_cast<Value *>(newData + 1) + offset);
+        newData->setArrayData(reinterpret_cast<Value *>(newData->d() + 1) + offset);
         newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->arrayData() + alloc) + offset : 0);
         newData->offset() = offset;
         newData->len() = d ? static_cast<SimpleArrayData *>(d)->len() : 0;
         o->setArrayData(newData);
     } else {
-        size += sizeof(SparseArrayData);
+        size += sizeof(SparseArrayData::Data);
         SparseArrayData *newData = static_cast<SparseArrayData *>(o->engine()->memoryManager->allocManaged(size));
         new (newData->d()) SparseArrayData::Data(o->engine());
         newData->setAlloc(alloc);
         newData->setType(newType);
-        newData->setArrayData(reinterpret_cast<Value *>(newData + 1));
+        newData->setArrayData(reinterpret_cast<Value *>(newData->d() + 1));
         newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->arrayData() + alloc) : 0);
         o->setArrayData(newData);
     }

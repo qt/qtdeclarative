@@ -63,7 +63,7 @@ template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
 #ifdef Q_COMPILER_STATIC_ASSERT
-#define V4_MANAGED_SIZE_TEST void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); }
+#define V4_MANAGED_SIZE_TEST void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Managed)); }
 #else
 #define V4_MANAGED_SIZE_TEST
 #endif

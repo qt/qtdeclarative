@@ -63,11 +63,6 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
         Object *qml;
         CallContext *qmlContext;
     };
-    struct {
-        Object *qml;
-        CallContext *qmlContext;
-    } __data;
-
     V4_OBJECT(FunctionObject)
 
     static ReturnedValue call(Managed *that, CallData *);

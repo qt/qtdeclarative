@@ -75,12 +75,6 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
         ObjectType objectType;
         mutable QQmlValueType *type;
     };
-    struct {
-        QV8Engine *v8;
-        ObjectType objectType;
-        mutable QQmlValueType *type;
-    } __data;
-
     V4_OBJECT(Object)
 
 public:

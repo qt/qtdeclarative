@@ -1085,15 +1085,6 @@ struct QmlIncubatorObject : public QV4::Object
         QV4::Value qmlGlobal;
         QV4::Value statusChanged;
     };
-    struct {
-        QScopedPointer<QQmlComponentIncubator> incubator;
-        QV8Engine *v8;
-        QPointer<QObject> parent;
-        QV4::Value valuemap;
-        QV4::Value qmlGlobal;
-        QV4::Value statusChanged;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_statusChanged(QV4::CallContext *ctx);

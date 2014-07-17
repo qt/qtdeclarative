@@ -81,10 +81,6 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
         Data(ExecutionEngine *engine, QObject *object);
         QPointer<QObject> object;
     };
-    struct {
-        QPointer<QObject> object;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
@@ -135,12 +131,6 @@ struct QObjectMethod : public QV4::FunctionObject
         int index;
         QV4::PersistentValue qmlGlobal;
     };
-    struct {
-        QPointer<QObject> object;
-        int index;
-        QV4::PersistentValue qmlGlobal;
-    } __data;
-
     V4_OBJECT(QV4::FunctionObject)
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
@@ -170,11 +160,6 @@ struct QmlSignalHandler : public QV4::Object
         QPointer<QObject> object;
         int signalIndex;
     };
-    struct {
-        QPointer<QObject> object;
-        int signalIndex;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
 

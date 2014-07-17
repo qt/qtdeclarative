@@ -171,10 +171,6 @@ struct QQmlDelegateModelItemObject : QV4::Object
         ~Data();
         QQmlDelegateModelItem *item;
     };
-    struct {
-        QQmlDelegateModelItem *item;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
     static void destroy(Managed *that);

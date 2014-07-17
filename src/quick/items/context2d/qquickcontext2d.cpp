@@ -487,9 +487,6 @@ struct QQuickJSContext2D : public QV4::Object
          }
         QQuickContext2D* context;
     };
-    struct {
-        QQuickContext2D* context;
-    } __data;
     V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_globalAlpha(QV4::CallContext *ctx);
@@ -657,12 +654,6 @@ struct QQuickContext2DStyle : public QV4::Object
         bool patternRepeatX:1;
         bool patternRepeatY:1;
     };
-    struct {
-        QBrush brush;
-        bool patternRepeatX:1;
-        bool patternRepeatY:1;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue gradient_proto_addColorStop(QV4::CallContext *ctx);
@@ -883,10 +874,6 @@ struct QQuickJSContext2DPixelData : public QV4::Object
         }
         QImage image;
     };
-    struct {
-        QImage image;
-    } __data;
-
     V4_OBJECT(QV4::Object)
 
     static void destroy(QV4::Managed *that) {
@@ -918,9 +905,6 @@ struct QQuickJSContext2DImageData : public QV4::Object
         }
         QV4::Value pixelData;
     };
-    struct {
-        QV4::Value pixelData;
-    } __data;
     V4_OBJECT(QV4::Object)
 
     static QV4::ReturnedValue method_get_width(QV4::CallContext *ctx);

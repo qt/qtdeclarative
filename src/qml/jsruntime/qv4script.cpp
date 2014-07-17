@@ -180,10 +180,6 @@ struct CompilationUnitHolder : public Object
         }
         QV4::CompiledData::CompilationUnit *unit;
     };
-    struct {
-        QV4::CompiledData::CompilationUnit *unit;
-    } __data;
-
     V4_OBJECT(Object)
 
 

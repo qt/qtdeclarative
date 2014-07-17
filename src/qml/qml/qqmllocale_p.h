@@ -139,10 +139,6 @@ struct QQmlLocaleData : public QV4::Object
         }
         QLocale locale;
     };
-    struct {
-        QLocale locale;
-    } __data;
-
     V4_OBJECT(Object)
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {

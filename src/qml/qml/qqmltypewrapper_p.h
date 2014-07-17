@@ -81,16 +81,6 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
         QQmlTypeNameCache *typeNamespace;
         const void *importNamespace;
     };
-    struct {
-        QV8Engine *v8;
-        TypeNameMode mode;
-        QPointer<QObject> object;
-
-        QQmlType *type;
-        QQmlTypeNameCache *typeNamespace;
-        const void *importNamespace;
-    } __data;
-
     V4_OBJECT(Object)
 private:
 

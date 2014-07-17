@@ -92,12 +92,6 @@ struct ForEachIteratorObject: Object {
         ObjectIterator it;
         Value workArea[2];
     };
-    struct _Data {
-        _Data(Object *o, uint flags)
-            : it(workArea, workArea + 1, o, flags) {}
-        ObjectIterator it;
-        Value workArea[2];
-    } __data;
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(ForeachIteratorObject)
 

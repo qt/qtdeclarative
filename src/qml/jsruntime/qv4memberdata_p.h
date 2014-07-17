@@ -57,14 +57,6 @@ struct MemberData : Managed
         };
         Value data[1];
     };
-    struct {
-        union {
-            uint size;
-            double _dummy;
-        };
-        Value data[1];
-    } __data;
-
     V4_MANAGED(Managed)
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
