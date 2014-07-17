@@ -41,7 +41,7 @@
 
 
 #include <QtTest/QtTest>
-#include "QtTest/qtestaccessible.h"
+#include <QtTest/qtestaccessible.h>
 
 #include <QtGui/qaccessible.h>
 #include <QtGui/private/qguiapplication_p.h>
