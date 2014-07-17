@@ -111,6 +111,11 @@ public:
     {
     }
 
+    ~QQuickTextEditPrivate()
+    {
+        qDeleteAll(textNodeMap);
+    }
+
     static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
         return static_cast<QQuickTextEditPrivate *>(QObjectPrivate::get(item)); }
 
