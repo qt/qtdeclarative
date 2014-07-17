@@ -62,6 +62,12 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
+#ifdef Q_COMPILER_STATIC_ASSERT
+#define V4_MANAGED_SIZE_TEST void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); }
+#else
+#define V4_MANAGED_SIZE_TEST
+#endif
+
 #define V4_MANAGED(superClass) \
     public: \
         Q_MANAGED_CHECK \
@@ -70,7 +76,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
-        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        V4_MANAGED_SIZE_TEST \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
 
@@ -82,7 +88,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
-        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        V4_MANAGED_SIZE_TEST \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
 

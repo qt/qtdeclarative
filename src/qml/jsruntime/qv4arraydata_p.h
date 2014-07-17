@@ -57,7 +57,7 @@ namespace QV4 {
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
-        void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Data)); } \
+        V4_MANAGED_SIZE_TEST \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
 
