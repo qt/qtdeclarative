@@ -187,7 +187,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 
 struct Q_QML_PRIVATE_EXPORT Managed
 {
-    struct Data : HeapObject {
+    struct Q_QML_PRIVATE_EXPORT Data : HeapObject {
         Data() {}
         Data(InternalClass *internal)
             : internalClass(internal)

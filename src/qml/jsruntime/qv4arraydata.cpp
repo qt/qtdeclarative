@@ -45,6 +45,22 @@
 
 using namespace QV4;
 
+const QV4::ManagedVTable QV4::ArrayData::static_vtbl = {
+    0,
+    QV4::ArrayData::IsExecutionContext,
+    QV4::ArrayData::IsString,
+    QV4::ArrayData::IsObject,
+    QV4::ArrayData::IsFunctionObject,
+    QV4::ArrayData::IsErrorObject,
+    QV4::ArrayData::IsArrayData,
+    0,
+    QV4::ArrayData::MyType,
+    "ArrayData",
+    Q_VTABLE_FUNCTION(QV4::ArrayData, destroy),
+    0,
+    isEqualTo
+};
+
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
     DEFINE_MANAGED_VTABLE_INT(SimpleArrayData, 0),

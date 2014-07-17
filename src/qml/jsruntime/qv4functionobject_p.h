@@ -95,7 +95,7 @@ struct InternalClass;
 struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
-    struct Data : Object::Data {
+    struct Q_QML_PRIVATE_EXPORT Data : Object::Data {
         Data(ExecutionContext *scope, String *name, bool createProto = false);
         Data(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
         Data(ExecutionContext *scope, const ReturnedValue name);
