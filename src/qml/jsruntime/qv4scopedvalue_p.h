@@ -121,6 +121,9 @@ struct ScopedValue
     {
         ptr = scope.engine->jsStackTop++;
         ptr->m = reinterpret_cast<Managed *>(o);
+#if QT_POINTER_SIZE == 4
+        ptr->tag = QV4::Value::Managed_Type;
+#endif
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -161,6 +164,9 @@ struct ScopedValue
 
     ScopedValue &operator=(HeapObject *o) {
         ptr->m = reinterpret_cast<Managed *>(o);
+#if QT_POINTER_SIZE == 4
+        ptr->tag = QV4::Value::Managed_Type;
+#endif
         return *this;
     }
 
@@ -233,6 +239,9 @@ struct Scoped
     {
         Value v;
         v.m = reinterpret_cast<Managed *>(o);
+#if QT_POINTER_SIZE == 4
+        v.tag = QV4::Value::Managed_Type;
+#endif
         ptr = scope.engine->jsStackTop++;
         setPointer(value_cast<T>(v));
 #ifndef QT_NO_DEBUG
@@ -307,6 +316,9 @@ struct Scoped
     Scoped<T> &operator=(HeapObject *o) {
         Value v;
         v.m = reinterpret_cast<Managed *>(o);
+#if QT_POINTER_SIZE == 4
+        v.tag = QV4::Value::Managed_Type;
+#endif
         setPointer(value_cast<T>(v));
         return *this;
     }
