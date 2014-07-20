@@ -254,7 +254,7 @@ private:
     QSet<IR::Jump *> _removableJumps;
     Assembler* _as;
 
-    CompilationUnit *compilationUnit;
+    QScopedPointer<CompilationUnit> compilationUnit;
     QQmlEnginePrivate *qmlEngine;
 };
 

@@ -184,7 +184,7 @@ private:
     QSet<IR::Jump *> _removableJumps;
     IR::Stmt *_currentStatement;
 
-    CompilationUnit *compilationUnit;
+    QScopedPointer<CompilationUnit> compilationUnit;
     QHash<IR::Function *, QByteArray> codeRefs;
 };
 

@@ -203,9 +203,9 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _block(0)
     , _as(0)
+    , compilationUnit(new CompilationUnit)
     , qmlEngine(qmlEngine)
 {
-    compilationUnit = new CompilationUnit;
     compilationUnit->codeRefs.resize(module->functions.size());
 }
 
@@ -298,7 +298,7 @@ const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    return compilationUnit;
+    return compilationUnit.take();
 }
 
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)

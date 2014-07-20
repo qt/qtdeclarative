@@ -328,9 +328,8 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
     , _codeNext(0)
     , _codeEnd(0)
     , _currentStatement(0)
-{
-    compilationUnit = new CompilationUnit;
-}
+    , compilationUnit(new CompilationUnit)
+{}
 
 InstructionSelection::~InstructionSelection()
 {
@@ -459,7 +458,7 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
     int i = 0;
     foreach (IR::Function *irFunction, irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
-    return compilationUnit;
+    return compilationUnit.take();
 }
 
 void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
