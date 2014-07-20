@@ -106,8 +106,8 @@ QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
 {
     Q_D(QQmlFileSelector);
     d->engine = engine;
-    interceptorInstances()->insert(d->myInstance, this);
-    d->engine->setUrlInterceptor(d->myInstance);
+    interceptorInstances()->insert(d->myInstance.data(), this);
+    d->engine->setUrlInterceptor(d->myInstance.data());
 }
 
 QQmlFileSelector::~QQmlFileSelector()
@@ -117,7 +117,7 @@ QQmlFileSelector::~QQmlFileSelector()
         d->engine->setUrlInterceptor(0);
         d->engine = 0;
     }
-    interceptorInstances()->remove(d->myInstance);
+    interceptorInstances()->remove(d->myInstance.data());
 }
 
 QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
@@ -125,7 +125,7 @@ QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
     Q_Q(QQmlFileSelector);
     ownSelector = true;
     selector = new QFileSelector(q);
-    myInstance = new QQmlFileSelectorInterceptor(this);
+    myInstance.reset(new QQmlFileSelectorInterceptor(this));
 }
 
 /*!

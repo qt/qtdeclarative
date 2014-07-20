@@ -71,7 +71,7 @@ public:
     QFileSelector* selector;
     QPointer<QQmlEngine> engine;
     bool ownSelector;
-    QQmlFileSelectorInterceptor* myInstance;
+    QScopedPointer<QQmlFileSelectorInterceptor> myInstance;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlFileSelectorInterceptor : public QQmlAbstractUrlInterceptor
