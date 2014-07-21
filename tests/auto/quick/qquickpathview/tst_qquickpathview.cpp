@@ -144,6 +144,7 @@ private slots:
     void indexAt_itemAt_data();
     void cacheItemCount();
     void incorrectSteal();
+    void changePathDuringRefill();
 };
 
 class TestObject : public QObject
@@ -2122,7 +2123,46 @@ void tst_QQuickPathView::cacheItemCount()
         bool b = true;
         controller.incubateWhile(&b);
     }
+}
 
+static void testCurrentIndexChange(QQuickPathView *pathView, const QStringList &objectNamesInOrder)
+{
+    for (int visualIndex = 0; visualIndex < objectNamesInOrder.size() - 1; ++visualIndex) {
+        QQuickRectangle *delegate = findItem<QQuickRectangle>(pathView, objectNamesInOrder.at(visualIndex));
+        QVERIFY(delegate);
+
+        QQuickRectangle *nextDelegate = findItem<QQuickRectangle>(pathView, objectNamesInOrder.at(visualIndex + 1));
+        QVERIFY(nextDelegate);
+
+        QVERIFY(delegate->y() < nextDelegate->y());
+    }
+}
+
+void tst_QQuickPathView::changePathDuringRefill()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("changePathDuringRefill.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathView = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathView != 0);
+
+    testCurrentIndexChange(pathView, QStringList() << "delegateC" << "delegateA" << "delegateB");
+
+    pathView->incrementCurrentIndex();
+    /*
+        Decrementing moves delegateA down, resulting in an offset of 1,
+        so incrementing will move it up, resulting in an offset of 2:
+
+        delegateC    delegateA
+        delegateA => delegateB
+        delegateB    delegateC
+    */
+    QTRY_COMPARE(pathView->offset(), 2.0);
+    testCurrentIndexChange(pathView, QStringList() << "delegateA" << "delegateB" << "delegateC");
 }
 
 void tst_QQuickPathView::incorrectSteal()

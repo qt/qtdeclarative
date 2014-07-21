@@ -104,6 +104,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
     , moving(false), flicking(false), dragging(false), inRequest(false), delegateValidated(false)
+    , inRefill(false)
     , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , firstIndex(-1), pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
@@ -1873,10 +1874,17 @@ void QQuickPathView::refill()
 {
     Q_D(QQuickPathView);
 
+    if (d->inRefill) {
+        d->scheduleLayout();
+        return;
+    }
+
     d->layoutScheduled = false;
 
     if (!d->isValid() || !isComponentComplete())
         return;
+
+    d->inRefill = true;
 
     bool currentVisible = false;
     int count = d->pathItems == -1 ? d->modelCount : qMin(d->pathItems, d->modelCount);
@@ -2010,6 +2018,8 @@ void QQuickPathView::refill()
     }
     while (d->itemCache.count())
         d->releaseItem(d->itemCache.takeLast());
+
+    d->inRefill = false;
 }
 
 void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
