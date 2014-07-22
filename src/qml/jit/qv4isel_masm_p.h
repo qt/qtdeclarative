@@ -158,6 +158,8 @@ protected:
 
     bool visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                           IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
+    bool visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
+                          IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
     void visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
     bool visitCJumpStrictNullUndefined(IR::Type nullOrUndef, IR::Binop *binop,
                                        IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);

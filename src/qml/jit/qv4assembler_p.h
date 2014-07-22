@@ -374,6 +374,7 @@ public:
                                 IR::BasicBlock *falseBlock);
     Jump genTryDoubleConversion(IR::Expr *src, Assembler::FPRegisterID dest);
     Assembler::Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
+    Assembler::Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
 
     Pointer loadAddress(RegisterID tmp, IR::Expr *t);
     Pointer loadTempAddress(IR::Temp *t);

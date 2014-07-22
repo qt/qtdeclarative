@@ -365,5 +365,27 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
     return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
 }
 
+Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
+{
+    Assembler::RelationalCondition cond;
+    switch (op) {
+    case IR::OpGt: cond = Assembler::GreaterThan; break;
+    case IR::OpLt: cond = Assembler::LessThan; break;
+    case IR::OpGe: cond = Assembler::GreaterThanOrEqual; break;
+    case IR::OpLe: cond = Assembler::LessThanOrEqual; break;
+    case IR::OpEqual:
+    case IR::OpStrictEqual: cond = Assembler::Equal; break;
+    case IR::OpNotEqual:
+    case IR::OpStrictNotEqual: cond = Assembler::NotEqual; break;
+    default:
+        Q_UNREACHABLE();
+    }
+    if (invertCondition)
+        cond = JSC::MacroAssembler::invert(cond);
+
+    return JSC::MacroAssembler::branch32(cond,
+                                         toInt32Register(left, Assembler::ScratchRegister),
+                                         toInt32Register(right, Assembler::ReturnValueRegister));
+}
 
 #endif
