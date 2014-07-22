@@ -6272,13 +6272,11 @@ void tst_qquicktextinput::hasAcceptableInputMask()
     textInput->setText(invalid);
     QVERIFY(textInput->hasAcceptableInput());
 
-    // at the moment we don't strip the blank character if it is valid input, this makes the test between x vs X useless
-    QEXPECT_FAIL( "Any optional and required", "To eat blanks or not? Known issue. Task 43172", Abort);
-
     // test requiredMask
     textInput->setInputMask(requiredMask);
     textInput->setText(invalid);
-    QVERIFY(!textInput->hasAcceptableInput());
+    // invalid text gets the input mask applied when setting, text becomes acceptable.
+    QVERIFY(textInput->hasAcceptableInput());
 
     textInput->setText(valid);
     QVERIFY(textInput->hasAcceptableInput());

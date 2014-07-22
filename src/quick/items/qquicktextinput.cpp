@@ -1199,7 +1199,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 bool QQuickTextInput::hasAcceptableInput() const
 {
     Q_D(const QQuickTextInput);
-    return d->hasAcceptableInput(d->m_text) == QQuickTextInputPrivate::AcceptableInput;
+    return d->m_acceptableInput;
 }
 
 /*!
@@ -2589,7 +2589,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
                 && !persistentSelection)
             deselect();
 
-        if (q->hasAcceptableInput() || fixup())
+        if (hasAcceptableInput(m_text) == AcceptableInput || fixup())
             emit q->editingFinished();
 
 #ifndef QT_NO_IM
@@ -3415,6 +3415,27 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             }
         }
 #endif
+
+        if (m_maskData) {
+            if (m_text.length() != m_maxLength) {
+                m_acceptableInput = false;
+            } else {
+                for (int i = 0; i < m_maxLength; ++i) {
+                    if (m_maskData[i].separator) {
+                        if (m_text.at(i) != m_maskData[i].maskChar) {
+                            m_acceptableInput = false;
+                            break;
+                        }
+                    } else {
+                        if (!isValidInput(m_text.at(i), m_maskData[i].maskChar)) {
+                            m_acceptableInput = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         if (validateFromState >= 0 && wasValidInput && !m_validInput) {
             if (m_transactions.count())
                 return false;
@@ -4199,7 +4220,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     Q_Q(QQuickTextInput);
 
     if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
-        if (q->hasAcceptableInput() || fixup()) {
+        if (hasAcceptableInput(m_text) == AcceptableInput || fixup()) {
             emit q->accepted();
             emit q->editingFinished();
         }
