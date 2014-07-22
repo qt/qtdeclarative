@@ -268,8 +268,6 @@ QQuickPinchArea::QQuickPinchArea(QQuickItem *parent)
 {
     Q_D(QQuickPinchArea);
     d->init();
-    setAcceptedMouseButtons(Qt::LeftButton);
-    setFiltersChildMouseEvents(true);
 #ifdef Q_OS_OSX
     setAcceptHoverEvents(true); // needed to enable touch events on mouse hover.
 #endif
@@ -413,6 +411,12 @@ void QQuickPinchArea::updatePinch()
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
     QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
 
+    if (touchPoint1.state() == Qt::TouchPointPressed)
+        d->sceneStartPoint1 = touchPoint1.scenePos();
+
+    if (touchPoint2.state() == Qt::TouchPointPressed)
+        d->sceneStartPoint2 = touchPoint2.scenePos();
+
     QRectF bounds = clipRect();
     // Pinch is not started unless there are exactly two touch points
     // AND one or more of the points has just now been pressed (wasn't pressed already)
@@ -421,8 +425,6 @@ void QQuickPinchArea::updatePinch()
             && (touchPoint1.state() & Qt::TouchPointPressed || touchPoint2.state() & Qt::TouchPointPressed) &&
             bounds.contains(touchPoint1.pos()) && bounds.contains(touchPoint2.pos())) {
         d->id1 = touchPoint1.id();
-        d->sceneStartPoint1 = touchPoint1.scenePos();
-        d->sceneStartPoint2 = touchPoint2.scenePos();
         d->pinchActivated = true;
         d->initPinch = true;
 

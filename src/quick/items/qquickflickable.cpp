@@ -1380,7 +1380,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
             // Use the event handler that will take care of finding the proper item to propagate the event
             replayingPressEvent = true;
-            QQuickWindowPrivate::get(w)->deliverMouseEvent(mouseEvent.data());
+            QCoreApplication::sendEvent(w, mouseEvent.data());
             replayingPressEvent = false;
         }
     }

@@ -137,21 +137,21 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);
     bool deliverMouseEvent(QMouseEvent *);
-    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *);
+    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
 #ifndef QT_NO_WHEELEVENT
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
-            QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *);
+                            QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
     void deliverTouchEvent(QTouchEvent *);
     void reallyDeliverTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
     void flushDelayedTouchEvent();
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
-    bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints);
+    bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints, QSet<QQuickItem*> *filtered);
     QTouchEvent *touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent);
     QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
-    bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event);
+    bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem*> *filtered);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
     bool clearHover();
@@ -239,6 +239,7 @@ public:
 
     // Keeps track of which touch point (int) was last accepted by which item
     QHash<int, QQuickItem *> itemForTouchPointId;
+    QSet<int> touchMouseIdCandidates;
 
     mutable QQuickWindowIncubationController *incubationController;
 

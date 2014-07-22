@@ -661,6 +661,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // but we'll get the delayed mouse press after a delay
     QTRY_COMPARE(eventItem1->eventList.size(), 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
+    QCOMPARE(filteredEventList.count(), 1);
 
     // eventItem1 should have the mouse grab, and have moved the itemForTouchPointId
     // for the touchMouseId to the new grabber.
@@ -690,8 +691,9 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     QTest::touchEvent(window, device).release(0, p3, window);
     QQuickTouchUtils::flush(window);
 
-    // We should not have received any synthesised mouse events from Qt gui.
-    QCOMPARE(filteredEventList.count(), 0);
+    // We should not have received any synthesised mouse events from Qt gui,
+    // just the delayed press.
+    QCOMPARE(filteredEventList.count(), 1);
 
     delete window;
 }
@@ -916,6 +918,7 @@ void tst_TouchMouse::pinchOnFlickable()
     p1 -= QPoint(10, 0);
     p2 += QPoint(10, 0);
     pinchSequence.move(0, p1, window).move(1, p2, window).commit();
+    QVERIFY(!flickable->isDragging());
     QQuickTouchUtils::flush(window);
     pinchSequence.release(0, p1, window).release(1, p2, window).commit();
     QQuickTouchUtils::flush(window);
