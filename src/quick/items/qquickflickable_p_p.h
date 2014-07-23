@@ -200,6 +200,8 @@ public:
 
     bool isViewMoving() const;
 
+    void cancelInteraction();
+
 public:
     QQuickItem *contentItem;
 
