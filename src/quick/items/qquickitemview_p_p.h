@@ -184,7 +184,7 @@ public:
     virtual void clear();
     virtual void updateViewport();
 
-    void regenerate();
+    void regenerate(bool orientationChanged=false);
     void layout();
     virtual void animationFinished(QAbstractAnimationJob *);
     void refill();
