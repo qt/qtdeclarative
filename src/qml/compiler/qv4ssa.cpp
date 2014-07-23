@@ -118,8 +118,6 @@ class BasicBlockSet
     IR::Function *function;
     enum { MaxVectorCapacity = 8 };
 
-    // Q_DISABLE_COPY(BasicBlockSet); disabled because MSVC wants assignment operator for std::vector
-
 public:
     class const_iterator
     {
@@ -205,7 +203,12 @@ public:
     friend class const_iterator;
 
 public:
-    BasicBlockSet(): blockNumbers(0), blockFlags(0), function(0) {}
+    BasicBlockSet(IR::Function *f = 0): blockNumbers(0), blockFlags(0), function(0)
+    {
+        if (f)
+            init(f);
+    }
+
 #ifdef Q_COMPILER_RVALUE_REFS
     BasicBlockSet(BasicBlockSet &&other): blockNumbers(0), blockFlags(0)
     {
@@ -213,8 +216,36 @@ public:
         std::swap(blockFlags, other.blockFlags);
         std::swap(function, other.function);
     }
-
 #endif // Q_COMPILER_RVALUE_REFS
+
+    BasicBlockSet(const BasicBlockSet &other)
+        : blockNumbers(0)
+        , blockFlags(0)
+        , function(other.function)
+    {
+        if (other.blockFlags)
+            blockFlags = new Flags(*other.blockFlags);
+        else if (other.blockNumbers)
+            blockNumbers = new Numbers(*other.blockNumbers);
+    }
+
+    BasicBlockSet &operator=(const BasicBlockSet &other)
+    {
+        if (blockFlags) {
+            delete blockFlags;
+            blockFlags = 0;
+        } else {
+            delete blockNumbers;
+            blockNumbers = 0;
+        }
+        function = other.function;
+        if (other.blockFlags)
+            blockFlags = new Flags(*other.blockFlags);
+        else if (other.blockNumbers)
+            blockNumbers = new Numbers(*other.blockNumbers);
+        return *this;
+    }
+
     ~BasicBlockSet() { delete blockNumbers; delete blockFlags; }
 
     void init(IR::Function *f)
@@ -224,6 +255,11 @@ public:
         function = f;
         blockNumbers = new Numbers;
         blockNumbers->reserve(MaxVectorCapacity);
+    }
+
+    bool empty() const
+    {
+        return begin() == end();
     }
 
     void insert(BasicBlock *bb)
@@ -253,6 +289,23 @@ public:
         }
     }
 
+    void remove(BasicBlock *bb)
+    {
+        Q_ASSERT(function);
+
+        if (blockFlags) {
+            (*blockFlags)[bb->index()] = false;
+            return;
+        }
+
+        for (std::vector<int>::iterator i = blockNumbers->begin(), ei = blockNumbers->end(); i != ei; ++i) {
+            if (*i == bb->index()) {
+                blockNumbers->erase(i);
+                return;
+            }
+        }
+    }
+
     const_iterator begin() const { return const_iterator(*this, false); }
     const_iterator end() const { return const_iterator(*this, true); }
 
@@ -262,6 +315,21 @@ public:
 
         for (const_iterator it = begin(), eit = end(); it != eit; ++it)
             bbs.push_back(*it);
+    }
+
+    bool contains(BasicBlock *bb) const
+    {
+        Q_ASSERT(function);
+
+        if (blockFlags)
+            return (*blockFlags)[bb->index()];
+
+        for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end(); i != ei; ++i) {
+            if (*i == bb->index())
+                return true;
+        }
+
+        return false;
     }
 };
 
