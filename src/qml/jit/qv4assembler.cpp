@@ -214,7 +214,7 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    return Pointer(reg, id * sizeof(QV4::StringValue));
+    return Pointer(reg, id * sizeof(QV4::String*));
 }
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
@@ -222,7 +222,7 @@ void Assembler::loadStringRef(RegisterID reg, const QString &string)
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, compilationUnit)), reg);
     loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    loadPtr(Address(reg, id * sizeof(QV4::StringValue)), reg);
+    loadPtr(Address(reg, id * sizeof(QV4::String*)), reg);
 }
 
 void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)

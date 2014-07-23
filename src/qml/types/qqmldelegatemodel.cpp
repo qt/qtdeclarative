@@ -67,7 +67,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     };
     V4_OBJECT(QV4::FunctionObject)
 
-    static DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
+    static QV4::Returned<DelegateModelGroupFunction> *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
     {
         return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
     }
@@ -3220,7 +3220,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     };
     V4_OBJECT(QV4::Object)
 
-    static QQmlDelegateModelGroupChange *create(QV4::ExecutionEngine *e) {
+    static QV4::Returned<QQmlDelegateModelGroupChange> *create(QV4::ExecutionEngine *e) {
         return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e);
     }
 
@@ -3267,7 +3267,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
     };
     V4_OBJECT(QV4::Object)
 public:
-    static QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
+    static QV4::Returned<QQmlDelegateModelGroupChangeArray> *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
         return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes);
     }

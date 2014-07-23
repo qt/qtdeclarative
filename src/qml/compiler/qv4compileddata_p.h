@@ -588,7 +588,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     ExecutionEngine *engine;
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 
-    QV4::StringValue *runtimeStrings; // Array
+    QV4::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;

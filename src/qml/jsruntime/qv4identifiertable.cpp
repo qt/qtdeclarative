@@ -121,7 +121,8 @@ String *IdentifierTable::insertString(const QString &s)
         idx %= alloc;
     }
 
-    String *str = engine->newString(s)->getPointer();
+    Returned<String> *_s = engine->newString(s);
+    String *str = _s->getPointer();
     addEntry(str);
     return str;
 }

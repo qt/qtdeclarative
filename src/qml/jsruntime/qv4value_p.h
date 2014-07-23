@@ -44,19 +44,21 @@ namespace QV4 {
 
 typedef uint Bool;
 
+struct HeapObject {};
+
 template <typename T>
-struct Returned : private T
+struct Returned : private HeapObject
 {
-    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
-    T *getPointer() { return this; }
+    static Returned<T> *create(T *t) { Q_ASSERT((void *)&t->data == (void *)t); return static_cast<Returned<T> *>(static_cast<HeapObject*>(t ? &t->data : 0)); }
+    static Returned<T> *create(typename T::Data *t) { return static_cast<Returned<T> *>(static_cast<HeapObject*>(t)); }
+    T *getPointer() { return reinterpret_cast<T *>(this); }
     template<typename X>
     static T *getPointer(Returned<X> *x) { return x->getPointer(); }
     template<typename X>
     Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
-    using T::asReturnedValue;
-};
 
-struct HeapObject {};
+    inline ReturnedValue asReturnedValue();
+};
 
 struct Q_QML_PRIVATE_EXPORT Value
 {
@@ -86,7 +88,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     union {
         quint64 val;
 #if QT_POINTER_SIZE == 8
-        Managed *m;
+        HeapObject *m;
 #else
         double dbl;
 #endif
@@ -98,7 +100,7 @@ struct Q_QML_PRIVATE_EXPORT Value
                 uint uint_32;
                 int int_32;
 #if QT_POINTER_SIZE == 4
-                Managed *m;
+                HeapObject *m;
 #endif
             };
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
@@ -266,17 +268,30 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     String *stringValue() const {
-        return reinterpret_cast<String*>(m);
+        return m ? reinterpret_cast<String*>(m) : 0;
     }
     Object *objectValue() const {
-        return reinterpret_cast<Object*>(m);
+        return m ? reinterpret_cast<Object*>(m) : 0;
     }
     Managed *managed() const {
+        return m ? reinterpret_cast<Managed*>(m) : 0;
+    }
+    HeapObject *heapObject() const {
         return m;
     }
 
     quint64 rawValue() const {
         return val;
+    }
+
+    static inline Value fromHeapObject(HeapObject *m)
+    {
+        Value v;
+        v.m = m;
+#if QT_POINTER_SIZE == 4
+        v.tag = Managed_Type;
+#endif
+        return v;
     }
 
     static inline Value fromManaged(Managed *m);
@@ -338,7 +353,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         return *this;
     }
     Value &operator=(HeapObject *o) {
-        m = reinterpret_cast<Managed *>(o);
+        m = o;
         return *this;
     }
 
@@ -402,20 +417,6 @@ inline Primitive Primitive::emptyValue()
     Primitive v;
     v.tag = Value::Empty_Type;
     v.uint_32 = 0;
-    return v;
-}
-
-inline Value Value::fromManaged(Managed *m)
-{
-    if (!m)
-        return QV4::Primitive::undefinedValue();
-    Value v;
-#if QT_POINTER_SIZE == 8
-    v.m = m;
-#else
-    v.tag = Managed_Type;
-    v.m = m;
-#endif
     return v;
 }
 
@@ -557,7 +558,8 @@ T *value_cast(const Value &v)
 template<typename T>
 ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 
-
+template <typename T>
+ReturnedValue Returned<T>::asReturnedValue() { return Value::fromHeapObject(this).asReturnedValue(); }
 
 }
 

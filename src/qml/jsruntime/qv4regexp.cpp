@@ -73,7 +73,8 @@ RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ign
             return result;
     }
 
-    RegExp *result = engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline);
+    Scope scope(engine);
+    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline));
 
     if (!cache)
         cache = engine->regExpCache = new RegExpCache;

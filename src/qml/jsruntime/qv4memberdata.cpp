@@ -57,6 +57,6 @@ void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
         else
             new (newMemberData) MemberData(e->memberDataClass);
         newMemberData->d()->size = newAlloc;
-        m = newMemberData;
+        m = &newMemberData->data;
     }
 }

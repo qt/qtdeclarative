@@ -508,11 +508,12 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    GlobalContext *g = memoryManager->alloc<GlobalContext>(this);
+    Scope scope(this);
+    Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
     g->d()->callData = rootContext->d()->callData;
 
-    Q_ASSERT(currentContext() == g);
-    return g;
+    Q_ASSERT(currentContext() == g.getPointer());
+    return g.getPointer();
 }
 
 

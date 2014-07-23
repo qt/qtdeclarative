@@ -112,7 +112,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope, HeapObject *o)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->m = reinterpret_cast<Managed *>(o);
+        ptr->m = o;
 #if QT_POINTER_SIZE == 4
         ptr->tag = QV4::Value::Managed_Type;
 #endif
@@ -155,7 +155,7 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(HeapObject *o) {
-        ptr->m = reinterpret_cast<Managed *>(o);
+        ptr->m = o;
 #if QT_POINTER_SIZE == 4
         ptr->tag = QV4::Value::Managed_Type;
 #endif
@@ -204,7 +204,7 @@ struct Scoped
 
     inline void setPointer(Managed *p) {
 #if QT_POINTER_SIZE == 8
-        ptr->val = (quint64)p;
+        ptr->val = (quint64)(p ? &p->data : 0);
 #else
         *ptr = p ? QV4::Value::fromManaged(p) : QV4::Primitive::undefinedValue();
 #endif
@@ -230,7 +230,7 @@ struct Scoped
     Scoped(const Scope &scope, HeapObject *o)
     {
         Value v;
-        v.m = reinterpret_cast<Managed *>(o);
+        v.m = o;
 #if QT_POINTER_SIZE == 4
         v.tag = QV4::Value::Managed_Type;
 #endif
@@ -317,7 +317,7 @@ struct Scoped
 
     Scoped<T> &operator=(HeapObject *o) {
         Value v;
-        v.m = reinterpret_cast<Managed *>(o);
+        v.m = o;
 #if QT_POINTER_SIZE == 4
         v.tag = QV4::Value::Managed_Type;
 #endif
@@ -361,10 +361,10 @@ struct Scoped
     }
 
     bool operator!() const {
-        return !ptr->managed();
+        return !ptr->m;
     }
     operator void *() const {
-        return ptr->managed();
+        return ptr->m;
     }
 
     T *getPointer() {
@@ -378,6 +378,8 @@ struct Scoped
         return ptr->val;
 #endif
     }
+
+    Returned<T> *asReturned() const { return Returned<T>::create(static_cast<typename T::Data*>(ptr->heapObject())); }
 
     Value *ptr;
 };
@@ -478,7 +480,7 @@ inline Returned<T> *Value::as()
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 {
-    m = t;
+    m = t ? &t->data : 0;
 #if QT_POINTER_SIZE == 4
     tag = Managed_Type;
 #endif
@@ -488,7 +490,7 @@ inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
 {
-    m = v.ptr->managed();
+    m = v.ptr->m;
 #if QT_POINTER_SIZE == 4
     tag = Managed_Type;
 #endif
@@ -519,7 +521,7 @@ inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
 template<typename T>
 inline Returned<T> * TypedValue<T>::ret() const
 {
-    return Returned<T>::create(static_cast<T *>(managed()));
+    return Returned<T>::create(static_cast<typename T::Data *>(heapObject()));
 }
 
 inline Primitive::operator ValueRef()

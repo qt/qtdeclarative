@@ -138,7 +138,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return v.asFunctionObject();
     }
 
-    static FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static Returned<FunctionObject> *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
     ReturnedValue protoProperty() { return memberData()[Index_Prototype].asReturnedValue(); }
 
@@ -188,7 +188,7 @@ struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
     };
     V4_OBJECT(FunctionObject)
 
-    static BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
+    static Returned<BuiltinFunction> *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
         return scope->engine()->memoryManager->alloc<BuiltinFunction>(scope, name, code);
     }
@@ -253,7 +253,7 @@ struct BoundFunction: FunctionObject {
     };
     V4_OBJECT(FunctionObject)
 
-    static BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
+    static Returned<BoundFunction> *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
     {
         return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }

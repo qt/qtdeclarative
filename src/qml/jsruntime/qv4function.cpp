@@ -58,7 +58,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     Scope scope(engine);
     ScopedString s(scope);
     for (int i = static_cast<int>(compiledFunction->nFormals - 1); i >= 0; --i) {
-        String *arg = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
+        String *arg = compilationUnit->runtimeStrings[formalsIndices[i]];
         while (1) {
             InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
             if (newClass != internalClass) {
@@ -72,7 +72,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 
     const quint32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
-        String *local = compilationUnit->runtimeStrings[localsIndices[i]].asString();
+        String *local = compilationUnit->runtimeStrings[localsIndices[i]];
         internalClass = internalClass->addMember(local, Attr_NotConfigurable);
     }
 }

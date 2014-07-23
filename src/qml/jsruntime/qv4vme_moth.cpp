@@ -184,7 +184,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     qDebug("Starting VME with context=%p and code=%p", context, code);
 #endif // DO_TRACE_INSTR
 
-    QV4::StringValue * const runtimeStrings = context->d()->compilationUnit->runtimeStrings;
+    QV4::String ** const runtimeStrings = context->d()->compilationUnit->runtimeStrings;
 
     // setup lookup scopes
     int scopeDepth = 0;
@@ -240,7 +240,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = runtimeStrings[instr.stringId].asReturnedValue();
+        VALUE(instr.result) = runtimeStrings[instr.stringId]->asReturnedValue();
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)

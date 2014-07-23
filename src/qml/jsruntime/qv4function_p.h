@@ -87,7 +87,7 @@ struct Q_QML_EXPORT Function {
     ~Function();
 
     inline String *name() {
-        return compilationUnit->runtimeStrings[compiledFunction->nameIndex].getPointer();
+        return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
     }
     inline QString sourceFile() const { return compilationUnit->fileName(); }
 

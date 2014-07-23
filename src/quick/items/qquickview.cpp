@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_OBJECT_VTABLE(QQuickRootItemMarker);
 
-QQuickRootItemMarker *QQuickRootItemMarker::create(QQmlEngine *engine, QQuickWindow *window)
+QV4::Returned<QQuickRootItemMarker> *QQuickRootItemMarker::create(QQmlEngine *engine, QQuickWindow *window)
 {
     QV4::ExecutionEngine *e = QQmlEnginePrivate::getV4Engine(engine);
     return e->memoryManager->alloc<QQuickRootItemMarker>(e, window);

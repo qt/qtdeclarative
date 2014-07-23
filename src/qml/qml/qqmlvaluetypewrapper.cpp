@@ -144,7 +144,7 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int pr
     Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeReference *r = v4->memoryManager->alloc<QmlValueTypeReference>(v8);
+    Scoped<QmlValueTypeReference> r(scope, v4->memoryManager->alloc<QmlValueTypeReference>(v8));
     r->d()->internalClass = r->d()->internalClass->changePrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->d()->type = type; r->d()->object = object; r->d()->property = property;
     return r->asReturnedValue();
@@ -156,7 +156,7 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, 
     Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeCopy *r = v4->memoryManager->alloc<QmlValueTypeCopy>(v8);
+    Scoped<QmlValueTypeCopy> r(scope, v4->memoryManager->alloc<QmlValueTypeCopy>(v8));
     r->d()->internalClass = r->d()->internalClass->changePrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->d()->type = type; r->d()->value = value;
     return r->asReturnedValue();

@@ -65,9 +65,9 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(data);
-    runtimeStrings = (QV4::StringValue *)malloc(data->stringTableSize * sizeof(QV4::StringValue));
+    runtimeStrings = (QV4::String **)malloc(data->stringTableSize * sizeof(QV4::String*));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
-    memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::StringValue));
+    memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::String*));
     for (uint i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
@@ -109,7 +109,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->classList[j] = 0;
             l->level = -1;
             l->index = UINT_MAX;
-            l->name = runtimeStrings[compiledLookups[i].nameIndex].asString();
+            l->name = runtimeStrings[compiledLookups[i].nameIndex];
             if (type == CompiledData::Lookup::Type_IndexedGetter || type == CompiledData::Lookup::Type_IndexedSetter)
                 l->engine = engine;
         }
@@ -123,7 +123,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
             QV4::InternalClass *klass = engine->objectClass;
             for (int j = 0; j < memberCount; ++j, ++member)
-                klass = klass->addMember(runtimeStrings[member->nameOffset].asString(), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
+                klass = klass->addMember(runtimeStrings[member->nameOffset], member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
 
             runtimeClasses[i] = klass;
         }
@@ -166,14 +166,16 @@ void CompilationUnit::unlink()
 void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 {
     for (uint i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i].mark(e);
+        if (runtimeStrings[i])
+            runtimeStrings[i]->mark(e);
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(e);
     }
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)
-            runtimeLookups[i].name->mark(e);
+            if (runtimeLookups[i].name)
+                runtimeLookups[i].name->mark(e);
     }
 }
 

@@ -127,10 +127,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         engine->current = this;
     }
 
-    HeapObject *newCallContext(FunctionObject *f, CallData *callData);
-    WithContext *newWithContext(Object *with);
-    CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
-    CallContext *newQmlContext(FunctionObject *f, Object *qml);
+    Returned<ExecutionContext> *newCallContext(FunctionObject *f, CallData *callData);
+    Returned<WithContext> *newWithContext(Object *with);
+    Returned<CatchContext> *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
+    Returned<CallContext> *newQmlContext(FunctionObject *f, Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 

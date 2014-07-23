@@ -70,7 +70,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = reinterpret_cast<CallContext *>(s.engine->currentContext()->newQmlContext(o, qml));
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer();
     s.engine->popContext();
 }
 
@@ -88,7 +88,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Object *qml)
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = reinterpret_cast<CallContext *>(s.engine->currentContext()->newQmlContext(o, qml));
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer();
     s.engine->popContext();
 }
 

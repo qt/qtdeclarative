@@ -48,7 +48,7 @@ DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
 
-HeapObject *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
+Returned<ExecutionContext> *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
     Q_ASSERT(function->function());
 
@@ -78,24 +78,25 @@ HeapObject *ExecutionContext::newCallContext(FunctionObject *function, CallData 
         std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, compiledFunction->nFormals);
 
-    return c;
+    return Returned<ExecutionContext>::create(c);
 }
 
-WithContext *ExecutionContext::newWithContext(Object *with)
+Returned<WithContext> *ExecutionContext::newWithContext(Object *with)
 {
     return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
 }
 
-CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
+Returned<CatchContext> *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
 {
     return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
 }
 
-CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
+Returned<CallContext> *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
-    CallContext *c = reinterpret_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0)));
+    Scope scope(this);
+    Scoped<CallContext> c(scope, static_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
     new (c->d()) CallContext::Data(d()->engine, qml, f);
-    return c;
+    return c.asReturned();
 }
 
 

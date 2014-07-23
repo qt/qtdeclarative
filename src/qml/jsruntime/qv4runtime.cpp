@@ -881,9 +881,9 @@ ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String 
     Scope scope(context);
 
     ScopedObject base(scope);
-    Object *baseObj = base.ptr->objectValue();
+    Object *baseObj = 0;
     ScopedValue func(scope, context->getPropertyAndBase(name, baseObj));
-    base.ptr->m = baseObj;
+    base.ptr->m = baseObj ? &baseObj->data : 0;
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1101,7 +1101,7 @@ ExecutionContext *Runtime::pushWithScope(const ValueRef o, ExecutionContext *ctx
 {
     Scope scope(ctx);
     ScopedObject obj(scope, o->toObject(ctx));
-    return reinterpret_cast<ExecutionContext *>(ctx->newWithContext(obj));
+    return ctx->newWithContext(obj)->getPointer();
 }
 
 ReturnedValue Runtime::unwindException(ExecutionContext *ctx)
@@ -1115,7 +1115,7 @@ ExecutionContext *Runtime::pushCatchScope(ExecutionContext *ctx, String *excepti
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->engine()->catchException(ctx, 0));
-    return reinterpret_cast<ExecutionContext *>(ctx->newCatchContext(exceptionVarName, v));
+    return ctx->newCatchContext(exceptionVarName, v)->getPointer();
 }
 
 ExecutionContext *Runtime::popScope(ExecutionContext *ctx)

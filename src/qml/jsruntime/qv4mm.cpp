@@ -535,6 +535,11 @@ MemoryManager::~MemoryManager()
 #endif
 }
 
+ExecutionEngine *MemoryManager::engine() const
+{
+    return m_d->engine;
+}
+
 void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 {
     m_d->engine = engine;

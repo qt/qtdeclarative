@@ -68,15 +68,15 @@ ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, uint flags)
     , memberIndex(0)
     , flags(flags)
 {
-    object->m = (Object*)0;
-    current->m = (Object*)0;
+    object->m = 0;
+    current->m = 0;
     // Caller needs to call init!
 }
 
 void ObjectIterator::init(Object *o)
 {
-    object->m = o;
-    current->m = o;
+    object->m = o ? &o->data : 0;
+    current->m = o ? &o->data : 0;
 
 #if QT_POINTER_SIZE == 4
     object->tag = QV4::Value::Managed_Type;
@@ -125,10 +125,11 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
             return;
         }
 
-        if (flags & WithProtoChain)
-            current->m = current->objectValue()->prototype();
-        else
-            current->m = (Object *)0;
+        if (flags & WithProtoChain) {
+            Object *proto = current->objectValue()->prototype();
+            current->m = proto ? &proto->data : 0;
+        } else
+            current->m = (HeapObject *)0;
 
         arrayIndex = 0;
         memberIndex = 0;

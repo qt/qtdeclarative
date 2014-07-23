@@ -207,7 +207,7 @@ struct Q_QML_PRIVATE_EXPORT Managed
 
         void setVTable(const ManagedVTable *vt);
         ReturnedValue asReturnedValue() const {
-            return reinterpret_cast<Managed *>(const_cast<Data *>(this))->asReturnedValue();
+            return Value::fromHeapObject(const_cast<Data *>(this)).asReturnedValue();
         }
 
         void *operator new(size_t, Managed *m) { return m; }
@@ -375,6 +375,20 @@ template<>
 inline FunctionObject *managed_cast(Managed *m)
 {
     return m ? m->asFunctionObject() : 0;
+}
+
+inline Value Value::fromManaged(Managed *m)
+{
+    if (!m)
+        return QV4::Primitive::undefinedValue();
+    Value v;
+#if QT_POINTER_SIZE == 8
+    v.m = &m->data;
+#else
+    v.tag = Managed_Type;
+    v.m = &m->data;
+#endif
+    return v;
 }
 
 }

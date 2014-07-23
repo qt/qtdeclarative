@@ -96,57 +96,64 @@ public:
     }
 
     template <typename ManagedType>
-    ManagedType *alloc()
+    Returned<ManagedType> *alloc()
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data();
-        return t;
+        return t.asReturned();
     }
 
     template <typename ManagedType, typename Arg1>
-    ManagedType *alloc(Arg1 arg1)
+    Returned<ManagedType> *alloc(Arg1 arg1)
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1);
-        return t;
+        return t.asReturned();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2>
-    ManagedType *alloc(Arg1 arg1, Arg2 arg2)
+    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2)
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
-        return t;
+        return t.asReturned();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
-    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
-        return t;
+        return t.asReturned();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
-        return t;
+        return t.asReturned();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    ManagedType *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
-        ManagedType *t = static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data)));
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
-        return t;
+        return t.asReturned();
     }
 
     bool isGCBlocked() const;
     void setGCBlocked(bool blockGC);
     void runGC();
 
+    ExecutionEngine *engine() const;
     void setExecutionEngine(ExecutionEngine *engine);
 
     void dumpStats() const;
