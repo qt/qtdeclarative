@@ -753,7 +753,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     return s;
 }
 
-Stmt *BasicBlock::RET(Temp *expr)
+Stmt *BasicBlock::RET(Expr *expr)
 {
     Q_ASSERT(!isRemoved());
     if (isTerminated())

@@ -879,7 +879,7 @@ public:
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
-    Stmt *RET(Temp *expr);
+    Stmt *RET(Expr *expr);
 
     BasicBlock *containingGroup() const
     {
@@ -899,10 +899,10 @@ public:
         return _groupStart;
     }
 
-    void markAsGroupStart()
+    void markAsGroupStart(bool mark = true)
     {
         Q_ASSERT(!isRemoved());
-        _groupStart = true;
+        _groupStart = mark;
     }
 
     // Returns the index of the basic-block.
@@ -1065,20 +1065,20 @@ public:
 
     void setBasicBlock(IR::BasicBlock *block);
 
-    template <typename _Expr>
-    _Expr *operator()(_Expr *expr)
+    template <typename ExprSubclass>
+    ExprSubclass *operator()(ExprSubclass *expr)
     {
         return clone(expr);
     }
 
-    template <typename _Expr>
-    _Expr *clone(_Expr *expr)
+    template <typename ExprSubclass>
+    ExprSubclass *clone(ExprSubclass *expr)
     {
         Expr *c = expr;
         qSwap(cloned, c);
         expr->accept(this);
         qSwap(cloned, c);
-        return static_cast<_Expr *>(c);
+        return static_cast<ExprSubclass *>(c);
     }
 
     static Const *cloneConst(Const *c, Function *f)
@@ -1137,8 +1137,10 @@ protected:
     virtual void visitSubscript(Subscript *);
     virtual void visitMember(Member *);
 
-private:
+protected:
     IR::BasicBlock *block;
+
+private:
     IR::Expr *cloned;
 };
 
