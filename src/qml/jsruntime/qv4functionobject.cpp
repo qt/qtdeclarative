@@ -386,6 +386,9 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
 
+    if (v4->hasException)
+        return Encode::undefined();
+
     if (result->isObject())
         return result.asReturnedValue();
     return obj.asReturnedValue();
