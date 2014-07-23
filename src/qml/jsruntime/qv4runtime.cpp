@@ -881,7 +881,9 @@ ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String 
     Scope scope(context);
 
     ScopedObject base(scope);
-    ScopedValue func(scope, context->getPropertyAndBase(name, base.ptr->o));
+    Object *baseObj = base.ptr->objectValue();
+    ScopedValue func(scope, context->getPropertyAndBase(name, baseObj));
+    base.ptr->m = baseObj;
     if (scope.engine->hasException)
         return Encode::undefined();
 

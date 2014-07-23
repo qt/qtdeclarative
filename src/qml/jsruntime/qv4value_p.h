@@ -87,8 +87,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         quint64 val;
 #if QT_POINTER_SIZE == 8
         Managed *m;
-        Object *o;
-        String *s;
 #else
         double dbl;
 #endif
@@ -101,8 +99,6 @@ struct Q_QML_PRIVATE_EXPORT Value
                 int int_32;
 #if QT_POINTER_SIZE == 4
                 Managed *m;
-                Object *o;
-                String *s;
 #endif
             };
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
@@ -270,10 +266,10 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     String *stringValue() const {
-        return s;
+        return reinterpret_cast<String*>(m);
     }
     Object *objectValue() const {
-        return o;
+        return reinterpret_cast<Object*>(m);
     }
     Managed *managed() const {
         return m;
@@ -283,7 +279,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         return val;
     }
 
-    static inline Value fromManaged(Managed *o);
+    static inline Value fromManaged(Managed *m);
 
     int toUInt16() const;
     inline int toInt32() const;
