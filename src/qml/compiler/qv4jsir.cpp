@@ -735,7 +735,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     }
 
     CJump *s = function->NewStmt<CJump>();
-    s->init(cond, iftrue, iffalse);
+    s->init(cond, iftrue, iffalse, this);
     appendStatement(s);
 
     Q_ASSERT(! out.contains(iftrue));

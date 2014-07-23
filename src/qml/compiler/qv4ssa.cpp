@@ -339,7 +339,9 @@ class DominatorTree
 {
     enum {
         DebugDominatorFrontiers = 0,
-        DebugImmediateDominators = 0
+        DebugImmediateDominators = 0,
+
+        DebugCodeCanUseLotsOfCpu = 0
     };
 
     typedef int BasicBlockIndex;
@@ -495,11 +497,6 @@ class DominatorTree
             }
         }
 
-#if defined(SHOW_SSA)
-        for (int i = 0; i < nodes.size(); ++i)
-            qDebug("\tL%d: ancestor = %d, semi = %d, samedom = %d", i, ancestor[i], semi[i], samedom[i]);
-#endif // SHOW_SSA
-
         for (int i = 1; i < d->N; ++i) {
             BasicBlockIndex n = d->vertex[i];
             Q_ASSERT(n != InvalidBasicBlockIndex);
@@ -619,26 +616,28 @@ public:
             }
         }
 
-#if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
-        foreach (BasicBlock *n, nodes) {
-            const BasicBlockSet &fBlocks = DF[n->index];
-            for (BasicBlockSet::const_iterator it = fBlocks.begin(), eit = fBlocks.end(); it != eit; ++it) {
-                BasicBlock *fBlock = *it;
-                Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
-                bool hasDominatedSucc = false;
-                foreach (BasicBlock *succ, fBlock->in) {
-                    if (dominates(n, succ)) {
-                        hasDominatedSucc = true;
-                        break;
+        if (DebugDominatorFrontiers && DebugCodeCanUseLotsOfCpu) {
+            foreach (BasicBlock *n, function->basicBlocks()) {
+                if (n->isRemoved())
+                    continue;
+                const BasicBlockSet &fBlocks = DF[n->index()];
+                for (BasicBlockSet::const_iterator it = fBlocks.begin(), eit = fBlocks.end(); it != eit; ++it) {
+                    BasicBlock *fBlock = *it;
+                    Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
+                    bool hasDominatedSucc = false;
+                    foreach (BasicBlock *succ, fBlock->in) {
+                        if (dominates(n, succ)) {
+                            hasDominatedSucc = true;
+                            break;
+                        }
                     }
+                    if (!hasDominatedSucc) {
+                        qout << fBlock << " in DF[" << n->index() << "] has no dominated predecessors" << endl;
+                    }
+                    Q_ASSERT(hasDominatedSucc);
                 }
-                if (!hasDominatedSucc) {
-                    qout << fBlock << " in DF[" << n->index << "] has no dominated predecessors" << endl;
-                }
-                Q_ASSERT(hasDominatedSucc);
             }
         }
-#endif // !QT_NO_DEBUG
     }
 
     const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
@@ -671,7 +670,7 @@ public:
         }
     }
 
-    void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
+    void setImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
     {
         Q_ASSERT(bb->index() >= 0);
         Q_ASSERT(!newDominator || newDominator->index() >= 0);
@@ -682,7 +681,33 @@ public:
             idom.resize(function->basicBlockCount(), InvalidBasicBlockIndex);
         }
 
-        idom[bb->index()] = newDominator ? newDominator->index() : 0;
+        const BasicBlockIndex newIdx = newDominator ? newDominator->index() : InvalidBasicBlockIndex;
+        if (DebugImmediateDominators)
+            qDebug() << "Setting idom of" << bb->index() << "from" << idom[bb->index()] << "to" << newIdx;
+        idom[bb->index()] = newIdx;
+    }
+
+    void collectSiblings(BasicBlock *node, BasicBlockSet &siblings)
+    {
+        siblings.insert(node);
+        const BasicBlockIndex dominator = idom[node->index()];
+        if (dominator == InvalidBasicBlockIndex)
+            return;
+        for (size_t i = 0, ei = idom.size(); i != ei; ++i) {
+            if (idom[i] == dominator) {
+                BasicBlock *bb = function->basicBlock(i);
+                if (!bb->isRemoved())
+                    siblings.insert(bb);
+            }
+        }
+    }
+
+    void recalculateIDoms(const BasicBlockSet &nodes, BasicBlock *limit = 0)
+    {
+        const BasicBlockIndex limitIndex = limit ? limit->index() : InvalidBasicBlockIndex;
+        BasicBlockSet todo(nodes), postponed(function);
+        while (!todo.empty())
+            recalculateIDom(*todo.begin(), todo, postponed, limitIndex);
     }
 
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
@@ -802,6 +827,97 @@ private:
             nodeDepths[*it] = ++depth;
 
         return depth;
+    }
+
+    // The immediate-dominator recalculation is used when edges are removed from the CFG. See
+    // [Ramalingam] for a description. Note that instead of calculating the priority, a recursive
+    // algorithm is used: when recalculating the immediate dominator of a node by looking for the
+    // least-common ancestor, and a node is hit that also needs recalculation, a recursive call
+    // is done to calculate that nodes immediate dominator first.
+    //
+    // Note that this simplified algorithm cannot cope with back-edges. It only works for
+    // non-looping edges (which is our use-case).
+    void recalculateIDom(BasicBlock *node, BasicBlockSet &todo, BasicBlockSet &postponed, BasicBlockIndex limit) {
+        Q_ASSERT(!postponed.contains(node));
+        Q_ASSERT(todo.contains(node));
+        todo.remove(node);
+
+        if (node->in.size() == 1) {
+            // Special case: if the node has only one incoming edge, then that is the immediate
+            // dominator.
+            setImmediateDominator(node, node->in.first());
+            return;
+        }
+
+        std::vector<BasicBlockIndex> prefix;
+        prefix.reserve(32);
+
+        for (int i = 0, ei = node->in.size(); i != ei; ++i) {
+            BasicBlock *in = node->in.at(i);
+            if (node == in) // back-edge to self
+                continue;
+            if (dominates(node->index(), in->index())) // a known back-edge
+                continue;
+
+            if (prefix.empty()) {
+                calculatePrefix(node, in, prefix, todo, postponed, limit);
+
+                if (!prefix.empty()) {
+                    std::reverse(prefix.begin(), prefix.end());
+                    Q_ASSERT(!prefix.empty());
+                    Q_ASSERT(prefix.front() == limit || limit == InvalidBasicBlockIndex);
+                }
+            } else {
+                std::vector<BasicBlockIndex> anotherPrefix;
+                anotherPrefix.reserve(prefix.size());
+                calculatePrefix(node, in, anotherPrefix, todo, postponed, limit);
+
+                if (!anotherPrefix.empty())
+                    commonPrefix(prefix, anotherPrefix);
+            }
+        }
+
+        Q_ASSERT(!prefix.empty());
+        idom[node->index()] = prefix.back();
+    }
+
+    void calculatePrefix(BasicBlock *node, BasicBlock *in, std::vector<BasicBlockIndex> &prefix, BasicBlockSet &todo, BasicBlockSet &postponed, BasicBlockIndex limit)
+    {
+        for (BasicBlockIndex it = in->index(); it != InvalidBasicBlockIndex; it = idom[it]) {
+            prefix.push_back(it);
+            if (it == limit)
+                return;
+            BasicBlock *n = function->basicBlock(it);
+            if (postponed.contains(n)) { // possible back-edge, bail out.
+                prefix.clear();
+                return;
+            }
+            if (todo.contains(n)) {
+                postponed.insert(node);
+                recalculateIDom(n, todo, postponed, limit);
+                postponed.remove(node);
+            }
+        }
+    }
+
+    // Calculate the LCA (Least Common Ancestor) by finding the longest common prefix between two
+    // dominator chains. Note that "anotherPrefix" has the node's immediate dominator first, while
+    // "bestPrefix" has it last (meaning: is in reverse order). The reason for this is that removing
+    // nodes from "bestPrefix" is cheaper because it's done at the end of the vector, while
+    // reversing all "anotherPrefix" nodes would take unnecessary time.
+    static void commonPrefix(std::vector<BasicBlockIndex> &bestPrefix, const std::vector<BasicBlockIndex> &anotherPrefix)
+    {
+        const size_t anotherSize = anotherPrefix.size();
+        size_t minLen = qMin(bestPrefix.size(), anotherPrefix.size());
+        while (minLen != 0) {
+            --minLen;
+            if (bestPrefix[minLen] == anotherPrefix[anotherSize - minLen - 1]) {
+                ++minLen;
+                break;
+            }
+        }
+        if (minLen != bestPrefix.size())
+            bestPrefix.erase(bestPrefix.begin() + minLen, bestPrefix.end());
     }
 };
 
@@ -2847,37 +2963,47 @@ protected:
 
 void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist, DefUses &defUses)
 {
-    foreach (BasicBlock *bb, f->basicBlocks()) {
-        if (bb->isRemoved())
+    foreach (BasicBlock *toBB, f->basicBlocks()) {
+        if (toBB->isRemoved())
             continue;
-        if (bb->in.size() < 2)
+        if (toBB->in.size() < 2)
             continue;
 
-        for (int inIdx = 0, eInIdx = bb->in.size(); inIdx != eInIdx; ++inIdx) {
-            BasicBlock *inBB = bb->in[inIdx];
-            if (inBB->out.size() < 2)
+        for (int inIdx = 0, eInIdx = toBB->in.size(); inIdx != eInIdx; ++inIdx) {
+            BasicBlock *fromBB = toBB->in[inIdx];
+            if (fromBB->out.size() < 2)
                 continue;
 
             // We found a critical edge.
             // create the basic block:
-            BasicBlock *newBB = f->newBasicBlock(bb->catchBlock);
+            BasicBlock *newBB = f->newBasicBlock(toBB->catchBlock);
             Jump *s = f->NewStmt<Jump>();
             worklist.registerNewStatement(s);
             defUses.registerNewStatement(s);
-            s->init(bb);
+            s->init(toBB);
             newBB->appendStatement(s);
 
             // rewire the old outgoing edge
-            int outIdx = inBB->out.indexOf(bb);
-            inBB->out[outIdx] = newBB;
-            newBB->in.append(inBB);
+            int outIdx = fromBB->out.indexOf(toBB);
+            fromBB->out[outIdx] = newBB;
+            newBB->in.append(fromBB);
 
             // rewire the old incoming edge
-            bb->in[inIdx] = newBB;
-            newBB->out.append(bb);
+            toBB->in[inIdx] = newBB;
+            newBB->out.append(toBB);
+
+            BasicBlock *container = 0;
+            for (container = fromBB->containingGroup(); container; container = container->containingGroup()) {
+                if (container == toBB || container == toBB->containingGroup())
+                    break;
+            }
+            if (container == 0)
+                container = fromBB->containingGroup();
+
+            newBB->setContainingGroup(container);
 
             // patch the terminator
-            Stmt *terminator = inBB->terminator();
+            Stmt *terminator = fromBB->terminator();
             if (Jump *j = terminator->asJump()) {
                 Q_ASSERT(outIdx == 0);
                 j->target = newBB;
@@ -2894,8 +3020,21 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
                 Q_ASSERT(!"Unknown terminator!");
             }
 
+//            qDebug() << "splitting edge" << fromBB->index() << "->" << toBB->index()
+//                     << "by inserting block" << newBB->index();
+
             // Set the immediate dominator of the new block to inBB
-            df.updateImmediateDominator(newBB, inBB);
+            df.setImmediateDominator(newBB, fromBB);
+
+            bool toNeedsNewIdom = true;
+            foreach (BasicBlock *bb, toBB->in) {
+                if (bb != newBB && !df.dominates(toBB, bb)) {
+                    toNeedsNewIdom = false;
+                    break;
+                }
+            }
+            if (toNeedsNewIdom)
+                df.setImmediateDominator(toBB, newBB);
         }
     }
 }
@@ -3509,78 +3648,113 @@ namespace {
 /// This function removes the basic-block from the function's list, unlinks any uses and/or defs,
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
-/// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, IR::Function *func, DefUses &defUses, StatementWorklist &W,
-             DominatorTree &df)
+void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUses,
+            StatementWorklist &W, DominatorTree &dt)
 {
-    // TODO: after the change above: if we keep on detaching the block from predecessors or
-    //       successors, update the DominatorTree too.
+    struct Util {
+        static void removeIncomingEdge(BasicBlock *from, BasicBlock *to, DefUses &defUses, StatementWorklist &W)
+        {
+            int idx = to->in.indexOf(from);
+            if (idx == -1)
+                return;
+
+            to->in.remove(idx);
+            foreach (Stmt *outStmt, to->statements()) {
+                if (!outStmt)
+                    continue;
+                if (Phi *phi = outStmt->asPhi()) {
+                    if (Temp *t = phi->d->incoming[idx]->asTemp()) {
+                        defUses.removeUse(phi, *t);
+                        W += defUses.defStmt(*t);
+                    }
+                    phi->d->incoming.remove(idx);
+                    W += phi;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        static bool isReachable(BasicBlock *bb, const DominatorTree &dt)
+        {
+            foreach (BasicBlock *in, bb->in) {
+                if (in->isRemoved())
+                    continue;
+                if (dt.dominates(bb, in)) // a back-edge, not interesting
+                    continue;
+                return true;
+            }
+
+            return false;
+        }
+    };
 
     // don't purge blocks that are entry points for catch statements. They might not be directly
     // connected, but are required anyway
-    if (bb->isExceptionHandler())
+    if (to->isExceptionHandler())
         return;
 
-    QVector<BasicBlock *> toPurge;
-    toPurge.reserve(8);
-    toPurge.append(bb);
+    // First, unlink the edge
+    from->out.removeOne(to);
+    Util::removeIncomingEdge(from, to, defUses, W);
 
-    while (!toPurge.isEmpty()) {
-        bb = toPurge.first();
-        toPurge.removeFirst();
+    BasicBlockSet siblings;
+    siblings.init(func);
 
-        if (bb->isRemoved())
-            continue;
+    // Check if the target is still reachable...
+    if (Util::isReachable(to, dt)) { // yes, recalculate the immediate dominator, and we're done.
+        dt.collectSiblings(to, siblings);
+    } else {
+        // The target is unreachable, so purge it:
+        QVector<BasicBlock *> toPurge;
+        toPurge.reserve(8);
+        toPurge.append(to);
+        while (!toPurge.isEmpty()) {
+            BasicBlock *bb = toPurge.first();
+            toPurge.removeFirst();
 
-        // unlink all incoming edges
-        foreach (BasicBlock *in, bb->in) {
-            int idx = in->out.indexOf(bb);
-            if (idx != -1)
-                in->out.remove(idx);
-        }
+            if (bb->isRemoved())
+                continue;
 
-        // unlink all outgoing edges, including "arguments" to phi statements
-        foreach (BasicBlock *out, bb->out) {
-            int idx = out->in.indexOf(bb);
-            if (idx != -1) {
-                out->in.remove(idx);
-                foreach (Stmt *outStmt, out->statements()) {
-                    if (!outStmt)
-                        continue;
-                    if (Phi *phi = outStmt->asPhi()) {
-                        if (Temp *t = phi->d->incoming[idx]->asTemp()) {
-                            defUses.removeUse(phi, *t);
-                            W += defUses.defStmt(*t);
-                        }
-                        phi->d->incoming.remove(idx);
-                        W += phi;
-                    } else
-                        break;
+            // unlink all incoming edges
+            foreach (BasicBlock *in, bb->in) {
+                int idx = in->out.indexOf(bb);
+                if (idx != -1)
+                    in->out.remove(idx);
+            }
+
+            // unlink all outgoing edges, including "arguments" to phi statements
+            foreach (BasicBlock *out, bb->out) {
+                if (out->isRemoved())
+                    continue;
+
+                Util::removeIncomingEdge(bb, out, defUses, W);
+
+                if (Util::isReachable(out, dt)) {
+                    dt.collectSiblings(out, siblings);
+                } else {
+                    // if a successor has no incoming edges after unlinking the current basic block,
+                    // then it is unreachable, and can be purged too
+                    toPurge.append(out);
                 }
             }
 
-            if (out->in.isEmpty()) {
-                // if a successor has no incoming edges after unlinking the current basic block, then
-                // it is unreachable, and can be purged too
-                toPurge.append(out);
-            } else if (out->in.size() == 1) {
-                // if the successor now has only one incoming edge, we that edge is the new
-                // immediate dominator
-                df.updateImmediateDominator(out, out->in.first());
+            // unlink all defs/uses from the statements in the basic block
+            foreach (Stmt *s, bb->statements()) {
+                if (!s)
+                    continue;
+
+                W += defUses.removeDefUses(s);
+                W -= s;
             }
+
+            siblings.remove(bb);
+            dt.setImmediateDominator(bb, 0);
+            func->removeBasicBlock(bb);
         }
-
-        // unlink all defs/uses from the statements in the basic block
-        foreach (Stmt *s, bb->statements()) {
-            if (!s)
-                continue;
-
-            W += defUses.removeDefUses(s);
-            W -= s;
-        }
-
-        func->removeBasicBlock(bb);
     }
+
+    dt.recalculateIDoms(siblings);
 }
 
 bool tryOptimizingComparison(Expr *&expr)
@@ -3973,10 +4147,10 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 W.registerNewStatement(jump);
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
-                    purgeBB(cjump->iffalse, function, defUses, W, df);
+                    unlink(cjump->parent, cjump->iffalse, function, defUses, W, df);
                 } else {
                     jump->target = cjump->iffalse;
-                    purgeBB(cjump->iftrue, function, defUses, W, df);
+                    unlink(cjump->parent, cjump->iftrue, function, defUses, W, df);
                 }
                 W.replace(s, jump);
 
@@ -5065,3 +5239,5 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
 //            Construction and Destruction of Static Single Assignment Form.
 //  [Appel]   A.W. Appel. Modern Compiler Implementation in Java. Second edition, Cambridge
 //            University Press.
+//  [Ramalingam] G. Ramalingam and T. Reps. An Incremental Algorithm for Maintaining the Dominator
+//               Tree of a Reducible Flowgraph.

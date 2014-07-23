@@ -710,14 +710,16 @@ struct CJump: Stmt {
     Expr *cond; // Temp, Binop
     BasicBlock *iftrue;
     BasicBlock *iffalse;
+    BasicBlock *parent;
 
     CJump(int id): Stmt(id) {}
 
-    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
+    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse, BasicBlock *parent)
     {
         this->cond = cond;
         this->iftrue = iftrue;
         this->iffalse = iffalse;
+        this->parent = parent;
     }
 
     virtual Stmt *asTerminator() { return this; }
