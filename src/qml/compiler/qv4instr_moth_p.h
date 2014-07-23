@@ -73,6 +73,7 @@ QT_BEGIN_NAMESPACE
     F(StoreQObjectProperty, storeQObjectProperty) \
     F(LoadQObjectProperty, loadQObjectProperty) \
     F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
+    F(LoadSingletonQObjectProperty, loadQObjectProperty) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
@@ -305,7 +306,6 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
-        int attachedPropertiesId;
         bool captureRequired;
     };
     struct instr_loadAttachedQObjectProperty {

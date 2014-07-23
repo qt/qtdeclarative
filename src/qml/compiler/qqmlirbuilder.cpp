@@ -1820,6 +1820,13 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
         tdata->release();
         resolver->flags |= AllPropertiesAreFinal;
         return resolver->resolveMember(qmlEngine, resolver, member);
+    }  else if (type->isSingleton()) {
+        const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
+        if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
+            initMetaObjectResolver(resolver, qmlEngine->cache(singletonMeta));
+            member->kind = QV4::IR::Member::MemberOfSingletonObject;
+            return resolver->resolveMember(qmlEngine, resolver, member);
+        }
     } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
         QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
         initMetaObjectResolver(resolver, cache);

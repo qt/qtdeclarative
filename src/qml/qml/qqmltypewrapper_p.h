@@ -87,6 +87,7 @@ private:
 public:
 
     bool isSingleton() const;
+    QObject *singletonObject() const;
 
     QVariant toVariant() const;
 

@@ -124,7 +124,7 @@ protected:
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target);
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex);
-    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target);
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
     virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target);
     virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex);
     virtual void copyValue(IR::Expr *source, IR::Expr *target);

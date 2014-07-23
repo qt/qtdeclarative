@@ -659,10 +659,13 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
         generateFunctionCall(target, Runtime::getQmlAttachedProperty, Assembler::ContextRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
+    else if (isSingleton)
+        generateFunctionCall(target, Runtime::getQmlSingletonQObjectProperty, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
+                             Assembler::TrustedImm32(captureRequired));
     else
         generateFunctionCall(target, Runtime::getQmlQObjectProperty, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
                              Assembler::TrustedImm32(captureRequired));

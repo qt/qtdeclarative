@@ -538,7 +538,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, int /*attachedPropertiesId*/, IR::Expr *target)
+    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, bool /*isSingleton*/, int /*attachedPropertiesId*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);

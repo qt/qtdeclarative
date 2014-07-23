@@ -713,13 +713,20 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     addInstruction(store);
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0) {
         Instruction::LoadAttachedQObjectProperty load;
         load.propertyIndex = propertyIndex;
         load.result = getResultParam(target);
         load.attachedPropertiesId = attachedPropertiesId;
+        addInstruction(load);
+    } else if (isSingletonProperty) {
+        Instruction::LoadSingletonQObjectProperty load;
+        load.base = getParam(base);
+        load.propertyIndex = propertyIndex;
+        load.result = getResultParam(target);
+        load.captureRequired = captureRequired;
         addInstruction(load);
     } else {
         Instruction::LoadQObjectProperty load;

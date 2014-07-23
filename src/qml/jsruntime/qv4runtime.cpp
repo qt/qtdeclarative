@@ -53,6 +53,7 @@
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmltypewrapper_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include <private/qv8engine_p.h>
 #endif
@@ -1322,6 +1323,17 @@ QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionContext *ctx, int at
     QQmlEngine *qmlEngine = ctx->engine()->v8Engine->engine();
     QQmlData::ensurePropertyCache(qmlEngine, attachedObject);
     return QV4::QObjectWrapper::getProperty(attachedObject, ctx, propertyIndex, /*captureRequired*/true);
+}
+
+ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QmlTypeWrapper> wrapper(scope, object);
+    if (!wrapper) {
+        ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
+        return Encode::undefined();
+    }
+    return QV4::QObjectWrapper::getProperty(wrapper->singletonObject(), ctx, propertyIndex, captureRequired);
 }
 
 void Runtime::setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value)

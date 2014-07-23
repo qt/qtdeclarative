@@ -229,6 +229,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue getQmlSingleton(NoThrowContext *ctx, String *name);
     static ReturnedValue getQmlAttachedProperty(ExecutionContext *ctx, int attachedPropertiesId, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
+    static ReturnedValue getQmlSingletonQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
     static void setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
 };
 

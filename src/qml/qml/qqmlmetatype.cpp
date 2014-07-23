@@ -233,7 +233,10 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         v4->popContext();
     } else if (qobjectCallback && !qobjectApi(e)) {
         v4->pushGlobalContext();
-        setQObjectApi(e, qobjectCallback(e, e));
+        QObject *o = qobjectCallback(e, e);
+        setQObjectApi(e, o);
+        // if this object can use a property cache, create it now
+        QQmlData::ensurePropertyCache(e, o);
         v4->popContext();
     } else if (!url.isEmpty() && !qobjectApi(e)) {
         v4->pushGlobalContext();

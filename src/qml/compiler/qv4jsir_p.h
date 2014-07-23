@@ -568,14 +568,14 @@ struct Member: Expr {
         UnspecifiedMember,
         MemberOfEnum,
         MemberOfQmlScopeObject,
-        MemberOfQmlContextObject
+        MemberOfQmlContextObject,
+        MemberOfSingletonObject
     };
 
     Expr *base;
     const QString *name;
     QQmlPropertyData *property;
     int attachedPropertiesIdOrEnumValue; // depending on kind
-    uchar memberIsEnum : 1;
     uchar freeOfSideEffects : 1;
 
     // This is set for example for for QObject properties. All sorts of extra behavior
@@ -602,7 +602,6 @@ struct Member: Expr {
         this->name = name;
         this->property = property;
         this->attachedPropertiesIdOrEnumValue = attachedPropertiesIdOrEnumValue;
-        this->memberIsEnum = false;
         this->freeOfSideEffects = false;
         this->inhibitTypeConversionOnWrite = property != 0;
         this->kind = kind;

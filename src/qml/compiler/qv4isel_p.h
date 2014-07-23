@@ -154,7 +154,7 @@ public: // to implement by subclasses:
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(IR::Closure *closure, IR::Expr *target) = 0;
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target) = 0;
-    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, int attachedPropertiesId, IR::Expr *target) = 0;
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName) = 0;
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex) = 0;
     virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target) = 0;

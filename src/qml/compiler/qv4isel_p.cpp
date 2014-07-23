@@ -152,6 +152,7 @@ void IRDecoder::visitMove(IR::Move *s)
 
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
                 const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+                const bool isSingletonProperty = m->kind == IR::Member::MemberOfSingletonObject;
 
                 if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
                     if (m->kind == IR::Member::MemberOfQmlContextObject) {
@@ -162,7 +163,7 @@ void IRDecoder::visitMove(IR::Move *s)
                         captureRequired = false;
                     }
                 }
-                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, attachedPropertiesId, s->target);
+                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
 #endif // V4_BOOTSTRAP
                 return;
             } else if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {

@@ -75,6 +75,17 @@ bool QmlTypeWrapper::isSingleton() const
     return d()->type && d()->type->isSingleton();
 }
 
+QObject* QmlTypeWrapper::singletonObject() const
+{
+    if (!isSingleton())
+        return 0;
+
+    QQmlEngine *e = d()->v8->engine();
+    QQmlType::SingletonInstanceInfo *siinfo = d()->type->singletonInstanceInfo();
+    siinfo->init(e);
+    return siinfo->qobjectApi(e);
+}
+
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (d()->type && d()->type->isSingleton()) {
