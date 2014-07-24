@@ -372,7 +372,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
     ExecutionContext *context = v4->currentContext();
     callData->thisObject = obj.asReturnedValue();
-    ExecutionContext *ctx = reinterpret_cast<ExecutionContext *>(context->newCallContext(f.getPointer(), callData));
+    Scoped<CallContext> ctx(scope, context->newCallContext(f.getPointer(), callData));
 
     ExecutionContextSaver ctxSaver(context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
@@ -399,7 +399,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->currentContext();
     Scope scope(context);
 
-    CallContext *ctx = reinterpret_cast<CallContext *>(context->newCallContext(f, callData));
+    Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
     ExecutionContextSaver ctxSaver(context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));

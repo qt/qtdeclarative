@@ -492,9 +492,9 @@ size_t MemoryManager::getUsedMem() const
         char *chunkStart = reinterpret_cast<char *>(i->memory.base());
         char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
         for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
-            Managed *m = reinterpret_cast<Managed *>(chunk);
+            Managed::Data *m = reinterpret_cast<Managed::Data *>(chunk);
             Q_ASSERT((qintptr) chunk % 16 == 0);
-            if (m->inUse())
+            if (m->inUse)
                 usedMem += i->chunkSize;
         }
     }

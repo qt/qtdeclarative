@@ -549,7 +549,7 @@ struct ValueRef {
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
     // ### get rid of this one!
-    ValueRef(Value *v) { ptr = reinterpret_cast<Value *>(v); }
+    ValueRef(Value *v) { ptr = v; }
 private:
     Value *ptr;
 };

@@ -71,7 +71,7 @@ RegExpObject::Data::Data(InternalClass *ic)
 
     Scope scope(ic->engine);
     Scoped<RegExpObject> o(scope, this);
-    o->d()->value = reinterpret_cast<RegExp *>(RegExp::create(ic->engine, QString(), false, false));
+    o->d()->value = RegExp::create(ic->engine, QString(), false, false)->getPointer();
     o->d()->global = false;
     o->init(ic->engine);
 }
@@ -139,7 +139,7 @@ RegExpObject::Data::Data(ExecutionEngine *engine, const QRegExp &re)
     Scope scope(engine);
     Scoped<RegExpObject> o(scope, this);
 
-    o->d()->value = reinterpret_cast<RegExp *>(RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false));
+    o->d()->value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer();
 
     o->init(engine);
 }
@@ -286,7 +286,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    RegExp *regexp = reinterpret_cast<RegExp *>(RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
+    Scoped<RegExp> regexp(scope, RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
         return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 

@@ -63,14 +63,14 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
+Returned<RegExp> *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
 {
     RegExpCacheKey key(pattern, ignoreCase, multiline);
 
     RegExpCache *cache = engine->regExpCache;
     if (cache) {
         if (RegExp *result = cache->value(key))
-            return result;
+            return Returned<RegExp>::create(result);
     }
 
     Scope scope(engine);
@@ -82,7 +82,7 @@ RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ign
     result->d()->cache = cache;
     cache->insert(key, result);
 
-    return result;
+    return result.asReturned();
 }
 
 RegExp::Data::Data(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)

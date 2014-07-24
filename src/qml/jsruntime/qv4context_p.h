@@ -127,7 +127,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         engine->current = this;
     }
 
-    Returned<ExecutionContext> *newCallContext(FunctionObject *f, CallData *callData);
+    Returned<CallContext> *newCallContext(FunctionObject *f, CallData *callData);
     Returned<WithContext> *newWithContext(Object *with);
     Returned<CatchContext> *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
     Returned<CallContext> *newQmlContext(FunctionObject *f, Object *qml);
