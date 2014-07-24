@@ -326,8 +326,8 @@ public:
 
     void setVTable(const ManagedVTable *vt);
 
-    bool isEqualTo(Managed *other)
-    { return internalClass()->vtable->isEqualTo(this, other); }
+    bool isEqualTo(const Managed *other) const
+    { return internalClass()->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 
     static bool isEqualTo(Managed *m, Managed *other);
 

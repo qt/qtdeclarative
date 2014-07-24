@@ -329,6 +329,12 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline ErrorObject *asErrorObject() const;
 
     template<typename T> inline T *as() const;
+    template<typename T> inline T *cast() {
+        return static_cast<T *>(managed());
+    }
+    template<typename T> inline const T *cast() const {
+        return static_cast<const T *>(managed());
+    }
 
     inline uint asArrayIndex() const;
     inline uint asArrayLength(bool *ok) const;

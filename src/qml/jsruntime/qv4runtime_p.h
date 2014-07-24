@@ -470,7 +470,7 @@ inline Bool Runtime::compareEqual(const ValueRef left, const ValueRef right)
         if (!left->isManaged())
             return false;
         if (left->isString() == right->isString())
-            return left->managed()->isEqualTo(right->managed());
+            return left->cast<Managed>()->isEqualTo(right->cast<Managed>());
     }
 
     return RuntimeHelpers::equalHelper(left, right);

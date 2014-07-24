@@ -357,7 +357,7 @@ struct Scoped
     }
 
     T *operator->() {
-        return static_cast<T *>(ptr->managed());
+        return ptr->cast<T>();
     }
 
     bool operator!() const {

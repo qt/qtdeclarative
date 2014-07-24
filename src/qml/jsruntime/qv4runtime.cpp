@@ -721,7 +721,7 @@ Bool RuntimeHelpers::strictEqual(const ValueRef x, const ValueRef y)
     if (x->isNumber())
         return y->isNumber() && x->asDouble() == y->asDouble();
     if (x->isManaged())
-        return y->isManaged() && x->managed()->isEqualTo(y->managed());
+        return y->isManaged() && x->cast<Managed>()->isEqualTo(y->cast<Managed>());
     return false;
 }
 

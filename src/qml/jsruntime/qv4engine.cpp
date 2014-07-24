@@ -369,7 +369,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     static_cast<URIErrorPrototype *>(uRIErrorPrototype.getPointer())->init(this, uRIErrorCtor.asObject());
 
     static_cast<VariantPrototype *>(variantPrototype.getPointer())->init();
-    static_cast<SequencePrototype *>(sequencePrototype.managed())->init();
+    sequencePrototype.cast<SequencePrototype>()->init();
 
 
     // typed arrays
