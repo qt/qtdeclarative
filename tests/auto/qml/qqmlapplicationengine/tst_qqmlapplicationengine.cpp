@@ -64,6 +64,7 @@ private:
 
 void tst_qqmlapplicationengine::initTestCase()
 {
+    qputenv("QT_MESSAGE_PATTERN", ""); // don't let it modify the debug output from testapp
     buildDir = QDir::currentPath();
     QQmlDataTest::initTestCase(); //Changes current path to src dir
     srcDir = QDir::currentPath();
@@ -123,7 +124,7 @@ void tst_qqmlapplicationengine::application()
     test_stderr_target.replace('\n', QByteArray("\r\n"));
 #endif
     QCOMPARE(test_stdout, QByteArray(""));
-    QCOMPARE(test_stderr, test_stderr_target);
+    QCOMPARE(QString(test_stderr), QString(test_stderr_target));
     delete testProcess;
     QDir::setCurrent(srcDir);
 #else // !QT_NO_PROCESS
