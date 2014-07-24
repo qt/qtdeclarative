@@ -85,6 +85,8 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 
 #if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
 #define V4_ENABLE_JIT
+#elif defined(__ARM_ARCH_ISA_THUMB) && __ARM_ARCH_ISA_THUMB == 2 // clang 3.5 and later will set this if the core supports the Thumb-2 ISA.
+#define V4_ENABLE_JIT
 #endif
 
 #endif

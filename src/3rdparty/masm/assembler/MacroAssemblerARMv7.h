@@ -35,6 +35,7 @@
 namespace JSC {
 
 class MacroAssemblerARMv7 : public AbstractMacroAssembler<ARMv7Assembler> {
+protected: // the YarrJIT needs know about addressTempRegister in order to push it.
     // FIXME: switch dataTempRegister & addressTempRegister, or possibly use r7?
     //        - dTR is likely used more than aTR, and we'll get better instruction
     //        encoding if it's in the low 8 registers.
