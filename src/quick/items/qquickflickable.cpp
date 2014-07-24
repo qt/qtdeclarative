@@ -327,7 +327,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         maxDistance = qAbs(maxExtent - data.move.value());
         data.flickTarget = maxExtent;
     }
-    if (maxDistance > 0) {
+    if (maxDistance > 0 || boundsBehavior == QQuickFlickable::DragAndOvershootBounds) {
         qreal v = velocity;
         if (maxVelocity != -1 && maxVelocity < qAbs(v)) {
             if (v < 0)
@@ -1541,6 +1541,10 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
 void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
 {
     Q_D(QQuickFlickable);
+    d->hData.reset();
+    d->vData.reset();
+    d->hData.velocity = xVelocity;
+    d->vData.velocity = yVelocity;
     bool flickedX = d->flickX(xVelocity);
     bool flickedY = d->flickY(yVelocity);
     d->flickingStarted(flickedX, flickedY);

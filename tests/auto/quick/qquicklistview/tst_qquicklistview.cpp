@@ -228,6 +228,9 @@ private slots:
     void roundingErrors();
     void roundingErrors_data();
 
+    void QTBUG_38209();
+    void programmaticFlickAtBounds();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -7307,6 +7310,58 @@ void tst_QQuickListView::roundingErrors_data()
     QTest::addColumn<bool>("pixelAligned");
     QTest::newRow("pixelAligned=true") << true;
     QTest::newRow("pixelAligned=false") << false;
+}
+
+void tst_QQuickListView::QTBUG_38209()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("simplelistview.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+
+    // simulate mouse flick
+    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QTRY_VERIFY(listview->isMoving() == false);
+    qreal contentY = listview->contentY();
+
+    // flick down
+    listview->flick(0, 1000);
+
+    // ensure we move more than just a couple pixels
+    QTRY_VERIFY(contentY - listview->contentY() > qreal(100.0));
+}
+
+void tst_QQuickListView::programmaticFlickAtBounds()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("simplelistview.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    QSignalSpy spy(listview, SIGNAL(contentYChanged()));
+
+    // flick down
+    listview->flick(0, 1000);
+
+    // verify that there is movement beyond bounds
+    QVERIFY(spy.wait(100));
+
+    // reset, and test with StopAtBounds
+    listview->cancelFlick();
+    listview->returnToBounds();
+    QTRY_COMPARE(listview->contentY(), qreal(0.0));
+    listview->setBoundsBehavior(QQuickFlickable::StopAtBounds);
+
+    // flick down
+    listview->flick(0, 1000);
+
+    // verify that there is no movement beyond bounds
+    QVERIFY(!spy.wait(100));
 }
 
 QTEST_MAIN(tst_QQuickListView)
