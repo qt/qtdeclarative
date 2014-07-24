@@ -96,6 +96,8 @@ public:
 
     QImage grabFramebuffer() const;
 
+    void setClearColor(const QColor &color);
+
 public Q_SLOTS:
     void setSource(const QUrl&);
     void setContent(const QUrl& url, QQmlComponent *component, QObject *item);

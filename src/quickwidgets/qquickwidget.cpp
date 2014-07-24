@@ -1115,4 +1115,23 @@ QImage QQuickWidget::grabFramebuffer() const
     return const_cast<QQuickWidgetPrivate *>(d_func())->grabFramebuffer();
 }
 
+/*!
+  Sets the clear \a color. By default this is an opaque color.
+
+  To get a semi- or fully transparent QQuickWidget, call this function with \a
+  color set to Qt::transparent and set the Qt::WA_TranslucentBackground widget
+  attribute.
+
+  \note The limitations for having widgets underneath visible that are described
+  in QOpenGLWidget::setFormat() apply also to QQuickWidget. In that case use
+  Qt::WA_AlwaysStackOnTop instead of Qt::WA_TranslucentBackground.
+
+  \sa QQuickWindow::setColor()
+ */
+void QQuickWidget::setClearColor(const QColor &color)
+{
+    Q_D(QQuickWidget);
+    d->offscreenWindow->setColor(color);
+}
+
 QT_END_NAMESPACE

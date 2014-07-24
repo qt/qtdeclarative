@@ -44,7 +44,6 @@ import fbitem 1.0
 
 Rectangle {
     id: root
-    color: "lightBlue"
     property alias currentText: edit.text
     property alias multisample: fbitem.multisample
 
