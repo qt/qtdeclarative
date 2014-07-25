@@ -2303,12 +2303,15 @@ void QQuickTextInput::resetPasswordMaskDelay()
    this property holds the text visible to the user, while
    the \l text property holds the actual entered text.
 
+   \note Unlike the TextInput::text property, this contains
+   partial text input from an input method.
+
    \readonly
 */
 QString QQuickTextInput::displayText() const
 {
     Q_D(const QQuickTextInput);
-    return d->m_textLayout.text();
+    return d->m_textLayout.text().insert(d->m_textLayout.preeditAreaPosition(), d->m_textLayout.preeditAreaText());
 }
 
 /*!

@@ -2234,24 +2234,33 @@ void tst_qquicktextinput::inputMethods()
     QTRY_COMPARE(qGuiApp->focusObject(), input);
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("My Hello world!"));
+    QCOMPARE(input->displayText(), QString("My Hello world!"));
 
     input->setCursorPosition(2);
     event.setCommitString("Your", -2, 2);
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("Your Hello world!"));
+    QCOMPARE(input->displayText(), QString("Your Hello world!"));
     QCOMPARE(input->cursorPosition(), 4);
 
     input->setCursorPosition(7);
     event.setCommitString("Goodbye", -2, 5);
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("Your Goodbye world!"));
+    QCOMPARE(input->displayText(), QString("Your Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 12);
 
     input->setCursorPosition(8);
     event.setCommitString("Our", -8, 4);
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
+    QCOMPARE(input->displayText(), QString("Our Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 7);
+
+    QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(input, &preeditEvent);
+    QCOMPARE(input->text(), QString("Our Goodbye world!"));
+    QCOMPARE(input->displayText(), QString("Our GooPREEDITdbye world!"));
 
     // input should reset selection even if replacement parameters are out of bounds
     input->setText("text");
@@ -2260,6 +2269,8 @@ void tst_qquicktextinput::inputMethods()
     event.setCommitString("replacement", -input->text().length(), input->text().length());
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->selectionStart(), input->selectionEnd());
+    QCOMPARE(input->text(), QString("replacement"));
+    QCOMPARE(input->displayText(), QString("replacement"));
 
     QInputMethodQueryEvent enabledQueryEvent(Qt::ImEnabled);
     QGuiApplication::sendEvent(input, &enabledQueryEvent);
