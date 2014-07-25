@@ -839,7 +839,11 @@ void ExecutionEngine::markObjects()
 
     ExecutionContext *c = currentContext();
     while (c) {
-        c->mark(this);
+        Q_ASSERT(c->inUse);
+        if (!c->markBit) {
+            c->markBit = 1;
+            c->markObjects(c, this);
+        }
         c = c->parent;
     }
 
