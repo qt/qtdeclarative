@@ -39,7 +39,8 @@
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
-#include <private/qv4internalclass_p.h>
+#include "qv4runtime_p.h"
+#include "qv4objectiterator_p.h"
 
 #include <algorithm>
 

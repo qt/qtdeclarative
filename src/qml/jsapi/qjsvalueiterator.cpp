@@ -36,6 +36,7 @@
 #include "qjsvalue_p.h"
 #include "private/qv4string_p.h"
 #include "private/qv4object_p.h"
+#include "private/qv4context_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +52,7 @@ QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
 
     QV4::Scope scope(e);
     QV4::ScopedObject o(scope, jsp->value);
-    iterator = e->newForEachIteratorObject(e->currentContext(), o)->asReturnedValue();
+    iterator = e->newForEachIteratorObject(o)->asReturnedValue();
 
     currentName = (QV4::String *)0;
     nextName = (QV4::String *)0;
@@ -223,7 +224,7 @@ QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
     QJSValuePrivate *jsp = QJSValuePrivate::get(object);
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, jsp->value);
-    d_ptr->iterator = v4->newForEachIteratorObject(v4->currentContext(), o)->asReturnedValue();
+    d_ptr->iterator = v4->newForEachIteratorObject(o)->asReturnedValue();
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it.flags =  QV4::ObjectIterator::NoFlags;
     QV4::String *nm = 0;

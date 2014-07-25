@@ -36,30 +36,13 @@
 #include "qv4argumentsobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4runtime_p.h"
+#include "qv4objectiterator_p.h"
+
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
-#include <QtCore/QDebug>
-#include <cassert>
-
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
-
-#ifndef Q_OS_WIN
-#  include <time.h>
-#  ifndef Q_OS_VXWORKS
-#    include <sys/time.h>
-#  else
-#    include "qplatformdefs.h"
-#  endif
-#else
-#  include <windows.h>
-#endif
 
 using namespace QV4;
 

@@ -35,6 +35,7 @@
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4runtime_p.h"
 
 using namespace QV4;
 

@@ -33,58 +33,14 @@
 #ifndef QV4FUNCTIONOBJECT_H
 #define QV4FUNCTIONOBJECT_H
 
-#include "qv4global_p.h"
-#include "qv4runtime_p.h"
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
 #include "qv4object_p.h"
-#include "qv4string_p.h"
-#include "qv4managed_p.h"
-#include "qv4property_p.h"
 #include "qv4function_p.h"
-#include "qv4objectiterator_p.h"
+#include "qv4context_p.h"
 #include "qv4mm_p.h"
-
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct Function;
-struct Object;
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct ErrorObject;
-struct ArgumentsObject;
-struct ExecutionContext;
-struct ExecutionEngine;
-class MemoryManager;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-struct InternalClass;
-struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
     struct Q_QML_PRIVATE_EXPORT Data : Object::Data {

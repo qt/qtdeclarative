@@ -34,6 +34,7 @@
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4mm_p.h"
+#include "qv4runtime_p.h"
 
 using namespace QV4;
 

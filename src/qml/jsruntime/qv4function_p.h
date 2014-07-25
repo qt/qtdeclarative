@@ -34,43 +34,11 @@
 #define QV4FUNCTION_H
 
 #include "qv4global_p.h"
-
-#include <QtCore/QVector>
-#include <QtCore/QByteArray>
-#include <QtCore/qurl.h>
-
-#include "qv4value_p.h"
 #include <private/qv4compileddata_p.h>
-#include <private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct String;
-struct Function;
-struct Object;
-struct FunctionObject;
-struct ExecutionContext;
-struct ExecutionEngine;
-class MemoryManager;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-struct InternalClass;
-struct Lookup;
 
 struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;

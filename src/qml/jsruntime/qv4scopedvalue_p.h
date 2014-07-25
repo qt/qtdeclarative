@@ -36,6 +36,7 @@
 #include "qv4engine_p.h"
 #include "qv4value_p.h"
 #include "qv4persistent_p.h"
+#include "qv4property_p.h"
 
 QT_BEGIN_NAMESPACE
 

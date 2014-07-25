@@ -35,18 +35,11 @@
 
 #include <cmath> // this HAS to come
 
-#include <QtCore/QString>
-#include <QtCore/qnumeric.h>
-#include "qv4global_p.h"
+#include "qv4value_p.h"
+
 #include "qv4string_p.h"
-#include <QtCore/QDebug>
 #include "qv4managed_p.h"
 #include "qv4engine_p.h"
-#include <private/qtqmlglobal_p.h>
-
-//#include <wtf/MathExtras.h>
-
-#include "qv4value_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +61,13 @@ inline bool Value::isObject() const
 inline bool Value::isPrimitive() const
 {
     return !isObject();
+}
+
+inline String *Value::asString() const
+{
+    if (isString())
+        return stringValue();
+    return 0;
 }
 
 inline ExecutionEngine *Value::engine() const
@@ -274,6 +274,21 @@ inline ErrorObject *Value::asErrorObject() const
 
 template<typename T>
 inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
+
+#ifndef V4_BOOTSTRAP
+
+template<>
+inline String *value_cast(const Value &v) {
+    return v.asString();
+}
+
+template<>
+inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
+{
+    return v.toString(e)->asReturnedValue();
+}
+
+#endif
 
 #endif
 

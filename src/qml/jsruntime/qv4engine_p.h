@@ -35,8 +35,7 @@
 
 #include "qv4global_p.h"
 #include "private/qv4isel_p.h"
-#include "qv4util_p.h"
-#include "qv4property_p.h"
+#include "qv4managed_p.h"
 #include <private/qintrusivelist_p.h>
 
 namespace WTF {
@@ -341,7 +340,7 @@ public:
 
     Returned<Object> *newVariantObject(const QVariant &v);
 
-    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+    Returned<Object> *newForEachIteratorObject(Object *o);
 
     Returned<Object> *qmlContextObject() const;
 

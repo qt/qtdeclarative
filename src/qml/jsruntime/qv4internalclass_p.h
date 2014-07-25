@@ -33,9 +33,9 @@
 #ifndef QV4INTERNALCLASS_H
 #define QV4INTERNALCLASS_H
 
-#include <QHash>
-#include <QVector>
 #include "qv4global_p.h"
+
+#include <QHash>
 #include <private/qqmljsmemorypool_p.h>
 
 QT_BEGIN_NAMESPACE

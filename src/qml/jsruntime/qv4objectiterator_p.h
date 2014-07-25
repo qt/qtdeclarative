@@ -34,23 +34,11 @@
 #define QV4OBJECTITERATOR_H
 
 #include "qv4global_p.h"
-#include "qv4property_p.h"
-#include "qv4scopedvalue_p.h"
 #include "qv4object_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct SparseArrayNode;
-struct Object;
-struct ArrayObject;
-struct PropertyAttributes;
-struct ExecutionContext;
-struct Property;
-struct String;
-struct InternalClass;
-struct ForEachIteratorObject;
 
 struct Q_QML_EXPORT ObjectIterator
 {
@@ -81,8 +69,8 @@ private:
 
 struct ForEachIteratorObject: Object {
     struct Data : Object::Data {
-        Data(ExecutionContext *ctx, Object *o)
-            : Object::Data(ctx->engine())
+        Data(ExecutionEngine *engine, Object *o)
+            : Object::Data(engine)
             , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
             setVTable(staticVTable());
         }

@@ -381,13 +381,6 @@ inline Managed *Value::asManaged() const
     return 0;
 }
 
-inline String *Value::asString() const
-{
-    if (isString())
-        return stringValue();
-    return 0;
-}
-
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();

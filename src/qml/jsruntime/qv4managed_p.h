@@ -33,9 +33,6 @@
 #ifndef QMLJS_MANAGED_H
 #define QMLJS_MANAGED_H
 
-#include <QtCore/QString>
-#include <QtCore/QVector>
-#include <QtCore/QDebug>
 #include "qv4global_p.h"
 #include "qv4value_p.h"
 #include "qv4internalclass_p.h"

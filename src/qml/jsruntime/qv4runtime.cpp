@@ -35,11 +35,11 @@
 #include "qv4runtime_p.h"
 #ifndef V4_BOOTSTRAP
 #include "qv4object_p.h"
-#include "qv4jsir_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4globalobject_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
+#include "qv4objectiterator_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "private/qlocale_tools_p.h"
@@ -625,8 +625,7 @@ ReturnedValue Runtime::foreachIterator(ExecutionContext *ctx, const ValueRef in)
     Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
         o = in->toObject(ctx);
-    Scoped<Object> it(scope, ctx->engine()->newForEachIteratorObject(ctx, o));
-    return it.asReturnedValue();
+    return ctx->engine()->newForEachIteratorObject(o)->asReturnedValue();
 }
 
 ReturnedValue Runtime::foreachNextPropertyName(const ValueRef foreach_iterator)
@@ -858,6 +857,25 @@ QV4::Bool Runtime::compareLessEqual(const QV4::ValueRef l, const QV4::ValueRef r
 }
 
 #ifndef V4_BOOTSTRAP
+Bool Runtime::compareInstanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+{
+    TRACE2(left, right);
+
+    Scope scope(ctx);
+    ScopedValue v(scope, Runtime::instanceof(ctx, left, right));
+    return v->booleanValue();
+}
+
+uint Runtime::compareIn(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+{
+    TRACE2(left, right);
+
+    Scope scope(ctx);
+    ScopedValue v(scope, Runtime::in(ctx, left, right));
+    return v->booleanValue();
+}
+
+
 ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, CallData *callData)
 {
     Scope scope(context);

@@ -35,6 +35,8 @@
 #include "qv4dateobject_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4runtime_p.h"
+
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>

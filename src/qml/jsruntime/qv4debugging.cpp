@@ -38,6 +38,7 @@
 #include "qv4instr_moth_p.h"
 #include "qv4runtime_p.h"
 #include "qv4script_p.h"
+#include "qv4objectiterator_p.h"
 #include <iostream>
 
 #include <algorithm>

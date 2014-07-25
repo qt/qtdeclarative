@@ -48,6 +48,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4runtime_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)

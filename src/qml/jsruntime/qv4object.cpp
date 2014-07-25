@@ -41,22 +41,9 @@
 #include "qv4lookup_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4memberdata_p.h"
+#include "qv4objectiterator_p.h"
 
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
-#include "private/qlocale_tools_p.h"
-
-#include <QtCore/qmath.h>
-#include <QtCore/QDebug>
-#include <cassert>
-#include <typeinfo>
-#include <iostream>
 #include <stdint.h>
-#include "qv4alloca_p.h"
 
 using namespace QV4;
 

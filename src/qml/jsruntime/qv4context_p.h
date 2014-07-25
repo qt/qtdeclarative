@@ -42,19 +42,11 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Object;
-struct ExecutionEngine;
-struct DeclarativeEnvironment;
-struct Lookup;
-struct Function;
-struct ValueRef;
-
 namespace CompiledData {
 struct CompilationUnit;
 struct Function;
 }
 
-struct CallContext;
 struct CallContext;
 struct CatchContext;
 struct WithContext;

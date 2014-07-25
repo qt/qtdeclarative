@@ -171,20 +171,6 @@ public:
     static uint toArrayIndex(const QString &str);
 };
 
-#ifndef V4_BOOTSTRAP
-template<>
-inline String *value_cast(const Value &v) {
-    return v.asString();
-}
-
-template<>
-inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
-{
-    return v.toString(e)->asReturnedValue();
-}
-
-#endif
-
 }
 
 QT_END_NAMESPACE

@@ -35,10 +35,8 @@
 #define QV4GC_H
 
 #include "qv4global_p.h"
-#include "qv4context_p.h"
 #include "qv4value_inl_p.h"
-
-#include <QScopedPointer>
+#include "qv4scopedvalue_p.h"
 
 //#define DETAILED_MM_STATS
 

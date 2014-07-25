@@ -52,6 +52,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4objectiterator_p.h>
 
 using namespace QV4;
 

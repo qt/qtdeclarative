@@ -30,69 +30,16 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QMLJS_OBJECTS_H
-#define QMLJS_OBJECTS_H
+#ifndef QV4_OBJECT_H
+#define QV4_OBJECT_H
 
-#include "qv4global_p.h"
-#include "qv4runtime_p.h"
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
-#include "qv4string_p.h"
 #include "qv4managed_p.h"
-#include "qv4property_p.h"
-#include "qv4internalclass_p.h"
-#include "qv4arraydata_p.h"
 #include "qv4memberdata_p.h"
-
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
-
-#ifdef _WIN32_WCE
-#undef assert
-#define assert(x)
-#endif // _WIN32_WCE
+#include "qv4arraydata_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct Function;
-struct Lookup;
-struct Object;
-struct ObjectIterator;
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct RegExpObject;
-struct ErrorObject;
-struct ArgumentsObject;
-struct ExecutionContext;
-struct CallContext;
-struct ExecutionEngine;
-class MemoryManager;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct RegExpPrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-
 
 struct Q_QML_EXPORT Object: Managed {
     struct Data : Managed::Data {

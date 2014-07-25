@@ -700,10 +700,10 @@ Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
+Returned<Object> *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(ctx, o));
+    ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(this, o));
     return obj->asReturned<Object>();
 }
 

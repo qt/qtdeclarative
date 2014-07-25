@@ -35,20 +35,11 @@
 
 #include "qv4global_p.h"
 #include "qv4value_inl_p.h"
-#include "qv4math_p.h"
-#include "qv4scopedvalue_p.h"
 #include "qv4context_p.h"
+#include "qv4math_p.h"
 
-#include <QtCore/QString>
 #include <QtCore/qnumeric.h>
-#include <QtCore/QDebug>
-#include <QtCore/qurl.h>
 
-#include <cmath>
-#include <cassert>
-#include <limits>
-
-//#include <wtf/MathExtras.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -528,27 +519,6 @@ inline Bool Runtime::compareStrictNotEqual(const ValueRef left, const ValueRef r
 
     return ! RuntimeHelpers::strictEqual(left, right);
 }
-
-#ifndef V4_BOOTSTRAP
-inline Bool Runtime::compareInstanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
-{
-    TRACE2(left, right);
-
-    Scope scope(ctx);
-    ScopedValue v(scope, Runtime::instanceof(ctx, left, right));
-    return v->booleanValue();
-}
-
-inline uint Runtime::compareIn(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
-{
-    TRACE2(left, right);
-
-    Scope scope(ctx);
-    ScopedValue v(scope, Runtime::in(ctx, left, right));
-    return v->booleanValue();
-}
-
-#endif // V4_BOOTSTRAP
 
 inline Bool Runtime::toBoolean(const ValueRef value)
 {

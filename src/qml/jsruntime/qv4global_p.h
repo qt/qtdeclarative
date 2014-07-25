@@ -126,6 +126,9 @@ struct ScriptFunction;
 struct InternalClass;
 struct Property;
 struct Value;
+struct Lookup;
+struct HeapObject;
+struct ArrayData;
 
 struct BooleanObject;
 struct NumberObject;
@@ -146,6 +149,7 @@ struct QObjectWrapper;
 // It will be returned in rax on x64, [eax,edx] on x86 and [r0,r1] on arm
 typedef quint64 ReturnedValue;
 struct CallData;
+struct Scope;
 struct ScopedValue;
 struct ValueRef;
 template<typename T> struct Scoped;
