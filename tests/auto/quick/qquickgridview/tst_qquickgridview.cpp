@@ -3613,12 +3613,13 @@ void tst_QQuickGridView::resetModel_headerFooter()
 
     model.reset();
 
-    header = findItem<QQuickItem>(contentItem, "header");
-    QVERIFY(header);
+    // A reset should not force a new header or footer to be created.
+    QQuickItem *newHeader = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(newHeader == header);
     QCOMPARE(header->y(), -header->height());
 
-    footer = findItem<QQuickItem>(contentItem, "footer");
-    QVERIFY(footer);
+    QQuickItem *newFooter = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(newFooter == footer);
     QCOMPARE(footer->y(), 60.*2);
 
     delete window;

@@ -711,7 +711,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     }
 
     bool shouldUseDesignMetrics = renderType != QQuickText::NativeRendering;
-
+    if (!visibleImgTags.isEmpty())
+        visibleImgTags.clear();
     layout.setCacheEnabled(true);
     QTextOption textOption = layout.textOption();
     if (textOption.alignment() != q->effectiveHAlign()
@@ -940,9 +941,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             maxHeight = q->heightValid() ? q->height() : FLT_MAX;
 
             // If the width of the item has changed and it's possible the result of wrapping,
-            // eliding, or scaling has changed do another layout.
+            // eliding, scaling has changed, or the text is not left aligned do another layout.
             if ((lineWidth < qMin(oldWidth, naturalWidth) || (widthExceeded && lineWidth > oldWidth))
-                    && (singlelineElide || multilineElide || canWrap || horizontalFit)) {
+                    && (singlelineElide || multilineElide || canWrap || horizontalFit
+                        || q->effectiveHAlign() != QQuickText::AlignLeft)) {
                 widthExceeded = false;
                 heightExceeded = false;
                 continue;

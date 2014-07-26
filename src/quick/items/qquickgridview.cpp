@@ -1616,7 +1616,7 @@ void QQuickGridView::setFlow(Flow flow)
         }
         setContentX(0);
         setContentY(0);
-        d->regenerate();
+        d->regenerate(true);
         emit flowChanged();
     }
 }

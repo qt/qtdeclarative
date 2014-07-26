@@ -303,6 +303,8 @@ void QQuickTextNode::deleteContent()
     while (firstChild() != 0)
         delete firstChild();
     m_cursorNode = 0;
+    qDeleteAll(m_textures);
+    m_textures.clear();
 }
 
 #if 0

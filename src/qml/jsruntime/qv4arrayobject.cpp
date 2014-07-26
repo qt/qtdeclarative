@@ -366,7 +366,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     ScopedValue result(scope);
 
-    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len) {
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len && instance->arrayData()->type() != ArrayData::Custom) {
         result = instance->arrayData()->vtable()->pop_front(instance.getPointer());
     } else {
         result = instance->getIndexed(0);
@@ -545,7 +545,7 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len) {
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len && instance->arrayData()->type() != ArrayData::Custom) {
         instance->arrayData()->vtable()->push_front(instance.getPointer(), ctx->d()->callData->args, ctx->d()->callData->argc);
     } else {
         ScopedValue v(scope);

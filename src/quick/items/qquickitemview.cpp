@@ -1783,18 +1783,20 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         emit q->countChanged();
 }
 
-void QQuickItemViewPrivate::regenerate()
+void QQuickItemViewPrivate::regenerate(bool orientationChanged)
 {
     Q_Q(QQuickItemView);
     if (q->isComponentComplete()) {
         currentChanges.reset();
-        delete header;
-        header = 0;
-        delete footer;
-        footer = 0;
+        if (orientationChanged) {
+            delete header;
+            header = 0;
+            delete footer;
+            footer = 0;
+        }
+        clear();
         updateHeader();
         updateFooter();
-        clear();
         updateViewport();
         setPosition(contentStartOffset());
         refill();

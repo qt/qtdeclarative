@@ -780,6 +780,11 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 
     The ownership of the returned object instance is transferred to the caller.
 
+    If the object being created from this component is a visual item, it must
+    have a visual parent, which can be set by calling
+    QQuickItem::setParentItem(). See \l {Concepts - Visual Parent in Qt Quick}
+    for more details.
+
     \sa QQmlEngine::ObjectOwnership
 */
 QObject *QQmlComponent::create(QQmlContext *context)

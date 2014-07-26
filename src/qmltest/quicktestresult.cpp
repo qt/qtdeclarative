@@ -685,7 +685,7 @@ void QuickTestResult::stopBenchmark()
 
 QObject *QuickTestResult::grabImage(QQuickItem *item)
 {
-    if (item) {
+    if (item && item->window()) {
         QQuickWindow *window = item->window();
         QImage grabbed = window->grabWindow();
         QRectF rf(item->x(), item->y(), item->width(), item->height());

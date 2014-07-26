@@ -152,6 +152,7 @@ public:
     bool requestedOnPath : 1;
     bool inRequest : 1;
     bool delegateValidated : 1;
+    bool inRefill : 1;
     QElapsedTimer timer;
     qint64 lastPosTime;
     QPointF lastPos;

@@ -2072,7 +2072,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
             setFlickableDirection(HorizontalFlick);
             setContentY(0);
         }
-        d->regenerate();
+        d->regenerate(true);
         emit orientationChanged();
     }
 }
