@@ -1031,7 +1031,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     }
 
     // Don't create the paint node if we're not spanning any area
-    if (width() == 0 || height() == 0) {
+    if (width() <= 0 || height() <= 0) {
         delete oldNode;
         return 0;
     }
