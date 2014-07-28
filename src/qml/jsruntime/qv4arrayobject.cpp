@@ -58,7 +58,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
         len = callData->args[0].asArrayLength(&ok);
 
         if (!ok)
-            return v4->currentContext()->throwRangeError(callData->args[0]);
+            return v4->throwRangeError(callData->args[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
@@ -286,7 +286,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
             instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(newLen)));
         else {
             ScopedString str(scope, ctx->d()->engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
-            return ctx->throwRangeError(str);
+            return ctx->engine()->throwRangeError(str);
         }
         return Encode(newLen);
     }
@@ -691,7 +691,7 @@ ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedCallData callData(scope, 3);
     callData->args[2] = instance;
@@ -725,7 +725,7 @@ ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedCallData callData(scope, 3);
     callData->thisObject = ctx->argument(1);
@@ -759,7 +759,7 @@ ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedCallData callData(scope, 3);
     callData->thisObject = ctx->argument(1);
@@ -790,7 +790,7 @@ ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     Scoped<ArrayObject> a(scope, ctx->d()->engine->newArrayObject());
     a->arrayReserve(len);
@@ -827,7 +827,7 @@ ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     Scoped<ArrayObject> a(scope, ctx->d()->engine->newArrayObject());
     a->arrayReserve(len);
@@ -868,7 +868,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     uint k = 0;
     ScopedValue acc(scope);
@@ -885,7 +885,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
             ++k;
         }
         if (!kPresent)
-            return ctx->throwTypeError();
+            return ctx->engine()->throwTypeError();
     }
 
     ScopedCallData callData(scope, 4);
@@ -918,11 +918,11 @@ ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     if (len == 0) {
         if (ctx->d()->callData->argc == 1)
-            return ctx->throwTypeError();
+            return ctx->engine()->throwTypeError();
         return ctx->argument(1);
     }
 
@@ -940,7 +940,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
             --k;
         }
         if (!kPresent)
-            return ctx->throwTypeError();
+            return ctx->engine()->throwTypeError();
     }
 
     ScopedCallData callData(scope, 4);

@@ -584,7 +584,7 @@ ReturnedValue GlobalFunctions::method_decodeURI(CallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->d()->engine->newString(QStringLiteral("malformed URI sequence")));
-        return context->throwURIError(s);
+        return context->engine()->throwURIError(s);
     }
 
     return context->d()->engine->newString(out)->asReturnedValue();
@@ -602,7 +602,7 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(CallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->d()->engine->newString(QStringLiteral("malformed URI sequence")));
-        return context->throwURIError(s);
+        return context->engine()->throwURIError(s);
     }
 
     return context->d()->engine->newString(out)->asReturnedValue();
@@ -620,7 +620,7 @@ ReturnedValue GlobalFunctions::method_encodeURI(CallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->d()->engine->newString(QStringLiteral("malformed URI sequence")));
-        return context->throwURIError(s);
+        return context->engine()->throwURIError(s);
     }
 
     return context->d()->engine->newString(out)->asReturnedValue();
@@ -638,7 +638,7 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(CallContext *context)
     if (!ok) {
         Scope scope(context);
         ScopedString s(scope, context->d()->engine->newString(QStringLiteral("malformed URI sequence")));
-        return context->throwURIError(s);
+        return context->engine()->throwURIError(s);
     }
 
     return context->d()->engine->newString(out)->asReturnedValue();

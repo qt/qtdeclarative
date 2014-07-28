@@ -300,7 +300,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
 
     FunctionObject *f = right->asFunctionObject();
     if (!f)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     if (f->subtype() == FunctionObject::BoundFunction)
         f = static_cast<BoundFunction *>(f)->target();
@@ -311,7 +311,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
 
     Object *o = QV4::Value::fromReturnedValue(f->protoProperty()).asObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     while (v) {
         v = v->prototype();
@@ -328,7 +328,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
 QV4::ReturnedValue Runtime::in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     if (!right->isObject())
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     Scope scope(ctx);
     ScopedString s(scope, left->toString(ctx));
     if (scope.hasException())
@@ -406,7 +406,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
             return r->asReturnedValue();
     }
 
-    return ctx->throwTypeError();
+    return ctx->engine()->throwTypeError();
 }
 
 
@@ -417,7 +417,7 @@ Returned<Object> *RuntimeHelpers::convertToObject(ExecutionContext *ctx, const V
     switch (value->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        ctx->throwTypeError();
+        ctx->engine()->throwTypeError();
         return 0;
     case Value::Boolean_Type:
         return ctx->engine()->newBooleanObject(value);
@@ -571,7 +571,7 @@ ReturnedValue Runtime::getElement(ExecutionContext *ctx, const ValueRef object, 
 
         if (object->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
-            return ctx->throwTypeError(message);
+            return ctx->engine()->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(ctx, object);
@@ -654,7 +654,7 @@ ReturnedValue Runtime::getProperty(ExecutionContext *ctx, const ValueRef object,
 
     if (object->isNullOrUndefined()) {
         QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
-        return ctx->throwTypeError(message);
+        return ctx->engine()->throwTypeError(message);
     }
 
     o = RuntimeHelpers::convertToObject(ctx, object);
@@ -884,7 +884,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionContext *context, uint index, C
     Lookup *l = context->d()->lookups + index;
     Scoped<FunctionObject> o(scope, l->globalGetter(l, context));
     if (!o)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     if (o.getPointer() == scope.engine->evalFunction && l->name->equals(scope.engine->id_eval))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
@@ -914,7 +914,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionContext *context, String 
         if (base)
             objectAsString = ScopedValue(scope, base.asReturnedValue())->toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
-        return context->throwTypeError(msg);
+        return context->engine()->throwTypeError(msg);
     }
 
     if (o == scope.engine->evalFunction && name->equals(scope.engine->id_eval)) {
@@ -932,7 +932,7 @@ ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, Cal
         Q_ASSERT(!callData->thisObject.isEmpty());
         if (callData->thisObject.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
-            return context->throwTypeError(message);
+            return context->engine()->throwTypeError(message);
         }
 
         baseObject = RuntimeHelpers::convertToObject(context, ValueRef(&callData->thisObject));
@@ -944,7 +944,7 @@ ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, Cal
     Scoped<FunctionObject> o(scope, baseObject->get(name));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
-        return context->throwTypeError(error);
+        return context->engine()->throwTypeError(error);
     }
 
     return o->call(callData);
@@ -956,7 +956,7 @@ ReturnedValue Runtime::callPropertyLookup(ExecutionContext *context, uint index,
     Value v;
     v = l->getter(l, callData->thisObject);
     if (!v.isObject())
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return v.objectValue()->call(callData);
 }
@@ -973,7 +973,7 @@ ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef ind
 
     ScopedObject o(scope, baseObject->get(s.getPointer()));
     if (!o)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return o->call(callData);
 }
@@ -981,7 +981,7 @@ ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef ind
 ReturnedValue Runtime::callValue(ExecutionContext *context, const ValueRef func, CallData *callData)
 {
     if (!func->isObject())
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return func->objectValue()->call(callData);
 }
@@ -995,7 +995,7 @@ ReturnedValue Runtime::constructGlobalLookup(ExecutionContext *context, uint ind
     Lookup *l = context->d()->lookups + index;
     Scoped<Object> f(scope, l->globalGetter(l, context));
     if (!f)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return f->construct(callData);
 }
@@ -1010,7 +1010,7 @@ ReturnedValue Runtime::constructActivationProperty(ExecutionContext *context, St
 
     Object *f = func->asObject();
     if (!f)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return f->construct(callData);
 }
@@ -1019,7 +1019,7 @@ ReturnedValue Runtime::constructValue(ExecutionContext *context, const ValueRef 
 {
     Object *f = func->asObject();
     if (!f)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return f->construct(callData);
 }
@@ -1033,7 +1033,7 @@ ReturnedValue Runtime::constructProperty(ExecutionContext *context, String *name
 
     Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return f->construct(callData);
 }
@@ -1044,7 +1044,7 @@ ReturnedValue Runtime::constructPropertyLookup(ExecutionContext *context, uint i
     Value v;
     v = l->getter(l, callData->thisObject);
     if (!v.isObject())
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     return v.objectValue()->construct(callData);
 }
@@ -1053,7 +1053,7 @@ ReturnedValue Runtime::constructPropertyLookup(ExecutionContext *context, uint i
 void Runtime::throwException(ExecutionContext *context, const ValueRef value)
 {
     if (!value->isEmpty())
-        context->throwError(value);
+        context->engine()->throwError(value);
 }
 
 ReturnedValue Runtime::typeofValue(ExecutionContext *ctx, const ValueRef value)
@@ -1320,7 +1320,7 @@ ReturnedValue Runtime::getQmlQObjectProperty(ExecutionContext *ctx, const ValueR
     Scope scope(ctx);
     QV4::Scoped<QObjectWrapper> wrapper(scope, object);
     if (!wrapper) {
-        ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
+        ctx->engine()->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
     return QV4::QObjectWrapper::getProperty(wrapper->object(), ctx, propertyIndex, captureRequired);
@@ -1343,7 +1343,7 @@ ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionContext *ctx, con
     Scope scope(ctx);
     QV4::Scoped<QmlTypeWrapper> wrapper(scope, object);
     if (!wrapper) {
-        ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
+        scope.engine->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
     return QV4::QObjectWrapper::getProperty(wrapper->singletonObject(), ctx, propertyIndex, captureRequired);
@@ -1354,7 +1354,7 @@ void Runtime::setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object
     Scope scope(ctx);
     QV4::Scoped<QObjectWrapper> wrapper(scope, object);
     if (!wrapper) {
-        ctx->throwTypeError(QStringLiteral("Cannot write property of null"));
+        ctx->engine()->throwTypeError(QStringLiteral("Cannot write property of null"));
         return;
     }
     wrapper->setProperty(ctx, propertyIndex, value);

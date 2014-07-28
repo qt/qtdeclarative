@@ -52,7 +52,7 @@ ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
     Scope scope(m->engine());
     Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
     if (!buffer)
-        return scope.engine->currentContext()->throwTypeError();
+        return scope.engine->throwTypeError();
 
     double bo = callData->argc > 1 ? callData->args[1].toNumber() : 0;
     uint byteOffset = (uint)bo;
@@ -60,7 +60,7 @@ ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
     double bl = callData->argc < 3 || callData->args[2].isUndefined() ? (bufferLength - bo) : callData->args[2].toNumber();
     uint byteLength = (uint)bl;
     if (bo != byteOffset || bl != byteLength || byteOffset + byteLength > bufferLength)
-        return scope.engine->currentContext()->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
+        return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->alloc<DataView>(scope.engine));
     a->d()->buffer = buffer;
@@ -126,7 +126,7 @@ ReturnedValue DataViewPrototype::method_get_buffer(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     return Encode(v->d()->buffer->asReturnedValue());
 }
@@ -136,7 +136,7 @@ ReturnedValue DataViewPrototype::method_get_byteLength(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     return Encode(v->d()->byteLength);
 }
@@ -146,7 +146,7 @@ ReturnedValue DataViewPrototype::method_get_byteOffset(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     return Encode(v->d()->byteOffset);
 }
@@ -157,11 +157,11 @@ ReturnedValue DataViewPrototype::method_getChar(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     T t = T(v->d()->buffer->d()->data->data()[idx]);
@@ -175,11 +175,11 @@ ReturnedValue DataViewPrototype::method_get(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     bool littleEndian = ctx->d()->callData->argc < 2 ? false : ctx->d()->callData->args[1].toBoolean();
@@ -197,11 +197,11 @@ ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     bool littleEndian = ctx->d()->callData->argc < 2 ? false : ctx->d()->callData->args[1].toBoolean();
@@ -235,11 +235,11 @@ ReturnedValue DataViewPrototype::method_setChar(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     int val = ctx->d()->callData->argc >= 2 ? ctx->d()->callData->args[1].toInt32() : 0;
@@ -254,11 +254,11 @@ ReturnedValue DataViewPrototype::method_set(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     int val = ctx->d()->callData->argc >= 2 ? ctx->d()->callData->args[1].toInt32() : 0;
@@ -279,11 +279,11 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
     Scope scope(ctx);
     Scoped<DataView> v(scope, ctx->d()->callData->thisObject);
     if (!v || ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     double l = ctx->d()->callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
     double val = ctx->d()->callData->argc >= 2 ? ctx->d()->callData->args[1].toNumber() : qSNaN();

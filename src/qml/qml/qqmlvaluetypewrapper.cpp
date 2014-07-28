@@ -242,10 +242,10 @@ ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
 {
     Object *o = ctx->d()->callData->thisObject.asObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     QmlValueTypeWrapper *w = o->as<QmlValueTypeWrapper>();
     if (!w)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     if (w->d()->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
@@ -355,7 +355,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
                 Scoped<String> e(scope, r->d()->v8->toString(error));
-                v4->currentContext()->throwError(e);
+                v4->throwError(e);
                 return;
             }
 

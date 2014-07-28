@@ -150,7 +150,7 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
     Scope scope(ctx);
     Scoped<ErrorObject> This(scope, ctx->d()->callData->thisObject);
     if (!This)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     if (!This->d()->stack) {
         QString trace;
         for (int i = 0; i < This->d()->stackTrace.count(); ++i) {
@@ -365,7 +365,7 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
 
     Object *o = ctx->d()->callData->thisObject.asObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedValue name(scope, o->get(ctx->d()->engine->id_name));
     QString qname;

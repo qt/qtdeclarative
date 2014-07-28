@@ -112,7 +112,7 @@ struct ExecutionContextSaver;
 #define CHECK_STACK_LIMITS(v4) \
     if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
     else \
-        return v4->currentContext()->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
+        return v4->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
 
 
 struct Q_QML_EXPORT ExecutionEngine
@@ -364,8 +364,20 @@ public:
     Value exceptionValue;
     StackTrace exceptionStackTrace;
 
-    ReturnedValue throwException(const ValueRef value);
+    ReturnedValue throwError(const ValueRef value);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
+
+    ReturnedValue throwError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int lineNumber, int column);
+    ReturnedValue throwTypeError();
+    ReturnedValue throwTypeError(const QString &message);
+    ReturnedValue throwReferenceError(const ValueRef value);
+    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
+    ReturnedValue throwRangeError(const ValueRef value);
+    ReturnedValue throwRangeError(const QString &message);
+    ReturnedValue throwURIError(const ValueRef msg);
+    ReturnedValue throwUnimplemented(const QString &message);
 
     // Use only inside catch(...) -- will re-throw if no JS exception
     static QQmlError catchExceptionAsQmlError(QV4::ExecutionContext *context);

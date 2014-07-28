@@ -262,7 +262,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
             QV4::ScopedObject apiprivate(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->value);
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
-                v4->currentContext()->throwError(error);
+                v4->throwError(error);
                 return;
             } else {
                 apiprivate->put(name, value);

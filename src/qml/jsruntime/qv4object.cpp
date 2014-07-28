@@ -117,7 +117,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
 
   reject:
     if (engine()->currentContext()->d()->strictMode)
-        engine()->currentContext()->throwTypeError();
+        engine()->throwTypeError();
 }
 
 void Object::defineDefaultProperty(const QString &name, ValueRef value)
@@ -356,12 +356,12 @@ bool Object::hasOwnProperty(uint index) const
 
 ReturnedValue Object::construct(Managed *m, CallData *)
 {
-    return m->engine()->currentContext()->throwTypeError();
+    return m->engine()->throwTypeError();
 }
 
 ReturnedValue Object::call(Managed *m, CallData *)
 {
-    return m->engine()->currentContext()->throwTypeError();
+    return m->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
@@ -665,7 +665,7 @@ void Object::internalPut(String *name, const ValueRef value)
             bool ok;
             uint l = value->asArrayLength(&ok);
             if (!ok) {
-                engine()->currentContext()->throwRangeError(value);
+                engine()->throwRangeError(value);
                 return;
             }
             ok = setArrayLength(l);
@@ -714,7 +714,7 @@ void Object::internalPut(String *name, const ValueRef value)
         QString message = QStringLiteral("Cannot assign to read-only property \"");
         message += name->toQString();
         message += QLatin1Char('\"');
-        engine()->currentContext()->throwTypeError(message);
+        engine()->throwTypeError(message);
     }
 }
 
@@ -783,7 +783,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 
   reject:
     if (engine()->currentContext()->d()->strictMode)
-        engine()->currentContext()->throwTypeError();
+        engine()->throwTypeError();
 }
 
 // Section 8.12.7
@@ -805,7 +805,7 @@ bool Object::internalDeleteProperty(String *name)
             return true;
         }
         if (engine()->currentContext()->d()->strictMode)
-            engine()->currentContext()->throwTypeError();
+            engine()->throwTypeError();
         return false;
     }
 
@@ -821,7 +821,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
         return true;
 
     if (engine()->currentContext()->d()->strictMode)
-        engine()->currentContext()->throwTypeError();
+        engine()->throwTypeError();
     return false;
 }
 
@@ -853,7 +853,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             uint l = p.value.asArrayLength(&ok);
             if (!ok) {
                 ScopedValue v(scope, p.value);
-                ctx->throwRangeError(v);
+                ctx->engine()->throwRangeError(v);
                 return false;
             }
             succeeded = setArrayLength(l);
@@ -887,7 +887,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     return __defineOwnProperty__(ctx, memberIndex, name, p, attrs);
 reject:
   if (ctx->d()->strictMode)
-      ctx->throwTypeError();
+      ctx->engine()->throwTypeError();
   return false;
 }
 
@@ -903,7 +903,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     return defineOwnProperty2(ctx, index, p, attrs);
 reject:
   if (ctx->d()->strictMode)
-      ctx->throwTypeError();
+      ctx->engine()->throwTypeError();
   return false;
 }
 
@@ -939,7 +939,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
     return __defineOwnProperty__(ctx, index, 0, p, attrs);
 reject:
   if (ctx->d()->strictMode)
-      ctx->throwTypeError();
+      ctx->engine()->throwTypeError();
   return false;
 }
 
@@ -1032,7 +1032,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *me
     return true;
   reject:
     if (ctx->d()->strictMode)
-        ctx->throwTypeError();
+        ctx->engine()->throwTypeError();
     return false;
 }
 

@@ -60,7 +60,7 @@ using namespace QV4;
     QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
-    ctx->throwError(ex); \
+    ctx->engine()->throwError(ex); \
     return Encode::undefined(); \
 }
 
@@ -68,13 +68,13 @@ using namespace QV4;
     QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
-    args->setReturnValue(ctx->throwError(ex)); \
+    args->setReturnValue(ctx->engine()->throwError(ex)); \
     return; \
 }
 
 #define V4THROW_REFERENCE(string) { \
     QV4::Scoped<String> v(scope, scope.engine->newString(string)); \
-    ctx->throwReferenceError(v); \
+    ctx->engine()->throwReferenceError(v); \
     return Encode::undefined(); \
 }
 
@@ -179,7 +179,7 @@ static ReturnedValue qmlsqldatabase_rows_setForwardOnly(CallContext *ctx)
     if (!r || r->d()->type != QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
     if (ctx->d()->callData->argc < 1)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     r->d()->sqlQuery.setForwardOnly(ctx->d()->callData->args[0].toBoolean());
     return Encode::undefined();

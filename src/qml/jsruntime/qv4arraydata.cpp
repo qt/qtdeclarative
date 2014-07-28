@@ -747,7 +747,7 @@ void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueR
         return;
 
     if (!(comparefn->isUndefined() || comparefn->asObject())) {
-        context->throwTypeError();
+        context->engine()->throwTypeError();
         return;
     }
 

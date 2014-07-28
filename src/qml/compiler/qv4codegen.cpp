@@ -2861,7 +2861,7 @@ void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QStr
     if (hasError)
         return;
     hasError = true;
-    context->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
+    context->engine()->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
 void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
@@ -2869,7 +2869,7 @@ void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const Q
     if (hasError)
         return;
     hasError = true;
-    context->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
+    context->engine()->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
 #endif // V4_BOOTSTRAP

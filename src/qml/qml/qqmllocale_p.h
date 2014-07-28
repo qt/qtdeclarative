@@ -137,7 +137,7 @@ struct QQmlLocaleData : public QV4::Object
         QV4::Object *o = ctx->d()->callData->thisObject.asObject();
         QQmlLocaleData *thisObject = o ? o->as<QQmlLocaleData>() : 0;
         if (!thisObject) {
-            ctx->throwTypeError();
+            ctx->engine()->throwTypeError();
             return 0;
         }
         return &thisObject->d()->locale;

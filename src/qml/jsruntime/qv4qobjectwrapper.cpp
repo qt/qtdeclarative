@@ -443,7 +443,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     if (!property->isWritable() && !property->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
                         property->name(object) + QLatin1Char('\"');
-        ctx->throwTypeError(error);
+        ctx->engine()->throwTypeError(error);
         return;
     }
 
@@ -459,7 +459,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
                     error += QLatin1String("[unknown property type]");
                 else
                     error += QLatin1String(QMetaType::typeName(property->propType));
-                ctx->throwError(error);
+                ctx->engine()->throwError(error);
                 return;
             }
         } else {
@@ -511,7 +511,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
             error += QLatin1String("[unknown property type]");
         else
             error += QLatin1String(QMetaType::typeName(property->propType));
-        ctx->throwError(error);
+        ctx->engine()->throwError(error);
         return;
     } else if (value->asFunctionObject()) {
         // this is handled by the binding creation above
@@ -560,7 +560,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
                             QLatin1String(valueType) +
                             QLatin1String(" to ") +
                             QLatin1String(targetTypeName);
-            ctx->throwError(error);
+            ctx->engine()->throwError(error);
             return;
         }
     }
@@ -693,7 +693,7 @@ void QObjectWrapper::put(Managed *m, String *name, const ValueRef value)
         if (ddata && ddata->context) {
             QString error = QLatin1String("Cannot assign to non-existent property \"") +
                             name->toQString() + QLatin1Char('\"');
-            v4->currentContext()->throwError(error);
+            v4->throwError(error);
         } else {
             QV4::Object::put(m, name, value);
         }
@@ -1374,7 +1374,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
         QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
-        return QV8Engine::getV4(engine)->currentContext()->throwError(error);
+        return QV8Engine::getV4(engine)->throwError(error);
     }
 
     if (data.hasArguments()) {
@@ -1388,12 +1388,12 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
             QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
-            return QV8Engine::getV4(engine)->currentContext()->throwError(error);
+            return QV8Engine::getV4(engine)->throwError(error);
         }
 
         if (args[0] > callArgs->argc) {
             QString error = QLatin1String("Insufficient arguments");
-            return QV8Engine::getV4(engine)->currentContext()->throwError(error);
+            return QV8Engine::getV4(engine)->throwError(error);
         }
 
         return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
@@ -1492,7 +1492,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
-        return QV8Engine::getV4(engine)->currentContext()->throwError(error);
+        return QV8Engine::getV4(engine)->throwError(error);
     }
 }
 
@@ -1793,7 +1793,7 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
     if (!d()->object)
         return Encode::undefined();
     if (QQmlData::keepAliveDuringGarbageCollection(d()->object))
-        return ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+        return ctx->engine()->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
     if (argc > 0)

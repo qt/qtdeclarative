@@ -1301,7 +1301,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalCompositeOperation(QV4::C
     CHECK_CONTEXT_SETTER(r)
 
     if (!ctx->d()->callData->argc)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     QString mode = ctx->d()->callData->args[0].toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
@@ -1853,7 +1853,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineJoin(QV4::CallContext *ctx)
     CHECK_CONTEXT_SETTER(r)
 
     if (!ctx->d()->callData->argc)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     QString lineJoin = ctx->d()->callData->args[0].toQString();
     Qt::PenJoinStyle join;
@@ -3027,7 +3027,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_width(QV4::CallContext
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->d()->callData->thisObject);
     if (!imageData)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
@@ -3043,7 +3043,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_height(QV4::CallContex
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->d()->callData->thisObject);
     if (!imageData)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
@@ -3059,7 +3059,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_data(QV4::CallContext 
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->d()->callData->thisObject);
     if (!imageData)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     return imageData->d()->pixelData.asReturnedValue();
 }
 

@@ -224,7 +224,7 @@ void Script::parse()
 
     foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
         if (m.isError()) {
-            scope->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
+            scope->engine()->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
             return;
         } else {
             qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
@@ -268,7 +268,7 @@ void Script::parse()
     if (!vmFunction) {
         // ### FIX file/line number
         Scoped<Object> error(valueScope, v4->newSyntaxErrorObject(QStringLiteral("Syntax error")));
-        v4->currentContext()->throwError(error);
+        v4->throwError(error);
     }
 }
 

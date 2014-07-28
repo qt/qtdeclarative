@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
     QV4::ScopedValue v(scope, scope.engine->newString(QStringLiteral(string))); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(error))); \
-    return ctx->throwError(ex); \
+    return ctx->engine()->throwError(ex); \
 }
 
 namespace QV4 {

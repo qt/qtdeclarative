@@ -254,7 +254,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     Scoped<RegExpObject> re(scope, r);
     if (re) {
         if (!f->isUndefined())
-            return ctx->throwTypeError();
+            return ctx->engine()->throwTypeError();
 
         return Encode(ctx->d()->engine->newRegExpObject(re->value(), re->global()));
     }
@@ -281,14 +281,14 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
             } else if (str.at(i) == QLatin1Char('m') && !multiLine) {
                 multiLine = true;
             } else {
-                return ctx->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
+                return ctx->engine()->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
             }
         }
     }
 
     Scoped<RegExp> regexp(scope, RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
-        return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
+        return ctx->engine()->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 
     return Encode(ctx->d()->engine->newRegExpObject(regexp, global));
 }
@@ -353,7 +353,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
     arg = RuntimeHelpers::toString(ctx, arg);
@@ -417,7 +417,7 @@ ReturnedValue RegExpPrototype::method_toString(CallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     return ctx->d()->engine->newString(r->toString())->asReturnedValue();
 }
@@ -427,7 +427,7 @@ ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->d()->callData->thisObject.as<RegExpObject>());
     if (!r)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedCallData callData(scope, ctx->d()->callData->argc);
     memcpy(callData->args, ctx->d()->callData->args, ctx->d()->callData->argc*sizeof(Value));

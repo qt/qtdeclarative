@@ -101,7 +101,7 @@ inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
         return ctx->d()->callData->thisObject.asReturnedValue();
     NumberObject *n = ctx->d()->callData->thisObject.asNumberObject();
     if (!n)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     return n->value().asReturnedValue();
 }
 
@@ -111,7 +111,7 @@ inline double thisNumber(ExecutionContext *ctx)
         return ctx->d()->callData->thisObject.asDouble();
     NumberObject *n = ctx->d()->callData->thisObject.asNumberObject();
     if (!n)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     return n->value().asDouble();
 }
 
@@ -124,7 +124,7 @@ ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
     if (ctx->d()->callData->argc && !ctx->d()->callData->args[0].isUndefined()) {
         int radix = ctx->d()->callData->args[0].toInt32();
         if (radix < 2 || radix > 36)
-            return ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
+            return ctx->engine()->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
 
         if (std::isnan(num)) {
@@ -197,7 +197,7 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
         fdigits = 0;
 
     if (fdigits < 0 || fdigits > 20)
-        return ctx->throwRangeError(ctx->d()->callData->thisObject);
+        return ctx->engine()->throwRangeError(ctx->d()->callData->thisObject);
 
     QString str;
     if (std::isnan(v))
@@ -224,7 +224,7 @@ ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
         fdigits = ctx->d()->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             ScopedString error(scope, ctx->d()->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
-            return ctx->throwRangeError(error);
+            return ctx->engine()->throwRangeError(error);
         }
     }
 
@@ -249,7 +249,7 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
     double precision = ctx->d()->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, ctx->d()->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
-        return ctx->throwRangeError(error);
+        return ctx->engine()->throwRangeError(error);
     }
 
     char str[100];

@@ -170,7 +170,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
     static ReturnedValue construct(Managed *m, CallData *)
     {
-        return m->engine()->currentContext()->throwTypeError();
+        return m->engine()->throwTypeError();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);

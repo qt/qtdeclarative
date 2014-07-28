@@ -90,7 +90,7 @@ static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
 static ReturnedValue throwTypeError(CallContext *ctx)
 {
-    return ctx->throwTypeError();
+    return ctx->engine()->throwTypeError();
 }
 
 const int MinimumStackSize = 256; // in kbytes
@@ -444,7 +444,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
-    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(rootContext, name.getPointer(), throwTypeError)).getPointer();
+    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(rootContext, name.getPointer(), ::throwTypeError)).getPointer();
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -968,7 +968,7 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
     return m_qmlExtensions;
 }
 
-ReturnedValue ExecutionEngine::throwException(const ValueRef value)
+ReturnedValue ExecutionEngine::throwError(const ValueRef value)
 {
     // we can get in here with an exception already set, as the runtime
     // doesn't check after every operation that can throw.
@@ -1005,6 +1005,92 @@ ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext,
     exceptionValue = Primitive::emptyValue();
     return res;
 }
+
+ReturnedValue ExecutionEngine::throwError(const QString &message)
+{
+    Scope scope(this);
+    ScopedValue v(scope, newString(message));
+    v = newErrorObject(v);
+    return throwError(v);
+}
+
+ReturnedValue ExecutionEngine::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
+{
+    Scope scope(this);
+    Scoped<Object> error(scope, newSyntaxErrorObject(message, fileName, line, column));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwSyntaxError(const QString &message)
+{
+    Scope scope(this);
+    Scoped<Object> error(scope, newSyntaxErrorObject(message));
+    return throwError(error);
+}
+
+
+ReturnedValue ExecutionEngine::throwTypeError()
+{
+    Scope scope(this);
+    Scoped<Object> error(scope, newTypeErrorObject(QStringLiteral("Type error")));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwTypeError(const QString &message)
+{
+    Scope scope(this);
+    Scoped<Object> error(scope, newTypeErrorObject(message));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwReferenceError(const ValueRef value)
+{
+    Scope scope(this);
+    Scoped<String> s(scope, value->toString(this));
+    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    Scoped<Object> error(scope, newReferenceErrorObject(msg));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
+{
+    Scope scope(this);
+    QString msg = message;
+    Scoped<Object> error(scope, newReferenceErrorObject(msg, fileName, line, column));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwRangeError(const QString &message)
+{
+    Scope scope(this);
+    ScopedObject error(scope, newRangeErrorObject(message));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwRangeError(const ValueRef value)
+{
+    Scope scope(this);
+    ScopedString s(scope, value->toString(this));
+    QString msg = s->toQString() + QStringLiteral(" out of range");
+    ScopedObject error(scope, newRangeErrorObject(msg));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwURIError(const ValueRef msg)
+{
+    Scope scope(this);
+    ScopedObject error(scope, newURIErrorObject(msg));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwUnimplemented(const QString &message)
+{
+    Scope scope(this);
+    ScopedValue v(scope, newString(QStringLiteral("Unimplemented ") + message));
+    v = newErrorObject(v);
+    return throwError(v);
+}
+
 
 QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
 {

@@ -237,7 +237,7 @@ bool ExecutionContext::deleteProperty(String *name)
     }
 
     if (d()->strictMode)
-        throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name->toQString()));
+        engine()->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name->toQString()));
     return true;
 }
 
@@ -328,7 +328,7 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
     }
     if (d()->strictMode || name->equals(d()->engine->id_this.getPointer())) {
         ScopedValue n(scope, name->asReturnedValue());
-        throwReferenceError(n);
+        engine()->throwReferenceError(n);
         return;
     }
     d()->engine->globalObject->put(name, value);
@@ -395,7 +395,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         }
     }
     ScopedValue n(scope, name);
-    return throwReferenceError(n);
+    return engine()->throwReferenceError(n);
 }
 
 ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
@@ -464,100 +464,10 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
         }
     }
     ScopedValue n(scope, name);
-    return throwReferenceError(n);
-}
-
-
-ReturnedValue ExecutionContext::throwError(const ValueRef value)
-{
-    return d()->engine->throwException(value);
-}
-
-ReturnedValue ExecutionContext::throwError(const QString &message)
-{
-    Scope scope(this);
-    ScopedValue v(scope, d()->engine->newString(message));
-    v = d()->engine->newErrorObject(v);
-    return throwError(v);
-}
-
-ReturnedValue ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
-{
-    Scope scope(this);
-    Scoped<Object> error(scope, d()->engine->newSyntaxErrorObject(message, fileName, line, column));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwSyntaxError(const QString &message)
-{
-    Scope scope(this);
-    Scoped<Object> error(scope, d()->engine->newSyntaxErrorObject(message));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwTypeError()
-{
-    Scope scope(this);
-    Scoped<Object> error(scope, d()->engine->newTypeErrorObject(QStringLiteral("Type error")));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwTypeError(const QString &message)
-{
-    Scope scope(this);
-    Scoped<Object> error(scope, d()->engine->newTypeErrorObject(message));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwUnimplemented(const QString &message)
-{
-    Scope scope(this);
-    ScopedValue v(scope, d()->engine->newString(QStringLiteral("Unimplemented ") + message));
-    v = d()->engine->newErrorObject(v);
-    return throwError(v);
+    return engine()->throwReferenceError(n);
 }
 
 ReturnedValue ExecutionContext::catchException(StackTrace *trace)
 {
     return d()->engine->catchException(this, trace);
-}
-
-ReturnedValue ExecutionContext::throwReferenceError(const ValueRef value)
-{
-    Scope scope(this);
-    Scoped<String> s(scope, value->toString(this));
-    QString msg = s->toQString() + QStringLiteral(" is not defined");
-    Scoped<Object> error(scope, d()->engine->newReferenceErrorObject(msg));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
-{
-    Scope scope(this);
-    QString msg = message;
-    Scoped<Object> error(scope, d()->engine->newReferenceErrorObject(msg, fileName, line, column));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwRangeError(const ValueRef value)
-{
-    Scope scope(this);
-    ScopedString s(scope, value->toString(this));
-    QString msg = s->toQString() + QStringLiteral(" out of range");
-    ScopedObject error(scope, d()->engine->newRangeErrorObject(msg));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwRangeError(const QString &message)
-{
-    Scope scope(this);
-    ScopedObject error(scope, d()->engine->newRangeErrorObject(message));
-    return throwError(error);
-}
-
-ReturnedValue ExecutionContext::throwURIError(const ValueRef msg)
-{
-    Scope scope(this);
-    ScopedObject error(scope, d()->engine->newURIErrorObject(msg));
-    return throwError(error);
 }

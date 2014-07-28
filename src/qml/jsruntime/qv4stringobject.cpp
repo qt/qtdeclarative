@@ -109,13 +109,13 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Scope scope(v4);
     Scoped<StringObject> o(scope, m->asStringObject());
     if (!o) {
-        v4->currentContext()->throwTypeError();
+        v4->throwTypeError();
         return false;
     }
 
     if (index < static_cast<uint>(o->d()->value.stringValue()->toQString().length())) {
         if (v4->currentContext()->d()->strictMode)
-            v4->currentContext()->throwTypeError();
+            v4->throwTypeError();
         return false;
     }
     return true;
@@ -230,7 +230,7 @@ static QString getThisString(ExecutionContext *ctx)
     if (StringObject *thisString = t->asStringObject())
         return thisString->d()->value.stringValue()->toQString();
     if (t->isUndefined() || t->isNull()) {
-        ctx->throwTypeError();
+        ctx->engine()->throwTypeError();
         return QString();
     }
     return t->toQString();
@@ -243,7 +243,7 @@ ReturnedValue StringPrototype::method_toString(CallContext *context)
 
     StringObject *o = context->d()->callData->thisObject.asStringObject();
     if (!o)
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
     return o->d()->value.asReturnedValue();
 }
 
@@ -365,7 +365,7 @@ ReturnedValue StringPrototype::method_localeCompare(CallContext *context)
 ReturnedValue StringPrototype::method_match(CallContext *context)
 {
     if (context->d()->callData->thisObject.isUndefined() || context->d()->callData->thisObject.isNull())
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     Scope scope(context);
     ScopedString s(scope, context->d()->callData->thisObject.toString(context));
@@ -380,7 +380,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     if (!rx)
         // ### CHECK
-        return context->throwTypeError();
+        return context->engine()->throwTypeError();
 
     bool global = rx->global();
 

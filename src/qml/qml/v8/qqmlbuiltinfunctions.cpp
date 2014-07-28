@@ -1004,7 +1004,7 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
 
     if (component.isError()) {
         ScopedValue v(scope, Error::create(ctx->d()->engine, component.errors()));
-        return ctx->throwError(v);
+        return ctx->engine()->throwError(v);
     }
 
     if (!component.isReady())
@@ -1028,7 +1028,7 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
 
     if (component.isError()) {
         ScopedValue v(scope, Error::create(ctx->d()->engine, component.errors()));
-        return ctx->throwError(v);
+        return ctx->engine()->throwError(v);
     }
 
     Q_ASSERT(obj);
@@ -1070,7 +1070,7 @@ use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 ReturnedValue QtObject::method_createComponent(CallContext *ctx)
 {
     if (ctx->d()->callData->argc < 1 || ctx->d()->callData->argc > 3)
-        return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
+        return ctx->engine()->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
 
     Scope scope(ctx);
 
@@ -1098,13 +1098,13 @@ ReturnedValue QtObject::method_createComponent(CallContext *ctx)
         if (ctx->d()->callData->args[1].isInteger()) {
             int mode = ctx->d()->callData->args[1].integerValue();
             if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
-                return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
+                return ctx->engine()->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
             compileMode = QQmlComponent::CompilationMode(mode);
             consumedCount += 1;
         } else {
             // The second argument could be the parent only if there are exactly two args
             if ((ctx->d()->callData->argc != 2) || !(lastArg->isObject() || lastArg->isNull()))
-                return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
+                return ctx->engine()->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
         }
 
         if (consumedCount < ctx->d()->callData->argc) {
@@ -1113,11 +1113,11 @@ ReturnedValue QtObject::method_createComponent(CallContext *ctx)
                 if (qobjectWrapper)
                     parentArg = qobjectWrapper->object();
                 if (!parentArg)
-                    return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
+                    return ctx->engine()->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
             } else if (lastArg->isNull()) {
                 parentArg = 0;
             } else {
-                return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
+                return ctx->engine()->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
             }
         }
     }
@@ -1257,10 +1257,10 @@ ReturnedValue QtObject::method_get_platform(CallContext *ctx)
     // ### inefficient. Should be just a value based getter
     Object *o = ctx->d()->callData->thisObject.asObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     QtObject *qt = o->as<QtObject>();
     if (!qt)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     if (!qt->d()->platform)
         // Only allocate a platform object once
@@ -1274,10 +1274,10 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
     // ### inefficient. Should be just a value based getter
     Object *o = ctx->d()->callData->thisObject.asObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
     QtObject *qt = o->as<QtObject>();
     if (!qt)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     if (!qt->d()->application)
         // Only allocate an application object once

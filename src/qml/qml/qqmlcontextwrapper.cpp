@@ -291,7 +291,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
             Scoped<String> e(scope, v4->currentContext()->d()->engine->newString(error));
-            v4->currentContext()->throwError(e);
+            v4->throwError(e);
             return;
         }
 
@@ -335,7 +335,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
     if (wrapper->d()->readOnly) {
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
-        v4->currentContext()->throwError(error);
+        v4->throwError(error);
         return;
     }
 

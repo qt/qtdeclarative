@@ -143,7 +143,7 @@ ReturnedValue FunctionObject::newInstance()
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    that->internalClass()->engine->currentContext()->throwTypeError();
+    that->internalClass()->engine->throwTypeError();
     return Encode::undefined();
 }
 
@@ -208,12 +208,12 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        return v4->currentContext()->throwSyntaxError(QLatin1String("Parse error"));
+        return v4->throwSyntaxError(QLatin1String("Parse error"));
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
     if (!fe)
-        return v4->currentContext()->throwSyntaxError(QLatin1String("Parse error"));
+        return v4->throwSyntaxError(QLatin1String("Parse error"));
 
     IR::Module module(v4->debugger != 0);
 
@@ -262,7 +262,7 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 {
     FunctionObject *fun = ctx->d()->callData->thisObject.asFunctionObject();
     if (!fun)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     return ctx->d()->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
@@ -272,7 +272,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     Scope scope(ctx);
     FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(1));
 
@@ -282,7 +282,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     if (!arr) {
         len = 0;
         if (!arg->isNullOrUndefined())
-            return ctx->throwTypeError();
+            return ctx->engine()->throwTypeError();
     } else {
         len = arr->getLength();
     }
@@ -314,7 +314,7 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 
     FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
     if (!o)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedCallData callData(scope, ctx->d()->callData->argc ? ctx->d()->callData->argc - 1 : 0);
     if (ctx->d()->callData->argc) {
@@ -330,7 +330,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
     Scope scope(ctx);
     Scoped<FunctionObject> target(scope, ctx->d()->callData->thisObject);
     if (!target)
-        return ctx->throwTypeError();
+        return ctx->engine()->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     Members boundArgs;
@@ -539,7 +539,7 @@ BuiltinFunction::Data::Data(ExecutionContext *scope, String *name, ReturnedValue
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
-    return f->internalClass()->engine->currentContext()->throwTypeError();
+    return f->internalClass()->engine->throwTypeError();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)

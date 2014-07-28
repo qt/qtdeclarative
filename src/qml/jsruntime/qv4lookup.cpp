@@ -130,7 +130,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
 
         if (object->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
-            return ctx->throwTypeError(message);
+            return ctx->engine()->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(ctx, object);
@@ -240,7 +240,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     switch (object->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        return engine->currentContext()->throwTypeError();
+        return engine->throwTypeError();
     case Value::Boolean_Type:
         proto = engine->booleanClass->prototype;
         break;
@@ -598,7 +598,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
     }
     Scope scope(ctx);
     Scoped<String> n(scope, l->name);
-    return ctx->throwReferenceError(n);
+    return ctx->engine()->throwReferenceError(n);
 }
 
 ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionContext *ctx)

@@ -126,19 +126,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     void createMutableBinding(String *name, bool deletable);
 
-    ReturnedValue throwError(const QV4::ValueRef value);
-    ReturnedValue throwError(const QString &message);
-    ReturnedValue throwSyntaxError(const QString &message);
-    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int lineNumber, int column);
-    ReturnedValue throwTypeError();
-    ReturnedValue throwTypeError(const QString &message);
-    ReturnedValue throwReferenceError(const ValueRef value);
-    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
-    ReturnedValue throwRangeError(const ValueRef value);
-    ReturnedValue throwRangeError(const QString &message);
-    ReturnedValue throwURIError(const ValueRef msg);
-    ReturnedValue throwUnimplemented(const QString &message);
-
     void setProperty(String *name, const ValueRef value);
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyAndBase(String *name, Object *&base);

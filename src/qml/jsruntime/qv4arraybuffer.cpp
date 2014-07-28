@@ -56,7 +56,7 @@ ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)
         return Encode::undefined();
     uint len = (uint)qBound(0., dl, (double)UINT_MAX);
     if (len != dl)
-        return v4->currentContext()->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
+        return v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
 
     Scoped<ArrayBuffer> a(scope, v4->memoryManager->alloc<ArrayBuffer>(v4, len));
     if (scope.engine->hasException)
@@ -89,7 +89,7 @@ ArrayBuffer::Data::Data(ExecutionEngine *e, int length)
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
         data = 0;
-        e->currentContext()->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
+        e->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
     data->size = length;
@@ -128,7 +128,7 @@ ReturnedValue ArrayBufferPrototype::method_get_byteLength(CallContext *ctx)
     Scope scope(ctx);
     Scoped<ArrayBuffer> v(scope, ctx->d()->callData->thisObject);
     if (!v)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     return Encode(v->d()->data->size);
 }
@@ -138,7 +138,7 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
     Scope scope(ctx);
     Scoped<ArrayBuffer> a(scope, ctx->d()->callData->thisObject);
     if (!a)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     double start = ctx->d()->callData->argc > 0 ? ctx->d()->callData->args[0].toInteger() : 0;
     double end = (ctx->d()->callData->argc < 2 || ctx->d()->callData->args[1].isUndefined()) ?
@@ -151,14 +151,14 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
 
     Scoped<FunctionObject> constructor(scope, a->get(scope.engine->id_constructor));
     if (!constructor)
-        return ctx->throwTypeError();
+        return scope.engine->throwTypeError();
 
     ScopedCallData callData(scope, 1);
     double newLen = qMax(final - first, 0.);
     callData->args[0] = QV4::Encode(newLen);
     QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->construct(callData));
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
-        return scope.engine->currentContext()->throwTypeError();
+        return scope.engine->throwTypeError();
 
     memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
 
