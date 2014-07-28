@@ -74,6 +74,8 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 
+#include <private/qopenglvertexarrayobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch");
@@ -415,6 +417,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , lastFocusReason(Qt::OtherFocusReason)
     , renderTarget(0)
     , renderTargetId(0)
+    , vaoHelper(0)
     , incubationController(0)
 {
 #ifndef QT_NO_DRAGANDDROP
@@ -2832,6 +2835,9 @@ void QQuickWindow::cleanupSceneGraph()
 {
     Q_D(QQuickWindow);
 
+    delete d->vaoHelper;
+    d->vaoHelper = 0;
+
     if (!d->renderer)
         return;
 
@@ -3517,16 +3523,26 @@ void QQuickWindow::resetOpenGLState()
     if (!openglContext())
         return;
 
-    QOpenGLFunctions *gl = openglContext()->functions();
+    Q_D(QQuickWindow);
+
+    QOpenGLContext *ctx = openglContext();
+    QOpenGLFunctions *gl = ctx->functions();
 
     gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    int maxAttribs;
-    gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
-    for (int i=0; i<maxAttribs; ++i) {
-        gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
-        gl->glDisableVertexAttribArray(i);
+    if (!d->vaoHelper)
+        d->vaoHelper = new QOpenGLVertexArrayObjectHelper(ctx);
+    if (d->vaoHelper->isValid())
+        d->vaoHelper->glBindVertexArray(0);
+
+    if (ctx->isOpenGLES() || (gl->openGLFeatures() & QOpenGLFunctions::FixedFunctionPipeline)) {
+        int maxAttribs;
+        gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+        for (int i=0; i<maxAttribs; ++i) {
+            gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            gl->glDisableVertexAttribArray(i);
+        }
     }
 
     gl->glActiveTexture(GL_TEXTURE0);

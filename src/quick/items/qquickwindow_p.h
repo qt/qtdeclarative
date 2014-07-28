@@ -94,6 +94,8 @@ class QTouchEvent;
 class QQuickWindowRenderLoop;
 class QQuickWindowIncubationController;
 
+class QOpenGLVertexArrayObjectHelper;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate : public QWindowPrivate
 {
 public:
@@ -232,6 +234,8 @@ public:
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
     QSize renderTargetSize;
+
+    QOpenGLVertexArrayObjectHelper *vaoHelper;
 
     // Keeps track of which touch point (int) was last accepted by which item
     QHash<int, QQuickItem *> itemForTouchPointId;
