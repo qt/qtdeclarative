@@ -55,6 +55,7 @@
 #include "../shared/visualtestutil.h"
 #include "incrementalmodel.h"
 #include "proxytestinnermodel.h"
+#include "randomsortmodel.h"
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -230,6 +231,8 @@ private slots:
 
     void QTBUG_38209();
     void programmaticFlickAtBounds();
+
+    void layoutChange();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -7363,6 +7366,41 @@ void tst_QQuickListView::programmaticFlickAtBounds()
 
     // verify that there is no movement beyond bounds
     QVERIFY(!spy.wait(100));
+}
+
+void tst_QQuickListView::layoutChange()
+{
+    RandomSortModel *model = new RandomSortModel;
+    QSortFilterProxyModel *sortModel = new QSortFilterProxyModel;
+    sortModel->setSourceModel(model);
+    sortModel->setSortRole(Qt::UserRole);
+    sortModel->setDynamicSortFilter(true);
+    sortModel->sort(0);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->rootContext()->setContextProperty("testModel", QVariant::fromValue(sortModel));
+    window->setSource(testFileUrl("layoutChangeSort.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView *>("listView");
+    QVERIFY(listview);
+
+    for (int iter = 0; iter < 100; iter++) {
+        for (int i = 0; i < sortModel->rowCount(); ++i) {
+            QQuickItem *delegateItem = listview->itemAt(10, 10 + 2 * i * 20 + 20); // item + group
+            QVERIFY(delegateItem);
+            QQuickItem *delegateText = delegateItem->findChild<QQuickItem *>("delegateText");
+            QVERIFY(delegateText);
+
+            QCOMPARE(delegateText->property("text").toString(),
+                     sortModel->index(i, 0, QModelIndex()).data().toString());
+        }
+
+        model->randomize();
+        listview->forceLayout();
+        QTest::qWait(5); // give view a chance to update
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)

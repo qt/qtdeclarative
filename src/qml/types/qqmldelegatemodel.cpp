@@ -1558,12 +1558,7 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
             if (i == index.row())
                 continue;
 
-            QVector<Compositor::Insert> inserts;
-            QVector<Compositor::Remove> removes;
-            d->m_compositor.listItemsMoved(&d->m_adaptorModel, i, index.row(), 1, &removes, &inserts);
-            if (!removes.isEmpty() || !inserts.isEmpty()) {
-                d->itemsMoved(removes, inserts);
-            }
+            _q_itemsMoved(i, index.row(), 1);
         }
 
         d->m_storedPersistentIndexes.clear();

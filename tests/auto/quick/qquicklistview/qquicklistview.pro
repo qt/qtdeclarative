@@ -4,10 +4,13 @@ TARGET = tst_qquicklistview
 macx:CONFIG -= app_bundle
 
 HEADERS += incrementalmodel.h \
-           proxytestinnermodel.h
+           proxytestinnermodel.h \
+           randomsortmodel.h
 SOURCES += tst_qquicklistview.cpp \
            incrementalmodel.cpp \
-           proxytestinnermodel.cpp
+           proxytestinnermodel.cpp \
+           randomsortmodel.cpp
+
 
 include (../../shared/util.pri)
 include (../shared/util.pri)
