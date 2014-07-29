@@ -251,10 +251,6 @@ bool QQuickRenderControl::sync()
   This is the equivalent of the cleanup operations that happen with a
   real QQuickWindow when the window becomes hidden.
 
-  This function takes QQuickWindow::persistentSceneGraph() into
-  account, meaning that context-specific resources are not released
-  when persistency is enabled.
-
   This function is called from the destructor. Therefore there will
   typically be no need to call it directly. Pay attention however to
   the fact that this requires the context, that was passed to
@@ -263,6 +259,11 @@ bool QQuickRenderControl::sync()
 
   Once stop() has been called, it is possible to reuse the
   QQuickRenderControl instance by calling initialize() again.
+
+  \note This function does not take
+  QQuickWindow::persistentSceneGraph() or
+  QQuickWindow::persistentOpenGLContext() into account. This means
+  that context-specific resources are always released.
  */
 void QQuickRenderControl::stop()
 {
@@ -273,17 +274,15 @@ void QQuickRenderControl::stop()
     if (!d->window)
         return;
 
-    if (!QOpenGLContext::currentContext())
-        return;
-
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
 
-    if (!cd->persistentSceneGraph) {
-        d->rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    }
+    // We must invalidate since the context can potentially be destroyed by the
+    // application right after returning from this function. Invalidating is
+    // also essential to allow a subsequent initialize() to succeed.
+    d->rc->invalidate();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 
     d->initialized = false;
 }
