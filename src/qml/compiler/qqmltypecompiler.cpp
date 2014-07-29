@@ -277,12 +277,12 @@ bool QQmlTypeCompiler::compile()
                 if (qmlType->parserStatusCast() != -1)
                     ++parserStatusCount;
             }
+            ++objectCount;
             if (typeRef->component) {
                 bindingCount += typeRef->component->totalBindingsCount;
                 parserStatusCount += typeRef->component->totalParserStatusCount;
                 objectCount += typeRef->component->totalObjectCount;
-            } else
-                ++objectCount;
+            }
         }
     }
 

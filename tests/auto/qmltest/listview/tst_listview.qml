@@ -108,6 +108,33 @@ Item {
         property int createdDelegates: 0
     }
 
+    ListView
+    {
+        id: listInteractiveCurrentIndexEnforce
+        width: 600
+        height: 600
+
+        snapMode: ListView.SnapOneItem
+        orientation: ListView.Horizontal
+        interactive: !currentItem.moving
+        highlightRangeMode: ListView.StrictlyEnforceRange
+
+        model: 4
+
+        focus: true
+        Keys.onPressed: if (event.key == Qt.Key_K) currentIndex = currentIndex + 1;
+
+        delegate: Flickable {
+            width: 600
+            height: 600
+            contentWidth: 600
+            contentHeight: 1200
+
+            MouseArea { anchors.fill: parent }
+            Rectangle { anchors.fill: parent; color: index == 0 ? "red" : index == 1 ? "green" : index == 2 ? "blue" : "white" }
+        }
+    }
+
     Component {
         id: delegateModelAfterCreateComponent
         Rectangle {
@@ -271,6 +298,20 @@ Item {
             listViewDelegateModelAfterCreate.delegate = delegateModelAfterCreateComponent;
             listViewDelegateModelAfterCreate.model = 40;
             verify(listViewDelegateModelAfterCreate.createdDelegates > 0);
+        }
+
+        function test_listInteractiveCurrentIndexEnforce() {
+            mousePress(listInteractiveCurrentIndexEnforce, 10, 50);
+            mouseMove(listInteractiveCurrentIndexEnforce, 10, 40);
+            mouseMove(listInteractiveCurrentIndexEnforce, 10, 30);
+            mouseMove(listInteractiveCurrentIndexEnforce, 10, 20);
+            mouseMove(listInteractiveCurrentIndexEnforce, 10, 10);
+            compare(listInteractiveCurrentIndexEnforce.interactive, false);
+            mouseRelease(listInteractiveCurrentIndexEnforce, 10, 10);
+            tryCompare(listInteractiveCurrentIndexEnforce, "interactive", true);
+            keyClick("k");
+            compare(listInteractiveCurrentIndexEnforce.currentIndex, 1);
+            tryCompare(listInteractiveCurrentIndexEnforce, "contentX", listInteractiveCurrentIndexEnforce.width);
         }
     }
 }

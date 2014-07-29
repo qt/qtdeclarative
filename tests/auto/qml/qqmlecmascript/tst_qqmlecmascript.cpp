@@ -324,6 +324,7 @@ private slots:
     void varPropertyAccessOnObjectWithInvalidContext();
     void importedScriptsAccessOnObjectWithInvalidContext();
     void contextObjectOnLazyBindings();
+    void garbageCollectionDuringCreation();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7635,6 +7636,33 @@ void tst_qqmlecmascript::contextObjectOnLazyBindings()
     QObject *subObject = qvariant_cast<QObject*>(obj->property("subObject"));
     QVERIFY(subObject);
     QCOMPARE(subObject->property("testValue").toInt(), int(42));
+}
+
+void tst_qqmlecmascript::garbageCollectionDuringCreation()
+{
+    QQmlComponent component(&engine);
+    component.setData("import Qt.test 1.0\n"
+                      "QObjectContainerWithGCOnAppend {\n"
+                      "    objectName: \"root\"\n"
+                      "    FloatingQObject {\n"
+                      "        objectName: \"parentLessChild\"\n"
+                      "        property var blah;\n" // Ensure we have JS wrapper
+                      "    }\n"
+                      "}\n",
+                      QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QObjectContainer *container = qobject_cast<QObjectContainer*>(object.data());
+    QCOMPARE(container->dataChildren.count(), 1);
+
+    QObject *child = container->dataChildren.first();
+    QQmlData *ddata = QQmlData::get(child);
+    QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
+
+    gc(engine);
+    QCOMPARE(container->dataChildren.count(), 0);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
