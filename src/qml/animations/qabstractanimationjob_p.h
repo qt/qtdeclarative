@@ -215,7 +215,9 @@ public:
     //useful for profiling/debugging
     int runningAnimationCount() { return animations.count(); }
 
-private Q_SLOTS:
+    bool hasStartAnimationPending() const { return startAnimationPending; }
+
+public Q_SLOTS:
     void startAnimations();
     void stopTimer();
 

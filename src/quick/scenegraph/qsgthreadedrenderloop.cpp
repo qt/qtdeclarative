@@ -1066,17 +1066,9 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     }
 
     // Flush pending touch events.
-    // First we force flushing of the windowing system events, so that we're
-    // working with the latest possible data. This can trigger event processing
-    // which in turn can stop rendering this window, so verify that before
-    // proceeding. Then we flush the touch event and as that also does event
-    // processing, verify again that we still are active and rendering.
-    QWindowSystemInterface::flushWindowSystemEvents();
+    QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
+    // The delivery of the event might have caused the window to stop rendering
     w = windowFor(m_windows, window);
-    if (w) {
-        QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
-        w = windowFor(m_windows, window);
-    }
     if (!w || !w->thread || !w->thread->window) {
         qCDebug(QSG_LOG_RENDERLOOP) << "- removed after event flushing, abort";
         killTimer(w->timerId);

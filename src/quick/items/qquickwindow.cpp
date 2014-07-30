@@ -1838,9 +1838,11 @@ void QQuickWindowPrivate::flushDelayedTouchEvent()
         delete delayedTouch;
         delayedTouch = 0;
 
-        // To flush pending meta-calls triggered from the recently flushed touch events.
-        // This is safe because flushDelayedEvent is only called from eventhandlers.
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        // Touch events which constantly start animations (such as a behavior tracking
+        // the mouse point) need animations to start.
+        QQmlAnimationTimer *ut = QQmlAnimationTimer::instance();
+        if (ut && ut->hasStartAnimationPending())
+            ut->startAnimations();
     }
 }
 

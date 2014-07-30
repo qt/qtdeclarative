@@ -147,6 +147,8 @@ void QQmlAnimationTimer::restartAnimationTimer()
 
 void QQmlAnimationTimer::startAnimations()
 {
+    if (!startAnimationPending)
+        return;
     startAnimationPending = false;
     //force timer to update, which prevents large deltas for our newly added animations
     QUnifiedTimer::instance()->maybeUpdateAnimationsToCurrentTime();
