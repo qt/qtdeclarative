@@ -414,7 +414,8 @@ QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
     delete m_multisampledFbo;
     delete m_paint_device;
 
-    glDeleteTextures(2, m_displayTextures);
+    if (QOpenGLContext::currentContext())
+        glDeleteTextures(2, m_displayTextures);
 }
 
 QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture)

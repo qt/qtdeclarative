@@ -70,6 +70,8 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <QtCore/QRunnable>
+
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
 #endif
@@ -4061,6 +4063,27 @@ bool QQuickContext2D::isPointInPath(qreal x, qreal y) const
     return contains;
 }
 
+class QQuickContext2DThreadCleanup : public QObject
+{
+public:
+    QQuickContext2DThreadCleanup(QOpenGLContext *gl, QQuickContext2DTexture *t, QOffscreenSurface *s)
+        : context(gl), texture(t), surface(s)
+    { }
+
+    ~QQuickContext2DThreadCleanup()
+    {
+        context->makeCurrent(surface);
+        delete texture;
+        context->doneCurrent();
+        delete context;
+        surface->deleteLater();
+    }
+
+    QOpenGLContext *context;
+    QQuickContext2DTexture *texture;
+    QOffscreenSurface *surface;
+};
+
 QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
@@ -4075,7 +4098,28 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
 QQuickContext2D::~QQuickContext2D()
 {
     delete m_buffer;
-    m_texture->deleteLater();
+
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
+        if (m_renderStrategy == QQuickCanvasItem::Immediate && m_glContext) {
+            Q_ASSERT(QThread::currentThread() == m_glContext->thread());
+            m_glContext->makeCurrent(m_surface.data());
+            delete m_texture;
+            m_glContext->doneCurrent();
+            delete m_glContext;
+        } else if (m_texture->isOnCustomThread()) {
+            Q_ASSERT(m_glContext);
+            QQuickContext2DThreadCleanup *cleaner = new QQuickContext2DThreadCleanup(m_glContext, m_texture, m_surface.take());
+            cleaner->moveToThread(m_texture->thread());
+            cleaner->deleteLater();
+        } else {
+            m_texture->deleteLater();
+        }
+    } else {
+        // Image based does not have GL resources, but must still be deleted
+        // on its designated thread after it has completed whatever it might
+        // currently be doing.
+        m_texture->deleteLater();
+    }
 }
 
 QV4::ReturnedValue QQuickContext2D::v4value() const

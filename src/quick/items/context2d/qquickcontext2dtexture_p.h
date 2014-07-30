@@ -107,6 +107,7 @@ public:
     bool setDirtyRect(const QRect &dirtyRect);
     bool canvasDestroyed();
     void setOnCustomThread(bool is) { m_onCustomThread = is; }
+    bool isOnCustomThread() const { return m_onCustomThread; }
 
     // Called during sync() on the scene graph thread while GUI is blocked.
     virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame) = 0;
