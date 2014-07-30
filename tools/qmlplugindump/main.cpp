@@ -306,6 +306,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                     std::cerr << "Got " << qPrintable( tyName )
                               << " (" << qPrintable( QString::fromUtf8(ty->typeName()) ) << ")" << std::endl;
                 collectReachableMetaObjects(object, &metas);
+                object->deleteLater();
             } else {
                 std::cerr << "Could not create" << qPrintable(tyName) << std::endl;
             }
