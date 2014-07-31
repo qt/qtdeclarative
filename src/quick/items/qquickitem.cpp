@@ -1687,6 +1687,63 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
+    \section2 Graphics Resource Handling
+
+    The preferred way to handle cleanup of graphics resources used in
+    the scene graph, is to rely on the automatic cleanup of nodes. A
+    QSGNode returned from QQuickItem::updatePaintNode() is
+    automatically deleted on the right thread at the right time. Trees
+    of QSGNode instances are managed through the use of
+    QSGNode::OwnedByParent, which is set by default. So, for the
+    majority of custom scene graph items, no extra work will be
+    required.
+
+    Implementations that store graphics resources outside the node
+    tree, such as an item implementing QQuickItem::textureProvider(),
+    will need to take care in cleaning it up correctly depending on
+    how the item is used in QML. The situations to handle are:
+
+    \list
+
+    \li The scene graph is invalidated; This can happen, for instance,
+    if the window is hidden using QQuickWindow::hide(). The signal
+    QQuickItem::sceneGraphInvalidated() is emitted on the rendering
+    thread and the GUI thread is blocked for the duration of this
+    call. Graphics resources can be deleted directly when this signal
+    is connected to using a Qt::DirectConnection.
+
+    \li The item is removed from the scene; If an item is taken out of
+    the scene, for instance because it's parent was set to \c null or
+    an item in another window, the QQuickItem::releaseResources() will
+    be called on the GUI thread. QQuickWindow::scheduleRenderJob()
+    should be used to schedule cleanup of rendering resources.
+
+    \li The item is deleted; When the destructor if an item runs, it
+    should delete any graphics resources it has. If neither of the two
+    conditions above were already met, the item will be part of a
+    window and it is possible to use QQuickWindow::scheduleRenderJob()
+    to have them cleaned up. If an implementation ignores the call to
+    QQuickItem::releaseResources(), the item will in many cases no
+    longer have access to a QQuickWindow and thus no means of
+    scheduling cleanup.
+
+    \endlist
+
+    When scheduling cleanup of graphics resources using
+    QQuickWindow::scheduleRenderJob(), one should use either
+    QQuickWindow::BeforeSynchronizingStage or
+    QQuickWindow::AfterSynchronizingStage. The \l {Scene Graph and
+    Rendering}{synchronization stage} is where the scene graph is
+    changed as a result of changes to the QML tree. If cleanup is
+    scheduled at any other time, it may result in other parts of the
+    scene graph referencing the newly deleted objects as these parts
+    have not been updated.
+
+    \note Use of QObject::deleteLater() to clean up graphics resources
+    is not recommended as this will run at an arbitrary time and it is
+    unknown if there will be an OpenGL context bound when the deletion
+    takes place.
+
     \section1 Custom QPainter Items
 
     The QQuickItem provides a subclass, QQuickPaintedItem, which
@@ -3443,7 +3500,7 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
-    QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty()
+    QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty(), {Graphics Resource Handling}
  */
 
 QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
@@ -3454,16 +3511,20 @@ QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upda
 }
 
 /*!
-    This function is called when the item's scene graph resources are no longer needed.
-    It allows items to free its resources, for instance textures, that are not owned by scene graph
-    nodes. Note that scene graph nodes are managed by QQuickWindow and should not be deleted by
-    this function. Scene graph resources are no longer needed when the parent is set to null and
-    the item is not used by any \l ShaderEffect or \l ShaderEffectSource.
+    This function is called when an item should release graphics
+    resources which are not already managed by the nodes returend from
+    QQuickItem::updatePaintNode().
 
-    This function is called from the main thread. Therefore, resources used by the scene graph
-    should not be deleted directly, but by calling \l QObject::deleteLater().
+    This happens when the item is about to be removed from window it
+    was previously rendering to. The item is guaranteed to have a
+    \l {QQuickItem::window()}{window} when the function is called.
 
-    \note The item destructor still needs to free its scene graph resources if not already done.
+    The function is called on the GUI thread and the state of the
+    rendering thread, when it is used, is unknown. Objects should
+    not be deleted directly, but instead scheduled for cleanup
+    using QQuickWindow::scheduleRenderJob().
+
+    \sa {Graphics Resource Handling}
  */
 
 void QQuickItem::releaseResources()
@@ -5841,7 +5902,7 @@ void QQuickItem::setFlags(Flags flags)
     \since 5.4
     \since QtQuick 2.4
 
-    \sa QQuickWindow::sceneGraphInvalidated()
+    \sa QQuickWindow::sceneGraphInvalidated(), {Graphics Resource Handling}
  */
 
 /*!
