@@ -37,16 +37,6 @@
 #define QML_FLICK_DISCARDSAMPLES 0
 #endif
 
-// The default maximum velocity of a flick.
-#ifndef QML_FLICK_DEFAULTMAXVELOCITY
-# define QML_FLICK_DEFAULTMAXVELOCITY 2500
-#endif
-
-// The default deceleration of a flick.
-#ifndef QML_FLICK_DEFAULTDECELERATION
-# define QML_FLICK_DEFAULTDECELERATION 1500
-#endif
-
 // How much faster to decelerate when overshooting
 #ifndef QML_FLICK_OVERSHOOTFRICTION
 #define QML_FLICK_OVERSHOOTFRICTION 8

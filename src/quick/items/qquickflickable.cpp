@@ -6,7 +6,6 @@
 #include "qquickflickablebehavior_p.h"
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
-#include "qquickevents_p_p.h"
 #include "qquickmousearea_p.h"
 #include "qquickdrag_p.h"
 
@@ -21,7 +20,7 @@
 #include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
-#include "qplatformdefs.h"
+#include <qpa/qplatformintegration.h>
 
 #include <math.h>
 #include <cmath>
@@ -34,10 +33,6 @@ Q_LOGGING_CATEGORY(lcFilter, "qt.quick.flickable.filter")
 Q_LOGGING_CATEGORY(lcReplay, "qt.quick.flickable.replay")
 Q_LOGGING_CATEGORY(lcWheel, "qt.quick.flickable.wheel")
 Q_LOGGING_CATEGORY(lcVel, "qt.quick.flickable.velocity")
-
-// FlickThreshold determines how far the "mouse" must have moved
-// before we perform a flick.
-static const int FlickThreshold = 15;
 
 // RetainGrabVelocity is the maxmimum instantaneous velocity that
 // will ensure the Flickable retains the grab on consecutive flicks.
@@ -252,8 +247,8 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , syncDrag(false)
     , lastPosTime(-1)
     , lastPressTime(0)
-    , deceleration(QML_FLICK_DEFAULTDECELERATION)
-    , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
+    , deceleration(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickDeceleration).toReal())
+    , maxVelocity(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickMaximumVelocity).toReal())
     , delayedPressEvent(nullptr), pressDelay(0), fixupDuration(400)
     , flickBoost(1.0), initialWheelFlickDistance(qApp->styleHints()->wheelScrollLines() * 24)
     , fixupMode(Normal), vTime(0), visibleArea(nullptr)
@@ -1212,9 +1207,9 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
             } else {
                 qreal vel = velocity.y() / QML_FLICK_OVERSHOOTFRICTION;
                 if (vel > 0. && vel > vData.velocity)
-                    vData.velocity = qMin(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, float(QML_FLICK_DEFAULTMAXVELOCITY));
+                    vData.velocity = qMin(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, maxVelocity);
                 else if (vel < 0. && vel < vData.velocity)
-                    vData.velocity = qMax(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, -float(QML_FLICK_DEFAULTMAXVELOCITY));
+                    vData.velocity = qMax(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, -maxVelocity);
                 if (newY > minY) {
                     // Overshoot beyond the top.  But don't wait for momentum phase to end before returning to bounds.
                     if (momentum && vData.atBeginning) {
@@ -1225,7 +1220,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         return;
                     }
                     if (velocitySensitiveOverBounds) {
-                        qreal overshoot = (newY - minY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        qreal overshoot = (newY - minY) * vData.velocity / maxVelocity / QML_FLICK_OVERSHOOTFRICTION;
                         overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
                         newY = minY + overshoot;
                     } else {
@@ -1241,7 +1236,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         return;
                     }
                     if (velocitySensitiveOverBounds) {
-                        qreal overshoot = (newY - maxY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        qreal overshoot = (newY - maxY) * vData.velocity / maxVelocity / QML_FLICK_OVERSHOOTFRICTION;
                         overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
                         newY = maxY - overshoot;
                     } else {
@@ -1285,9 +1280,9 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
             } else {
                 qreal vel = velocity.x() / QML_FLICK_OVERSHOOTFRICTION;
                 if (vel > 0. && vel > hData.velocity)
-                    hData.velocity = qMin(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, float(QML_FLICK_DEFAULTMAXVELOCITY));
+                    hData.velocity = qMin(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, maxVelocity);
                 else if (vel < 0. && vel < hData.velocity)
-                    hData.velocity = qMax(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, -float(QML_FLICK_DEFAULTMAXVELOCITY));
+                    hData.velocity = qMax(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, -maxVelocity);
                 if (newX > minX) {
                     // Overshoot beyond the left.  But don't wait for momentum phase to end before returning to bounds.
                     if (momentum && hData.atBeginning) {
@@ -1298,7 +1293,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         return;
                     }
                     if (velocitySensitiveOverBounds) {
-                        qreal overshoot = (newX - minX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        qreal overshoot = (newX - minX) * hData.velocity / maxVelocity / QML_FLICK_OVERSHOOTFRICTION;
                         overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
                         newX = minX + overshoot;
                     } else {
@@ -1314,7 +1309,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         return;
                     }
                     if (velocitySensitiveOverBounds) {
-                        qreal overshoot = (newX - maxX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        qreal overshoot = (newX - maxX) * hData.velocity / maxVelocity / QML_FLICK_OVERSHOOTFRICTION;
                         overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
                         newX = maxX - overshoot;
                     } else {
@@ -1450,10 +1445,11 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
     }
 
     flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
+    const int flickThreshold = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickStartDistance).toInt();
 
     bool flickedVertically = false;
     vVelocity *= flickBoost;
-    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > FlickThreshold;
+    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > flickThreshold;
     if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
@@ -1462,7 +1458,7 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 
     bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > FlickThreshold;
+    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > flickThreshold;
     if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);

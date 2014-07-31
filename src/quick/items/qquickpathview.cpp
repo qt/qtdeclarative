@@ -3,7 +3,6 @@
 
 #include "qquickpathview_p.h"
 #include "qquickpathview_p_p.h"
-#include "qquickwindow.h"
 #include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
 #include "qquicktext_p.h"
 
@@ -11,12 +10,14 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmlchangeset_p.h>
+#include <qpa/qplatformintegration.h>
 
 #include <QtQml/qqmlinfo.h>
 
 #include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
 
@@ -62,7 +63,8 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
     , moving(false), flicking(false), dragging(false), inRequest(false), delegateValidated(false)
     , inRefill(false)
-    , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
+    , dragMargin(0), deceleration(100)
+    , maximumFlickVelocity(QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FlickMaximumVelocity).toReal())
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
     , moveReason(Other), movementDirection(QQuickPathView::Shortest), moveDirection(QQuickPathView::Shortest)
