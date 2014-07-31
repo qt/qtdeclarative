@@ -102,10 +102,14 @@ Q_SIGNALS:
     void verticalAlignmentChanged(VAlignment alignment);
     Q_REVISION(1) void mipmapChanged(bool);
 
+private Q_SLOTS:
+    void invalidateSG();
+
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);
     void pixmapChange();
     void updatePaintedGeometry();
+    void releaseResources() Q_DECL_OVERRIDE;
 
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);

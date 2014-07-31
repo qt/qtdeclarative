@@ -50,6 +50,7 @@
 #include "qopenglframebufferobject.h"
 #include "qmath.h"
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtCore/QRunnable>
 
 QT_BEGIN_NAMESPACE
 
@@ -485,6 +486,21 @@ QImage QQuickShaderEffectTexture::toImage() const
     return QImage();
 }
 
+class QQuickShaderEffectSourceCleanup : public QRunnable
+{
+public:
+    QQuickShaderEffectSourceCleanup(QQuickShaderEffectTexture *t, QQuickShaderEffectSourceTextureProvider *p)
+        : texture(t)
+        , provider(p)
+    {}
+    void run() Q_DECL_OVERRIDE {
+        delete texture;
+        delete provider;
+    }
+    QQuickShaderEffectTexture *texture;
+    QQuickShaderEffectSourceTextureProvider *provider;
+};
+
 /*!
     \qmltype ShaderEffectSource
     \instantiates QQuickShaderEffectSource
@@ -586,15 +602,20 @@ QQuickShaderEffectSource::QQuickShaderEffectSource(QQuickItem *parent)
     , m_grab(true)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 QQuickShaderEffectSource::~QQuickShaderEffectSource()
 {
-    if (m_texture)
-        m_texture->deleteLater();
-
-    if (m_provider)
-        m_provider->deleteLater();
+    if (window()) {
+        window()->scheduleRenderJob(new QQuickShaderEffectSourceCleanup(m_texture, m_provider),
+                                    QQuickWindow::AfterSynchronizingStage);
+    } else {
+        // If we don't have a window, these should already have been
+        // released in invalidateSG or in releaseResrouces()
+        Q_ASSERT(!m_texture);
+        Q_ASSERT(!m_provider);
+    }
 
     if (m_sourceItem) {
         QQuickItemPrivate *sd = QQuickItemPrivate::get(m_sourceItem);
@@ -967,12 +988,10 @@ static void get_wrap_mode(QQuickShaderEffectSource::WrapMode mode, QSGTexture::W
 
 void QQuickShaderEffectSource::releaseResources()
 {
-    if (m_texture) {
-        m_texture->deleteLater();
+    if (m_texture || m_provider) {
+        window()->scheduleRenderJob(new QQuickShaderEffectSourceCleanup(m_texture, m_provider),
+                                    QQuickWindow::AfterSynchronizingStage);
         m_texture = 0;
-    }
-    if (m_provider) {
-        m_provider->deleteLater();
         m_provider = 0;
     }
 }
@@ -1062,6 +1081,16 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     node->update();
 
     return node;
+}
+
+void QQuickShaderEffectSource::invalidateSG()
+{
+    if (m_texture)
+        delete m_texture;
+    if (m_provider)
+        delete m_provider;
+    m_texture = 0;
+    m_provider = 0;
 }
 
 void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeData &value)
