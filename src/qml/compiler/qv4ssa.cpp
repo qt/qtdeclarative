@@ -619,6 +619,21 @@ public:
         return dominates(dominator->index(), dominated->index());
     }
 
+    struct Cmp {
+        std::vector<int> *nodeDepths;
+        Cmp(std::vector<int> *nodeDepths)
+            : nodeDepths(nodeDepths)
+            { Q_ASSERT(nodeDepths); }
+        bool operator()(BasicBlock *one, BasicBlock *two) const
+            {
+                if (one->isRemoved())
+                    return false;
+                if (two->isRemoved())
+                    return true;
+                return nodeDepths->at(one->index()) > nodeDepths->at(two->index());
+            }
+    };
+
     // Calculate a depth-first iteration order on the nodes of the dominator tree.
     //
     // The order of the nodes in the vector is not the same as one where a recursive depth-first
@@ -641,20 +656,6 @@ public:
     QVector<BasicBlock *> calculateDFNodeIterOrder() const
     {
         std::vector<int> depths = calculateNodeDepths();
-        struct Cmp {
-            std::vector<int> *nodeDepths;
-            Cmp(std::vector<int> *nodeDepths)
-                : nodeDepths(nodeDepths)
-            { Q_ASSERT(nodeDepths); }
-            bool operator()(BasicBlock *one, BasicBlock *two) const
-            {
-                if (one->isRemoved())
-                    return false;
-                if (two->isRemoved())
-                    return true;
-                return nodeDepths->at(one->index()) > nodeDepths->at(two->index());
-            }
-        };
         QVector<BasicBlock *> order = function->basicBlocks();
         std::sort(order.begin(), order.end(), Cmp(&depths));
         for (int i = 0; i < order.size(); ) {
