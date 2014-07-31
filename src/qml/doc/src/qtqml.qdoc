@@ -126,6 +126,11 @@ the QML code to interact with C++ code.
 \li \l{Integrating QML and C++}
 \endlist
 
+\section1 Additional Frameworks
+\list
+\li \l{The Declarative State Machine Framework}
+\endlist
+
 \section1 Guides and Other Information
 
 Further information for writing QML applications:

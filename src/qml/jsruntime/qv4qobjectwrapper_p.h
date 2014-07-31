@@ -123,7 +123,7 @@ private:
     static ReturnedValue method_disconnect(CallContext *ctx);
 };
 
-struct QObjectMethod : public QV4::FunctionObject
+struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 {
     struct Data : QV4::FunctionObject::Data {
         Data(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);

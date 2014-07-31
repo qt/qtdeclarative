@@ -40,7 +40,8 @@ headerdirs  += .. \
                ../../imports/models
 
 sourcedirs  += .. \
-               ../../imports/models
+               ../../imports/models \
+               ../../imports/statemachine
 
 exampledirs += ../../../examples/qml \
                ../ \
