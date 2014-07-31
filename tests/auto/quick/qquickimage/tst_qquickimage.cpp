@@ -263,8 +263,9 @@ void tst_qquickimage::resized()
 
 void tst_qquickimage::preserveAspectRatio()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView(0));
     window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     window->setSource(testFileUrl("aspectratio.qml"));
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
@@ -279,7 +280,6 @@ void tst_qquickimage::preserveAspectRatio()
     QVERIFY(image != 0);
     QCOMPARE(image->height(), 60.);
     QCOMPARE(image->width(), 60.);
-    delete window;
 }
 
 void tst_qquickimage::smooth()
@@ -312,7 +312,7 @@ void tst_qquickimage::mirror()
         QWindow dummy;          // On BlackBerry first window is always full screen,
         dummy.showFullScreen(); // so make test window a second window.
 #endif
-        QQuickView *window = new QQuickView;
+        QScopedPointer<QQuickView> window(new QQuickView);
         window->setSource(testFileUrl("mirror.qml"));
 
         QQuickImage *obj = window->rootObject()->findChild<QQuickImage*>("image");
@@ -321,11 +321,10 @@ void tst_qquickimage::mirror()
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
         window->showNormal();
-        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
         QImage screenshot = window->grabWindow();
         screenshots[fillMode] = screenshot;
-        delete window;
     }
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
@@ -644,10 +643,10 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
 void tst_qquickimage::sourceSize_QTBUG_16389()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView(0));
     window->setSource(testFileUrl("qtbug_16389.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickImage *image = findItem<QQuickImage>(window->rootObject(), "iconImage");
     QQuickItem *handle = findItem<QQuickItem>(window->rootObject(), "blueHandle");
@@ -663,16 +662,15 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
     QCOMPARE(image->sourceSize().height(), 200);
     QCOMPARE(image->paintedWidth(), 20.0);
     QCOMPARE(image->paintedHeight(), 20.0);
-
-    delete window;
 }
 
 // QTBUG-15690
 void tst_qquickimage::nullPixmapPaint()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView(0));
     window->setSource(testFileUrl("nullpixmap.qml"));
     window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QTRY_VERIFY(image != 0);
@@ -681,11 +679,8 @@ void tst_qquickimage::nullPixmapPaint()
     QQmlTestMessageHandler messageHandler;
     // used to print "QTransform::translate with NaN called"
     QPixmap pm = QPixmap::fromImage(window->grabWindow());
-    const QStringList glErrors =  messageHandler.messages().filter(QLatin1String("QGLContext::makeCurrent(): Failed."), Qt::CaseInsensitive);
-    QVERIFY2(glErrors.size() == messageHandler.messages().size(), qPrintable(messageHandler.messageString()));
+    QVERIFY2(messageHandler.messages().size() == 0, qPrintable(messageHandler.messageString()));
     delete image;
-
-    delete window;
 }
 
 void tst_qquickimage::imageCrash_QTBUG_22125()
@@ -697,7 +692,7 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
     {
         QQuickView view(testFileUrl("qtbug_22125.qml"));
         view.show();
-        qApp->processEvents();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
         qApp->processEvents();
         // shouldn't crash when the view drops out of scope due to
         // QQuickPixmapData attempting to dereference a pointer to
@@ -739,14 +734,14 @@ void tst_qquickimage::sourceSize()
     QFETCH(qreal, implicitWidth);
     QFETCH(qreal, implicitHeight);
 
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView(0));
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("srcWidth", sourceWidth);
     ctxt->setContextProperty("srcHeight", sourceHeight);
 
     window->setSource(testFileUrl("sourceSize.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QVERIFY(image);
@@ -755,8 +750,6 @@ void tst_qquickimage::sourceSize()
     QCOMPARE(image->sourceSize().height(), sourceHeight);
     QCOMPARE(image->implicitWidth(), implicitWidth);
     QCOMPARE(image->implicitHeight(), implicitHeight);
-
-    delete window;
 }
 
 void tst_qquickimage::sourceSizeChanges()
