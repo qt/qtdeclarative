@@ -292,10 +292,10 @@ void QQuickImageBase::handleWindowChanged(QQuickWindow* window)
         connect(window, SIGNAL(screenChanged(QScreen*)), this, SLOT(handleScreenChanged(QScreen*)));
 }
 
-void QQuickImageBase::handleScreenChanged(QScreen*)
+void QQuickImageBase::handleScreenChanged(QScreen* screen)
 {
     // Screen DPI might have changed, reload images on screen change.
-    if (isComponentComplete())
+    if (screen && isComponentComplete())
         load();
 }
 
