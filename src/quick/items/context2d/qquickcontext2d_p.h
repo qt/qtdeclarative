@@ -185,7 +185,6 @@ public:
 
     QQuickCanvasItem* canvas() const { return m_canvas; }
     QQuickContext2DCommandBuffer* buffer() const { return m_buffer; }
-    QQuickContext2DCommandBuffer* nextBuffer();
 
     bool bufferValid() const { return m_buffer != 0; }
     void popState();
@@ -255,7 +254,7 @@ public:
     QImage m_grabbedImage;
     bool m_grabbed:1;
 
-    QMutex m_mutex;
+    static QMutex mutex;
 };
 
 
