@@ -144,25 +144,25 @@ protected:
     bool setPressed(Qt::MouseButton button, bool);
     bool sendMouseEvent(QMouseEvent *event);
 
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void mouseDoubleClickEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void mouseUngrabEvent();
-    virtual void hoverEnterEvent(QHoverEvent *event);
-    virtual void hoverMoveEvent(QHoverEvent *event);
-    virtual void hoverLeaveEvent(QHoverEvent *event);
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
 #ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *event);
+    void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 #endif
-    virtual bool childMouseEventFilter(QQuickItem *i, QEvent *e);
-    virtual void timerEvent(QTimerEvent *event);
-    virtual void windowDeactivateEvent();
+    bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
+    void windowDeactivateEvent() Q_DECL_OVERRIDE;
 
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
-    virtual void itemChange(ItemChange change, const ItemChangeData& value);
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void geometryChanged(const QRectF &newGeometry,
+                                 const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData& value) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
 private:
     void handlePress();

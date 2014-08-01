@@ -1661,6 +1661,51 @@ public:
     };
 };
 
+// Like QtObject, but with default property
+class QObjectContainer : public QObject
+{
+    Q_OBJECT
+    Q_CLASSINFO("DefaultProperty", "data")
+    Q_PROPERTY(QQmlListProperty<QObject> data READ data DESIGNABLE false)
+public:
+    QObjectContainer();
+
+    QQmlListProperty<QObject> data();
+
+    static void children_append(QQmlListProperty<QObject> *prop, QObject *o);
+    static int children_count(QQmlListProperty<QObject> *prop);
+    static QObject *children_at(QQmlListProperty<QObject> *prop, int index);
+    static void children_clear(QQmlListProperty<QObject> *prop);
+
+    QList<QObject*> dataChildren;
+    QWidget *widgetParent;
+    bool gcOnAppend;
+
+protected slots:
+    void childDestroyed(QObject *child);
+};
+
+class QObjectContainerWithGCOnAppend : public QObjectContainer
+{
+    Q_OBJECT
+public:
+    QObjectContainerWithGCOnAppend()
+    {
+        gcOnAppend = true;
+    }
+};
+
+class FloatingQObject : public QObject, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+public:
+    FloatingQObject() {}
+
+    virtual void classBegin();
+    virtual void componentComplete();
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

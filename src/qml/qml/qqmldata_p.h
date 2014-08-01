@@ -239,7 +239,7 @@ bool QQmlData::wasDeleted(QObject *object)
         return true;
 
     QObjectPrivate *priv = QObjectPrivate::get(object);
-    if (priv->wasDeleted)
+    if (!priv || priv->wasDeleted)
         return true;
 
     return priv->declarativeData &&

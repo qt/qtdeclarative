@@ -58,13 +58,13 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged REVISION 1);
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged);
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
-    Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged REVISION 1)
-    Q_PROPERTY(int desktopAvailableHeight READ desktopAvailableHeight NOTIFY desktopGeometryChanged REVISION 1)
-    Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged REVISION 1)
-    Q_PROPERTY(qreal pixelDensity READ pixelDensity NOTIFY pixelDensityChanged REVISION 2)
+    Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged)
+    Q_PROPERTY(int desktopAvailableHeight READ desktopAvailableHeight NOTIFY desktopGeometryChanged)
+    Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged)
+    Q_PROPERTY(qreal pixelDensity READ pixelDensity NOTIFY pixelDensityChanged)
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
@@ -87,12 +87,12 @@ public:
     void windowChanged(QQuickWindow*);
 
 Q_SIGNALS:
-    Q_REVISION(1) void nameChanged();
+    void nameChanged();
     void widthChanged();
     void heightChanged();
-    Q_REVISION(1) void desktopGeometryChanged();
-    Q_REVISION(1) void logicalPixelDensityChanged();
-    Q_REVISION(2) void pixelDensityChanged();
+    void desktopGeometryChanged();
+    void logicalPixelDensityChanged();
+    void pixelDensityChanged();
     void primaryOrientationChanged();
     void orientationChanged();
 

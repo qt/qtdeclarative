@@ -763,15 +763,8 @@ void QQuickFlickable::setInteractive(bool interactive)
     Q_D(QQuickFlickable);
     if (interactive != d->interactive) {
         d->interactive = interactive;
-        if (!interactive && (d->hData.flicking || d->vData.flicking)) {
-            d->clearTimeline();
-            d->hData.vTime = d->vData.vTime = d->timeline.time();
-            d->hData.flicking = false;
-            d->vData.flicking = false;
-            emit flickingChanged();
-            emit flickingHorizontallyChanged();
-            emit flickingVerticallyChanged();
-            emit flickEnded();
+        if (!interactive) {
+            d->cancelInteraction();
         }
         emit interactiveChanged();
     }
@@ -2015,18 +2008,24 @@ bool QQuickFlickable::yflick() const
 void QQuickFlickable::mouseUngrabEvent()
 {
     Q_D(QQuickFlickable);
-    if (d->pressed) {
-        // if our mouse grab has been removed (probably by another Flickable),
-        // fix our state
-        d->clearDelayedPress();
-        d->pressed = false;
-        d->draggingEnding();
-        d->stealMouse = false;
-        setKeepMouseGrab(false);
-        d->fixupX();
-        d->fixupY();
-        if (!d->isViewMoving())
-            movementEnding();
+    // if our mouse grab has been removed (probably by another Flickable),
+    // fix our state
+    d->cancelInteraction();
+}
+
+void QQuickFlickablePrivate::cancelInteraction()
+{
+    Q_Q(QQuickFlickable);
+    if (pressed) {
+        clearDelayedPress();
+        pressed = false;
+        draggingEnding();
+        stealMouse = false;
+        q->setKeepMouseGrab(false);
+        fixupX();
+        fixupY();
+        if (!isViewMoving())
+            q->movementEnding();
     }
 }
 
