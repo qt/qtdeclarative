@@ -232,7 +232,8 @@ public:
     inline QColor takeColor() { return colors[colorIdx++]; }
     inline QBrush takeBrush() { return brushes[brushIdx++]; }
 
-    void replay(QPainter* painter, QQuickContext2D::State& state);
+    void replay(QPainter* painter, QQuickContext2D::State& state, const QVector2D &scaleFactor);
+
 private:
     QPen makePen(const QQuickContext2D::State& state);
     void setPainterState(QPainter* painter, const QQuickContext2D::State& state, const QPen& pen);

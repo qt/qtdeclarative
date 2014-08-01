@@ -258,13 +258,14 @@ static void qt_drawImage(QPainter *p, QQuickContext2D::State& state, QImage imag
     p->endNativePainting();
 }
 
-void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& state)
+void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& state, const QVector2D &scaleFactor)
 {
     if (!p)
         return;
 
     reset();
 
+    p->scale(scaleFactor.x(), scaleFactor.y());
     QTransform originMatrix = p->worldTransform();
 
     QPen pen = makePen(state);

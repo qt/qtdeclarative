@@ -124,6 +124,8 @@ public Q_SLOTS:
     virtual void grabImage(const QRectF& region = QRectF()) = 0;
 
 protected:
+    virtual QVector2D scaleFactor() const { return QVector2D(1, 1); }
+
     void paintWithoutTiles(QQuickContext2DCommandBuffer *ccb);
     virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
     virtual void endPainting() {m_painting = false;}
@@ -172,6 +174,9 @@ public:
     QSize adjustedTileSize(const QSize &ts);
 
     QSGTexture *textureForNextFrame(QSGTexture *);
+
+protected:
+    QVector2D scaleFactor() const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
     virtual void grabImage(const QRectF& region = QRectF());

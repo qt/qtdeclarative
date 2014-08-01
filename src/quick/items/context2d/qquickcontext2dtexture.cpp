@@ -227,7 +227,7 @@ void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb
 
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
-    ccb->replay(&p, m_state);
+    ccb->replay(&p, m_state, scaleFactor());
     endPainting();
     markDirtyTexture();
 }
@@ -268,7 +268,7 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
             QQuickContext2D::State oldState = m_state;
             foreach (QQuickContext2DTile* tile, m_tiles) {
                 if (tile->dirty()) {
-                    ccb->replay(tile->createPainter(m_smooth, m_antialiasing), oldState);
+                    ccb->replay(tile->createPainter(m_smooth, m_antialiasing), oldState, scaleFactor());
                     tile->drawFinished();
                     tile->markDirty(false);
                 }
@@ -418,6 +418,14 @@ QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(2, m_displayTextures);
 }
 
+QVector2D QQuickContext2DFBOTexture::scaleFactor() const
+{
+    if (!m_fbo)
+        return QVector2D(1, 1);
+    return QVector2D(m_fbo->width() / m_fboSize.width(),
+                     m_fbo->height() / m_fboSize.height());
+}
+
 QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture)
 {
     QSGPlainTexture *texture = static_cast<QSGPlainTexture *>(lastTexture);
@@ -500,7 +508,7 @@ void QQuickContext2DFBOTexture::grabImage(const QRectF& rf)
     QImage grabbed;
     {
         GLAcquireContext ctx(m_context->glContext(), m_context->surface());
-        grabbed = m_fbo->toImage().mirrored().copy(rf.toRect());
+        grabbed = m_fbo->toImage().scaled(m_fboSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation).mirrored().copy(rf.toRect());
     }
 
     m_context->setGrabbedImage(grabbed);
@@ -561,7 +569,14 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         } else {
             QOpenGLFramebufferObjectFormat format;
             format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            QSize s = m_fboSize;
+            if (m_antialiasing) { // do supersampling since multisampling is not available
+                GLint max;
+                QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
+                if (s.width() * 2 <= max && s.height() * 2 <= max)
+                    s = s * 2;
+            }
+            m_fbo = new QOpenGLFramebufferObject(s, format);
         }
     }
 
