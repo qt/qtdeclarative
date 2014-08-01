@@ -541,12 +541,14 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         Q_ASSERT(baseTypeCache);
     }
 
-    if (needVMEMetaObject) {
-        if (!createMetaObject(objectIndex, obj, baseTypeCache))
-            return false;
-    } else if (baseTypeCache) {
-        propertyCaches[objectIndex] = baseTypeCache;
-        baseTypeCache->addref();
+    if (baseTypeCache) {
+        if (needVMEMetaObject) {
+            if (!createMetaObject(objectIndex, obj, baseTypeCache))
+                return false;
+        } else {
+            propertyCaches[objectIndex] = baseTypeCache;
+            baseTypeCache->addref();
+        }
     }
 
     if (propertyCaches.at(objectIndex)) {
