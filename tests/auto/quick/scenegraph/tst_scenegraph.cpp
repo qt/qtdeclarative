@@ -45,14 +45,59 @@
 
 #include <private/qopenglcontext_p.h>
 
-
 #include <QtQml>
+
+class PerPixelRect : public QQuickItem
+{
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_OBJECT
+public:
+    PerPixelRect() {
+        setFlag(ItemHasContents);
+    }
+
+    void setColor(const QColor &c) {
+        if (c == m_color)
+            return;
+        m_color = c;
+        emit colorChanged(c);
+    }
+
+    QColor color() const { return m_color; }
+
+    QSGNode *updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
+    {
+        if (old)
+            delete old;
+
+        QSGNode *node = new QSGNode();
+
+        for (int y=0; y<height(); ++y) {
+            for (int x=0; x<width(); ++x) {
+                QSGSimpleRectNode *rn = new QSGSimpleRectNode();
+                rn->setRect(x, y, 1, 1);
+                rn->setColor(m_color);
+                node->appendChildNode(rn);
+            }
+        }
+
+        return node;
+    }
+
+Q_SIGNALS:
+    void colorChanged(const QColor &c   );
+
+private:
+    QColor m_color;
+};
 
 class tst_SceneGraph : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+
     void manyWindows_data();
     void manyWindows();
 
@@ -66,6 +111,11 @@ template <typename T> class ScopedList : public QList<T> {
 public:
     ~ScopedList() { qDeleteAll(*this); }
 };
+
+void tst_SceneGraph::initTestCase()
+{
+    qmlRegisterType<PerPixelRect>("SceneGraphTest", 1, 0, "PerPixelRect");
+}
 
 QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1)
 {

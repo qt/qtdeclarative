@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.2
+import SceneGraphTest 1.0
 
 /*
    The purpose of the test is to verify that a batch of more than 64K
@@ -64,39 +65,20 @@ RenderTestBase
 {
     id: root
 
-    Grid {
+    Column {
         id: clipped
         width: 100
-        height: 500
         clip: true
-        columns: 100
-        Repeater {
-            id: clippedRepeater
-            model: clipped.width * clipped.height
-            Rectangle {
-                width: 1
-                height: 1
-                color: index < clippedRepeater.model / 2 ? "red" : "blue";
-            }
-        }
+        PerPixelRect { width: 100; height: 250; color: "red" }
+        PerPixelRect { width: 100; height: 250; color: "blue" }
     }
 
-    Grid {
+    Column {
         id: unclipped
         x: 100
         width: 100
-        height: 500
-        clip: true
-        columns: 100
-        Repeater {
-            id: unclippedRepeater
-            model: unclipped.width * unclipped.height
-            Rectangle {
-                width: 1
-                height: 1
-                color: index < unclippedRepeater.model / 2 ? "black" : "#00ff00";
-            }
-        }
+        PerPixelRect { width: 100; height: 250; color: "black" }
+        PerPixelRect { width: 100; height: 250; color: "#00ff00" }
     }
 
     SequentialAnimation {
@@ -108,6 +90,5 @@ RenderTestBase
 
     onEnterFinalStage: {
         animation.running = true;
-
     }
 }
