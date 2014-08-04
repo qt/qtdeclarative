@@ -9,6 +9,8 @@ HEADERS += testtypes.h \
            ../../shared/testhttpserver.h
 INCLUDEPATH += ../../shared
 
+RESOURCES += qqmlecmascript.qrc
+
 include (../../shared/util.pri)
 
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
