@@ -586,6 +586,10 @@ void QSGRenderThread::syncAndRender()
         QSG_RT_DEBUG(" - update pending, doing sync");
         sync();
     }
+#ifndef QSG_NO_RENDER_TIMING
+    if (profileFrames)
+        syncTime = threadTimer.nsecsElapsed();
+#endif
 
     if (!syncResultedInChanges && !(repaintRequested)) {
         QSG_RT_DEBUG(" - no changes, rendering aborted");
@@ -595,10 +599,6 @@ void QSGRenderThread::syncAndRender()
         return;
     }
 
-#ifndef QSG_NO_RENDER_TIMING
-    if (profileFrames)
-        syncTime = threadTimer.nsecsElapsed();
-#endif
     QSG_RT_DEBUG(" - rendering starting");
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
