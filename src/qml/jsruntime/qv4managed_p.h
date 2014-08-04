@@ -191,6 +191,7 @@ struct Q_QML_PRIVATE_EXPORT Managed
         Data() {}
         Data(InternalClass *internal)
             : internalClass(internal)
+            , markBit(0)
             , inUse(1)
             , extensible(1)
         {
