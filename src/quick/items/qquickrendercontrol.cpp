@@ -123,12 +123,6 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
     d->rc->initialize(gl);
 }
 
-void QQuickRenderControl::invalidate()
-{
-    Q_D(QQuickRenderControl);
-    d->rc->invalidate();
-}
-
 /*!
   This function should be called as late as possible before
   sync(). In a threaded scenario, rendering can happen in parallel with this function.
@@ -165,7 +159,7 @@ bool QQuickRenderControl::sync()
   Stop rendering and release resources. This function is typically
   called when the window is hidden. Requires a current context.
  */
-void QQuickRenderControl::stop()
+void QQuickRenderControl::invalidate()
 {
     Q_D(QQuickRenderControl);
     if (!d->window)
@@ -175,10 +169,11 @@ void QQuickRenderControl::stop()
     cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
 
-    if (!cd->persistentSceneGraph) {
-        d->rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    }
+    // We must invalidate since the context can potentially be destroyed by the
+    // application right after returning from this function. Invalidating is
+    // also essential to allow a subsequent initialize() to succeed.
+    d->rc->invalidate();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 }
 
 /*!

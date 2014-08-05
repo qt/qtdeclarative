@@ -74,7 +74,6 @@ public:
     void polishItems();
     void render();
     bool sync();
-    void stop();
 
     QImage grab();
 
