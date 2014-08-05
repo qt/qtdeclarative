@@ -875,8 +875,19 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         d->renderControl->sync();
     }
 
-    d->createContext();
-    createFramebufferObject();
+    if (d->context) {
+        // Bail out in the special case of receiving a resize after
+        // scenegraph invalidation during application exit.
+        if (!d->fbo && !d->offscreenWindow->openglContext())
+            return;
+        if (!d->fbo || d->fbo->size() != size() * devicePixelRatio())
+            createFramebufferObject();
+    } else {
+        // This will result in a scenegraphInitialized() signal which
+        // is connected to createFramebufferObject().
+        d->createContext();
+    }
+
     d->offscreenWindow->resizeEvent(e);
     d->offscreenWindow->setGeometry(0, 0, e->size().width(), e->size().height());
 
