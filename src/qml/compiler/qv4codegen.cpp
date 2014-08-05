@@ -68,6 +68,12 @@ using namespace QV4;
 using namespace QQmlJS;
 using namespace AST;
 
+static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
+{
+    if (s && loc.isValid())
+        s->location = loc;
+}
+
 Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
@@ -562,7 +568,7 @@ IR::Expr *Codegen::reference(IR::Expr *expr)
     return expr;
 }
 
-IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
+IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr, const SourceLocation &loc)
 {
     if (hasError)
         return 0;
@@ -592,14 +598,14 @@ IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
     }
     if (!expr->asTemp() && !expr->asArgLocal()) {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
+        setLocation(move(_block->TEMP(t), expr), loc);
         expr = _block->TEMP(t);
     }
     Q_ASSERT(expr->asTemp() || expr->asArgLocal());
     return _block->UNOP(op, expr);
 }
 
-IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
+IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right, const AST::SourceLocation &loc)
 {
     if (hasError)
         return 0;
@@ -656,13 +662,13 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 
     if (!left->asTemp() && !left->asArgLocal()) {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), left);
+        setLocation(move(_block->TEMP(t), left), loc);
         left = _block->TEMP(t);
     }
 
     if (!right->asTemp() && !right->asArgLocal()) {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), right);
+        setLocation(move(_block->TEMP(t), right), loc);
         right = _block->TEMP(t);
     }
 
@@ -680,16 +686,15 @@ IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
     return _block->CALL(base, args);
 }
 
-void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
+IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
     if (hasError)
-        return;
+        return 0;
 
     Q_ASSERT(target->isLValue());
 
     if (op != IR::OpInvalid) {
-        move(target, binop(op, target, source));
-        return;
+        return move(target, binop(op, target, source));
     }
 
     if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
@@ -703,20 +708,20 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
         source = _block->TEMP(t);
     }
 
-    _block->MOVE(target, source);
+    return _block->MOVE(target, source);
 }
 
-void Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+IR::Stmt *Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (hasError)
-        return;
+        return 0;
 
     if (! (cond->asTemp() || cond->asBinop())) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), cond);
         cond = _block->TEMP(t);
     }
-    _block->CJUMP(cond, iftrue, iffalse);
+    return _block->CJUMP(cond, iftrue, iffalse);
 }
 
 void Codegen::accept(Node *node)
@@ -766,7 +771,7 @@ void Codegen::condition(ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBl
         accept(ast);
         qSwap(_expr, r);
         if (r.format == ex) {
-            cjump(*r, r.iftrue, r.iffalse);
+            setLocation(cjump(*r, r.iftrue, r.iffalse), ast->firstSourceLocation());
         }
     }
 }
@@ -1136,7 +1141,7 @@ bool Codegen::visit(BinaryExpression *ast)
             const unsigned r = _block->newTemp();
 
             move(_block->TEMP(r), *expression(ast->left));
-            cjump(_block->TEMP(r), iftrue, endif);
+            setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
             _block = iftrue;
             move(_block->TEMP(r), *expression(ast->right));
             _block->JUMP(endif);
@@ -1157,7 +1162,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             const unsigned r = _block->newTemp();
             move(_block->TEMP(r), *expression(ast->left));
-            cjump(_block->TEMP(r), endif, iffalse);
+            setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
             _block = iffalse;
             move(_block->TEMP(r), *expression(ast->right));
             _block->JUMP(endif);
@@ -1237,21 +1242,21 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::StrictNotEqual: {
         if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), left);
+            setLocation(move(_block->TEMP(t), left), ast->operatorToken);
             left = _block->TEMP(t);
         }
 
         IR::Expr* right = *expression(ast->right);
 
         if (_expr.accept(cx)) {
-            cjump(binop(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
+            setLocation(cjump(binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
         } else {
-            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
+            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken);
             if (e->asConst() || e->asString())
                 _expr.code = e;
             else {
                 const unsigned t = _block->newTemp();
-                move(_block->TEMP(t), e);
+                setLocation(move(_block->TEMP(t), e), ast->operatorToken);
                 _expr.code = _block->TEMP(t);
             }
         }
@@ -1271,18 +1276,18 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::URShift: {
         if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), left);
+            setLocation(move(_block->TEMP(t), left), ast->operatorToken);
             left = _block->TEMP(t);
         }
 
         IR::Expr* right = *expression(ast->right);
 
-        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
+        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken);
         if (e->asConst() || e->asString())
             _expr.code = e;
         else {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), e);
+            setLocation(move(_block->TEMP(t), e), ast->operatorToken);
             _expr.code = _block->TEMP(t);
         }
         break;
@@ -1541,7 +1546,7 @@ bool Codegen::visit(NotExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned r = _block->newTemp();
-    move(_block->TEMP(r), unop(IR::OpNot, *expr));
+    setLocation(move(_block->TEMP(r), unop(IR::OpNot, *expr, ast->notToken)), ast->notToken);
     _expr.code = _block->TEMP(r);
     return false;
 }
@@ -1735,11 +1740,11 @@ bool Codegen::visit(PostDecrementExpression *ast)
         return false;
 
     const unsigned oldValue = _block->newTemp();
-    move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr));
+    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->decrementToken)), ast->decrementToken);
 
     const unsigned  newValue = _block->newTemp();
-    move(_block->TEMP(newValue), binop(IR::OpSub, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1)));
-    move(*expr, _block->TEMP(newValue));
+    setLocation(move(_block->TEMP(newValue), binop(IR::OpSub, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->decrementToken)), ast->decrementToken);
+    setLocation(move(*expr, _block->TEMP(newValue)), ast->decrementToken);
 
     if (!_expr.accept(nx))
         _expr.code = _block->TEMP(oldValue);
@@ -1761,11 +1766,11 @@ bool Codegen::visit(PostIncrementExpression *ast)
         return false;
 
     const unsigned oldValue = _block->newTemp();
-    move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr));
+    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->incrementToken)), ast->incrementToken);
 
     const unsigned  newValue = _block->newTemp();
-    move(_block->TEMP(newValue), binop(IR::OpAdd, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1)));
-    move(*expr, _block->TEMP(newValue));
+    setLocation(move(_block->TEMP(newValue), binop(IR::OpAdd, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->incrementToken)), ast->incrementToken);
+    setLocation(move(*expr, _block->TEMP(newValue)), ast->incrementToken);
 
     if (!_expr.accept(nx))
         _expr.code = _block->TEMP(oldValue);
@@ -1786,13 +1791,13 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
         return false;
-    IR::Expr *op = binop(IR::OpSub, *expr, _block->CONST(IR::NumberType, 1));
+    IR::Expr *op = binop(IR::OpSub, *expr, _block->CONST(IR::NumberType, 1), ast->decrementToken);
     if (_expr.accept(nx)) {
-        move(*expr, op);
+        setLocation(move(*expr, op), ast->decrementToken);
     } else {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), op);
-        move(*expr, _block->TEMP(t));
+        setLocation(move(_block->TEMP(t), op), ast->decrementToken);
+        setLocation(move(*expr, _block->TEMP(t)), ast->decrementToken);
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1811,13 +1816,13 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
         return false;
-    IR::Expr *op = binop(IR::OpAdd, unop(IR::OpUPlus, *expr), _block->CONST(IR::NumberType, 1));
+    IR::Expr *op = binop(IR::OpAdd, unop(IR::OpUPlus, *expr, ast->incrementToken), _block->CONST(IR::NumberType, 1), ast->incrementToken);
     if (_expr.accept(nx)) {
-        move(*expr, op);
+        setLocation(move(*expr, op), ast->incrementToken);
     } else {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), op);
-        move(*expr, _block->TEMP(t));
+        setLocation(move(_block->TEMP(t), op), ast->incrementToken);
+        setLocation(move(*expr, _block->TEMP(t)), ast->incrementToken);
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1857,7 +1862,7 @@ bool Codegen::visit(TildeExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(IR::OpCompl, *expr));
+    setLocation(move(_block->TEMP(t), unop(IR::OpCompl, *expr, ast->tildeToken)), ast->tildeToken);
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1894,7 +1899,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(IR::OpUMinus, *expr));
+    setLocation(move(_block->TEMP(t), unop(IR::OpUMinus, *expr, ast->minusToken)), ast->minusToken);
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1906,7 +1911,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), unop(IR::OpUPlus, *expr));
+    setLocation(move(_block->TEMP(t), unop(IR::OpUPlus, *expr, ast->plusToken)), ast->plusToken);
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -2007,7 +2012,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     unsigned returnAddress = entryBlock->newTemp();
 
     entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
-    exitBlock->RET(exitBlock->TEMP(returnAddress));
+    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
@@ -2242,7 +2247,7 @@ bool Codegen::visit(ForEachStatement *ast)
     move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
     int null = _block->newTemp();
     move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
     _block = foreachend;
 
     leaveLoop();
@@ -2381,7 +2386,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
     int null = _block->newTemp();
     move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
     _block = foreachend;
 
     leaveLoop();
@@ -2513,7 +2518,7 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
+            setLocation(cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse), clause->caseToken);
             _block = iffalse;
         }
 
@@ -2522,12 +2527,12 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
+            setLocation(cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse), clause->caseToken);
             _block = iffalse;
         }
 
-        if (ast->block->defaultClause) {
-            _block->JUMP(blockMap[ast->block->defaultClause]);
+        if (DefaultClause *defaultClause = ast->block->defaultClause) {
+            setLocation(_block->JUMP(blockMap[ast->block->defaultClause]), defaultClause->defaultToken);
         }
     }
 

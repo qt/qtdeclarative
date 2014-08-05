@@ -291,11 +291,11 @@ protected:
     QV4::IR::Expr *subscript(QV4::IR::Expr *base, QV4::IR::Expr *index);
     QV4::IR::Expr *argument(QV4::IR::Expr *expr);
     QV4::IR::Expr *reference(QV4::IR::Expr *expr);
-    QV4::IR::Expr *unop(QV4::IR::AluOp op, QV4::IR::Expr *expr);
-    QV4::IR::Expr *binop(QV4::IR::AluOp op, QV4::IR::Expr *left, QV4::IR::Expr *right);
+    QV4::IR::Expr *unop(QV4::IR::AluOp op, QV4::IR::Expr *expr, const AST::SourceLocation &loc = AST::SourceLocation());
+    QV4::IR::Expr *binop(QV4::IR::AluOp op, QV4::IR::Expr *left, QV4::IR::Expr *right, const AST::SourceLocation &loc = AST::SourceLocation());
     QV4::IR::Expr *call(QV4::IR::Expr *base, QV4::IR::ExprList *args);
-    void move(QV4::IR::Expr *target, QV4::IR::Expr *source, QV4::IR::AluOp op = QV4::IR::OpInvalid);
-    void cjump(QV4::IR::Expr *cond, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
+    QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source, QV4::IR::AluOp op = QV4::IR::OpInvalid);
+    QV4::IR::Stmt *cjump(QV4::IR::Expr *cond, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
 
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
