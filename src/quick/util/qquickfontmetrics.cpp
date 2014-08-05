@@ -65,12 +65,12 @@ QT_BEGIN_NAMESPACE
     }
 
     Rectangle {
-        width: fontMetrics.height() * 4
-        height: fontMetrics.height() * 2
+        width: fontMetrics.height * 4
+        height: fontMetrics.height * 2
     }
     \endcode
 
-    \sa QFontMetricsF
+    \sa QFontMetricsF, TextMetrics
 */
 QQuickFontMetrics::QQuickFontMetrics(QObject *parent) :
     QObject(parent),
@@ -280,6 +280,10 @@ qreal QQuickFontMetrics::lineWidth() const
     This is the distance from the position of the string to where the next
     string should be drawn.
 
+    This method is offered as an imperative alternative to the
+    \l {QQuickTextMetrics::advanceWidth}{advanceWidth} property of
+    \l {QQuickTextMetrics::advanceWidth}{TextMetrics}.
+
     \sa {QFontMetricsF::width()}, height()
 */
 qreal QQuickFontMetrics::advanceWidth(const QString &text) const
@@ -293,6 +297,10 @@ qreal QQuickFontMetrics::advanceWidth(const QString &text) const
     This method returns the bounding rectangle of the characters in the string
     specified by \a text.
 
+    This method is offered as an imperative alternative to the
+    \l {QQuickTextMetrics::boundingRect}{boundingRect} property of
+    \l {QQuickTextMetrics::boundingRect}{TextMetrics}.
+
     \sa {QFontMetricsF::boundingRect()}, tightBoundingRect()
 */
 QRectF QQuickFontMetrics::boundingRect(const QString &text) const
@@ -305,6 +313,10 @@ QRectF QQuickFontMetrics::boundingRect(const QString &text) const
 
     This method returns a tight bounding rectangle around the characters in the
     string specified by \a text.
+
+    This method is offered as an imperative alternative to the
+    \l {QQuickTextMetrics::tightBoundingRect}{tightBoundingRect} property of
+    \l {QQuickTextMetrics::tightBoundingRect}{TextMetrics}.
 
     \sa {QFontMetricsF::tightBoundingRect()}, boundingRect()
 */
@@ -323,6 +335,10 @@ QRectF QQuickFontMetrics::tightBoundingRect(const QString &text) const
 
     The \a flags argument is optional and currently only supports
     \l {Qt::TextShowMnemonic}.
+
+    This method is offered as an imperative alternative to the
+    \l {QQuickTextMetrics::elidedText}{elidedText} property of
+    \l {QQuickTextMetrics::elidedText}{TextMetrics}.
 
     \sa {QFontMetricsF::elidedText()}
 */

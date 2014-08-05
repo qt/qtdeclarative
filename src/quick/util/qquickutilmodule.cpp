@@ -53,6 +53,7 @@
 #include "qquickstate_p.h"
 #include "qquickstate_p_p.h"
 #include "qquicksystempalette_p.h"
+#include "qquicktextmetrics_p.h"
 #include "qquicktransition_p.h"
 #include "qquickanimator_p.h"
 #include <qqmlinfo.h>
@@ -109,4 +110,5 @@ void QQuickUtilModule::defineModule()
     qmlRegisterUncreatableType<QKeySequence, 2>("QtQuick", 2, 2, "StandardKey", QStringLiteral("Cannot create an instance of StandardKey."));
 
     qmlRegisterType<QQuickFontMetrics>("QtQuick", 2, 4, "FontMetrics");
+    qmlRegisterType<QQuickTextMetrics>("QtQuick", 2, 4, "TextMetrics");
 }
