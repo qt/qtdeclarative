@@ -284,6 +284,7 @@ QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
     : QQuickItem(*(new QQuickCanvasItemPrivate), parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 QQuickCanvasItem::~QQuickCanvasItem()
@@ -604,6 +605,13 @@ void QQuickCanvasItem::releaseResources()
         delete d->context;
         d->context = 0;
     }
+}
+
+void QQuickCanvasItem::invalidateSG()
+{
+    Q_D(QQuickCanvasItem);
+    d->context->deleteLater();
+    d->context = 0;
 }
 
 void QQuickCanvasItem::componentComplete()
