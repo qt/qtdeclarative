@@ -551,9 +551,11 @@ public:
 
     void storeUInt32ReturnValue(RegisterID dest)
     {
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
+        Pointer tmp(StackPointerRegister, 0);
         storeReturnValue(tmp);
         toUInt32Register(tmp, dest);
+        addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
     }
 
     void storeReturnValue(FPRegisterID dest)
@@ -562,10 +564,16 @@ public:
         move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
         xor64(ScratchRegister, ReturnValueRegister);
         move64ToDouble(ReturnValueRegister, dest);
+#elif defined(Q_PROCESSOR_ARM)
+        moveIntsToDouble(JSC::ARMRegisters::r0, JSC::ARMRegisters::r1, dest, FPGpr0);
+#elif defined(Q_PROCESSOR_X86)
+        moveIntsToDouble(JSC::X86Registers::eax, JSC::X86Registers::edx, dest, FPGpr0);
 #else
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
+        Pointer tmp(StackPointerRegister, 0);
         storeReturnValue(tmp);
         loadDouble(tmp, dest);
+        addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
 #endif
     }
 
