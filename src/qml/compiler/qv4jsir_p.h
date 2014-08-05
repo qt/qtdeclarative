@@ -1043,13 +1043,17 @@ struct Function {
     void setScheduledBlocks(const QVector<BasicBlock *> &scheduled);
     void renumberBasicBlocks();
 
-    unsigned getNewStatementId() { return _statementCount++; }
-    unsigned statementCount() const { return _statementCount; }
+    int getNewStatementId() { return _statementCount++; }
+    int statementCount() const { return _statementCount; }
+
+private:
+    BasicBlock *getOrCreateBasicBlock(int index);
+    void setStatementCount(int cnt);
 
 private:
     QVector<BasicBlock *> _basicBlocks;
     QVector<BasicBlock *> *_allBasicBlocks;
-    unsigned _statementCount;
+    int _statementCount;
 };
 
 class CloneExpr: protected IR::ExprVisitor
@@ -1136,7 +1140,7 @@ private:
     IR::Expr *cloned;
 };
 
-class IRPrinter: public StmtVisitor, public ExprVisitor
+class Q_AUTOTEST_EXPORT IRPrinter: public StmtVisitor, public ExprVisitor
 {
 public:
     IRPrinter(QTextStream *out);
@@ -1175,13 +1179,13 @@ public:
 
 protected:
     virtual void addStmtNr(Stmt *s);
-    QString dumpStart(const Expr *e);
-    const char *dumpEnd(const Expr *e);
-    void printBlockStart(BasicBlock *bb);
+    void addJustifiedNr(int pos);
+    void printBlockStart();
 
 protected:
     QTextStream *out;
-    bool printElse;
+    int positionSize;
+    BasicBlock *currentBB;
 };
 
 } // end of namespace IR

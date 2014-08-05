@@ -85,15 +85,7 @@ public:
 protected:
     void addStmtNr(Stmt *s)
     {
-        QString posStr;
-        int pos = intervals->positionForStatement(s);
-        if (pos != Stmt::InvalidId)
-            posStr = QString::number(pos);
-        *out << posStr.rightJustified(positionSize);
-        if (pos == Stmt::InvalidId)
-            *out << "  ";
-        else
-            *out << ": ";
+        addJustifiedNr(intervals->positionForStatement(s));
     }
 };
 
@@ -126,9 +118,7 @@ protected:
             const RegisterInfo *ri = e->type == DoubleType ? _infoForFPRegister.value(e->index, 0)
                                                            : _infoForRegularRegister.value(e->index, 0);
             if (ri) {
-                *out << dumpStart(e);
                 *out << ri->prettyName();
-                *out << dumpEnd(e);
                 break;
             }
         }

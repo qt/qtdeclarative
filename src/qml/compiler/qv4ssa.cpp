@@ -81,8 +81,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 void showMeTheCode(IR::Function *function)
 {
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
-    if (showCode)
+    if (showCode) {
         IRPrinter(&qout).print(function);
+        qout << endl;
+    }
 }
 
 class ProcessedBlocks
@@ -1659,7 +1661,7 @@ class StatementWorklist
 public:
     StatementWorklist(IR::Function *function)
         : theFunction(function)
-        , stmts(function->statementCount(), 0)
+        , stmts(function->statementCount(), static_cast<Stmt *>(0))
         , worklist(function->statementCount(), false)
         , worklistSize(0)
         , replaced(function->statementCount(), Stmt::InvalidId)
