@@ -2285,12 +2285,12 @@ void QQmlListModel::sync()
     qmlInfo(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding)
+bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
         const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
-        QString objName = qmlUnit->header.stringAt(target->inheritedTypeNameIndex);
+        QString objName = qmlUnit->stringAt(target->inheritedTypeNameIndex);
         if (objName != listElementTypeName) {
             const QMetaObject *mo = resolveType(objName);
             if (mo != &QQmlListElement::staticMetaObject) {
@@ -2300,14 +2300,14 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
             listElementTypeName = objName; // cache right name for next time
         }
 
-        if (!qmlUnit->header.stringAt(target->idIndex).isEmpty()) {
+        if (!qmlUnit->stringAt(target->idIndex).isEmpty()) {
             error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
         }
 
         const QV4::CompiledData::Binding *binding = target->bindingTable();
         for (quint32 i = 0; i < target->nBindings; ++i, ++binding) {
-            QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+            QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
             if (propName.isEmpty()) {
                 error(binding, QQmlListModel::tr("ListElement: cannot contain nested elements"));
                 return false;
@@ -2316,7 +2316,7 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
                 return false;
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+        QString scriptStr = binding->valueAsScriptString(qmlUnit);
         if (!definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
@@ -2331,9 +2331,9 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
     return true;
 }
 
-bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+bool QQmlListModelParser::applyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
-    const QString elementName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+    const QString elementName = qmlUnit->stringAt(binding->propertyNameIndex);
 
     bool roleSet = false;
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
@@ -2366,13 +2366,13 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUni
         QVariant value;
 
         if (binding->evaluatesToString()) {
-            value = binding->valueAsString(&qmlUnit->header);
+            value = binding->valueAsString(qmlUnit);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             value = binding->valueAsNumber();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-            QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+            QString scriptStr = binding->valueAsScriptString(qmlUnit);
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
                 ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
@@ -2392,12 +2392,12 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUni
     return roleSet;
 }
 
-void QQmlListModelParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlListModelParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     listElementTypeName = QString(); // unknown
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
-        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
         if (!propName.isEmpty()) { // isn't default property
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
             return;
@@ -2414,7 +2414,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, QQmlCompiledData *cdata, c
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(qmlEngine(rv));
     rv->m_engine = engine;
 
-    const QV4::CompiledData::QmlUnit *qmlUnit = cdata->qmlUnit;
+    const QV4::CompiledData::Unit *qmlUnit = cdata->compilationUnit->data;
 
     bool setRoles = false;
 

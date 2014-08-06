@@ -89,13 +89,10 @@ void QV4::Compiler::StringTableGenerator::serialize(uint *stringTable, char *dat
     }
 }
 
-QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::IR::Module *module, int headerSize)
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::IR::Module *module)
     : irModule(module)
     , jsClassDataSize(0)
 {
-    if (headerSize == -1)
-        headerSize = sizeof(QV4::CompiledData::Unit);
-    this->headerSize = headerSize;
     // Make sure the empty string always gets index 0
     registerString(QString());
 }
@@ -212,7 +209,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, irModule->functions.size(), regexps.size(),
+    int unitSize = QV4::CompiledData::Unit::calculateSize(irModule->functions.size(), regexps.size(),
                                                           constants.size(), lookups.size(), jsClasses.count());
 
     uint functionDataSize = 0;
@@ -236,7 +233,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->version = 1;
     unit->unitSize = totalSize;
     unit->functionTableSize = irModule->functions.size();
-    unit->offsetToFunctionTable = headerSize;
+    unit->offsetToFunctionTable = sizeof(*unit);
     unit->lookupTableSize = lookups.count();
     unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->regexpTableSize = regexps.size();
@@ -249,6 +246,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
     unit->indexOfRootFunction = -1;
     unit->sourceFileIndex = getStringId(irModule->fileName);
+    unit->nImports = 0;
+    unit->offsetToImports = 0;
+    unit->nObjects = 0;
+    unit->offsetToObjects = 0;
+    unit->indexOfRootObject = 0;
 
     uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
     for (int i = 0; i < irModule->functions.size(); ++i)

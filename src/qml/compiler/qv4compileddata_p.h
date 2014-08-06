@@ -68,6 +68,7 @@ struct String;
 struct Function;
 struct Lookup;
 struct RegExp;
+struct Unit;
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 1)
@@ -138,85 +139,6 @@ struct String
     static int calculateSize(const QString &str) {
         return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
     }
-};
-
-static const char magic_str[] = "qv4cdata";
-
-struct Unit
-{
-    char magic[8];
-    qint16 architecture;
-    qint16 version;
-    quint32 unitSize; // Size of the Unit and any depending data. Does _not_ include size of data needed by QmlUnit.
-
-    enum {
-        IsJavascript = 0x1,
-        IsQml = 0x2,
-        StaticData = 0x4, // Unit data persistent in memory?
-        IsSingleton = 0x8,
-        IsSharedLibrary = 0x10 // .pragma shared?
-    };
-    quint32 flags;
-    uint stringTableSize;
-    uint offsetToStringTable;
-    uint functionTableSize;
-    uint offsetToFunctionTable;
-    uint lookupTableSize;
-    uint offsetToLookupTable;
-    uint regexpTableSize;
-    uint offsetToRegexpTable;
-    uint constantTableSize;
-    uint offsetToConstantTable;
-    uint jsClassTableSize;
-    uint offsetToJSClassTable;
-    qint32 indexOfRootFunction;
-    quint32 sourceFileIndex;
-
-    QString stringAt(int idx) const {
-        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
-        const uint offset = offsetTable[idx];
-        const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
-        if (str->size == 0)
-            return QString();
-        const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
-        if (flags & StaticData)
-            return QString::fromRawData(characters, str->size);
-        return QString(characters, str->size);
-    }
-
-    const uint *functionOffsetTable() const { return reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable); }
-
-    const Function *functionAt(int idx) const {
-        const uint *offsetTable = functionOffsetTable();
-        const uint offset = offsetTable[idx];
-        return reinterpret_cast<const Function*>(reinterpret_cast<const char *>(this) + offset);
-    }
-
-    const Lookup *lookupTable() const { return reinterpret_cast<const Lookup*>(reinterpret_cast<const char *>(this) + offsetToLookupTable); }
-    const RegExp *regexpAt(int index) const {
-        return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
-    }
-    const QV4::Value *constants() const {
-        return reinterpret_cast<const QV4::Value*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
-    }
-
-    const JSClassMember *jsClassAt(int idx, int *nMembers) const {
-        const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
-        const uint offset = offsetTable[idx];
-        const char *ptr = reinterpret_cast<const char *>(this) + offset;
-        const JSClass *klass = reinterpret_cast<const JSClass *>(ptr);
-        *nMembers = klass->nMembers;
-        return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
-    }
-
-    static int calculateSize(uint headerSize, uint nFunctions, uint nRegExps, uint nConstants,
-                             uint nLookups, uint nClasses) {
-        return (headerSize
-                + (nFunctions + nClasses) * sizeof(uint)
-                + nRegExps * RegExp::calculateSize()
-                + nConstants * sizeof(QV4::ReturnedValue)
-                + nLookups * Lookup::calculateSize()
-                + 7) & ~7; }
 };
 
 struct Function
@@ -509,10 +431,39 @@ struct Import
     Import(): type(0), uriIndex(0), qualifierIndex(0), majorVersion(0), minorVersion(0) {}
 };
 
-struct QmlUnit
+static const char magic_str[] = "qv4cdata";
+
+struct Unit
 {
-    Unit header;
-    quint32 qmlUnitSize; // size including header and all surrounding data.
+    char magic[8];
+    qint16 architecture;
+    qint16 version;
+    quint32 unitSize; // Size of the Unit and any depending data.
+
+    enum {
+        IsJavascript = 0x1,
+        IsQml = 0x2,
+        StaticData = 0x4, // Unit data persistent in memory?
+        IsSingleton = 0x8,
+        IsSharedLibrary = 0x10 // .pragma shared?
+    };
+    quint32 flags;
+    uint stringTableSize;
+    uint offsetToStringTable;
+    uint functionTableSize;
+    uint offsetToFunctionTable;
+    uint lookupTableSize;
+    uint offsetToLookupTable;
+    uint regexpTableSize;
+    uint offsetToRegexpTable;
+    uint constantTableSize;
+    uint offsetToConstantTable;
+    uint jsClassTableSize;
+    uint offsetToJSClassTable;
+    qint32 indexOfRootFunction;
+    quint32 sourceFileIndex;
+
+    /* QML specific fields */
     quint32 nImports;
     quint32 offsetToImports;
     quint32 nObjects;
@@ -530,8 +481,55 @@ struct QmlUnit
     }
 
     bool isSingleton() const {
-        return header.flags & Unit::IsSingleton;
+        return flags & Unit::IsSingleton;
     }
+    /* end QML specific fields*/
+
+    QString stringAt(int idx) const {
+        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
+        const uint offset = offsetTable[idx];
+        const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+        if (str->size == 0)
+            return QString();
+        const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
+        if (flags & StaticData)
+            return QString::fromRawData(characters, str->size);
+        return QString(characters, str->size);
+    }
+
+    const uint *functionOffsetTable() const { return reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable); }
+
+    const Function *functionAt(int idx) const {
+        const uint *offsetTable = functionOffsetTable();
+        const uint offset = offsetTable[idx];
+        return reinterpret_cast<const Function*>(reinterpret_cast<const char *>(this) + offset);
+    }
+
+    const Lookup *lookupTable() const { return reinterpret_cast<const Lookup*>(reinterpret_cast<const char *>(this) + offsetToLookupTable); }
+    const RegExp *regexpAt(int index) const {
+        return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
+    }
+    const QV4::Value *constants() const {
+        return reinterpret_cast<const QV4::Value*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    }
+
+    const JSClassMember *jsClassAt(int idx, int *nMembers) const {
+        const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
+        const uint offset = offsetTable[idx];
+        const char *ptr = reinterpret_cast<const char *>(this) + offset;
+        const JSClass *klass = reinterpret_cast<const JSClass *>(ptr);
+        *nMembers = klass->nMembers;
+        return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
+    }
+
+    static int calculateSize(uint nFunctions, uint nRegExps, uint nConstants,
+                             uint nLookups, uint nClasses) {
+        return (sizeof(Unit)
+                + (nFunctions + nClasses) * sizeof(uint)
+                + nRegExps * RegExp::calculateSize()
+                + nConstants * sizeof(QV4::ReturnedValue)
+                + nLookups * Lookup::calculateSize()
+                + 7) & ~7; }
 };
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)

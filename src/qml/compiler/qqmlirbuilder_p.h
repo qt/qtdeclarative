@@ -425,7 +425,7 @@ public:
 
 struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QV4::CompiledData::QmlUnit *generate(Document &output);
+    QV4::CompiledData::Unit *generate(Document &output);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;

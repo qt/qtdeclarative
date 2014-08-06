@@ -544,7 +544,7 @@ void Document::removeScriptPragmas(QString &script)
 Document::Document(bool debugMode)
     : jsModule(debugMode)
     , program(0)
-    , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
+    , jsGenerator(&jsModule)
     , unitFlags(0)
     , javaScriptCompilationUnit(0)
 {
@@ -1508,7 +1508,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
     return true;
 }
 
-QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
+QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
 {
     QV4::CompiledData::CompilationUnit *compilationUnit = output.javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
@@ -1538,10 +1538,10 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
         free(jsUnit);
     jsUnit = 0;
 
-    QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<QV4::CompiledData::QmlUnit *>(data);
-    qmlUnit->qmlUnitSize = totalSize;
-    qmlUnit->header.flags |= output.unitFlags;
-    qmlUnit->header.flags |= QV4::CompiledData::Unit::IsQml;
+    QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
+    qmlUnit->unitSize = totalSize;
+    qmlUnit->flags |= output.unitFlags;
+    qmlUnit->flags |= QV4::CompiledData::Unit::IsQml;
     qmlUnit->offsetToImports = unitSize;
     qmlUnit->nImports = output.imports.count();
     qmlUnit->offsetToObjects = unitSize + importSize;
@@ -1633,7 +1633,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(Document &output)
     // enable flag if we encountered pragma Singleton
     foreach (Pragma *p, output.pragmas) {
         if (p->type == Pragma::PragmaSingleton) {
-            qmlUnit->header.flags |= QV4::CompiledData::Unit::IsSingleton;
+            qmlUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
             break;
         }
     }

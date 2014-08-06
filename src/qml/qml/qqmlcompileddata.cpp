@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
 : engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
-  rootPropertyCache(0), compilationUnit(0), qmlUnit(0), totalBindingsCount(0), totalParserStatusCount(0)
+  rootPropertyCache(0), compilationUnit(0), totalBindingsCount(0), totalParserStatusCount(0)
 {
     Q_ASSERT(engine);
 }
@@ -100,8 +100,6 @@ QQmlCompiledData::~QQmlCompiledData()
 
     if (rootPropertyCache)
         rootPropertyCache->release();
-
-    qmlUnit = 0;
 
     if (compilationUnit)
         compilationUnit->deref();

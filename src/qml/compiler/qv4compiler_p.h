@@ -80,7 +80,7 @@ private:
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
-    JSUnitGenerator(IR::Module *module, int headerSize = -1);
+    JSUnitGenerator(IR::Module *module);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }
     int getStringId(const QString &string) const { return stringTable.getStringId(string); }
@@ -112,7 +112,6 @@ private:
     QVector<ReturnedValue> constants;
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
-    uint headerSize;
 };
 
 }

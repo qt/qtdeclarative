@@ -138,7 +138,7 @@ void CustomBinding::componentComplete()
     }
 }
 
-void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
@@ -146,7 +146,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::QmlUnit
     }
 
     const QV4::CompiledData::Binding *binding = bindings.first();
-    if (qmlUnit->header.stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
+    if (qmlUnit->stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property name"));
         return;
     }
@@ -155,7 +155,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::QmlUnit
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
         return;
     }
-    QByteArray script = qmlUnit->header.stringAt(binding->stringIndex).toUtf8();
+    QByteArray script = qmlUnit->stringAt(binding->stringIndex).toUtf8();
     bool ok;
     int v = evaluateEnum(script, &ok);
     if (!ok) {

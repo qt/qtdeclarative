@@ -82,7 +82,7 @@ public:
 
     QV4::IR::Module *jsIRModule() const;
 
-    const QV4::CompiledData::QmlUnit *qmlUnit() const;
+    const QV4::CompiledData::Unit *qmlUnit() const;
 
     QUrl url() const { return typeData->finalUrl(); }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
@@ -293,7 +293,7 @@ private:
     bool canCoerce(int to, QQmlPropertyCache *fromMo);
 
     QQmlEnginePrivate *enginePrivate;
-    const QV4::CompiledData::QmlUnit *qmlUnit;
+    const QV4::CompiledData::Unit *qmlUnit;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QVector<QQmlPropertyCache *> &propertyCaches;

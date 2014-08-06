@@ -232,17 +232,15 @@ bool QQmlTypeCompiler::compile()
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*document);
+    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document);
 
     Q_ASSERT(document->javaScriptCompilationUnit);
-    Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
     // The js unit owns the data and will free the qml unit.
-    document->javaScriptCompilationUnit->data = &qmlUnit->header;
+    document->javaScriptCompilationUnit->data = qmlUnit;
 
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
     if (compiledData->compilationUnit)
         compiledData->compilationUnit->ref();
-    compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
 
     // Add to type registry of composites
     if (compiledData->isCompositeType())
@@ -290,7 +288,7 @@ bool QQmlTypeCompiler::compile()
     compiledData->totalParserStatusCount = parserStatusCount;
     compiledData->totalObjectCount = objectCount;
 
-    Q_ASSERT(compiledData->propertyCaches.count() == static_cast<int>(compiledData->qmlUnit->nObjects));
+    Q_ASSERT(compiledData->propertyCaches.count() == static_cast<int>(compiledData->compilationUnit->data->nObjects));
 
     return errors.isEmpty();
 }
@@ -317,9 +315,9 @@ QV4::IR::Module *QQmlTypeCompiler::jsIRModule() const
     return &document->jsModule;
 }
 
-const QV4::CompiledData::QmlUnit *QQmlTypeCompiler::qmlUnit() const
+const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 {
-    return compiledData->qmlUnit;
+    return compiledData->compilationUnit->data;
 }
 
 const QQmlImports *QQmlTypeCompiler::imports() const
@@ -2035,7 +2033,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
         if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)
             return true;
 
-        QString value = binding->valueAsString(&qmlUnit->header);
+        QString value = binding->valueAsString(qmlUnit);
         QMetaProperty p = propertyCache->firstCppMetaObject()->property(property->coreIndex);
         bool ok;
         if (p.isFlagType()) {
@@ -2117,7 +2115,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Color: {
         bool ok = false;
-        QQmlStringConverters::rgbaFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::rgbaFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: color expected"));
             return false;
@@ -2127,7 +2125,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
 #ifndef QT_NO_DATESTRING
     case QVariant::Date: {
         bool ok = false;
-        QQmlStringConverters::dateFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: date expected"));
             return false;
@@ -2136,7 +2134,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Time: {
         bool ok = false;
-        QQmlStringConverters::timeFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::timeFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: time expected"));
             return false;
@@ -2145,7 +2143,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::DateTime: {
         bool ok = false;
-        QQmlStringConverters::dateTimeFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::dateTimeFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: datetime expected"));
             return false;
@@ -2155,7 +2153,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
 #endif // QT_NO_DATESTRING
     case QVariant::Point: {
         bool ok = false;
-        QQmlStringConverters::pointFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
             return false;
@@ -2164,7 +2162,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::PointF: {
         bool ok = false;
-        QQmlStringConverters::pointFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
             return false;
@@ -2173,7 +2171,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Size: {
         bool ok = false;
-        QQmlStringConverters::sizeFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: size expected"));
             return false;
@@ -2182,7 +2180,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::SizeF: {
         bool ok = false;
-        QQmlStringConverters::sizeFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: size expected"));
             return false;
@@ -2191,7 +2189,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::Rect: {
         bool ok = false;
-        QQmlStringConverters::rectFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: rect expected"));
             return false;
@@ -2200,7 +2198,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     break;
     case QVariant::RectF: {
         bool ok = false;
-        QQmlStringConverters::rectFFromString(binding->valueAsString(&qmlUnit->header), &ok);
+        QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok);
         if (!ok) {
             recordError(binding->valueLocation, tr("Invalid property assignment: point expected"));
             return false;
@@ -2220,7 +2218,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
             float yp;
             float zy;
         } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(&qmlUnit->header), &vec, sizeof(vec))) {
+        if (!QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(qmlUnit), &vec, sizeof(vec))) {
             recordError(binding->valueLocation, tr("Invalid property assignment: 3D vector expected"));
             return false;
         }
@@ -2233,7 +2231,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
             float zy;
             float wp;
         } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(&qmlUnit->header), &vec, sizeof(vec))) {
+        if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(qmlUnit), &vec, sizeof(vec))) {
             recordError(binding->valueLocation, tr("Invalid property assignment: 4D vector expected"));
             return false;
         }

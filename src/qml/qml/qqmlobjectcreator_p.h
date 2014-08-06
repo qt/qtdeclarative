@@ -108,7 +108,7 @@ private:
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
-    QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
+    QString stringAt(int idx) const { return qmlUnit->stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
     enum Phase {
@@ -122,7 +122,7 @@ private:
 
     QQmlEngine *engine;
     QQmlCompiledData *compiledData;
-    const QV4::CompiledData::QmlUnit *qmlUnit;
+    const QV4::CompiledData::Unit *qmlUnit;
     QQmlContextData *parentContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;

@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace CompiledData {
 struct CompilationUnit;
-struct QmlUnit;
+struct Unit;
 }
 }
 
@@ -132,7 +132,6 @@ public:
     QList<QQmlScriptData *> scripts;
 
     QV4::CompiledData::CompilationUnit *compilationUnit;
-    QV4::CompiledData::QmlUnit *qmlUnit;
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
@@ -144,7 +143,7 @@ public:
     int totalObjectCount; // Number of objects explicitly instantiated
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-    bool isCompositeType() const { return !metaObjects.at(qmlUnit->indexOfRootObject).isEmpty(); }
+    bool isCompositeType() const { return !metaObjects.at(compilationUnit->data->indexOfRootObject).isEmpty(); }
 
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);

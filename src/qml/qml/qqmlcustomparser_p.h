@@ -90,7 +90,7 @@ public:
     void clearErrors();
     Flags flags() const { return m_flags; }
 
-    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
     virtual void applyBindings(QObject *, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
     QList<QQmlError> errors() const { return exceptions; }

@@ -1954,18 +1954,18 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlTypeData *td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        QV4::CompiledData::QmlUnit *qmlUnit = td->compiledData()->qmlUnit;
+        QV4::CompiledData::Unit *qmlUnit = td->compiledData()->compilationUnit->data;
         Q_ASSERT(qmlUnit);
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
-        QCOMPARE(qmlUnit->header.stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
+        QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
         for (i = 0; i < rootObject->nBindings; ++i) {
             const QV4::CompiledData::Binding *binding = rootObject->bindingTable() + i;
-            if (qmlUnit->header.stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
+            if (qmlUnit->stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
                 continue;
-            QCOMPARE(binding->valueAsScriptString(&qmlUnit->header), QString("intProperty"));
+            QCOMPARE(binding->valueAsScriptString(qmlUnit), QString("intProperty"));
             const_cast<QV4::CompiledData::Binding*>(binding)->stringIndex = 0; // empty string index
-            QVERIFY(binding->valueAsScriptString(&qmlUnit->header).isEmpty());
+            QVERIFY(binding->valueAsScriptString(qmlUnit).isEmpty());
             break;
         }
         QVERIFY(i < rootObject->nBindings);

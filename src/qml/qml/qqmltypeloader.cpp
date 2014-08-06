@@ -2715,11 +2715,10 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     irUnit.javaScriptCompilationUnit = unit;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(irUnit);
+    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
     Q_ASSERT(!unit->data);
-    Q_ASSERT((void*)qmlUnit == (void*)&qmlUnit->header);
     // The js unit owns the data and will free the qml unit.
-    unit->data = &qmlUnit->header;
+    unit->data = unitData;
 
     initializeFromCompilationUnit(unit);
     unit->deref();
@@ -2801,7 +2800,7 @@ void QQmlScriptBlob::initializeFromCompilationUnit(QV4::CompiledData::Compilatio
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
     Q_ASSERT(m_scriptData->m_precompiledScript->data->flags & QV4::CompiledData::Unit::IsQml);
-    const QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<const QV4::CompiledData::QmlUnit*>(m_scriptData->m_precompiledScript->data);
+    const QV4::CompiledData::Unit *qmlUnit = m_scriptData->m_precompiledScript->data;
 
     QList<QQmlError> errors;
     for (quint32 i = 0; i < qmlUnit->nImports; ++i) {

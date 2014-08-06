@@ -205,11 +205,11 @@ void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
     d->ignoreUnknownSignals = ignore;
 }
 
-void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
-        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
 
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
@@ -219,7 +219,7 @@ void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::QmlUnit *qml
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
             const QV4::CompiledData::Object *target = qmlUnit->objectAt(binding->value.objectIndex);
-            if (!qmlUnit->header.stringAt(target->inheritedTypeNameIndex).isEmpty())
+            if (!qmlUnit->stringAt(target->inheritedTypeNameIndex).isEmpty())
                 error(binding, QQmlConnections::tr("Connections: nested objects not allowed"));
             else
                 error(binding, QQmlConnections::tr("Connections: syntax error"));
@@ -251,10 +251,10 @@ void QQmlConnections::connectSignals()
     QQmlData *ddata = QQmlData::get(this);
     QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
 
-    const QV4::CompiledData::QmlUnit *qmlUnit = d->cdata->qmlUnit;
+    const QV4::CompiledData::Unit *qmlUnit = d->cdata->compilationUnit->data;
     foreach (const QV4::CompiledData::Binding *binding, d->bindings) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
-        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
 
         QQmlProperty prop(target, propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {

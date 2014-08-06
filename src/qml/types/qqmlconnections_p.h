@@ -84,7 +84,7 @@ private:
 class QQmlConnectionsParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
+    virtual void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
     virtual void applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings);
 };
 

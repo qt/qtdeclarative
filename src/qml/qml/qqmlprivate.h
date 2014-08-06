@@ -68,7 +68,7 @@ struct CachedQmlUnit;
 namespace QV4 {
 struct ExecutionEngine;
 namespace CompiledData {
-struct QmlUnit;
+struct Unit;
 struct CompilationUnit;
 }
 typedef CompiledData::CompilationUnit *(*CompilationUnitFactoryFunction)();
@@ -285,7 +285,7 @@ namespace QQmlPrivate
     };
 
     struct CachedQmlUnit {
-        const QV4::CompiledData::QmlUnit *qmlData;
+        const QV4::CompiledData::Unit *qmlData;
         QV4::CompilationUnitFactoryFunction createCompilationUnit;
         QmlIR::IRLoaderFunction loadIR;
     };
