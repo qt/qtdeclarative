@@ -1768,14 +1768,14 @@ void tst_qquickwindow::unloadSubWindow()
     QVERIFY(window);
     window->show();
     QTest::qWaitForWindowExposed(window);
-    QQuickWindow *transient = Q_NULLPTR;
+    QPointer<QQuickWindow> transient;
     QTRY_VERIFY(transient = window->property("transientWindow").value<QQuickWindow*>());
     QTest::qWaitForWindowExposed(transient);
 
     // Unload the inner window (in nested Loaders) and make sure it doesn't crash
     QQuickLoader *loader = window->property("loader1").value<QQuickLoader*>();
     loader->setActive(false);
-    QTRY_VERIFY(!transient->isVisible());
+    QTRY_VERIFY(transient.isNull() || !transient->isVisible());
 }
 
 // QTBUG-32004
