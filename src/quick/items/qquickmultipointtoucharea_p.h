@@ -45,6 +45,7 @@
 #include "qquickitem.h"
 #include "qevent.h"
 
+#include <QPointer>
 #include <QMap>
 #include <QList>
 #include <QtGui/qguiapplication.h>
@@ -271,7 +272,7 @@ private:
     QList<QObject*> _movedTouchPoints;
     int _minimumTouchPoints;
     int _maximumTouchPoints;
-    QQuickTouchPoint *_mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
+    QPointer<QQuickTouchPoint> _mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
     QTouchEvent::TouchPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
     QPointF _mousePos;
     bool _stealMouse;

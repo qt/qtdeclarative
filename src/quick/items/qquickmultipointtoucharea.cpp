@@ -349,7 +349,6 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     : QQuickItem(parent),
       _minimumTouchPoints(0),
       _maximumTouchPoints(INT_MAX),
-      _mouseTouchPoint(Q_NULLPTR),
       _stealMouse(false),
       _mouseEnabled(true)
 {
