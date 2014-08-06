@@ -97,9 +97,11 @@ QQuickAnimatorProxyJob::~QQuickAnimatorProxyJob()
 void QQuickAnimatorProxyJob::deleteJob()
 {
     if (m_job) {
-        if (m_controller && m_internalState != State_Starting)
+        // If we have a controller, we might have posted the job to be started
+        // so delete it through the controller to clean up properly.
+        if (m_controller)
             m_controller->deleteJob(m_job);
-        else if (m_internalState == State_Starting)
+        else
             delete m_job;
         m_job = 0;
     }
