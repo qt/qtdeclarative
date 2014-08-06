@@ -325,6 +325,7 @@ private slots:
     void importedScriptsAccessOnObjectWithInvalidContext();
     void contextObjectOnLazyBindings();
     void garbageCollectionDuringCreation();
+    void qtbug_39520();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7663,6 +7664,30 @@ void tst_qqmlecmascript::garbageCollectionDuringCreation()
 
     gc(engine);
     QCOMPARE(container->dataChildren.count(), 0);
+}
+
+void tst_qqmlecmascript::qtbug_39520()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n"
+                      "Item {\n"
+                      "    property string s\n"
+                      "    Component.onCompleted: test()\n"
+                      "    function test() {\n"
+                      "    var count = 1 * 1000 * 1000\n"
+                      "    var t = ''\n"
+                      "    for (var i = 0; i < count; ++i)\n"
+                      "        t += 'testtest ' + i + '\n'\n"
+                      "    s = t\n"
+                      "    }\n"
+                      "}\n",
+                      QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QString s = object->property("s").toString();
+    QCOMPARE(s.count('\n'), 1 * 1000 * 1000);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

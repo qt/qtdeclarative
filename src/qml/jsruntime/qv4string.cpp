@@ -332,23 +332,31 @@ void String::Data::simplifyString() const
     int l = length();
     QString result(l, Qt::Uninitialized);
     QChar *ch = const_cast<QChar *>(result.constData());
-    recursiveAppend(ch);
+    append(this, ch);
     text = result.data_ptr();
     text->ref.ref();
     identifier = 0;
     largestSubLength = 0;
 }
 
-QChar *String::Data::recursiveAppend(QChar *ch) const
+void String::Data::append(const String::Data *data, QChar *ch)
 {
-    if (largestSubLength) {
-        ch = left->d()->recursiveAppend(ch);
-        ch = right->d()->recursiveAppend(ch);
-    } else {
-        memcpy(ch, text->data(), text->size*sizeof(QChar));
-        ch += text->size;
+    std::vector<const String::Data *> worklist;
+    worklist.reserve(32);
+    worklist.push_back(data);
+
+    while (!worklist.empty()) {
+        const String::Data *item = worklist.back();
+        worklist.pop_back();
+
+        if (item->largestSubLength) {
+            worklist.push_back(item->right->d());
+            worklist.push_back(item->left->d());
+        } else {
+            memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
+            ch += item->text->size;
+        }
     }
-    return ch;
 }
 
 

@@ -79,7 +79,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         mutable uint largestSubLength;
         uint len;
     private:
-        QChar *recursiveAppend(QChar *ch) const;
+        static void append(const Data *data, QChar *ch);
     };
     // ### FIXME: Should this be a V4_OBJECT
     V4_OBJECT(QV4::Managed)
