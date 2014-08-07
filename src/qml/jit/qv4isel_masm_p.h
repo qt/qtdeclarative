@@ -179,6 +179,15 @@ private:
     {
         if (IR::Temp *targetTemp = target->asTemp()) {
             if (targetTemp->kind == IR::Temp::PhysicalRegister) {
+                if (IR::Temp *sourceTemp = source->asTemp()) {
+                    if (sourceTemp->kind == IR::Temp::PhysicalRegister) {
+                        _as->convertInt32ToDouble((Assembler::RegisterID) sourceTemp->index,
+                                                  (Assembler::FPRegisterID) targetTemp->index);
+                    } else {
+                        _as->convertInt32ToDouble(_as->loadAddress(Assembler::ReturnValueRegister, sourceTemp),
+                                                  (Assembler::FPRegisterID) targetTemp->index);
+                    }
+                }
                 _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                           (Assembler::FPRegisterID) targetTemp->index);
                 return;
@@ -187,7 +196,7 @@ private:
 
         _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                   Assembler::FPGpr0);
-        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ScratchRegister, target));
+        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ReturnValueRegister, target));
     }
 
     void convertUIntToDouble(IR::Expr *source, IR::Expr *target)
