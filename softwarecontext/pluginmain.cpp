@@ -42,6 +42,7 @@
 
 #include "pluginmain.h"
 #include "context.h"
+#include "renderloop.h"
 
 ContextPlugin::ContextPlugin(QObject *parent)
     : QSGContextPlugin(parent)
@@ -60,9 +61,9 @@ QSGContext *ContextPlugin::create(const QString &) const
     return instance;
 }
 
-QQuickTextureFactory *ContextPlugin::createTextureFactoryFromImage(const QImage &image)
+QSGRenderLoop *ContextPlugin::createWindowManager()
 {
-    return 0;
+    return new RenderLoop();
 }
 
 SoftwareContext::Context *ContextPlugin::instance = 0;

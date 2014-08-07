@@ -7,11 +7,19 @@ QT += gui-private core-private quick-private qml-private
 
 SOURCES += \
     context.cpp \
-    pluginmain.cpp
+    pluginmain.cpp \
+    renderloop.cpp \
+    rectanglenode.cpp \
+    imagenode.cpp \
+    pixmaptexture.cpp
 
 HEADERS += \
     context.h \
-    pluginmain.h
+    pluginmain.h \
+    renderloop.h \
+    rectanglenode.h \
+    imagenode.h \
+    pixmaptexture.h
 
 OTHER_FILES += softwarecontext.json
 

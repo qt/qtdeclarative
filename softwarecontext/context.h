@@ -44,11 +44,28 @@
 #define CONTEXT_H
 
 #include <private/qsgcontext_p.h>
+#include <private/qsgrenderer_p.h>
 #include <QtCore/QElapsedTimer>
 #include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QBackingStore>
 
 namespace SoftwareContext
 {
+
+class Renderer : public QSGRenderer
+{
+public:
+    Renderer(QSGRenderContext *context);
+
+    virtual void renderScene(GLuint fboId = 0);
+
+    virtual void render();
+
+private:
+    void renderNode(QPainter *painter, QSGNode *node);
+
+    QScopedPointer<QBackingStore> backingStore;
+};
 
 class RenderContext : public QSGRenderContext
 {
@@ -60,6 +77,8 @@ public:
     QSGTexture *createTexture(const QImage &image) const;
     QSGTexture *createTextureNoAtlas(const QImage &image) const;
     QSGRenderer *createRenderer();
+
+    QWindow *currentWindow;
 };
 
 class Context : public QSGContext
@@ -69,6 +88,9 @@ public:
     explicit Context(QObject *parent = 0);
 
     QSGRenderContext *createRenderContext() { return new RenderContext(this); }
+
+    virtual QSGRectangleNode *createRectangleNode();
+    virtual QSGImageNode *createImageNode();
 
 private:
 };

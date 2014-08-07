@@ -41,6 +41,10 @@
 
 #include "context.h"
 
+#include "rectanglenode.h"
+#include "imagenode.h"
+#include "pixmaptexture.h"
+
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
 
@@ -62,13 +66,87 @@ static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 namespace SoftwareContext
 {
 
+Renderer::Renderer(QSGRenderContext *context)
+    : QSGRenderer(context)
+{
+}
+
+void Renderer::renderScene(GLuint fboId)
+{
+    class B : public QSGBindable
+    {
+    public:
+        void bind() const { }
+    } bindable;
+    QSGRenderer::renderScene(bindable);
+}
+
+void Renderer::render()
+{
+    QWindow *currentWindow = static_cast<RenderContext*>(m_context)->currentWindow;
+    if (!backingStore)
+        backingStore.reset(new QBackingStore(currentWindow));
+
+    if (backingStore->size() != currentWindow->size())
+        backingStore->resize(currentWindow->size());
+
+    const QRect rect(0, 0, currentWindow->width(), currentWindow->height());
+    backingStore->beginPaint(rect);
+
+    QPaintDevice *device = backingStore->paintDevice();
+    QPainter painter(device);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    painter.fillRect(rect, Qt::white);
+    renderNode(&painter, rootNode());
+
+    backingStore->endPaint();
+    backingStore->flush(rect);
+}
+
+void Renderer::renderNode(QPainter *painter, QSGNode *node)
+{
+    bool restore = false;
+
+    if (node->type() == QSGNode::TransformNodeType) {
+        QSGTransformNode *tn = static_cast<QSGTransformNode*>(node);
+        painter->save();
+        restore = true;
+        painter->setTransform(tn->matrix().toTransform(), /*combine*/true);
+    } else if (node->type() == QSGNode::ClipNodeType) {
+        QSGClipNode *cn = static_cast<QSGClipNode*>(node);
+        painter->save();
+        restore = true;
+        painter->setClipRect(cn->clipRect(), Qt::IntersectClip);
+    }
+
+    node->paint(painter);
+
+    for (QSGNode *child = node->firstChild(); child; child = child->nextSibling())
+        renderNode(painter, child);
+
+    if (restore)
+        painter->restore();
+}
+
 RenderContext::RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
+    , currentWindow(0)
 {
 }
 Context::Context(QObject *parent)
     : QSGContext(parent)
 {
+}
+
+QSGRectangleNode *Context::createRectangleNode()
+{
+    return new RectangleNode();
+}
+
+QSGImageNode *Context::createImageNode()
+{
+    return new ImageNode();
 }
 
 void RenderContext::initialize(QOpenGLContext *context)
@@ -83,7 +161,7 @@ void RenderContext::invalidate()
 
 QSGTexture *RenderContext::createTexture(const QImage &image) const
 {
-    return QSGRenderContext::createTexture(image);
+    return new PixmapTexture(image);
 }
 
 QSGTexture *RenderContext::createTextureNoAtlas(const QImage &image) const
@@ -93,7 +171,7 @@ QSGTexture *RenderContext::createTextureNoAtlas(const QImage &image) const
 
 QSGRenderer *RenderContext::createRenderer()
 {
-    return QSGRenderContext::createRenderer();
+    return new Renderer(this);
 }
 
 
@@ -101,8 +179,6 @@ void RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
 {
     QSGRenderContext::renderNextFrame(renderer, fbo);
 }
-
-
 
 
 } // namespace
