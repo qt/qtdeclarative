@@ -119,6 +119,11 @@ void Renderer::renderNode(QPainter *painter, QSGNode *node)
         painter->save();
         restore = true;
         painter->setClipRect(cn->clipRect(), Qt::IntersectClip);
+    } else if (node->type() == QSGNode::OpacityNodeType) {
+        QSGOpacityNode *on = static_cast<QSGOpacityNode*>(node);
+        painter->save();
+        restore = true;
+        painter->setOpacity(on->opacity());
     }
 
     node->paint(painter);
