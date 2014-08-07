@@ -44,6 +44,7 @@
 #include "rectanglenode.h"
 #include "imagenode.h"
 #include "pixmaptexture.h"
+#include "glyphnode.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -137,6 +138,7 @@ RenderContext::RenderContext(QSGContext *ctx)
 Context::Context(QObject *parent)
     : QSGContext(parent)
 {
+    setDistanceFieldEnabled(false);
 }
 
 QSGRectangleNode *Context::createRectangleNode()
@@ -147,6 +149,11 @@ QSGRectangleNode *Context::createRectangleNode()
 QSGImageNode *Context::createImageNode()
 {
     return new ImageNode();
+}
+
+QSGGlyphNode *Context::createGlyphNode(QSGRenderContext */*rc*/, bool /*preferNativeGlyphNode*/)
+{
+    return new GlyphNode();
 }
 
 void RenderContext::initialize(QOpenGLContext *context)

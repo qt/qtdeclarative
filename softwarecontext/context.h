@@ -91,6 +91,7 @@ public:
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
 
 private:
 };

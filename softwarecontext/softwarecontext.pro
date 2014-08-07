@@ -11,7 +11,8 @@ SOURCES += \
     renderloop.cpp \
     rectanglenode.cpp \
     imagenode.cpp \
-    pixmaptexture.cpp
+    pixmaptexture.cpp \
+    glyphnode.cpp
 
 HEADERS += \
     context.h \
@@ -19,7 +20,8 @@ HEADERS += \
     renderloop.h \
     rectanglenode.h \
     imagenode.h \
-    pixmaptexture.h
+    pixmaptexture.h \
+    glyphnode.h
 
 OTHER_FILES += softwarecontext.json
 
