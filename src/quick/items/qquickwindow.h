@@ -47,6 +47,7 @@
 #include <QtGui/qopengl.h>
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
+#include <qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,6 +56,7 @@ class QQuickItem;
 class QSGTexture;
 class QInputMethodEvent;
 class QQuickWindowPrivate;
+class QQuickWindowAttached;
 class QOpenGLFramebufferObject;
 class QQmlIncubationController;
 class QInputMethodEvent;
@@ -156,6 +158,8 @@ public:
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
+    static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
+
 Q_SIGNALS:
     void frameSwapped();
     Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
@@ -220,6 +224,7 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickWindow *)
+QML_DECLARE_TYPEINFO(QQuickWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKWINDOW_H
 

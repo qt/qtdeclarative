@@ -43,6 +43,7 @@
 #include <QDebug>
 #include <QTouchEvent>
 #include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickView>
 #include <QtQuick/QQuickWindow>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
@@ -367,6 +368,8 @@ private slots:
 
     void defaultSurfaceFormat();
     void glslVersion();
+
+    void attachedProperty();
 
     void testRenderJob();
 
@@ -1972,6 +1975,24 @@ void tst_qquickwindow::glslVersion()
         else
             QVERIFY(window.glslVersion().contains(QStringLiteral("es")));
     }
+}
+
+void tst_qquickwindow::attachedProperty()
+{
+    QQuickView view(testFileUrl("windowattached.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(view.rootObject()->property("windowActive").toBool());
+
+    QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
+    QVERIFY(innerWindow);
+    innerWindow->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(innerWindow));
+
+    QQuickText *text = view.rootObject()->findChild<QQuickText*>("extraWindowText");
+    QVERIFY(text);
+    QCOMPARE(text->text(), QLatin1String("active\nvisibility: 2"));
 }
 
 class RenderJob : public QRunnable

@@ -41,6 +41,7 @@
 
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
+#include "qquickwindowattached_p.h"
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
@@ -3850,6 +3851,18 @@ bool QQuickWindow::glslIsCoreProfile() const
  */
 
 /*!
+    \qmlattachedproperty QWindow::Visibility Window::visibility
+    \since 5.4
+
+    This attached property holds whether whether the window is currently shown
+    in the windowing system as normal, minimized, maximized, fullscreen or
+    hidden. The Window attached property can be attached to any Item. If the
+    item is not shown in any window, the value will be \l {QWindow::}{Hidden}.
+
+    \sa visible, visibility
+*/
+
+/*!
     \qmlproperty Qt::ScreenOrientation Window::contentOrientation
 
     This is a hint to the window manager in case it needs to display
@@ -3896,6 +3909,15 @@ bool QQuickWindow::glslIsCoreProfile() const
  */
 
 /*!
+    \qmlattachedproperty Item Window::activeFocusItem
+    \since 5.4
+
+    This attached property holds the item which currently has active focus or
+    \c null if there is no item with active focus. The Window attached property
+    can be attached to any Item.
+*/
+
+/*!
     \qmlproperty Window::active
     \since 5.1
 
@@ -3903,6 +3925,26 @@ bool QQuickWindow::glslIsCoreProfile() const
 
     \sa requestActivate()
  */
+
+/*!
+    \qmlattachedproperty bool Window::active
+    \since 5.4
+
+    This attached property tells whether the window is active. The Window
+    attached property can be attached to any Item.
+
+    Here is an example which changes a label to show the active state of the
+    window in which it is shown:
+
+    \qml
+    import QtQuick 2.4
+    import QtQuick.Window 2.2
+
+    Text {
+        text: Window.active ? "active" : "inactive"
+    }
+    \endqml
+*/
 
 /*!
     \qmlmethod QtQuick::Window::requestActivate()
@@ -3981,6 +4023,11 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     else if (stage == AfterSwapStage)
         d->afterSwapJobs << job;
     d->renderJobMutex.unlock();
+}
+
+QQuickWindowAttached *QQuickWindow::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickWindowAttached(object);
 }
 
 void QQuickWindowPrivate::runAndClearJobs(QList<QRunnable *> *jobs)

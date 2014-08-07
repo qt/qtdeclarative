@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickwindowmodule_p.h"
+#include "qquickwindowattached_p.h"
 #include "qquickscreen_p.h"
 #include "qquickview_p.h"
 #include <QtQuick/QQuickWindow>
@@ -173,6 +174,10 @@ void QQuickWindowModule::defineModule()
 {
     const char uri[] = "QtQuick.Window";
 
+    // Since Window is both an attached property and a createable type,
+    // the attached property declaration must come first so that it can
+    // be overridden below.
+    qmlRegisterUncreatableType<QQuickWindow>(uri, 2, 2, "Window", QQuickWindow::tr("Window is available via attached properties"));
     qmlRegisterType<QQuickWindow>(uri, 2, 0, "Window");
     qmlRegisterRevision<QWindow,1>(uri, 2, 1);
     qmlRegisterRevision<QWindow,2>(uri, 2, 2);
