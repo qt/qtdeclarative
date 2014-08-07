@@ -87,8 +87,6 @@ Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty");
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
-bool QQuickWindowPrivate::defaultFormatInitialized = false;
-QSurfaceFormat QQuickWindowPrivate::defaultFormat;
 
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
@@ -466,7 +464,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     }
 
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
-    q->setFormat(q->defaultFormat());
+    q->setFormat(sg->defaultSurfaceFormat());
 
     animationController = new QQuickAnimatorController();
     animationController->m_window = q;
@@ -1055,8 +1053,18 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \sa {Scene Graph - OpenGL Under QML}
+    \section2 Context and surface formats
 
+    While it is possible to specify a QSurfaceFormat for every QQuickWindow by
+    calling the member function setFormat(), windows may also be created from
+    QML by using the Window and ApplicationWindow elements. In this case there
+    is no C++ code involved in the creation of the window instance, yet
+    applications may still wish to set certain surface format values, for
+    example to request a given OpenGL version or profile. Such applications can
+    call the static function QSurfaceFormat::setDefaultFormat() at startup. The
+    specified format will be used for all Quick windows created afterwards.
+
+    \sa {Scene Graph - OpenGL Under QML}
 */
 
 /*!
@@ -3535,11 +3543,7 @@ bool QQuickWindow::hasDefaultAlphaBuffer()
     In any application which expects to create translucent windows, it's necessary to set
     this to true before creating the first QQuickWindow. The default value is false.
 
-    \note This function affects the size of the alpha buffer in the format returned by
-    defaultFormat(). Enabling alpha via this function and passing a format with alpha
-    buffer size 8 to setDefaultFormat() are equivalent.
-
-    \sa hasDefaultAlphaBuffer(), setDefaultFormat(), defaultFormat()
+    \sa hasDefaultAlphaBuffer()
  */
 void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 {
@@ -3619,53 +3623,6 @@ void QQuickWindow::resetOpenGLState()
 }
 
 /*!
-    \brief QQuickWindow::setDefaultFormat
-    \since 5.4
-    @brief Sets the global default surface format that is used for all new QQuickWindow instances.
-
-    While it is possible to specify a QSurfaceFormat for every QQuickWindow by
-    calling the member function setFormat(), windows may also be created from
-    QML by using the Window and ApplicationWindow elements. In this case there
-    is no C++ code involved in the creation of the window instance, yet
-    applications may still wish to set certain surface format values, for
-    example to request a given OpenGL version or profile. Such applications can
-    call this static functions in main(). \a format will be used for all Quick
-    windows created afterwards.
-
-    \note The default value for the default format is not necessarily a
-    default-constructed QSurfaceFormat. It may already have depth, stencil and alpha
-    buffer sizes set. Unless there is a need to change all these sizes, the format should
-    first be queried via defaultFormat() and the changes should be applied to that,
-    instead of merely starting with a default-constructed QSurfaceFormat.
-
-    \sa setFormat(), format(), defaultFormat()
- */
-void QQuickWindow::setDefaultFormat(const QSurfaceFormat &format)
-{
-    QQuickWindowPrivate::defaultFormatInitialized = true;
-    QQuickWindowPrivate::defaultFormat = format;
-}
-
-/*!
-    \brief QQuickWindow::defaultFormat
-    \since 5.4
-
-    \return The global default surface format that is used for all QQuickWindow instances.
-
-    \note This function requires a QGuiApplication or QApplication instance.
-
-    \sa setDefaultFormat()
- */
-QSurfaceFormat QQuickWindow::defaultFormat()
-{
-    if (!QQuickWindowPrivate::defaultFormatInitialized) {
-        QQuickWindowPrivate::defaultFormatInitialized = true;
-        QQuickWindowPrivate::defaultFormat = QSGRenderLoop::instance()->sceneGraphContext()->defaultSurfaceFormat();
-    }
-    return QQuickWindowPrivate::defaultFormat;
-}
-
-/*!
     \brief QQuickWindow::glslVersion
     \since 5.4
     \return The OpenGL Shading Language version for this window.
@@ -3687,7 +3644,7 @@ QSurfaceFormat QQuickWindow::defaultFormat()
     OpenGL 2 style shaders. The most important for reusable components is to check for
     core profiles since these do not accept shaders with the old syntax.
 
-    \sa setFormat(), setDefaultFormat(), glslIsCoreProfile()
+    \sa setFormat(), glslIsCoreProfile()
  */
 QString QQuickWindow::glslVersion() const
 {
@@ -3738,7 +3695,7 @@ QString QQuickWindow::glslVersion() const
 
     To retrieve more information about the shading language, use glslVersion().
 
-    \sa glslVersion(), setFormat(), setDefaultFormat()
+    \sa glslVersion(), setFormat()
  */
 bool QQuickWindow::glslIsCoreProfile() const
 {

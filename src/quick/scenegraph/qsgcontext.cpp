@@ -310,7 +310,7 @@ QSGNinePatchNode *QSGContext::createQStyleNode()
 
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 {
-    QSurfaceFormat format;
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     format.setDepthBufferSize(useDepth ? 24 : 0);

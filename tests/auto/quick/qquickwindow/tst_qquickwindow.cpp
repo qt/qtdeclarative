@@ -1912,12 +1912,10 @@ void tst_qquickwindow::defaultSurfaceFormat()
     // least using some harmless settings to check that the global, static format is
     // taken into account in the requested format.
 
-    QSurfaceFormat savedDefaultFormat = QQuickWindow::defaultFormat();
+    QSurfaceFormat savedDefaultFormat = QSurfaceFormat::defaultFormat();
 
     // Verify that depth and stencil are set, as they should be, unless they are disabled
     // via environment variables.
-    QVERIFY(savedDefaultFormat.depthBufferSize() >= 16);
-    QVERIFY(savedDefaultFormat.stencilBufferSize() >= 8);
 
     QSurfaceFormat format = savedDefaultFormat;
     format.setSwapInterval(0);
@@ -1926,7 +1924,9 @@ void tst_qquickwindow::defaultSurfaceFormat()
     format.setBlueBufferSize(8);
     format.setProfile(QSurfaceFormat::CompatibilityProfile);
     format.setOption(QSurfaceFormat::DebugContext);
-    QQuickWindow::setDefaultFormat(format);
+    // Will not set depth and stencil. That should be added automatically,
+    // unless the are disabled (but they aren't).
+    QSurfaceFormat::setDefaultFormat(format);
 
     QQuickWindow window;
     window.show();
@@ -1940,7 +1940,13 @@ void tst_qquickwindow::defaultSurfaceFormat()
     QCOMPARE(format.profile(), reqFmt.profile());
     QCOMPARE(int(format.options()), int(reqFmt.options()));
 
-    QQuickWindow::setDefaultFormat(savedDefaultFormat);
+    // Depth and stencil should be >= what has been requested. For real. But use
+    // the context since the window's surface format is only partially updated
+    // on most platforms.
+    QVERIFY(window.openglContext()->format().depthBufferSize() >= 16);
+    QVERIFY(window.openglContext()->format().stencilBufferSize() >= 8);
+
+    QSurfaceFormat::setDefaultFormat(savedDefaultFormat);
 }
 
 void tst_qquickwindow::glslVersion()
