@@ -138,6 +138,9 @@ tst_QQuickItemLayer::tst_QQuickItemLayer()
 
 void tst_QQuickItemLayer::layerSmooth()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("Smooth.qml");
@@ -157,6 +160,9 @@ void tst_QQuickItemLayer::layerSmooth()
 
 void tst_QQuickItemLayer::layerEnabled()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("Enabled.qml");
@@ -173,6 +179,9 @@ void tst_QQuickItemLayer::layerEnabled()
 
 void tst_QQuickItemLayer::layerMipmap()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer)
         QSKIP("Mipmapping does not work with the Mesa Software Rasterizer.");
     QImage fb = runTest("Mipmap.qml");
@@ -187,6 +196,9 @@ void tst_QQuickItemLayer::layerMipmap()
 
 void tst_QQuickItemLayer::layerEffect()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("Effect.qml");
@@ -201,6 +213,9 @@ void tst_QQuickItemLayer::layerEffect()
 // a shader that pads transparent to blue. Everything else is red.
 void tst_QQuickItemLayer::layerSourceRect()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
@@ -222,6 +237,9 @@ void tst_QQuickItemLayer::layerSourceRect()
 // directly in a stand alone ShaderEffect
 void tst_QQuickItemLayer::layerIsTextureProvider()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("TextureProvider.qml");
@@ -254,6 +272,9 @@ void tst_QQuickItemLayer::layerVisibility_data()
 
 void tst_QQuickItemLayer::layerVisibility()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
@@ -302,6 +323,9 @@ void tst_QQuickItemLayer::layerZOrder_data()
 
 void tst_QQuickItemLayer::layerZOrder()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
@@ -336,6 +360,9 @@ void tst_QQuickItemLayer::changeZOrder_data()
 
 void tst_QQuickItemLayer::changeZOrder()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
@@ -404,6 +431,9 @@ void tst_QQuickItemLayer::disableLayer()
 
 void tst_QQuickItemLayer::changeSamplerName()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("SamplerNameChange.qml");
@@ -412,6 +442,9 @@ void tst_QQuickItemLayer::changeSamplerName()
 
 void tst_QQuickItemLayer::itemEffect()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest("ItemEffect.qml");

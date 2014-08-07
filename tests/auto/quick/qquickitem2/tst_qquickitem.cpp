@@ -2814,6 +2814,9 @@ void tst_QQuickItem::childAt()
 
 void tst_QQuickItem::grab()
 {
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-40649");
+#endif
     QQuickView view;
     view.setSource(testFileUrl("grabToImage.qml"));
     view.show();
