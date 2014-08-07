@@ -1456,6 +1456,7 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
         d->implicitHeightValid = false;
         d->updateLayout();
     }
+    QQuickItem::itemChange(change, value);
 }
 
 /*!
