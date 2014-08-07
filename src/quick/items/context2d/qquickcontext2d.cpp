@@ -4031,6 +4031,8 @@ public:
     void run() Q_DECL_OVERRIDE { delete texture; }
 };
 
+QMutex QQuickContext2D::mutex;
+
 QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
@@ -4044,6 +4046,8 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
 
 QQuickContext2D::~QQuickContext2D()
 {
+    mutex.lock();
+    m_texture->setItem(0);
     delete m_buffer;
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
@@ -4064,7 +4068,7 @@ QQuickContext2D::~QQuickContext2D()
                 c->texture = m_texture;
                 m_canvas->window()->scheduleRenderJob(c, QQuickWindow::AfterSynchronizingStage);
             } else {
-                delete m_texture;
+                m_texture->deleteLater();
             }
         }
     } else {
@@ -4073,6 +4077,7 @@ QQuickContext2D::~QQuickContext2D()
         // currently be doing.
         m_texture->deleteLater();
     }
+    mutex.unlock();
 }
 
 QV4::ReturnedValue QQuickContext2D::v4value() const
@@ -4143,6 +4148,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
          m_glContext->setShareContext(cc);
          if (renderThread != QThread::currentThread())
              m_glContext->moveToThread(renderThread);
+         m_texture->initializeOpenGL(m_glContext, m_surface.data());
     }
 
     connect(m_texture, SIGNAL(textureChanged()), SIGNAL(textureChanged()));
@@ -4329,12 +4335,6 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         wrapper->d()->context = this;
         m_v4value = wrapper;
     }
-}
-
-QQuickContext2DCommandBuffer* QQuickContext2D::nextBuffer()
-{
-    QMutexLocker lock(&m_mutex);
-    return m_bufferQueue.isEmpty() ? 0 : m_bufferQueue.dequeue();
 }
 
 QT_END_NAMESPACE
