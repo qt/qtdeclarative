@@ -1127,6 +1127,13 @@ QQuickWindow::~QQuickWindow()
     qDeleteAll(d->afterSwapJobs);
     d->afterSwapJobs.clear();
     d->renderJobMutex.unlock();
+
+    // It is important that the pixmap cache is cleaned up during shutdown.
+    // Besides playing nice, this also solves a practical problem that
+    // QQuickTextureFactory implementations in other libraries need
+    // have their destructors loaded while they the library is still
+    // loaded into memory.
+    QQuickPixmap::purgeCache();
 }
 
 /*!
