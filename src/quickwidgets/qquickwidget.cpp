@@ -116,23 +116,23 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
-void QQuickWidgetPrivate::stopRenderControl()
+void QQuickWidgetPrivate::invalidateRenderControl()
 {
     if (!context) // this is not an error, could be called before creating the context, or multiple times
         return;
 
     bool success = context->makeCurrent(offscreenSurface);
     if (!success) {
-        qWarning("QQuickWidget::stopRenderControl could not make context current");
+        qWarning("QQuickWidget::invalidateRenderControl could not make context current");
         return;
     }
 
-    renderControl->stop();
+    renderControl->invalidate();
 }
 
 void QQuickWidgetPrivate::handleWindowChange()
 {
-    stopRenderControl();
+    invalidateRenderControl();
     destroyContext();
 }
 
@@ -158,7 +158,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
 
-    stopRenderControl();
+    invalidateRenderControl();
 
     // context and offscreenSurface are current at this stage, if the context was created.
     Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
@@ -960,7 +960,7 @@ void QQuickWidget::showEvent(QShowEvent *)
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-    d->stopRenderControl();
+    d->invalidateRenderControl();
 }
 
 /*! \reimp */

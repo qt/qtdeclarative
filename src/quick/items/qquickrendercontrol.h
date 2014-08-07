@@ -60,7 +60,7 @@ public:
     ~QQuickRenderControl();
 
     void initialize(QOpenGLContext *gl);
-    void stop();
+    void invalidate();
 
     void polishItems();
     void render();

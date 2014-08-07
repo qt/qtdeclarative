@@ -157,13 +157,13 @@ QQuickRenderControl::QQuickRenderControl(QObject *parent)
 /*!
   Destroys the instance. Releases all scenegraph resources.
 
-  \sa stop()
+  \sa invalidate()
  */
 QQuickRenderControl::~QQuickRenderControl()
 {
     Q_D(QQuickRenderControl);
 
-    stop();
+    invalidate();
 
     if (d->window)
         QQuickWindowPrivate::get(d->window)->renderControl = 0;
@@ -257,7 +257,7 @@ bool QQuickRenderControl::sync()
   initialize(), to be the current one at the time of destroying the
   QQuickRenderControl instance.
 
-  Once stop() has been called, it is possible to reuse the
+  Once invalidate() has been called, it is possible to reuse the
   QQuickRenderControl instance by calling initialize() again.
 
   \note This function does not take
@@ -265,7 +265,7 @@ bool QQuickRenderControl::sync()
   QQuickWindow::persistentOpenGLContext() into account. This means
   that context-specific resources are always released.
  */
-void QQuickRenderControl::stop()
+void QQuickRenderControl::invalidate()
 {
     Q_D(QQuickRenderControl);
     if (!d->initialized)
