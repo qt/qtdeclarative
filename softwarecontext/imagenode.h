@@ -30,6 +30,10 @@ private:
     QRectF m_subSourceRect;
 
     QPixmap m_pixmap;
+    bool m_mirror;
+    bool m_smooth;
+    bool m_tileHorizontal;
+    bool m_tileVertical;
 };
 
 #endif // IMAGENODE_H

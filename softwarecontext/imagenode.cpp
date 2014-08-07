@@ -300,6 +300,10 @@ static void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const 
 }
 
 ImageNode::ImageNode()
+    : m_mirror(false)
+    , m_smooth(true)
+    , m_tileHorizontal(false)
+    , m_tileVertical(false)
 {
     setMaterial((QSGMaterial*)1);
     setGeometry((QSGGeometry*)1);
@@ -338,22 +342,26 @@ void ImageNode::setTexture(QSGTexture *texture)
 
 void ImageNode::setMirror(bool mirror)
 {
+    m_mirror = mirror;
 }
 
-void ImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+void ImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
 {
 }
 
 void ImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
+    m_smooth = (filtering == QSGTexture::Nearest);
 }
 
 void ImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 {
+    m_tileHorizontal = (wrapMode == QSGTexture::Repeat);
 }
 
 void ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
+    m_tileVertical = (wrapMode == QSGTexture::Repeat);
 }
 
 void ImageNode::update()
@@ -362,5 +370,20 @@ void ImageNode::update()
 
 void ImageNode::paint(QPainter *painter)
 {
-    painter->drawPixmap(m_targetRect, m_pixmap, m_innerSourceRect);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
+    if (m_tileHorizontal || m_tileVertical) {
+        painter->save();
+        qreal sx = m_targetRect.width()/(m_subSourceRect.width()*m_pixmap.width());
+        qreal sy = m_targetRect.height()/(m_subSourceRect.height()*m_pixmap.height());
+        QMatrix transform(sx, 0, 0, sy, 0, 0);
+        painter->setMatrix(transform, true);
+        painter->drawTiledPixmap(QRectF(m_targetRect.x()/sx, m_targetRect.y()/sy, m_targetRect.width()/sx, m_targetRect.height()/sy),
+                                 m_pixmap,
+                                 QPointF(m_subSourceRect.left()*m_pixmap.width(), m_subSourceRect.top()*m_pixmap.height()));
+        painter->restore();
+    } else {
+        QRectF sr(m_subSourceRect.left()*m_pixmap.width(), m_subSourceRect.top()*m_pixmap.height(),
+                  m_subSourceRect.width()*m_pixmap.width(), m_subSourceRect.height()*m_pixmap.height());
+        painter->drawPixmap(m_targetRect, m_pixmap, sr);
+    }
 }
