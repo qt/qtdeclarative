@@ -25,9 +25,14 @@ public:
     virtual void paint(QPainter *);
 
 private:
+    QRectF m_rect;
+    QColor m_color;
+    QColor m_penColor;
+    double m_penWidth;
+    QGradientStops m_stops;
+    double m_radius;
     QPen m_pen;
     QBrush m_brush;
-    QRectF m_rect;
 };
 
 #endif // RECTANGLENODE_H
