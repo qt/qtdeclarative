@@ -876,6 +876,9 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
+#if defined(QT_OPENGL_ES_2_ANGLE) && _MSC_VER==1600
+    QSKIP("QTBUG-40658");
+#endif
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
