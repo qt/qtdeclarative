@@ -309,6 +309,7 @@ void ImageNode::setTexture(QSGTexture *texture)
 
 void ImageNode::setMirror(bool mirror)
 {
+    // ### implement support for mirrored pixmaps
     m_mirror = mirror;
 }
 
@@ -335,9 +336,32 @@ void ImageNode::update()
 {
 }
 
+static Qt::TileRule getTileRule(qreal factor)
+{
+    int ifactor = qRound(factor);
+    if (qFuzzyCompare(factor, ifactor )) {
+        if (ifactor  == 1 || ifactor  == 0)
+            return Qt::StretchTile;
+        return Qt::RoundTile;
+    }
+    return Qt::RepeatTile;
+}
+
+
 void ImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
+
+    if (m_innerTargetRect != m_targetRect) {
+        // border image
+        QMargins margins(m_innerTargetRect.left() - m_targetRect.left(), m_innerTargetRect.top() - m_targetRect.top(),
+                         m_targetRect.right() - m_innerTargetRect.right(), m_targetRect.bottom() - m_innerTargetRect.bottom());
+        QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
+        SoftwareContext::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
+                                           margins, tilerules, QDrawBorderPixmap::DrawingHints(0));
+        return;
+    }
+
     if (m_tileHorizontal || m_tileVertical) {
         painter->save();
         qreal sx = m_targetRect.width()/(m_subSourceRect.width()*m_pixmap.width());
