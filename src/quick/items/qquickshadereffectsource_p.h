@@ -64,17 +64,6 @@ class QSGSimpleRectNode;
 
 class QQuickShaderEffectSourceTextureProvider;
 
-class QQuickShaderEffectSourceNode : public QObject, public QSGDefaultImageNode
-{
-    Q_OBJECT
-
-public:
-    QQuickShaderEffectSourceNode();
-
-private Q_SLOTS:
-    void markDirtyTexture();
-};
-
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectTexture : public QSGDynamicTexture
 {
     Q_OBJECT
@@ -87,6 +76,8 @@ public:
     // The item's "paint node", not effect node.
     QSGNode *item() const { return m_item; }
     void setItem(QSGNode *item);
+
+    void setShaderSourceNode(QSGNode *node) { m_shaderSourceNode = node; }
 
     QRectF rect() const { return m_rect; }
     void setRect(const QRectF &rect);
@@ -125,11 +116,16 @@ Q_SIGNALS:
 public Q_SLOTS:
     void markDirtyTexture();
     void invalidated();
+    void markDirtyTextureLater();
+
+protected:
+    virtual void customEvent(QEvent *);
 
 private:
     void grab();
 
     QSGNode *m_item;
+    QSGNode *m_shaderSourceNode;
     QRectF m_rect;
     QSize m_size;
     qreal m_device_pixel_ratio;

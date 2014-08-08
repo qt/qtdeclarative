@@ -122,21 +122,10 @@ public:
 };
 #include "qquickshadereffectsource.moc"
 
-
-QQuickShaderEffectSourceNode::QQuickShaderEffectSourceNode()
-{
-    setFlag(UsePreprocess, true);
-}
-
-void QQuickShaderEffectSourceNode::markDirtyTexture()
-{
-    markDirty(DirtyMaterial);
-}
-
-
 QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
     : QSGDynamicTexture()
     , m_item(0)
+    , m_shaderSourceNode(0)
     , m_device_pixel_ratio(1)
     , m_format(GL_RGBA)
     , m_renderer(0)
@@ -177,6 +166,16 @@ void QQuickShaderEffectTexture::invalidated()
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_transparentTexture);
         m_transparentTexture = 0;
     }
+}
+
+void QQuickShaderEffectTexture::markDirtyTextureLater()
+{
+    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+}
+
+void QQuickShaderEffectTexture::customEvent(QEvent *)
+{
+    markDirtyTexture();
 }
 
 int QQuickShaderEffectTexture::textureId() const
@@ -307,8 +306,11 @@ void QQuickShaderEffectTexture::scheduleUpdate()
     if (m_grab)
         return;
     m_grab = true;
-    if (m_dirtyTexture)
+    if (m_dirtyTexture) {
         emit updateRequested();
+        if (m_shaderSourceNode)
+            m_shaderSourceNode->markDirty(QSGNode::DirtyMaterial);
+    }
 }
 
 void QQuickShaderEffectTexture::setRecursive(bool recursive)
@@ -319,8 +321,11 @@ void QQuickShaderEffectTexture::setRecursive(bool recursive)
 void QQuickShaderEffectTexture::markDirtyTexture()
 {
     m_dirtyTexture = true;
-    if (m_live || m_grab)
+    if (m_live || m_grab) {
         emit updateRequested();
+        if (m_shaderSourceNode)
+            m_shaderSourceNode->markDirty(QSGNode::DirtyMaterial);
+    }
 }
 
 void QQuickShaderEffectTexture::grab()
@@ -341,7 +346,7 @@ void QQuickShaderEffectTexture::grab()
 
     if (!m_renderer) {
         m_renderer = m_context->createRenderer();
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTextureLater()));
     }
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
@@ -999,8 +1004,10 @@ void QQuickShaderEffectSource::releaseResources()
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
-        if (m_texture)
+        if (m_texture) {
             m_texture->setItem(0);
+            m_texture->setShaderSourceNode(0);
+        }
         delete oldNode;
         return 0;
     }
@@ -1061,11 +1068,12 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
         return 0;
     }
 
-    QQuickShaderEffectSourceNode *node = static_cast<QQuickShaderEffectSourceNode *>(oldNode);
+    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
     if (!node) {
-        node = new QQuickShaderEffectSourceNode;
+        node = d->sceneGraphContext()->createImageNode();
+        node->setFlag(QSGNode::UsePreprocess);
         node->setTexture(m_texture);
-        connect(m_texture, SIGNAL(updateRequested()), node, SLOT(markDirtyTexture()));
+        m_texture->setShaderSourceNode(node);
     }
 
     // If live and recursive, update continuously.
