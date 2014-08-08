@@ -1,5 +1,6 @@
 #include "ninepatchnode.h"
 #include "pixmaptexture.h"
+#include "imagenode.h"
 
 NinePatchNode::NinePatchNode()
 {
@@ -24,20 +25,23 @@ void NinePatchNode::setBounds(const QRectF &bounds)
 
 void NinePatchNode::setDevicePixelRatio(qreal ratio)
 {
-
+    m_pixelRatio = ratio;
 }
 
 void NinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal bottom)
 {
-
+    m_margins = QMargins(qRound(left), qRound(top), qRound(right), qRound(bottom));
 }
 
 void NinePatchNode::update()
 {
-
 }
 
 void NinePatchNode::paint(QPainter *painter)
 {
-    painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
+    if (m_margins.isNull())
+        painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
+    else
+        SoftwareContext::qDrawBorderPixmap(painter, m_bounds.toRect(), m_margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
+                                           m_margins, Qt::StretchTile, QDrawBorderPixmap::DrawingHints(0));
 }

@@ -19,6 +19,8 @@ public:
 private:
     QPixmap m_pixmap;
     QRectF m_bounds;
+    qreal m_pixelRatio;
+    QMargins m_margins;
 };
 
 #endif // NINEPATCHNODE_H

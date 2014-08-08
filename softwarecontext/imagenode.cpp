@@ -6,44 +6,9 @@
 
 // Helper from widgets/styles/qdrawutil.cpp
 
-typedef QVarLengthArray<QPainter::PixmapFragment, 16> QPixmapFragmentsArray;
+namespace SoftwareContext {
 
-struct QTileRules
-{
-    inline QTileRules(Qt::TileRule horizontalRule, Qt::TileRule verticalRule)
-            : horizontal(horizontalRule), vertical(verticalRule) {}
-    inline QTileRules(Qt::TileRule rule = Qt::StretchTile)
-            : horizontal(rule), vertical(rule) {}
-    Qt::TileRule horizontal;
-    Qt::TileRule vertical;
-};
-
-#ifndef Q_QDOC
-// For internal use only.
-namespace QDrawBorderPixmap
-{
-    enum DrawingHint
-    {
-        OpaqueTopLeft = 0x0001,
-        OpaqueTop = 0x0002,
-        OpaqueTopRight = 0x0004,
-        OpaqueLeft = 0x0008,
-        OpaqueCenter = 0x0010,
-        OpaqueRight = 0x0020,
-        OpaqueBottomLeft = 0x0040,
-        OpaqueBottom = 0x0080,
-        OpaqueBottomRight = 0x0100,
-        OpaqueCorners = OpaqueTopLeft | OpaqueTopRight | OpaqueBottomLeft | OpaqueBottomRight,
-        OpaqueEdges = OpaqueTop | OpaqueLeft | OpaqueRight | OpaqueBottom,
-        OpaqueFrame = OpaqueCorners | OpaqueEdges,
-        OpaqueAll = OpaqueCenter | OpaqueFrame
-    };
-
-    Q_DECLARE_FLAGS(DrawingHints, DrawingHint)
-}
-#endif
-
-static void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMargins,
+void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMargins,
                        const QPixmap &pixmap, const QRect &sourceRect,const QMargins &sourceMargins,
                        const QTileRules &rules, QDrawBorderPixmap::DrawingHints hints)
 {
@@ -297,6 +262,8 @@ static void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const 
 
     if (oldAA)
         painter->setRenderHint(QPainter::Antialiasing, true);
+}
+
 }
 
 ImageNode::ImageNode()
