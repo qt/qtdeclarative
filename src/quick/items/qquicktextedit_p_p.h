@@ -65,7 +65,7 @@ class QTextLayout;
 class QQuickTextDocumentWithImageResources;
 class QQuickTextControl;
 class QQuickTextNode;
-class QSGSimpleRectNode;
+
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
 public:

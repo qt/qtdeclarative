@@ -155,7 +155,7 @@ namespace {
             newNode->setFlag(QSGNode::OwnedByParent);
         }
 
-        void resetCursorNode(QSGSimpleRectNode* newNode)
+        void resetCursorNode(QSGRectangleNode* newNode)
         {
             if (cursorNode)
                 removeChildNode(cursorNode);
@@ -165,7 +165,7 @@ namespace {
             cursorNode->setFlag(QSGNode::OwnedByParent);
         }
 
-        QSGSimpleRectNode *cursorNode;
+        QSGRectangleNode *cursorNode;
         QQuickTextNode* frameDecorationsNode;
 
     };
@@ -1914,7 +1914,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QColor color = (!d->cursorVisible || !d->control->cursorOn())
                 ? QColor(0, 0, 0, 0)
                 : d->color;
-        rootNode->resetCursorNode(new QSGSimpleRectNode(cursorRectangle(), color));
+        rootNode->resetCursorNode(d->sceneGraphContext()->createRectangleNode(cursorRectangle(), color));
     }
 
     return rootNode;

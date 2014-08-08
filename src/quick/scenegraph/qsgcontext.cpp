@@ -261,6 +261,19 @@ void QSGContext::renderContextInvalidated(QSGRenderContext *)
 {
 }
 
+
+/*!
+    Convenience factory function for creating a colored rectangle with the given geometry.
+ */
+QSGRectangleNode *QSGContext::createRectangleNode(const QRectF &rect, const QColor &c)
+{
+    QSGRectangleNode *node = createRectangleNode();
+    node->setRect(rect);
+    node->setColor(c);
+    node->update();
+    return node;
+}
+
 /*!
     Factory function for scene graph backends of the Rectangle element.
  */

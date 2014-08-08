@@ -49,7 +49,6 @@
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtexttable.h>
 #include <QtGui/qtextlist.h>
-#include <QtQuick/qsgsimplerectnode.h>
 
 #include <private/qquicktext_p_p.h>
 #include <private/qtextdocumentlayout_p.h>
@@ -647,14 +646,14 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
         const QRectF &rect = m_backgrounds.at(i).first;
         const QColor &color = m_backgrounds.at(i).second;
 
-        parentNode->appendChildNode(new QSGSimpleRectNode(rect, color));
+        parentNode->addRectangleNode(rect, color);
     }
 
     // First, prepend all selection rectangles to the tree
     for (int i=0; i<m_selectionRects.size(); ++i) {
         const QRectF &rect = m_selectionRects.at(i);
 
-        parentNode->appendChildNode(new QSGSimpleRectNode(rect, m_selectionColor));
+        parentNode->addRectangleNode(rect, m_selectionColor);
     }
 
     // Finally, add decorations for each node to the tree.
@@ -665,7 +664,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                 ? m_selectedTextColor
                 : textDecoration.color;
 
-        parentNode->appendChildNode(new QSGSimpleRectNode(textDecoration.rect, color));
+        parentNode->addRectangleNode(textDecoration.rect, color);
     }
 
     // Then, go through all the nodes for all lines and combine all QGlyphRuns with a common
@@ -714,7 +713,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
             if (node->selectionState == Selected) {
                 QColor color = m_selectionColor;
                 color.setAlpha(128);
-                parentNode->appendChildNode(new QSGSimpleRectNode(node->boundingRect, color));
+                parentNode->addRectangleNode(node->boundingRect, color);
             }
         }
     }

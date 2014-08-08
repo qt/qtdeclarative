@@ -1861,7 +1861,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     d->textNode = node;
 
     if (!d->textLayoutDirty && oldNode != 0) {
-        QSGSimpleRectNode *cursorNode = node->cursorNode();
+        QSGRectangleNode *cursorNode = node->cursorNode();
         if (cursorNode != 0 && !isReadOnly()) {
             cursorNode->setRect(cursorRectangle());
 
@@ -2706,14 +2706,20 @@ void QQuickTextInput::selectionChanged()
 
 void QQuickTextInputPrivate::showCursor()
 {
-    if (textNode != 0 && textNode->cursorNode() != 0)
-        textNode->cursorNode()->setColor(color);
+    if (textNode != 0 && textNode->cursorNode() != 0) {
+        QSGRectangleNode *cursor = textNode->cursorNode();
+        cursor->setColor(color);
+        cursor->update();
+    }
 }
 
 void QQuickTextInputPrivate::hideCursor()
 {
-    if (textNode != 0 && textNode->cursorNode() != 0)
-        textNode->cursorNode()->setColor(QColor(0, 0, 0, 0));
+    if (textNode != 0 && textNode->cursorNode() != 0) {
+        QSGRectangleNode *cursor = textNode->cursorNode();
+        cursor->setColor(QColor(0, 0, 0, 0));
+        cursor->update();
+    }
 }
 
 QRectF QQuickTextInput::boundingRect() const

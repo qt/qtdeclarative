@@ -172,6 +172,7 @@ public:
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
     virtual QSGRenderContext *createRenderContext();
 
+    QSGRectangleNode *createRectangleNode(const QRectF &rect, const QColor &c);
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);

@@ -43,7 +43,6 @@
 
 #include "qquicktextnodeengine_p.h"
 
-#include <QtQuick/qsgsimplerectnode.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
 #include <private/qquickclipnode_p.h>
@@ -183,7 +182,8 @@ void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
     if (m_cursorNode != 0)
         delete m_cursorNode;
 
-    m_cursorNode = new QSGSimpleRectNode(rect, color);
+    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
+    m_cursorNode =  sg->sceneGraphContext()->createRectangleNode(rect, color);
     appendChildNode(m_cursorNode);
 }
 
@@ -197,6 +197,13 @@ void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedT
     m_engine->setAnchorColor(anchorColor);
     m_engine->setPosition(position);
 }
+
+void QQuickTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
+{
+    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
+    appendChildNode(sg->sceneGraphContext()->createRectangleNode(rect, color));
+}
+
 
 void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
 {
