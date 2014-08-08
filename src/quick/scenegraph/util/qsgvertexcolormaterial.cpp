@@ -107,9 +107,12 @@ void QSGVertexColorMaterialShader::initialize()
     The geometry to be rendered with vertex color must have the following layout. Attribute
     position 0 must contain vertices. Attribute position 1 must contain colors, a tuple of
     4 values with RGBA layout. Both floats in the range of 0 to 1 and unsigned bytes in
-    the range 0 to 255 are valid for the color values. The
-    QSGGeometry::defaultAttributes_ColoredPoint2D() constructs an attribute set
-    compatible with this material.
+    the range 0 to 255 are valid for the color values.
+
+    \note The rendering pipeline expects pixels with premultiplied alpha.
+
+    QSGGeometry::defaultAttributes_ColoredPoint2D() can be used to construct an attribute
+    set that is compatible with this material.
 
     The vertex color material respects both current opacity and current matrix when
     updating it's rendering state.
