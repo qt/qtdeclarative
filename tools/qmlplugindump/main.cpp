@@ -69,6 +69,10 @@
 #ifdef Q_OS_UNIX
 #include <signal.h>
 #endif
+#ifdef Q_OS_WIN
+#include <crtdbg.h>
+#include <qt_windows.h>
+#endif
 
 QString pluginImportPath;
 bool verbose = false;
@@ -306,6 +310,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                     std::cerr << "Got " << qPrintable( tyName )
                               << " (" << qPrintable( QString::fromUtf8(ty->typeName()) ) << ")" << std::endl;
                 collectReachableMetaObjects(object, &metas);
+                object->deleteLater();
             } else {
                 std::cerr << "Could not create" << qPrintable(tyName) << std::endl;
             }
@@ -731,6 +736,13 @@ void printDebugMessage(QtMsgType, const QMessageLogContext &, const QString &msg
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_WIN
+    // we do not want windows popping up if the module loaded triggers an assert
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+#endif
     // The default message handler might not print to console on some systems. Enforce this.
     qInstallMessageHandler(printDebugMessage);
 #ifdef Q_OS_UNIX

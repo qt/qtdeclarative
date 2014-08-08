@@ -1526,6 +1526,18 @@ void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelInd
         _q_itemsChanged(begin.row(), end.row() - begin.row() + 1, roles);
 }
 
+bool QQmlDelegateModel::isDescendantOf(const QPersistentModelIndex& desc, const QList< QPersistentModelIndex >& parents) const
+{
+    for (int i = 0, c = parents.count(); i < c; ++i) {
+        for (QPersistentModelIndex parent = desc; parent.isValid(); parent = parent.parent()) {
+            if (parent == parents[i])
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void QQmlDelegateModel::_q_layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
     Q_D(QQmlDelegateModel);
@@ -1534,8 +1546,9 @@ void QQmlDelegateModel::_q_layoutAboutToBeChanged(const QList<QPersistentModelIn
 
     if (hint == QAbstractItemModel::VerticalSortHint) {
         d->m_storedPersistentIndexes.clear();
-        if (!parents.contains(d->m_adaptorModel.rootIndex))
+        if (!parents.isEmpty() && d->m_adaptorModel.rootIndex.isValid() &&  !isDescendantOf(d->m_adaptorModel.rootIndex, parents)) {
             return;
+        }
 
         for (int i = 0; i < d->m_count; ++i) {
             const QModelIndex index = d->m_adaptorModel.aim()->index(i, 0, d->m_adaptorModel.rootIndex);
@@ -1555,20 +1568,16 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
         return;
 
     if (hint == QAbstractItemModel::VerticalSortHint) {
-        if (!parents.contains(d->m_adaptorModel.rootIndex))
+        if (!parents.isEmpty() && d->m_adaptorModel.rootIndex.isValid() && !isDescendantOf(d->m_adaptorModel.rootIndex, parents)) {
             return;
+        }
 
         for (int i = 0, c = d->m_storedPersistentIndexes.count(); i < c; ++i) {
             const QPersistentModelIndex &index = d->m_storedPersistentIndexes.at(i);
             if (i == index.row())
                 continue;
 
-            QVector<Compositor::Insert> inserts;
-            QVector<Compositor::Remove> removes;
-            d->m_compositor.listItemsMoved(&d->m_adaptorModel, i, index.row(), 1, &removes, &inserts);
-            if (!removes.isEmpty() || !inserts.isEmpty()) {
-                d->itemsMoved(removes, inserts);
-            }
+            _q_itemsMoved(i, index.row(), 1);
         }
 
         d->m_storedPersistentIndexes.clear();

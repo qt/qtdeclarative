@@ -3233,6 +3233,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for beforeSynchronizing leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
+
+    \sa resetOpenGLState()
 */
 
 /*!
@@ -3254,6 +3256,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     do so can result in the scene not rendering properly.
 
     \since 5.3
+    \sa resetOpenGLState()
  */
 
 /*!
@@ -3274,6 +3277,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for beforeRendering leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
+
+    \sa resetOpenGLState()
 */
 
 /*!
@@ -3293,6 +3298,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for afterRendering() leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
+
+    \sa resetOpenGLState()
  */
 
 /*!
@@ -3345,7 +3352,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 
-    \sa sceneGraphInvalidated()
+    \sa sceneGraphInvalidated(), resetOpenGLState()
     \since 5.3
  */
 

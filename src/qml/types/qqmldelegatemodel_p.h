@@ -143,6 +143,8 @@ private Q_SLOTS:
     void _q_layoutChanged(const QList<QPersistentModelIndex>&, QAbstractItemModel::LayoutChangeHint);
 
 private:
+    bool isDescendantOf(const QPersistentModelIndex &desc, const QList<QPersistentModelIndex> &parents) const;
+
     Q_DISABLE_COPY(QQmlDelegateModel)
 };
 
