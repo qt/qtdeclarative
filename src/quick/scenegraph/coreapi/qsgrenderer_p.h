@@ -99,8 +99,6 @@ protected:
     void addNodesToPreprocess(QSGNode *node);
     void removeNodesToPreprocess(QSGNode *node);
 
-    void markNodeDirtyState(QSGNode *node, QSGNode::DirtyState state) { node->m_dirtyState |= state; }
-
     QMatrix4x4 m_current_projection_matrix;
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;

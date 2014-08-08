@@ -1008,7 +1008,6 @@ void QSGGeometryNode::setOpaqueMaterial(QSGMaterial *material)
  */
 QSGMaterial *QSGGeometryNode::activeMaterial() const
 {
-    Q_ASSERT_X(dirtyState() == 0, "QSGGeometryNode::activeMaterial()", "function assumes that all dirty states are cleaned up");
     if (m_opaque_material && m_opacity > 0.999)
         return m_opaque_material;
     return m_material;
@@ -1494,7 +1493,6 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);
 #endif
-    d << "dirty=" << hex << (int) n->dirtyState() << dec;
     return d;
 }
 
@@ -1515,7 +1513,7 @@ QDebug operator<<(QDebug d, const QSGClipNode *n)
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);
 #endif
-    d << "dirty=" << hex << (int) n->dirtyState() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+    d << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
     return d;
 }
 
@@ -1537,7 +1535,7 @@ QDebug operator<<(QDebug d, const QSGTransformNode *n)
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);
 #endif
-    d << "dirty=" << hex << (int) n->dirtyState() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+    d << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
     d << ')';
     return d;
 }
@@ -1556,7 +1554,6 @@ QDebug operator<<(QDebug d, const QSGOpacityNode *n)
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);
 #endif
-    d << "dirty=" << hex << (int) n->dirtyState() << dec;
     d << ')';
     return d;
 }
@@ -1568,8 +1565,7 @@ QDebug operator<<(QDebug d, const QSGRootNode *n)
         d << "RootNode(null)";
         return d;
     }
-    d << "RootNode" << hex << (void *) n << "dirty=" << (int) n->dirtyState() << dec
-      << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+    d << "RootNode" << hex << (void *) n << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);
 #endif
@@ -1603,7 +1599,6 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     case QSGNode::RenderNodeType:
         d << "RenderNode(" << hex << (void *) n << dec
-          << "dirty=" << hex << (int) n->dirtyState()
           << "flags=" << (int) n->flags() << dec
           << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QSG_RUNTIME_DESCRIPTION
@@ -1613,7 +1608,6 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     default:
         d << "Node(" << hex << (void *) n << dec
-          << "dirty=" << hex << (int) n->dirtyState()
           << "flags=" << (int) n->flags() << dec
           << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QSG_RUNTIME_DESCRIPTION

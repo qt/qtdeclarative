@@ -113,9 +113,6 @@ bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 
 void QSGNodeUpdater::enterTransformNode(QSGTransformNode *t)
 {
-    if (t->dirtyState() & QSGNode::DirtyMatrix)
-        ++m_force_update;
-
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "enter transform:" << t << "force=" << m_force_update;
 #endif
@@ -142,9 +139,6 @@ void QSGNodeUpdater::leaveTransformNode(QSGTransformNode *t)
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "leave transform:" << t;
 #endif
-
-    if (t->dirtyState() & QSGNode::DirtyMatrix)
-        --m_force_update;
 
     if (!t->matrix().isIdentity()) {
         m_combined_matrix_stack.pop_back();
@@ -217,9 +211,6 @@ void QSGNodeUpdater::leaveRenderNode(QSGRenderNode *r)
 
 void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
 {
-    if (o->dirtyState() & QSGNode::DirtyOpacity)
-        ++m_force_update;
-
     qreal opacity = m_opacity_stack.last() * o->opacity();
     o->setCombinedOpacity(opacity);
     m_opacity_stack.add(opacity);
@@ -252,14 +243,10 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
     qDebug() << "enter:" << n;
 #endif
 
-    if (!n->dirtyState() && !m_force_update)
+    if (!m_force_update)
         return;
     if (n->isSubtreeBlocked())
         return;
-
-    bool forceUpdate = n->dirtyState() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
-    if (forceUpdate)
-        ++m_force_update;
 
     switch (n->type()) {
     case QSGNode::TransformNodeType: {
@@ -296,11 +283,6 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
         visitChildren(n);
         break;
     }
-
-    if (forceUpdate)
-        --m_force_update;
-
-    n->clearDirty();
 }
 
 QT_END_NAMESPACE

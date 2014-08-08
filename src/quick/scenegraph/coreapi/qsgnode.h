@@ -145,9 +145,9 @@ public:
 
     inline NodeType type() const { return m_type; }
 
-    void clearDirty() { m_dirtyState = 0; }
+    QT_DEPRECATED void clearDirty() { }
     void markDirty(DirtyState bits);
-    DirtyState dirtyState() const { return m_dirtyState; }
+    QT_DEPRECATED DirtyState dirtyState() const { return 0; }
 
     virtual bool isSubtreeBlocked() const;
 
