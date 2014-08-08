@@ -12,7 +12,8 @@ SOURCES += \
     rectanglenode.cpp \
     imagenode.cpp \
     pixmaptexture.cpp \
-    glyphnode.cpp
+    glyphnode.cpp \
+    renderingvisitor.cpp
 
 HEADERS += \
     context.h \
@@ -21,7 +22,8 @@ HEADERS += \
     rectanglenode.h \
     imagenode.h \
     pixmaptexture.h \
-    glyphnode.h
+    glyphnode.h \
+    renderingvisitor.h
 
 OTHER_FILES += softwarecontext.json
 

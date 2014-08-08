@@ -16,7 +16,7 @@ public:
     virtual void setPreferredAntialiasingMode(AntialiasingMode);
     virtual void update();
 
-    virtual void paint(QPainter *painter);
+    void paint(QPainter *painter);
 
 private:
     QPointF m_position;

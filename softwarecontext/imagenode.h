@@ -21,7 +21,7 @@ public:
     virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode);
     virtual void update();
 
-    virtual void paint(QPainter *painter);
+    void paint(QPainter *painter);
 
 private:
     QRectF m_targetRect;

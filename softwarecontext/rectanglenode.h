@@ -22,7 +22,7 @@ public:
 
     virtual void update();
 
-    virtual void paint(QPainter *);
+    void paint(QPainter *);
 
 private:
     QRectF m_rect;

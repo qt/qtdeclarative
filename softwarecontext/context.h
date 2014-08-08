@@ -45,6 +45,7 @@
 
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderer_p.h>
+#include <private/qsgadaptationlayer_p.h>
 #include <QtCore/QElapsedTimer>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QBackingStore>
@@ -62,8 +63,6 @@ public:
     virtual void render();
 
 private:
-    void renderNode(QPainter *painter, QSGNode *node);
-
     QScopedPointer<QBackingStore> backingStore;
 };
 

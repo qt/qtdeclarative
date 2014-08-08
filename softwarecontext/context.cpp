@@ -45,6 +45,7 @@
 #include "imagenode.h"
 #include "pixmaptexture.h"
 #include "glyphnode.h"
+#include "renderingvisitor.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -99,40 +100,10 @@ void Renderer::render()
     painter.setRenderHint(QPainter::Antialiasing);
 
     painter.fillRect(rect, Qt::white);
-    renderNode(&painter, rootNode());
+    RenderingVisitor(&painter).visitChildren(rootNode());
 
     backingStore->endPaint();
     backingStore->flush(rect);
-}
-
-void Renderer::renderNode(QPainter *painter, QSGNode *node)
-{
-    bool restore = false;
-
-    if (node->type() == QSGNode::TransformNodeType) {
-        QSGTransformNode *tn = static_cast<QSGTransformNode*>(node);
-        painter->save();
-        restore = true;
-        painter->setTransform(tn->matrix().toTransform(), /*combine*/true);
-    } else if (node->type() == QSGNode::ClipNodeType) {
-        QSGClipNode *cn = static_cast<QSGClipNode*>(node);
-        painter->save();
-        restore = true;
-        painter->setClipRect(cn->clipRect(), Qt::IntersectClip);
-    } else if (node->type() == QSGNode::OpacityNodeType) {
-        QSGOpacityNode *on = static_cast<QSGOpacityNode*>(node);
-        painter->save();
-        restore = true;
-        painter->setOpacity(on->opacity());
-    }
-
-    node->paint(painter);
-
-    for (QSGNode *child = node->firstChild(); child; child = child->nextSibling())
-        renderNode(painter, child);
-
-    if (restore)
-        painter->restore();
 }
 
 RenderContext::RenderContext(QSGContext *ctx)
@@ -191,6 +162,5 @@ void RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
 {
     QSGRenderContext::renderNextFrame(renderer, fbo);
 }
-
 
 } // namespace
