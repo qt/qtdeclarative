@@ -317,8 +317,15 @@ public:
                 << RI(JSC::ARMRegisters::d4,  QStringLiteral("d4"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::d5,  QStringLiteral("d5"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::d6,  QStringLiteral("d6"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d8,  QStringLiteral("d8"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d9,  QStringLiteral("d9"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d10, QStringLiteral("d10"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d11, QStringLiteral("d11"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d12, QStringLiteral("d12"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d13, QStringLiteral("d13"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d14, QStringLiteral("d14"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d15, QStringLiteral("d15"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
-        // TODO: someone should check what's up with d8-d15: are they alway available, and are they caller or callee saved?
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
