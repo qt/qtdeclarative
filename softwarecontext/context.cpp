@@ -45,6 +45,7 @@
 #include "imagenode.h"
 #include "pixmaptexture.h"
 #include "glyphnode.h"
+#include "ninepatchnode.h"
 #include "renderingvisitor.h"
 
 #include <QtCore/QCoreApplication>
@@ -130,6 +131,11 @@ QSGImageNode *Context::createImageNode()
 QSGGlyphNode *Context::createGlyphNode(QSGRenderContext */*rc*/, bool /*preferNativeGlyphNode*/)
 {
     return new GlyphNode();
+}
+
+QSGNinePatchNode *Context::createQStyleNode()
+{
+    return new NinePatchNode();
 }
 
 void RenderContext::initialize(QOpenGLContext *context)

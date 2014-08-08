@@ -3,6 +3,7 @@
 #include "imagenode.h"
 #include "rectanglenode.h"
 #include "glyphnode.h"
+#include "ninepatchnode.h"
 
 RenderingVisitor::RenderingVisitor(QPainter *painter)
     : painter(painter)
@@ -34,12 +35,12 @@ void RenderingVisitor::endVisit(QSGClipNode *)
 
 void RenderingVisitor::visit(QSGGeometryNode *node)
 {
-    Q_UNREACHABLE();
+//    Q_UNREACHABLE();
 }
 
 void RenderingVisitor::endVisit(QSGGeometryNode *node)
 {
-    Q_UNREACHABLE();
+//    Q_UNREACHABLE();
 }
 
 void RenderingVisitor::visit(QSGOpacityNode *node)
@@ -78,4 +79,14 @@ void RenderingVisitor::visit(QSGGlyphNode *node)
 
 void RenderingVisitor::endVisit(QSGGlyphNode *)
 {
+}
+
+void RenderingVisitor::visit(QSGNinePatchNode *node)
+{
+    static_cast<NinePatchNode*>(node)->paint(painter);
+}
+
+void RenderingVisitor::endVisit(QSGNinePatchNode *)
+{
+
 }

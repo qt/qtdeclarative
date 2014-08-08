@@ -22,6 +22,8 @@ public:
     virtual void endVisit(QSGRectangleNode *node);
     virtual void visit(QSGGlyphNode *node);
     virtual void endVisit(QSGGlyphNode *node);
+    virtual void visit(QSGNinePatchNode *node);
+    virtual void endVisit(QSGNinePatchNode *);
 
 private:
     QPainter *painter;
