@@ -1350,24 +1350,26 @@ void RegisterAllocator::prepareRanges()
         ltiWithCalls.addRange(callPosition, callPosition);
 
     const int regCount = _normalRegisters.size();
-    _fixedRegisterRanges.reserve(regCount);
+    _fixedRegisterRanges.resize(regCount);
     for (int reg = 0; reg < regCount; ++reg) {
         if (_normalRegisters.at(reg)->isCallerSaved()) {
             LifeTimeInterval *lti = cloneFixedInterval(reg, false, ltiWithCalls);
-            _fixedRegisterRanges.append(lti);
-            if (lti->isValid())
+            if (lti->isValid()) {
+                _fixedRegisterRanges[reg] = lti;
                 _active.append(lti);
+            }
         }
     }
 
     const int fpRegCount = _fpRegisters.size();
-    _fixedFPRegisterRanges.reserve(fpRegCount);
+    _fixedFPRegisterRanges.resize(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
         if (_fpRegisters.at(fpReg)->isCallerSaved()) {
             LifeTimeInterval *lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
-            _fixedFPRegisterRanges.append(lti);
-            if (lti->isValid())
+            if (lti->isValid()) {
+                _fixedFPRegisterRanges[fpReg] = lti;
                 _active.append(lti);
+            }
         }
     }
 }
@@ -1681,16 +1683,18 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
     splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
     // make sure that current does not intersect with the fixed interval for reg
-    const LifeTimeInterval &fixedRegRange = needsFPReg ? *_fixedFPRegisterRanges.at(reg)
-                                                       : *_fixedRegisterRanges.at(reg);
-    int ni = nextIntersection(current, fixedRegRange);
-    if (ni != -1) {
-        if (DebugRegAlloc) {
-            QTextStream out(stderr, QIODevice::WriteOnly);
-            out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
+    const LifeTimeInterval *fixedRegRange = needsFPReg ? _fixedFPRegisterRanges.at(reg)
+                                                       : _fixedRegisterRanges.at(reg);
+    if (fixedRegRange) {
+        int ni = nextIntersection(current, *fixedRegRange);
+        if (ni != -1) {
+            if (DebugRegAlloc) {
+                QTextStream out(stderr, QIODevice::WriteOnly);
+                out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
+            }
+            // current does overlap with a fixed interval, so split current before that intersection.
+            split(current, ni, true);
         }
-        // current does overlap with a fixed interval, so split current before that intersection.
-        split(current, ni, true);
     }
 }
 
