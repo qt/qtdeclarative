@@ -27,7 +27,7 @@ void NinePatchNode::setDevicePixelRatio(qreal ratio)
 
 }
 
-void NinePatchNode::setPadding(int left, int top, int right, int bottom)
+void NinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal bottom)
 {
 
 }

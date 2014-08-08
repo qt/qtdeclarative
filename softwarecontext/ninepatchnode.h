@@ -11,7 +11,7 @@ public:
     virtual void setTexture(QSGTexture *texture);
     virtual void setBounds(const QRectF &bounds);
     virtual void setDevicePixelRatio(qreal ratio);
-    virtual void setPadding(int left, int top, int right, int bottom);
+    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom);
     virtual void update();
 
     void paint(QPainter *painter);
