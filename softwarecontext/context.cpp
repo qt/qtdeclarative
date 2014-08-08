@@ -100,7 +100,7 @@ void Renderer::render()
     QPainter painter(device);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    painter.fillRect(rect, Qt::white);
+    painter.fillRect(rect, clearColor());
     RenderingVisitor(&painter).visitChildren(rootNode());
 
     backingStore->endPaint();
