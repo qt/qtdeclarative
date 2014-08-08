@@ -118,6 +118,11 @@ Context::Context(QObject *parent)
     setDistanceFieldEnabled(false);
 }
 
+QSGSimpleRectangleNode *Context::createSimpleRectangleNode(const QRectF &rect, const QColor &color)
+{
+    return new SimpleRectangleNode(rect, color);
+}
+
 QSGRectangleNode *Context::createRectangleNode()
 {
     return new RectangleNode();

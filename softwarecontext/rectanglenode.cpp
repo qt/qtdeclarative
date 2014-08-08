@@ -1,5 +1,33 @@
 #include "rectanglenode.h"
 
+SimpleRectangleNode::SimpleRectangleNode(const QRectF &rect, const QColor &color)
+    : m_rect(rect)
+    , m_color(color)
+{
+    setMaterial((QSGMaterial*)1);
+    setGeometry((QSGGeometry*)1);
+}
+
+void SimpleRectangleNode::setRect(const QRectF &rect)
+{
+    m_rect = rect;
+}
+
+void SimpleRectangleNode::setColor(const QColor &color)
+{
+    m_color = color;
+}
+
+void SimpleRectangleNode::update()
+{
+}
+
+void SimpleRectangleNode::paint(QPainter *p)
+{
+    p->fillRect(m_rect, m_color);
+}
+
+
 RectangleNode::RectangleNode()
     : m_penWidth(0)
     , m_radius(0)

@@ -88,6 +88,7 @@ public:
 
     QSGRenderContext *createRenderContext() { return new RenderContext(this); }
 
+    virtual QSGSimpleRectangleNode *createSimpleRectangleNode(const QRectF &rect, const QColor &color);
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);

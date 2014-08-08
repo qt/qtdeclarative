@@ -6,6 +6,24 @@
 #include <QPen>
 #include <QBrush>
 
+class SimpleRectangleNode : public QSGSimpleRectangleNode
+{
+public:
+    SimpleRectangleNode(const QRectF &rect, const QColor &color);
+
+    virtual void setRect(const QRectF &rect);
+    virtual void setColor(const QColor &color);
+
+    virtual void update();
+
+    void paint(QPainter *);
+
+private:
+    QRectF m_rect;
+    QColor m_color;
+};
+
+
 class RectangleNode : public QSGRectangleNode
 {
 public:

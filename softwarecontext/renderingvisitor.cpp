@@ -63,6 +63,16 @@ void RenderingVisitor::endVisit(QSGImageNode *)
 {
 }
 
+void RenderingVisitor::visit(QSGSimpleRectangleNode *node)
+{
+    static_cast<SimpleRectangleNode *>(node)->paint(painter);
+}
+
+void RenderingVisitor::endVisit(QSGSimpleRectangleNode *)
+{
+
+}
+
 void RenderingVisitor::visit(QSGRectangleNode *node)
 {
     static_cast<RectangleNode*>(node)->paint(painter);

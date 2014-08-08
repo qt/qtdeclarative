@@ -18,6 +18,8 @@ public:
     virtual void endVisit(QSGOpacityNode *node);
     virtual void visit(QSGImageNode *node);
     virtual void endVisit(QSGImageNode *node);
+    virtual void visit(QSGSimpleRectangleNode *node);
+    virtual void endVisit(QSGSimpleRectangleNode *node);
     virtual void visit(QSGRectangleNode *node);
     virtual void endVisit(QSGRectangleNode *node);
     virtual void visit(QSGGlyphNode *node);
