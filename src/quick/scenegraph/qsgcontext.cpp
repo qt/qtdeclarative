@@ -597,6 +597,8 @@ QSGDepthStencilBufferManager *QSGRenderContext::depthStencilBufferManager()
 
 QSGTexture *QSGRenderContext::createTexture(const QImage &image) const
 {
+    if (!openglContext())
+        return 0;
     QSGTexture *t = m_atlasManager->create(image);
     if (t)
         return t;

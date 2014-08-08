@@ -3432,7 +3432,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
 {
     Q_D(const QQuickWindow);
-    if (d->context && d->context->openglContext()) {
+    if (d->context) {
         if (options & TextureCanUseAtlas)
             return d->context->createTexture(image);
         else
