@@ -70,6 +70,7 @@ class QOpenGLContext;
 class QSGImageNode;
 class QSGRectangleNode;
 class QSGGlyphNode;
+class QSGNinePatchNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -88,6 +89,8 @@ public:
     virtual void endVisit(QSGRectangleNode *) = 0;
     virtual void visit(QSGGlyphNode *) = 0;
     virtual void endVisit(QSGGlyphNode *) = 0;
+    virtual void visit(QSGNinePatchNode *) = 0;
+    virtual void endVisit(QSGNinePatchNode *) = 0;
 
     void visitChildren(QSGNode *node);
 };
@@ -142,6 +145,18 @@ public:
     virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
+class Q_QUICK_PRIVATE_EXPORT QSGNinePatchNode : public QSGVisitableNode
+{
+public:
+    virtual void setTexture(QSGTexture *texture) = 0;
+    virtual void setBounds(const QRectF &bounds) = 0;
+    virtual void setDevicePixelRatio(qreal ratio) = 0;
+    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom) = 0;
+
+    virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
+};
 
 class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {

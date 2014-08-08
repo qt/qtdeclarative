@@ -64,6 +64,7 @@ class QSGContextPrivate;
 class QSGRectangleNode;
 class QSGImageNode;
 class QSGGlyphNode;
+class QSGNinePatchNode;
 class QSGRenderer;
 class QSGDistanceFieldGlyphCache;
 class QQuickWindow;
@@ -174,6 +175,7 @@ public:
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
+    virtual QSGNinePatchNode *createQStyleNode();
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;
