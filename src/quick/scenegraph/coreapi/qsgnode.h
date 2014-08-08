@@ -95,9 +95,14 @@ public:
         // QSGBasicGeometryNode
         OwnsGeometry                = 0x00010000,
         OwnsMaterial                = 0x00020000,
-        OwnsOpaqueMaterial          = 0x00040000
+        OwnsOpaqueMaterial          = 0x00040000,
 
         // Uppermost 8 bits are reserved for internal use.
+#ifndef qdoc
+        IsVisitableNode             = 0x01000000
+#else
+        InternalReserved            = 0x01000000
+#endif
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

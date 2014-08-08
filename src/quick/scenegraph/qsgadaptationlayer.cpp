@@ -291,4 +291,52 @@ void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, con
     }
 }
 
+void QSGNodeVisitorEx::visitChildren(QSGNode *node)
+{
+    for (QSGNode *child = node->firstChild(); child; child = child->nextSibling()) {
+        switch (child->type()) {
+        case QSGNode::ClipNodeType: {
+            QSGClipNode *c = static_cast<QSGClipNode*>(child);
+            visit(c);
+            visitChildren(c);
+            endVisit(c);
+            break;
+        }
+        case QSGNode::TransformNodeType: {
+            QSGTransformNode *c = static_cast<QSGTransformNode*>(child);
+            visit(c);
+            visitChildren(c);
+            endVisit(c);
+            break;
+        }
+        case QSGNode::OpacityNodeType: {
+            QSGOpacityNode *c = static_cast<QSGOpacityNode*>(child);
+            visit(c);
+            visitChildren(c);
+            endVisit(c);
+            break;
+        }
+        case QSGNode::GeometryNodeType: {
+            if (child->flags() & QSGNode::IsVisitableNode) {
+                QSGVisitableNode *v = static_cast<QSGVisitableNode*>(child);
+                v->accept(this);
+            } else {
+                QSGGeometryNode *c = static_cast<QSGGeometryNode*>(child);
+                visit(c);
+                visitChildren(c);
+                endVisit(c);
+            }
+            break;
+        }
+        case QSGNode::BasicNodeType: {
+            visitChildren(child);
+            break;
+        }
+        default:
+            Q_UNREACHABLE();
+            break;
+        }
+    }
+}
+
 QT_END_NAMESPACE

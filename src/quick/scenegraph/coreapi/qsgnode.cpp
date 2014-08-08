@@ -135,6 +135,7 @@ static void qt_print_node_count()
     \value OwnsOpaqueMaterial Only valid for QSGGeometryNode. The node has
     ownership over the opaque material and will delete it when the node is
     destroyed or a material is assigned.
+    \value InternalReserved Reserved for internal use.
  */
 
 /*!

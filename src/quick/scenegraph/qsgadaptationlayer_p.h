@@ -67,8 +67,41 @@ class TextureReference;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 class QOpenGLContext;
+class QSGImageNode;
+class QSGRectangleNode;
+class QSGGlyphNode;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
+{
+public:
+    virtual void visit(QSGTransformNode *) = 0;
+    virtual void endVisit(QSGTransformNode *) = 0;
+    virtual void visit(QSGClipNode *) = 0;
+    virtual void endVisit(QSGClipNode *) = 0;
+    virtual void visit(QSGGeometryNode *) = 0;
+    virtual void endVisit(QSGGeometryNode *) = 0;
+    virtual void visit(QSGOpacityNode *) = 0;
+    virtual void endVisit(QSGOpacityNode *) = 0;
+    virtual void visit(QSGImageNode *) = 0;
+    virtual void endVisit(QSGImageNode *) = 0;
+    virtual void visit(QSGRectangleNode *) = 0;
+    virtual void endVisit(QSGRectangleNode *) = 0;
+    virtual void visit(QSGGlyphNode *) = 0;
+    virtual void endVisit(QSGGlyphNode *) = 0;
+
+    void visitChildren(QSGNode *node);
+};
+
+
+class Q_QUICK_PRIVATE_EXPORT QSGVisitableNode : public QSGGeometryNode
+{
+public:
+    QSGVisitableNode() { setFlag(IsVisitableNode); }
+
+    virtual void accept(QSGNodeVisitorEx *) = 0;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGVisitableNode
 {
 public:
     virtual void setRect(const QRectF &rect) = 0;
@@ -81,10 +114,12 @@ public:
     virtual void setAligned(bool aligned) = 0;
 
     virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGVisitableNode
 {
 public:
     virtual void setTargetRect(const QRectF &rect) = 0;
@@ -103,10 +138,12 @@ public:
     virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) = 0;
 
     virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {
 public:
     enum AntialiasingMode
@@ -134,6 +171,7 @@ public:
     void setOwnerElement(QQuickItem *ownerElement) { m_ownerElement = ownerElement; }
     QQuickItem *ownerElement() const { return m_ownerElement; }
 
+    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
     QQuickItem *m_ownerElement;
