@@ -86,6 +86,11 @@ QSGRenderLoop::~QSGRenderLoop()
 {
 }
 
+QSurface::SurfaceType QSGRenderLoop::windowSurfaceType() const
+{
+    return QSurface::OpenGLSurface;
+}
+
 void QSGRenderLoop::cleanup()
 {
     if (!s_instance)

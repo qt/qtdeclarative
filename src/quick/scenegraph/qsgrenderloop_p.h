@@ -43,6 +43,7 @@
 #define QSGRenderLoop_P_H
 
 #include <QtGui/QImage>
+#include <QtGui/QSurface>
 #include <private/qtquickglobal_p.h>
 #include <QtCore/QSet>
 
@@ -82,6 +83,8 @@ public:
     void addWindow(QQuickWindow *win) { m_windows.insert(win); }
     void removeWindow(QQuickWindow *win) { m_windows.remove(win); }
     QSet<QQuickWindow *> windows() const { return m_windows; }
+
+    virtual QSurface::SurfaceType windowSurfaceType() const;
 
     // ### make this less of a singleton
     static QSGRenderLoop *instance();

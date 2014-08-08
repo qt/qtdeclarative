@@ -465,7 +465,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         context = windowManager->createRenderContext(sg);
     }
 
-    q->setSurfaceType(QWindow::OpenGLSurface);
+    q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(q->defaultFormat());
 
     animationController = new QQuickAnimatorController();
