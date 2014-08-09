@@ -189,7 +189,7 @@ public:
     virtual void animationFinished(QAbstractAnimationJob *);
     void refill();
     void refill(qreal from, qreal to);
-    void mirrorChange();
+    void mirrorChange() Q_DECL_OVERRIDE;
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
     virtual bool releaseItem(FxViewItem *item);
@@ -219,7 +219,7 @@ public:
     void prepareVisibleItemTransitions();
     void prepareRemoveTransitions(QHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
-    virtual void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item);
+    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) Q_DECL_OVERRIDE;
 
     int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const;
 
@@ -361,7 +361,7 @@ protected:
     virtual void updateSectionCriteria() {}
     virtual void updateSections() {}
 
-    virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 };
 
 

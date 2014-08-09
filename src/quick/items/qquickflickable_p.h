@@ -228,14 +228,14 @@ Q_SIGNALS:
     void pixelAlignedChanged();
 
 protected:
-    virtual bool childMouseEventFilter(QQuickItem *, QEvent *);
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void mouseReleaseEvent(QMouseEvent *event);
+    bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 #ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *event);
+    void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 #endif
-    virtual void timerEvent(QTimerEvent *event);
+    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
     QQuickFlickableVisibleArea *visibleArea();
 
@@ -252,11 +252,11 @@ protected:
     virtual qreal maxYExtent() const;
     qreal vWidth() const;
     qreal vHeight() const;
-    virtual void componentComplete();
+    void componentComplete() Q_DECL_OVERRIDE;
     virtual void viewportMoved(Qt::Orientations orient);
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
-    void mouseUngrabEvent();
+    void geometryChanged(const QRectF &newGeometry,
+                         const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
     bool sendMouseEvent(QQuickItem *item, QMouseEvent *event);
 
     bool xflick() const;

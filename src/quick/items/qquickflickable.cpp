@@ -188,7 +188,7 @@ public:
     }
 
 protected:
-    virtual void finished() {
+    void finished() Q_DECL_OVERRIDE {
         if (!flickable)
             return;
         axisData->move.setValue(axisData->transitionTo);

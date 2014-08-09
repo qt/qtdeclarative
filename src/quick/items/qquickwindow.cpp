@@ -153,7 +153,7 @@ public slots:
     void animationStopped() { incubate(); }
 
 protected:
-    virtual void incubatingObjectCountChanged(int count)
+    void incubatingObjectCountChanged(int count) Q_DECL_OVERRIDE
     {
         if (count && !m_renderLoop->interleaveIncubation())
             incubateAgain();

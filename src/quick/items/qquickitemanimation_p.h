@@ -77,10 +77,10 @@ Q_SIGNALS:
     void viaChanged();
 
 protected:
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
 };
 
 class QQuickAnchorAnimationPrivate;
@@ -109,10 +109,10 @@ Q_SIGNALS:
     void easingChanged(const QEasingCurve&);
 
 protected:
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
 };
 
 class QQuickItem;
@@ -174,10 +174,10 @@ public:
     void setEndRotation(qreal);
 
 protected:
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
 Q_SIGNALS:
     void durationChanged(int);
     void easingChanged(const QEasingCurve &);

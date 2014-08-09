@@ -94,9 +94,9 @@ public:
     };
 
     explicit QQuickShaderEffectMaterial(QQuickShaderEffectNode *node = 0);
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const Q_DECL_OVERRIDE;
+    QSGMaterialShader *createShader() const Q_DECL_OVERRIDE;
+    int compare(const QSGMaterial *other) const Q_DECL_OVERRIDE;
 
     QVector<QByteArray> attributes;
     QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
@@ -136,7 +136,7 @@ public:
     QQuickShaderEffectNode();
     virtual ~QQuickShaderEffectNode();
 
-    virtual void preprocess();
+    void preprocess() Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void logAndStatusChanged(const QString &, int status);

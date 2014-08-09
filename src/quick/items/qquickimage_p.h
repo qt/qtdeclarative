@@ -81,7 +81,7 @@ public:
     qreal paintedWidth() const;
     qreal paintedHeight() const;
 
-    QRectF boundingRect() const;
+    QRectF boundingRect() const Q_DECL_OVERRIDE;
 
     HAlignment horizontalAlignment() const;
     void setHorizontalAlignment(HAlignment align);
@@ -89,8 +89,8 @@ public:
     VAlignment verticalAlignment() const;
     void setVerticalAlignment(VAlignment align);
 
-    bool isTextureProvider() const { return true; }
-    QSGTextureProvider *textureProvider() const;
+    bool isTextureProvider() const Q_DECL_OVERRIDE { return true; }
+    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
 
     bool mipmap() const;
     void setMipmap(bool use);
@@ -107,12 +107,12 @@ private Q_SLOTS:
 
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);
-    void pixmapChange();
+    void pixmapChange() Q_DECL_OVERRIDE;
     void updatePaintedGeometry();
     void releaseResources() Q_DECL_OVERRIDE;
 
-    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickImage)

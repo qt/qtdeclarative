@@ -61,9 +61,9 @@ class QQuickSpriteSequenceMaterial : public QSGMaterial
 public:
     QQuickSpriteSequenceMaterial();
     ~QQuickSpriteSequenceMaterial();
-    virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const
+    QSGMaterialType *type() const  Q_DECL_OVERRIDE{ static QSGMaterialType type; return &type; }
+    QSGMaterialShader *createShader() const Q_DECL_OVERRIDE;
+    int compare(const QSGMaterial *other) const Q_DECL_OVERRIDE
     {
         return this - static_cast<const QQuickSpriteSequenceMaterial *>(other);
     }
@@ -107,7 +107,7 @@ public:
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/items/shaders/sprite.frag"));
     }
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) Q_DECL_OVERRIDE
     {
         QQuickSpriteSequenceMaterial *m = static_cast<QQuickSpriteSequenceMaterial *>(newEffect);
         m->texture->bind();
@@ -120,14 +120,14 @@ public:
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
-    virtual void initialize() {
+    void initialize() Q_DECL_OVERRIDE {
         m_matrix_id = program()->uniformLocation("qt_Matrix");
         m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
     }
 
-    virtual char const *const *attributeNames() const {
+    char const *const *attributeNames() const Q_DECL_OVERRIDE {
         static const char *attr[] = {
            "vPos",
            "vTex",

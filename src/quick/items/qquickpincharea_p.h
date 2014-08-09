@@ -276,15 +276,15 @@ Q_SIGNALS:
     void pinchFinished(QQuickPinchEvent *pinch);
 
 protected:
-    virtual bool childMouseEventFilter(QQuickItem *i, QEvent *e);
-    virtual void touchEvent(QTouchEvent *event);
+    bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;
+    void touchEvent(QTouchEvent *event) Q_DECL_OVERRIDE;
 
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
-    virtual void itemChange(ItemChange change, const ItemChangeData& value);
+    void geometryChanged(const QRectF &newGeometry,
+                         const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData& value) Q_DECL_OVERRIDE;
 #ifdef Q_OS_OSX
-    void hoverEnterEvent(QHoverEvent *event);
-    void hoverLeaveEvent(QHoverEvent *event);
+    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
     void setTouchEventsEnabled(bool enable);
 #endif
 

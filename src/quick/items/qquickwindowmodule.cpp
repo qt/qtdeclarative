@@ -92,7 +92,7 @@ Q_SIGNALS:
     void visibilityChanged(QWindow::Visibility visibility);
 
 protected:
-    void classBegin() {
+    void classBegin() Q_DECL_OVERRIDE {
         QQmlEngine* e = qmlEngine(this);
         //Give QQuickView behavior when created from QML with QQmlApplicationEngine
         if (QCoreApplication::instance()->property("__qml_using_qqmlapplicationengine") == QVariant(true)) {
@@ -108,7 +108,7 @@ protected:
         }
     }
 
-    void componentComplete() {
+    void componentComplete() Q_DECL_OVERRIDE {
         m_complete = true;
         if (transientParent() && !transientParent()->isVisible()) {
             connect(transientParent(), &QQuickWindow::visibleChanged, this,

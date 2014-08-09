@@ -53,16 +53,16 @@ class QQuickCustomMaterialShader : public QSGMaterialShader
 {
 public:
     QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes);
-    virtual void deactivate();
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void deactivate() Q_DECL_OVERRIDE;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
+    char const *const *attributeNames() const Q_DECL_OVERRIDE;
 
 protected:
     friend class QQuickShaderEffectNode;
 
-    virtual void compile();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
+    void compile() Q_DECL_OVERRIDE;
+    const char *vertexShader() const Q_DECL_OVERRIDE;
+    const char *fragmentShader() const Q_DECL_OVERRIDE;
 
     const QQuickShaderEffectMaterialKey m_key;
     QVector<const char *> m_attributeNames;

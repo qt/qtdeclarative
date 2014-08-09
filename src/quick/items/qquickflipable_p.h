@@ -80,7 +80,7 @@ Q_SIGNALS:
     void sideChanged();
 
 protected:
-    virtual void updatePolish();
+    void updatePolish() Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void retransformBack();

@@ -201,14 +201,14 @@ Q_SIGNALS:
     void cacheItemCountChanged();
 
 protected:
-    virtual void updatePolish();
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *);
+    void updatePolish() Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
     bool sendMouseEvent(QMouseEvent *event);
-    bool childMouseEventFilter(QQuickItem *, QEvent *);
-    void mouseUngrabEvent();
-    void componentComplete();
+    bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void refill();

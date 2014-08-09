@@ -194,15 +194,15 @@ public:
     FontSizeMode fontSizeMode() const;
     void setFontSizeMode(FontSizeMode mode);
 
-    virtual void componentComplete();
+    void componentComplete() Q_DECL_OVERRIDE;
 
     int resourcesLoading() const; // mainly for testing
 
     qreal contentWidth() const;
     qreal contentHeight() const;
 
-    QRectF boundingRect() const;
-    QRectF clipRect() const;
+    QRectF boundingRect() const Q_DECL_OVERRIDE;
+    QRectF clipRect() const Q_DECL_OVERRIDE;
     Q_INVOKABLE void doLayout();
 
     RenderType renderType() const;
@@ -241,18 +241,18 @@ Q_SIGNALS:
     void renderTypeChanged();
 
 protected:
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    virtual void itemChange(ItemChange change, const ItemChangeData &value);
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry,
+                                 const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
-    void updatePolish();
+    void updatePolish() Q_DECL_OVERRIDE;
 
-    void hoverEnterEvent(QHoverEvent *event);
-    void hoverMoveEvent(QHoverEvent *event);
-    void hoverLeaveEvent(QHoverEvent *event);
+    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void q_imagesLoaded();

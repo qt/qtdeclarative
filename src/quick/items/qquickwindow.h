@@ -125,7 +125,7 @@ public:
     QQmlIncubationController *incubationController() const;
 
 #ifndef QT_NO_ACCESSIBILITY
-    virtual QAccessibleInterface *accessibleRoot() const;
+    QAccessibleInterface *accessibleRoot() const Q_DECL_OVERRIDE;
 #endif
 
     // Scene graph specific functions
@@ -185,25 +185,25 @@ public Q_SLOTS:
 protected:
     QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = 0);
 
-    virtual void exposeEvent(QExposeEvent *);
-    virtual void resizeEvent(QResizeEvent *);
+    void exposeEvent(QExposeEvent *) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
 
-    virtual void showEvent(QShowEvent *);
-    virtual void hideEvent(QHideEvent *);
+    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
+    void hideEvent(QHideEvent *) Q_DECL_OVERRIDE;
     // TODO Qt 6: reimplement QWindow::closeEvent to emit closing
 
-    virtual void focusInEvent(QFocusEvent *);
-    virtual void focusOutEvent(QFocusEvent *);
+    void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
+    void focusOutEvent(QFocusEvent *) Q_DECL_OVERRIDE;
 
-    virtual bool event(QEvent *);
-    virtual void keyPressEvent(QKeyEvent *);
-    virtual void keyReleaseEvent(QKeyEvent *);
-    virtual void mousePressEvent(QMouseEvent *);
-    virtual void mouseReleaseEvent(QMouseEvent *);
-    virtual void mouseDoubleClickEvent(QMouseEvent *);
-    virtual void mouseMoveEvent(QMouseEvent *);
+    bool event(QEvent *) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
 #ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *);
+    void wheelEvent(QWheelEvent *) Q_DECL_OVERRIDE;
 #endif
 
 private Q_SLOTS:

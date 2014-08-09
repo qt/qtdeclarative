@@ -389,7 +389,7 @@ Q_SIGNALS:
     Q_REVISION(2) void sceneGraphInitialized();
 
 protected:
-    virtual bool event(QEvent *);
+    bool event(QEvent *) Q_DECL_OVERRIDE;
 
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);

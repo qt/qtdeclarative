@@ -218,7 +218,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         //### reverse should probably apply on a per-action basis
         bool reverse;
         QList<QQuickParentChange *> pc;
-        virtual void doAction()
+        void doAction() Q_DECL_OVERRIDE
         {
             for (int ii = 0; ii < actions.count(); ++ii) {
                 const QQuickStateAction &action = actions.at(ii);

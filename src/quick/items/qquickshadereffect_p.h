@@ -144,7 +144,7 @@ public:
 
     QString parseLog();
 
-    virtual bool event(QEvent *);
+    bool event(QEvent *) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -157,10 +157,10 @@ Q_SIGNALS:
     void supportsAtlasTexturesChanged();
 
 protected:
-    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    virtual void componentComplete();
-    virtual void itemChange(ItemChange change, const ItemChangeData &value);
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void updateGeometry();

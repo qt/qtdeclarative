@@ -59,7 +59,7 @@ public:
         transform = t;
         update();
     }
-    virtual void applyTo(QMatrix4x4 *matrix) const {
+    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE {
         *matrix *= transform;
     }
 private:
@@ -72,7 +72,7 @@ class QQuickFlipablePrivate : public QQuickItemPrivate
 public:
     QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(0), back(0), sideDirty(false) {}
 
-    virtual void transformChanged();
+    void transformChanged() Q_DECL_OVERRIDE;
     void updateSide();
     void setBackTransform();
 

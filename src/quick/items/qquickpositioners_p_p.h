@@ -106,7 +106,7 @@ public:
 
     Qt::LayoutDirection layoutDirection;
 
-    void mirrorChange() {
+    void mirrorChange() Q_DECL_OVERRIDE {
         effectiveLayoutDirectionChange();
     }
     bool isLeftToRight() const {
@@ -116,24 +116,24 @@ public:
             return effectiveLayoutMirror ? layoutDirection == Qt::RightToLeft : layoutDirection == Qt::LeftToRight;
     }
 
-    virtual void itemSiblingOrderChanged(QQuickItem* other)
+    void itemSiblingOrderChanged(QQuickItem* other) Q_DECL_OVERRIDE
     {
         Q_UNUSED(other);
         setPositioningDirty();
     }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry)
+    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE
     {
         if (newGeometry.size() != oldGeometry.size())
             setPositioningDirty();
     }
 
-    virtual void itemVisibilityChanged(QQuickItem *)
+    void itemVisibilityChanged(QQuickItem *) Q_DECL_OVERRIDE
     {
         setPositioningDirty();
     }
 
-    void itemDestroyed(QQuickItem *item)
+    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE
     {
         Q_Q(QQuickBasePositioner);
         int index = q->positionedItems.find(QQuickBasePositioner::PositionedItem(item));

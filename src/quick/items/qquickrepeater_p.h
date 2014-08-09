@@ -85,8 +85,8 @@ private:
     void regenerate();
 
 protected:
-    virtual void componentComplete();
-    void itemChange(ItemChange change, const ItemChangeData &value);
+    void componentComplete() Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void createdItem(int index, QObject *item);

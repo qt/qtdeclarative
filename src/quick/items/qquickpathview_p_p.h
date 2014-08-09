@@ -77,7 +77,7 @@ public:
 
     void init();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) {
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE {
         if ((newGeometry.size() != oldGeometry.size())
             && (!highlightItem || item != highlightItem)) {
             if (QQuickPathViewAttached *att = attached(item))

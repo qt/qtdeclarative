@@ -82,7 +82,7 @@ public:
     QQuickShaderEffectTexture(QQuickItem *shaderSource);
     ~QQuickShaderEffectTexture();
 
-    virtual bool updateTexture();
+    bool updateTexture() Q_DECL_OVERRIDE;
 
     // The item's "paint node", not effect node.
     QSGNode *item() const { return m_item; }
@@ -215,8 +215,8 @@ public:
     bool recursive() const;
     void setRecursive(bool enabled);
 
-    bool isTextureProvider() const { return true; }
-    QSGTextureProvider *textureProvider() const;
+    bool isTextureProvider() const Q_DECL_OVERRIDE { return true; }
+    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
 
     Q_INVOKABLE void scheduleUpdate();
 
@@ -238,11 +238,11 @@ private Q_SLOTS:
     void invalidateSG();
 
 protected:
-    virtual void releaseResources();
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void releaseResources() Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
-    virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect);
-    virtual void itemChange(ItemChange change, const ItemChangeData &value);
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
 
 private:
     void ensureTexture();

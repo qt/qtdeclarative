@@ -101,17 +101,17 @@ public:
     void setRotation(QQmlScriptString rotation);
     bool rotationIsSet() const;
 
-    virtual ActionList actions();
+    ActionList actions() Q_DECL_OVERRIDE;
 
-    virtual void saveOriginals();
+    void saveOriginals() Q_DECL_OVERRIDE;
     //virtual void copyOriginals(QQuickStateActionEvent*);
-    virtual void execute(Reason reason = ActualChange);
-    virtual bool isReversable();
-    virtual void reverse(Reason reason = ActualChange);
-    virtual EventType type() const;
-    virtual bool override(QQuickStateActionEvent*other);
-    virtual void rewind();
-    virtual void saveCurrentValues();
+    void execute(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    bool isReversable() Q_DECL_OVERRIDE;
+    void reverse(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    EventType type() const Q_DECL_OVERRIDE;
+    bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
+    void rewind() Q_DECL_OVERRIDE;
+    void saveCurrentValues() Q_DECL_OVERRIDE;
 };
 
 class QQuickAnchorChanges;
@@ -181,28 +181,28 @@ public:
     QQuickAnchorChanges(QObject *parent=0);
     ~QQuickAnchorChanges();
 
-    virtual ActionList actions();
+    ActionList actions() Q_DECL_OVERRIDE;
 
     QQuickAnchorSet *anchors();
 
     QQuickItem *object() const;
     void setObject(QQuickItem *);
 
-    virtual void execute(Reason reason = ActualChange);
-    virtual bool isReversable();
-    virtual void reverse(Reason reason = ActualChange);
-    virtual EventType type() const;
-    virtual bool override(QQuickStateActionEvent*other);
-    virtual bool changesBindings();
-    virtual void saveOriginals();
-    virtual bool needsCopy() { return true; }
-    virtual void copyOriginals(QQuickStateActionEvent*);
-    virtual void clearBindings();
-    virtual void rewind();
-    virtual void saveCurrentValues();
+    void execute(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    bool isReversable() Q_DECL_OVERRIDE;
+    void reverse(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    EventType type() const Q_DECL_OVERRIDE;
+    bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
+    bool changesBindings() Q_DECL_OVERRIDE;
+    void saveOriginals() Q_DECL_OVERRIDE;
+    bool needsCopy() Q_DECL_OVERRIDE { return true; }
+    void copyOriginals(QQuickStateActionEvent*) Q_DECL_OVERRIDE;
+    void clearBindings() Q_DECL_OVERRIDE;
+    void rewind() Q_DECL_OVERRIDE;
+    void saveCurrentValues() Q_DECL_OVERRIDE;
 
     QList<QQuickStateAction> additionalActions();
-    virtual void saveTargetValues();
+    void saveTargetValues() Q_DECL_OVERRIDE;
 };
 
 QT_END_NAMESPACE

@@ -219,7 +219,7 @@ public:
     bool canUndo() const;
     bool canRedo() const;
 
-    virtual void componentComplete();
+    void componentComplete() Q_DECL_OVERRIDE;
 
     /* FROM EDIT */
     void setReadOnly(bool);
@@ -228,7 +228,7 @@ public:
     QRectF cursorRectangle() const;
 
 #ifndef QT_NO_IM
-    QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+    QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
     Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
@@ -244,8 +244,8 @@ public:
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
 
-    QRectF boundingRect() const;
-    QRectF clipRect() const;
+    QRectF boundingRect() const Q_DECL_OVERRIDE;
+    QRectF clipRect() const Q_DECL_OVERRIDE;
 
 #ifndef QT_NO_IM
     bool isInputMethodComposing() const;
@@ -340,28 +340,28 @@ private:
     void updateTotalLines();
 
 protected:
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
+    void geometryChanged(const QRectF &newGeometry,
+                         const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
-    bool event(QEvent *);
-    void keyPressEvent(QKeyEvent *);
-    void keyReleaseEvent(QKeyEvent *);
-    void focusInEvent(QFocusEvent *event);
-    void focusOutEvent(QFocusEvent *event);
+    bool event(QEvent *) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
+    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
 
-    void hoverEnterEvent(QHoverEvent *event);
-    void hoverMoveEvent(QHoverEvent *event);
-    void hoverLeaveEvent(QHoverEvent *event);
+    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
 
     // mouse filter?
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseDoubleClickEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 #ifndef QT_NO_IM
-    void inputMethodEvent(QInputMethodEvent *e);
+    void inputMethodEvent(QInputMethodEvent *e) Q_DECL_OVERRIDE;
 #endif
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) Q_DECL_OVERRIDE;
 
     friend class QQuickTextUtil;
     friend class QQuickTextDocument;

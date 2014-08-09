@@ -79,7 +79,7 @@ public:
     int frameCount() const;
 
     // Extends QQuickImage's src property
-    virtual void setSource(const QUrl&);
+    void setSource(const QUrl&) Q_DECL_OVERRIDE;
     virtual QSize sourceSize();
 
 Q_SIGNALS:
@@ -94,8 +94,8 @@ private Q_SLOTS:
     void playingStatusChanged();
 
 protected:
-    virtual void load();
-    void componentComplete();
+    void load() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickAnimatedImage)

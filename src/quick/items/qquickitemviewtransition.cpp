@@ -65,7 +65,7 @@ public:
     bool *m_wasDeleted;
 
 protected:
-    virtual void finished();
+    void finished() Q_DECL_OVERRIDE;
 };
 
 

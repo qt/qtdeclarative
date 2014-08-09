@@ -161,7 +161,7 @@ Q_SIGNALS:
     void radiusChanged();
 
 protected:
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void doUpdate();

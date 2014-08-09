@@ -170,9 +170,9 @@ public:
     bool cursorOn() const;
 
 protected:
-    virtual void timerEvent(QTimerEvent *e);
+    void timerEvent(QTimerEvent *e) Q_DECL_OVERRIDE;
 
-    virtual bool event(QEvent *e);
+    bool event(QEvent *e) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickTextControl)

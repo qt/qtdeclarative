@@ -79,7 +79,7 @@ public:
     {
     }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *, QQuickItem *parent);
     void updatePosition();
     void restartDrag();

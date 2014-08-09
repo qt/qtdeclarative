@@ -74,7 +74,7 @@ public:
     TileMode verticalTileMode() const;
     void setVerticalTileMode(TileMode);
 
-    void setSource(const QUrl &url);
+    void setSource(const QUrl &url) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void horizontalTileModeChanged();
@@ -82,16 +82,16 @@ Q_SIGNALS:
     void sourceSizeChanged();
 
 protected:
-    virtual void load();
-    virtual void pixmapChange();
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void load() Q_DECL_OVERRIDE;
+    void pixmapChange() Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
 private:
     void setGridScaledImage(const QQuickGridScaledImage& sci);
 
 private Q_SLOTS:
     void doUpdate();
-    void requestFinished();
+    void requestFinished() Q_DECL_OVERRIDE;
     void sciRequestFinished();
 
 private:

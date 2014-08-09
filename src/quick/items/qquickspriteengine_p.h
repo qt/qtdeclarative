@@ -276,8 +276,8 @@ public:
     int spriteCount();//Like state count
     int maxFrames();
 
-    virtual void restart(int index=0);
-    virtual void advance(int index=0);
+    void restart(int index=0) Q_DECL_OVERRIDE;
+    void advance(int index=0) Q_DECL_OVERRIDE;
 
     //Similar API to QQuickPixmap for async loading convenience
     bool isNull() { return status() == QQuickPixmap::Null; }

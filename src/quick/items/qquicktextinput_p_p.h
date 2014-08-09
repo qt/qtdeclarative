@@ -153,7 +153,7 @@ public:
     void updateVerticalScroll();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
-    void mirrorChange();
+    void mirrorChange() Q_DECL_OVERRIDE;
     bool sendMouseEventToInputContext(QMouseEvent *event);
 #ifndef QT_NO_IM
     Qt::InputMethodHints effectiveInputMethodHints() const;
@@ -428,7 +428,7 @@ public:
     void updateLayout();
     void updateBaselineOffset();
 
-    qreal getImplicitWidth() const;
+    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
 
 private:
     void removeSelectedText();

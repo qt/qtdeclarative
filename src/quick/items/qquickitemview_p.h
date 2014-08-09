@@ -213,10 +213,10 @@ public:
     Q_INVOKABLE void positionViewAtEnd();
     Q_REVISION(1) Q_INVOKABLE void forceLayout();
 
-    virtual void setContentX(qreal pos);
-    virtual void setContentY(qreal pos);
-    virtual qreal originX() const;
-    virtual qreal originY() const;
+    void setContentX(qreal pos) Q_DECL_OVERRIDE;
+    void setContentY(qreal pos) Q_DECL_OVERRIDE;
+    qreal originX() const Q_DECL_OVERRIDE;
+    qreal originY() const Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void modelChanged();
@@ -257,13 +257,13 @@ Q_SIGNALS:
     void highlightMoveDurationChanged();
 
 protected:
-    virtual void updatePolish();
-    virtual void componentComplete();
-    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual qreal minYExtent() const;
-    virtual qreal maxYExtent() const;
-    virtual qreal minXExtent() const;
-    virtual qreal maxXExtent() const;
+    void updatePolish() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    qreal minYExtent() const Q_DECL_OVERRIDE;
+    qreal maxYExtent() const Q_DECL_OVERRIDE;
+    qreal minXExtent() const Q_DECL_OVERRIDE;
+    qreal maxXExtent() const Q_DECL_OVERRIDE;
 
 protected Q_SLOTS:
     void destroyRemoved();

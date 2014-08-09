@@ -236,13 +236,13 @@ Q_SIGNALS:
     void mouseEnabledChanged();
 
 protected:
-    void touchEvent(QTouchEvent *);
-    bool childMouseEventFilter(QQuickItem *i, QEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseUngrabEvent();
-    void touchUngrabEvent();
+    void touchEvent(QTouchEvent *) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *i, QEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void touchUngrabEvent() Q_DECL_OVERRIDE;
 
     void addTouchPrototype(QQuickTouchPoint* prototype);
     void addTouchPoint(const QTouchEvent::TouchPoint *p);
@@ -256,10 +256,10 @@ protected:
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);
     void grabGesture();
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 #ifdef Q_OS_OSX
-    void hoverEnterEvent(QHoverEvent *event);
-    void hoverLeaveEvent(QHoverEvent *event);
+    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
     void setTouchEventsEnabled(bool enable);
 #endif
 

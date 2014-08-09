@@ -167,12 +167,12 @@ private Q_SLOTS:
     void invalidateSG();
 
 protected:
-    void componentComplete();
-    void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
-    void updatePolish();
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    void releaseResources();
+    void componentComplete() Q_DECL_OVERRIDE;
+    void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &) Q_DECL_OVERRIDE;
+    void updatePolish() Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void releaseResources() Q_DECL_OVERRIDE;
 private:
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
     Q_INVOKABLE void delayedCreate();

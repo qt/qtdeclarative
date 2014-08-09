@@ -134,8 +134,8 @@ public:
     void updateMe();
 
     // QQuickItemGeometryListener interface
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
-    QQuickAnchorsPrivate *anchorPrivate() { return this; }
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    QQuickAnchorsPrivate *anchorPrivate() Q_DECL_OVERRIDE { return this; }
 
     bool checkHValid() const;
     bool checkVValid() const;

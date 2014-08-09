@@ -122,7 +122,7 @@ private Q_SLOTS:
 
 protected:
     void reset();
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
     void prepareNextFrame();
     QSGGeometryNode* buildNode();

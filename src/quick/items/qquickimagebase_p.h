@@ -99,7 +99,7 @@ Q_SIGNALS:
 
 protected:
     virtual void load();
-    virtual void componentComplete();
+    void componentComplete() Q_DECL_OVERRIDE;
     virtual void pixmapChange();
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);
 

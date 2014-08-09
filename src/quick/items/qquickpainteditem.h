@@ -112,7 +112,7 @@ Q_SIGNALS:
 
 protected:
     QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = 0);
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickPaintedItem)

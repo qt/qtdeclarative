@@ -77,8 +77,8 @@ class QQuickGridMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
 public:
     QQuickGridMesh(QObject *parent = 0);
-    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &rect);
-    virtual QString log() const { return m_log; }
+    QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &rect) Q_DECL_OVERRIDE;
+    QString log() const  Q_DECL_OVERRIDE { return m_log; }
 
     void setResolution(const QSize &res);
     QSize resolution() const;

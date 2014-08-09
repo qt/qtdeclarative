@@ -84,7 +84,7 @@ public:
     virtual Renderer *createRenderer() const = 0;
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
