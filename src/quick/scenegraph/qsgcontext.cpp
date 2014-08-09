@@ -303,7 +303,7 @@ QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativ
  * Factory function for scene graph backends of the QStyle stylable elements. Returns a
  * null pointer if the backend doesn't provide its own node type.
  */
-QSGNinePatchNode *QSGContext::createQStyleNode()
+QSGNinePatchNode *QSGContext::createNinePatchNode()
 {
     return 0;
 }
