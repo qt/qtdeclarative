@@ -367,7 +367,6 @@ private slots:
     void contentItemSize();
 
     void defaultSurfaceFormat();
-    void glslVersion();
 
     void attachedProperty();
 
@@ -1947,40 +1946,6 @@ void tst_qquickwindow::defaultSurfaceFormat()
     QVERIFY(window.openglContext()->format().stencilBufferSize() >= 8);
 
     QSurfaceFormat::setDefaultFormat(savedDefaultFormat);
-}
-
-void tst_qquickwindow::glslVersion()
-{
-    QQuickWindow window;
-    window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
-
-    // Core profile is never requested by default.
-    QVERIFY(!window.glslIsCoreProfile());
-
-    // Get the format from the context, not the window. The actual OpenGL version and
-    // related settings are associated with the context and are only written back to the
-    // context's format.
-    QSurfaceFormat format = window.openglContext()->format();
-
-    if (format.renderableType() == QSurfaceFormat::OpenGL) {
-        if (format.majorVersion() == 2)
-            QCOMPARE(window.glslVersion(), QString());
-        else if (format.majorVersion() == 3)
-            QVERIFY(window.glslVersion().startsWith('3')
-                    || window.glslVersion() == QStringLiteral("130")
-                    || window.glslVersion() == QStringLiteral("140")
-                    || window.glslVersion() == QStringLiteral("150"));
-        else if (format.majorVersion() == 4)
-            QVERIFY(window.glslVersion().startsWith('4'));
-        QVERIFY(!window.glslVersion().contains(QStringLiteral("core")));
-        QVERIFY(!window.glslVersion().contains(QStringLiteral("es")));
-    } else if (format.renderableType() == QSurfaceFormat::OpenGLES) {
-        if (format.majorVersion() == 2)
-            QCOMPARE(window.glslVersion(), QString());
-        else
-            QVERIFY(window.glslVersion().contains(QStringLiteral("es")));
-    }
 }
 
 void tst_qquickwindow::attachedProperty()
