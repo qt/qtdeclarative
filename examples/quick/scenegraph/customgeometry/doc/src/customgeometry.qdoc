@@ -137,7 +137,7 @@
 
     \snippet scenegraph/customgeometry/beziercurve.cpp 6
 
-    The scene graph API provides a few commonly used used material
+    The scene graph API provides a few commonly used material
     implementations. In this example we use the QSGFlatColorMaterial
     which will fill the shape defined by the geometry with a solid
     color. Again we pass the ownership of the material to the node, so

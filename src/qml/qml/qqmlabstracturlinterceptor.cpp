@@ -69,7 +69,7 @@
 /*
  \enum QQmlAbstractUrlInterceptor::DataType
 
- Specifies where URL interception is taking place place.
+ Specifies where URL interception is taking place.
 
  Because QML loads qmldir files for locating types, there are two URLs involved in loading a QML type. The URL of the (possibly implicit) qmldir used for locating the type and the URL of the file which defines the type. Intercepting
  both leads to either complex URL replacement or double URL replacements for the same file.

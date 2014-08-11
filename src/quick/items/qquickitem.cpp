@@ -5902,7 +5902,7 @@ void QQuickItem::setFlags(Flags flags)
 /*!
     \fn void QQuickItem::sceneGraphInitialized()
 
-    This signal is emitted when the scene graph is is initialized for
+    This signal is emitted when the scene graph is initialized for
     items that have the ItemHasContents flag set.
 
     When the scene graph is using a dedicated render thread, this

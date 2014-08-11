@@ -299,7 +299,7 @@ A QML object will emit the \c{Component.completed} \l{Signal and Handler Event
 System#Attached Signal Handlers}{attached signal} when its instantiation is
 complete.  JavaScript code in the corresponding \c{Component.onCompleted} handler
 runs after the object is instantiated.  Thus, the best place to write application
-startup code is in the \c{Component.onCompleted} handler of the top-level level
+startup code is in the \c{Component.onCompleted} handler of the top-level
 object, because this object emits \c{Component.completed} when the QML environment
 is fully established.
 

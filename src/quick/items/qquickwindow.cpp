@@ -190,7 +190,7 @@ having no effect if an item is removed from a window.
 When an item is moved into a new focus scope (either being added to a window
 for the first time, or having its parent changed), if the focus scope already has
 a scope focused item that takes precedence over the item being added.  Otherwise,
-the focus of the added tree is used.  In the case of of a tree of items being
+the focus of the added tree is used.  In the case of a tree of items being
 added to a window for the first time, which may have a conflicted focus state (two
 or more items in one scope having focus set), the same rule is applied item by item -
 thus the first item that has focus will get it (assuming the scope doesn't already
@@ -3811,7 +3811,7 @@ bool QQuickWindow::glslIsCoreProfile() const
     \qmlattachedproperty QWindow::Visibility Window::visibility
     \since 5.4
 
-    This attached property holds whether whether the window is currently shown
+    This attached property holds whether the window is currently shown
     in the windowing system as normal, minimized, maximized, fullscreen or
     hidden. The Window attached property can be attached to any Item. If the
     item is not shown in any window, the value will be \l {QWindow::}{Hidden}.

@@ -185,7 +185,7 @@ to our C++ class:
 
 The use of Q_INVOKABLE makes the \c clearChart() method available to the
 Qt Meta-Object system, and in turn, to QML. Note that it could have
-been declared as as a Qt slot instead of using Q_INVOKABLE, as
+been declared as a Qt slot instead of using Q_INVOKABLE, as
 slots are also callable from QML. Both of these approaches are valid.
 
 The \c clearChart() method simply changes the color to Qt::transparent,

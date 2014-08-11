@@ -2322,7 +2322,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     placeholder items that are later \l {resolve()}{resolved} to real model data when it becomes
     available.
 
-    Delegate items can also be be instantiated directly from a DelegateModelGroup using the
+    Delegate items can also be instantiated directly from a DelegateModelGroup using the
     create() function, making it possible to use DelegateModel without an accompanying view
     type or to cherry-pick specific items that should be instantiated irregardless of whether
     they're currently within a view's visible area.

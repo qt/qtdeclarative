@@ -320,7 +320,7 @@
     \printuntil }
 
     The \c onTriggered signal handler is called when the timer is triggered to
-    increment the value of the the \c countdown custom property.
+    increment the value of the \c countdown custom property.
 
     We set the \c repeat property to \c true to specify that the timer is
     triggered at the interval of 1 second as long as the value of \c countdown
@@ -408,7 +408,7 @@
     We use anchoring to position the help button at the bottom center of the
     game canvas.
 
-    We use another \l{Image} type to to display the help image:
+    We use another \l{Image} type to display the help image:
 
     \printuntil }
     \printuntil }
@@ -668,7 +668,7 @@
     opaque, otherwise their opacity is set to \c 0.4.
 
     We use a \l{Text} type to display the cost of each tower item, as specified
-    by the the \c towerData variable, depending on \c towerType:
+    by the \c towerData variable, depending on \c towerType:
 
     \skipto Text
     \printuntil }
