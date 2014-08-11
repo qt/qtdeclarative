@@ -81,7 +81,8 @@ HEADERS += \
     $$PWD/qsgshareddistancefieldglyphcache_p.h \
     $$PWD/qsgrenderloop_p.h \
     $$PWD/qsgthreadedrenderloop_p.h \
-    $$PWD/qsgwindowsrenderloop_p.h
+    $$PWD/qsgwindowsrenderloop_p.h \
+    $$PWD/qsgdefaultlayer_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -97,7 +98,8 @@ SOURCES += \
     $$PWD/qsgshareddistancefieldglyphcache.cpp \
     $$PWD/qsgrenderloop.cpp \
     $$PWD/qsgthreadedrenderloop.cpp \
-    $$PWD/qsgwindowsrenderloop.cpp
+    $$PWD/qsgwindowsrenderloop.cpp \
+    $$PWD/qsgdefaultlayer.cpp
 
 RESOURCES += \
     $$PWD/scenegraph.qrc

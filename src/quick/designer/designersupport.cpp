@@ -65,10 +65,10 @@ DesignerSupport::DesignerSupport()
 
 DesignerSupport::~DesignerSupport()
 {
-    QHash<QQuickItem*, QQuickShaderEffectTexture*>::iterator iterator;
+    QHash<QQuickItem*, QSGLayer*>::iterator iterator;
 
     for (iterator = m_itemTextureHash.begin(); iterator != m_itemTextureHash.end(); ++iterator) {
-        QQuickShaderEffectTexture *texture = iterator.value();
+        QSGLayer *texture = iterator.value();
         QQuickItem *item = iterator.key();
         QQuickItemPrivate::get(item)->derefFromEffectItem(true);
         delete texture;
@@ -86,7 +86,8 @@ void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
     Q_ASSERT(QQuickItemPrivate::get(referencedItem)->rootNode());
 
     if (!m_itemTextureHash.contains(referencedItem)) {
-        QQuickShaderEffectTexture *texture = new QQuickShaderEffectTexture(referencedItem);
+        QSGRenderContext *rc = QQuickWindowPrivate::get(referencedItem->window())->context;
+        QSGLayer *texture = rc->sceneGraphContext()->createLayer(rc);
 
         texture->setLive(true);
         texture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode());
@@ -123,7 +124,7 @@ QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRe
         return QImage();
     }
 
-    QQuickShaderEffectTexture *renderTexture = m_itemTextureHash.value(referencedItem);
+    QSGLayer *renderTexture = m_itemTextureHash.value(referencedItem);
 
     Q_ASSERT(renderTexture);
     if (renderTexture == 0)

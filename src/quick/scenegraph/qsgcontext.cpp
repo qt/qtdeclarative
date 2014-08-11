@@ -51,6 +51,7 @@
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
 #include <QtQuick/private/qsgrenderloop_p.h>
+#include <QtQuick/private/qsgdefaultlayer_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -319,6 +320,14 @@ QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativ
 QSGNinePatchNode *QSGContext::createNinePatchNode()
 {
     return 0;
+}
+
+/*!
+    Factory function for scene graph backends of layers.
+ */
+QSGLayer *QSGContext::createLayer(QSGRenderContext *renderContext)
+{
+    return new QSGDefaultLayer(renderContext);
 }
 
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const

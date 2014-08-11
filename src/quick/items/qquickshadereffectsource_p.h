@@ -53,8 +53,6 @@
 #include "qsize.h"
 #include "qrect.h"
 
-#define QSG_DEBUG_FBO_OVERLAY
-
 QT_BEGIN_NAMESPACE
 
 class QSGNode;
@@ -63,95 +61,6 @@ class QOpenGLFramebufferObject;
 class QSGSimpleRectNode;
 
 class QQuickShaderEffectSourceTextureProvider;
-
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectTexture : public QSGDynamicTexture
-{
-    Q_OBJECT
-public:
-    QQuickShaderEffectTexture(QQuickItem *shaderSource);
-    ~QQuickShaderEffectTexture();
-
-    virtual bool updateTexture();
-
-    // The item's "paint node", not effect node.
-    QSGNode *item() const { return m_item; }
-    void setItem(QSGNode *item);
-
-    void setShaderSourceNode(QSGNode *node) { m_shaderSourceNode = node; }
-
-    QRectF rect() const { return m_rect; }
-    void setRect(const QRectF &rect);
-
-    QSize size() const { return m_size; }
-    void setSize(const QSize &size);
-
-    void setHasMipmaps(bool mipmap);
-
-    void bind();
-
-    bool hasAlphaChannel() const;
-    bool hasMipmaps() const;
-    int textureId() const;
-    QSize textureSize() const { return m_size; }
-
-    GLenum format() const { return m_format; }
-    void setFormat(GLenum format);
-
-    bool live() const { return bool(m_live); }
-    void setLive(bool live);
-
-    bool recursive() const { return bool(m_recursive); }
-    void setRecursive(bool recursive);
-
-    void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
-
-    void scheduleUpdate();
-
-    QImage toImage() const;
-
-Q_SIGNALS:
-    void updateRequested();
-    void scheduledUpdateCompleted();
-
-public Q_SLOTS:
-    void markDirtyTexture();
-    void invalidated();
-    void markDirtyTextureLater();
-
-protected:
-    virtual void customEvent(QEvent *);
-
-private:
-    void grab();
-
-    QSGNode *m_item;
-    QSGNode *m_shaderSourceNode;
-    QRectF m_rect;
-    QSize m_size;
-    qreal m_device_pixel_ratio;
-    GLenum m_format;
-
-    QSGRenderer *m_renderer;
-    QOpenGLFramebufferObject *m_fbo;
-    QOpenGLFramebufferObject *m_secondaryFbo;
-    QSharedPointer<QSGDepthStencilBuffer> m_depthStencilBuffer;
-
-    GLuint m_transparentTexture;
-
-#ifdef QSG_DEBUG_FBO_OVERLAY
-    QSGSimpleRectNode *m_debugOverlay;
-#endif
-
-    QSGRenderContext *m_context;
-
-    uint m_mipmap : 1;
-    uint m_live : 1;
-    uint m_recursive : 1;
-    uint m_dirtyTexture : 1;
-    uint m_multisamplingChecked : 1;
-    uint m_multisampling : 1;
-    uint m_grab : 1;
-};
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, public QQuickItemChangeListener
 {
@@ -244,7 +153,7 @@ private:
     void ensureTexture();
 
     QQuickShaderEffectSourceTextureProvider *m_provider;
-    QQuickShaderEffectTexture *m_texture;
+    QSGLayer *m_texture;
     WrapMode m_wrapMode;
     QQuickItem *m_sourceItem;
     QRectF m_sourceRect;

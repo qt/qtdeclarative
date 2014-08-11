@@ -91,7 +91,7 @@ public:
 
     QPointer<QQuickItem> item;
     QPointer<QQuickWindow> window;
-    QQuickShaderEffectTexture *texture;
+    QSGLayer *texture;
     QSizeF itemSize;
     QSize textureSize;
 };
@@ -228,7 +228,8 @@ void QQuickItemGrabResult::setup()
         return;
     }
 
-    d->texture = new QQuickShaderEffectTexture(d->item);
+    QSGRenderContext *rc = QQuickWindowPrivate::get(d->window.data())->context;
+    d->texture = rc->sceneGraphContext()->createLayer(rc);
     d->texture->setItem(QQuickItemPrivate::get(d->item)->itemNode());
     d->itemSize = QSizeF(d->item->width(), d->item->height());
 }

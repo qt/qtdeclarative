@@ -49,7 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvasItem;
-class QSGDynamicTexture;
+class QSGLayer;
 
 class QQuickCanvasContextPrivate;
 class QQuickCanvasContext : public QObject

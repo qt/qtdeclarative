@@ -62,7 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
-class QQuickShaderEffectTexture;
+class QSGLayer;
 class QImage;
 class QTransform;
 class QQmlContext;
@@ -154,7 +154,7 @@ public:
     static void polishItems(QQuickWindow *window);
 
 private:
-    QHash<QQuickItem*, QQuickShaderEffectTexture*> m_itemTextureHash;
+    QHash<QQuickItem*, QSGLayer*> m_itemTextureHash;
 };
 
 QT_END_NAMESPACE

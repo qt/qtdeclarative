@@ -158,6 +158,37 @@ public:
     virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
+class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
+{
+    Q_OBJECT
+public:
+    virtual void setItem(QSGNode *item) = 0;
+    virtual void setShaderSourceNode(QSGNode *node) = 0;
+    virtual void setRect(const QRectF &rect) = 0;
+    virtual void setSize(const QSize &size) = 0;
+    virtual void scheduleUpdate() = 0;
+    virtual QImage toImage() const = 0;
+    virtual void setLive(bool live) = 0;
+    virtual void setRecursive(bool recursive) = 0;
+    virtual void setFormat(GLenum format) = 0;
+    virtual void setHasMipmaps(bool mipmap) = 0;
+    virtual void setDevicePixelRatio(qreal ratio) = 0;
+    Q_SLOT virtual void markDirtyTexture() = 0;
+    Q_SLOT virtual void invalidated() = 0;
+
+    Q_SLOT void markDirtyTextureLater();
+
+Q_SIGNALS:
+    void updateRequested();
+    void scheduledUpdateCompleted();
+
+protected:
+    virtual void customEvent(QEvent *);
+
+private:
+    int markDirtyEventType();
+};
+
 class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {
 public:

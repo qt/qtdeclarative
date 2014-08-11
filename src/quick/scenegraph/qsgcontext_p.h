@@ -72,6 +72,7 @@ class QSGTexture;
 class QSGMaterial;
 class QSGMaterialShader;
 class QSGRenderLoop;
+class QSGLayer;
 
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
@@ -177,6 +178,7 @@ public:
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QSGNinePatchNode *createNinePatchNode();
+    virtual QSGLayer *createLayer(QSGRenderContext *renderContext);
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;

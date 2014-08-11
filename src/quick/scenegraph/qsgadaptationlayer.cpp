@@ -328,6 +328,7 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
             }
             break;
         }
+        case QSGNode::RootNodeType: // fall through
         case QSGNode::BasicNodeType: {
             visitChildren(child);
             break;
@@ -337,6 +338,27 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
             break;
         }
     }
+}
+
+void QSGLayer::markDirtyTextureLater()
+{
+    QCoreApplication::postEvent(this, new QEvent(static_cast<QEvent::Type>(markDirtyEventType())));
+}
+
+void QSGLayer::customEvent(QEvent *event)
+{
+    if (event->type() == markDirtyEventType())
+        markDirtyTexture();
+    else
+        QObject::customEvent(event);
+}
+
+int QSGLayer::markDirtyEventType()
+{
+    static int type = QEvent::None;
+    if (type == QEvent::None)
+        type = QEvent::registerEventType();
+    return type;
 }
 
 QT_END_NAMESPACE
