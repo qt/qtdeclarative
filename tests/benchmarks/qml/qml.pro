@@ -3,6 +3,7 @@ TEMPLATE = subdirs
 SUBDIRS += \
            binding \
            creation \
+           compilation \
            javascript \
            holistic \
            pointers \
