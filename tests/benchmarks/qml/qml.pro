@@ -10,7 +10,7 @@ SUBDIRS += \
            qqmlcomponent \
            qqmlimage \
            qqmlmetaproperty \
-           script \
+#            script \ ### FIXME: doesn't build
            qmltime \
            js \
            qquickwindow
