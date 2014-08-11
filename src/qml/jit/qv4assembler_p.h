@@ -93,6 +93,15 @@ struct RelativeCall {
     {}
 };
 
+struct LookupCall {
+    JSC::MacroAssembler::Address addr;
+    uint getterSetterOffset;
+
+    LookupCall(const JSC::MacroAssembler::Address &addr, uint getterSetterOffset)
+        : addr(addr)
+        , getterSetterOffset(getterSetterOffset)
+    {}
+};
 
 template <typename T>
 struct ExceptionCheck {
@@ -342,6 +351,11 @@ public:
     void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
     {
         call(relativeCall.addr);
+    }
+
+    void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
+    {
+        call(lookupCall.addr);
     }
 
     void registerBlock(IR::BasicBlock*, IR::BasicBlock *nextBlock);
@@ -866,8 +880,8 @@ public:
         loadArgumentOnStackOrRegister<2>(arg3);
         loadArgumentOnStackOrRegister<1>(arg2);
 
-        prepareRelativeCall(function, this);
-        loadArgumentOnStackOrRegister<0>(arg1);
+        if (prepareCall(function, this))
+            loadArgumentOnStackOrRegister<0>(arg1);
 
 #ifdef RESTORE_EBX_ON_CALL
         load32(ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
@@ -1198,11 +1212,31 @@ void Assembler::copyValue(Result result, IR::Expr* source)
 
 
 
-template <typename T> inline void prepareRelativeCall(const T &, Assembler *){}
-template <> inline void prepareRelativeCall(const RelativeCall &relativeCall, Assembler *as)
+template <typename T> inline bool prepareCall(T &, Assembler *)
+{ return true; }
+
+template <> inline bool prepareCall(RelativeCall &relativeCall, Assembler *as)
 {
     as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lookups)),
                 relativeCall.addr.base);
+    return true;
+}
+
+template <> inline bool prepareCall(LookupCall &lookupCall, Assembler *as)
+{
+    // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
+
+    // same as prepareCall(RelativeCall ....) : load the table from the context
+    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lookups)),
+                lookupCall.addr.base);
+    // pre-calculate the indirect address for the lookupCall table:
+    if (lookupCall.addr.offset)
+        as->addPtr(Assembler::TrustedImm32(lookupCall.addr.offset), lookupCall.addr.base);
+    // store it as the first argument
+    as->loadArgumentOnStackOrRegister<0>(lookupCall.addr.base);
+    // set the destination addresses offset to the getterSetterOffset. The base is the lookupCall table's address
+    lookupCall.addr.offset = lookupCall.getterSetterOffset;
+    return false;
 }
 
 } // end of namespace JIT
