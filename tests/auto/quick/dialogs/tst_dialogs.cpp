@@ -73,6 +73,7 @@ void tst_dialogs::fileDialogDefaultModality()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     // Click to show
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
@@ -118,6 +119,7 @@ void tst_dialogs::fileDialogNonModal()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     // Click to toggle visibility
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
@@ -142,6 +144,7 @@ void tst_dialogs::fileDialogNameFilters()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
     QStringList filters;
