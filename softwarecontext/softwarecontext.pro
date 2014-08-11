@@ -14,7 +14,8 @@ SOURCES += \
     pixmaptexture.cpp \
     glyphnode.cpp \
     renderingvisitor.cpp \
-    ninepatchnode.cpp
+    ninepatchnode.cpp \
+    softwarelayer.cpp
 
 HEADERS += \
     context.h \
@@ -25,7 +26,8 @@ HEADERS += \
     pixmaptexture.h \
     glyphnode.h \
     renderingvisitor.h \
-    ninepatchnode.h
+    ninepatchnode.h \
+    softwarelayer.h
 
 OTHER_FILES += softwarecontext.json
 

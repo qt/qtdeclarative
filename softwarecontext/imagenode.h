@@ -66,15 +66,20 @@ public:
     virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode);
     virtual void update();
 
+    virtual void preprocess();
+
     void paint(QPainter *painter);
 
 private:
+    const QPixmap &pixmap() const;
+
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
     QRectF m_innerSourceRect;
     QRectF m_subSourceRect;
 
-    QPixmap m_pixmap;
+    QSGTexture *m_texture;
+
     bool m_mirror;
     bool m_smooth;
     bool m_tileHorizontal;

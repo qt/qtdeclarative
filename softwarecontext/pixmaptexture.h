@@ -15,7 +15,7 @@ public:
     virtual bool hasMipmaps() const;
     virtual void bind();
 
-    QPixmap pixmap() const { return m_pixmap; }
+    const QPixmap &pixmap() const { return m_pixmap; }
 
 private:
     QPixmap m_pixmap;

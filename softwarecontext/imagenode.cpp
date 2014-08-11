@@ -1,6 +1,7 @@
 #include "imagenode.h"
 
 #include "pixmaptexture.h"
+#include "softwarelayer.h"
 #include <QPainter>
 #include <qmath.h>
 
@@ -267,7 +268,10 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
 }
 
 ImageNode::ImageNode()
-    : m_mirror(false)
+    : m_innerSourceRect(0, 0, 1, 1)
+    , m_subSourceRect(0, 0, 1, 1)
+    , m_texture(0)
+    , m_mirror(false)
     , m_smooth(true)
     , m_tileHorizontal(false)
     , m_tileVertical(false)
@@ -299,12 +303,7 @@ void ImageNode::setSubSourceRect(const QRectF &rect)
 
 void ImageNode::setTexture(QSGTexture *texture)
 {
-    PixmapTexture *pt = qobject_cast<PixmapTexture*>(texture);
-    if (!pt) {
-        qWarning() << "Image used with invalid texture format.";
-        return;
-    }
-    m_pixmap = pt->pixmap();
+    m_texture = texture;
 }
 
 void ImageNode::setMirror(bool mirror)
@@ -336,6 +335,18 @@ void ImageNode::update()
 {
 }
 
+void ImageNode::preprocess()
+{
+    bool doDirty = false;
+    QSGLayer *t = qobject_cast<QSGLayer *>(m_texture);
+    if (t) {
+        doDirty = t->updateTexture();
+        markDirty(DirtyGeometry);
+    }
+    if (doDirty)
+        markDirty(DirtyMaterial);
+}
+
 static Qt::TileRule getTileRule(qreal factor)
 {
     int ifactor = qRound(factor);
@@ -352,29 +363,42 @@ void ImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
+    const QPixmap &pm = pixmap();
+
     if (m_innerTargetRect != m_targetRect) {
         // border image
         QMargins margins(m_innerTargetRect.left() - m_targetRect.left(), m_innerTargetRect.top() - m_targetRect.top(),
                          m_targetRect.right() - m_innerTargetRect.right(), m_targetRect.bottom() - m_innerTargetRect.bottom());
         QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
-        SoftwareContext::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
+        SoftwareContext::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, pm, QRect(0, 0, pm.width(), pm.height()),
                                            margins, tilerules, QDrawBorderPixmap::DrawingHints(0));
         return;
     }
 
     if (m_tileHorizontal || m_tileVertical) {
         painter->save();
-        qreal sx = m_targetRect.width()/(m_subSourceRect.width()*m_pixmap.width());
-        qreal sy = m_targetRect.height()/(m_subSourceRect.height()*m_pixmap.height());
+        qreal sx = m_targetRect.width()/(m_subSourceRect.width()*pm.width());
+        qreal sy = m_targetRect.height()/(m_subSourceRect.height()*pm.height());
         QMatrix transform(sx, 0, 0, sy, 0, 0);
         painter->setMatrix(transform, true);
         painter->drawTiledPixmap(QRectF(m_targetRect.x()/sx, m_targetRect.y()/sy, m_targetRect.width()/sx, m_targetRect.height()/sy),
-                                 m_pixmap,
-                                 QPointF(m_subSourceRect.left()*m_pixmap.width(), m_subSourceRect.top()*m_pixmap.height()));
+                                 pm,
+                                 QPointF(m_subSourceRect.left()*pm.width(), m_subSourceRect.top()*pm.height()));
         painter->restore();
     } else {
-        QRectF sr(m_subSourceRect.left()*m_pixmap.width(), m_subSourceRect.top()*m_pixmap.height(),
-                  m_subSourceRect.width()*m_pixmap.width(), m_subSourceRect.height()*m_pixmap.height());
-        painter->drawPixmap(m_targetRect, m_pixmap, sr);
+        QRectF sr(m_subSourceRect.left()*pm.width(), m_subSourceRect.top()*pm.height(),
+                  m_subSourceRect.width()*pm.width(), m_subSourceRect.height()*pm.height());
+        painter->drawPixmap(m_targetRect, pm, sr);
+    }
+}
+
+const QPixmap &ImageNode::pixmap() const
+{
+    if (PixmapTexture *pt = qobject_cast<PixmapTexture*>(m_texture)) {
+        return pt->pixmap();
+    } else if (SoftwareLayer *layer = qobject_cast<SoftwareLayer*>(m_texture)) {
+        return layer->pixmap();
+    } else {
+        qFatal("Image used with invalid texture format.");
     }
 }

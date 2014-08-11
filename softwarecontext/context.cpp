@@ -47,6 +47,7 @@
 #include "glyphnode.h"
 #include "ninepatchnode.h"
 #include "renderingvisitor.h"
+#include "softwarelayer.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -107,6 +108,38 @@ void Renderer::render()
     backingStore->flush(rect);
 }
 
+void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
+{
+
+    QSGRenderer::nodeChanged(node, state);
+}
+
+PixmapRenderer::PixmapRenderer(QSGRenderContext *context)
+    : QSGRenderer(context)
+{
+
+}
+
+void PixmapRenderer::renderScene(GLuint)
+{
+    Q_UNREACHABLE();
+}
+
+void PixmapRenderer::render()
+{
+    Q_UNREACHABLE();
+}
+
+void PixmapRenderer::render(QPixmap *target)
+{
+    const QRect rect(0, 0, target->width(), target->height());
+    target->fill(clearColor());
+    QPainter painter(target);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    RenderingVisitor(&painter).visitChildren(rootNode());
+}
+
 RenderContext::RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
     , currentWindow(0)
@@ -141,6 +174,11 @@ QSGGlyphNode *Context::createGlyphNode(QSGRenderContext */*rc*/, bool /*preferNa
 QSGNinePatchNode *Context::createQStyleNode()
 {
     return new NinePatchNode();
+}
+
+QSGLayer *Context::createLayer(QSGRenderContext *renderContext)
+{
+    return new SoftwareLayer(renderContext);
 }
 
 void RenderContext::initialize(QOpenGLContext *context)

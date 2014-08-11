@@ -62,8 +62,23 @@ public:
 
     virtual void render();
 
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+
 private:
     QScopedPointer<QBackingStore> backingStore;
+    QRect m_dirtyRect;
+};
+
+class PixmapRenderer : public QSGRenderer
+{
+public:
+    PixmapRenderer(QSGRenderContext *context);
+
+    virtual void renderScene(GLuint fboId = 0);
+
+    virtual void render();
+
+    void render(QPixmap *target);
 };
 
 class RenderContext : public QSGRenderContext
@@ -93,6 +108,7 @@ public:
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QSGNinePatchNode *createQStyleNode();
+    virtual QSGLayer *createLayer(QSGRenderContext *renderContext);
 
 private:
 };
