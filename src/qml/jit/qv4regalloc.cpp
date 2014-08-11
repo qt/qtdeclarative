@@ -53,7 +53,8 @@ struct Use {
     unsigned pos  : 31;
 
     Use(): flag(MustHaveRegister), pos(0) {}
-    Use(int pos, RegisterFlag flag): flag(flag), pos(pos) {}
+    Use(int position, RegisterFlag flag): flag(flag), pos(position)
+    { Q_ASSERT(position >= 0); }
 
     bool mustHaveRegister() const { return flag == MustHaveRegister; }
 };
@@ -162,14 +163,12 @@ class RegAllocInfo: public IRDecoder
     std::vector<int> _calls;
     std::vector<QList<Temp> > _hints;
 
-    int defPosition(Stmt *s) const
-    {
-        return usePosition(s) + 1;
-    }
-
     int usePosition(Stmt *s) const
     {
-        return _lifeTimeIntervals->positionForStatement(s);
+        int usePos = _lifeTimeIntervals->positionForStatement(s);
+        if (usePos == Stmt::InvalidId) // phi-node operand, so:
+            usePos = _lifeTimeIntervals->startPosition(_currentBB);
+        return usePos;
     }
 
 public:
@@ -752,9 +751,7 @@ private:
 
     void addUses(Expr *e, Use::RegisterFlag flag)
     {
-        int usePos = usePosition(_currentStmt);
-        if (usePos == Stmt::InvalidId)
-            usePos = _lifeTimeIntervals->startPosition(_currentBB);
+        const int usePos = usePosition(_currentStmt);
         Q_ASSERT(usePos > 0);
         if (!e)
             return;
@@ -762,7 +759,7 @@ private:
         if (!t)
             return;
         if (t && t->kind == Temp::VirtualRegister)
-            _uses[t->index].push_back(Use(usePosition(_currentStmt), flag));
+            _uses[t->index].push_back(Use(usePos, flag));
     }
 
     void addUses(ExprList *l, Use::RegisterFlag flag)
