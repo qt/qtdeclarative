@@ -2170,7 +2170,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillRect(QV4::CallContext 
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::fillRect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick::Context2D::strokeRect(real x, real y, real w, real h)
    Stroke the specified rectangle's path using the strokeStyle, lineWidth, lineJoin,
    and (if appropriate) miterLimit attributes.
 
