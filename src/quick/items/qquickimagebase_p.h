@@ -107,7 +107,7 @@ private Q_SLOTS:
     virtual void requestFinished();
     void requestProgress(qint64,qint64);
     void handleWindowChanged(QQuickWindow *window);
-    void handleScreenChanged(QScreen *);
+    void handleScreenChanged(QScreen *screen);
 
 private:
     Q_DISABLE_COPY(QQuickImageBase)

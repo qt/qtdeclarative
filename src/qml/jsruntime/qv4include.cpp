@@ -209,20 +209,28 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         result = i->result();
 
     } else {
+        QScopedPointer<QV4::Script> script;
 
-        QFile f(localFile);
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
+            QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
+            script.reset(new QV4::Script(scope.engine, qmlcontextobject, jsUnit));
+        } else {
+            QFile f(localFile);
 
-        if (f.open(QIODevice::ReadOnly)) {
-            QByteArray data = f.readAll();
-            QString code = QString::fromUtf8(data);
-            QmlIR::Document::removeScriptPragmas(code);
+            if (f.open(QIODevice::ReadOnly)) {
+                QByteArray data = f.readAll();
+                QString code = QString::fromUtf8(data);
+                QmlIR::Document::removeScriptPragmas(code);
 
-            QV4::Script script(scope.engine, qmlcontextobject, code, url.toString());
+                script.reset(new QV4::Script(scope.engine, qmlcontextobject, code, url.toString()));
+            }
+        }
 
+        if (!script.isNull()) {
             QV4::ExecutionContext *ctx = scope.engine->currentContext();
-            script.parse();
+            script->parse();
             if (!scope.engine->hasException)
-                script.run();
+                script->run();
             if (scope.engine->hasException) {
                 QV4::ScopedValue ex(scope, ctx->catchException());
                 result = resultValue(scope.engine, Exception);

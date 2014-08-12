@@ -135,6 +135,7 @@ public:
     qreal currentItemOffset;
     qreal startPc;
     QPointF startPoint;
+    QPointF startPos;
     qreal offset;
     qreal offsetAdj;
     qreal mappedRange;
