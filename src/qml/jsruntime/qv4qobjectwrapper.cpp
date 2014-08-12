@@ -65,6 +65,8 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4mm_p.h>
+#include <private/qqmlscriptstring_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -511,7 +513,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, new QJSValuePrivate(ctx->d()->engine, value));
-    } else if (value->isUndefined()) {
+    } else if (value->isUndefined() && property->propType != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
         if (!QMetaType::typeName(property->propType))
             error += QLatin1String("[unknown property type]");
@@ -535,6 +537,16 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(property->coreIndex, value);
+    } else if (property->propType == qMetaTypeId<QQmlScriptString>() && (value->isUndefined() || value->isPrimitive())) {
+        QQmlScriptString ss(value->toQStringNoThrow(), 0 /* context */, object);
+        if (value->isNumber()) {
+            ss.d->numberValue = value->toNumber();
+            ss.d->isNumberLiteral = true;
+        } else if (value->isString()) {
+            ss.d->script = QV4::CompiledData::Binding::escapedString(ss.d->script);
+            ss.d->isStringLiteral = true;
+        }
+        PROPERTY_STORE(QQmlScriptString, ss);
     } else {
         QVariant v;
         if (property->isQList())

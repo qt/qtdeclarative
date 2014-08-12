@@ -146,6 +146,7 @@ private slots:
     void onCompleted();
     void onDestruction();
     void scriptString();
+    void scriptStringJs();
     void scriptStringWithoutSourceCode();
     void defaultPropertyListOrder();
     void declaredPropertyValues();
@@ -1944,6 +1945,84 @@ void tst_qqmllanguage::scriptString()
             QCOMPARE(expr.evaluate().toInt(), int(42));
         }
     }
+}
+
+// Check that assignments to QQmlScriptString properties works also from within Javascript
+void tst_qqmllanguage::scriptStringJs()
+{
+    QQmlComponent component(&engine, testFileUrl("scriptStringJs.qml"));
+    VERIFY_ERRORS(0);
+
+    MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+    QVERIFY(object != 0);
+    QQmlContext *context = QQmlEngine::contextForObject(object);
+    QVERIFY(context != 0);
+    bool ok;
+
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("\" hello \\\" world \""));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QCOMPARE(object->scriptProperty().stringLiteral(), QString(" hello \\\" world "));
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
+
+    QJSValue inst = engine.newQObject(object);
+    QJSValue func = engine.evaluate("function(value) { this.scriptProperty = value }");
+
+    func.callWithInstance(inst, QJSValueList() << "test a \"string ");
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("\"test a \\\"string \""));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QCOMPARE(object->scriptProperty().stringLiteral(), QString("test a \\\"string "));
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
+
+    func.callWithInstance(inst, QJSValueList() << QJSValue::UndefinedValue);
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("undefined"));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QVERIFY(object->scriptProperty().stringLiteral().isEmpty());
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
+
+    func.callWithInstance(inst, QJSValueList() << true);
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("true"));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QVERIFY(object->scriptProperty().stringLiteral().isEmpty());
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(object->scriptProperty().booleanLiteral(&ok) && ok);
+
+    func.callWithInstance(inst, QJSValueList() << false);
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("false"));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QVERIFY(object->scriptProperty().stringLiteral().isEmpty());
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && ok);
+
+    func.callWithInstance(inst, QJSValueList() << QJSValue::NullValue);
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("null"));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(object->scriptProperty().isNullLiteral());
+    QVERIFY(object->scriptProperty().stringLiteral().isEmpty());
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 0.0 && !ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
+
+    func.callWithInstance(inst, QJSValueList() << 12.34);
+    QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("12.34"));
+    QVERIFY(!object->scriptProperty().isEmpty());
+    QVERIFY(!object->scriptProperty().isUndefinedLiteral());
+    QVERIFY(!object->scriptProperty().isNullLiteral());
+    QVERIFY(object->scriptProperty().stringLiteral().isEmpty());
+    QVERIFY(object->scriptProperty().numberLiteral(&ok) == 12.34 && ok);
+    QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
 }
 
 void tst_qqmllanguage::scriptStringWithoutSourceCode()

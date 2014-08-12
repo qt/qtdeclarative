@@ -54,6 +54,9 @@ class QObject;
 class QQmlContext;
 class QQmlScriptStringPrivate;
 class QQmlObjectCreator;
+namespace QV4 {
+    struct QObjectWrapper;
+}
 class Q_QML_EXPORT QQmlScriptString
 {
 public:
@@ -79,6 +82,7 @@ private:
     friend class QQmlScriptStringPrivate;
     friend class QQmlExpression;
     friend class QQmlBinding;
+    friend struct QV4::QObjectWrapper;
 };
 
 QT_END_NAMESPACE

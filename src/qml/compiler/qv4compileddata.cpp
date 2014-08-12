@@ -233,7 +233,7 @@ QString Binding::valueAsString(const Unit *unit) const
 }
 
 //reverse of Lexer::singleEscape()
-static QString escapedString(const QString &string)
+QString Binding::escapedString(const QString &string)
 {
     QString tmp = QLatin1String("\"");
     for (int i = 0; i < string.length(); ++i) {
