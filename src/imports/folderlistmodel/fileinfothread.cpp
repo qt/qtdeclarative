@@ -92,7 +92,8 @@ void FileInfoThread::removePath(const QString &path)
 {
     QMutexLocker locker(&mutex);
 #ifndef QT_NO_FILESYSTEMWATCHER
-    watcher->removePath(path);
+    if (!path.startsWith(QLatin1Char(':')))
+        watcher->removePath(path);
 #endif
     currentPath.clear();
 }
@@ -103,7 +104,8 @@ void FileInfoThread::setPath(const QString &path)
 
     QMutexLocker locker(&mutex);
 #ifndef QT_NO_FILESYSTEMWATCHER
-    watcher->addPath(path);
+    if (!path.startsWith(QLatin1Char(':')))
+        watcher->addPath(path);
 #endif
     currentPath = path;
     needUpdate = true;
