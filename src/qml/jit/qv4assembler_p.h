@@ -361,11 +361,10 @@ public:
             return frameSize;
         }
 
+        /// \return the stack frame size in number of Value items.
         int calculateJSStackFrameSize() const
         {
-            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
-            int frameSize = locals * sizeof(QV4::Value);
-            return frameSize;
+            return (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
         }
 
         Address stackSlotPointer(int idx) const
