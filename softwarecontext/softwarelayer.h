@@ -51,7 +51,7 @@ public:
     // QSGLayer interface
 public:
     virtual void setItem(QSGNode *item);
-    virtual void setShaderEffectNode(QSGNode *node);
+    virtual void setShaderSourceNode(QSGNode *node);
     virtual void setRect(const QRectF &rect);
     virtual void setSize(const QSize &size);
     virtual void scheduleUpdate();
@@ -70,7 +70,7 @@ private:
     void grab();
 
     QSGNode *m_item;
-    QSGNode *m_shaderEffectNode;
+    QSGNode *m_shaderSourceNode;
     QSGRenderContext *m_context;
     SoftwareContext::PixmapRenderer *m_renderer;
     QRectF m_rect;

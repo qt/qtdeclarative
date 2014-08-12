@@ -145,7 +145,7 @@ QSGGlyphNode *Context::createGlyphNode(QSGRenderContext */*rc*/, bool /*preferNa
     return new GlyphNode();
 }
 
-QSGNinePatchNode *Context::createQStyleNode()
+QSGNinePatchNode *Context::createNinePatchNode()
 {
     return new NinePatchNode();
 }
