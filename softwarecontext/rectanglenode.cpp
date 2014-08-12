@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** For any questions to Digia, please use contact form at http://qt.digia.com
 **
-** This file is part of the Qt Purchasing Add-on.
+** This file is part of the Qt SceneGraph Raster Add-on.
 **
 ** $QT_BEGIN_LICENSE$
 ** Licensees holding valid Qt Commercial licenses may use this file in
