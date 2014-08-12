@@ -225,8 +225,9 @@ void InstructionSelection::run(int functionIndex)
 
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
     if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
-        RegisterAllocator(Assembler::getRegisterInfo()).run(_function, opt);
-        calculateRegistersToSave(Assembler::getRegisterInfo());
+        RegisterAllocator regalloc(Assembler::getRegisterInfo());
+        regalloc.run(_function, opt);
+        calculateRegistersToSave(regalloc.usedRegisters());
     } else {
         if (opt.isInSSA())
             // No register allocator available for this platform, or env. var was set, so:

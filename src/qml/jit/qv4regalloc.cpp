@@ -1241,6 +1241,9 @@ RegisterAllocator::RegisterAllocator(const QV4::JIT::RegisterInformation &regist
     Q_ASSERT(_fpRegisters.size() >= 2);
     _active.reserve((_normalRegisters.size() + _fpRegisters.size()) * 2);
     _inactive.reserve(_active.size());
+
+    _regularRegsInUse.resize(_normalRegisters.size());
+    _fpRegsInUse.resize(_fpRegisters.size());
 }
 
 RegisterAllocator::~RegisterAllocator()
@@ -1301,6 +1304,31 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
         QTextStream qout(stdout, QIODevice::WriteOnly);
         IRPrinterWithRegisters(&qout, _lifeTimeIntervals, _registerInformation).print(function);
     }
+}
+
+RegisterInformation RegisterAllocator::usedRegisters() const
+{
+    RegisterInformation regInfo;
+
+    for (int i = 0, ei = _normalRegisters.size(); i != ei; ++i) {
+        if (_regularRegsInUse.testBit(i))
+            regInfo.append(*_normalRegisters.at(i));
+    }
+
+    for (int i = 0, ei = _fpRegisters.size(); i != ei; ++i) {
+        if (_fpRegsInUse.testBit(i))
+            regInfo.append(*_fpRegisters.at(i));
+    }
+
+    return regInfo;
+}
+
+void RegisterAllocator::markInUse(int reg, bool isFPReg)
+{
+    if (isFPReg)
+        _fpRegsInUse.setBit(reg);
+    else
+        _regularRegsInUse.setBit(reg);
 }
 
 static inline LifeTimeInterval createFixedInterval(int rangeCount)
@@ -1565,6 +1593,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
             qDebug() << "*** allocating register" << reg << "for the whole interval of %" << current.temp().index;
         current.setReg(reg);
         _lastAssignedRegister[current.temp().index] = reg;
+        markInUse(reg, needsFPReg);
     } else {
         // register available for the first part of the interval
 
@@ -1580,6 +1609,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
         if (DebugRegAlloc)
             qDebug() << "*** allocating register" << reg << "for the first part of interval of %" << current.temp().index;
         split(current, freeUntilPos_reg, true);
+        markInUse(reg, needsFPReg);
     }
 }
 

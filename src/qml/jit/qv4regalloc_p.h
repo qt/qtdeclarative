@@ -93,6 +93,8 @@ class RegisterAllocator
     std::vector<int> _assignedSpillSlots;
     QVector<int> _activeSpillSlots;
 
+    QBitArray _regularRegsInUse, _fpRegsInUse;
+
     Q_DISABLE_COPY(RegisterAllocator)
 
 public:
@@ -102,8 +104,10 @@ public:
     ~RegisterAllocator();
 
     void run(IR::Function *function, const IR::Optimizer &opt);
+    RegisterInformation usedRegisters() const;
 
 private:
+    void markInUse(int reg, bool isFPReg);
     LifeTimeInterval *cloneFixedInterval(int reg, bool isFP, const LifeTimeInterval &original);
     void prepareRanges();
     void linearScan();
