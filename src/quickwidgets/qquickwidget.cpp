@@ -910,8 +910,13 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     }
 
     d->renderControl->render();
-
     context->functions()->glFlush();
+
+    if (d->resolvedFbo) {
+        QRect rect(QPoint(0, 0), d->fbo->size());
+        QOpenGLFramebufferObject::blitFramebuffer(d->resolvedFbo, rect, d->fbo, rect);
+    }
+
     context->doneCurrent();
 }
 
