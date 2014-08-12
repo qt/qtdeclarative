@@ -266,6 +266,7 @@ private:
     QScopedPointer<CompilationUnit> compilationUnit;
     QQmlEnginePrivate *qmlEngine;
     RegisterInformation regularRegistersToSave;
+    RegisterInformation fpRegistersToSave;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

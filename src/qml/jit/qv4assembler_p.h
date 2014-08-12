@@ -182,8 +182,9 @@ public:
     class StackLayout
     {
     public:
-        StackLayout(IR::Function *function, int maxArgCountForBuiltins, int normalRegistersToSave)
+        StackLayout(IR::Function *function, int maxArgCountForBuiltins, int normalRegistersToSave, int fpRegistersToSave)
             : normalRegistersToSave(normalRegistersToSave)
+            , fpRegistersToSave(fpRegistersToSave)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedRegCount(maxArgCountForBuiltins)
@@ -216,7 +217,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * normalRegistersToSave;
+            int frameSize = RegisterSize * normalRegistersToSave + sizeof(double) * fpRegistersToSave;
             frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
 
             Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
@@ -269,11 +270,13 @@ public:
         int calleeSavedRegisterSpace() const
         {
             // plus 1 for the old FP
-            return RegisterSize * (normalRegistersToSave + 1);
+            return RegisterSize * (normalRegistersToSave + 1)
+                    + sizeof(double) * fpRegistersToSave;
         }
 
     private:
         int normalRegistersToSave;
+        int fpRegistersToSave;
 
         /// arg count for calls to JS functions
         int maxOutgoingArgumentCount;
@@ -794,8 +797,10 @@ public:
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
 
-    void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave);
-    void leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave);
+    void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                 const RegisterInformation &fpRegistersToSave);
+    void leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                 const RegisterInformation &fpRegistersToSave);
 
     void checkException() {
         loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, engine)), ScratchRegister);
@@ -1146,7 +1151,7 @@ public:
 
     JSC::MacroAssemblerCodeRef link(int *codeSize);
 
-    void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave);
+    void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave);
     const StackLayout &stackLayout() const { return *_stackLayout.data(); }
     ConstantTable &constantTable() { return _constTable; }
 

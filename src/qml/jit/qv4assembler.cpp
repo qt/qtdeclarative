@@ -239,37 +239,50 @@ void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave)
+void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                        const RegisterInformation &fpRegistersToSave)
 {
     platformEnterStandardStackFrame(this);
 
-    // ### FIXME: Handle through calleeSavedRegisters mechanism
-    // or eliminate StackFrameRegister altogether.
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    int frameSize = _stackLayout->calculateStackFrameSize();
-
+    const int frameSize = _stackLayout->calculateStackFrameSize();
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    Address slotAddr(StackFrameRegister, -RegisterSize);
+    Address slotAddr(StackFrameRegister, 0);
     for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
-        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
+        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
         slotAddr.offset -= RegisterSize;
+        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
+    }
+    for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
+        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
+        slotAddr.offset -= sizeof(double);
+        JSC::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
     }
 }
 
-void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave)
+void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                        const RegisterInformation &fpRegistersToSave)
 {
-    Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize);
+    Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
 
     // restore the callee saved registers
+    for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
+        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
+        JSC::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
+        slotAddr.offset += sizeof(double);
+    }
     for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
+        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
         loadPtr(slotAddr, regularRegistersToSave.at(i).reg<RegisterID>());
         slotAddr.offset += RegisterSize;
     }
 
-    int frameSize = _stackLayout->calculateStackFrameSize();
+    Q_ASSERT(slotAddr.offset == 0);
+
+    const int frameSize = _stackLayout->calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -390,9 +403,9 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
                                          toInt32Register(right, Assembler::ReturnValueRegister));
 }
 
-void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave)
+void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
 {
-    _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave));
+    _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
 }
 
 #endif

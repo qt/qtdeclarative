@@ -242,8 +242,9 @@ void InstructionSelection::run(int functionIndex)
     Assembler* oldAssembler = _as;
     _as = new Assembler(this, _function, executableAllocator);
     _as->setStackLayout(6, // 6 == max argc for calls to built-ins with an argument array
-                        regularRegistersToSave.size());
-    _as->enterStandardStackFrame(regularRegistersToSave);
+                        regularRegistersToSave.size(),
+                        fpRegistersToSave.size());
+    _as->enterStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
 
 #ifdef ARGUMENTS_IN_REGISTERS
     _as->move(_as->registerForArgument(0), Assembler::ContextRegister);
@@ -1474,7 +1475,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
-    _as->leaveStandardStackFrame(regularRegistersToSave);
+    _as->leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     _as->ret();
 }
 
@@ -1532,6 +1533,7 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
 void InstructionSelection::calculateRegistersToSave(const RegisterInformation &used)
 {
     regularRegistersToSave.clear();
+    fpRegistersToSave.clear();
 
     foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
         if (ri.isCallerSaved())
@@ -1546,6 +1548,10 @@ void InstructionSelection::calculateRegistersToSave(const RegisterInformation &u
 #endif // RESTORE_EBX_ON_CALL
             if (ri.isPredefined() || used.contains(ri))
                 regularRegistersToSave.append(ri);
+        } else {
+            Q_ASSERT(ri.isFloatingPoint());
+            if (ri.isPredefined() || used.contains(ri))
+                fpRegistersToSave.append(ri);
         }
     }
 }
