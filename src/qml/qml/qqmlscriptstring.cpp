@@ -114,6 +114,44 @@ QQmlScriptString &QQmlScriptString::operator=(const QQmlScriptString &other)
 }
 
 /*!
+Returns \c true if this and the \a other QQmlScriptString objects are equal.
+
+\sa operator!=()
+*/
+bool QQmlScriptString::operator==(const QQmlScriptString &other) const
+{
+    if (d == other.d)
+        return true;
+
+    if (d->isNumberLiteral || other.d->isNumberLiteral)
+        return d->isNumberLiteral && other.d->isNumberLiteral && d->numberValue == other.d->numberValue;
+
+    if (d->isStringLiteral || other.d->isStringLiteral)
+        return d->isStringLiteral && other.d->isStringLiteral && d->script == other.d->script;
+
+    if (d->script == QStringLiteral("true") ||
+        d->script == QStringLiteral("false") ||
+        d->script == QStringLiteral("undefined") ||
+        d->script == QStringLiteral("null"))
+        return d->script == other.d->script;
+
+    return d->context == other.d->context &&
+           d->scope == other.d->scope &&
+           d->script == other.d->script &&
+           d->bindingId == other.d->bindingId;
+}
+
+/*!
+Returns \c true if this and the \a other QQmlScriptString objects are different.
+
+\sa operator==()
+*/
+bool QQmlScriptString::operator!=(const QQmlScriptString &other) const
+{
+    return !operator==(other);
+}
+
+/*!
 Returns whether the QQmlScriptString is empty.
 */
 bool QQmlScriptString::isEmpty() const

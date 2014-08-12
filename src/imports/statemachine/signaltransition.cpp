@@ -38,6 +38,7 @@
 #include <QQmlInfo>
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QQmlExpression>
 
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv8engine_p.h>
@@ -46,7 +47,6 @@
 
 SignalTransition::SignalTransition(QState *parent)
     : QSignalTransition(this, SIGNAL(invokeYourself()), parent)
-    , m_guard(true)
 {
     connect(this, SIGNAL(signalChanged()), SIGNAL(qmlSignalChanged()));
 }
@@ -57,7 +57,23 @@ bool SignalTransition::eventTest(QEvent *event)
     if (!QSignalTransition::eventTest(event))
         return false;
 
-    return m_guard;
+    if (m_guard.isEmpty())
+        return true;
+
+    QQmlContext context(QQmlEngine::contextForObject(this));
+
+    QStateMachine::SignalEvent *e = static_cast<QStateMachine::SignalEvent*>(event);
+
+    // Set arguments as context properties
+    int count = e->arguments().count();
+    QMetaMethod metaMethod = e->sender()->metaObject()->method(e->signalIndex());
+    for (int i = 0; i < count; i++)
+        context.setContextProperty(metaMethod.parameterNames()[i], QVariant::fromValue(e->arguments().at(i)));
+
+    QQmlExpression expr(m_guard, &context, this);
+    QVariant result = expr.evaluate();
+
+    return result.toBool();
 }
 
 const QJSValue& SignalTransition::signal()
@@ -89,17 +105,18 @@ void SignalTransition::setSignal(const QJSValue &signal)
     QSignalTransition::setSignal(metaMethod.methodSignature());
 }
 
-bool SignalTransition::guard() const
+QQmlScriptString SignalTransition::guard() const
 {
     return m_guard;
 }
 
-void SignalTransition::setGuard(bool guard)
+void SignalTransition::setGuard(const QQmlScriptString &guard)
 {
-    if (guard != m_guard) {
-        m_guard = guard;
-        emit guardChanged();
-    }
+    if (m_guard == guard)
+        return;
+
+    m_guard = guard;
+    emit guardChanged();
 }
 
 void SignalTransition::invoke()
@@ -227,4 +244,12 @@ void SignalTransition::invoke()
     Guard conditions affect the behavior of a state machine by enabling
     transitions only when they evaluate to true and disabling them when
     they evaluate to false.
+
+    When the signal associated with this signal transition is emitted the
+    guard condition is evaluated. In the guard condition the arguments
+    of the signal can be used as demonstrated in the example below.
+
+    \snippet qml/statemachine/guardcondition.qml document
+
+    \sa signal
 */

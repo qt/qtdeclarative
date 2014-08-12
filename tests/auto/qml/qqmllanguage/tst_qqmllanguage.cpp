@@ -140,6 +140,7 @@ private slots:
     void scriptString();
     void scriptStringJs();
     void scriptStringWithoutSourceCode();
+    void scriptStringComparison();
     void defaultPropertyListOrder();
     void declaredPropertyValues();
     void dontDoubleCallClassBegin();
@@ -2063,6 +2064,87 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlExpression expr(ss, /*context*/0, object);
         QCOMPARE(expr.evaluate().toInt(), int(100));
     }
+}
+
+// Test the QQmlScriptString comparison operators. The script strings are considered
+// equal if there evaluation would produce the same result.
+void tst_qqmllanguage::scriptStringComparison()
+{
+    QQmlComponent component1(&engine, testFileUrl("scriptString.qml"));
+    QVERIFY(!component1.isError() && component1.errors().isEmpty());
+    MyTypeObject *object1 = qobject_cast<MyTypeObject*>(component1.create());
+    QVERIFY(object1 != 0);
+
+    QQmlComponent component2(&engine, testFileUrl("scriptString2.qml"));
+    QVERIFY(!component2.isError() && component2.errors().isEmpty());
+    MyTypeObject *object2 = qobject_cast<MyTypeObject*>(component2.create());
+    QVERIFY(object2 != 0);
+
+    QQmlComponent component3(&engine, testFileUrl("scriptString3.qml"));
+    QVERIFY(!component3.isError() && component3.errors().isEmpty());
+    MyTypeObject *object3 = qobject_cast<MyTypeObject*>(component3.create());
+    QVERIFY(object3 != 0);
+
+    //QJSValue inst1 = engine.newQObject(object1);
+    QJSValue inst2 = engine.newQObject(object2);
+    QJSValue inst3 = engine.newQObject(object3);
+    QJSValue func = engine.evaluate("function(value) { this.scriptProperty = value }");
+
+    const QString s = "hello\\n\\\"world\\\"";
+    const qreal n = 12.345;
+    bool ok;
+
+    QVERIFY(object2->scriptProperty().stringLiteral() == s);
+    QVERIFY(object3->scriptProperty().numberLiteral(&ok) == n && ok);
+    QVERIFY(object1->scriptProperty() == object1->scriptProperty());
+    QVERIFY(object2->scriptProperty() == object2->scriptProperty());
+    QVERIFY(object3->scriptProperty() == object3->scriptProperty());
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    QVERIFY(object1->scriptProperty() != object2->scriptProperty());
+    QVERIFY(object1->scriptProperty() != object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << n);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << s);
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << s);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << QJSValue::UndefinedValue);
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << QJSValue::UndefinedValue);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << QJSValue::NullValue);
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << QJSValue::NullValue);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << false);
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << false);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    func.callWithInstance(inst2, QJSValueList() << true);
+    QVERIFY(object2->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << true);
+    QVERIFY(object2->scriptProperty() == object3->scriptProperty());
+
+    QVERIFY(object1->scriptProperty() != object2->scriptProperty());
+    object2->setScriptProperty(object1->scriptProperty());
+    QVERIFY(object1->scriptProperty() == object2->scriptProperty());
+
+    QVERIFY(object1->scriptProperty() != object3->scriptProperty());
+    func.callWithInstance(inst3, QJSValueList() << engine.toScriptValue(object1->scriptProperty()));
+    QVERIFY(object1->scriptProperty() == object3->scriptProperty());
+
+    // While this are two instances of the same object they are still considered different
+    // because the (none literal) script string may access variables which have different
+    // values in both instances and hence evaluated to different results.
+    MyTypeObject *object1_2 = qobject_cast<MyTypeObject*>(component1.create());
+    QVERIFY(object1_2 != 0);
+    QVERIFY(object1->scriptProperty() != object1_2->scriptProperty());
 }
 
 // Check that default property assignments are correctly spliced into explicit

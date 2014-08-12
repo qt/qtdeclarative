@@ -38,19 +38,21 @@
 #include <QtCore/QVariant>
 #include <QtQml/QJSValue>
 
+#include <QtQml/qqmlscriptstring.h>
+
 QT_BEGIN_NAMESPACE
 
 class SignalTransition : public QSignalTransition
 {
     Q_OBJECT
     Q_PROPERTY(QJSValue signal READ signal WRITE setSignal NOTIFY qmlSignalChanged)
-    Q_PROPERTY(bool guard READ guard WRITE setGuard NOTIFY guardChanged)
+    Q_PROPERTY(QQmlScriptString guard READ guard WRITE setGuard NOTIFY guardChanged)
 
 public:
     explicit SignalTransition(QState *parent = Q_NULLPTR);
 
-    bool guard() const;
-    void setGuard(bool guard);
+    QQmlScriptString guard() const;
+    void setGuard(const QQmlScriptString &guard);
 
     bool eventTest(QEvent *event);
 
@@ -70,7 +72,7 @@ Q_SIGNALS:
 private:
     QByteArray m_data;
     QJSValue m_signal;
-    bool m_guard;
+    QQmlScriptString m_guard;
 };
 
 QT_END_NAMESPACE

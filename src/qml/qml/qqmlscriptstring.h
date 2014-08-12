@@ -58,6 +58,9 @@ public:
 
     QQmlScriptString &operator=(const QQmlScriptString &);
 
+    bool operator==(const QQmlScriptString &) const;
+    bool operator!=(const QQmlScriptString &) const;
+
     bool isEmpty() const;
 
     bool isUndefinedLiteral() const;
