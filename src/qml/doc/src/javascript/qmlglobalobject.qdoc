@@ -47,8 +47,8 @@ additional imports:
 
 
 
+\keyword XMLHttpRequest
 \section1 XMLHttpRequest
-\target XMLHttpRequest
 
 The XMLHttpRequest object, which can be used to asynchronously obtain
 data from over a network.
