@@ -93,10 +93,8 @@ QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int fu
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
-                     int maxArgCountForBuiltins)
-    : _stackLayout(function, maxArgCountForBuiltins)
-    , _constTable(this)
+Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+    : _constTable(this)
     , _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
@@ -241,7 +239,7 @@ void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame()
+void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave)
 {
     platformEnterStandardStackFrame(this);
 
@@ -250,24 +248,28 @@ void Assembler::enterStandardStackFrame()
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    int frameSize = _stackLayout.calculateStackFrameSize();
+    int frameSize = _stackLayout->calculateStackFrameSize();
 
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
-    for (int i = 0; i < calleeSavedRegisterCount(); ++i)
-        storePtr(calleeSavedRegisters[i].reg<RegisterID>(), Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
-
+    Address slotAddr(StackFrameRegister, -RegisterSize);
+    for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
+        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
+        slotAddr.offset -= RegisterSize;
+    }
 }
 
-void Assembler::leaveStandardStackFrame()
+void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave)
 {
-    // restore the callee saved registers
-    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
-    for (int i = calleeSavedRegisterCount() - 1; i >= 0; --i)
-        loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i].reg<RegisterID>());
+    Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize);
 
-    int frameSize = _stackLayout.calculateStackFrameSize();
+    // restore the callee saved registers
+    for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
+        loadPtr(slotAddr, regularRegistersToSave.at(i).reg<RegisterID>());
+        slotAddr.offset += RegisterSize;
+    }
+
+    int frameSize = _stackLayout->calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -386,6 +388,11 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
     return JSC::MacroAssembler::branch32(cond,
                                          toInt32Register(left, Assembler::ScratchRegister),
                                          toInt32Register(right, Assembler::ReturnValueRegister));
+}
+
+void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave)
+{
+    _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave));
 }
 
 #endif

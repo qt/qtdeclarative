@@ -237,6 +237,8 @@ private:
     int prepareVariableArguments(IR::ExprList* args);
     int prepareCallData(IR::ExprList* args, IR::Expr *thisObject);
 
+    void calculateRegistersToSave(const RegisterInformation &used);
+
     template <typename Retval, typename Arg1, typename Arg2, typename Arg3>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
@@ -263,6 +265,7 @@ private:
 
     QScopedPointer<CompilationUnit> compilationUnit;
     QQmlEnginePrivate *qmlEngine;
+    RegisterInformation regularRegistersToSave;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

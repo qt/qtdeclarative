@@ -354,30 +354,6 @@ public: // utility functions
 
         return info;
     }
-
-    static RegisterInformation &getCalleeSavedRegisters()
-    {
-        static RegisterInformation regs;
-        if (regs.isEmpty()) {
-            foreach (const RegisterInfo &info, getRegisterInfo()) {
-#if defined(RESTORE_EBX_ON_CALL)
-                if (info.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
-                    regs.append(info);
-                    continue;
-                }
-#endif // RESTORE_EBX_ON_CALL
-                if (info.isCalleeSaved())
-                    regs.append(info);
-            }
-        }
-
-        return regs;
-    }
-
-    static int calleeSavedRegisterCount()
-    {
-        return getCalleeSavedRegisters().size();
-    }
 };
 
 } // JIT namespace

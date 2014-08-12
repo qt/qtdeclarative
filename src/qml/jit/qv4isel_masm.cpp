@@ -226,20 +226,23 @@ void InstructionSelection::run(int functionIndex)
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
     if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
         RegisterAllocator(Assembler::getRegisterInfo()).run(_function, opt);
+        calculateRegistersToSave(Assembler::getRegisterInfo());
     } else {
         if (opt.isInSSA())
             // No register allocator available for this platform, or env. var was set, so:
             opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
         IR::Optimizer::showMeTheCode(_function);
+        calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
     QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, executableAllocator, 6); // 6 == max argc for calls to built-ins with an argument array
-
-    _as->enterStandardStackFrame();
+    _as = new Assembler(this, _function, executableAllocator);
+    _as->setStackLayout(6, // 6 == max argc for calls to built-ins with an argument array
+                        regularRegistersToSave.size());
+    _as->enterStandardStackFrame(regularRegistersToSave);
 
 #ifdef ARGUMENTS_IN_REGISTERS
     _as->move(_as->registerForArgument(0), Assembler::ContextRegister);
@@ -1470,7 +1473,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
-    _as->leaveStandardStackFrame();
+    _as->leaveStandardStackFrame(regularRegistersToSave);
     _as->ret();
 }
 
@@ -1525,6 +1528,26 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
     return argc;
 }
 
+void InstructionSelection::calculateRegistersToSave(const RegisterInformation &used)
+{
+    regularRegistersToSave.clear();
+
+    foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
+        if (ri.isCallerSaved())
+            continue;
+
+        if (ri.isRegularRegister()) {
+#if defined(RESTORE_EBX_ON_CALL)
+            if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+                regularRegistersToSave.append(ri);
+                continue;
+            }
+#endif // RESTORE_EBX_ON_CALL
+            if (ri.isPredefined() || used.contains(ri))
+                regularRegistersToSave.append(ri);
+        }
+    }
+}
 
 QT_BEGIN_NAMESPACE
 namespace QV4 {

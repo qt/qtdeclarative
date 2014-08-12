@@ -135,9 +135,10 @@ struct ExceptionCheck<void (*)(QV4::NoThrowContext *, A, B, C)> {
 
 class Assembler : public JSC::MacroAssembler, public TargetPlatform
 {
+    Q_DISABLE_COPY(Assembler)
+
 public:
-    Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
-              int maxArgCountForBuiltins);
+    Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -181,8 +182,8 @@ public:
     class StackLayout
     {
     public:
-        StackLayout(IR::Function *function, int maxArgCountForBuiltins)
-            : calleeSavedRegCount(Assembler::calleeSavedRegisterCount() + 1)
+        StackLayout(IR::Function *function, int maxArgCountForBuiltins, int normalRegistersToSave)
+            : normalRegistersToSave(normalRegistersToSave)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedRegCount(maxArgCountForBuiltins)
@@ -215,7 +216,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * calleeSavedRegisterCount();
+            int frameSize = RegisterSize * normalRegistersToSave;
             frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
 
             Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
@@ -268,11 +269,11 @@ public:
         int calleeSavedRegisterSpace() const
         {
             // plus 1 for the old FP
-            return RegisterSize * (calleeSavedRegCount + 1);
+            return RegisterSize * (normalRegistersToSave + 1);
         }
 
     private:
-        int calleeSavedRegCount;
+        int normalRegistersToSave;
 
         /// arg count for calls to JS functions
         int maxOutgoingArgumentCount;
@@ -384,7 +385,7 @@ public:
     {
         Q_ASSERT(t->kind == IR::Temp::StackSlot);
 
-        return Pointer(_stackLayout.stackSlotPointer(t->index));
+        return Pointer(_stackLayout->stackSlotPointer(t->index));
     }
 
     template <int argumentNumber>
@@ -394,7 +395,7 @@ public:
             return;
         if (IR::Temp *t = arg.value->asTemp()) {
             if (t->kind == IR::Temp::PhysicalRegister) {
-                Pointer addr(_stackLayout.savedRegPointer(argumentNumber));
+                Pointer addr(_stackLayout->savedRegPointer(argumentNumber));
                 switch (t->type) {
                 case IR::BoolType:
                     storeBool((RegisterID) t->index, addr);
@@ -793,8 +794,8 @@ public:
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
 
-    void enterStandardStackFrame();
-    void leaveStandardStackFrame();
+    void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave);
+    void leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave);
 
     void checkException() {
         loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, engine)), ScratchRegister);
@@ -941,7 +942,7 @@ public:
     Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)
     {
         if (IR::Const *c = e->asConst()) {
-            Address addr = _stackLayout.savedRegPointer(offset);
+            Address addr = _stackLayout->savedRegPointer(offset);
             Address tagAddr = addr;
             tagAddr.offset += 4;
 
@@ -953,7 +954,7 @@ public:
 
         if (IR::Temp *t = e->asTemp())
             if (t->kind == IR::Temp::PhysicalRegister)
-                return Pointer(_stackLayout.savedRegPointer(offset));
+                return Pointer(_stackLayout->savedRegPointer(offset));
 
         return loadAddress(tmpReg, e);
     }
@@ -1145,14 +1146,15 @@ public:
 
     JSC::MacroAssemblerCodeRef link(int *codeSize);
 
-    const StackLayout stackLayout() const { return _stackLayout; }
+    void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave);
+    const StackLayout &stackLayout() const { return *_stackLayout.data(); }
     ConstantTable &constantTable() { return _constTable; }
 
     Label exceptionReturnLabel;
     IR::BasicBlock * catchBlock;
     QVector<Jump> exceptionPropagationJumps;
 private:
-    const StackLayout _stackLayout;
+    QScopedPointer<const StackLayout> _stackLayout;
     ConstantTable _constTable;
     IR::Function *_function;
     QHash<IR::BasicBlock *, Label> _addrs;

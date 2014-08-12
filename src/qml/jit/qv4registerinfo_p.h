@@ -52,26 +52,29 @@ namespace JIT {
 class RegisterInfo
 {
 public:
-    enum { InvalidRegister = -1 };
+    enum { InvalidRegister = (1 << 29) - 1 };
     enum SavedBy { CallerSaved, CalleeSaved };
     enum RegisterType { RegularRegister, FloatingPointRegister };
     enum Usage { Predefined, RegAlloc };
 
 public:
     RegisterInfo()
-        : _reg(InvalidRegister)
-        , _type(RegularRegister)
-        , _savedBy(CallerSaved)
+        : _savedBy(CallerSaved)
         , _usage(Predefined)
+        , _type(RegularRegister)
+        , _reg(InvalidRegister)
     {}
 
     RegisterInfo(int reg, const QString &prettyName, RegisterType type, SavedBy savedBy, Usage usage)
-        : _reg(reg)
-        , _prettyName(prettyName)
-        , _type(type)
+        : _prettyName(prettyName)
         , _savedBy(savedBy)
         , _usage(usage)
+        , _type(type)
+        , _reg(reg)
     {}
+
+    bool operator==(const RegisterInfo &other) const
+    { return _type == other._type && _reg == other._reg; }
 
     bool isValid() const { return _reg != InvalidRegister; }
     template <typename T> T reg() const { return static_cast<T>(_reg); }
@@ -81,13 +84,14 @@ public:
     bool isFloatingPoint() const { return _type == FloatingPointRegister; }
     bool isRegularRegister() const { return _type == RegularRegister; }
     bool useForRegAlloc() const { return _usage == RegAlloc; }
+    bool isPredefined() const { return _usage == Predefined; }
 
 private:
-    int _reg;
     QString _prettyName;
-    RegisterType _type;
-    SavedBy _savedBy;
-    Usage _usage;
+    unsigned _savedBy : 1;
+    unsigned _usage   : 1;
+    unsigned _type    : 1;
+    unsigned _reg     : 29;
 };
 typedef QVector<RegisterInfo> RegisterInformation;
 
