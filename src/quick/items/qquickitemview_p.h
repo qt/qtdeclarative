@@ -44,8 +44,11 @@
 
 #include "qquickflickable_p.h"
 #include <qpointer.h>
+#include <QtCore/QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
 
 class QQmlChangeSet;
 

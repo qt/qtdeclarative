@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcItemViewDelegateLifecycle, "qt.quick.itemview.lifecycle")
+
 // Default cacheBuffer for all views.
 #ifndef QML_VIEW_DEFAULTCACHEBUFFER
 #define QML_VIEW_DEFAULTCACHEBUFFER 320

@@ -59,8 +59,6 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_SNAPONETHRESHOLD 30
 #endif
 
-//#define DEBUG_DELEGATE_LIFECYCLE
-
 class FxListItemSG;
 
 class QQuickListViewPrivate : public QQuickItemViewPrivate
@@ -665,11 +663,9 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     FxListItemSG *item = 0;
     qreal pos = itemEnd;
     while (modelIndex < model->count() && pos <= fillTo) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer;
-#endif
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << item->item->objectName();
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos, true);
         QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
@@ -683,11 +679,9 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         return changed;
 
     while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos > fillFrom) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer;
-#endif
         if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer << "item" << item->item->objectName();
         --visibleIndex;
         visiblePos -= item->size() + spacing;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
@@ -716,18 +710,14 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
             break;
 
         if (item->size() > 0) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-            qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endPosition();
-#endif
+            qCDebug(lcItemViewDelegateLifecycle) << "refill: remove first" << visibleIndex << "top end pos" << item->endPosition();
             // remove this item and all zero-sized items before it
             while (item) {
                 if (item->index != -1)
                     visibleIndex++;
                 visibleItems.removeAt(index);
                 if (item->transitionScheduledOrRunning()) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-                    qDebug() << "refill not releasing animating item" << item->index << item->item->objectName();
-#endif
+                    qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << item->item->objectName();
                     item->releaseAfterTransition = true;
                     releasePendingTransition.append(item);
                 } else {
@@ -746,14 +736,10 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position();
-#endif
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position() << item->item->objectName();
         visibleItems.removeLast();
         if (item->transitionScheduledOrRunning()) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-            qDebug() << "refill not releasing animating item" << item->index << item->item->objectName();
-#endif
+            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << item->item->objectName();
             item->releaseAfterTransition = true;
             releasePendingTransition.append(item);
         } else {

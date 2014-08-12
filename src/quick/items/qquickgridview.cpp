@@ -58,8 +58,6 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_SNAPONETHRESHOLD 30
 #endif
 
-//#define DEBUG_DELEGATE_LIFECYCLE
-
 //----------------------------------------------------------------------------
 
 class FxGridItemSG : public FxViewItem
@@ -512,9 +510,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     bool changed = false;
 
     while (modelIndex < model->count() && rowPos <= fillTo + rowSize()*(columns - colNum)/(columns+1)) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: append item" << modelIndex << colPos << rowPos;
-#endif
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << colPos << rowPos;
         if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, doBuffer))))
             break;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
@@ -549,9 +545,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     // Prepend
     colPos = colNum * colSize();
     while (visibleIndex > 0 && rowPos + rowSize() - 1 >= fillFrom - rowSize()*(colNum+1)/(columns+1)){
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: prepend item" << visibleIndex-1 << "top pos" << rowPos << colPos;
-#endif
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "top pos" << rowPos << colPos;
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
         --visibleIndex;
@@ -580,16 +574,12 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                 && item->rowPos()+rowSize()-1 < bufferFrom - rowSize()*(item->colPos()/colSize()+1)/(columns+1)) {
         if (item->attached->delayRemove())
             break;
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endRowPos();
-#endif
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: remove first" << visibleIndex << "top end pos" << item->endRowPos();
         if (item->index != -1)
             visibleIndex++;
         visibleItems.removeFirst();
         if (item->transitionScheduledOrRunning()) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-            qDebug() << "\tnot releasing animating item:" << item->index << item->item->objectName();
-#endif
+            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
             item->releaseAfterTransition = true;
             releasePendingTransition.append(item);
         } else {
@@ -602,14 +592,10 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                 && item->rowPos() > bufferTo + rowSize()*(columns - item->colPos()/colSize())/(columns+1)) {
         if (item->attached->delayRemove())
             break;
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1;
-#endif
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1;
         visibleItems.removeLast();
         if (item->transitionScheduledOrRunning()) {
-#ifdef DEBUG_DELEGATE_LIFECYCLE
-            qDebug() << "\tnot releasing animating item:" << item->index << item->item->objectName();
-#endif
+            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
             item->releaseAfterTransition = true;
             releasePendingTransition.append(item);
         } else {
