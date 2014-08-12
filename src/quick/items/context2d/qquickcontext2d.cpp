@@ -70,6 +70,9 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
+
 #include <QtCore/QRunnable>
 
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
@@ -4155,6 +4158,13 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_renderTarget = QQuickCanvasItem::Image;
     }
 #endif
+
+    // Disable threaded background rendering if the platform has issues with it
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject
+            && m_renderStrategy == QQuickCanvasItem::Threaded
+            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
+        m_renderTarget = QQuickCanvasItem::Image;
+    }
 
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
