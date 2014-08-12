@@ -68,7 +68,12 @@ void RenderingVisitor::endVisit(QSGGeometryNode *node)
 bool RenderingVisitor::visit(QSGOpacityNode *node)
 {
     painter->save();
-    painter->setOpacity(node->opacity());
+
+    const qreal newOpacity = painter->opacity() * node->opacity();
+    if (qFuzzyIsNull(newOpacity))
+        return false;
+
+    painter->setOpacity(newOpacity);
     return true;
 }
 
