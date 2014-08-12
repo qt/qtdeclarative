@@ -2876,7 +2876,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(QV4::CallContex
     \brief Provides a Context2D TextMetrics interface
 
     The TextMetrics object can be created by QtQuick::Context2D::measureText method.
-    See \l{http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TexMetrics} for more details.
+    See \l{http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TextMetrics} for more details.
 
     \sa Context2D::measureText
     \sa width
