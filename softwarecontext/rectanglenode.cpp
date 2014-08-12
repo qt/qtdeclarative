@@ -95,6 +95,8 @@ void RectangleNode::paint(QPainter *painter)
     painter->setBrush(m_brush);
     if (m_radius)
         painter->drawRoundedRect(m_rect, m_radius, m_radius);
+    else if (m_pen.style() == Qt::NoPen && m_stops.isEmpty())
+        painter->fillRect(m_rect, m_color);
     else
         painter->drawRect(m_rect);
 }
