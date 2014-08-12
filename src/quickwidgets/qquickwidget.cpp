@@ -218,7 +218,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
     QOpenGLContext *context = offscreenWindow->openglContext();
     if (!context) {
-        qWarning("QQuickWidget: render scenegraph with no context");
+        qWarning("QQuickWidget: Attempted to render scene with no context");
         return;
     }
 
@@ -634,33 +634,40 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &for
 
 void QQuickWidgetPrivate::createContext()
 {
-    if (context)
-        return;
+    // On hide-show we invalidate() but our context is kept.
+    // We nonetheless need to initialize() again.
+    const bool reinit = context && !offscreenWindow->openglContext();
 
-    context = new QOpenGLContext;
-    context->setFormat(offscreenWindow->requestedFormat());
+    if (!reinit) {
+        if (context)
+            return;
 
-    if (qt_gl_global_share_context())
-        context->setShareContext(qt_gl_global_share_context());
-    if (!context->create()) {
-        const bool isEs = context->isOpenGLES();
-        delete context;
-        context = 0;
-        handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
-        return;
+        context = new QOpenGLContext;
+        context->setFormat(offscreenWindow->requestedFormat());
+
+        if (qt_gl_global_share_context())
+            context->setShareContext(qt_gl_global_share_context());
+
+        if (!context->create()) {
+            const bool isEs = context->isOpenGLES();
+            delete context;
+            context = 0;
+            handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
+            return;
+        }
+
+        offscreenSurface = new QOffscreenSurface;
+        // Pass the context's format(), which, now that the underlying platform context is created,
+        // contains a QSurfaceFormat representing the _actual_ format of the underlying
+        // configuration. This is essential to get a surface that is compatible with the context.
+        offscreenSurface->setFormat(context->format());
+        offscreenSurface->create();
     }
-
-    offscreenSurface = new QOffscreenSurface;
-    // Pass the context's format(), which, now that the underlying platform context is created,
-    // contains a QSurfaceFormat representing the _actual_ format of the underlying
-    // configuration. This is essential to get a surface that is compatible with the context.
-    offscreenSurface->setFormat(context->format());
-    offscreenSurface->create();
 
     if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
-        qWarning("QQuickWidget: failed to make window surface current");
+        qWarning("QQuickWidget: Failed to make context current");
 }
 
 void QQuickWidgetPrivate::destroyContext()
