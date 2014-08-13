@@ -42,7 +42,7 @@
 #ifndef QSGABSTRACTRENDERER_H
 #define QSGABSTRACTRENDERER_H
 
-#include "qsgnode.h"
+#include <QtQuick/qsgnode.h>
 
 QT_BEGIN_NAMESPACE
 
