@@ -30,10 +30,11 @@ RenderingVisitor::RenderingVisitor(QPainter *painter)
 
 }
 
-void RenderingVisitor::visit(QSGTransformNode *node)
+bool RenderingVisitor::visit(QSGTransformNode *node)
 {
     painter->save();
     painter->setTransform(node->matrix().toTransform(), /*combine*/true);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGTransformNode *)
@@ -41,10 +42,11 @@ void RenderingVisitor::endVisit(QSGTransformNode *)
     painter->restore();
 }
 
-void RenderingVisitor::visit(QSGClipNode *node)
+bool RenderingVisitor::visit(QSGClipNode *node)
 {
     painter->save();
     painter->setClipRect(node->clipRect(), Qt::IntersectClip);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGClipNode *)
@@ -52,20 +54,22 @@ void RenderingVisitor::endVisit(QSGClipNode *)
     painter->restore();
 }
 
-void RenderingVisitor::visit(QSGGeometryNode *node)
+bool RenderingVisitor::visit(QSGGeometryNode *node)
 {
-//    Q_UNREACHABLE();
+    Q_UNREACHABLE();
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGGeometryNode *node)
 {
-//    Q_UNREACHABLE();
+    Q_UNREACHABLE();
 }
 
-void RenderingVisitor::visit(QSGOpacityNode *node)
+bool RenderingVisitor::visit(QSGOpacityNode *node)
 {
     painter->save();
     painter->setOpacity(node->opacity());
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGOpacityNode *node)
@@ -73,39 +77,51 @@ void RenderingVisitor::endVisit(QSGOpacityNode *node)
     painter->restore();
 }
 
-void RenderingVisitor::visit(QSGImageNode *node)
+bool RenderingVisitor::visit(QSGImageNode *node)
 {
     static_cast<ImageNode*>(node)->paint(painter);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGImageNode *)
 {
 }
 
-void RenderingVisitor::visit(QSGRectangleNode *node)
+bool RenderingVisitor::visit(QSGRectangleNode *node)
 {
     static_cast<RectangleNode*>(node)->paint(painter);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGRectangleNode *)
 {
 }
 
-void RenderingVisitor::visit(QSGGlyphNode *node)
+bool RenderingVisitor::visit(QSGGlyphNode *node)
 {
     static_cast<GlyphNode*>(node)->paint(painter);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGGlyphNode *)
 {
 }
 
-void RenderingVisitor::visit(QSGNinePatchNode *node)
+bool RenderingVisitor::visit(QSGNinePatchNode *node)
 {
     static_cast<NinePatchNode*>(node)->paint(painter);
+    return true;
 }
 
 void RenderingVisitor::endVisit(QSGNinePatchNode *)
 {
+}
 
+bool RenderingVisitor::visit(QSGRootNode *)
+{
+    return true;
+}
+
+void RenderingVisitor::endVisit(QSGRootNode *)
+{
 }
