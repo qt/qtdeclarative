@@ -183,6 +183,7 @@ RoundedButton RoundedBtn.qml
 internal HighlightedButton HighlightedBtn.qml
         \endcode
 
+    \row
     \li JavaScript Resource Declaration
     \li <Identifier> <FileName>
     \li A JavaScript resource declaration allows a JavaScript file to be
