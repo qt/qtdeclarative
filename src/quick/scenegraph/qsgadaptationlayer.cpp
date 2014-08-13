@@ -297,22 +297,22 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
         switch (child->type()) {
         case QSGNode::ClipNodeType: {
             QSGClipNode *c = static_cast<QSGClipNode*>(child);
-            visit(c);
-            visitChildren(c);
+            if (visit(c))
+                visitChildren(c);
             endVisit(c);
             break;
         }
         case QSGNode::TransformNodeType: {
             QSGTransformNode *c = static_cast<QSGTransformNode*>(child);
-            visit(c);
-            visitChildren(c);
+            if (visit(c))
+                visitChildren(c);
             endVisit(c);
             break;
         }
         case QSGNode::OpacityNodeType: {
             QSGOpacityNode *c = static_cast<QSGOpacityNode*>(child);
-            visit(c);
-            visitChildren(c);
+            if (visit(c))
+                visitChildren(c);
             endVisit(c);
             break;
         }
@@ -322,13 +322,19 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
                 v->accept(this);
             } else {
                 QSGGeometryNode *c = static_cast<QSGGeometryNode*>(child);
-                visit(c);
-                visitChildren(c);
+                if (visit(c))
+                    visitChildren(c);
                 endVisit(c);
             }
             break;
         }
-        case QSGNode::RootNodeType: // fall through
+        case QSGNode::RootNodeType: {
+            QSGRootNode *root = static_cast<QSGRootNode*>(child);
+            if (visit(root))
+                visitChildren(root);
+            endVisit(root);
+            break;
+        }
         case QSGNode::BasicNodeType: {
             visitChildren(child);
             break;

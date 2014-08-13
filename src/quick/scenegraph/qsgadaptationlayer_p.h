@@ -71,26 +71,32 @@ class QSGImageNode;
 class QSGRectangleNode;
 class QSGGlyphNode;
 class QSGNinePatchNode;
+class QSGRootNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
 public:
-    virtual void visit(QSGTransformNode *) = 0;
+    // visit(...) returns true if the children are supposed to be
+    // visisted and false if they're supposed to be skipped by the visitor.
+
+    virtual bool visit(QSGTransformNode *) = 0;
     virtual void endVisit(QSGTransformNode *) = 0;
-    virtual void visit(QSGClipNode *) = 0;
+    virtual bool visit(QSGClipNode *) = 0;
     virtual void endVisit(QSGClipNode *) = 0;
-    virtual void visit(QSGGeometryNode *) = 0;
+    virtual bool visit(QSGGeometryNode *) = 0;
     virtual void endVisit(QSGGeometryNode *) = 0;
-    virtual void visit(QSGOpacityNode *) = 0;
+    virtual bool visit(QSGOpacityNode *) = 0;
     virtual void endVisit(QSGOpacityNode *) = 0;
-    virtual void visit(QSGImageNode *) = 0;
+    virtual bool visit(QSGImageNode *) = 0;
     virtual void endVisit(QSGImageNode *) = 0;
-    virtual void visit(QSGRectangleNode *) = 0;
+    virtual bool visit(QSGRectangleNode *) = 0;
     virtual void endVisit(QSGRectangleNode *) = 0;
-    virtual void visit(QSGGlyphNode *) = 0;
+    virtual bool visit(QSGGlyphNode *) = 0;
     virtual void endVisit(QSGGlyphNode *) = 0;
-    virtual void visit(QSGNinePatchNode *) = 0;
+    virtual bool visit(QSGNinePatchNode *) = 0;
     virtual void endVisit(QSGNinePatchNode *) = 0;
+    virtual bool visit(QSGRootNode *) = 0;
+    virtual void endVisit(QSGRootNode *) = 0;
 
     void visitChildren(QSGNode *node);
 };
@@ -118,7 +124,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 
@@ -142,7 +148,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGNinePatchNode : public QSGVisitableNode
@@ -155,7 +161,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
@@ -217,7 +223,7 @@ public:
     void setOwnerElement(QQuickItem *ownerElement) { m_ownerElement = ownerElement; }
     QQuickItem *ownerElement() const { return m_ownerElement; }
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { visitor->visit(this); visitor->visitChildren(this); visitor->endVisit(this); }
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
     QQuickItem *m_ownerElement;
