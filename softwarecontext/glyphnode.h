@@ -42,6 +42,8 @@ private:
     QGlyphRun m_glyphRun;
     QColor m_color;
     QSGGeometry m_geometry;
+    QQuickText::TextStyle m_style;
+    QColor m_styleColor;
 };
 
 #endif // GLYPHNODE_H

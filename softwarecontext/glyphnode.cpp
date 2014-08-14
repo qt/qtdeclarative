@@ -21,6 +21,7 @@
 
 GlyphNode::GlyphNode()
     : m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
+    , m_style(QQuickText::Normal)
 {
     setMaterial((QSGMaterial*)1);
     setGeometry(&m_geometry);
@@ -40,10 +41,12 @@ void GlyphNode::setColor(const QColor &color)
 
 void GlyphNode::setStyle(QQuickText::TextStyle style)
 {
+    m_style = style;
 }
 
 void GlyphNode::setStyleColor(const QColor &color)
 {
+    m_styleColor = color;
 }
 
 QPointF GlyphNode::baseLine() const
@@ -61,6 +64,27 @@ void GlyphNode::update()
 
 void GlyphNode::paint(QPainter *painter)
 {
+    QPointF pos = m_position - QPointF(0, m_glyphRun.rawFont().ascent());
+
+    switch (m_style) {
+    case QQuickText::Normal: break;
+    case QQuickText::Outline:
+        painter->setPen(m_styleColor);
+        painter->drawGlyphRun(pos + QPointF(0, 1), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(0, -1), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(1, 0), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(-1, 0), m_glyphRun);
+        break;
+    case QQuickText::Raised:
+        painter->setPen(m_styleColor);
+        painter->drawGlyphRun(pos + QPointF(0, 1), m_glyphRun);
+        break;
+    case QQuickText::Sunken:
+        painter->setPen(m_styleColor);
+        painter->drawGlyphRun(pos + QPointF(0, -1), m_glyphRun);
+        break;
+    }
+
     painter->setPen(m_color);
-    painter->drawGlyphRun(m_position - QPointF(0, m_glyphRun.rawFont().ascent()), m_glyphRun);
+    painter->drawGlyphRun(pos, m_glyphRun);
 }
