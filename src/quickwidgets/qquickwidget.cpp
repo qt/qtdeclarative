@@ -891,8 +891,23 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         d->renderControl->sync();
     }
 
-    d->createContext();
-    createFramebufferObject();
+    bool newFbo = false;
+    if (d->context) {
+        // Bail out in the special case of receiving a resize after
+        // scenegraph invalidation during application exit.
+        if (!d->fbo && !d->offscreenWindow->openglContext())
+            return;
+        if (!d->fbo || d->fbo->size() != size() * devicePixelRatio()) {
+            newFbo = true;
+            createFramebufferObject();
+        }
+    } else {
+        // This will result in a scenegraphInitialized() signal which
+        // is connected to createFramebufferObject().
+        newFbo = true;
+        d->createContext();
+    }
+
     QCoreApplication::sendEvent(d->offscreenWindow, e);
     d->offscreenWindow->setGeometry(0, 0, e->size().width(), e->size().height());
 
@@ -904,10 +919,13 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 
     context->makeCurrent(d->offscreenSurface);
 
-    if (d->fakeHidden) {
-        d->fakeHidden = false;
+    if (newFbo) {
+        d->renderControl->polishItems();
+        d->renderControl->sync();
+    } else if (d->fakeHidden) {
         d->renderControl->sync();
     }
+    d->fakeHidden = false;
 
     d->renderControl->render();
     context->functions()->glFlush();
