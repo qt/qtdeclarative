@@ -107,7 +107,9 @@ void RenderLoop::renderWindow(QQuickWindow *window)
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
 
     // ### create QPainter and set up pointer to current window/painter
-    static_cast<SoftwareContext::RenderContext*>(cd->context)->currentWindow = window;
+    SoftwareContext::RenderContext *ctx = static_cast<SoftwareContext::RenderContext*>(cd->context);
+    ctx->currentWindow = window;
+    ctx->initializeIfNeeded();
 
     bool alsoSwap = data.updatePending;
     data.updatePending = false;

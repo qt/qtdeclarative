@@ -67,24 +67,24 @@ void Renderer::renderScene(GLuint fboId)
 void Renderer::render()
 {
     QWindow *currentWindow = static_cast<RenderContext*>(m_context)->currentWindow;
-    if (!backingStore)
-        backingStore.reset(new QBackingStore(currentWindow));
+    if (!m_backingStore)
+        m_backingStore.reset(new QBackingStore(currentWindow));
 
-    if (backingStore->size() != currentWindow->size())
-        backingStore->resize(currentWindow->size());
+    if (m_backingStore->size() != currentWindow->size())
+        m_backingStore->resize(currentWindow->size());
 
     const QRect rect(0, 0, currentWindow->width(), currentWindow->height());
-    backingStore->beginPaint(rect);
+    m_backingStore->beginPaint(rect);
 
-    QPaintDevice *device = backingStore->paintDevice();
+    QPaintDevice *device = m_backingStore->paintDevice();
     QPainter painter(device);
     painter.setRenderHint(QPainter::Antialiasing);
 
     painter.fillRect(rect, clearColor());
     RenderingVisitor(&painter).visitChildren(rootNode());
 
-    backingStore->endPaint();
-    backingStore->flush(rect);
+    m_backingStore->endPaint();
+    m_backingStore->flush(rect);
 }
 
 void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
@@ -122,6 +122,7 @@ void PixmapRenderer::render(QPixmap *target)
 RenderContext::RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
     , currentWindow(0)
+    , m_initialized(false)
 {
 }
 Context::Context(QObject *parent)
@@ -157,7 +158,16 @@ QSGLayer *Context::createLayer(QSGRenderContext *renderContext)
 
 void RenderContext::initialize(QOpenGLContext *context)
 {
-    QSGRenderContext::initialize(context);
+    Q_UNUSED(context)
+    Q_UNREACHABLE();
+}
+
+void RenderContext::initializeIfNeeded()
+{
+    if (m_initialized)
+        return;
+    m_initialized = true;
+    emit initialized();
 }
 
 void RenderContext::invalidate()

@@ -15,7 +15,8 @@ SOURCES += \
     glyphnode.cpp \
     renderingvisitor.cpp \
     ninepatchnode.cpp \
-    softwarelayer.cpp
+    softwarelayer.cpp \
+    threadedrenderloop.cpp
 
 HEADERS += \
     context.h \
@@ -27,7 +28,8 @@ HEADERS += \
     glyphnode.h \
     renderingvisitor.h \
     ninepatchnode.h \
-    softwarelayer.h
+    softwarelayer.h \
+    threadedrenderloop.h
 
 OTHER_FILES += softwarecontext.json
 

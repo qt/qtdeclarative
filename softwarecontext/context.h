@@ -41,8 +41,10 @@ public:
 
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
 
+    QBackingStore *backingStore() const { return m_backingStore.data(); }
+
 private:
-    QScopedPointer<QBackingStore> backingStore;
+    QScopedPointer<QBackingStore> m_backingStore;
     QRect m_dirtyRect;
 };
 
@@ -63,6 +65,7 @@ class RenderContext : public QSGRenderContext
 public:
     RenderContext(QSGContext *ctx);
     void initialize(QOpenGLContext *context);
+    void initializeIfNeeded();
     void invalidate();
     void renderNextFrame(QSGRenderer *renderer, GLuint fbo);
     QSGTexture *createTexture(const QImage &image) const;
@@ -70,6 +73,7 @@ public:
     QSGRenderer *createRenderer();
 
     QWindow *currentWindow;
+    bool m_initialized;
 };
 
 class Context : public QSGContext
