@@ -2255,10 +2255,12 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
     cursorItem = findCursorItem(contentItem, scenePos);
 
     if (cursorItem != oldCursorItem) {
+        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(q);
+        QWindow *window = renderWindow ? renderWindow : q;
         if (cursorItem)
-            q->setCursor(cursorItem->cursor());
+            window->setCursor(cursorItem->cursor());
         else
-            q->unsetCursor();
+            window->unsetCursor();
     }
 }
 

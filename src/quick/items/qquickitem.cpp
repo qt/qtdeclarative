@@ -42,6 +42,7 @@
 #include "qquickitem.h"
 
 #include "qquickwindow.h"
+#include "qquickrendercontrol.h"
 #include <QtQml/qjsengine.h>
 #include "qquickwindow_p.h"
 
@@ -6754,9 +6755,10 @@ void QQuickItem::setCursor(const QCursor &cursor)
     if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
         d->extra.value().cursor = cursor;
         if (d->window) {
-            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(d->window);
-            if (windowPrivate->cursorItem == this)
-                d->window->setCursor(cursor);
+            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
+            QWindow *window = renderWindow ? renderWindow : d->window; // this may not be a QQuickWindow
+            if (QQuickWindowPrivate::get(d->window)->cursorItem == this)
+                window->setCursor(cursor);
         }
     }
 
@@ -6764,7 +6766,9 @@ void QQuickItem::setCursor(const QCursor &cursor)
         d->incrementCursorCount(+1);
         d->hasCursor = true;
         if (d->window) {
-            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
+            QWindow *window = renderWindow ? renderWindow : d->window;
+            QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
             if (contains(mapFromScene(pos)))
                 QQuickWindowPrivate::get(d->window)->updateCursor(pos);
         }
