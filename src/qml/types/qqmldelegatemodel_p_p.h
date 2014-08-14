@@ -143,7 +143,7 @@ public:
     QV4::ExecutionEngine *v4;
     QQmlDelegateModelItemMetaType * const metaType;
     QQmlContextData *contextData;
-    QObject *object;
+    QPointer<QObject> object;
     QPointer<QQmlDelegateModelAttached> attached;
     QQDMIncubationTask *incubationTask;
     int objectRef;
