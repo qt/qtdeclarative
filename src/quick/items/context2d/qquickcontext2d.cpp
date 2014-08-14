@@ -70,6 +70,9 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
+
 #include <QtCore/QRunnable>
 
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
@@ -2119,7 +2122,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillRect(QV4::CallContext 
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::fillRect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick::Context2D::strokeRect(real x, real y, real w, real h)
    Stroke the specified rectangle's path using the strokeStyle, lineWidth, lineJoin,
    and (if appropriate) miterLimit attributes.
 
@@ -4108,6 +4111,13 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_renderTarget = QQuickCanvasItem::Image;
     }
 #endif
+
+    // Disable threaded background rendering if the platform has issues with it
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject
+            && m_renderStrategy == QQuickCanvasItem::Threaded
+            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
+        m_renderTarget = QQuickCanvasItem::Image;
+    }
 
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
