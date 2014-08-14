@@ -47,7 +47,6 @@
 #include <QtQml/private/qqmljsmemorypool_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
-#include <QtQml/private/qqmlscript_p.h>
 
 #include <QFile>
 #include <QDebug>
@@ -64,9 +63,6 @@ private slots:
 
     void jsparser_data();
     void jsparser();
-
-    void scriptparser_data();
-    void scriptparser();
 
 private:
     QQmlEngine engine;
@@ -127,33 +123,6 @@ void tst_compilation::jsparser()
         QQmlJS::Parser parser(&engine);
         parser.parse();
         parser.ast();
-    }
-}
-
-void tst_compilation::scriptparser_data()
-{
-    QTest::addColumn<QString>("file");
-
-    QTest::newRow("boomblock") << QString(SRCDIR + QLatin1String("/data/BoomBlock.qml"));
-}
-
-void tst_compilation::scriptparser()
-{
-    QFETCH(QString, file);
-
-    QFile f(file);
-    QVERIFY(f.open(QIODevice::ReadOnly));
-    QByteArray data = f.readAll();
-
-    //TODO(pvarga): check preparseData
-    QByteArray preparseData;
-    QUrl url = QUrl::fromLocalFile(file);
-    QString urlString = url.toString();
-
-    QBENCHMARK {
-        QQmlScript::Parser parser;
-        parser.parse(data, preparseData, url, urlString);
-        parser.tree();
     }
 }
 

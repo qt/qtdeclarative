@@ -2389,10 +2389,9 @@ void tst_qquicktextedit::positionAt()
         break;
     }
 
-    qreal xoff;
+    qreal xoff = 0;
     switch (horizontalAlignment) {
     case QQuickTextEdit::AlignLeft:
-        xoff = 0;
         break;
     case QQuickTextEdit::AlignHCenter:
         xoff = (texteditObject->width() - secondLine.naturalTextWidth()) / 2;
@@ -2400,7 +2399,7 @@ void tst_qquicktextedit::positionAt()
     case QQuickTextEdit::AlignRight:
         xoff = texteditObject->width() - secondLine.naturalTextWidth();
         break;
-    case QQuickTextEdit::AlignJustify:
+    default:
         break;
     }
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
