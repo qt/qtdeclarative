@@ -187,9 +187,11 @@ private:
                         _as->convertInt32ToDouble(_as->loadAddress(Assembler::ReturnValueRegister, sourceTemp),
                                                   (Assembler::FPRegisterID) targetTemp->index);
                     }
+                } else {
+                    _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                              (Assembler::FPRegisterID) targetTemp->index);
                 }
-                _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                          (Assembler::FPRegisterID) targetTemp->index);
+
                 return;
             }
         }
