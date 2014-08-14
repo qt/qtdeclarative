@@ -950,6 +950,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     // because QQuickWindow thinks of itself as a top-level window always.
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
+    e->setAccepted(mappedEvent.isAccepted());
 }
 
 /*! \reimp */
@@ -963,6 +964,7 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
     QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->screenPos(), e->button(),
                            e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &pressEvent);
+    e->setAccepted(pressEvent.isAccepted());
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(),
                             e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
@@ -992,6 +994,7 @@ void QQuickWidget::mousePressEvent(QMouseEvent *e)
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
+    e->setAccepted(mappedEvent.isAccepted());
 }
 
 /*! \reimp */
@@ -1002,6 +1005,7 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
+    e->setAccepted(mappedEvent.isAccepted());
 }
 
 #ifndef QT_NO_WHEELEVENT
