@@ -192,6 +192,8 @@ public Q_SLOTS:
 
             if (msDisplayFbo)
                 QOpenGLFramebufferObject::blitFramebuffer(msDisplayFbo, fbo);
+
+            markDirty(QSGNode::DirtyMaterial);
         }
     }
 
