@@ -141,8 +141,10 @@ QSGImageNode *Context::createImageNode()
     return new ImageNode();
 }
 
-QSGGlyphNode *Context::createGlyphNode(QSGRenderContext */*rc*/, bool /*preferNativeGlyphNode*/)
+QSGGlyphNode *Context::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
 {
+    Q_UNUSED(rc);
+    Q_UNUSED(preferNativeGlyphNode);
     return new GlyphNode();
 }
 
