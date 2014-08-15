@@ -280,6 +280,7 @@ void QQmlContext::setContextObject(QObject *object)
     }
 
     data->contextObject = object;
+    data->refreshExpressions();
 }
 
 /*!

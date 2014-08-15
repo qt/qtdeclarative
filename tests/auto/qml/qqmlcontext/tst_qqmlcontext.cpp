@@ -401,6 +401,18 @@ void tst_qqmlcontext::setContextObject()
 
         delete obj;
     }
+
+    // Change of context object
+    ctxt.setContextProperty("c", QVariant(30));
+    TestObject to2;
+    to2.setA(10);
+    to2.setB(20);
+    to2.setC(40);
+    ctxt.setContextObject(&to2);
+
+    TEST_CONTEXT_PROPERTY(&ctxt, a, QVariant(10));
+    TEST_CONTEXT_PROPERTY(&ctxt, b, QVariant(20));
+    TEST_CONTEXT_PROPERTY(&ctxt, c, QVariant(30));
 }
 
 void tst_qqmlcontext::destruction()
