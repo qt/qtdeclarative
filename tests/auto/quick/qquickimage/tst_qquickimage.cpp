@@ -56,6 +56,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QImageReader>
 #include <QQuickWindow>
+#include <QQuickView>
 #include <QQuickImageProvider>
 
 #include "../../shared/util.h"
@@ -106,6 +107,7 @@ private slots:
     void sourceSizeChanges();
     void correctStatus();
     void highdpi();
+    void hugeImages();
 
 private:
     QQmlEngine engine;
@@ -967,6 +969,21 @@ void tst_qquickimage::highdpi()
     QCOMPARE(obj->paintedHeight(), 300.0);
 
     delete obj;
+}
+
+void tst_qquickimage::hugeImages()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("hugeImages.qml"));
+    view.setGeometry(0, 0, 200, 200);
+    view.create();
+
+    QImage contents = view.grabWindow();
+
+    QCOMPARE(contents.pixel(0, 0), qRgba(255, 0, 0, 255));
+    QCOMPARE(contents.pixel(99, 99), qRgba(255, 0, 0, 255));
+    QCOMPARE(contents.pixel(100, 0), qRgba(0, 0, 255, 255));
+    QCOMPARE(contents.pixel(199, 99), qRgba(0, 0, 255, 255));
 }
 
 QTEST_MAIN(tst_qquickimage)

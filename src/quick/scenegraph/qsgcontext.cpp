@@ -253,6 +253,7 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
         QSet<QByteArray> exts = renderContext->openglContext()->extensions();
         QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
         qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
+        qCDebug(QSG_LOG_INFO) << "Max Texture Size: " << renderContext->maxTextureSize();
     }
 
     d->mutex.unlock();
@@ -392,6 +393,7 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
     , m_atlasManager(0)
     , m_depthStencilManager(0)
     , m_distanceFieldCacheManager(0)
+    , m_maxTextureSize(0)
     , m_brokenIBOs(false)
     , m_serializedRender(false)
     , m_attachToGLContext(true)
@@ -493,6 +495,9 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
  */
 void QSGRenderContext::initialize(QOpenGLContext *context)
 {
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
+
     // Sanity check the surface format, in case it was overridden by the application
     QSurfaceFormat requested = m_sg->defaultSurfaceFormat();
     QSurfaceFormat actual = context->format();
@@ -513,7 +518,6 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
     m_sg->renderContextInitialized(this);
 
 #ifdef Q_OS_LINUX
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
     if (strstr(vendor, "nouveau"))
         m_brokenIBOs = true;

@@ -126,6 +126,7 @@ public:
     static QSGRenderContext *from(QOpenGLContext *context);
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
+    int maxTextureSize() const { return m_maxTextureSize; }
 
 Q_SIGNALS:
     void initialized();
@@ -147,7 +148,7 @@ protected:
     QSGDistanceFieldGlyphCacheManager *m_distanceFieldCacheManager;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
-
+    int m_maxTextureSize;
     bool m_brokenIBOs;
     bool m_serializedRender;
     bool m_attachToGLContext;
