@@ -192,6 +192,8 @@ public slots:
             m_texture = m_window->createTextureFromId(newId, size);
             setTexture(m_texture);
 
+            markDirty(DirtyMaterial);
+
             // This will notify the rendering thread that the texture is now being rendered
             // and it can start rendering to the other one.
             emit textureInUse();
