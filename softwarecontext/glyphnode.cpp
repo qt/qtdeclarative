@@ -64,6 +64,7 @@ void GlyphNode::update()
 
 void GlyphNode::paint(QPainter *painter)
 {
+    painter->setBrush(QBrush());
     QPointF pos = m_position - QPointF(0, m_glyphRun.rawFont().ascent());
 
     switch (m_style) {
