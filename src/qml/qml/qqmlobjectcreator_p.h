@@ -50,6 +50,8 @@
 #include <private/qrecursionwatcher_p.h>
 #include <private/qqmlprofiler_p.h>
 
+#include <qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
@@ -63,7 +65,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
     QQmlContextData *creationContext;
     QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
-    QFiniteStack<QObject*> allCreatedObjects;
+    QFiniteStack<QPointer<QObject> > allCreatedObjects;
     QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
@@ -89,8 +91,8 @@ public:
 
     QList<QQmlError> errors;
 
-    QQmlContextData *parentContextData() const { return parentContext; }
-    QFiniteStack<QObject*> &allCreatedObjects() const { return sharedState->allCreatedObjects; }
+    QQmlContextData *parentContextData() { return parentContext.contextData(); }
+    QFiniteStack<QPointer<QObject> > &allCreatedObjects() const { return sharedState->allCreatedObjects; }
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState);
@@ -123,7 +125,7 @@ private:
     QQmlEngine *engine;
     QQmlCompiledData *compiledData;
     const QV4::CompiledData::QmlUnit *qmlUnit;
-    QQmlContextData *parentContext;
+    QQmlGuardedContextData parentContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QVector<QQmlPropertyCache *> &propertyCaches;
