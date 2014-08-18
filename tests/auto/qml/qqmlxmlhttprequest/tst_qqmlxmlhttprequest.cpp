@@ -73,6 +73,8 @@ private slots:
     void send_ignoreData();
     void send_withdata();
     void send_withdata_data();
+    void send_options();
+    void send_options_data();
     void abort();
     void abort_unsent();
     void abort_opened();
@@ -550,6 +552,47 @@ void tst_qqmlxmlhttprequest::send_withdata_data()
     QTest::newRow("Incorrect content-type - out of order") << "send_data.4.expect" << "send_data.5.qml";
     QTest::newRow("PUT") << "send_data.6.expect" << "send_data.6.qml";
     QTest::newRow("Correct content-type - no charset") << "send_data.1.expect" << "send_data.7.qml";
+}
+
+void tst_qqmlxmlhttprequest::send_options()
+{
+    QFETCH(QString, url_suffix);
+    QFETCH(QString, file_expected);
+    QFETCH(QString, file_qml);
+    QFETCH(QString, file_reply);
+
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl(file_expected),
+                        testFileUrl(file_reply),
+                        testFileUrl("testdocument.html")));
+
+    QQmlComponent component(&engine, testFileUrl(file_qml));
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(!object.isNull());
+    QString url = "http://127.0.0.1:14445";
+    if (url_suffix != "/")
+        url.append("/");
+    if (!url_suffix.isEmpty())
+        url.append(url_suffix);
+    object->setProperty("url", url);
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("dataOK").toBool());
+    QTRY_VERIFY(object->property("headerOK").toBool());
+}
+
+void tst_qqmlxmlhttprequest::send_options_data()
+{
+    QTest::addColumn<QString>("url_suffix");
+    QTest::addColumn<QString>("file_expected");
+    QTest::addColumn<QString>("file_qml");
+    QTest::addColumn<QString>("file_reply");
+
+    QTest::newRow("OPTIONS (no data, no resource, no path)") << "" << "send_data.8.expect" << "send_data.8.qml" << "send_data.2.reply";
+    QTest::newRow("OPTIONS (no data, no resource, path- \"/\")") << "/" << "send_data.8.expect" << "send_data.8.qml" << "send_data.2.reply";
+    QTest::newRow("OPTIONS (no data, with resource)") << "testdocument.html" << "send_data.9.expect" << "send_data.8.qml" << "send_data.2.reply";
+    QTest::newRow("OPTIONS (with data)") << "testdocument.html" << "send_data.10.expect" << "send_data.9.qml" << "send_data.2.reply";
 }
 
 // Test abort() has no effect in unsent state

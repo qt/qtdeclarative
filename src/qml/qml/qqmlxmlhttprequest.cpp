@@ -55,6 +55,7 @@
 #include <QtCore/qxmlstream.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qbuffer.h>
 
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
@@ -1255,16 +1256,23 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         }
     }
 
-    if (m_method == QLatin1String("GET"))
+    if (m_method == QLatin1String("GET")) {
         m_network = networkAccessManager()->get(request);
-    else if (m_method == QLatin1String("HEAD"))
+    } else if (m_method == QLatin1String("HEAD")) {
         m_network = networkAccessManager()->head(request);
-    else if (m_method == QLatin1String("POST"))
+    } else if (m_method == QLatin1String("POST")) {
         m_network = networkAccessManager()->post(request, m_data);
-    else if (m_method == QLatin1String("PUT"))
+    } else if (m_method == QLatin1String("PUT")) {
         m_network = networkAccessManager()->put(request, m_data);
-    else if (m_method == QLatin1String("DELETE"))
+    } else if (m_method == QLatin1String("DELETE")) {
         m_network = networkAccessManager()->deleteResource(request);
+    } else if (m_method == QLatin1String("OPTIONS")) {
+        QBuffer *buffer = new QBuffer;
+        buffer->setData(m_data);
+        buffer->open(QIODevice::ReadOnly);
+        m_network = networkAccessManager()->sendCustomRequest(request, QByteArrayLiteral("OPTIONS"), buffer);
+        buffer->setParent(m_network);
+    }
 
     QObject::connect(m_network, SIGNAL(readyRead()),
                      this, SLOT(readyRead()));
@@ -1730,7 +1738,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
         method != QLatin1String("POST") &&
-        method != QLatin1String("DELETE"))
+        method != QLatin1String("DELETE") &&
+        method != QLatin1String("OPTIONS"))
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
