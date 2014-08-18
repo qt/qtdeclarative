@@ -380,6 +380,7 @@ static Qt::TileRule getTileRule(qreal factor)
 
 void ImageNode::paint(QPainter *painter)
 {
+    QPainter::RenderHints originalHints = painter->renderHints();
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
     const QPixmap &pm = pixmap();
@@ -395,7 +396,8 @@ void ImageNode::paint(QPainter *painter)
     }
 
     if (m_tileHorizontal || m_tileVertical) {
-        painter->save();
+        QMatrix originalMatrix = painter->matrix();
+
         qreal sx = m_targetRect.width()/(m_subSourceRect.width()*pm.width());
         qreal sy = m_targetRect.height()/(m_subSourceRect.height()*pm.height());
         QMatrix transform(sx, 0, 0, sy, 0, 0);
@@ -403,12 +405,15 @@ void ImageNode::paint(QPainter *painter)
         painter->drawTiledPixmap(QRectF(m_targetRect.x()/sx, m_targetRect.y()/sy, m_targetRect.width()/sx, m_targetRect.height()/sy),
                                  pm,
                                  QPointF(m_subSourceRect.left()*pm.width(), m_subSourceRect.top()*pm.height()));
-        painter->restore();
+
+        painter->setMatrix(originalMatrix);
     } else {
         QRectF sr(m_subSourceRect.left()*pm.width(), m_subSourceRect.top()*pm.height(),
                   m_subSourceRect.width()*pm.width(), m_subSourceRect.height()*pm.height());
         painter->drawPixmap(m_targetRect, pm, sr);
     }
+
+    painter->setRenderHints(originalHints);
 }
 
 const QPixmap &ImageNode::pixmap() const

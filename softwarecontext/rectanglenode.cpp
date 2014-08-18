@@ -82,6 +82,9 @@ void RectangleNode::update()
 
 void RectangleNode::paint(QPainter *painter)
 {
+    QPen originalPen = painter->pen();
+    QBrush originalBrush = painter->brush();
+
     painter->setPen(m_pen);
     painter->setBrush(m_brush);
     if (m_radius)
@@ -90,4 +93,7 @@ void RectangleNode::paint(QPainter *painter)
         painter->fillRect(m_rect, m_color);
     else
         painter->drawRect(m_rect);
+
+    painter->setPen(originalPen);
+    painter->setBrush(originalBrush);
 }
