@@ -65,6 +65,7 @@ protected:
     virtual const char *fragmentShader() const;
 
     const QQuickShaderEffectMaterialKey m_key;
+    QVector<QByteArray> m_attributes;
     QVector<const char *> m_attributeNames;
     QString m_log;
     bool m_compiled;
@@ -75,11 +76,12 @@ protected:
 
 QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
     : m_key(key)
+    , m_attributes(attributes)
     , m_compiled(false)
     , m_initialized(false)
 {
-    for (int i = 0; i < attributes.count(); ++i)
-        m_attributeNames.append(attributes.at(i).constData());
+    for (int i = 0; i < m_attributes.count(); ++i)
+        m_attributeNames.append(m_attributes.at(i).constData());
     m_attributeNames.append(0);
 }
 
