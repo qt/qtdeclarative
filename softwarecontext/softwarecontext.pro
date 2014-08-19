@@ -16,7 +16,8 @@ SOURCES += \
     renderingvisitor.cpp \
     ninepatchnode.cpp \
     softwarelayer.cpp \
-    threadedrenderloop.cpp
+    threadedrenderloop.cpp \
+    painternode.cpp
 
 HEADERS += \
     context.h \
@@ -29,7 +30,8 @@ HEADERS += \
     renderingvisitor.h \
     ninepatchnode.h \
     softwarelayer.h \
-    threadedrenderloop.h
+    threadedrenderloop.h \
+    painternode.h
 
 OTHER_FILES += softwarecontext.json
 

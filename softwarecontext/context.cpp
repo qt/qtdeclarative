@@ -22,6 +22,7 @@
 
 #include "rectanglenode.h"
 #include "imagenode.h"
+#include "painternode.h"
 #include "pixmaptexture.h"
 #include "glyphnode.h"
 #include "ninepatchnode.h"
@@ -139,6 +140,11 @@ QSGRectangleNode *Context::createRectangleNode()
 QSGImageNode *Context::createImageNode()
 {
     return new ImageNode();
+}
+
+QSGPainterNode *Context::createPainterNode(QQuickPaintedItem *item)
+{
+    return new PainterNode(item);
 }
 
 QSGGlyphNode *Context::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)

@@ -86,6 +86,7 @@ public:
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
+    virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item);
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QSGNinePatchNode *createNinePatchNode();
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext);

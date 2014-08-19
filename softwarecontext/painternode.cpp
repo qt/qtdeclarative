@@ -1,0 +1,178 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 Digia Plc
+** All rights reserved.
+** For any questions to Digia, please use contact form at http://qt.digia.com
+**
+** This file is part of the Qt SceneGraph Raster Add-on.
+**
+** $QT_BEGIN_LICENSE$
+** Licensees holding valid Qt Commercial licenses may use this file in
+** accordance with the Qt Commercial License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.
+**
+** If you have questions regarding the use of this file, please use
+** contact form at http://qt.digia.com
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+#include "painternode.h"
+#include <qmath.h>
+
+PainterNode::PainterNode(QQuickPaintedItem *item)
+    : QSGPainterNode()
+    , m_preferredRenderTarget(QQuickPaintedItem::Image)
+    , m_actualRenderTarget(QQuickPaintedItem::Image)
+    , m_item(item)
+    , m_dirtyContents(false)
+    , m_opaquePainting(false)
+    , m_linear_filtering(false)
+    , m_mipmapping(false)
+    , m_smoothPainting(false)
+    , m_extensionsChecked(false)
+    , m_multisamplingSupported(false)
+    , m_fastFBOResizing(false)
+    , m_fillColor(Qt::transparent)
+    , m_contentsScale(1.0)
+    , m_dirtyGeometry(false)
+{
+    setMaterial((QSGMaterial*)1);
+    setGeometry((QSGGeometry*)1);
+}
+
+void PainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
+{
+    if (m_preferredRenderTarget == target)
+        return;
+
+    m_preferredRenderTarget = target;
+}
+
+void PainterNode::setSize(const QSize &size)
+{
+    if (size == m_size)
+        return;
+
+    m_size = size;
+
+    m_dirtyGeometry = true;
+}
+
+void PainterNode::setDirty(const QRect &dirtyRect)
+{
+    m_dirtyContents = true;
+    m_dirtyRect = dirtyRect;
+    markDirty(DirtyMaterial);
+}
+
+void PainterNode::setOpaquePainting(bool opaque)
+{
+    if (opaque == m_opaquePainting)
+        return;
+
+    m_opaquePainting = opaque;
+}
+
+void PainterNode::setLinearFiltering(bool linearFiltering)
+{
+    if (linearFiltering == m_linear_filtering)
+        return;
+
+    m_linear_filtering = linearFiltering;
+}
+
+void PainterNode::setMipmapping(bool mipmapping)
+{
+    if (mipmapping == m_mipmapping)
+        return;
+
+    m_mipmapping = mipmapping;
+}
+
+void PainterNode::setSmoothPainting(bool s)
+{
+    if (s == m_smoothPainting)
+        return;
+
+    m_smoothPainting = s;
+}
+
+void PainterNode::setFillColor(const QColor &c)
+{
+    if (c == m_fillColor)
+        return;
+
+    m_fillColor = c;
+    markDirty(DirtyMaterial);
+}
+
+void PainterNode::setContentsScale(qreal s)
+{
+    if (s == m_contentsScale)
+        return;
+
+    m_contentsScale = s;
+    markDirty(DirtyMaterial);
+}
+
+void PainterNode::setFastFBOResizing(bool dynamic)
+{
+    m_fastFBOResizing = dynamic;
+}
+
+QImage PainterNode::toImage() const
+{
+    return m_pixmap.toImage();
+}
+
+void PainterNode::update()
+{
+    if (m_dirtyGeometry) {
+        m_pixmap = QPixmap(m_size);
+        if (!m_opaquePainting)
+            m_pixmap.fill(Qt::transparent);
+    }
+
+    if (m_dirtyContents)
+        paint();
+
+    m_dirtyGeometry = false;
+    m_dirtyContents = false;
+}
+
+void PainterNode::paint(QPainter *painter)
+{
+    painter->drawPixmap(0, 0, m_size.width(), m_size.height(), m_pixmap);
+}
+
+void PainterNode::paint()
+{
+    QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
+
+    QPainter painter;
+
+    painter.begin(&m_pixmap);
+    if (m_smoothPainting) {
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+    }
+
+    painter.scale(m_contentsScale, m_contentsScale);
+
+    QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
+                qFloor(dirtyRect.y()/m_contentsScale),
+                qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
+                qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+
+    if (!m_dirtyRect.isNull())
+        painter.setClipRect(sclip);
+
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(sclip, m_fillColor);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+    m_item->paint(&painter);
+    painter.end();
+
+    m_dirtyRect = QRect();
+}

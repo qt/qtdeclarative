@@ -37,6 +37,8 @@ public:
     virtual void endVisit(QSGOpacityNode *node);
     virtual bool visit(QSGImageNode *node);
     virtual void endVisit(QSGImageNode *node);
+    virtual bool visit(QSGPainterNode *node);
+    virtual void endVisit(QSGPainterNode *node);
     virtual bool visit(QSGRectangleNode *node);
     virtual void endVisit(QSGRectangleNode *node);
     virtual bool visit(QSGGlyphNode *node);

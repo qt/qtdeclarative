@@ -23,6 +23,7 @@
 #include "rectanglenode.h"
 #include "glyphnode.h"
 #include "ninepatchnode.h"
+#include "painternode.h"
 
 RenderingVisitor::RenderingVisitor(QPainter *painter)
     : painter(painter)
@@ -90,6 +91,17 @@ bool RenderingVisitor::visit(QSGImageNode *node)
 
 void RenderingVisitor::endVisit(QSGImageNode *)
 {
+}
+
+bool RenderingVisitor::visit(QSGPainterNode *node)
+{
+    static_cast<PainterNode*>(node)->paint(painter);
+    return true;
+}
+
+void RenderingVisitor::endVisit(QSGPainterNode *node)
+{
+
 }
 
 bool RenderingVisitor::visit(QSGRectangleNode *node)
