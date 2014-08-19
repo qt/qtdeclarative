@@ -45,7 +45,7 @@ HEADERS += \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider.h \
-    $$PWD/util/qsgpainternode_p.h \
+    $$PWD/util/qsgdefaultpainternode_p.h \
     $$PWD/util/qsgdistancefieldutil_p.h \
     $$PWD/util/qsgshadersourcebuilder_p.h
 
@@ -61,7 +61,7 @@ SOURCES += \
     $$PWD/util/qsgvertexcolormaterial.cpp \
     $$PWD/util/qsgtexture.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
-    $$PWD/util/qsgpainternode.cpp \
+    $$PWD/util/qsgdefaultpainternode.cpp \
     $$PWD/util/qsgdistancefieldutil.cpp \
     $$PWD/util/qsgsimplematerial.cpp \
     $$PWD/util/qsgshadersourcebuilder.cpp

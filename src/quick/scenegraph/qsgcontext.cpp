@@ -37,6 +37,7 @@
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultrectanglenode_p.h>
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
@@ -288,6 +289,14 @@ QSGImageNode *QSGContext::createImageNode()
     return d->antialiasingMethod == MsaaAntialiasing
             ? new QSGMultisampleAntialiasing::ImageNode
             : new QSGDefaultImageNode;
+}
+
+/*!
+    Factory function for scene graph backends of Painter elements
+ */
+QSGPainterNode *QSGContext::createPainterNode(QQuickPaintedItem *item)
+{
+    return new QSGDefaultPainterNode(item);
 }
 
 /*!

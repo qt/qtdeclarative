@@ -63,7 +63,7 @@
 #include <QtQuick/private/qsggeometry_p.h>
 #include <QtQuick/private/qsgnode_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>
-#include <QtQuick/private/qsgpainternode_p.h>
+#include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QtQuick/private/qsgrendernode_p.h>

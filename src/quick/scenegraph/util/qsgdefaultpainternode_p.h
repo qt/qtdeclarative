@@ -31,10 +31,10 @@
 **
 ****************************************************************************/
 
-#ifndef QSGPAINTERNODE_P_H
-#define QSGPAINTERNODE_P_H
+#ifndef QSGDEFAULTPAINTERNODE_P_H
+#define QSGDEFAULTPAINTERNODE_P_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
 #include "qsgtexturematerial.h"
 #include "qsgtexture_p.h"
 
@@ -60,11 +60,11 @@ private:
     QRect m_dirty_rect;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGPainterNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultPainterNode : public QSGPainterNode
 {
 public:
-    QSGPainterNode(QQuickPaintedItem *item);
-    virtual ~QSGPainterNode();
+    QSGDefaultPainterNode(QQuickPaintedItem *item);
+    virtual ~QSGDefaultPainterNode();
 
     void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target);
 
@@ -145,4 +145,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QSGPAINTERNODE_P_H
+#endif // QSGDEFAULTPAINTERNODE_P_H

@@ -55,6 +55,7 @@ namespace QSGAtlasTexture {
 class QSGContextPrivate;
 class QSGRectangleNode;
 class QSGImageNode;
+class QSGPainterNode;
 class QSGGlyphNode;
 class QSGNinePatchNode;
 class QSGRenderer;
@@ -72,6 +73,7 @@ class QOpenGLFramebufferObject;
 class QQuickTextureFactory;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGContext;
+class QQuickPaintedItem;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -169,6 +171,7 @@ public:
     QSGRectangleNode *createRectangleNode(const QRectF &rect, const QColor &c);
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
+    virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item);
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QSGNinePatchNode *createNinePatchNode();
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext);

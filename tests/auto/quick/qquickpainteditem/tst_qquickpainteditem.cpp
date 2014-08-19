@@ -37,7 +37,7 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qquickitem_p.h>
-#include <private/qsgpainternode_p.h>
+#include <private/qsgdefaultpainternode_p.h>
 
 class tst_QQuickPaintedItem: public QObject
 {
@@ -78,11 +78,11 @@ public:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     {
-        paintNode = static_cast<QSGPainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));
+        paintNode = static_cast<QSGDefaultPainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));
         return paintNode;
     }
 
-    QSGPainterNode *paintNode;
+    QSGDefaultPainterNode *paintNode;
     int paintRequests;
     QRectF clipRect;
 };

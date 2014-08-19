@@ -34,7 +34,7 @@
 #include "qquickpainteditem.h"
 #include <private/qquickpainteditem_p.h>
 
-#include <QtQuick/private/qsgpainternode_p.h>
+#include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
@@ -523,7 +523,7 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     QSGPainterNode *node = static_cast<QSGPainterNode *>(oldNode);
     if (!node) {
-        node = new QSGPainterNode(this);
+        node = d->sceneGraphContext()->createPainterNode(this);
         d->node = node;
     }
 

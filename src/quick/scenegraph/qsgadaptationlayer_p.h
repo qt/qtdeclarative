@@ -60,6 +60,7 @@ class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 class QOpenGLContext;
 class QSGImageNode;
+class QSGPainterNode;
 class QSGRectangleNode;
 class QSGGlyphNode;
 class QSGNinePatchNode;
@@ -81,6 +82,8 @@ public:
     virtual void endVisit(QSGOpacityNode *) = 0;
     virtual bool visit(QSGImageNode *) = 0;
     virtual void endVisit(QSGImageNode *) = 0;
+    virtual bool visit(QSGPainterNode *) = 0;
+    virtual void endVisit(QSGPainterNode *) = 0;
     virtual bool visit(QSGRectangleNode *) = 0;
     virtual void endVisit(QSGRectangleNode *) = 0;
     virtual bool visit(QSGGlyphNode *) = 0;
@@ -139,6 +142,28 @@ public:
     virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) = 0;
 
     virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGPainterNode : public QSGVisitableNode
+{
+public:
+
+    virtual void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target) = 0;
+    virtual void setSize(const QSize &size) = 0;
+    virtual void setDirty(const QRect &dirtyRect = QRect()) = 0;
+    virtual void setOpaquePainting(bool opaque) = 0;
+    virtual void setLinearFiltering(bool linearFiltering) = 0;
+    virtual void setMipmapping(bool mipmapping) = 0;
+    virtual void setSmoothPainting(bool s) = 0;
+    virtual void setFillColor(const QColor &c) = 0;
+    virtual void setContentsScale(qreal s) = 0;
+    virtual void setFastFBOResizing(bool dynamic) = 0;
+
+    virtual QImage toImage() const = 0;
+    virtual void update() = 0;
+    virtual QSGTexture *texture() const = 0;
 
     virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };

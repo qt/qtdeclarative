@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-#include "qsgpainternode_p.h"
+#include "qsgdefaultpainternode_p.h"
 
 #include <QtQuick/private/qquickpainteditem_p.h>
 
@@ -66,8 +66,8 @@ void QSGPainterTexture::bind()
     m_dirty_rect = QRect();
 }
 
-QSGPainterNode::QSGPainterNode(QQuickPaintedItem *item)
-    : QSGGeometryNode()
+QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
+    : QSGPainterNode()
     , m_preferredRenderTarget(QQuickPaintedItem::Image)
     , m_actualRenderTarget(QQuickPaintedItem::Image)
     , m_item(item)
@@ -101,7 +101,7 @@ QSGPainterNode::QSGPainterNode(QQuickPaintedItem *item)
 #endif
 }
 
-QSGPainterNode::~QSGPainterNode()
+QSGDefaultPainterNode::~QSGDefaultPainterNode()
 {
     delete m_texture;
     delete m_fbo;
@@ -109,7 +109,7 @@ QSGPainterNode::~QSGPainterNode()
     delete m_gl_device;
 }
 
-void QSGPainterNode::paint()
+void QSGDefaultPainterNode::paint()
 {
     QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
 
@@ -168,7 +168,7 @@ void QSGPainterNode::paint()
     m_dirtyRect = QRect();
 }
 
-void QSGPainterNode::update()
+void QSGDefaultPainterNode::update()
 {
     if (m_dirtyRenderTarget)
         updateRenderTarget();
@@ -186,7 +186,7 @@ void QSGPainterNode::update()
     m_dirtyContents = false;
 }
 
-void QSGPainterNode::updateTexture()
+void QSGDefaultPainterNode::updateTexture()
 {
     m_texture->setHasAlphaChannel(!m_opaquePainting);
     m_material.setTexture(m_texture);
@@ -195,7 +195,7 @@ void QSGPainterNode::updateTexture()
     markDirty(DirtyMaterial);
 }
 
-void QSGPainterNode::updateGeometry()
+void QSGDefaultPainterNode::updateGeometry()
 {
     QRectF source;
     if (m_actualRenderTarget == QQuickPaintedItem::Image)
@@ -211,7 +211,7 @@ void QSGPainterNode::updateGeometry()
     markDirty(DirtyGeometry);
 }
 
-void QSGPainterNode::updateRenderTarget()
+void QSGDefaultPainterNode::updateRenderTarget()
 {
     if (!m_extensionsChecked) {
         const QSet<QByteArray> extensions = m_context->openglContext()->extensions();
@@ -297,7 +297,7 @@ void QSGPainterNode::updateRenderTarget()
     m_texture = texture;
 }
 
-void QSGPainterNode::updateFBOSize()
+void QSGDefaultPainterNode::updateFBOSize()
 {
     int fboWidth;
     int fboHeight;
@@ -313,7 +313,7 @@ void QSGPainterNode::updateFBOSize()
     m_fboSize = QSize(fboWidth, fboHeight);
 }
 
-void QSGPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
+void QSGDefaultPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
 {
     if (m_preferredRenderTarget == target)
         return;
@@ -325,7 +325,7 @@ void QSGPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget ta
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setSize(const QSize &size)
+void QSGDefaultPainterNode::setSize(const QSize &size)
 {
     if (size == m_size)
         return;
@@ -341,7 +341,7 @@ void QSGPainterNode::setSize(const QSize &size)
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setDirty(const QRect &dirtyRect)
+void QSGDefaultPainterNode::setDirty(const QRect &dirtyRect)
 {
     m_dirtyContents = true;
     m_dirtyRect = dirtyRect;
@@ -352,7 +352,7 @@ void QSGPainterNode::setDirty(const QRect &dirtyRect)
     markDirty(DirtyMaterial);
 }
 
-void QSGPainterNode::setOpaquePainting(bool opaque)
+void QSGDefaultPainterNode::setOpaquePainting(bool opaque)
 {
     if (opaque == m_opaquePainting)
         return;
@@ -361,7 +361,7 @@ void QSGPainterNode::setOpaquePainting(bool opaque)
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setLinearFiltering(bool linearFiltering)
+void QSGDefaultPainterNode::setLinearFiltering(bool linearFiltering)
 {
     if (linearFiltering == m_linear_filtering)
         return;
@@ -373,7 +373,7 @@ void QSGPainterNode::setLinearFiltering(bool linearFiltering)
     markDirty(DirtyMaterial);
 }
 
-void QSGPainterNode::setMipmapping(bool mipmapping)
+void QSGDefaultPainterNode::setMipmapping(bool mipmapping)
 {
     if (mipmapping == m_mipmapping)
         return;
@@ -384,7 +384,7 @@ void QSGPainterNode::setMipmapping(bool mipmapping)
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setSmoothPainting(bool s)
+void QSGDefaultPainterNode::setSmoothPainting(bool s)
 {
     if (s == m_smoothPainting)
         return;
@@ -393,7 +393,7 @@ void QSGPainterNode::setSmoothPainting(bool s)
     m_dirtyRenderTarget = true;
 }
 
-void QSGPainterNode::setFillColor(const QColor &c)
+void QSGDefaultPainterNode::setFillColor(const QColor &c)
 {
     if (c == m_fillColor)
         return;
@@ -402,7 +402,7 @@ void QSGPainterNode::setFillColor(const QColor &c)
     markDirty(DirtyMaterial);
 }
 
-void QSGPainterNode::setContentsScale(qreal s)
+void QSGDefaultPainterNode::setContentsScale(qreal s)
 {
     if (s == m_contentsScale)
         return;
@@ -411,12 +411,12 @@ void QSGPainterNode::setContentsScale(qreal s)
     markDirty(DirtyMaterial);
 }
 
-void QSGPainterNode::setFastFBOResizing(bool dynamic)
+void QSGDefaultPainterNode::setFastFBOResizing(bool dynamic)
 {
     m_fastFBOResizing = dynamic;
 }
 
-QImage QSGPainterNode::toImage() const
+QImage QSGDefaultPainterNode::toImage() const
 {
     if (m_actualRenderTarget == QQuickPaintedItem::Image)
         return m_image;
