@@ -682,6 +682,11 @@ void QQuickWidget::createFramebufferObject()
 {
     Q_D(QQuickWidget);
 
+    // Could come from Show -> createContext -> sceneGraphInitialized in which case the size may
+    // still be invalid on some platforms. Bail out. A resize will come later on.
+    if (size().isEmpty())
+        return;
+
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
