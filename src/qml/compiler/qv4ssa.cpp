@@ -2212,10 +2212,14 @@ class TypeInference: public StmtVisitor, public ExprVisitor
         DiscoveredType type;
         bool fullyTyped;
 
-        TypingResult(const DiscoveredType &type = DiscoveredType())
-            : type(type)
-            , fullyTyped(type.type != UnknownType)
-        {}
+        TypingResult(const DiscoveredType &type = DiscoveredType()) {
+#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 6
+            // avoid optimization bug in gcc 4.6.3 armhf
+            ((int volatile &) this->type.type) = type.type;
+#endif
+            this->type = type;
+            fullyTyped = type.type != UnknownType;
+        }
         explicit TypingResult(MemberExpressionResolver memberResolver)
             : type(memberResolver)
             , fullyTyped(true)
