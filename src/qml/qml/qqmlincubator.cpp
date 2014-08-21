@@ -384,7 +384,7 @@ finishIncubate:
                 enginePriv->erroredBindings->removeError();
             }
         }
-    } else {
+    } else if (!creator.isNull()) {
         vmeGuard.guard(creator.data());
     }
 }
