@@ -113,6 +113,8 @@ private:
     QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
+    void registerObjectWithContextById(int objectIndex, QObject *instance) const;
+
     enum Phase {
         Startup,
         CreatingObjects,

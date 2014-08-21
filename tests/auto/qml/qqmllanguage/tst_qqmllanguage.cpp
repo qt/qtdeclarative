@@ -240,6 +240,8 @@ private slots:
 
     void noChildEvents();
 
+    void earlyIdObjectAccess();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3790,6 +3792,14 @@ void tst_qqmllanguage::noChildEvents()
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != 0);
     QCOMPARE(object->childAddedEventCount(), 0);
+}
+
+void tst_qqmllanguage::earlyIdObjectAccess()
+{
+    QQmlComponent component(&engine, testFileUrl("earlyIdObjectAccess.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
