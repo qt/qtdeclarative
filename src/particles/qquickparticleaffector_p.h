@@ -96,7 +96,7 @@ Q_SIGNALS:
 
     void systemChanged(QQuickParticleSystem* arg);
 
-    void groupsChanged(QStringList arg);
+    void groupsChanged(const QStringList &arg);
 
     void enabledChanged(bool arg);
 
@@ -106,7 +106,7 @@ Q_SIGNALS:
 
     void affected(qreal x, qreal y);
 
-    void whenCollidingWithChanged(QStringList arg);
+    void whenCollidingWithChanged(const QStringList &arg);
 
 public Q_SLOTS:
 void setSystem(QQuickParticleSystem* arg)
@@ -118,7 +118,7 @@ void setSystem(QQuickParticleSystem* arg)
     }
 }
 
-void setGroups(QStringList arg)
+void setGroups(const QStringList &arg)
 {
     if (m_groups != arg) {
         m_groups = arg;
@@ -152,7 +152,7 @@ void setShape(QQuickParticleExtruder* arg)
     }
 }
 
-void setWhenCollidingWith(QStringList arg)
+void setWhenCollidingWith(const QStringList &arg)
 {
     if (m_whenCollidingWith != arg) {
         m_whenCollidingWith = arg;

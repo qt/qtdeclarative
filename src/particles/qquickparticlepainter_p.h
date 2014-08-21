@@ -80,12 +80,12 @@ Q_SIGNALS:
     void countChanged();
     void systemChanged(QQuickParticleSystem* arg);
 
-    void groupsChanged(QStringList arg);
+    void groupsChanged(const QStringList &arg);
 
 public Q_SLOTS:
     void setSystem(QQuickParticleSystem* arg);
 
-    void setGroups(QStringList arg)
+    void setGroups(const QStringList &arg)
     {
         if (m_groups != arg) {
             m_groups = arg;

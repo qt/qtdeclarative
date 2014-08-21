@@ -59,7 +59,8 @@ public:
     QQmlFileSelector(QQmlEngine* engine, QObject* parent=0);
     ~QQmlFileSelector();
     void setSelector(QFileSelector *selector);
-    void setExtraSelectors(QStringList &strings);
+    void setExtraSelectors(QStringList &strings); // TODO Qt6: remove
+    void setExtraSelectors(const QStringList &strings);
     static QQmlFileSelector* get(QQmlEngine*);
 
 private:

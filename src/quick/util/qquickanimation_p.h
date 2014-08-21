@@ -300,8 +300,8 @@ protected:
                             QObject *defaultTarget = 0);
 Q_SIGNALS:
     void durationChanged(int);
-    void fromChanged(QVariant);
-    void toChanged(QVariant);
+    void fromChanged(const QVariant &);
+    void toChanged(const QVariant &);
     void easingChanged(const QEasingCurve &);
     void propertiesChanged(const QString &);
     void targetChanged();

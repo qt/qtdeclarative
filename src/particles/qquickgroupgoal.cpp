@@ -82,7 +82,7 @@ QQuickGroupGoalAffector::QQuickGroupGoalAffector(QQuickItem *parent) :
     m_ignoresTime = true;
 }
 
-void QQuickGroupGoalAffector::setGoalState(QString arg)
+void QQuickGroupGoalAffector::setGoalState(const QString &arg)
 {
     if (m_goalState != arg) {
         m_goalState = arg;

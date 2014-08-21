@@ -126,7 +126,7 @@ Q_SIGNALS:
 
     void systemChanged(QQuickParticleSystem* arg);
 
-    void groupChanged(QString arg);
+    void groupChanged(const QString &arg);
 
     void particleDurationVariationChanged(int arg);
 
@@ -182,7 +182,7 @@ public Q_SLOTS:
         }
     }
 
-    void setGroup(QString arg)
+    void setGroup(const QString &arg)
     {
         if (m_group != arg) {
             m_group = arg;

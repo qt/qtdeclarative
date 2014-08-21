@@ -70,13 +70,13 @@ protected:
 
 Q_SIGNALS:
 
-    void goalStateChanged(QString arg);
+    void goalStateChanged(const QString &arg);
 
     void jumpChanged(bool arg);
 
 public Q_SLOTS:
 
-    void setGoalState(QString arg);
+    void setGoalState(const QString &arg);
 
     void setJump(bool arg)
     {

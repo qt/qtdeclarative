@@ -162,6 +162,18 @@ void QQmlFileSelector::setExtraSelectors(QStringList &strings)
     d->selector->setExtraSelectors(strings);
 }
 
+
+/*!
+  Adds extra selectors contained in \a strings to the current QFileSelector being used.
+  Use this when extra selectors are all you need to avoid having to create your own
+  QFileSelector instance.
+*/
+void QQmlFileSelector::setExtraSelectors(const QStringList &strings)
+{
+    Q_D(QQmlFileSelector);
+    d->selector->setExtraSelectors(strings);
+}
+
 /*!
   Gets the QQmlFileSelector currently active on the target \a engine.
 */

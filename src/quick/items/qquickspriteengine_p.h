@@ -111,9 +111,9 @@ public:
 Q_SIGNALS:
     void durationChanged(int arg);
 
-    void nameChanged(QString arg);
+    void nameChanged(const QString &arg);
 
-    void toChanged(QVariantMap arg);
+    void toChanged(const QVariantMap &arg);
 
     void durationVariationChanged(int arg);
 
@@ -130,7 +130,7 @@ public Q_SLOTS:
         }
     }
 
-    void setName(QString arg)
+    void setName(const QString &arg)
     {
         if (m_name != arg) {
             m_name = arg;
@@ -138,7 +138,7 @@ public Q_SLOTS:
         }
     }
 
-    void setTo(QVariantMap arg)
+    void setTo(const QVariantMap &arg)
     {
         if (m_to != arg) {
             m_to = arg;
@@ -216,11 +216,11 @@ public:
 private:
 Q_SIGNALS:
 
-    void globalGoalChanged(QString arg);
+    void globalGoalChanged(const QString &arg);
     void stateChanged(int idx);
 
 public Q_SLOTS:
-    void setGlobalGoal(QString arg)
+    void setGlobalGoal(const QString &arg)
     {
         if (m_globalGoal != arg) {
             m_globalGoal = arg;

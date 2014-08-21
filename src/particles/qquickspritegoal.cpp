@@ -108,7 +108,7 @@ void QQuickSpriteGoalAffector::updateStateIndex(QQuickStochasticEngine* e)
     }
 }
 
-void QQuickSpriteGoalAffector::setGoalState(QString arg)
+void QQuickSpriteGoalAffector::setGoalState(const QString &arg)
 {
     if (m_goalState != arg) {
         m_goalState = arg;

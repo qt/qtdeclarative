@@ -70,7 +70,7 @@ enum PauseReason {
 class DebuggerAgent;
 
 struct DebuggerBreakPoint {
-    DebuggerBreakPoint(QString fileName, int line)
+    DebuggerBreakPoint(const QString &fileName, int line)
         : fileName(fileName), lineNumber(line)
     {}
     QString fileName;

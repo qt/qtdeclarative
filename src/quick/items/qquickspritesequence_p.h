@@ -92,8 +92,8 @@ Q_SIGNALS:
 
     void runningChanged(bool arg);
     void interpolateChanged(bool arg);
-    void goalSpriteChanged(QString arg);
-    void currentSpriteChanged(QString arg);
+    void goalSpriteChanged(const QString &arg);
+    void currentSpriteChanged(const QString &arg);
 
 public Q_SLOTS:
 

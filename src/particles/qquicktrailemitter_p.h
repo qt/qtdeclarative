@@ -99,7 +99,7 @@ Q_SIGNALS:
 
     void emitterYVariationChanged(qreal arg);
 
-    void followChanged(QString arg);
+    void followChanged(const QString &arg);
 
     void emissionShapeChanged(QQuickParticleExtruder* arg);
 
@@ -128,7 +128,7 @@ public Q_SLOTS:
         }
     }
 
-    void setFollow(QString arg)
+    void setFollow(const QString &arg)
     {
         if (m_follow != arg) {
             m_follow = arg;
