@@ -631,11 +631,8 @@ protected: // IRDecoder
             }
         } else if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift || oper == OpURShift) {
             needsCall = false;
-        } else if (oper == OpAdd
-                   || oper == OpMul
-                   ||
-                   oper == OpSub
-                   ) {
+        } else if (oper == OpAdd || oper == OpMul || oper == OpSub
+                   || (oper >= OpGt && oper <= OpStrictNotEqual)) {
             if (leftSource->type == SInt32Type && rightSource->type == SInt32Type)
                 needsCall = false;
         }
@@ -649,16 +646,35 @@ protected: // IRDecoder
         } else {
             addUses(leftSource->asTemp(), Use::MustHaveRegister);
             addHint(target, leftSource->asTemp());
+            addHint(target, rightSource->asTemp());
 
-            addUses(rightSource->asTemp(), Use::MustHaveRegister);
+#if CPU(X86) || CPU(X86_64)
             switch (oper) {
+                // The rhs operand can be a memory address
             case OpAdd:
+            case OpSub:
             case OpMul:
-                addHint(target, rightSource->asTemp());
+            case OpDiv:
+#if CPU(X86_64)
+                if (leftSource->type == DoubleType || rightSource->type == DoubleType) {
+                    // well, on 64bit the doubles are mangled, so they must first be loaded in a register and demangled, so...:
+                    addUses(rightSource->asTemp(), Use::MustHaveRegister);
+                    break;
+                }
+#endif
+            case OpBitAnd:
+            case OpBitOr:
+            case OpBitXor:
+                addUses(rightSource->asTemp(), Use::CouldHaveRegister);
                 break;
+
             default:
+                addUses(rightSource->asTemp(), Use::MustHaveRegister);
                 break;
             }
+#else
+            addUses(rightSource->asTemp(), Use::MustHaveRegister);
+#endif
         }
     }
 

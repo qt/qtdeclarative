@@ -651,6 +651,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 
     \note Scene Graph textures have origin in the top-left corner rather than
     bottom-left which is common in OpenGL.
+
+    For information about the GLSL version being used, see \l QtQuick::OpenGLInfo.
 */
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)

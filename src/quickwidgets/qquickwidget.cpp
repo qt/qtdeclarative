@@ -238,6 +238,15 @@ void QQuickWidgetPrivate::renderSceneGraph()
     q->update();
 }
 
+QImage QQuickWidgetPrivate::grabFramebuffer()
+{
+    if (!context)
+        return QImage();
+
+    context->makeCurrent(offscreenSurface);
+    return renderControl->grab();
+}
+
 /*!
     \module QtQuickWidgets
     \title Qt Quick Widgets C++ Classes
@@ -1103,12 +1112,7 @@ QSurfaceFormat QQuickWidget::format() const
  */
 QImage QQuickWidget::grabFramebuffer() const
 {
-    Q_D(const QQuickWidget);
-    if (!d->context)
-        return QImage();
-
-    d->context->makeCurrent(d->offscreenSurface);
-    return d->renderControl->grab();
+    return const_cast<QQuickWidgetPrivate *>(d_func())->grabFramebuffer();
 }
 
 QT_END_NAMESPACE

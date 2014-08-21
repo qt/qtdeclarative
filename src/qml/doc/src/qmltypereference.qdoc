@@ -185,7 +185,7 @@ is automatically converted into a QSizeF value.
 The \c rect type refers to a value with \c x, \c y, \c width and \c height attributes.
 
 For example, to read the \c width and \c height values of the \l Item
-\l {Item::childrenRect.x}{childrenRect} rect-type type property:
+\l {Item::childrenRect.x}{childrenRect} rect-type property:
 
 \qml
 Rectangle {

@@ -1411,7 +1411,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     This means that for all x values before the first character this function returns 0,
     and for all x values after the last character this function returns text.length.  If
     the y value is above the text the position will be that of the nearest character on
-    the first line line and if it is below the text the position of the nearest character
+    the first line and if it is below the text the position of the nearest character
     on the last line will be returned.
 
     The cursor position type specifies how the cursor position should be resolved.

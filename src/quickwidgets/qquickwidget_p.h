@@ -89,6 +89,7 @@ public:
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
     GLuint textureId() const Q_DECL_OVERRIDE;
+    QImage grabFramebuffer() Q_DECL_OVERRIDE;
 
     void init(QQmlEngine* e = 0);
     void handleWindowChange();

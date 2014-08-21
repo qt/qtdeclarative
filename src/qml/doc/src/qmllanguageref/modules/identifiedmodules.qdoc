@@ -162,7 +162,7 @@ object types defined in the module will behave as the module author documented.
 
 An identified module has several restrictions upon it:
 \list
-\li an identified module must must be installed into the
+\li an identified module must be installed into the
     \l{qtqml-syntax-imports.html#qml-import-path}{QML import path}
 \li the module identifier specified in the \l{qtqml-modules-qmldir.html}
     {module identifier directive} must match the install path of the module

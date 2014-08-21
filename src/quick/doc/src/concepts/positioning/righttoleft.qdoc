@@ -42,7 +42,7 @@ from the right to left. The general rule of thumb is that content (like photos, 
 mirrored, but positioning of the content (like application layouts and the flow of visual elements) is
 mirrored. For example, photos shown in chronological order should flow from right to left, the
 low end range of the horizontal sliders should be located at the right side of the slider, and
-text lines should should be aligned to the right side of the available text area. The location of visual
+text lines should be aligned to the right side of the available text area. The location of visual
 elements should not be mirrored when the position is related to a content; for example, when a
 position marker is shown to indicate a location on a map. Also, there are some special cases you may
 need to take into account where right-to-left language speakers are used to left-to-right

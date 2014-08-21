@@ -216,6 +216,12 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         emit pixmapCache((QQmlProfilerService::PixmapEventType)pixEvTy, time,
                          QmlEventLocation(pixUrl,0,0), width, height, refcount);
         d->maximumTime = qMax(time, d->maximumTime);
+    } else if (messageType == QQmlProfilerService::MemoryAllocation) {
+        int type;
+        qint64 delta;
+        stream >> type >> delta;
+        emit memoryAllocation((QQmlProfilerService::MemoryType)type, time, delta);
+        d->maximumTime = qMax(time, d->maximumTime);
     } else {
         int range;
         stream >> range;

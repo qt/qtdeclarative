@@ -294,7 +294,7 @@ when to call the signals and this is the only time the OpenGL
 application is allowed to draw.
 
 The \l {Scene Graph - OpenGL Under QML} example gives an example on
-how to use use these signals.
+how to use these signals.
 
 The other alternative is to create a QQuickFramebufferObject, render
 into it, and let it be displayed in the scene graph as a texture.

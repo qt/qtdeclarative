@@ -78,7 +78,8 @@ HEADERS += \
     $$PWD/qquickframebufferobject.h \
     $$PWD/qquickitemgrabresult.h \
     $$PWD/qquickrendercontrol.h \
-    $$PWD/qquickrendercontrol_p.h
+    $$PWD/qquickrendercontrol_p.h \
+    $$PWD/qquickopenglinfo_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -133,7 +134,8 @@ SOURCES += \
     $$PWD/qquickwindowattached.cpp \
     $$PWD/qquickframebufferobject.cpp \
     $$PWD/qquickitemgrabresult.cpp \
-    $$PWD/qquickrendercontrol.cpp
+    $$PWD/qquickrendercontrol.cpp \
+    $$PWD/qquickopenglinfo.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \

@@ -1304,6 +1304,10 @@ void InstructionSelection::visitCJump(IR::CJump *s)
                 && visitCJumpDouble(b->op, b->left, b->right, s->iftrue, s->iffalse))
             return;
 
+        if (b->left->type == IR::SInt32Type && b->right->type == IR::SInt32Type
+                && visitCJumpSInt32(b->op, b->left, b->right, s->iftrue, s->iffalse))
+            return;
+
         if (b->op == IR::OpStrictEqual || b->op == IR::OpStrictNotEqual) {
             visitCJumpStrict(b, s->iftrue, s->iffalse);
             return;
@@ -1541,17 +1545,15 @@ int Assembler::ConstantTable::add(const Primitive &v)
     return idx;
 }
 
-Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(IR::Const *c,
-                                                                      RegisterID baseReg)
+Assembler::Address Assembler::ConstantTable::loadValueAddress(IR::Const *c, RegisterID baseReg)
 {
     return loadValueAddress(convertToValue(c), baseReg);
 }
 
-Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(const Primitive &v,
-                                                                      RegisterID baseReg)
+Assembler::Address Assembler::ConstantTable::loadValueAddress(const Primitive &v, RegisterID baseReg)
 {
     _toPatch.append(_as->moveWithPatch(TrustedImmPtr(0), baseReg));
-    ImplicitAddress addr(baseReg);
+    Address addr(baseReg);
     addr.offset = add(v) * sizeof(QV4::Primitive);
     Q_ASSERT(addr.offset >= 0);
     return addr;
@@ -1576,6 +1578,23 @@ bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Ex
         _as->addPatch(iffalse, target);
     } else {
         Assembler::Jump target = _as->branchDouble(false, op, left, right);
+        _as->addPatch(iftrue, target);
+        _as->jumpToBlock(_block, iffalse);
+    }
+    return true;
+}
+
+bool InstructionSelection::visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
+                                            IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+{
+    if (!isPregOrConst(left) || !isPregOrConst(right))
+        return false;
+
+    if (_as->nextBlock() == iftrue) {
+        Assembler::Jump target = _as->branchInt32(true, op, left, right);
+        _as->addPatch(iffalse, target);
+    } else {
+        Assembler::Jump target = _as->branchInt32(false, op, left, right);
         _as->addPatch(iftrue, target);
         _as->jumpToBlock(_block, iffalse);
     }

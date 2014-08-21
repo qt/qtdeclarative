@@ -97,7 +97,7 @@ MyComponents.DialogBox {
 
 The ability to import a local directory is convenient for cases such as
 in-application component sets and application prototyping, although any code
-that imports such modules must must update their relevant \c import statements
+that imports such modules must update their relevant \c import statements
 if the module directory moves to another location.  This can be avoided if
 \l{qtqml-modules-identifiedmodules.html}{QML modules} are used instead,
 as an installed module is imported with a unique identifier string rather than

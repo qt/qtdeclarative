@@ -208,7 +208,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     arbitrary input textures, such as YUV video frames or 8 bit alpha
     masks. The scene graph backend provides a default implementation
     of normal color textures. As the implementation of these may be
-    hardware specific, they are are constructed via the factory
+    hardware specific, they are constructed via the factory
     function QQuickWindow::createTextureFromImage().
 
     The texture is a wrapper around an OpenGL texture, which texture

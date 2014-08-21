@@ -50,6 +50,8 @@ public:
 private slots:
     void quickWidgetStatusChanged(QQuickWidget::Status);
     void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+    void grabToFile();
+    void renderToFile();
 
 private:
     QQuickWidget *m_quickWidget;
@@ -88,7 +90,11 @@ MainWindow::MainWindow()
 
     setCentralWidget(centralWidget);
 
-    QMenu *fileMenu = menuBar()->addMenu(tr("File"));
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    QAction *grabAction = fileMenu->addAction(tr("Grab to image"));
+    connect(grabAction, SIGNAL(triggered()), this, SLOT(grabToFile()));
+    QAction *renderAction = fileMenu->addAction(tr("Render to pixmap"));
+    connect(renderAction, SIGNAL(triggered()), this, SLOT(renderToFile()));
     QAction *quitAction = fileMenu->addAction(tr("Quit"));
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 }
@@ -106,6 +112,30 @@ void MainWindow::quickWidgetStatusChanged(QQuickWidget::Status status)
 void MainWindow::sceneGraphError(QQuickWindow::SceneGraphError, const QString &message)
 {
      statusBar()->showMessage(message);
+}
+
+template<class T> void saveToFile(QWidget *parent, T *saveable)
+{
+    QString t;
+    QFileDialog fd(parent, t, QString());
+    fd.setAcceptMode(QFileDialog::AcceptSave);
+    fd.setDefaultSuffix("png");
+    fd.selectFile("test.png");
+    if (fd.exec() == QDialog::Accepted)
+        saveable->save(fd.selectedFiles().first());
+}
+
+void MainWindow::grabToFile()
+{
+    QImage image = m_quickWidget->grabFramebuffer();
+    saveToFile(this, &image);
+}
+
+void MainWindow::renderToFile()
+{
+    QPixmap pixmap(m_quickWidget->size());
+    m_quickWidget->render(&pixmap);
+    saveToFile(this, &pixmap);
 }
 
 int main(int argc, char **argv)

@@ -117,9 +117,9 @@ To visualize data, bind the view's \c model property to a model and the
     The ListView type has the \c section
     \l{qtqml-syntax-objectattributes.html#Attached-properties-and-attached-signal-handlers}
     {attached property} that can combine adjacent and related types into a
-    section.  The section's \c property property is for selecting which list
-    type property to use as sections. The \c criteria can dictate how the
-    section names are displayed and the \c delegate is similar to the views'
+    section.  The \c section.property determines which list
+    type property to use as sections. The \c section.criteria can dictate how the
+    section names are displayed and the \c section.delegate is similar to the views'
     \l {qml-view-delegate}{delegate} property.
     \snippet qml/listview-sections.qml section
     \image listview-section.png

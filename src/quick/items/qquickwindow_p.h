@@ -258,9 +258,6 @@ public:
                                               QString *untranslatedMessage,
                                               bool isEs);
 
-    static bool defaultFormatInitialized;
-    static QSurfaceFormat defaultFormat;
-
     QMutex renderJobMutex;
     QList<QRunnable *> beforeSynchronizingJobs;
     QList<QRunnable *> afterSynchronizingJobs;

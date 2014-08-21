@@ -2416,7 +2416,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_moveTo(QV4::CallContext *c
 
    Adds a quadratic bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
 
-   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for  for quadraticCurveTo}
+   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for quadraticCurveTo}
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_quadraticCurveTo(QV4::CallContext *ctx)
 {
