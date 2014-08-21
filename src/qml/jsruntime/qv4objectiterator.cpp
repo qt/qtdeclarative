@@ -54,13 +54,7 @@ ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, const ObjectRef
     , memberIndex(0)
     , flags(flags)
 {
-    object = o.getPointer();
-    current = o.getPointer();
-
-    if (!!object && object->asArgumentsObject()) {
-        Scope scope(object->engine());
-        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
-    }
+    init(o);
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
@@ -71,8 +65,26 @@ ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
     , memberIndex(0)
     , flags(flags)
 {
-    object = o;
-    current = o;
+    init(o);
+}
+
+ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, uint flags)
+    : object(ObjectRef::fromValuePointer(scratch1))
+    , current(ObjectRef::fromValuePointer(scratch2))
+    , arrayNode(0)
+    , arrayIndex(0)
+    , memberIndex(0)
+    , flags(flags)
+{
+    object = (Object*)0;
+    current = (Object*)0;
+    // Caller needs to call init!
+}
+
+void ObjectIterator::init(const ObjectRef o)
+{
+    object = o.getPointer();
+    current = o.getPointer();
 
     if (!!object && object->asArgumentsObject()) {
         Scope scope(object->engine());
@@ -193,6 +205,16 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
 
 DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
+
+ForEachIteratorObject::ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
+    : Object(ctx->engine), it(workArea, workArea + 1, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
+{
+    Scope scope(ctx);
+    ScopedObject protectThis(scope, this);
+
+    setVTable(staticVTable());
+    it.init(o);
+}
 
 void ForEachIteratorObject::markObjects(Managed *that, ExecutionEngine *e)
 {
