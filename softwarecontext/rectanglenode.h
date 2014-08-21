@@ -24,6 +24,7 @@
 
 #include <QPen>
 #include <QBrush>
+#include <QPixmap>
 
 class RectangleNode : public QSGRectangleNode
 {
@@ -52,6 +53,9 @@ private:
     double m_radius;
     QPen m_pen;
     QBrush m_brush;
+
+    bool m_cornerPixmapIsDirty;
+    QPixmap m_cornerPixmap;
 };
 
 #endif // RECTANGLENODE_H
