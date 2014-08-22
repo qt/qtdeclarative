@@ -162,8 +162,9 @@ void FbItemRenderer::render()
 {
     ensureInit();
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-    if (!m_vao.isCreated())
+    if (m_vao.isCreated())
+        m_vao.bind();
+    else
         setupVertexAttribs();
 
     StateBinder state(this);
@@ -182,6 +183,9 @@ void FbItemRenderer::render()
     updateDirtyUniforms();
 
     f->glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
+
+    if (m_vao.isCreated())
+        m_vao.release();
 }
 
 QOpenGLFramebufferObject *FbItemRenderer::createFramebufferObject(const QSize &size)
@@ -209,7 +213,6 @@ void FbItemRenderer::ensureInit()
 
 void FbItemRenderer::initBuf()
 {
-    m_vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
     m_logoVbo.create();
