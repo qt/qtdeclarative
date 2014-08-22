@@ -40,6 +40,8 @@ QT_BEGIN_NAMESPACE
     \brief The QSGTextureProvider class encapsulates texture based entities in QML.
 
     The QSGTextureProvider lives primarily in the scene graph rendering thread.
+
+    \sa {Scene Graph - Two Texture Providers}
  */
 
 
