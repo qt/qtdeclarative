@@ -60,6 +60,7 @@ public:
     QV4::CompiledData::CompilationUnit *compile(bool generateUnitData = true);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
+    void setUseTypeInference(bool onoff) { useTypeInference = onoff; }
 
     int registerString(const QString &str) { return jsGenerator->registerString(str); }
     uint registerIndexedGetterLookup() { return jsGenerator->registerIndexedGetterLookup(); }
@@ -76,6 +77,7 @@ protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
     bool useFastLookups;
+    bool useTypeInference;
     QV4::ExecutableAllocator *executableAllocator;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
     QScopedPointer<QV4::Compiler::JSUnitGenerator> ownJSGenerator;

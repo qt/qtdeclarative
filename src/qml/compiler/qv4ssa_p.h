@@ -207,7 +207,7 @@ class Q_QML_PRIVATE_EXPORT Optimizer
 public:
     Optimizer(Function *function);
 
-    void run(QQmlEnginePrivate *qmlEngine);
+    void run(QQmlEnginePrivate *qmlEngine, bool doTypeInference = true, bool peelLoops = true);
     void convertOutOfSSA();
 
     bool isInSSA() const

@@ -51,6 +51,7 @@ using namespace QV4::IR;
 
 EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : useFastLookups(true)
+    , useTypeInference(true)
     , executableAllocator(execAllocator)
     , irModule(module)
 {

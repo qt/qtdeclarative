@@ -218,6 +218,7 @@ bool QQmlTypeCompiler::compile()
         QV4::ExecutionEngine *v4 = engine->v4engine();
         QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
         isel->setUseFastLookups(false);
+        isel->setUseTypeInference(true);
         document->javaScriptCompilationUnit = isel->compile(/*generated unit data*/false);
     }
 

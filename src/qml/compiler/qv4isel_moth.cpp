@@ -321,7 +321,9 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
     , _codeEnd(0)
     , _currentStatement(0)
     , compilationUnit(new CompilationUnit)
-{}
+{
+    setUseTypeInference(false);
+}
 
 InstructionSelection::~InstructionSelection()
 {
@@ -351,7 +353,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(codeEnd, _codeEnd);
 
     IR::Optimizer opt(_function);
-    opt.run(qmlEngine);
+    opt.run(qmlEngine, useTypeInference, /*peelLoops =*/ false);
     if (opt.isInSSA()) {
         static const bool doStackSlotAllocation =
                 qgetenv("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION").isEmpty();

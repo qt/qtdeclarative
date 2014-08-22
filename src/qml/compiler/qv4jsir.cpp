@@ -989,6 +989,9 @@ void IRPrinter::print(BasicBlock *bb)
     printBlockStart();
 
     foreach (Stmt *s, currentBB->statements()) {
+        if (!s)
+            continue;
+
         QByteArray str;
         QBuffer buf(&str);
         buf.open(QIODevice::WriteOnly);

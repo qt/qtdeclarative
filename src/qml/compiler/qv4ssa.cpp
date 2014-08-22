@@ -1794,6 +1794,9 @@ public:
 
     void reset()
     {
+        worklist.assign(worklist.size(), false);
+        worklistSize = 0;
+
         foreach (Stmt *s, stmts) {
             if (!s)
                 continue;
@@ -3934,6 +3937,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
 
                 // constant propagation:
                 if (Const *sourceConst = m->source->asConst()) {
+                    Q_ASSERT(sourceConst->type != UnknownType);
                     replaceUses(targetTemp, sourceConst, W);
                     defUses.removeDef(*targetTemp);
                     W.remove(s);
@@ -3998,7 +4002,8 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                                 doneSomething = true;
                                 break;
                             case OpUPlus:
-                                constOperand->type = unop->type;
+                                if (unop->type != UnknownType)
+                                    constOperand->type = unop->type;
                                 doneSomething = true;
                                 break;
                             case OpCompl:
@@ -5057,7 +5062,7 @@ Optimizer::Optimizer(IR::Function *function)
     , inSSA(false)
 {}
 
-void Optimizer::run(QQmlEnginePrivate *qmlEngine)
+void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool peelLoops)
 {
 #if defined(SHOW_SSA)
     qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
@@ -5093,13 +5098,15 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
             showMeTheCode(function);
 //            cfg2dot(function, loopDetection.allLoops());
 
-            QVector<LoopDetection::LoopInfo *> innerLoops = loopDetection.innermostLoops();
-            LoopPeeling(df).run(innerLoops);
+            if (peelLoops) {
+                QVector<LoopDetection::LoopInfo *> innerLoops = loopDetection.innermostLoops();
+                LoopPeeling(df).run(innerLoops);
 
-//            cfg2dot(function, loopDetection.allLoops());
-            showMeTheCode(function);
-            if (!innerLoops.isEmpty())
-                verifyImmediateDominators(df, function);
+//                cfg2dot(function, loopDetection.allLoops());
+                showMeTheCode(function);
+                if (!innerLoops.isEmpty())
+                    verifyImmediateDominators(df, function);
+            }
         }
 
         verifyCFG(function);
@@ -5123,18 +5130,20 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
         StatementWorklist worklist(function);
 
-//        qout << "Running type inference..." << endl;
-        TypeInference(qmlEngine, defUses).run(worklist);
-        showMeTheCode(function);
+        if (doTypeInference) {
+//            qout << "Running type inference..." << endl;
+            TypeInference(qmlEngine, defUses).run(worklist);
+            showMeTheCode(function);
 
-//        qout << "Doing reverse inference..." << endl;
-        ReverseInference(defUses).run(function);
-//        showMeTheCode(function);
+//            qout << "Doing reverse inference..." << endl;
+            ReverseInference(defUses).run(function);
+//            showMeTheCode(function);
 
-//        qout << "Doing type propagation..." << endl;
-        TypePropagation(defUses).run(function, worklist);
-//        showMeTheCode(function);
-        verifyNoPointerSharing(function);
+//            qout << "Doing type propagation..." << endl;
+            TypePropagation(defUses).run(function, worklist);
+//            showMeTheCode(function);
+            verifyNoPointerSharing(function);
+        }
 
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
