@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -942,7 +934,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 47;
+    int sourceLine = 39;
     QVERIFY(init(ONCOMPLETED_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
@@ -962,7 +954,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 47;
+    int sourceLine = 39;
     QVERIFY(init(CREATECOMPONENT_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
@@ -980,7 +972,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 {
-    int sourceLine = 48;
+    int sourceLine = 40;
     QVERIFY(init(TIMER_QMLFILE));
 
     client->connect();
@@ -1002,7 +994,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 43;
+    int sourceLine = 35;
     QVERIFY(init(LOADJSFILE_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
@@ -1022,8 +1014,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 47;
-    int actualLine = 49;
+    int sourceLine = 39;
+    int actualLine = 41;
     QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
@@ -1044,8 +1036,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 48;
-    int actualLine = 49;
+    int sourceLine = 40;
+    int actualLine = 41;
     QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
@@ -1066,7 +1058,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 52;
+    int sourceLine = 44;
     QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
@@ -1085,7 +1077,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 {
     int out = 10;
-    int sourceLine = 50;
+    int sourceLine = 42;
     QVERIFY(init(CONDITION_QMLFILE));
 
     client->connect();
@@ -1122,7 +1114,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 {
     QVERIFY(init(QUIT_QMLFILE));
 
-    int sourceLine = 49;
+    int sourceLine = 41;
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(QUIT_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1180,8 +1172,8 @@ void tst_QQmlDebugJS::clearBreakpoint()
 {
     //void clearBreakpoint(int breakpoint);
 
-    int sourceLine1 = 50;
-    int sourceLine2 = 51;
+    int sourceLine1 = 42;
+    int sourceLine2 = 43;
     QVERIFY(init(CHANGEBREAKPOINT_QMLFILE));
 
     client->connect();
@@ -1237,7 +1229,7 @@ void tst_QQmlDebugJS::stepNext()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 50;
+    int sourceLine = 42;
     QVERIFY(init(STEPACTION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
@@ -1260,8 +1252,8 @@ void tst_QQmlDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 54;
-    int actualLine = 50;
+    int sourceLine = 46;
+    int actualLine = 42;
     QVERIFY(init(STEPACTION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
@@ -1284,8 +1276,8 @@ void tst_QQmlDebugJS::stepOut()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 50;
-    int actualLine = 54;
+    int sourceLine = 42;
+    int actualLine = 46;
     QVERIFY(init(STEPACTION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
@@ -1308,8 +1300,8 @@ void tst_QQmlDebugJS::continueDebugging()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine1 = 54;
-    int sourceLine2 = 51;
+    int sourceLine1 = 46;
+    int sourceLine2 = 43;
     QVERIFY(init(STEPACTION_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
@@ -1333,7 +1325,7 @@ void tst_QQmlDebugJS::backtrace()
 {
     //void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
 
-    int sourceLine = 47;
+    int sourceLine = 39;
     QVERIFY(init(ONCOMPLETED_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
@@ -1348,7 +1340,7 @@ void tst_QQmlDebugJS::getFrameDetails()
 {
     //void frame(int number = -1);
 
-    int sourceLine = 47;
+    int sourceLine = 39;
     QVERIFY(init(ONCOMPLETED_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
@@ -1363,7 +1355,7 @@ void tst_QQmlDebugJS::getScopeDetails()
 {
     //void scope(int number = -1, int frameNumber = -1);
 
-    int sourceLine = 47;
+    int sourceLine = 39;
     QVERIFY(init(ONCOMPLETED_QMLFILE));
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
@@ -1437,7 +1429,7 @@ void tst_QQmlDebugJS::getScripts()
 
     QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QString(TEST_QMLFILE), 48, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QString(TEST_QMLFILE), 40, -1, true);
     client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
