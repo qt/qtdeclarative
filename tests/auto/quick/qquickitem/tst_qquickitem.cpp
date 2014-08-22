@@ -167,6 +167,8 @@ private slots:
 
     void testSGInitializeAndInvalidate();
 
+    void objectChildTransform();
+
 private:
 
     enum PaintOrderOp {
@@ -1906,7 +1908,18 @@ void tst_qquickitem::testSGInitializeAndInvalidate()
         delete view.take();
         QCOMPARE(invalidateSpy.size(), expected);
     }
+}
 
+void tst_qquickitem::objectChildTransform()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("objectChildTransform.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+
+    root->setProperty("source", QString());
+    // Shouldn't crash.
 }
 
 QTEST_MAIN(tst_qquickitem)

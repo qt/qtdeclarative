@@ -2161,6 +2161,17 @@ QQuickItem::~QQuickItem()
 
     d->changeListeners.clear();
 
+    /*
+       Remove any references our transforms have to us, in case they try to
+       remove themselves from our list of transforms when that list has already
+       been destroyed after ~QQuickItem() has run.
+    */
+    for (int ii = 0; ii < d->transforms.count(); ++ii) {
+        QQuickTransform *t = d->transforms.at(ii);
+        QQuickTransformPrivate *tp = QQuickTransformPrivate::get(t);
+        tp->items.removeOne(this);
+    }
+
     if (d->extra.isAllocated()) {
         delete d->extra->contents; d->extra->contents = 0;
         delete d->extra->layer; d->extra->layer = 0;
