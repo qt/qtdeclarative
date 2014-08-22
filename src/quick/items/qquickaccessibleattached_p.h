@@ -221,7 +221,6 @@ private:
     QAccessible::State m_state;
     QString m_name;
     QString m_description;
-    bool m_ignored;
 
 public:
     using QObject::property;
