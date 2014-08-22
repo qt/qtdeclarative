@@ -294,7 +294,7 @@ bool QQuickAccessibleAttached::ignored() const
 
 void QQuickAccessibleAttached::setIgnored(bool ignored)
 {
-    if (m_ignored != ignored) {
+    if (this->ignored() != ignored) {
         item()->d_func()->isAccessible = !ignored;
         emit ignoredChanged();
     }
