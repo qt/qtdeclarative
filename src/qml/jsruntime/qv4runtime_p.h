@@ -338,8 +338,8 @@ inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, co
 {
     TRACE2(left, right);
 
-    if (left->isInteger() && right->isInteger())
-        return add_int32(left->integerValue(), right->integerValue()).asReturnedValue();
+    if (Q_LIKELY(left->isInteger() && right->isInteger()))
+        return add_int32(left->integerValue(), right->integerValue());
     if (left->isNumber() && right->isNumber())
         return Primitive::fromDouble(left->asDouble() + right->asDouble()).asReturnedValue();
 
@@ -351,8 +351,8 @@ inline ReturnedValue Runtime::sub(const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
 
-    if (left->isInteger() && right->isInteger())
-        return sub_int32(left->integerValue(), right->integerValue()).asReturnedValue();
+    if (Q_LIKELY(left->isInteger() && right->isInteger()))
+        return sub_int32(left->integerValue(), right->integerValue());
 
     double lval = left->isNumber() ? left->asDouble() : left->toNumberImpl();
     double rval = right->isNumber() ? right->asDouble() : right->toNumberImpl();
@@ -364,8 +364,8 @@ inline ReturnedValue Runtime::mul(const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
 
-    if (left->isInteger() && right->isInteger())
-        return mul_int32(left->integerValue(), right->integerValue()).asReturnedValue();
+    if (Q_LIKELY(left->isInteger() && right->isInteger()))
+        return mul_int32(left->integerValue(), right->integerValue());
 
     double lval = left->isNumber() ? left->asDouble() : left->toNumberImpl();
     double rval = right->isNumber() ? right->asDouble() : right->toNumberImpl();

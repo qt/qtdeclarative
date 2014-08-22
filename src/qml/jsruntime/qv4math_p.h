@@ -35,9 +35,7 @@
 
 #include <qglobal.h>
 
-#ifndef QMLJS_LLVM_RUNTIME
-#  include <QtCore/qnumeric.h>
-#endif // QMLJS_LLVM_RUNTIME
+#include <QtCore/qnumeric.h>
 #include <cmath>
 
 #if defined(Q_CC_GNU)
@@ -50,9 +48,9 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-#if !defined(QMLJS_LLVM_RUNTIME) && defined(Q_CC_GNU) && defined(Q_PROCESSOR_X86)
+#if defined(Q_CC_GNU) && defined(Q_PROCESSOR_X86)
 
-static inline QMLJS_READONLY Value add_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -63,13 +61,12 @@ static inline QMLJS_READONLY Value add_int32(int a, int b)
          : "r" (b), "1" (aa)
          : "cc"
     );
-    if (!overflow)
-        return Primitive::fromInt32(aa);
-    qint64 result = static_cast<qint64>(a) + b;
-    return Primitive::fromDouble(result);
+    if (Q_UNLIKELY(overflow))
+        return Primitive::fromDouble(static_cast<double>(a) + b).asReturnedValue();
+    return Primitive::fromInt32(aa).asReturnedValue();
 }
 
-static inline QMLJS_READONLY Value sub_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -80,13 +77,12 @@ static inline QMLJS_READONLY Value sub_int32(int a, int b)
          : "r" (b), "1" (aa)
          : "cc"
     );
-    if (!overflow)
-        return Primitive::fromInt32(aa);
-    qint64 result = static_cast<qint64>(a) - b;
-    return Primitive::fromDouble(result);
+    if (Q_UNLIKELY(overflow))
+        return Primitive::fromDouble(static_cast<double>(a) - b).asReturnedValue();
+    return Primitive::fromInt32(aa).asReturnedValue();
 }
 
-static inline QMLJS_READONLY Value mul_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -97,39 +93,38 @@ static inline QMLJS_READONLY Value mul_int32(int a, int b)
          : "r" (b), "1" (aa)
          : "cc"
     );
-    if (!overflow)
-        return Primitive::fromInt32(aa);
-    qint64 result = static_cast<qint64>(a) * b;
-    return Primitive::fromDouble(result);
+    if (Q_UNLIKELY(overflow))
+        return Primitive::fromDouble(static_cast<double>(a) * b).asReturnedValue();
+    return Primitive::fromInt32(aa).asReturnedValue();
 }
 
 #else
 
-static inline QMLJS_READONLY Value add_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 {
     qint64 result = static_cast<qint64>(a) + b;
-    if (result > INT_MAX || result < INT_MIN)
-        return Primitive::fromDouble(result);
-    return Primitive::fromInt32(static_cast<int>(result));
+    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
+        return Primitive::fromDouble(static_cast<double>(a) + b).asReturnedValue();
+    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
 }
 
-static inline QMLJS_READONLY Value sub_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 {
     qint64 result = static_cast<qint64>(a) - b;
-    if (result > INT_MAX || result < INT_MIN)
-        return Primitive::fromDouble(result);
-    return Primitive::fromInt32(static_cast<int>(result));
+    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
+        return Primitive::fromDouble(static_cast<double>(a) - b).asReturnedValue();
+    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
 }
 
-static inline QMLJS_READONLY Value mul_int32(int a, int b)
+static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
 {
     qint64 result = static_cast<qint64>(a) * b;
-    if (result > INT_MAX || result < INT_MIN)
-        return Primitive::fromDouble(result);
-    return Primitive::fromInt32(static_cast<int>(result));
+    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
+        return Primitive::fromDouble(static_cast<double>(a) * b).asReturnedValue();
+    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
 }
 
-#endif // defined(QMLJS_INLINE_MATH)
+#endif
 
 }
 
