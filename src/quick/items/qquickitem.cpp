@@ -5177,6 +5177,8 @@ void QQuickItem::setScale(qreal s)
   rectangle has specified an opacity of 0.5, which affects the opacity of
   its blue child rectangle even though the child has not specified an opacity.
 
+  Values outside the range of 0 to 1 will be clamped.
+
   \table
   \row
   \li \image declarative-item_opacity1.png
@@ -5224,9 +5226,10 @@ qreal QQuickItem::opacity() const
     return d->opacity();
 }
 
-void QQuickItem::setOpacity(qreal o)
+void QQuickItem::setOpacity(qreal newOpacity)
 {
     Q_D(QQuickItem);
+    qreal o = qBound<qreal>(0, newOpacity, 1);
     if (d->opacity() == o)
         return;
 
