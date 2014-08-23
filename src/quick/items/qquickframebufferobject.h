@@ -75,6 +75,10 @@ public:
 
     virtual Renderer *createRenderer() const = 0;
 
+    bool isTextureProvider() const Q_DECL_OVERRIDE;
+    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+    void releaseResources() Q_DECL_OVERRIDE;
+
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
 
@@ -83,6 +87,9 @@ protected:
 
 Q_SIGNALS:
     void textureFollowsItemSizeChanged(bool);
+
+private Q_SLOTS:
+    void invalidateSG();
 };
 
 QT_END_NAMESPACE

@@ -47,10 +47,12 @@ class QQuickFramebufferObjectPrivate : public QQuickItemPrivate
 public:
     QQuickFramebufferObjectPrivate()
         : followsItemSize(true)
+        , node(0)
     {
     }
 
     bool followsItemSize;
+    mutable QSGFramebufferObjectNode *node;
 };
 
 /*!
@@ -91,6 +93,11 @@ public:
  * to \c false and return a texture of your choosing from
  * QQuickFramebufferObject::Renderer::createFramebufferObject().
  *
+ * Starting Qt 5.4, the QQuickFramebufferObject class is a
+ * \l{QSGTextureProvider}{texture provider}
+ * and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
+ * classes that consume texture providers.
+ *
  * \sa {Scene Graph - Rendering FBOs}, {Scene Graph and Rendering}
  */
 
@@ -101,6 +108,7 @@ QQuickFramebufferObject::QQuickFramebufferObject(QQuickItem *parent) :
     QQuickItem(*new QQuickFramebufferObjectPrivate, parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -142,7 +150,7 @@ void QQuickFramebufferObject::geometryChanged(const QRectF &newGeometry, const Q
         update();
 }
 
-class QSGFramebufferObjectNode : public QObject, public QSGSimpleTextureNode
+class QSGFramebufferObjectNode : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
 
@@ -155,7 +163,7 @@ public:
         , renderPending(true)
         , invalidatePending(false)
     {
-
+        qsgnode_set_description(this, QStringLiteral("fbonode"));
     }
 
     ~QSGFramebufferObjectNode()
@@ -172,6 +180,11 @@ public:
         window->update();
     }
 
+    QSGTexture *texture() const Q_DECL_OVERRIDE
+    {
+        return QSGSimpleTextureNode::texture();
+    }
+
 public Q_SLOTS:
     void render()
     {
@@ -186,6 +199,7 @@ public Q_SLOTS:
                 QOpenGLFramebufferObject::blitFramebuffer(msDisplayFbo, fbo);
 
             markDirty(QSGNode::DirtyMaterial);
+            emit textureChanged();
         }
     }
 
@@ -217,11 +231,13 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     Q_D(QQuickFramebufferObject);
 
     if (!n) {
-        n = new QSGFramebufferObjectNode;
-        n->window = window();
+        if (!d->node)
+            d->node = new QSGFramebufferObjectNode;
+        n = d->node;
     }
 
     if (!n->renderer) {
+        n->window = window();
         n->renderer = createRenderer();
         n->renderer->data = n;
         connect(window(), SIGNAL(beforeRendering()), n, SLOT(render()));
@@ -263,6 +279,39 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     n->scheduleRender();
 
     return n;
+}
+
+bool QQuickFramebufferObject::isTextureProvider() const
+{
+    return true;
+}
+
+QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
+{
+    Q_D(const QQuickFramebufferObject);
+    QQuickWindow *w = window();
+    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+        qWarning("QQuickFramebufferObject::textureProvider: can only be queried on the rendering thread of an exposed window");
+        return 0;
+    }
+    if (!d->node)
+        d->node = new QSGFramebufferObjectNode;
+    return d->node;
+}
+
+void QQuickFramebufferObject::releaseResources()
+{
+    // When release resources is called on the GUI thread, we only need to
+    // forget about the node. Since it is the node we returned from updatePaintNode
+    // it will be managed by the scene graph.
+    Q_D(QQuickFramebufferObject);
+    d->node = 0;
+}
+
+void QQuickFramebufferObject::invalidateSG()
+{
+    Q_D(QQuickFramebufferObject);
+    d->node = 0;
 }
 
 /*!
