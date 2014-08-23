@@ -133,6 +133,9 @@ public:
     Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url);
 
+    bool isTextureProvider() const Q_DECL_OVERRIDE;
+    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+
 Q_SIGNALS:
     void paint(const QRect &region);
     void painted();
