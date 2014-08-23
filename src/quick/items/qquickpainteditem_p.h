@@ -39,6 +39,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickPaintedItemTextureProvider;
+class QSGPainterNode;
+
 class QQuickPaintedItemPrivate : public QQuickItemPrivate
 {
 public:
@@ -55,6 +58,9 @@ public:
     bool opaquePainting: 1;
     bool antialiasing: 1;
     bool mipmap: 1;
+
+    mutable QQuickPaintedItemTextureProvider *textureProvider;
+    QSGPainterNode *node;
 };
 
 QT_END_NAMESPACE

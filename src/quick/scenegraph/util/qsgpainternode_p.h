@@ -99,6 +99,8 @@ public:
 
     void paint();
 
+    QSGTexture *texture() const { return m_texture; }
+
 private:
     void updateTexture();
     void updateGeometry();

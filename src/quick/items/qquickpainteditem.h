@@ -96,6 +96,9 @@ public:
 
     virtual void paint(QPainter *painter) = 0;
 
+    bool isTextureProvider() const Q_DECL_OVERRIDE;
+    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+
 Q_SIGNALS:
     void fillColorChanged();
     void contentsSizeChanged();
@@ -105,6 +108,10 @@ Q_SIGNALS:
 protected:
     QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = 0);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void releaseResources() Q_DECL_OVERRIDE;
+
+private Q_SLOTS:
+    void invalidateSG();
 
 private:
     Q_DISABLE_COPY(QQuickPaintedItem)

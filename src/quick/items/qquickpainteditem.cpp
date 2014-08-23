@@ -42,6 +42,14 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickPaintedItemTextureProvider : public QSGTextureProvider
+{
+public:
+    QSGPainterNode *node;
+    QSGTexture *texture() const { return node ? node->texture() : 0; }
+    void fireTextureChanged() { emit textureChanged(); }
+};
+
 /*!
     \class QQuickPaintedItem
     \brief The QQuickPaintedItem class provides a way to use the QPainter API in the
@@ -63,6 +71,11 @@ QT_BEGIN_NAMESPACE
     start by implementing its only pure virtual public function: paint(), which implements
     the actual painting. To get the size of the area painted by the item, use
     contentsBoundingRect().
+
+    Starting Qt 5.4, the QQuickPaintedItem is a
+    \l{QSGTextureProvider}{texture provider}
+    and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
+    classes that consume texture providers.
 */
 
 /*!
@@ -115,6 +128,8 @@ QQuickPaintedItemPrivate::QQuickPaintedItemPrivate()
     , opaquePainting(false)
     , antialiasing(false)
     , mipmap(false)
+    , textureProvider(0)
+    , node(0)
 {
 }
 
@@ -125,6 +140,7 @@ QQuickPaintedItem::QQuickPaintedItem(QQuickItem *parent)
     : QQuickItem(*(new QQuickPaintedItemPrivate), parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -134,6 +150,7 @@ QQuickPaintedItem::QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *p
     : QQuickItem(dd, parent)
 {
     setFlag(ItemHasContents);
+    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -141,6 +158,9 @@ QQuickPaintedItem::QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *p
 */
 QQuickPaintedItem::~QQuickPaintedItem()
 {
+    Q_D(QQuickPaintedItem);
+    if (d->textureProvider)
+        QQuickWindowQObjectCleanupJob::schedule(window(), d->textureProvider);
 }
 
 /*!
@@ -494,12 +514,18 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     if (width() <= 0 || height() <= 0) {
         delete oldNode;
+        if (d->textureProvider) {
+            d->textureProvider->node = 0;
+            d->textureProvider->fireTextureChanged();
+        }
         return 0;
     }
 
     QSGPainterNode *node = static_cast<QSGPainterNode *>(oldNode);
-    if (!node)
+    if (!node) {
         node = new QSGPainterNode(this);
+        d->node = node;
+    }
 
     QRectF br = contentsBoundingRect();
 
@@ -517,7 +543,49 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     d->dirtyRect = QRect();
 
+    if (d->textureProvider) {
+        d->textureProvider->node = node;
+        d->textureProvider->fireTextureChanged();
+    }
+
     return node;
+}
+
+void QQuickPaintedItem::releaseResources()
+{
+    Q_D(QQuickPaintedItem);
+    if (d->textureProvider) {
+        QQuickWindowQObjectCleanupJob::schedule(window(), d->textureProvider);
+        d->textureProvider = 0;
+    }
+    d->node = 0; // Managed by the scene graph, just clear the pointer.
+}
+
+void QQuickPaintedItem::invalidateSG()
+{
+    Q_D(QQuickPaintedItem);
+    delete d->textureProvider;
+    d->textureProvider = 0;
+    d->node = 0; // Managed by the scene graph, just clear the pointer
+}
+
+bool QQuickPaintedItem::isTextureProvider() const
+{
+    return true;
+}
+
+QSGTextureProvider *QQuickPaintedItem::textureProvider() const
+{
+    Q_D(const QQuickPaintedItem);
+    QQuickWindow *w = window();
+    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+        qWarning("QQuickPaintedItem::textureProvider: can only be queried on the rendering thread of an exposed window");
+        return 0;
+    }
+    if (!d->textureProvider)
+        d->textureProvider = new QQuickPaintedItemTextureProvider();
+    d->textureProvider->node = d->node;
+    return d->textureProvider;
 }
 
 QT_END_NAMESPACE
