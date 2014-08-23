@@ -62,6 +62,7 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
+#include <QtCore/qrunnable.h>
 #include <private/qwindow_p.h>
 #include <private/qopengl_p.h>
 #include <qopenglcontext.h>
@@ -285,6 +286,19 @@ public:
 
 private:
     bool _accepted;
+};
+
+class QQuickWindowQObjectCleanupJob : public QRunnable
+{
+public:
+    QQuickWindowQObjectCleanupJob(QObject *o) : object(o) { }
+    void run() Q_DECL_OVERRIDE { delete object; }
+    QObject *object;
+    static void schedule(QQuickWindow *window, QObject *object) {
+        Q_ASSERT(window);
+        Q_ASSERT(object);
+        window->scheduleRenderJob(new QQuickWindowQObjectCleanupJob(object), QQuickWindow::AfterSynchronizingStage);
+    }
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::FocusOptions)
