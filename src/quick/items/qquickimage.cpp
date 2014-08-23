@@ -93,14 +93,6 @@ QQuickImagePrivate::QQuickImagePrivate()
 {
 }
 
-class QQuickImageCleanup : public QRunnable
-{
-public:
-    QQuickImageCleanup(QQuickImageTextureProvider *p) : provider(p) { }
-    void run() Q_DECL_OVERRIDE { delete provider; }
-    QQuickImageTextureProvider *provider;
-};
-
 /*!
     \qmltype Image
     \instantiates QQuickImage
@@ -172,11 +164,10 @@ QQuickImage::QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent)
 QQuickImage::~QQuickImage()
 {
     Q_D(QQuickImage);
-    if (QQuickWindow *w = window()) {
-        w->scheduleRenderJob(new QQuickImageCleanup(d->provider), QQuickWindow::AfterSynchronizingStage);
-    } else {
-        // Should have been released already in releaseResources or in invalidateSG.
-        Q_ASSERT(!d->provider);
+    if (d->provider) {
+        // We're guaranteed to have a window() here because the provider would have
+        // been released in releaseResources() if we were gone from a window.
+        QQuickWindowQObjectCleanupJob::schedule(window(), d->provider);
     }
 }
 
@@ -589,7 +580,7 @@ void QQuickImage::releaseResources()
 {
     Q_D(QQuickImage);
     if (d->provider) {
-        window()->scheduleRenderJob(new QQuickImageCleanup(d->provider), QQuickWindow::AfterSynchronizingStage);
+        QQuickWindowQObjectCleanupJob::schedule(window(), d->provider);
         d->provider = 0;
     }
 }
