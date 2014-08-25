@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
                                              QQuickTextNode::Decorations decorations, const QColor &textColor,
-                                             const QColor &backgroundColor, const QPointF &position)
+                                             const QColor &backgroundColor, const QPointF &position, int rangeStart, int rangeEnd)
 {
     QRectF searchRect = glyphRun.boundingRect();
     searchRect.translate(position);
@@ -66,7 +66,7 @@ void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode
 
     qreal ascent = glyphRun.rawFont().ascent();
     insert(binaryTree, BinaryTreeNode(glyphRun, selectionState, searchRect, decorations,
-                                      textColor, backgroundColor, position, ascent));
+                                      textColor, backgroundColor, position, ascent, rangeStart, rangeEnd));
 }
 
 void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode)
@@ -247,12 +247,9 @@ void QQuickTextNodeEngine::processCurrentLine()
             // selection rect to the graph, and we add decoration every time the
             // selection state changes, because that means the text color changes
             if (node == 0 || node->selectionState != currentSelectionState) {
-                if (node != 0)
-                    currentRect.setRight(node->boundingRect.left());
                 currentRect.setY(m_position.y() + m_currentLine.y());
                 currentRect.setHeight(m_currentLine.height());
 
-                // Draw selection all the way up to the left edge of the unselected item
                 if (currentSelectionState == Selected)
                     m_selectionRects.append(currentRect);
 
@@ -288,8 +285,10 @@ void QQuickTextNodeEngine::processCurrentLine()
             }
 
             if (node != 0) {
-                node->clipNode = currentClipNode;
-                currentClipNodeUsed = true;
+                if (node->selectionState == Selected) {
+                    node->clipNode = currentClipNode;
+                    currentClipNodeUsed = true;
+                }
 
                 decorationRect = node->boundingRect;
 
@@ -442,17 +441,19 @@ void QQuickTextNodeEngine::addTextObject(const QPointF &position, const QTextCha
     }
 }
 
-void QQuickTextNodeEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun)
+void QQuickTextNodeEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd)
 {
     BinaryTreeNode::insert(&m_currentLineTree, glyphRun, Unselected,
-                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position);
+                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position,
+                           rangeStart, rangeEnd);
 }
 
-void QQuickTextNodeEngine::addSelectedGlyphs(const QGlyphRun &glyphRun)
+void QQuickTextNodeEngine::addSelectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd)
 {
     int currentSize = m_currentLineTree.size();
     BinaryTreeNode::insert(&m_currentLineTree, glyphRun, Selected,
-                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position);
+                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position,
+                           rangeStart, rangeEnd);
     m_hasSelection = m_hasSelection || m_currentLineTree.size() > currentSize;
 }
 
@@ -525,17 +526,15 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
         QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart, rangeLength);
         for (int j=0; j<glyphRuns.size(); ++j) {
             const QGlyphRun &glyphRun = glyphRuns.at(j);
-            addUnselectedGlyphs(glyphRun);
+            addUnselectedGlyphs(glyphRun, rangeStart, rangeEnd - 1);
         }
     } else {
         if (rangeStart < selectionStart) {
-            QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart,
-                                                        qMin(selectionStart - rangeStart,
-                                                             rangeLength));
-
+            int length = qMin(selectionStart - rangeStart, rangeLength);
+            QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart, length);
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addUnselectedGlyphs(glyphRun);
+                addUnselectedGlyphs(glyphRun, rangeStart, rangeStart + length - 1);
             }
         }
 
@@ -546,15 +545,18 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
 
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addSelectedGlyphs(glyphRun);
+                addSelectedGlyphs(glyphRun, start, start + length - 1);
+                addUnselectedGlyphs(glyphRun, start, start + length - 1);
             }
         }
 
         if (selectionEnd >= rangeStart && selectionEnd < rangeEnd) {
-            QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionEnd + 1, rangeEnd - selectionEnd - 1);
+            int start = selectionEnd + 1;
+            int length = rangeEnd - selectionEnd - 1;
+            QList<QGlyphRun> glyphRuns = line.glyphRuns(start, length);
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addUnselectedGlyphs(glyphRun);
+                addUnselectedGlyphs(glyphRun, start, start + length - 1);
             }
         }
     }
@@ -633,37 +635,12 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     if (m_currentLine.isValid())
         processCurrentLine();
 
-
-    for (int i=0; i<m_backgrounds.size(); ++i) {
-        const QRectF &rect = m_backgrounds.at(i).first;
-        const QColor &color = m_backgrounds.at(i).second;
-
-        parentNode->addRectangleNode(rect, color);
-    }
-
-    // First, prepend all selection rectangles to the tree
-    for (int i=0; i<m_selectionRects.size(); ++i) {
-        const QRectF &rect = m_selectionRects.at(i);
-
-        parentNode->addRectangleNode(rect, m_selectionColor);
-    }
-
-    // Finally, add decorations for each node to the tree.
-    for (int i=0; i<m_lines.size(); ++i) {
-        const TextDecoration &textDecoration = m_lines.at(i);
-
-        QColor color = textDecoration.selectionState == Selected
-                ? m_selectedTextColor
-                : textDecoration.color;
-
-        parentNode->addRectangleNode(textDecoration.rect, color);
-    }
-
     // Then, go through all the nodes for all lines and combine all QGlyphRuns with a common
     // font, selection state and clip node.
     typedef QPair<QFontEngine *, QPair<QQuickDefaultClipNode *, QPair<QRgb, int> > > KeyType;
     QHash<KeyType, BinaryTreeNode *> map;
     QList<BinaryTreeNode *> nodes;
+    QList<BinaryTreeNode *> imageNodes;
     for (int i = 0; i < m_processedNodes.size(); ++i) {
         BinaryTreeNode *node = m_processedNodes.data() + i;
 
@@ -696,11 +673,130 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                 otherGlyphRun.setGlyphIndexes(otherGlyphIndexes);
                 otherGlyphRun.setPositions(otherGlyphPositions);
 
+                otherNode->ranges += node->ranges;
+
             } else {
                 map.insert(key, node);
                 nodes.append(node);
             }
         } else {
+            imageNodes.append(node);
+        }
+    }
+
+    for (int i = 0; i < m_backgrounds.size(); ++i) {
+        const QRectF &rect = m_backgrounds.at(i).first;
+        const QColor &color = m_backgrounds.at(i).second;
+
+        parentNode->addRectangleNode(rect, color);
+    }
+
+    // Add all unselected text first
+    for (int i = 0; i < nodes.size(); ++i) {
+        const BinaryTreeNode *node = nodes.at(i);
+        if (node->selectionState == Unselected)
+            parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
+    }
+
+    for (int i = 0; i < imageNodes.size(); ++i) {
+        const BinaryTreeNode *node = imageNodes.at(i);
+        if (node->selectionState == Unselected)
+            parentNode->addImage(node->boundingRect, node->image);
+    }
+
+    // Then, prepend all selection rectangles to the tree
+    for (int i = 0; i < m_selectionRects.size(); ++i) {
+        const QRectF &rect = m_selectionRects.at(i);
+
+        parentNode->addRectangleNode(rect, m_selectionColor);
+    }
+
+    // Add decorations for each node to the tree.
+    for (int i = 0; i < m_lines.size(); ++i) {
+        const TextDecoration &textDecoration = m_lines.at(i);
+
+        QColor color = textDecoration.selectionState == Selected
+                ? m_selectedTextColor
+                : textDecoration.color;
+
+        parentNode->addRectangleNode(textDecoration.rect, color);
+    }
+
+    // Finally add the selected text on top of everything
+    for (int i = 0; i < nodes.size(); ++i) {
+        const BinaryTreeNode *node = nodes.at(i);
+        QQuickDefaultClipNode *clipNode = node->clipNode;
+        if (clipNode != 0 && clipNode->parent() == 0)
+            parentNode->appendChildNode(clipNode);
+
+        if (node->selectionState == Selected) {
+            QColor color = m_selectedTextColor;
+            int previousNodeIndex = i - 1;
+            int nextNodeIndex = i + 1;
+            const BinaryTreeNode *previousNode = previousNodeIndex < 0 ? 0 : nodes.at(previousNodeIndex);
+            while (previousNode != 0 && qFuzzyCompare(previousNode->boundingRect.left(), node->boundingRect.left()))
+                previousNode = --previousNodeIndex < 0 ? 0 : nodes.at(previousNodeIndex);
+
+            const BinaryTreeNode *nextNode = nextNodeIndex == nodes.size() ? 0 : nodes.at(nextNodeIndex);
+
+            if (previousNode != 0 && previousNode->selectionState == Unselected)
+                parentNode->addGlyphs(previousNode->position, previousNode->glyphRun, color, style, styleColor, clipNode);
+
+            if (nextNode != 0 && nextNode->selectionState == Unselected)
+                parentNode->addGlyphs(nextNode->position, nextNode->glyphRun, color, style, styleColor, clipNode);
+
+            // If the previous or next node completely overlaps this one, then we have already drawn the glyphs of
+            // this node
+            bool drawCurrent = false;
+            if (previousNode != 0 || nextNode != 0) {
+                for (int i = 0; i < node->ranges.size(); ++i) {
+                    const QPair<int, int> &range = node->ranges.at(i);
+
+                    int rangeLength = range.second - range.first + 1;
+                    if (previousNode != 0) {
+                        for (int j = 0; j < previousNode->ranges.size(); ++j) {
+                            const QPair<int, int> &otherRange = previousNode->ranges.at(j);
+                            if (range.first <= otherRange.second && range.second >= otherRange.first) {
+                                int start = qMax(range.first, otherRange.first);
+                                int end = qMin(range.second, otherRange.second);
+                                rangeLength -= end - start + 1;
+                                if (rangeLength == 0)
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (nextNode != 0 && rangeLength > 0) {
+                        for (int j = 0; j < nextNode->ranges.size(); ++j) {
+                            const QPair<int, int> &otherRange = nextNode->ranges.at(j);
+
+                            if (range.first <= otherRange.second && range.second >= otherRange.first) {
+                                int start = qMax(range.first, otherRange.first);
+                                int end = qMin(range.second, otherRange.second);
+                                rangeLength -= end - start + 1;
+                                if (rangeLength == 0)
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (rangeLength > 0) {
+                        drawCurrent = true;
+                        break;
+                    }
+                }
+            } else {
+                drawCurrent = true;
+            }
+
+            if (drawCurrent)
+                parentNode->addGlyphs(node->position, node->glyphRun, color, style, styleColor, clipNode);
+        }
+    }
+
+    for (int i = 0; i < imageNodes.size(); ++i) {
+        const BinaryTreeNode *node = imageNodes.at(i);
+        if (node->selectionState == Selected) {
             parentNode->addImage(node->boundingRect, node->image);
             if (node->selectionState == Selected) {
                 QColor color = m_selectionColor;
@@ -708,19 +804,6 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                 parentNode->addRectangleNode(node->boundingRect, color);
             }
         }
-    }
-
-    foreach (const BinaryTreeNode *node, nodes) {
-
-        QQuickDefaultClipNode *clipNode = node->clipNode;
-        if (clipNode != 0 && clipNode->parent() == 0 )
-            parentNode->appendChildNode(clipNode);
-
-        QColor color = node->selectionState == Selected
-                ? m_selectedTextColor
-                : node->color;
-
-        parentNode->addGlyphs(node->position, node->glyphRun, color, style, styleColor, clipNode);
     }
 }
 
@@ -844,7 +927,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
             QList<QGlyphRun> glyphRuns = layout.glyphRuns();
             for (int i=0; i<glyphRuns.size(); ++i)
-                addUnselectedGlyphs(glyphRuns.at(i));
+                addUnselectedGlyphs(glyphRuns.at(i), 0, layout.text().length() - 1);
         }
     }
 
