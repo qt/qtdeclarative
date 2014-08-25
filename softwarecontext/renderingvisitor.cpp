@@ -25,6 +25,8 @@
 #include "ninepatchnode.h"
 #include "painternode.h"
 
+#include <QtQuick/QSGSimpleRectNode>
+
 RenderingVisitor::RenderingVisitor(QPainter *painter)
     : painter(painter)
 {
@@ -57,13 +59,22 @@ void RenderingVisitor::endVisit(QSGClipNode *)
 
 bool RenderingVisitor::visit(QSGGeometryNode *node)
 {
-    Q_UNREACHABLE();
+    //Check for QSGSimpleRect
+    QSGSimpleRectNode *rectNode = 0;
+    rectNode = dynamic_cast<QSGSimpleRectNode *>(node);
+    if (rectNode) {
+        if (!rectNode->material()->flags() & QSGMaterial::Blending)
+            painter->setCompositionMode(QPainter::CompositionMode_Source);
+        painter->fillRect(rectNode->rect(), rectNode->color());
+        painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+    }
+
     return true;
 }
 
 void RenderingVisitor::endVisit(QSGGeometryNode *node)
 {
-    Q_UNREACHABLE();
+
 }
 
 bool RenderingVisitor::visit(QSGOpacityNode *node)
