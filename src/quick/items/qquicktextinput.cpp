@@ -1852,17 +1852,13 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node = new QQuickTextNode(this);
     d->textNode = node;
 
-    if (!d->textLayoutDirty && oldNode != 0) {
-        QSGRectangleNode *cursorNode = node->cursorNode();
-        if (cursorNode != 0 && !isReadOnly()) {
-            cursorNode->setRect(cursorRectangle());
+    const bool showCursor = !isReadOnly() && d->cursorItem == 0 && d->cursorVisible && (d->m_blinkStatus || d->m_blinkPeriod == 0);
 
-            if (!d->cursorVisible || d->cursorItem || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
-                d->hideCursor();
-            } else {
-                d->showCursor();
-            }
-        }
+    if (!d->textLayoutDirty && oldNode != 0) {
+        if (showCursor)
+            node->setCursor(cursorRectangle(), d->color);
+        else
+            node->clearCursor();
     } else {
         node->setUseNativeRenderer(d->renderType == NativeRendering);
         node->deleteContent();
@@ -1890,14 +1886,8 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
                                                                  // selection
         }
 
-        if (!isReadOnly() && d->cursorItem == 0) {
-            node->setCursor(cursorRectangle(), d->color);
-            if (!d->cursorVisible || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
-                d->hideCursor();
-            } else {
-                d->showCursor();
-            }
-        }
+        if (showCursor)
+                node->setCursor(cursorRectangle(), d->color);
 
         d->textLayoutDirty = false;
     }
@@ -2693,24 +2683,6 @@ void QQuickTextInput::selectionChanged()
         if (d->lastSelectionEnd == -1)
             d->lastSelectionEnd = d->m_cursor;
         emit selectionEndChanged();
-    }
-}
-
-void QQuickTextInputPrivate::showCursor()
-{
-    if (textNode != 0 && textNode->cursorNode() != 0) {
-        QSGRectangleNode *cursor = textNode->cursorNode();
-        cursor->setColor(color);
-        cursor->update();
-    }
-}
-
-void QQuickTextInputPrivate::hideCursor()
-{
-    if (textNode != 0 && textNode->cursorNode() != 0) {
-        QSGRectangleNode *cursor = textNode->cursorNode();
-        cursor->setColor(QColor(0, 0, 0, 0));
-        cursor->update();
     }
 }
 

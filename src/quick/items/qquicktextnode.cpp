@@ -179,6 +179,14 @@ void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
     appendChildNode(m_cursorNode);
 }
 
+void QQuickTextNode::clearCursor()
+{
+    if (m_cursorNode)
+        removeChildNode(m_cursorNode);
+    delete m_cursorNode;
+    m_cursorNode = 0;
+}
+
 void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor, const QColor& anchorColor, const QPointF &position)
 {
     m_engine.reset(new QQuickTextNodeEngine);

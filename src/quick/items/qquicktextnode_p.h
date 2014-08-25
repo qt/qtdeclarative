@@ -88,6 +88,7 @@ public:
                          int selectionStart = -1, int selectionEnd = -1);
 
     void setCursor(const QRectF &rect, const QColor &color);
+    void clearCursor();
     QSGRectangleNode *cursorNode() const { return m_cursorNode; }
 
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,

@@ -150,8 +150,6 @@ public:
 #ifndef QT_NO_IM
     Qt::InputMethodHints effectiveInputMethodHints() const;
 #endif
-    void hideCursor();
-    void showCursor();
     void handleFocusEvent(QFocusEvent *event);
 
     struct MaskInputData {
