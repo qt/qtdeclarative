@@ -190,7 +190,7 @@ QSGTexture *RenderContext::createTexture(const QImage &image) const
 
 QSGTexture *RenderContext::createTextureNoAtlas(const QImage &image) const
 {
-    return QSGRenderContext::createTextureNoAtlas(image);
+    return new PixmapTexture(image);
 }
 
 QSGRenderer *RenderContext::createRenderer()

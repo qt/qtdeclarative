@@ -24,8 +24,11 @@
 #include "glyphnode.h"
 #include "ninepatchnode.h"
 #include "painternode.h"
+#include "pixmaptexture.h"
 
 #include <QtQuick/QSGSimpleRectNode>
+#include <QtQuick/qsgsimpletexturenode.h>
+#include <private/qsgtexture_p.h>
 
 RenderingVisitor::RenderingVisitor(QPainter *painter)
     : painter(painter)
@@ -59,22 +62,30 @@ void RenderingVisitor::endVisit(QSGClipNode *)
 
 bool RenderingVisitor::visit(QSGGeometryNode *node)
 {
-    //Check for QSGSimpleRect
-    QSGSimpleRectNode *rectNode = 0;
-    rectNode = dynamic_cast<QSGSimpleRectNode *>(node);
-    if (rectNode) {
+    if (QSGSimpleRectNode *rectNode = dynamic_cast<QSGSimpleRectNode *>(node)) {
         if (!rectNode->material()->flags() & QSGMaterial::Blending)
             painter->setCompositionMode(QPainter::CompositionMode_Source);
         painter->fillRect(rectNode->rect(), rectNode->color());
         painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+    } else if (QSGSimpleTextureNode *tn = dynamic_cast<QSGSimpleTextureNode *>(node)) {
+        QSGTexture *texture = tn->texture();
+        if (PixmapTexture *pt = dynamic_cast<PixmapTexture *>(texture)) {
+            const QPixmap &pm = pt->pixmap();
+            painter->drawPixmap(tn->rect(), pm, QRectF(0, 0, pm.width(), pm.height()));
+        } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(texture)) {
+            const QImage &im = pt->image();
+            painter->drawImage(tn->rect(), im, QRectF(0, 0, im.width(), im.height()));
+        } else {
+            Q_UNREACHABLE();
+        }
+    } else {
+        Q_UNREACHABLE();
     }
-
     return true;
 }
 
-void RenderingVisitor::endVisit(QSGGeometryNode *node)
+void RenderingVisitor::endVisit(QSGGeometryNode *)
 {
-
 }
 
 bool RenderingVisitor::visit(QSGOpacityNode *node)
@@ -89,7 +100,7 @@ bool RenderingVisitor::visit(QSGOpacityNode *node)
     return true;
 }
 
-void RenderingVisitor::endVisit(QSGOpacityNode *node)
+void RenderingVisitor::endVisit(QSGOpacityNode *)
 {
     painter->restore();
 }
