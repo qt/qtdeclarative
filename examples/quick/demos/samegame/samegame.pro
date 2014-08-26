@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick
+QT += qml quick sql
 SOURCES += main.cpp
 RESOURCES += samegame.qrc
 
