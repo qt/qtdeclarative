@@ -18,6 +18,7 @@
 **
 ****************************************************************************/
 #include "painternode.h"
+#include "pixmaptexture.h"
 #include <qmath.h>
 
 PainterNode::PainterNode(QQuickPaintedItem *item)
@@ -25,6 +26,7 @@ PainterNode::PainterNode(QQuickPaintedItem *item)
     , m_preferredRenderTarget(QQuickPaintedItem::Image)
     , m_actualRenderTarget(QQuickPaintedItem::Image)
     , m_item(item)
+    , m_texture(0)
     , m_dirtyContents(false)
     , m_opaquePainting(false)
     , m_linear_filtering(false)
@@ -39,6 +41,11 @@ PainterNode::PainterNode(QQuickPaintedItem *item)
 {
     setMaterial((QSGMaterial*)1);
     setGeometry((QSGGeometry*)1);
+}
+
+PainterNode::~PainterNode()
+{
+    delete m_texture;
 }
 
 void PainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
@@ -132,6 +139,10 @@ void PainterNode::update()
         m_pixmap = QPixmap(m_size);
         if (!m_opaquePainting)
             m_pixmap.fill(Qt::transparent);
+
+        if (m_texture)
+            delete m_texture;
+        m_texture = new PixmapTexture(m_pixmap);
     }
 
     if (m_dirtyContents)

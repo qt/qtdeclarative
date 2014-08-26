@@ -29,6 +29,7 @@ class PainterNode : public QSGPainterNode
 {
 public:
     PainterNode(QQuickPaintedItem *item);
+    ~PainterNode();
 
     void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target);
 
@@ -60,6 +61,7 @@ public:
 
     QImage toImage() const;
     void update();
+    QSGTexture *texture() const { return m_texture; }
 
     void paint(QPainter *painter);
 
@@ -73,6 +75,7 @@ private:
     QQuickPaintedItem *m_item;
 
     QPixmap m_pixmap;
+    QSGTexture *m_texture;
 
     QSize m_size;
     bool m_dirtyContents;

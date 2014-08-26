@@ -27,6 +27,7 @@ class PixmapTexture : public QSGTexture
     Q_OBJECT
 public:
     PixmapTexture(const QImage &image);
+    PixmapTexture(const QPixmap &pixmap);
 
     virtual int textureId() const;
     virtual QSize textureSize() const;

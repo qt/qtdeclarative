@@ -24,6 +24,11 @@ PixmapTexture::PixmapTexture(const QImage &image)
 {
 }
 
+PixmapTexture::PixmapTexture(const QPixmap &pixmap)
+    : m_pixmap(pixmap)
+{
+}
+
 
 int PixmapTexture::textureId() const
 {
