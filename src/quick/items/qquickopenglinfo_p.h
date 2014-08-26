@@ -1,9 +1,10 @@
 /****************************************************************************
 **
+** Copyright (C) 2014 BlackBerry Ltd.
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,11 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLPROFILERDEFINITIONS_P_H
-#define QQMLPROFILERDEFINITIONS_P_H
-
-#include <private/qtqmlglobal_p.h>
-#include <private/qv4profiling_p.h>
+#ifndef QQUICKOPENGLINFO_P_H
+#define QQUICKOPENGLINFO_P_H
 
 //
 //  W A R N I N G
@@ -56,82 +54,69 @@
 // We mean it.
 //
 
+#include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
+#include <QtGui/qsurfaceformat.h>
+#include <QtQml/qqml.h>
+
 QT_BEGIN_NAMESPACE
 
-struct QQmlProfilerDefinitions {
-    enum Message {
-        Event,
-        RangeStart,
-        RangeData,
-        RangeLocation,
-        RangeEnd,
-        Complete, // end of transmission
-        PixmapCacheEvent,
-        SceneGraphFrame,
-        MemoryAllocation,
+class QQuickItem;
+class QQuickWindow;
 
-        MaximumMessage
+class QQuickOpenGLInfo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int majorVersion READ majorVersion NOTIFY majorVersionChanged FINAL)
+    Q_PROPERTY(int minorVersion READ minorVersion NOTIFY minorVersionChanged FINAL)
+    Q_PROPERTY(ContextProfile profile READ profile NOTIFY profileChanged FINAL)
+    Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
+    Q_ENUMS(ContextProfile RenderableType)
+
+public:
+    QQuickOpenGLInfo(QQuickItem *item = 0);
+
+    int majorVersion() const;
+    int minorVersion() const;
+
+    // keep in sync with QSurfaceFormat::OpenGLContextProfile
+    enum ContextProfile {
+        NoProfile = QSurfaceFormat::NoProfile,
+        CoreProfile = QSurfaceFormat::CoreProfile,
+        CompatibilityProfile = QSurfaceFormat::CompatibilityProfile
     };
+    ContextProfile profile() const;
 
-    enum EventType {
-        FramePaint,
-        Mouse,
-        Key,
-        AnimationFrame,
-        EndTrace,
-        StartTrace,
-
-        MaximumEventType
+    // keep in sync with QSurfaceFormat::RenderableType
+    enum RenderableType {
+        Unspecified = QSurfaceFormat::DefaultRenderableType,
+        OpenGL = QSurfaceFormat::OpenGL,
+        OpenGLES = QSurfaceFormat::OpenGLES
     };
+    RenderableType renderableType() const;
 
-    enum RangeType {
-        Painting,
-        Compiling,
-        Creating,
-        Binding,            //running a binding
-        HandlingSignal,     //running a signal handler
-        Javascript,
+    static QQuickOpenGLInfo *qmlAttachedProperties(QObject *object);
 
-        MaximumRangeType
-    };
+Q_SIGNALS:
+    void majorVersionChanged();
+    void minorVersionChanged();
+    void profileChanged();
+    void renderableTypeChanged();
 
-    enum BindingType {
-        QmlBinding,
-        V8Binding,
-        V4Binding,
+private Q_SLOTS:
+    void updateFormat();
+    void setWindow(QQuickWindow *window);
 
-        MaximumBindingType
-    };
-
-    enum PixmapEventType {
-        PixmapSizeKnown,
-        PixmapReferenceCountChanged,
-        PixmapCacheCountChanged,
-        PixmapLoadingStarted,
-        PixmapLoadingFinished,
-        PixmapLoadingError,
-
-        MaximumPixmapEventType
-    };
-
-    enum SceneGraphFrameType {
-        SceneGraphRendererFrame,
-        SceneGraphAdaptationLayerFrame,
-        SceneGraphContextFrame,
-        SceneGraphRenderLoopFrame,
-        SceneGraphTexturePrepare,
-        SceneGraphTextureDeletion,
-        SceneGraphPolishAndSync,
-        SceneGraphWindowsRenderShow,
-        SceneGraphWindowsAnimations,
-        SceneGraphPolishFrame,
-
-        MaximumSceneGraphFrameType
-    };
-
-    typedef QV4::Profiling::MemoryType MemoryType;
+private:
+    QPointer<QQuickWindow> m_window;
+    int m_majorVersion;
+    int m_minorVersion;
+    ContextProfile m_profile;
+    RenderableType m_renderableType;
 };
 
 QT_END_NAMESPACE
 
-#endif
+QML_DECLARE_TYPEINFO(QQuickOpenGLInfo, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKOPENGLINFO_P_H

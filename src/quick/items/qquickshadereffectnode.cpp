@@ -329,6 +329,11 @@ bool QQuickShaderEffectMaterialKey::operator == (const QQuickShaderEffectMateria
     return true;
 }
 
+bool QQuickShaderEffectMaterialKey::operator != (const QQuickShaderEffectMaterialKey &other) const
+{
+    return !(*this == other);
+}
+
 uint qHash(const QQuickShaderEffectMaterialKey &key)
 {
     uint hash = qHash((void *)key.className);
@@ -381,9 +386,13 @@ bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &ot
 int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
 {
     const QQuickShaderEffectMaterial *other = static_cast<const QQuickShaderEffectMaterial *>(o);
+    if (!supportsAtlasTextures || !other->supportsAtlasTextures)
+        return 1;
+    if (bool(flags() & QSGMaterial::RequiresFullMatrix) || bool(other->flags() & QSGMaterial::RequiresFullMatrix))
+        return 1;
     if (cullMode != other->cullMode)
         return 1;
-    if (supportsAtlasTextures != other->supportsAtlasTextures)
+    if (m_source != other->m_source)
         return 1;
     for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         if (uniforms[shaderType] != other->uniforms[shaderType])

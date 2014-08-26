@@ -52,7 +52,7 @@ for more details.)
 
 In general, these are accessible from QML regardless of whether a
 QObject-derived class has been \l{Registering C++ types with the QML type
-system}{registered with the QML type system}. However, if if a class is to be
+system}{registered with the QML type system}. However, if a class is to be
 used in a way that requires the engine to access additional type information
 — for example, if the class itself is to be used as a method parameter or
 property, or if one of its enum types is to be used in this way — then the

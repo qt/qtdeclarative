@@ -158,6 +158,8 @@ protected:
 
     bool visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                           IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
+    bool visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
+                          IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
     void visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
     bool visitCJumpStrictNullUndefined(IR::Type nullOrUndef, IR::Binop *binop,
                                        IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
@@ -229,19 +231,15 @@ private:
     template <typename Retval, typename Arg1, typename Arg2, typename Arg3>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        Assembler::RegisterID lookupRegister;
-#if CPU(ARM)
-        lookupRegister = JSC::ARMRegisters::r8;
-#else
-        lookupRegister = Assembler::ReturnValueRegister;
-#endif
-        Assembler::Pointer lookupAddr(lookupRegister, index * sizeof(QV4::Lookup));
-
-        Assembler::Address getterSetter = lookupAddr;
-        getterSetter.offset += getterSetterOffset;
+        // Note: using the return value register is intentional: for ABIs where the first parameter
+        // goes into the same register as the return value (currently only ARM), the prepareCall
+        // will combine loading the looupAddr into the register and calculating the indirect call
+        // address.
+        Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
          _as->generateFunctionCallImp(retval, "lookup getter/setter",
-                                      RelativeCall(getterSetter), lookupAddr, arg1, arg2, arg3);
+                                      LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
+                                      arg1, arg2, arg3);
     }
 
     template <typename Retval, typename Arg1, typename Arg2>

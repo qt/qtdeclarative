@@ -6051,6 +6051,23 @@ void tst_qqmlecmascript::include()
 
     delete o;
     }
+
+    // include from resources
+    {
+    QQmlComponent component(&engine, QUrl("qrc:///data/include.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test0").toInt(), 99);
+    QCOMPARE(o->property("test1").toBool(), true);
+    QCOMPARE(o->property("test2").toBool(), true);
+    QCOMPARE(o->property("test2_1").toBool(), true);
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test3_1").toBool(), true);
+
+    delete o;
+    }
+
 }
 
 void tst_qqmlecmascript::includeRemoteSuccess()

@@ -2563,12 +2563,6 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 */
 
 /*!
-    \qmlproperty Window QtQuick::Item::window
-    \since 5.4
-    This property holds the window in which the item is rendered.
- */
-
-/*!
   Returns the window in which this item is rendered.
 
   The item does not have a window until it has been assigned into a scene. The
@@ -5908,7 +5902,7 @@ void QQuickItem::setFlags(Flags flags)
 /*!
     \fn void QQuickItem::sceneGraphInitialized()
 
-    This signal is emitted when the scene graph is is initialized for
+    This signal is emitted when the scene graph is initialized for
     items that have the ItemHasContents flag set.
 
     When the scene graph is using a dedicated render thread, this

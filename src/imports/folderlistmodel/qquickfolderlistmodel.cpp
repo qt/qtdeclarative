@@ -479,7 +479,7 @@ void QQuickFolderListModel::setRootFolder(const QUrl &path)
 /*!
     \qmlproperty url FolderListModel::parentFolder
 
-    Returns the URL of the parent of of the current \l folder.
+    Returns the URL of the parent of the current \l folder.
 */
 QUrl QQuickFolderListModel::parentFolder() const
 {

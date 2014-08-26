@@ -343,24 +343,9 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     return isNoDbl;
 }
 
-#if !defined(QT_NO_DEBUG) || defined(QT_FORCE_ASSERTS)
-namespace {
-inline bool isPregOrConst(IR::Expr *e)
-{
-    if (IR::Temp *t = e->asTemp())
-        return t->kind == IR::Temp::PhysicalRegister;
-    return e->asConst() != 0;
-}
-} // anonymous namespace
-#endif
-
 Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
                                                    IR::Expr *left, IR::Expr *right)
 {
-    Q_ASSERT(isPregOrConst(left));
-    Q_ASSERT(isPregOrConst(right));
-    Q_ASSERT(left->asConst() == 0 || right->asConst() == 0);
-
     Assembler::DoubleCondition cond;
     switch (op) {
     case IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
@@ -377,8 +362,30 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
     if (invertCondition)
         cond = JSC::MacroAssembler::invert(cond);
 
-    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left), toDoubleRegister(right));
+    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
 }
 
+Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
+{
+    Assembler::RelationalCondition cond;
+    switch (op) {
+    case IR::OpGt: cond = Assembler::GreaterThan; break;
+    case IR::OpLt: cond = Assembler::LessThan; break;
+    case IR::OpGe: cond = Assembler::GreaterThanOrEqual; break;
+    case IR::OpLe: cond = Assembler::LessThanOrEqual; break;
+    case IR::OpEqual:
+    case IR::OpStrictEqual: cond = Assembler::Equal; break;
+    case IR::OpNotEqual:
+    case IR::OpStrictNotEqual: cond = Assembler::NotEqual; break;
+    default:
+        Q_UNREACHABLE();
+    }
+    if (invertCondition)
+        cond = JSC::MacroAssembler::invert(cond);
+
+    return JSC::MacroAssembler::branch32(cond,
+                                         toInt32Register(left, Assembler::ScratchRegister),
+                                         toInt32Register(right, Assembler::ReturnValueRegister));
+}
 
 #endif

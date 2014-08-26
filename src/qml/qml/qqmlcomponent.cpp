@@ -265,7 +265,7 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 /*!
     \qmlattachedsignal Component::completed()
 
-    Emitted after component "startup" has completed. This can be used to
+    Emitted after the object has been instantiated. This can be used to
     execute script code at startup, once the full QML environment has been
     established.
 
@@ -286,14 +286,13 @@ V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 /*!
     \qmlattachedsignal Component::destruction()
 
-    Emitted as the component begins destruction. This can be used to undo
+    Emitted as the object begins destruction. This can be used to undo
     work done in response to the \l {completed}{completed()} signal, or other
     imperative code in your application.
 
     The corresponding handler is \c onDestruction. It can be declared on
-    any object. However, it applies to the destruction of the component as
-    a whole, and not the destruction of the specific object. The order of
-    running the \c onDestruction handlers is undefined.
+    any object. The order of running the \c onDestruction handlers is
+    undefined.
 
     \qml
     Rectangle {

@@ -65,6 +65,7 @@ struct QQuickShaderEffectMaterialKey {
     const char *className;
 
     bool operator == (const QQuickShaderEffectMaterialKey &other) const;
+    bool operator != (const QQuickShaderEffectMaterialKey &other) const;
 };
 
 uint qHash(const QQuickShaderEffectMaterialKey &key);

@@ -378,6 +378,24 @@ void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventTy
     d->startInstanceList.append(rangeEventStartInstance);
 }
 
+void QmlProfilerData::addMemoryEvent(QQmlProfilerService::MemoryType type, qint64 time,
+                                     qint64 size)
+{
+    setState(AcquiringData);
+    QString eventHashStr = QString::fromLatin1("MemoryAllocation:%1").arg(type);
+    QmlRangeEventData *newEvent;
+    if (d->eventDescriptions.contains(eventHashStr)) {
+        newEvent = d->eventDescriptions[eventHashStr];
+    } else {
+        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr, QmlEventLocation(),
+                                         QString(), QQmlProfilerService::MemoryAllocation,
+                                         QQmlProfilerService::MaximumRangeType);
+        d->eventDescriptions.insert(eventHashStr, newEvent);
+    }
+    QmlRangeEventStartInstance rangeEventStartInstance(time, size, 0, 0, 0, 0, newEvent);
+    d->startInstanceList.append(rangeEventStartInstance);
+}
+
 QString QmlProfilerData::rootEventName()
 {
     return tr("<program>");
@@ -589,6 +607,9 @@ bool QmlProfilerData::save(const QString &filename)
         else if (eventData->message == QQmlProfilerService::SceneGraphFrame)
             stream.writeTextElement(QStringLiteral("sgEventType"),
                                     QString::number((int)eventData->detailType));
+        else if (eventData->message == QQmlProfilerService::MemoryAllocation)
+            stream.writeTextElement(QStringLiteral("memoryEventType"),
+                                    QString::number((int)eventData->detailType));
         stream.writeEndElement();
     }
     stream.writeEndElement(); // eventData
@@ -636,6 +657,8 @@ bool QmlProfilerData::save(const QString &filename)
             if (event.numericData5 > 0)
                 stream.writeAttribute(QStringLiteral("timing5"),
                                       QString::number(event.numericData5));
+        } else if (event.data->message == QQmlProfilerService::MemoryAllocation) {
+            stream.writeAttribute(QStringLiteral("amount"), QString::number(event.numericData1));
         }
         stream.writeEndElement();
     }

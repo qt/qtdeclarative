@@ -150,9 +150,6 @@ public:
 
     QOpenGLContext *openglContext() const;
 
-    static void setDefaultFormat(const QSurfaceFormat &format);
-    static QSurfaceFormat defaultFormat();
-
     QString glslVersion() const;
     bool glslIsCoreProfile() const;
 

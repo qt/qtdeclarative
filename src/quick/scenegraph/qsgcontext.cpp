@@ -303,14 +303,14 @@ QSGGlyphNode *QSGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativ
  * Factory function for scene graph backends of the QStyle stylable elements. Returns a
  * null pointer if the backend doesn't provide its own node type.
  */
-QSGNinePatchNode *QSGContext::createQStyleNode()
+QSGNinePatchNode *QSGContext::createNinePatchNode()
 {
     return 0;
 }
 
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 {
-    QSurfaceFormat format;
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     format.setDepthBufferSize(useDepth ? 24 : 0);

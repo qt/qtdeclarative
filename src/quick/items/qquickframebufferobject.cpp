@@ -235,8 +235,12 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
 
     n->renderer->synchronize(this);
 
+    QSize minFboSize = d->sceneGraphContext()->minimumFBOSize();
+    QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
+                         qMax<int>(minFboSize.height(), height()));
+
     if (n->fbo && (d->followsItemSize || n->invalidatePending)) {
-        if (n->fbo->width() != width() || n->fbo->height() != height()) {
+        if (n->fbo->size() != desiredFboSize) {
             delete n->fbo;
             n->fbo = 0;
             delete n->msDisplayFbo;
@@ -245,10 +249,7 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     }
 
     if (!n->fbo) {
-        QSize minFboSize = d->sceneGraphContext()->minimumFBOSize();
-        QSize fboSize(qMax<int>(minFboSize.width(), width()),
-                      qMax<int>(minFboSize.height(), height()));
-        n->fbo = n->renderer->createFramebufferObject(fboSize);
+        n->fbo = n->renderer->createFramebufferObject(desiredFboSize);
 
         GLuint displayTexture = n->fbo->texture();
 
