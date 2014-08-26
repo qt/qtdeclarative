@@ -540,90 +540,347 @@ void QQuickBorderImage::doUpdate()
     update();
 }
 
+QImage QQuickBorderImage::shallowCopy(const QImage &image, const QRect &rect)
+{
+    if (image.depth() == 1) {
+        return image.copy(rect);
+    } else {
+        const uchar *bits = image.constBits() + image.bytesPerLine() * rect.y()  + (image.depth() / 8) * rect.x();
+        return QImage(bits, rect.width(), rect.height(), image.bytesPerLine(), image.format());
+    }
+}
+
 QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickBorderImage);
 
-    QSGTexture *texture = d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window());
-
-    if (!texture || width() <= 0 || height() <= 0) {
+    if (!d->pix.isReady() || width() <= 0 || height() <= 0) {
         delete oldNode;
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
-
-    bool updatePixmap = d->pixmapChanged;
-    d->pixmapChanged = false;
-    if (!node) {
-        node = d->sceneGraphContext()->createImageNode();
-        updatePixmap = true;
-    }
-
-    if (updatePixmap)
-        node->setTexture(texture);
-
     // Don't implicitly create the scalegrid in the rendering thread...
     QRectF innerSourceRect(0, 0, 1, 1);
-    QRectF targetRect(0, 0, width(), height());
-    QRectF innerTargetRect = targetRect;
+    QRectF innerTargetRect(0, 0, width(), height());
+    int borderLeft, borderTop, borderRight, borderBottom;
     if (d->border) {
         const QQuickScaleGrid *border = d->getScaleGrid();
-        innerSourceRect = QRectF(border->left() / qreal(d->pix.width()),
-                                 border->top() / qreal(d->pix.height()),
-                                 qMax<qreal>(0, d->pix.width() - border->right() - border->left()) / d->pix.width(),
-                                 qMax<qreal>(0, d->pix.height() - border->bottom() - border->top()) / d->pix.height());
-        innerTargetRect = QRectF(border->left(),
-                                 border->top(),
+
+        borderLeft = qBound(0, border->left(), d->pix.width());
+        borderTop = qBound(0, border->top(), d->pix.height());
+        borderRight = d->pix.rect().width() - qBound(0, border->right(), d->pix.rect().width() - borderLeft);
+        borderBottom = d->pix.rect().height() - qBound(0, border->bottom(), d->pix.rect().height() - borderTop);
+
+        innerSourceRect = QRectF(borderLeft / qreal(d->pix.width()),
+                                 borderTop / qreal(d->pix.height()),
+                                 qMax<qreal>(0, borderRight - borderLeft) / d->pix.width(),
+                                 qMax<qreal>(0, borderBottom - borderTop) / d->pix.height());
+        innerTargetRect = QRectF(borderLeft,
+                                 borderTop,
                                  qMax<qreal>(0, width() - border->right() - border->left()),
                                  qMax<qreal>(0, height() - border->bottom() - border->top()));
     }
-    qreal hTiles = 1;
-    qreal vTiles = 1;
-    if (innerSourceRect.width() != 0) {
-        switch (d->horizontalTileMode) {
-        case QQuickBorderImage::Repeat:
-            hTiles = innerTargetRect.width() / qreal(innerSourceRect.width() * d->pix.width());
-            break;
-        case QQuickBorderImage::Round:
-            hTiles = qCeil(innerTargetRect.width() / qreal(innerSourceRect.width() * d->pix.width()));
-            break;
-        default:
-            break;
+
+    bool updatePixmap = d->pixmapChanged;
+    d->pixmapChanged = false;
+    if (!oldNode) {
+        oldNode = new QSGNode;
+        updatePixmap = true;
+
+        for (int i=0; i<9; ++i)
+            d->regions[i].node = 0;
+
+        if (innerSourceRect.left() > 0) {
+            if (innerSourceRect.top() > 0)
+                d->regions[0].node = d->sceneGraphContext()->createImageNode();
+            if (innerSourceRect.bottom() < 1)
+                d->regions[6].node = d->sceneGraphContext()->createImageNode();
+
+            if (innerSourceRect.top() < innerSourceRect.bottom())
+                d->regions[3].node = d->sceneGraphContext()->createImageNode();
+        }
+
+        if (innerSourceRect.right() < 1) {
+            if (innerSourceRect.top() > 0)
+                d->regions[2].node = d->sceneGraphContext()->createImageNode();
+            if (innerSourceRect.bottom() < 1)
+                d->regions[8].node = d->sceneGraphContext()->createImageNode();
+
+            if (innerSourceRect.top() < innerSourceRect.bottom())
+                d->regions[5].node = d->sceneGraphContext()->createImageNode();
+        }
+
+        if (innerSourceRect.top() > 0 && innerSourceRect.left() < innerSourceRect.right())
+            d->regions[1].node = d->sceneGraphContext()->createImageNode();
+
+        if (innerSourceRect.bottom() < 1 && innerSourceRect.left() < innerSourceRect.right())
+            d->regions[7].node = d->sceneGraphContext()->createImageNode();
+
+        if (innerSourceRect.left() < innerSourceRect.right() && innerSourceRect.top() < innerSourceRect.bottom())
+            d->regions[4].node = d->sceneGraphContext()->createImageNode();
+
+        for (int i=0; i<9; ++i) {
+            if (d->regions[i].node != 0)
+                oldNode->appendChildNode(d->regions[i].node);
         }
     }
-    if (innerSourceRect.height() != 0) {
-        switch (d->verticalTileMode) {
-        case QQuickBorderImage::Repeat:
-            vTiles = innerTargetRect.height() / qreal(innerSourceRect.height() * d->pix.height());
-            break;
-        case QQuickBorderImage::Round:
-            vTiles = qCeil(innerTargetRect.height() / qreal(innerSourceRect.height() * d->pix.height()));
-            break;
-        default:
-            break;
+
+
+    QImage image = d->pix.image();
+
+    if (d->regions[0].node != 0) {
+        if (updatePixmap)
+            d->regions[0].image = shallowCopy(image, QRect(QPoint(0, 0), QSize(borderLeft, borderTop)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingFlags(QSGImageNode::AntialiasingLeft | QSGImageNode::AntialiasingTop);
+        if (d->regions[1].node == 0 && d->regions[2].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[3].node == 0 && d->regions[6].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        d->regions[0].node->setAntialiasing(antialiasing);
+
+        QRectF rect(0,
+                    0,
+                    innerTargetRect.left(),
+                    innerTargetRect.top());
+        d->regions[0].node->setTargetRect(rect);
+        d->regions[0].node->setInnerTargetRect(rect);
+        d->regions[0].targetRect = rect;
+    }
+
+    if (d->regions[1].node != 0) {
+        if (updatePixmap)
+            d->regions[1].image = shallowCopy(image, QRect(QPoint(borderLeft, 0), QSize(borderRight - borderLeft, borderTop)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingTop;
+        if (d->regions[0].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[2].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[4].node == 0 && d->regions[7].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        d->regions[1].node->setAntialiasing(antialiasing);
+
+        QRectF rect(innerTargetRect.left(),
+                    0,
+                    innerTargetRect.width(),
+                    innerTargetRect.top());
+        d->regions[1].node->setTargetRect(rect);
+        d->regions[1].node->setInnerTargetRect(rect);
+        d->regions[1].targetRect = rect;
+    }
+
+    if (d->regions[2].node != 0) {
+        if (updatePixmap)
+            d->regions[2].image = shallowCopy(image, QRect(QPoint(borderRight, 0), QSize(d->pix.rect().width() - borderRight, borderTop)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingFlags(QSGImageNode::AntialiasingTop | QSGImageNode::AntialiasingRight);
+        if (d->regions[0].node == 0 && d->regions[1].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[5].node == 0 && d->regions[8].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        d->regions[2].node->setAntialiasing(antialiasing);
+
+        QRectF rect(innerTargetRect.right(),
+                    0,
+                    width() - innerTargetRect.width() - innerTargetRect.left(),
+                    innerTargetRect.top());
+        d->regions[2].node->setTargetRect(rect);
+        d->regions[2].node->setInnerTargetRect(rect);
+        d->regions[2].targetRect = rect;
+    }
+
+    if (d->regions[3].node != 0) {
+        if (updatePixmap)
+            d->regions[3].image = shallowCopy(image, QRect(QPoint(0, borderTop), QSize(borderLeft, borderBottom - borderTop)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingLeft;
+        if (d->regions[4].node == 0 && d->regions[5].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[6].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        if (d->regions[0].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        d->regions[3].node->setAntialiasing(antialiasing);
+
+        QRectF rect(0,
+                    innerTargetRect.top(),
+                    innerTargetRect.left(),
+                    innerTargetRect.height());
+        d->regions[3].node->setTargetRect(rect);
+        d->regions[3].node->setInnerTargetRect(rect);
+        d->regions[3].targetRect = rect;
+    }
+
+    if (d->regions[4].node != 0) {
+        if (updatePixmap) {
+            if (innerSourceRect == QRectF(0, 0, 1, 1)) {
+                d->regions[4].image = image;
+            } else {
+                d->regions[4].image = shallowCopy(image, QRect(QPoint(borderLeft, borderTop), QSize(borderRight - borderLeft, borderBottom - borderTop)));
+            }
+        }
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingNone;
+        if (d->regions[3].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[5].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[1].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        if (d->regions[7].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        d->regions[4].node->setAntialiasing(antialiasing);
+
+        d->regions[4].node->setInnerTargetRect(innerTargetRect);
+        d->regions[4].node->setTargetRect(innerTargetRect);
+        d->regions[4].targetRect = innerTargetRect;
+    }
+
+    if (d->regions[5].node != 0) {
+        if (updatePixmap)
+            d->regions[5].image = shallowCopy(image, QRect(QPoint(borderRight, borderTop), QSize(d->pix.rect().width() - borderRight, borderBottom - borderTop)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingRight;
+        if (d->regions[4].node == 0 && d->regions[3].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[2].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        if (d->regions[8].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingBottom;
+        d->regions[5].node->setAntialiasing(antialiasing);
+
+        QRectF rect(innerTargetRect.right(),
+                    innerTargetRect.top(),
+                    width() - innerTargetRect.width() - innerTargetRect.left(),
+                    innerTargetRect.height());
+        d->regions[5].node->setTargetRect(rect);
+        d->regions[5].node->setInnerTargetRect(rect);
+        d->regions[5].targetRect = rect;
+    }
+
+    if (d->regions[6].node != 0) {
+        if (updatePixmap)
+            d->regions[6].image = shallowCopy(image, QRect(QPoint(0, borderBottom), QSize(borderLeft, d->pix.rect().height() - borderBottom)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingFlags(QSGImageNode::AntialiasingBottom | QSGImageNode::AntialiasingLeft);
+        if (d->regions[7].node == 0 && d->regions[8].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[3].node == 0 && d->regions[0].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        d->regions[6].node->setAntialiasing(antialiasing);
+
+        QRectF rect(0,
+                    innerTargetRect.bottom(),
+                    innerTargetRect.left(),
+                    height() - innerTargetRect.height() - innerTargetRect.top());
+        d->regions[6].node->setTargetRect(rect);
+        d->regions[6].node->setInnerTargetRect(rect);
+        d->regions[6].targetRect = rect;
+    }
+
+    if (d->regions[7].node != 0) {
+        if (updatePixmap)
+            d->regions[7].image = shallowCopy(image, QRect(QPoint(borderLeft, borderBottom), QSize(borderRight - borderLeft, d->pix.rect().height() - borderBottom)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingBottom;
+        if (d->regions[6].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[8].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingRight;
+        if (d->regions[4].node == 0 && d->regions[1].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        d->regions[7].node->setAntialiasing(antialiasing);
+
+        QRectF rect(innerTargetRect.left(),
+                    innerTargetRect.bottom(),
+                    innerTargetRect.width(),
+                    height() - innerTargetRect.height() - innerTargetRect.top());
+        d->regions[7].node->setTargetRect(rect);
+        d->regions[7].node->setInnerTargetRect(rect);
+        d->regions[7].targetRect = rect;
+    }
+
+    if (d->regions[8].node != 0) {
+        if (updatePixmap)
+            d->regions[8].image = shallowCopy(image, QRect(QPoint(borderRight, borderBottom), QSize(d->pix.rect().width() - borderRight, d->pix.rect().height() - borderBottom)));
+
+        QSGImageNode::AntialiasingFlags antialiasing = QSGImageNode::AntialiasingFlags(QSGImageNode::AntialiasingBottom | QSGImageNode::AntialiasingRight);
+        if (d->regions[7].node == 0 && d->regions[6].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingLeft;
+        if (d->regions[5].node == 0 && d->regions[2].node == 0)
+            antialiasing |= QSGImageNode::AntialiasingTop;
+        d->regions[8].node->setAntialiasing(antialiasing);
+
+        QRectF rect(innerTargetRect.right(),
+                    innerTargetRect.bottom(),
+                    width() - innerTargetRect.width() - innerTargetRect.left(),
+                    height() - innerTargetRect.height() - innerTargetRect.top());
+        d->regions[8].node->setTargetRect(rect);
+        d->regions[8].node->setInnerTargetRect(rect);
+        d->regions[8].targetRect = rect;
+    }
+
+    for (int i=0; i<9; ++i) {
+        if (d->regions[i].node != 0) {
+            if (updatePixmap) {
+                QQuickTextureFactory *textureFactory = QSGContext::createTextureFactoryFromImage(d->regions[i].image);
+                if (textureFactory == 0)
+                    textureFactory = new QQuickDefaultTextureFactory(d->regions[i].image);
+                d->regions[i].textureFactory.reset(textureFactory);
+                d->regions[i].node->setTexture(d->sceneGraphRenderContext()->textureForFactory(d->regions[i].textureFactory.data(),
+                                                                                               window()));
+            }
+
+            d->regions[i].node->setInnerSourceRect(QRectF(0, 0, 1, 1));
+            d->regions[i].node->setMipmapFiltering(QSGTexture::None);
+            d->regions[i].node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+            d->regions[i].node->setMirror(d->mirror);
+
+
+            qreal hTiles = 1;
+            qreal vTiles = 1;
+
+            if (innerSourceRect.width() != 0) {
+                switch (d->horizontalTileMode) {
+                case QQuickBorderImage::Repeat:
+                    hTiles = d->regions[i].targetRect.width() / qreal(d->regions[i].image.width());
+                    break;
+                case QQuickBorderImage::Round:
+                    hTiles = qCeil(d->regions[i].targetRect.width() / qreal(d->regions[i].image.width()));
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            if (innerSourceRect.height() != 0) {
+                switch (d->verticalTileMode) {
+                case QQuickBorderImage::Repeat:
+                    vTiles = d->regions[i].targetRect.height() / qreal(d->regions[i].image.height());
+                    break;
+                case QQuickBorderImage::Round:
+                    vTiles = qCeil(d->regions[i].targetRect.height() / qreal(d->regions[i].image.height()));
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            if (vTiles > 1 || hTiles > 1) {
+                d->regions[i].node->setHorizontalWrapMode(QSGTexture::Repeat);
+                d->regions[i].node->setVerticalWrapMode(QSGTexture::Repeat);
+            } else {
+                d->regions[i].node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+                d->regions[i].node->setVerticalWrapMode(QSGTexture::ClampToEdge);
+            }
+
+            d->regions[i].node->setSubSourceRect(QRectF(0, 0, hTiles, vTiles));
+            d->regions[i].node->update();
         }
     }
 
-    node->setTargetRect(targetRect);
-    node->setInnerSourceRect(innerSourceRect);
-    node->setInnerTargetRect(innerTargetRect);
-    node->setSubSourceRect(QRectF(0, 0, hTiles, vTiles));
-    node->setMirror(d->mirror);
-
-    node->setMipmapFiltering(QSGTexture::None);
-    node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    if (innerSourceRect == QRectF(0, 0, 1, 1) && (vTiles > 1 || hTiles > 1)) {
-        node->setHorizontalWrapMode(QSGTexture::Repeat);
-        node->setVerticalWrapMode(QSGTexture::Repeat);
-    } else {
-        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-    }
-    node->setAntialiasing(d->antialiasing);
-    node->update();
-
-    return node;
+    return oldNode;
 }
 
 void QQuickBorderImage::pixmapChange()

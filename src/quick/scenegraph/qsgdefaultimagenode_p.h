@@ -62,6 +62,7 @@ public:
     virtual void setSubSourceRect(const QRectF &rect);
     virtual void setTexture(QSGTexture *t);
     virtual void setAntialiasing(bool antialiasing);
+    virtual void setAntialiasing(AntialiasingFlags antialiasing);
     virtual void setMirror(bool mirror);
     virtual void update();
 
@@ -84,11 +85,11 @@ private:
     QSGTextureMaterial m_materialO;
     QSGSmoothTextureMaterial m_smoothMaterial;
 
-    uint m_antialiasing : 1;
     uint m_mirror : 1;
     uint m_dirtyGeometry : 1;
 
     QSGGeometry m_geometry;
+    AntialiasingFlags m_antialiasing;
 };
 
 QT_END_NAMESPACE
