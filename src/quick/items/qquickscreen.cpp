@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
 
     To use this type, you will need to import the module with the following line:
     \code
-    import QtQuick.Window 2.1
+    import QtQuick.Window 2.2
     \endcode
     It is a separate import in order to allow you to have a QML environment
     without access to window system features.
