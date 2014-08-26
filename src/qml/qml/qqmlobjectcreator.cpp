@@ -1021,6 +1021,13 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
     errors << error;
 }
 
+void QQmlObjectCreator::registerObjectWithContextById(int objectIndex, QObject *instance) const
+{
+    QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(objectIndex);
+    if (idEntry != objectIndexToId.constEnd())
+        context->setIdProperty(idEntry.value(), instance);
+}
+
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
 {
     QQmlObjectCreationProfiler profiler(sharedState->profiler.profiler);
@@ -1120,10 +1127,6 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         parserStatus->d = &sharedState->allParserStatusCallbacks.top();
     }
 
-    QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
-    if (idEntry != objectIndexToId.constEnd())
-        context->setIdProperty(idEntry.value(), instance);
-
     // Register the context object in the context early on in order for pending binding
     // initialization to find it available.
     if (isContextObject)
@@ -1147,8 +1150,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         }
     }
 
-    if (isComponent)
+    if (isComponent) {
+        registerObjectWithContextById(index, instance);
         return instance;
+    }
 
     QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(index);
     Q_ASSERT(!cache.isNull());
@@ -1313,6 +1318,9 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
+
+    registerObjectWithContextById(index, _qobject);
+
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 

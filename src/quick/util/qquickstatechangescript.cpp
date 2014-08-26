@@ -67,7 +67,7 @@ public:
 
     A StateChangeScript is run upon entering a state. You can optionally use
     ScriptAction to specify the point in the transition at which
-    the StateChangeScript should to be run.
+    the StateChangeScript should be run.
 
     \snippet qml/states/statechangescript.qml state and transition
 

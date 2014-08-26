@@ -478,7 +478,7 @@ ReturnedValue GlobalFunctions::method_parseInt(CallContext *ctx)
     if (pos == end) // 12
         return Encode(std::numeric_limits<double>::quiet_NaN());
     bool overflow = false;
-    qint64 v_overflow;
+    qint64 v_overflow = 0;
     unsigned overflow_digit_count = 0;
     int d = toInt(*pos++, R);
     if (d == -1)

@@ -1037,6 +1037,18 @@ void QSGThreadedRenderLoop::releaseResources(Window *w, bool inDestructor)
         w->thread->postEvent(new WMTryReleaseEvent(window, inDestructor, fallback));
         w->thread->waitCondition.wait(&w->thread->mutex);
         delete fallback;
+
+        // Avoid a shutdown race condition.
+        // If SG is invalidated and 'active' becomes false, the thread's run()
+        // method will exit. handleExposure() relies on QThread::isRunning() (because it
+        // potentially needs to start the thread again) and our mutex cannot be used to
+        // track the thread stopping, so we wait a few nanoseconds extra so the thread
+        // can exit properly.
+        if (!w->thread->active) {
+            qCDebug(QSG_LOG_RENDERLOOP) << " - waiting for render thread to exit" << w->window;
+            w->thread->wait();
+            qCDebug(QSG_LOG_RENDERLOOP) << " - render thread finished" << w->window;
+        }
     }
     w->thread->mutex.unlock();
 }
