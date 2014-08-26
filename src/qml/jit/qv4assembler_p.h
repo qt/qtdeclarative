@@ -160,9 +160,9 @@ public:
     //   callee saved reg n
     //   ...
     //   callee saved reg 0
-    //   saved reg arg 0
+    //   saved reg arg n
     //   ...
-    //   saved reg arg n            <- SP
+    //   saved reg arg 0            <- SP
     //
     // Stack layout for the JS stack:
     //   function call argument n   <- LocalsRegister
@@ -205,15 +205,20 @@ public:
 
         int calculateStackFrameSize() const
         {
+            // sp was aligned before executing the call instruction. So, calculate all contents
+            // that were saved after that aligned stack...:
             const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
                                                      + RegisterSize; // saved StackFrameRegister
 
-            // space for the callee saved registers
+            // ... then calculate the stuff we want to store ...:
             int frameSize = RegisterSize * normalRegistersToSave + sizeof(double) * fpRegistersToSave;
-            frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
+            frameSize += savedRegCount * sizeof(QV4::Value); // (these get written out as Values, not as native registers)
 
             Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
+            // .. then align that chunk ..:
             frameSize = static_cast<int>(WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise));
+            // ... which now holds our frame size + the extra stuff that was pushed due to the call.
+            // So subtract that extra stuff, and we have our frame size:
             frameSize -= stackSpaceAllocatedOtherwise;
 
             return frameSize;
@@ -255,15 +260,12 @@ public:
             Q_ASSERT(offset >= 0);
             Q_ASSERT(offset < savedRegCount);
 
-            const int off = offset * sizeof(QV4::Value);
-            return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
-        }
-
-        int calleeSavedRegisterSpace() const
-        {
-            // plus 1 for the old FP
-            return RegisterSize * (normalRegistersToSave + 1)
-                    + sizeof(double) * fpRegistersToSave;
+            // Get the address of the bottom-most element of our frame:
+            Address ptr(Assembler::StackFrameRegister, -calculateStackFrameSize());
+            // This now is the element with offset 0. So:
+            ptr.offset += offset * sizeof(QV4::Value);
+            // and we're done!
+            return ptr;
         }
 
     private:
