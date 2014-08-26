@@ -1108,8 +1108,6 @@ QQuickWindow::~QQuickWindow()
         d->windowManager->windowDestroyed(this);
     }
 
-    QCoreApplication::removePostedEvents(this, QEvent::DeferredDelete);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 #ifndef QT_NO_DRAGANDDROP
     delete d->dragGrabber; d->dragGrabber = 0;
