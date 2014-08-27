@@ -618,7 +618,7 @@ Item {
         \code
         var image = grabImage(rect);
         compare(image.red(10, 10), 255);
-        compare(image.pixel(20, 20), Qt.rgba(255, 0, 0, 255);
+        compare(image.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
         \endcode
 
         \endlist
