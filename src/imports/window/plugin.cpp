@@ -38,7 +38,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQuick.Window 2.1
+    \qmlmodule QtQuick.Window 2.2
     \title Qt Quick Window QML Types
     \ingroup qmlmodules
     \brief Provides QML types for window management
@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQuick.Window 2.0
+    import QtQuick.Window 2.2
     \endcode
 */
 
