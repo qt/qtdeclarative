@@ -321,6 +321,7 @@ private slots:
     void lazyBindingEvaluation();
     void varPropertyAccessOnObjectWithInvalidContext();
     void importedScriptsAccessOnObjectWithInvalidContext();
+    void importedScriptsWithoutQmlMode();
     void contextObjectOnLazyBindings();
     void garbageCollectionDuringCreation();
 
@@ -7602,6 +7603,16 @@ void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
 void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
 {
    QQmlComponent component(&engine, testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml"));
+   QScopedPointer<QObject> obj(component.create());
+   if (obj.isNull())
+       qDebug() << component.errors().first().toString();
+   QVERIFY(!obj.isNull());
+   QTRY_VERIFY(obj->property("success") == true);
+}
+
+void tst_qqmlecmascript::importedScriptsWithoutQmlMode()
+{
+   QQmlComponent component(&engine, testFileUrl("importScriptsWithoutQmlMode.qml"));
    QScopedPointer<QObject> obj(component.create());
    if (obj.isNull())
        qDebug() << component.errors().first().toString();
