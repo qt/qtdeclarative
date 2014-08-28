@@ -121,6 +121,7 @@ public:
     QHash<QString,Component> components() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
+    bool designerSupported() const;
 
 #ifdef QT_CREATOR
     struct TypeInfo
@@ -144,6 +145,7 @@ private:
     QHash<QString,Component> _components; // multi hash
     QList<Script> _scripts;
     QList<Plugin> _plugins;
+    bool _designerSupported;
 #ifdef QT_CREATOR
     QList<TypeInfo> _typeInfos;
 #endif

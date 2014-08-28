@@ -320,6 +320,8 @@ public:
 
         QString pluginLocation() const;
 
+        bool designerSupported() const;
+
     private:
         QQmlDirParser m_parser;
         QString m_location;

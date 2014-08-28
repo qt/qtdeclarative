@@ -1571,6 +1571,10 @@ QString QQmlTypeLoader::QmldirContent::pluginLocation() const
     return m_location;
 }
 
+bool QQmlTypeLoader::QmldirContent::designerSupported() const
+{
+    return m_parser.designerSupported();
+}
 
 /*!
 Constructs a new type loader that uses the given \a engine.

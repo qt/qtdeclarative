@@ -129,6 +129,8 @@ public:
     static bool isLocal(const QString &url);
     static bool isLocal(const QUrl &url);
 
+    static void setDesignerSupportRequired(bool b);
+
 private:
     friend class QQmlImportDatabase;
     QQmlImportsPrivate *d;

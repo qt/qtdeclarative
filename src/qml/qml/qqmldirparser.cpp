@@ -55,7 +55,7 @@ static int parseInt(const QStringRef &str, bool *ok)
     return number;
 }
 
-QQmlDirParser::QQmlDirParser()
+QQmlDirParser::QQmlDirParser() : _designerSupported(false)
 {
 }
 
@@ -87,6 +87,7 @@ bool QQmlDirParser::parse(const QString &source)
     _plugins.clear();
     _components.clear();
     _scripts.clear();
+    _designerSupported = false;
 
     quint16 lineNumber = 0;
     bool firstLine = true;
@@ -225,6 +226,11 @@ bool QQmlDirParser::parse(const QString &source)
             _typeInfos.append(typeInfo);
 #endif
 
+        } else if (sections[0] == QLatin1String("designersupported")) {
+            if (sectionCount != 1)
+                reportError(lineNumber, 0, QString::fromLatin1("designersupported does not expect any argument"));
+            else
+                _designerSupported = true;
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], -1, -1);
@@ -353,6 +359,11 @@ QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
     return _typeInfos;
 }
 #endif
+
+bool QQmlDirParser::designerSupported() const
+{
+    return _designerSupported;
+}
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
 {

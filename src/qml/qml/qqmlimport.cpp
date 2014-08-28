@@ -64,6 +64,7 @@ static const QLatin1Char Colon(':');
 static const QLatin1String Slash_qmldir("/qmldir");
 static const QLatin1String String_qmldir("qmldir");
 static const QString dotqml_string(QLatin1String(".qml"));
+static bool designerSupportRequired = false;
 
 namespace {
 
@@ -881,6 +882,16 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         qDebug().nospace() << "QQmlImports(" << qPrintable(base) << ")::importExtension: "
                            << "loaded " << qmldirFilePath;
 
+    if (designerSupportRequired && !qmldir->designerSupported()) {
+        if (errors) {
+            QQmlError error;
+            error.setDescription(QQmlImportDatabase::tr("module does not support the designer \"%1\"").arg(qmldir->typeNamespace()));
+            error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
+            errors->prepend(error);
+        }
+        return false;
+    }
+
     int qmldirPluginCount = qmldir->plugins().count();
     if (qmldirPluginCount == 0)
         return true;
@@ -1537,6 +1548,11 @@ bool QQmlImports::isLocal(const QString &url)
 bool QQmlImports::isLocal(const QUrl &url)
 {
     return QQmlFile::isBundle(url) || !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
+}
+
+void QQmlImports::setDesignerSupportRequired(bool b)
+{
+    designerSupportRequired = b;
 }
 
 
