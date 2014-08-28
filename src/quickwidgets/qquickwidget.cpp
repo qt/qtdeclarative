@@ -703,8 +703,13 @@ void QQuickWidget::createFramebufferObject()
 
     QSize fboSize = size() * window()->devicePixelRatio();
 
-    delete d->fbo;
-    d->fbo = new QOpenGLFramebufferObject(fboSize, format);
+    // Could be a simple hide - show, in which case the previous fbo is just fine.
+    if (!d->fbo || d->fbo->size() != fboSize) {
+        delete d->fbo;
+        d->fbo = new QOpenGLFramebufferObject(fboSize, format);
+    }
+
+    d->offscreenWindow->setGeometry(0, 0, width(), height());
     d->offscreenWindow->setRenderTarget(d->fbo);
 
     if (samples > 0)
@@ -891,8 +896,8 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     }
 
     if (d->context) {
-        // Bail out in the special case of receiving a resize after
-        // scenegraph invalidation during application exit.
+        // Bail out when receiving a resize after scenegraph invalidation. This can happen
+        // during hide - resize - show sequences and also during application exit.
         if (!d->fbo && !d->offscreenWindow->openglContext())
             return;
         if (!d->fbo || d->fbo->size() != size() * devicePixelRatio()) {
@@ -905,9 +910,6 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         needsSync = true;
         d->createContext();
     }
-
-    QCoreApplication::sendEvent(d->offscreenWindow, e);
-    d->offscreenWindow->setGeometry(0, 0, e->size().width(), e->size().height());
 
     QOpenGLContext *context = d->offscreenWindow->openglContext();
     if (!context) {
