@@ -105,6 +105,7 @@ Q_SIGNALS:
     void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
 
 private Q_SLOTS:
+    // ### Qt 6: make these truly private slots through Q_PRIVATE_SLOT
     void continueExecute();
     void createFramebufferObject();
     void destroyFramebufferObject();
