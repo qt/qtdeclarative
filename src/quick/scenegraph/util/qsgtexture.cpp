@@ -679,7 +679,7 @@ void QSGPlainTexture::bind()
     if (QSGRenderContext *rc = QSGRenderContext::from(context))
         max = rc->maxTextureSize();
     else
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
+        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
     if (tmp.width() > max || tmp.height() > max) {
         tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         m_texture_size = tmp.size();
