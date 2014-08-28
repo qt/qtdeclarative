@@ -77,6 +77,7 @@ public:
 
     void startedByController();
     void controllerWasDeleted();
+    void markJobManagedByController() { m_jobManagedByController = true; }
 
 protected:
     bool event(QEvent *);
@@ -95,7 +96,7 @@ private:
     void setWindow(QQuickWindow *window);
     static QObject *findAnimationContext(QQuickAbstractAnimation *);
 
-    QQuickAnimatorController *m_controller;
+    QPointer<QQuickAnimatorController> m_controller;
     QQuickAbstractAnimation *m_animation;
     QAbstractAnimationJob *m_job;
     int m_duration;
@@ -108,6 +109,7 @@ private:
     };
 
     InternalState m_internalState;
+    bool m_jobManagedByController;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorJob : public QAbstractAnimationJob

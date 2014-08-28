@@ -262,6 +262,7 @@ void QQuickAnimatorController::requestSync()
 // These functions are called on the GUI thread.
 void QQuickAnimatorController::startJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job)
 {
+    proxy->markJobManagedByController();
     m_starting[job] = proxy;
     requestSync();
 }
