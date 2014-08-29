@@ -368,9 +368,12 @@ void Atlas::bind(QSGTexture::Filtering filtering)
     // Upload all pending images..
     for (int i=0; i<m_pending_uploads.size(); ++i) {
 
-        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() || QQuickProfiler::enabled;
+        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled();
         if (profileFrames)
             qsg_renderer_timer.start();
+        // Skip bind, convert, swizzle; they're irrelevant
+        Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphTexturePrepare);
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare, 3);
 
         if (m_externalFormat == GL_BGRA &&
                 !m_use_bgra_fallback) {
@@ -383,12 +386,10 @@ void Atlas::bind(QSGTexture::Filtering filtering)
                                            << "ms (" << m_pending_uploads.at(i)->image().width() << "x"
                                            << m_pending_uploads.at(i)->image().height() << ")";
 
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
-                0,  // bind (not relevant)
-                0,  // convert (not relevant)
-                0,  // swizzle (not relevant)
-                qsg_renderer_timer.nsecsElapsed(), // (upload all of the above)
-                0)); // mipmap (not used ever...)
+        // Skip mipmap; unused
+        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare, 1);
+        Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphTexturePrepare);
     }
 
     GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;

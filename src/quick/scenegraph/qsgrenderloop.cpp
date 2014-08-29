@@ -362,16 +362,17 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     }
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames)
         renderTimer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
 
     cd->polishItems();
 
-    if (profileFrames) {
+    if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishFrame, (polishTime));
-    }
+    Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
+                              QQuickProfiler::SceneGraphRenderLoopFrame);
 
     emit window->afterAnimating();
 
@@ -379,11 +380,13 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     cd->renderSceneGraph(window->size());
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
         grabContent = qt_gl_read_framebuffer(window->size() * window->devicePixelRatio(), false, false);
@@ -398,6 +401,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     qint64 swapTime = 0;
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
@@ -411,11 +415,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
-
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
-            syncTime - polishTime,
-            renderTime - syncTime,
-            swapTime - renderTime));
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)

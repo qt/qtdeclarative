@@ -633,9 +633,12 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
-    bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled();
     if (profileFrames)
         qsg_renderer_timer.start();
+    Q_QUICK_SG_PROFILE_START_SYNCHRONIZED(QQuickProfiler::SceneGraphTexturePrepare,
+                                          QQuickProfiler::SceneGraphTextureDeletion);
+
 
     if (m_image.isNull()) {
         if (m_texture_id && m_owns_texture) {
@@ -644,8 +647,7 @@ void QSGPlainTexture::bind()
                     (int) qsg_renderer_timer.elapsed(),
                     m_texture_size.width(),
                     m_texture_size.height());
-            Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTextureDeletion, (
-                    qsg_renderer_timer.nsecsElapsed()));
+            Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTextureDeletion);
         }
         m_texture_id = 0;
         m_texture_size = QSize();
@@ -661,6 +663,7 @@ void QSGPlainTexture::bind()
     qint64 bindTime = 0;
     if (profileFrames)
         bindTime = qsg_renderer_timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
 
     // ### TODO: check for out-of-memory situations...
 
@@ -691,6 +694,7 @@ void QSGPlainTexture::bind()
     qint64 convertTime = 0;
     if (profileFrames)
         convertTime = qsg_renderer_timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
 
     updateBindOptions(m_dirty_bind_options);
 
@@ -733,12 +737,14 @@ void QSGPlainTexture::bind()
     qint64 swizzleTime = 0;
     if (profileFrames)
         swizzleTime = qsg_renderer_timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
 
     funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_texture_size.width(), m_texture_size.height(), 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
     qint64 uploadTime = 0;
     if (profileFrames)
         uploadTime = qsg_renderer_timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
 
     if (mipmapFiltering() != QSGTexture::None) {
         funcs->glGenerateMipmap(GL_TEXTURE_2D);
@@ -761,13 +767,7 @@ void QSGPlainTexture::bind()
                 int((mipmapTime - uploadTime)/1000000),
                 m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
     }
-
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
-            bindTime,
-            convertTime - bindTime,
-            swizzleTime - convertTime,
-            uploadTime - swizzleTime,
-            qsg_renderer_timer.nsecsElapsed() - uploadTime));
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTexturePrepare);
 
     m_texture_rect = QRectF(0, 0, 1, 1);
 

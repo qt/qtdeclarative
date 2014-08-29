@@ -153,9 +153,10 @@ void QSGDistanceFieldGlyphCache::update()
     if (m_pendingGlyphs.isEmpty())
         return;
 
-    bool profileFrames = QSG_LOG_TIME_GLYPH().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_GLYPH().isDebugEnabled();
     if (profileFrames)
         qsg_render_timer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphAdaptationLayerFrame);
 
     QList<QDistanceField> distanceFields;
     for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
@@ -168,6 +169,7 @@ void QSGDistanceFieldGlyphCache::update()
     int count = m_pendingGlyphs.size();
     if (profileFrames)
         renderTime = qsg_render_timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame);
 
     m_pendingGlyphs.reset();
 
@@ -182,10 +184,8 @@ void QSGDistanceFieldGlyphCache::update()
                 int(renderTime / 1000000),
                 int((now - (renderTime / 1000000))));
     }
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphAdaptationLayerFrame, (
-            count,
-            renderTime,
-            qsg_render_timer.nsecsElapsed() - renderTime));
+    Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
+                                        (qint64)count);
 }
 
 void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &glyphs)

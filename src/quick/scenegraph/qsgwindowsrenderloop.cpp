@@ -53,10 +53,14 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 #define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP) << x;
 
 static QElapsedTimer qsg_render_timer;
-#define QSG_RENDER_TIMING_SAMPLE(sampleName) \
+#define QSG_LOG_TIME_SAMPLE(sampleName) \
     qint64 sampleName = 0;                                                  \
-    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled)   \
-        sampleName = qsg_render_timer.nsecsElapsed()
+    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled())  \
+        sampleName = qsg_render_timer.nsecsElapsed(); \
+
+#define QSG_RENDER_TIMING_SAMPLE(frameType, sampleName) \
+    QSG_LOG_TIME_SAMPLE(sampleName) \
+    Q_QUICK_SG_PROFILE_RECORD(frameType);
 
 
 QSGWindowsRenderLoop::QSGWindowsRenderLoop()
@@ -360,7 +364,8 @@ void QSGWindowsRenderLoop::render()
 
     if (m_animationDriver->isRunning()) {
         RLDEBUG("advancing animations");
-        QSG_RENDER_TIMING_SAMPLE(time_start);
+        QSG_LOG_TIME_SAMPLE(time_start);
+        Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphWindowsAnimations);
         m_animationDriver->advance();
         RLDEBUG("animations advanced");
 
@@ -368,8 +373,7 @@ void QSGWindowsRenderLoop::render()
                 "animations ticked in %dms",
                 int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
 
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphWindowsAnimations, (
-                qsg_render_timer.nsecsElapsed() - time_start));
+        Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphWindowsAnimations);
 
         // It is not given that animations triggered another maybeUpdate()
         // and thus another render pass, so to keep things running,
@@ -404,27 +408,28 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     if (!windowData(window))
         return;
 
-    QSG_RENDER_TIMING_SAMPLE(time_start);
+    QSG_LOG_TIME_SAMPLE(time_start);
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
 
     RLDEBUG(" - polishing");
     d->polishItems();
-    QSG_RENDER_TIMING_SAMPLE(time_polished);
-
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishFrame, (time_polished - time_start));
+    QSG_LOG_TIME_SAMPLE(time_polished);
+    Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
+                                QQuickProfiler::SceneGraphRenderLoopFrame);
 
     emit window->afterAnimating();
 
     RLDEBUG(" - syncing");
     d->syncSceneGraph();
-    QSG_RENDER_TIMING_SAMPLE(time_synced);
+    QSG_RENDER_TIMING_SAMPLE(QQuickProfiler::SceneGraphRenderLoopFrame, time_synced);
 
     RLDEBUG(" - rendering");
     d->renderSceneGraph(window->size());
-    QSG_RENDER_TIMING_SAMPLE(time_rendered);
+    QSG_RENDER_TIMING_SAMPLE(QQuickProfiler::SceneGraphRenderLoopFrame, time_rendered);
 
     RLDEBUG(" - swapping");
     m_gl->swapBuffers(window);
-    QSG_RENDER_TIMING_SAMPLE(time_swapped);
+    QSG_RENDER_TIMING_SAMPLE(QQuickProfiler::SceneGraphRenderLoopFrame, time_swapped);
 
     RLDEBUG(" - frameDone");
     d->fireFrameSwapped();
@@ -437,10 +442,7 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
             << ", swap=" << (time_swapped - time_rendered) / 1000000
             << " - " << window;
 
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
-                time_synced - time_polished,
-                time_rendered - time_synced,
-                time_swapped - time_rendered));
+    Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphRenderLoopFrame);
 }
 
 QT_END_NAMESPACE

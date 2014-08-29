@@ -124,8 +124,9 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (shader)
         return shader;
 
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::enabled)
+    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = material->createShader();
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
@@ -155,8 +156,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphContextFrame, (
-            qsg_renderer_timer.nsecsElapsed()));
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
 
     rewrittenShaders[type] = shader;
     return shader;
@@ -169,8 +169,9 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     if (shader)
         return shader;
 
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::enabled)
+    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
     context->compile(s, material);
@@ -186,8 +187,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms (no rewrite)", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphContextFrame, (
-            qsg_renderer_timer.nsecsElapsed()));
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
     return shader;
 }
 

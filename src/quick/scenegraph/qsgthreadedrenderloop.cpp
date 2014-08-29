@@ -521,11 +521,12 @@ void QSGRenderThread::sync(bool inExpose)
 
 void QSGRenderThread::syncAndRender()
 {
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames) {
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
     }
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     QElapsedTimer waitTimer;
     waitTimer.start();
@@ -552,6 +553,7 @@ void QSGRenderThread::syncAndRender()
 
     if (profileFrames)
         syncTime = threadTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering started";
 
@@ -570,9 +572,11 @@ void QSGRenderThread::syncAndRender()
         d->renderSceneGraph(windowSize);
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
+        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
         gl->swapBuffers(window);
         d->fireFrameSwapped();
     } else {
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame, 1);
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- window not ready, skipping render";
     }
 
@@ -597,10 +601,7 @@ void QSGRenderThread::syncAndRender()
             int(threadTimer.elapsed() - renderTime / 1000000));
 
 
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
-                syncTime,
-                renderTime - syncTime,
-                threadTimer.nsecsElapsed() - renderTime));
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
 }
 
 
@@ -1087,15 +1088,17 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qint64 polishTime = 0;
     qint64 waitTime = 0;
     qint64 syncTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()  || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames)
         timer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
     d->polishItems();
 
     if (profileFrames)
         polishTime = timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
 
     w->updateDuringSync = false;
 
@@ -1109,6 +1112,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qCDebug(QSG_LOG_RENDERLOOP) << "- wait for sync";
     if (profileFrames)
         waitTime = timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
     w->thread->waitCondition.wait(&w->thread->mutex);
     m_lockedForSync = false;
     w->thread->mutex.unlock();
@@ -1116,6 +1120,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     if (profileFrames)
         syncTime = timer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
 
     killTimer(w->timerId);
     w->timerId = 0;
@@ -1139,11 +1144,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
             << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
             << " - (on Gui thread) " << window;
 
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishAndSync, (
-            polishTime,
-            waitTime - polishTime,
-            syncTime - waitTime,
-            timer.nsecsElapsed() - syncTime));
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync);
 }
 
 QSGThreadedRenderLoop::Window *QSGThreadedRenderLoop::windowForTimer(int timerId) const

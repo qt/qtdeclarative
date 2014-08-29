@@ -107,18 +107,20 @@ struct QQmlProfilerDefinitions {
     };
 
     enum SceneGraphFrameType {
-        SceneGraphRendererFrame,
-        SceneGraphAdaptationLayerFrame,
-        SceneGraphContextFrame,
-        SceneGraphRenderLoopFrame,
-        SceneGraphTexturePrepare,
-        SceneGraphTextureDeletion,
-        SceneGraphPolishAndSync,
-        SceneGraphWindowsRenderShow,
-        SceneGraphWindowsAnimations,
-        SceneGraphPolishFrame,
+        SceneGraphRendererFrame,        // Render Thread
+        SceneGraphAdaptationLayerFrame, // Render Thread
+        SceneGraphContextFrame,         // Render Thread
+        SceneGraphRenderLoopFrame,      // Render Thread
+        SceneGraphTexturePrepare,       // Render Thread
+        SceneGraphTextureDeletion,      // Render Thread
+        SceneGraphPolishAndSync,        // GUI Thread
+        SceneGraphWindowsRenderShow,    // Unused
+        SceneGraphWindowsAnimations,    // GUI Thread
+        SceneGraphPolishFrame,          // GUI Thread
 
-        MaximumSceneGraphFrameType
+        MaximumSceneGraphFrameType,
+        NumRenderThreadFrameTypes = SceneGraphPolishAndSync,
+        NumGUIThreadFrameTypes = MaximumSceneGraphFrameType - NumRenderThreadFrameTypes
     };
 
     typedef QV4::Profiling::MemoryType MemoryType;

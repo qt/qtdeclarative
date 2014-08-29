@@ -176,9 +176,11 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_is_rendering = true;
 
 
-    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         frameTimer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRendererFrame);
+
     qint64 bindTime = 0;
     qint64 renderTime = 0;
 
@@ -188,6 +190,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     bindable.bind();
     if (profileFrames)
         bindTime = frameTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
 
     // Sanity check that attribute registers are disabled
     if (qsg_sanity_check) {
@@ -205,6 +208,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     render();
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame);
 
     m_is_rendering = false;
     m_changed_emitted = false;
@@ -217,13 +221,6 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
             int((updatePassTime - preprocessTime) / 1000000),
             int((bindTime - updatePassTime) / 1000000),
             int((renderTime - bindTime) / 1000000));
-
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRendererFrame, (
-            preprocessTime,
-            updatePassTime - preprocessTime,
-            bindTime - updatePassTime,
-            renderTime - bindTime));
-
 }
 
 /*!
@@ -272,14 +269,16 @@ void QSGRenderer::preprocess()
         }
     }
 
-    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled()|| QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
 
     nodeUpdater()->updateStates(root);
 
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
 }
 
 void QSGRenderer::addNodesToPreprocess(QSGNode *node)
