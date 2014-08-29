@@ -908,6 +908,8 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             w->thread->moveToThread(w->thread);
         }
         w->thread->start();
+        if (!w->thread->isRunning())
+            qFatal("Render thread failed to start, aborting application.");
 
     } else {
         qCDebug(QSG_LOG_RENDERLOOP) << "- render thread already running";
