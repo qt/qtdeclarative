@@ -319,7 +319,16 @@ void Atlas::uploadBgra(Texture *texture)
     glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + iw + 1, r.y() + 1, 1, ih, m_externalFormat, GL_UNSIGNED_BYTE, dst);
 
     // Inner part of the image....
-    glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, m_externalFormat, GL_UNSIGNED_BYTE, src);
+    if (bpl != iw) {
+        int sy = r.y() + 1;
+        int ey = sy + r.height() - 2;
+        for (int y = sy; y < ey; ++y) {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + 1, y, r.width() - 2, 1, m_externalFormat, GL_UNSIGNED_BYTE, src);
+            src += bpl;
+        }
+    } else {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, m_externalFormat, GL_UNSIGNED_BYTE, src);
+    }
 
 }
 
