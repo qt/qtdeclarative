@@ -665,6 +665,13 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
             exists = QQmlFile::bundleFileExists(qmlUrl, typeLoader->engine());
         } else {
             exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(qmlUrl)).isEmpty();
+            if (!exists) {
+                QString formUrl = url + QString::fromRawData(type.constData(), type.length()) + QStringLiteral(".ui.qml");
+                if (!typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(formUrl)).isEmpty()) {
+                    exists = true;
+                    qmlUrl = formUrl;
+                }
+            }
             if (!exists)
                 exists = QQmlMetaType::findCachedCompilationUnit(QUrl(qmlUrl));
         }

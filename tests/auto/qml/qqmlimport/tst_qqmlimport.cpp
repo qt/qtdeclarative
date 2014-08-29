@@ -52,6 +52,7 @@ class tst_QQmlImport : public QQmlDataTest
 
 private slots:
     void testDesignerSupported();
+    void uiFormatLoading();
     void cleanup();
 };
 
@@ -93,6 +94,45 @@ void tst_QQmlImport::testDesignerSupported()
     QVERIFY(!window->errors().isEmpty());
 
     delete window;
+}
+
+void tst_QQmlImport::uiFormatLoading()
+{
+    int size = 0;
+
+    QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("TestForm.ui.qml"));
+    test->addImportPath(QT_TESTCASE_BUILDDIR);
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
+
+    QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,QUrl)));
+    test->load(testFileUrl("TestForm.ui.qml"));
+    QCOMPARE(objectCreated.count(), size);//one less than rootObjects().size() because we missed the first one
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
+
+    QByteArray testQml("import QtQml 2.0; QtObject{property bool success: true; property TestForm t: TestForm{}}");
+    test->loadData(testQml, testFileUrl("dynamicTestForm.ui.qml"));
+    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
+
+    test->load(testFileUrl("openTestFormFromDir.qml"));
+    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
+
+    test->load(testFileUrl("openTestFormFromQmlDir.qml"));
+    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
+
+    delete test;
 }
 
 QTEST_MAIN(tst_QQmlImport)
