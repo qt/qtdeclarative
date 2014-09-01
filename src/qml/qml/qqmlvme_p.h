@@ -104,10 +104,8 @@ public:
 private:
     enum Mode { None, Time, Flag };
     Mode mode;
-    struct {
-        QElapsedTimer timer;
-        int nsecs;
-    };
+    QElapsedTimer timer;
+    int nsecs;
     volatile bool *runWhile;
 };
 
