@@ -90,8 +90,7 @@ public:
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
     virtual QSGNinePatchNode *createNinePatchNode();
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext);
-
-private:
+    virtual QSurfaceFormat defaultSurfaceFormat() const;
 };
 
 } // namespace

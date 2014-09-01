@@ -164,6 +164,15 @@ QSGLayer *Context::createLayer(QSGRenderContext *renderContext)
     return new SoftwareLayer(renderContext);
 }
 
+QSurfaceFormat Context::defaultSurfaceFormat() const
+{
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    format.setRenderableType(QSurfaceFormat::DefaultRenderableType);
+    format.setMajorVersion(0);
+    format.setMinorVersion(0);
+    return format;
+}
+
 void RenderContext::initialize(QOpenGLContext *context)
 {
     Q_UNUSED(context)
