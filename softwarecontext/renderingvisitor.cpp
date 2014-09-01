@@ -29,6 +29,7 @@
 #include <QtQuick/QSGSimpleRectNode>
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <private/qsgtexture_p.h>
+#include <private/qquickshadereffectnode_p.h>
 
 RenderingVisitor::RenderingVisitor(QPainter *painter)
     : painter(painter)
@@ -78,6 +79,8 @@ bool RenderingVisitor::visit(QSGGeometryNode *node)
         } else {
             Q_UNREACHABLE();
         }
+    } else if (QQuickShaderEffectNode *sn = dynamic_cast<QQuickShaderEffectNode *>(node)) {
+        Q_UNUSED(sn)
     } else {
         Q_UNREACHABLE();
     }
