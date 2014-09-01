@@ -387,8 +387,8 @@ QSurfaceFormat::OpenGLContextProfile QSGShaderSourceBuilder::contextProfile() co
 {
     QOpenGLContext *context = QOpenGLContext::currentContext();
     QSurfaceFormat::OpenGLContextProfile profile = QSurfaceFormat::NoProfile;
-    Q_ASSERT(context);
-    profile = context->format().profile();
+    if (context)
+        profile = context->format().profile();
     return profile;
 }
 
