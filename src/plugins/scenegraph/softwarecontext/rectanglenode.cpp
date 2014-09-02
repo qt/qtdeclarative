@@ -63,9 +63,96 @@ void RectangleNode::setPenWidth(qreal width)
     }
 }
 
+//Move first stop by pos relative to seconds
+static QGradientStop interpolateStop(const QGradientStop &firstStop, const QGradientStop &secondStop, double newPos)
+{
+    double distance = secondStop.first - firstStop.first;
+    double distanceDelta = newPos - firstStop.first;
+    double modifierValue = distanceDelta / distance;
+    int redDelta = (secondStop.second.red() - firstStop.second.red()) * modifierValue;
+    int greenDelta = (secondStop.second.green() - firstStop.second.green()) * modifierValue;
+    int blueDelta = (secondStop.second.blue() - firstStop.second.blue()) * modifierValue;
+    int alphaDelta = (secondStop.second.alpha() - firstStop.second.alpha()) * modifierValue;
+
+    QGradientStop newStop;
+    newStop.first = newPos;
+    newStop.second = QColor(firstStop.second.red() + redDelta,
+                            firstStop.second.green() + greenDelta,
+                            firstStop.second.blue() + blueDelta,
+                            firstStop.second.alpha() + alphaDelta);
+
+    return newStop;
+}
+
 void RectangleNode::setGradientStops(const QGradientStops &stops)
 {
-    m_stops = stops;
+    //normalize stops
+    bool needsNormalization = false;
+    foreach (const QGradientStop &stop, stops) {
+        if (stop.first < 0.0 || stop.first > 1.0) {
+            needsNormalization = true;
+            continue;
+        }
+    }
+
+    if (needsNormalization) {
+        QGradientStops normalizedStops;
+        if (stops.count() == 1) {
+            //If there is only one stop, then the position does not matter
+            //It is just treated as a color
+            QGradientStop stop = stops.at(0);
+            stop.first = 0.0;
+            normalizedStops.append(stop);
+        } else {
+            //Clip stops to only the first below 0.0 and above 1.0
+            int below = -1;
+            int above = -1;
+            QVector<int> between;
+            for (int i = 0; i < stops.count(); ++i) {
+                if (stops.at(i).first < 0.0) {
+                    below = i;
+                } else if (stops.at(i).first > 1.0) {
+                    above = i;
+                    break;
+                } else {
+                    between.append(i);
+                }
+            }
+
+            //Interpoloate new color values for above and below
+            if (below != -1 ) {
+                //If there are more than one stops left, interpolate
+                if (below + 1 < stops.count()) {
+                    normalizedStops.append(interpolateStop(stops.at(below), stops.at(below + 1), 0.0));
+                } else {
+                    QGradientStop singleStop;
+                    singleStop.first = 0.0;
+                    singleStop.second = stops.at(below).second;
+                    normalizedStops.append(singleStop);
+                }
+            }
+
+            for (int i = 0; i < between.count(); ++i)
+                normalizedStops.append(stops.at(between.at(i)));
+
+            if (above != -1) {
+                //If there stops before above, interpolate
+                if (above >= 1) {
+                    normalizedStops.append(interpolateStop(stops.at(above), stops.at(above - 1), 1.0));
+                } else {
+                    QGradientStop singleStop;
+                    singleStop.first = 1.0;
+                    singleStop.second = stops.at(above).second;
+                    normalizedStops.append(singleStop);
+                }
+            }
+        }
+
+        m_stops = normalizedStops;
+
+    } else {
+        m_stops = stops;
+    }
     m_cornerPixmapIsDirty = true;
 }
 
