@@ -111,7 +111,7 @@ protected:
     void releaseResources() Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
-    void invalidateSG();
+    void invalidateSceneGraph();
 
 private:
     Q_DISABLE_COPY(QQuickPaintedItem)

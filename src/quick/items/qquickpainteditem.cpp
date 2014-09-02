@@ -140,7 +140,6 @@ QQuickPaintedItem::QQuickPaintedItem(QQuickItem *parent)
     : QQuickItem(*(new QQuickPaintedItemPrivate), parent)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -150,7 +149,6 @@ QQuickPaintedItem::QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *p
     : QQuickItem(dd, parent)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -561,7 +559,7 @@ void QQuickPaintedItem::releaseResources()
     d->node = 0; // Managed by the scene graph, just clear the pointer.
 }
 
-void QQuickPaintedItem::invalidateSG()
+void QQuickPaintedItem::invalidateSceneGraph()
 {
     Q_D(QQuickPaintedItem);
     delete d->textureProvider;

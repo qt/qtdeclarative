@@ -375,9 +375,6 @@ Q_SIGNALS:
     void implicitWidthChanged();
     void implicitHeightChanged();
 
-    Q_REVISION(2) void sceneGraphInvalidated();
-    Q_REVISION(2) void sceneGraphInitialized();
-
 protected:
     virtual bool event(QEvent *);
 

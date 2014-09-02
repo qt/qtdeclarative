@@ -108,7 +108,6 @@ QQuickFramebufferObject::QQuickFramebufferObject(QQuickItem *parent) :
     QQuickItem(*new QQuickFramebufferObjectPrivate, parent)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 /*!
@@ -308,7 +307,7 @@ void QQuickFramebufferObject::releaseResources()
     d->node = 0;
 }
 
-void QQuickFramebufferObject::invalidateSG()
+void QQuickFramebufferObject::invalidateSceneGraph()
 {
     Q_D(QQuickFramebufferObject);
     d->node = 0;

@@ -89,7 +89,7 @@ Q_SIGNALS:
     void textureFollowsItemSizeChanged(bool);
 
 private Q_SLOTS:
-    void invalidateSG();
+    void invalidateSceneGraph();
 };
 
 QT_END_NAMESPACE

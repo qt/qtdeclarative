@@ -95,7 +95,7 @@ Q_SIGNALS:
     Q_REVISION(1) void mipmapChanged(bool);
 
 private Q_SLOTS:
-    void invalidateSG();
+    void invalidateSceneGraph();
 
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);

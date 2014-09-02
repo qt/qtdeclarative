@@ -159,7 +159,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void sceneGraphInitialized();
     void checkAnimationCallbacks();
-    void invalidateSG();
+    void invalidateSceneGraph();
 
 protected:
     void componentComplete();

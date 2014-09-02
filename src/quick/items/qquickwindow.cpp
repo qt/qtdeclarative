@@ -2587,6 +2587,18 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         p->dirty(QQuickItemPrivate::Window);
     }
 
+    // Qt 6: Make invalidateSceneGraph a virtual member of QQuickItem
+    if (p->flags & QQuickItem::ItemHasContents) {
+        const QMetaObject *mo = item->metaObject();
+        int index = mo->indexOfSlot("invalidateSceneGraph()");
+        if (index >= 0) {
+            const QMetaMethod &method = mo->method(index);
+            // Skip functions named invalidateSceneGraph() in QML items.
+            if (strstr(method.enclosingMetaObject()->className(), "_QML_") == 0)
+                method.invoke(item, Qt::DirectConnection);
+        }
+    }
+
     for (int ii = 0; ii < p->childItems.count(); ++ii)
         cleanupNodesOnShutdown(p->childItems.at(ii));
 }

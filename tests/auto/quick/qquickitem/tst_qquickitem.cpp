@@ -165,7 +165,7 @@ private slots:
     void visualParentOwnership();
     void visualParentOwnershipWindow();
 
-    void testSGInitializeAndInvalidate();
+    void testSGInvalidate();
 
     void objectChildTransform();
 
@@ -1880,30 +1880,35 @@ void tst_qquickitem::visualParentOwnershipWindow()
     }
 }
 
-void tst_qquickitem::testSGInitializeAndInvalidate()
+class InvalidatedItem : public QQuickItem {
+    Q_OBJECT
+signals:
+    void invalidated();
+public slots:
+    void invalidateSceneGraph() { emit invalidated(); }
+};
+
+void tst_qquickitem::testSGInvalidate()
 {
     for (int i=0; i<2; ++i) {
         QScopedPointer<QQuickView> view(new QQuickView());
 
-        QQuickItem *item = new QQuickItem();
+        InvalidatedItem *item = new InvalidatedItem();
 
-        int expected;
+        int expected = 0;
         if (i == 0) {
             // First iteration, item has contents and should get signals
             expected = 1;
             item->setFlag(QQuickItem::ItemHasContents, true);
         } else {
             // Second iteration, item does not have content and will not get signals
-            expected = 0;
         }
 
-        QSignalSpy initializeSpy(item, SIGNAL(sceneGraphInitialized()));
-        QSignalSpy invalidateSpy(item, SIGNAL(sceneGraphInvalidated()));
+        QSignalSpy invalidateSpy(item, SIGNAL(invalidated()));
         item->setParentItem(view->contentItem());
         view->show();
 
         QVERIFY(QTest::qWaitForWindowExposed(view.data()));
-        QCOMPARE(initializeSpy.size(), expected);
 
         delete view.take();
         QCOMPARE(invalidateSpy.size(), expected);

@@ -1699,11 +1699,14 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \list
 
     \li The scene graph is invalidated; This can happen, for instance,
-    if the window is hidden using QQuickWindow::hide(). The signal
-    QQuickItem::sceneGraphInvalidated() is emitted on the rendering
-    thread and the GUI thread is blocked for the duration of this
-    call. Graphics resources can be deleted directly when this signal
-    is connected to using a Qt::DirectConnection.
+    if the window is hidden using QQuickWindow::hide(). If the item
+    class implements a \c slot named \c invalidateSceneGraph(), this
+    slot will be called on the rendering thread while the GUI thread
+    is blocked. This is equivalent to connecting to
+    QQuickWindow::sceneGraphInvalidated(). The OpenGL context of this
+    item's window will be bound when this slot is called. The only
+    exception is if the native OpenGL has been destroyed outside Qt's
+    control, for instance through \c EGL_CONTEXT_LOST.
 
     \li The item is removed from the scene; If an item is taken out of
     the scene, for instance because it's parent was set to \c null or
@@ -2677,11 +2680,6 @@ void QQuickItemPrivate::refWindow(QQuickWindow *c)
     Q_ASSERT(window == 0);
     window = c;
 
-    if (q->flags() & QQuickItem::ItemHasContents) {
-        QObject::connect(window, SIGNAL(sceneGraphInvalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-        QObject::connect(window, SIGNAL(sceneGraphInitialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-    }
-
     if (polishScheduled)
         QQuickWindowPrivate::get(window)->itemsToPolish.insert(q);
 
@@ -2710,11 +2708,6 @@ void QQuickItemPrivate::derefWindow()
 
     if (--windowRefCount > 0)
         return; // There are still other references, so don't set window to null yet.
-
-    if (q->flags() & QQuickItem::ItemHasContents) {
-        QObject::disconnect(window, SIGNAL(sceneGraphInvalidated()), q, SIGNAL(sceneGraphInvalidated()));
-        QObject::disconnect(window, SIGNAL(sceneGraphInitialized()), q, SIGNAL(sceneGraphInitialized()));
-    }
 
     q->releaseResources();
     removeFromDirtyList();
@@ -5866,65 +5859,8 @@ void QQuickItem::setFlags(Flags flags)
     if (int(flags & ItemClipsChildrenToShape) != int(d->flags & ItemClipsChildrenToShape))
         d->dirty(QQuickItemPrivate::Clip);
 
-    if (window() && (flags & ItemHasContents) ^ (d->flags & ItemHasContents)) {
-        if (flags & ItemHasContents)  {
-            connect(window(), SIGNAL(sceneGraphInvalidated()), this, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-            connect(window(), SIGNAL(sceneGraphInitialized()), this, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-        } else {
-            disconnect(window(), SIGNAL(sceneGraphInvalidated()), this, SIGNAL(sceneGraphInvalidated()));
-            disconnect(window(), SIGNAL(sceneGraphInitialized()), this, SIGNAL(sceneGraphInitialized()));
-        }
-    }
-
     d->flags = flags;
 }
-
-/*!
-    \fn void QQuickItem::sceneGraphInvalidated()
-
-    This signal is emitted when the scene graph is invalidated for
-    items that have the ItemHasContents flag set.
-
-    QSGNode instances will be cleaned up by the scene graph
-    automatically. An application will only need to react to this signal
-    to clean up resources that are stored and managed outside the
-    QSGNode structure returned from updatePaintNode().
-
-    When the scene graph is using a dedicated render thread, this
-    signal will be emitted on the scene graph's render thread. The
-    GUI thread is blocked for the duration of this call. Connections
-    should for this reason be made using Qt::DirectConnection.
-
-    The OpenGL context of this item's window will be bound when this
-    signal is emitted. The only exception is if the native OpenGL has
-    been destroyed outside Qt's control, for instance through
-    EGL_CONTEXT_LOST.
-
-    \since 5.4
-    \since QtQuick 2.4
-
-    \sa QQuickWindow::sceneGraphInvalidated(), {Graphics Resource Handling}
- */
-
-/*!
-    \fn void QQuickItem::sceneGraphInitialized()
-
-    This signal is emitted when the scene graph is initialized for
-    items that have the ItemHasContents flag set.
-
-    When the scene graph is using a dedicated render thread, this
-    function will be called on the scene graph's render thread. The
-    GUI thread is blocked for the duration of this call. Connections
-    should for this reason be made using Qt::DirectConnection.
-
-    The OpenGL context of this item's window will be bound when
-    this signal is emitted.
-
-    \since 5.4
-    \since QtQuick 2.4
-
-    \sa QQuickWindow::sceneGraphInitialized()
- */
 
 /*!
   \qmlproperty real QtQuick::Item::x

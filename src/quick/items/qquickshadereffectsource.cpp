@@ -192,7 +192,6 @@ QQuickShaderEffectSource::QQuickShaderEffectSource(QQuickItem *parent)
     , m_grab(true)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidateSG()));
 }
 
 QQuickShaderEffectSource::~QQuickShaderEffectSource()
@@ -677,7 +676,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     return node;
 }
 
-void QQuickShaderEffectSource::invalidateSG()
+void QQuickShaderEffectSource::invalidateSceneGraph()
 {
     if (m_texture)
         delete m_texture;
