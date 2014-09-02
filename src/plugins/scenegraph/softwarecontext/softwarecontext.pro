@@ -1,9 +1,10 @@
-TEMPLATE=lib
 TARGET=softwarecontext
 
-CONFIG += plugin
-
 QT += gui-private core-private quick-private qml-private
+
+PLUGIN_TYPE = scenegraph
+PLUGIN_CLASS_NAME = ContextPlugin
+load(qt_plugin)
 
 SOURCES += \
     context.cpp \
@@ -34,10 +35,4 @@ HEADERS += \
     painternode.h
 
 OTHER_FILES += softwarecontext.json
-
-target.path +=  $$[QT_INSTALL_PLUGINS]/scenegraph
-
-files.path += $$[QT_INSTALL_PLUGINS]/scenegraph
-
-INSTALLS += target files
 
