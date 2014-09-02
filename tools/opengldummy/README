@@ -1,0 +1,55 @@
+How to use the OpenGL dummy libraries
+
+The OpenGL Dummy libraries provide both headers and shared object files containing
+the symbols for both OpenGL ES2 and EGL.  The headers get copied into your sysroot
+in the /usr/include folder, and the *.so file gets copied into your /usr/lib/
+folder in both the sysroot, as well as in the target image (distributed on the device).
+The library that is generated contains all the symbols needed to succesffuly link
+an application as if you had support for OpenGL ES2 and EGL.  It is important to
+make sure that you do not actually call any of these symbols in your application.
+
+
+Installation:
+
+You need to have three things:
+
+Toolchain to cross compile code for your device
+Sysroot containing development headers and shared objects to link against when
+building applications
+Target image inteded to be deployed to your device.
+
+1) Build the library
+        Setup your build environment by defining where your compiler and sysroot
+        are located:
+	eg.
+	export CC=/opt/arm-toolchain/usr/bin/arm-linux-gnueabi-g++
+	export SYSROOT=/opt/device-name/sysroot/
+
+	Run the build script inside the client-dummy directory:
+	cd client-dummy
+	./build-gcc.sh
+
+	That should generate a two files: libEGL.so, libGLESv2.so
+
+2) Installation of files
+        Copy the include folder to the /usr/include folder in your sysroot.  This
+        installs the OpenGL/EGL headers:
+	cp -r include/* ${SYSROOT}/usr/include/
+	
+	Copy libEGL.so and libGLESv2.so to the /usr/lib folder in your sysroot:
+	cp src/lib*.so ${SYSROOT}/usr/lib/
+
+        Copy the libEGL.so and libGLESv2.so to the target device image and/or device
+        (this is the copy that is linked against on the device).
+
+3) Build Qt against this fake OpenGL library
+	When configuring Qt, make sure to build with es2 support:
+	./configure -opengl es2 ...
+	
+	Build as normal.
+
+4) Done
+        Now when you deploy your Qt build to the device it will depend on the dummy
+        libs libEGL.so and libGLESv2.so, but as long as you are using the Qt Quick
+        2D Renderer plugin you will be able to use QtQuick2 without actually making
+        any OpenGL/EGL calls.
