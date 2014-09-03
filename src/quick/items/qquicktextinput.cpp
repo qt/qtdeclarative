@@ -1868,9 +1868,9 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
             QFontMetricsF fm(d->font);
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = -QPoint(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
+            offset = -QPointF(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
         } else {
-            offset = -QPoint(d->hscroll, d->vscroll);
+            offset = -QPointF(d->hscroll, d->vscroll);
         }
 
         if (!d->m_textLayout.text().isEmpty()
