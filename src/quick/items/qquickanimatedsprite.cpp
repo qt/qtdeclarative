@@ -577,7 +577,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
     double frameAt; //double just for modf
     qreal progress = 0.0;
     int lastFrame = m_curFrame;
-    if (!m_paused) {
+    if (m_running && !m_paused) {
         //Advance State (keeps time for psuedostates)
         m_spriteEngine->updateSprites(timeInt);
 
@@ -607,10 +607,8 @@ void QQuickAnimatedSprite::prepareNextFrame()
         }
         if (m_loops > 0 && m_curLoop >= m_loops) {
             frameAt = 0;
-            if (m_running) {
-                m_running = false;
-                emit runningChanged(false);
-            }
+            m_running = false;
+            emit runningChanged(false);
         }
     } else {
         frameAt = m_curFrame;

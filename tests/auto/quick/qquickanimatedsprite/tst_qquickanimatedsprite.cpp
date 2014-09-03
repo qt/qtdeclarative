@@ -109,21 +109,39 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
     QVERIFY(sprite);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(!sprite->running());
     QVERIFY(!sprite->paused());
     QCOMPARE(sprite->loops(), 3);
     QCOMPARE(sprite->frameCount(), 6);
+    QCOMPARE(frameChangedSpy.count(), 0);
 
-    QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
+    frameChangedSpy.clear();
     sprite->setRunning(true);
-    QTRY_COMPARE(frameChangedSpy.count(), 3*6);
     QTRY_VERIFY(!sprite->running());
+    QCOMPARE(frameChangedSpy.count(), 3*6 + 1);
+
+    int prevFrame = -1;
+    int loopCounter = 0;
+    int maxFrame = 0;
+    while (!frameChangedSpy.isEmpty()) {
+        QList<QVariant> args = frameChangedSpy.takeFirst();
+        int frame = args.first().toInt();
+        if (frame < prevFrame) {
+            ++loopCounter;
+        } else {
+            QVERIFY(frame > prevFrame);
+        }
+        maxFrame = qMax(frame, maxFrame);
+        prevFrame = frame;
+    }
+    QCOMPARE(loopCounter, 3);
 
     delete window;
 }
