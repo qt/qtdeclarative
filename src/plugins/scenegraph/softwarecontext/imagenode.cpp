@@ -294,6 +294,7 @@ ImageNode::ImageNode()
     , m_smooth(true)
     , m_tileHorizontal(false)
     , m_tileVertical(false)
+    , m_cachedMirroredPixmapIsDirty(false)
 {
     setMaterial((QSGMaterial*)1);
     setGeometry((QSGGeometry*)1);
@@ -322,13 +323,18 @@ void ImageNode::setSubSourceRect(const QRectF &rect)
 
 void ImageNode::setTexture(QSGTexture *texture)
 {
-    m_texture = texture;
+    if (m_texture != texture) {
+        m_texture = texture;
+        m_cachedMirroredPixmapIsDirty = true;
+    }
 }
 
 void ImageNode::setMirror(bool mirror)
 {
-    // ### implement support for mirrored pixmaps
-    m_mirror = mirror;
+    if (m_mirror != mirror) {
+        m_mirror = mirror;
+        m_cachedMirroredPixmapIsDirty = true;
+    }
 }
 
 void ImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
@@ -352,6 +358,16 @@ void ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 
 void ImageNode::update()
 {
+    if (m_cachedMirroredPixmapIsDirty) {
+        if (m_mirror) {
+            m_cachedMirroredPixmap = pixmap().transformed(QTransform(-1, 0, 0, 1, 0, 0));
+        } else {
+            //Cleanup cached pixmap if necessary
+            if (!m_cachedMirroredPixmap.isNull())
+                m_cachedMirroredPixmap = QPixmap();
+        }
+        m_cachedMirroredPixmapIsDirty = false;
+    }
 }
 
 void ImageNode::preprocess()
@@ -382,7 +398,7 @@ void ImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
-    const QPixmap &pm = pixmap();
+    const QPixmap &pm = m_mirror ? m_cachedMirroredPixmap : pixmap();
 
     if (m_innerTargetRect != m_targetRect) {
         // border image

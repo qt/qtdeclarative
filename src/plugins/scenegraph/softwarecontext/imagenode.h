@@ -98,11 +98,13 @@ private:
     QRectF m_subSourceRect;
 
     QSGTexture *m_texture;
+    QPixmap m_cachedMirroredPixmap;
 
     bool m_mirror;
     bool m_smooth;
     bool m_tileHorizontal;
     bool m_tileVertical;
+    bool m_cachedMirroredPixmapIsDirty;
 };
 
 #endif // IMAGENODE_H
