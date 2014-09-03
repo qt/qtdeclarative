@@ -55,7 +55,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 static QElapsedTimer qsg_render_timer;
 #define QSG_RENDER_TIMING_SAMPLE(sampleName) \
     qint64 sampleName = 0;                                                  \
-    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled)   \
+    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::profilingSceneGraph())   \
         sampleName = qsg_render_timer.nsecsElapsed()
 
 

@@ -46,6 +46,11 @@ namespace QV4 {
 
 namespace Profiling {
 
+enum Features {
+    FeatureFunctionCall,
+    FeatureMemoryAllocation
+};
+
 enum MemoryType {
     HeapPage,
     LargeItem,
@@ -106,15 +111,18 @@ private:
 };
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type)\
-    (engine->profiler && engine->profiler->enabled ?\
+    (engine->profiler &&\
+            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
         engine->profiler->trackAlloc(size, type) : size)
 
 #define Q_V4_PROFILE_DEALLOC(engine, pointer, size, type) \
-    (engine->profiler && engine->profiler->enabled ?\
+    (engine->profiler &&\
+            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
         engine->profiler->trackDealloc(pointer, size, type) : pointer)
 
 #define Q_V4_PROFILE(engine, ctx, function)\
-    ((engine->profiler && engine->profiler->enabled) ?\
+    (engine->profiler &&\
+            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
         Profiling::FunctionCallProfiler::profileCall(engine->profiler, ctx, function) :\
         function->code(ctx, function->codeData))
 
@@ -138,11 +146,11 @@ public:
         return pointer;
     }
 
-    bool enabled;
+    quint64 featuresEnabled;
 
 public slots:
     void stopProfiling();
-    void startProfiling();
+    void startProfiling(quint64 features);
     void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 

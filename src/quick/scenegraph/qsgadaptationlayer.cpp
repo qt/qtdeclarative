@@ -153,7 +153,8 @@ void QSGDistanceFieldGlyphCache::update()
     if (m_pendingGlyphs.isEmpty())
         return;
 
-    bool profileFrames = QSG_LOG_TIME_GLYPH().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_GLYPH().isDebugEnabled() ||
+            QQuickProfiler::profilingSceneGraph();
     if (profileFrames)
         qsg_render_timer.start();
 

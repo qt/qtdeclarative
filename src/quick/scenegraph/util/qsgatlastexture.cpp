@@ -377,7 +377,8 @@ void Atlas::bind(QSGTexture::Filtering filtering)
     // Upload all pending images..
     for (int i=0; i<m_pending_uploads.size(); ++i) {
 
-        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() || QQuickProfiler::enabled;
+        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() ||
+                QQuickProfiler::profilingSceneGraph();
         if (profileFrames)
             qsg_renderer_timer.start();
 

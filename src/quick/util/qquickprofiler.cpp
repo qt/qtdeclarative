@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 // instance will be set, unset in constructor. Allows static methods to be inlined.
 QQuickProfiler *QQuickProfiler::s_instance = 0;
-bool QQuickProfiler::enabled = false;
+quint64 QQuickProfiler::featuresEnabled = 0;
 
 // convert to QByteArrays that can be sent to the debug client
 // use of QDataStream can skew results
@@ -129,7 +129,7 @@ void QQuickProfiler::initialize()
 
 void animationTimerCallback(qint64 delta)
 {
-    Q_QUICK_PROFILE(animationFrame(delta,
+    Q_QUICK_PROFILE(QQuickProfiler::ProfileAnimations, animationFrame(delta,
             QThread::currentThread() == QCoreApplication::instance()->thread() ?
             QQuickProfiler::GuiThread : QQuickProfiler::RenderThread));
 }
@@ -158,10 +158,10 @@ QQuickProfiler::QQuickProfiler(QQmlProfilerService *service) :
     m_timer.start();
 
     // We can always do DirectConnection here as all methods are protected by mutexes
-    connect(this, SIGNAL(profilingEnabled()), this, SLOT(startProfilingImpl()),
+    connect(this, SIGNAL(profilingEnabled(quint64)), this, SLOT(startProfilingImpl(quint64)),
             Qt::DirectConnection);
-    connect(this, SIGNAL(profilingEnabledWhileWaiting()), this, SLOT(startProfilingImpl()),
-            Qt::DirectConnection);
+    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
+            this, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)), this, SLOT(setTimer(QElapsedTimer)),
             Qt::DirectConnection);
     connect(this, SIGNAL(profilingDisabled()), this, SLOT(stopProfilingImpl()),
@@ -179,23 +179,23 @@ QQuickProfiler::QQuickProfiler(QQmlProfilerService *service) :
 QQuickProfiler::~QQuickProfiler()
 {
     QMutexLocker lock(&m_dataMutex);
-    enabled = false;
+    featuresEnabled = 0;
     s_instance = 0;
 }
 
-void QQuickProfiler::startProfilingImpl()
+void QQuickProfiler::startProfilingImpl(quint64 features)
 {
     QMutexLocker lock(&m_dataMutex);
     next = 0;
     m_data.clear();
-    enabled = true;
+    featuresEnabled = features;
 }
 
 void QQuickProfiler::stopProfilingImpl()
 {
     {
         QMutexLocker lock(&m_dataMutex);
-        enabled = false;
+        featuresEnabled = 0;
         next = 0;
     }
     service->dataReady(this);

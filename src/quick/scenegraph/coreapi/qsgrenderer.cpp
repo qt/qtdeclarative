@@ -176,7 +176,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_is_rendering = true;
 
 
-    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled() ||
+            QQuickProfiler::profilingSceneGraph();
     if (profileFrames)
         frameTimer.start();
     qint64 bindTime = 0;
@@ -272,7 +273,8 @@ void QSGRenderer::preprocess()
         }
     }
 
-    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled()|| QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled()||
+            QQuickProfiler::profilingSceneGraph();
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
 

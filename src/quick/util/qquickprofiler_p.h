@@ -54,18 +54,21 @@
 
 QT_BEGIN_NAMESPACE
 
-#define Q_QUICK_PROFILE_IF_ENABLED(Code)\
-    if (QQuickProfiler::enabled) {\
+#define Q_QUICK_PROFILE_IF_ENABLED(feature, Code)\
+    if (QQuickProfiler::featuresEnabled & (1 << feature)) {\
         Code;\
     } else\
         (void)0
 
-#define Q_QUICK_PROFILE(Method)\
-    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::Method)
+#define Q_QUICK_PROFILE(feature, Method)\
+    Q_QUICK_PROFILE_IF_ENABLED(feature, QQuickProfiler::Method)
 
 #define Q_QUICK_SG_PROFILE(Type, Params)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::sceneGraphFrame<Type> Params))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::sceneGraphFrame<Type> Params))
 
+#define Q_QUICK_INPUT_PROFILE(Method)\
+    Q_QUICK_PROFILE(QQuickProfiler::ProfileInputEvents, Method)
 
 // This struct is somewhat dangerous to use:
 // You can save values either with 32 or 64 bit precision. toByteArrays will
@@ -196,7 +199,11 @@ public:
 
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
-    static bool enabled;
+    static quint64 featuresEnabled;
+    static bool profilingSceneGraph()
+    {
+        return featuresEnabled & (1 << QQuickProfiler::ProfileSceneGraph);
+    }
 
     static void initialize();
 
@@ -218,7 +225,7 @@ protected:
     }
 
 protected slots:
-    void startProfilingImpl();
+    void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
     void reportDataImpl();
     void setTimer(const QElapsedTimer &t);

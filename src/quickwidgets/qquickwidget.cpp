@@ -959,7 +959,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
 void QQuickWidget::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
 
     QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
@@ -968,7 +968,7 @@ void QQuickWidget::keyPressEvent(QKeyEvent *e)
 void QQuickWidget::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
 
     QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
@@ -977,7 +977,7 @@ void QQuickWidget::keyReleaseEvent(QKeyEvent *e)
 void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // Use the constructor taking localPos and screenPos. That puts localPos into the
     // event's localPos and windowPos, and screenPos into the event's screenPos. This way
@@ -992,7 +992,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
 void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // As the second mouse press is suppressed in widget windows we emulate it here for QML.
     // See QTBUG-25831
@@ -1025,7 +1025,7 @@ void QQuickWidget::hideEvent(QHideEvent *)
 void QQuickWidget::mousePressEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
@@ -1036,7 +1036,7 @@ void QQuickWidget::mousePressEvent(QMouseEvent *e)
 void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
@@ -1048,7 +1048,7 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
 void QQuickWidget::wheelEvent(QWheelEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // Wheel events only have local and global positions, no need to map.
     QCoreApplication::sendEvent(d->offscreenWindow, e);

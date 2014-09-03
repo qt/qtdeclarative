@@ -69,13 +69,13 @@ QT_BEGIN_NAMESPACE
  * If the profiler's thread is waiting for an initial start signal we can emit the signal over a
  * \c Qt::DirectConnection to avoid the delay of the event loop.
  */
-void QQmlAbstractProfilerAdapter::startProfiling()
+void QQmlAbstractProfilerAdapter::startProfiling(quint64 features)
 {
     if (waiting)
-        emit profilingEnabledWhileWaiting();
+        emit profilingEnabledWhileWaiting(features);
     else
-        emit profilingEnabled();
-    running = true;
+        emit profilingEnabled(features);
+    featuresEnabled = features;
 }
 
 /*!
@@ -90,7 +90,7 @@ void QQmlAbstractProfilerAdapter::stopProfiling() {
         emit profilingDisabledWhileWaiting();
     else
         emit profilingDisabled();
-    running = false;
+    featuresEnabled = 0;
 }
 
 /*!

@@ -633,7 +633,8 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
-    bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled() ||
+            QQuickProfiler::profilingSceneGraph();
     if (profileFrames)
         qsg_renderer_timer.start();
 

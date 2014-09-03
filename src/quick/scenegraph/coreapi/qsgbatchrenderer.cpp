@@ -124,7 +124,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (shader)
         return shader;
 
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::enabled)
+    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::profilingSceneGraph())
         qsg_renderer_timer.start();
 
     QSGMaterialShader *s = material->createShader();
@@ -169,7 +169,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     if (shader)
         return shader;
 
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::enabled)
+    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled() || QQuickProfiler::profilingSceneGraph())
         qsg_renderer_timer.start();
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());

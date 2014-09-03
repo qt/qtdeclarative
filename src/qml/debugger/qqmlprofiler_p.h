@@ -56,14 +56,14 @@
 
 QT_BEGIN_NAMESPACE
 
-#define Q_QML_PROFILE_IF_ENABLED(profiler, Code)\
-    if (profiler && profiler->enabled) {\
+#define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)\
+    if (profiler && (profiler->featuresEnabled & (1 << feature))) {\
         Code;\
     } else\
         (void)0
 
-#define Q_QML_PROFILE(profiler, Method)\
-    Q_QML_PROFILE_IF_ENABLED(profiler, profiler->Method)
+#define Q_QML_PROFILE(feature, profiler, Method)\
+    Q_QML_PROFILE_IF_ENABLED(feature, profiler, profiler->Method)
 
 // This struct is somewhat dangerous to use:
 // The messageType is a bit field. You can pack multiple messages into
@@ -162,10 +162,10 @@ public:
 
     QQmlProfiler();
 
-    bool enabled;
+    quint64 featuresEnabled;
 
 public slots:
-    void startProfiling();
+    void startProfiling(quint64 features);
     void stopProfiling();
     void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
@@ -204,12 +204,14 @@ struct QQmlBindingProfiler : public QQmlProfilerHelper {
     QQmlBindingProfiler(QQmlProfiler *profiler, const QString &url, int line, int column) :
         QQmlProfilerHelper(profiler)
     {
-        Q_QML_PROFILE(profiler, startBinding(url, line, column));
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileBinding, profiler,
+                      startBinding(url, line, column));
     }
 
     ~QQmlBindingProfiler()
     {
-        Q_QML_PROFILE(profiler, endRange<Binding>());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileBinding, profiler,
+                      endRange<Binding>());
     }
 };
 
@@ -217,12 +219,14 @@ struct QQmlHandlingSignalProfiler : public QQmlProfilerHelper {
     QQmlHandlingSignalProfiler(QQmlProfiler *profiler, QQmlBoundSignalExpression *expression) :
         QQmlProfilerHelper(profiler)
     {
-        Q_QML_PROFILE(profiler, startHandlingSignal(expression->sourceLocation()));
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileHandlingSignal, profiler,
+                      startHandlingSignal(expression->sourceLocation()));
     }
 
     ~QQmlHandlingSignalProfiler()
     {
-        Q_QML_PROFILE(profiler, endRange<QQmlProfiler::HandlingSignal>());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileHandlingSignal, profiler,
+                      endRange<QQmlProfiler::HandlingSignal>());
     }
 };
 
@@ -230,12 +234,12 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
     QQmlCompilingProfiler(QQmlProfiler *profiler, const QString &name) :
         QQmlProfilerHelper(profiler)
     {
-        Q_QML_PROFILE(profiler, startCompiling(name));
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCompiling, profiler, startCompiling(name));
     }
 
     ~QQmlCompilingProfiler()
     {
-        Q_QML_PROFILE(profiler, endRange<Compiling>());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCompiling, profiler, endRange<Compiling>());
     }
 };
 
@@ -278,20 +282,20 @@ private:
     QFiniteStack<Data> ranges;
 };
 
-#define Q_QML_OC_PROFILE(profilerMember, Code)\
-    Q_QML_PROFILE_IF_ENABLED(profilerMember.profiler, Code)
+#define Q_QML_OC_PROFILE(member, Code)\
+    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, member.profiler, Code)
 
 class QQmlObjectCreationProfiler : public QQmlVmeProfiler::Data {
 public:
 
     QQmlObjectCreationProfiler(QQmlProfiler *profiler) : profiler(profiler)
     {
-        Q_QML_PROFILE(profiler, startCreating());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, startCreating());
     }
 
     ~QQmlObjectCreationProfiler()
     {
-        Q_QML_PROFILE(profiler, endRange<QQmlProfilerDefinitions::Creating>());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, endRange<QQmlProfilerDefinitions::Creating>());
     }
 
     void update(const QString &typeName, const QUrl &url, int line, int column)
@@ -312,7 +316,7 @@ public:
     QQmlObjectCompletionProfiler(QQmlVmeProfiler *parent) :
         profiler(parent->profiler)
     {
-        Q_QML_PROFILE_IF_ENABLED(profiler, {
+        Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler, {
             QQmlVmeProfiler::Data data = parent->pop();
             profiler->startCreating(data.m_typeName, data.m_url, data.m_line, data.m_column);
         });
@@ -320,7 +324,8 @@ public:
 
     ~QQmlObjectCompletionProfiler()
     {
-        Q_QML_PROFILE(profiler, endRange<QQmlProfilerDefinitions::Creating>());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler,
+                      endRange<QQmlProfilerDefinitions::Creating>());
     }
 private:
     QQmlProfiler *profiler;
