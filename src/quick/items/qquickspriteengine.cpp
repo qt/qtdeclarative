@@ -512,7 +512,9 @@ void QQuickStochasticEngine::start(int index, int state)
     else
         m_startTimes[index] = 0;
     m_goals[index] = -1;
+    m_addAdvance = false;
     restart(index);
+    m_addAdvance = true;
 }
 
 void QQuickStochasticEngine::stop(int index)

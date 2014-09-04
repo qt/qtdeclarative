@@ -35,6 +35,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
+#include <QtGui/qpainter.h>
 
 class tst_qquickanimatedsprite : public QQmlDataTest
 {
@@ -47,6 +48,8 @@ private slots:
     void test_properties();
     void test_runningChangedSignal();
     void test_frameChangedSignal();
+    void test_largeAnimation_data();
+    void test_largeAnimation();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -103,6 +106,13 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     delete window;
 }
 
+template <typename T>
+static bool isWithinRange(T min, T value, T max)
+{
+    Q_ASSERT(min < max);
+    return min <= value && value <= max;
+}
+
 void tst_qquickanimatedsprite::test_frameChangedSignal()
 {
     QQuickView *window = new QQuickView(0);
@@ -145,6 +155,109 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
 
     delete window;
 }
+
+void tst_qquickanimatedsprite::test_largeAnimation_data()
+{
+    QTest::addColumn<bool>("frameSync");
+
+    QTest::newRow("frameSync") << true;
+    QTest::newRow("no_frameSync") << false;
+
+}
+
+class AnimationImageProvider : public QQuickImageProvider
+{
+public:
+    AnimationImageProvider()
+        : QQuickImageProvider(QQuickImageProvider::Pixmap)
+    {
+    }
+
+    QPixmap requestPixmap(const QString &/*id*/, QSize *size, const QSize &requestedSize)
+    {
+        if (requestedSize.isValid())
+            qWarning() << "requestPixmap called with requestedSize of" << requestedSize;
+        // 40 frames.
+        const int nFrames = 40; // 40 is good for texture max width of 4096, 64 is good for 16384
+
+        const int frameWidth = 512;
+        const int frameHeight = 64;
+
+        const QSize pixSize(frameWidth, nFrames * frameHeight);
+        QPixmap pixmap(pixSize);
+        pixmap.fill();
+
+        for (int i = 0; i < nFrames; ++i) {
+            QImage frame(frameWidth, frameHeight, QImage::Format_ARGB32_Premultiplied);
+            frame.fill(Qt::white);
+            QPainter p1(&frame);
+            p1.setRenderHint(QPainter::Antialiasing, true);
+            QRect r(0,0, frameWidth, frameHeight);
+            p1.setBrush(QBrush(Qt::red, Qt::SolidPattern));
+            p1.drawPie(r, i*360*16/nFrames, 90*16);
+            p1.drawText(r, QString::number(i));
+            p1.end();
+
+            QPainter p2(&pixmap);
+            p2.drawImage(0, i * frameHeight, frame);
+        }
+
+        if (size)
+            *size = pixSize;
+        return pixmap;
+    }
+};
+
+void tst_qquickanimatedsprite::test_largeAnimation()
+{
+    QFETCH(bool, frameSync);
+
+    QQuickView *window = new QQuickView(0);
+    window->engine()->addImageProvider(QLatin1String("test"), new AnimationImageProvider);
+    window->setSource(testFileUrl("largeAnimation.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+
+    QVERIFY(sprite);
+
+    QVERIFY(!sprite->running());
+    QVERIFY(!sprite->paused());
+    QCOMPARE(sprite->loops(), 3);
+    QCOMPARE(sprite->frameCount(), 40);
+    sprite->setProperty("frameSync", frameSync);
+    if (!frameSync)
+        sprite->setProperty("frameDuration", 30);
+
+    QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
+    sprite->setRunning(true);
+    QTRY_VERIFY_WITH_TIMEOUT(!sprite->running(), 100000 /* make sure we wait until its done*/ );
+    if (frameSync)
+        QVERIFY(isWithinRange(3*40, frameChangedSpy.count(), 3*40 + 1));
+    int prevFrame = -1;
+    int loopCounter = 0;
+    int maxFrame = 0;
+    while (!frameChangedSpy.isEmpty()) {
+        QList<QVariant> args = frameChangedSpy.takeFirst();
+        int frame = args.first().toInt();
+        if (frame < prevFrame) {
+            ++loopCounter;
+        } else {
+            QVERIFY(frame > prevFrame);
+        }
+        maxFrame = qMax(frame, maxFrame);
+        prevFrame = frame;
+    }
+    int maxTextureSize;
+    ::glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    maxTextureSize /= 512;
+    QVERIFY(maxFrame > maxTextureSize); // make sure we go beyond the texture width limitation
+    QCOMPARE(loopCounter, sprite->loops());
+    delete window;
+}
+
 
 QTEST_MAIN(tst_qquickanimatedsprite)
 
