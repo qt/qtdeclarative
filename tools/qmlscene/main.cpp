@@ -418,14 +418,10 @@ int main(int argc, char ** argv)
     QTranslator translator;
     QTranslator qtTranslator;
     QString sysLocale = QLocale::system().name();
-    if (translator.load(QLatin1String("qmlscene_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+    if (qtTranslator.load(QLatin1String("qt_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+        app.installTranslator(&qtTranslator);
+    if (translator.load(QLatin1String("qmlscene_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&translator);
-        if (qtTranslator.load(QLatin1String("qt_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
-            app.installTranslator(&qtTranslator);
-        } else {
-            app.removeTranslator(&translator);
-        }
-    }
 
     QTranslator qmlTranslator;
     if (!options.translationFile.isEmpty()) {
