@@ -771,8 +771,7 @@ QRectF QQuickTextInput::cursorRectangle() const
         return QRectF();
     qreal x = l.cursorToX(c) - d->hscroll;
     qreal y = l.y() - d->vscroll;
-    qreal height = l.ascent() + l.descent();
-    return QRectF(x, y, 1, height);
+    return QRectF(x, y, 1, l.height());
 }
 
 /*!
@@ -1388,8 +1387,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         return QRectF();
     qreal x = l.cursorToX(pos) - d->hscroll;
     qreal y = l.y() - d->vscroll;
-    qreal height = l.ascent() + l.descent();
-    return QRectF(x, y, 1, height);
+    return QRectF(x, y, 1, l.height());
 }
 
 /*!
