@@ -112,23 +112,23 @@ public:
     \ingroup qtquick-input
     \brief For specifying drag and drop events for moved Items
 
-    Using the Drag attached property any Item can be made a source of drag and drop
+    Using the Drag attached property, any Item can be made a source of drag and drop
     events within a scene.
 
-    When a drag is \l active on an item any change in that item's position will
+    When a drag is \l active on an item, any change in that item's position will
     generate a drag event that will be sent to any DropArea that intersects
     with the new position of the item.  Other items which implement drag and
     drop event handlers can also receive these events.
 
     The following snippet shows how an item can be dragged with a MouseArea.
-    However, dragging is not limited to mouse drags, anything that can move an item
-    can generate drag events, this can include touch events, animations and bindings.
+    However, dragging is not limited to mouse drags; anything that can move an item
+    can generate drag events, including touch events, animations and bindings.
 
     \snippet qml/drag.qml 0
 
     A drag can be terminated either by canceling it with Drag.cancel() or setting
     Drag.active to false, or it can be terminated with a drop event by calling
-    Drag.drop().  If the drop event is accepted Drag.drop() will return the
+    Drag.drop().  If the drop event is accepted, Drag.drop() will return the
     \l {supportedActions}{drop action} chosen by the recipient of the event,
     otherwise it will return Qt.IgnoreAction.
 
@@ -314,7 +314,8 @@ void QQuickDragAttached::setActive(bool active)
     \qmlattachedproperty Object QtQuick::Drag::source
 
     This property holds an object that is identified to recipients of drag events as
-    the source of the events.  By default this is the item Drag property is attached to.
+    the source of the events.  By default this is the item that the Drag
+    property is attached to.
 
     Changing the source while a drag is active will reset the sequence of drag events by
     sending a drag leave event followed by a drag enter event with the new source.
