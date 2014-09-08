@@ -45,6 +45,8 @@ public:
     void paint(QPainter *);
 
 private:
+    void paintRectangle(QPainter *painter, const QRect &rect);
+
     QRect m_rect;
     QColor m_color;
     QColor m_penColor;
