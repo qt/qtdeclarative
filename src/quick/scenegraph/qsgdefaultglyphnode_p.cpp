@@ -128,28 +128,8 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
         }
     }
 
-    if (state.isMatrixDirty()) {
-        QMatrix4x4 transform = state.modelViewMatrix();
-        qreal xTranslation = transform(0, 3);
-        qreal yTranslation = transform(1, 3);
-
-        // Remove translation and check identity to see if matrix is only translating.
-        // If it is, we can round the translation to make sure the text is pixel aligned,
-        // which is the only thing that works with GL_NEAREST filtering. Adding rotations
-        // and scales to native rendered text is not a prioritized use case, since the
-        // default rendering type is designed for that.
-        transform(0, 3) = 0.0;
-        transform(1, 3) = 0.0;
-        if (transform.isIdentity()) {
-            transform(0, 3) = qRound(xTranslation);
-            transform(1, 3) = qRound(yTranslation);
-
-            transform = state.projectionMatrix() * transform;
-            program()->setUniformValue(m_matrix_id, transform);
-        } else {
-            program()->setUniformValue(m_matrix_id, state.combinedMatrix());
-        }
-    }
+    if (state.isMatrixDirty())
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
 class QSG8BitTextMaskShader : public QSGTextMaskShader
