@@ -36,21 +36,23 @@ import QtQuick.Particles 2.0
 
 Rectangle {
     id: root
-    color: "green"
 
-    Rectangle {
-        width: 400
-        height: 400
-        anchors.centerIn: parent
-        color: "red"
-        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+    gradient: Gradient {
+        GradientStop { position: 0; color: mouse.pressed ? "lightsteelblue" : "steelblue" }
+        GradientStop { position: 1; color: "black" }
     }
 
     Text {
         anchors.centerIn: parent
         text: "Qt Quick in a texture"
         font.pointSize: 40
-        color: "cyan"
+        color: "white"
+
+        SequentialAnimation on rotation {
+            PauseAnimation { duration: 2500 }
+            NumberAnimation { from: 0; to: 360; duration: 5000; easing.type: Easing.InOutCubic }
+            loops: Animation.Infinite
+        }
     }
 
     ParticleSystem {
@@ -183,8 +185,7 @@ Rectangle {
     onHeightChanged: particles.reset()
 
     MouseArea {
+        id: mouse
         anchors.fill: parent
-        onPressed: root.color = "gray"
-        onReleased: root.color = "green"
     }
 }
