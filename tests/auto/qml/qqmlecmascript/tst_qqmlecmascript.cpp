@@ -213,6 +213,7 @@ private slots:
     void deletedEngine();
     void libraryScriptAssert();
     void variantsAssignedUndefined();
+    void variants();
     void qtbug_9792();
     void qtcreatorbug_1289();
     void noSpuriousWarningsAtShutdown();
@@ -5735,6 +5736,29 @@ void tst_qqmlecmascript::variantsAssignedUndefined()
 
 
     delete object;
+}
+
+void tst_qqmlecmascript::variants()
+{
+    QQmlComponent component(&engine, testFileUrl("variants.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVERIFY(object->property("undefinedVariant").type() == QVariant::Invalid);
+    QVERIFY(object->property("nullVariant").type() == (int)QMetaType::VoidStar);
+    QVERIFY(object->property("intVariant").type() == QVariant::Int);
+    QVERIFY(object->property("doubleVariant").type() == QVariant::Double);
+
+    QVariant result;
+    QMetaObject::invokeMethod(object, "checkNull", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
+    QMetaObject::invokeMethod(object, "checkUndefined", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
+    QMetaObject::invokeMethod(object, "checkNumber", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
 }
 
 void tst_qqmlecmascript::qtbug_9792()

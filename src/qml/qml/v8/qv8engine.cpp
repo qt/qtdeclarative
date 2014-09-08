@@ -240,6 +240,8 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::UnknownType:
             case QMetaType::Void:
                 return QV4::Encode::undefined();
+            case QMetaType::VoidStar:
+                return QV4::Encode::null();
             case QMetaType::Bool:
                 return QV4::Encode(*reinterpret_cast<const bool*>(ptr));
             case QMetaType::Int:
@@ -379,8 +381,10 @@ QQmlContextData *QV8Engine::callingContext()
 // [Any other object] -> QVariantMap(...)
 QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
 {
-    if (value->isNullOrUndefined())
+    if (value->isUndefined())
         return QVariant();
+    if (value->isNull())
+        return QVariant(QMetaType::VoidStar, (void *)0);
     if (value->isBoolean())
         return value->booleanValue();
     if (value->isInteger())
@@ -644,6 +648,8 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::UnknownType:
     case QMetaType::Void:
         return QV4::Encode::undefined();
+    case QMetaType::VoidStar:
+        return QV4::Encode::null();
     case QMetaType::Bool:
         return QV4::Encode(*reinterpret_cast<const bool*>(data));
     case QMetaType::Int:
