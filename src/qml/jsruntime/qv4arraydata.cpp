@@ -678,6 +678,60 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
     return p1s->toQString() < p2s->toQString();
 }
 
+template <typename RandomAccessIterator, typename T, typename LessThan>
+void sortHelper(RandomAccessIterator start, RandomAccessIterator end, const T &t, LessThan lessThan)
+{
+top:
+    int span = int(end - start);
+    if (span < 2)
+        return;
+
+    --end;
+    RandomAccessIterator low = start, high = end - 1;
+    RandomAccessIterator pivot = start + span / 2;
+
+    if (lessThan(*end, *start))
+        qSwap(*end, *start);
+    if (span == 2)
+        return;
+
+    if (lessThan(*pivot, *start))
+        qSwap(*pivot, *start);
+    if (lessThan(*end, *pivot))
+        qSwap(*end, *pivot);
+    if (span == 3)
+        return;
+
+    qSwap(*pivot, *end);
+
+    while (low < high) {
+        while (low < high && lessThan(*low, *end))
+            ++low;
+
+        while (high > low && lessThan(*end, *high))
+            --high;
+
+        if (low < high) {
+            qSwap(*low, *high);
+            ++low;
+            --high;
+        } else {
+            break;
+        }
+    }
+
+    if (lessThan(*low, *end))
+        ++low;
+
+    qSwap(*end, *low);
+    sortHelper(start, low, t, lessThan);
+
+    start = low + 1;
+    ++end;
+    goto top;
+}
+
+
 void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint len)
 {
     if (!len)
@@ -769,7 +823,7 @@ void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueR
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 
     Value *begin = thisObject->arrayData()->arrayData();
-    std::sort(begin, begin + len, lessThan);
+    sortHelper(begin, begin + len, *begin, lessThan);
 
 #ifdef CHECK_SPARSE_ARRAYS
     thisObject->initSparseArray();

@@ -127,6 +127,7 @@ private slots:
     void reentrancy_objectCreation();
     void jsIncDecNonObjectProperty();
     void JSONparse();
+    void arraySort();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -2740,6 +2741,24 @@ void tst_QJSEngine::JSONparse()
     QJSEngine eng;
     QJSValue ret = eng.evaluate("var json=\"{\\\"1\\\": null}\"; JSON.parse(json);");
     QVERIFY(ret.isObject());
+}
+
+void tst_QJSEngine::arraySort()
+{
+    // tests that calling Array.sort with a bad sort function doesn't cause issues
+    // Using std::sort is e.g. not safe when used with a bad sort function and causes
+    // crashes
+    QJSEngine eng;
+    eng.evaluate("function crashMe() {"
+                 "    var data = [];"
+                 "    for (var i = 0; i < 50; i++) {"
+                 "        data[i] = 'whatever';"
+                 "    }"
+                 "    data.sort(function(a, b) {"
+                 "        return -1;"
+                 "    });"
+                 "}"
+                 "crashMe();");
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }

@@ -49,6 +49,7 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
     : m_controller(0)
     , m_job(job)
     , m_internalState(State_Stopped)
+    , m_jobManagedByController(false)
 {
     m_isRenderThreadProxy = true;
     m_animation = qobject_cast<QQuickAbstractAnimation *>(item);
@@ -93,7 +94,10 @@ void QQuickAnimatorProxyJob::deleteJob()
         // so delete it through the controller to clean up properly.
         if (m_controller)
             m_controller->deleteJob(m_job);
-        else
+
+        // We explicitly delete the job if the animator controller has never touched
+        // it. If it has, it will have ownership as well.
+        else if (!m_jobManagedByController)
             delete m_job;
         m_job = 0;
     }
@@ -141,11 +145,13 @@ void QQuickAnimatorProxyJob::controllerWasDeleted()
 void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 {
     if (!window) {
-        // Stop will trigger syncBackCurrentValues so best to do it before
-        // we delete m_job.
         stop();
         deleteJob();
-        return;
+
+        // Upon leaving a window, we reset the controller. This means that
+        // animators will only enter the Starting phase and won't be making
+        // calls to QQuickAnimatorController::startjob().
+        m_controller = 0;
 
     } else if (!m_controller && m_job) {
         m_controller = QQuickWindowPrivate::get(window)->animationController;
