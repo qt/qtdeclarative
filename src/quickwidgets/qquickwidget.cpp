@@ -294,6 +294,26 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
 
+    \section1 Limitations
+
+    Putting other widgets underneath and making the QQuickWidget transparent will not lead
+    to the expected results: the widgets underneath will not be visible. This is because
+    in practice the QQuickWidget is drawn before all other regular, non-OpenGL widgets,
+    and so see-through types of solutions are not feasible. Other type of layouts, like
+    having widgets on top of the QQuickWidget, will function as expected.
+
+    When absolutely necessary, this limitation can be overcome by setting the
+    Qt::WA_AlwaysStackOnTop attribute on the QQuickWidget. Be aware, however that this
+    breaks stacking order. For example it will not be possible to have other widgets on
+    top of the QQuickWidget, so it should only be used in situations where a
+    semi-transparent QQuickWidget with other widgets visible underneath is required.
+
+    This limitation only applies when there are other widgets underneath the QQuickWidget
+    inside the same window. Making the window semi-transparent, with other applications
+    and the desktop visible in the background, is done in the traditional way: Set
+    Qt::WA_TranslucentBackground and change the Qt Quick Scenegraph's clear color to
+    Qt::transparent via setClearColor().
+
     \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
 
@@ -1152,10 +1172,6 @@ QImage QQuickWidget::grabFramebuffer() const
   To get a semi- or fully transparent QQuickWidget, call this function with \a
   color set to Qt::transparent and set the Qt::WA_TranslucentBackground widget
   attribute.
-
-  \note The limitations for having widgets underneath visible that are described
-  in QOpenGLWidget::setFormat() apply also to QQuickWidget. In that case use
-  Qt::WA_AlwaysStackOnTop instead of Qt::WA_TranslucentBackground.
 
   \sa QQuickWindow::setColor()
  */
