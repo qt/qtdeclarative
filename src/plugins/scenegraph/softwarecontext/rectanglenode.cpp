@@ -34,8 +34,9 @@ RectangleNode::RectangleNode()
 
 void RectangleNode::setRect(const QRectF &rect)
 {
-    if (m_rect != rect) {
-        m_rect = rect;
+    QRect alignedRect = rect.toAlignedRect();
+    if (m_rect != alignedRect) {
+        m_rect = alignedRect;
     }
 }
 
@@ -188,7 +189,7 @@ void RectangleNode::update()
 
     if (m_cornerPixmapIsDirty) {
         //Generate new corner Pixmap
-        int radius = qRound(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5f, m_radius));
+        int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
 
         m_cornerPixmap = QPixmap(radius * 2, radius * 2);
         m_cornerPixmap.fill(Qt::transparent);
@@ -226,49 +227,89 @@ void RectangleNode::update()
 void RectangleNode::paint(QPainter *painter)
 {
     //Radius should never exceeds half of the width or half of the height
-    int radius = qRound(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
+    int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
 
     QPainter::RenderHints previousRenderHints = painter->renderHints();
     painter->setRenderHint(QPainter::Antialiasing, false);
 
     if (m_penWidth > 0) {
+        //Fill border Rects
+
         //Borders can not be more than half the height/width of a rect
         double borderWidth = qMin(m_penWidth, m_rect.width() * 0.5);
         double borderHeight = qMin(m_penWidth, m_rect.height() * 0.5);
 
-        //Fill 4 border Rects
-        QRectF borderTop(QPointF(m_rect.x() + radius, m_rect.y()),
-                         QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + borderHeight));
-        painter->fillRect(borderTop, m_penColor);
-        QRectF borderBottom(QPointF(m_rect.x() + radius, m_rect.y() + m_rect.height() - borderHeight),
-                            QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + m_rect.height()));
-        painter->fillRect(borderBottom, m_penColor);
+
+
+        if (borderWidth > radius) {
+            //4 Rects
+            QRectF borderTopOutside(QPointF(m_rect.x() + radius, m_rect.y()),
+                                    QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + radius));
+            QRectF borderTopInside(QPointF(m_rect.x() + borderWidth, m_rect.y() + radius),
+                                   QPointF(m_rect.x() + m_rect.width() - borderWidth, m_rect.y() + borderHeight));
+            QRectF borderBottomOutside(QPointF(m_rect.x() + radius, m_rect.y() + m_rect.height() - radius),
+                                       QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + m_rect.height()));
+            QRectF borderBottomInside(QPointF(m_rect.x() + borderWidth, m_rect.y() + m_rect.height() - borderHeight),
+                                      QPointF(m_rect.x() + m_rect.width() - borderWidth, m_rect.y() + m_rect.height() - radius));
+
+            if (borderTopOutside.isValid())
+                painter->fillRect(borderTopOutside, m_penColor);
+            if (borderTopInside.isValid())
+                painter->fillRect(borderTopInside, m_penColor);
+            if (borderBottomOutside.isValid())
+                painter->fillRect(borderBottomOutside, m_penColor);
+            if (borderBottomInside.isValid())
+                painter->fillRect(borderBottomInside, m_penColor);
+
+        } else {
+            //2 Rects
+            QRectF borderTop(QPointF(m_rect.x() + radius, m_rect.y()),
+                             QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + borderHeight));
+            QRectF borderBottom(QPointF(m_rect.x() + radius, m_rect.y() + m_rect.height() - borderHeight),
+                                QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + m_rect.height()));
+            if (borderTop.isValid())
+                painter->fillRect(borderTop, m_penColor);
+            if (borderBottom.isValid())
+                painter->fillRect(borderBottom, m_penColor);
+        }
         QRectF borderLeft(QPointF(m_rect.x(), m_rect.y() + radius),
                           QPointF(m_rect.x() + borderWidth, m_rect.y() + m_rect.height() - radius));
-        painter->fillRect(borderLeft, m_penColor);
         QRectF borderRight(QPointF(m_rect.x() + m_rect.width() - borderWidth, m_rect.y() + radius),
                            QPointF(m_rect.x() + m_rect.width(), m_rect.y() + m_rect.height() - radius));
-        painter->fillRect(borderRight, m_penColor);
+        if (borderLeft.isValid())
+            painter->fillRect(borderLeft, m_penColor);
+        if (borderRight.isValid())
+            painter->fillRect(borderRight, m_penColor);
     }
+
 
     if (radius > 0) {
-        //blit 4 corners to border
-        QRectF topLeftCorner(QPointF(m_rect.x(), m_rect.y()),
-                             QPointF(m_rect.x() + radius, m_rect.y() + radius));
-        painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, radius, radius));
-        QRectF topRightCorner(QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y()),
-                              QPointF(m_rect.x() + m_rect.width(), m_rect.y() + radius));
-        painter->drawPixmap(topRightCorner, m_cornerPixmap, QRectF(radius, 0, radius, radius));
-        QRectF bottomLeftCorner(QPointF(m_rect.x(), m_rect.y() + m_rect.height() - radius),
-                                QPointF(m_rect.x() + radius, m_rect.y() + m_rect.height()));
-        painter->drawPixmap(bottomLeftCorner, m_cornerPixmap, QRectF(0, radius, radius, radius));
-        QRectF bottomRightCorner(QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + m_rect.height() - radius),
-                                 QPointF(m_rect.x() + m_rect.width(), m_rect.y() + m_rect.height()));
-        painter->drawPixmap(bottomRightCorner, m_cornerPixmap, QRectF(radius, radius, radius, radius));
+
+        if (radius * 2 >= m_rect.width() && radius * 2 >= m_rect.height()) {
+            //Blit whole pixmap for circles
+            painter->drawPixmap(m_rect, m_cornerPixmap, m_cornerPixmap.rect());
+        } else {
+
+            //blit 4 corners to border
+            QRectF topLeftCorner(QPointF(m_rect.x(), m_rect.y()),
+                                 QPointF(m_rect.x() + radius, m_rect.y() + radius));
+            painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, radius, radius));
+            QRectF topRightCorner(QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y()),
+                                  QPointF(m_rect.x() + m_rect.width(), m_rect.y() + radius));
+            painter->drawPixmap(topRightCorner, m_cornerPixmap, QRectF(radius, 0, radius, radius));
+            QRectF bottomLeftCorner(QPointF(m_rect.x(), m_rect.y() + m_rect.height() - radius),
+                                    QPointF(m_rect.x() + radius, m_rect.y() + m_rect.height()));
+            painter->drawPixmap(bottomLeftCorner, m_cornerPixmap, QRectF(0, radius, radius, radius));
+            QRectF bottomRightCorner(QPointF(m_rect.x() + m_rect.width() - radius, m_rect.y() + m_rect.height() - radius),
+                                     QPointF(m_rect.x() + m_rect.width(), m_rect.y() + m_rect.height()));
+            painter->drawPixmap(bottomRightCorner, m_cornerPixmap, QRectF(radius, radius, radius, radius));
+
+        }
 
     }
 
-    QRectF brushRect = m_rect.marginsRemoved(QMarginsF(m_penWidth, m_penWidth, m_penWidth, m_penWidth));
+    int penWidth = qRound(m_penWidth);
+    QRectF brushRect = m_rect.marginsRemoved(QMargins(penWidth, penWidth, penWidth, penWidth));
     if (brushRect.width() < 0)
         brushRect.setWidth(0);
     if (brushRect.height() < 0)

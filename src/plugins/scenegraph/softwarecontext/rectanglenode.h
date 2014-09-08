@@ -45,7 +45,7 @@ public:
     void paint(QPainter *);
 
 private:
-    QRectF m_rect;
+    QRect m_rect;
     QColor m_color;
     QColor m_penColor;
     double m_penWidth;
