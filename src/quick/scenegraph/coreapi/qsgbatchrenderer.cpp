@@ -1875,9 +1875,12 @@ void Renderer::uploadBatch(Batch *b)
                 vd += g->sizeOfVertex();
             }
 
-            const quint16 *id = (const quint16 *) (b->vbo.data
-                                                   + b->vertexCount * g->sizeOfVertex()
-                                                   + (b->merged ? b->vertexCount * sizeof(float) : 0));
+            const quint16 *id =
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+                    (const quint16 *) (b->ibo.data);
+#else
+                    (const quint16 *) (b->vbo.data + b->drawSets.at(0).indices);
+#endif
             {
                 QDebug iDump = qDebug();
                 iDump << "  -- Index Data, count:" << b->indexCount;
