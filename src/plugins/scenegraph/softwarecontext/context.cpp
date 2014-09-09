@@ -104,12 +104,17 @@ PixmapRenderer::PixmapRenderer(QSGRenderContext *context)
 
 void PixmapRenderer::renderScene(GLuint)
 {
-    Q_UNREACHABLE();
+    class B : public QSGBindable
+    {
+    public:
+        void bind() const { }
+    } bindable;
+    QSGRenderer::renderScene(bindable);
 }
 
 void PixmapRenderer::render()
 {
-    Q_UNREACHABLE();
+
 }
 
 void PixmapRenderer::render(QPixmap *target)

@@ -190,7 +190,7 @@ void SoftwareLayer::grab()
 
     if (!m_renderer) {
         m_renderer = new SoftwareContext::PixmapRenderer(m_context);
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTextureLater()));
     }
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
@@ -206,10 +206,9 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
-    m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
+    m_renderer->renderScene();
     m_renderer->render(&m_pixmap);
 
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip, opacity and render list update.
