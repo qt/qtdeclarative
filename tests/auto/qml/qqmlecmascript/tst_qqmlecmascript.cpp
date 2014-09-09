@@ -199,6 +199,7 @@ private slots:
     void sequenceSort_data();
     void sequenceSort();
     void dateParse();
+    void utcDate();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -7360,6 +7361,21 @@ void tst_qqmlecmascript::dateParse()
     QVERIFY(q.toBool() == true);
 
 
+}
+
+void tst_qqmlecmascript::utcDate()
+{
+    QQmlComponent component(&engine, testFileUrl("utcdate.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QVariant val = QString::fromLatin1("2014-07-16T23:30:31");
+    QMetaObject::invokeMethod(object, "check_utc", Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
+    QVERIFY(q.toBool() == true);
 }
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
