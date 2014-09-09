@@ -397,7 +397,7 @@ void QQuickItemKeyFilter::componentComplete()
     \c KeyNavigation.BeforeItem allows the event to be used for key navigation
     before the item, rather than after.
 
-    If item to which the focus is switching is not enabled or visible, an attempt will
+    If the item to which the focus is switching is not enabled or visible, an attempt will
     be made to skip this item and focus on the next. This is possible if there are
     a chain of items with the same KeyNavigation handler. If multiple items in a row are not enabled
     or visible, they will also be skipped.
@@ -405,7 +405,7 @@ void QQuickItemKeyFilter::componentComplete()
     KeyNavigation will implicitly set the other direction to return focus to this item. So if you set
     \l left to another item, \l right will be set on that item's KeyNavigation to set focus back to this
     item. However, if that item's KeyNavigation has had right explicitly set then no change will occur.
-    This means that the above example could have been written, with the same behaviour, without specifying
+    This means that the example above could achieve the same behavior without specifying
     KeyNavigation.right or KeyNavigation.down for any of the items.
 
     \sa {Keys}{Keys attached property}
