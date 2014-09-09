@@ -119,7 +119,7 @@ const ObjectVTable String::static_vtbl =
 
 void String::destroy(Managed *that)
 {
-    static_cast<String*>(that)->~String();
+    static_cast<String*>(that)->d()->~Data();
 }
 
 void String::markObjects(Managed *that, ExecutionEngine *e)
