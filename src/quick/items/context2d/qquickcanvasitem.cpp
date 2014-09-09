@@ -634,7 +634,8 @@ void QQuickCanvasItem::releaseResources()
 void QQuickCanvasItem::invalidateSceneGraph()
 {
     Q_D(QQuickCanvasItem);
-    d->context->deleteLater();
+    if (d->context)
+        d->context->deleteLater();
     d->context = 0;
     d->node = 0; // managed by the scene graph, just reset the pointer
     delete d->textureProvider;
