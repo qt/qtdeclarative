@@ -74,13 +74,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged)
 
     Q_PROPERTY(int maximumLength READ maxLength WRITE setMaxLength NOTIFY maximumLengthChanged)
-#ifndef QT_NO_VALIDATOR
     Q_PROPERTY(QValidator* validator READ validator WRITE setValidator NOTIFY validatorChanged)
-#endif
     Q_PROPERTY(QString inputMask READ inputMask WRITE setInputMask NOTIFY inputMaskChanged)
-#ifndef QT_NO_IM
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
-#endif
 
     Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged)
     Q_PROPERTY(EchoMode echoMode READ echoMode WRITE setEchoMode NOTIFY echoModeChanged)
@@ -95,9 +91,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
-#ifndef QT_NO_IM
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
-#endif
     Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
@@ -205,10 +199,9 @@ public:
     int maxLength() const;
     void setMaxLength(int ml);
 
-#ifndef QT_NO_VALIDATOR
     QValidator * validator() const;
     void setValidator(QValidator* v);
-#endif
+
     QString inputMask() const;
     void setInputMask(const QString &im);
 
@@ -257,12 +250,10 @@ public:
     bool canUndo() const;
     bool canRedo() const;
 
-#ifndef QT_NO_IM
     bool isInputMethodComposing() const;
 
     Qt::InputMethodHints inputMethodHints() const;
     void setInputMethodHints(Qt::InputMethodHints hints);
-#endif
 
     Q_INVOKABLE QString getText(int start, int end) const;
 
@@ -304,14 +295,10 @@ Q_SIGNALS:
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();
-#ifndef QT_NO_IM
     void inputMethodComposingChanged();
-#endif
     void effectiveHorizontalAlignmentChanged();
     void contentSizeChanged();
-#ifndef QT_NO_IM
     void inputMethodHintsChanged();
-#endif
     void renderTypeChanged();
 
 protected:

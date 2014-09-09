@@ -1021,6 +1021,8 @@ void QQuickDoubleValidator::resetLocaleName()
     }
 }
 
+#endif // QT_NO_VALIDATOR
+
 /*!
     \qmlproperty real QtQuick::DoubleValidator::top
 
@@ -1099,12 +1101,19 @@ void QQuickDoubleValidator::resetLocaleName()
 
 QValidator* QQuickTextInput::validator() const
 {
+#ifdef QT_NO_VALIDATOR
+    return 0;
+#else
     Q_D(const QQuickTextInput);
     return d->m_validator;
+#endif // QT_NO_VALIDATOR
 }
 
 void QQuickTextInput::setValidator(QValidator* v)
 {
+#ifdef QT_NO_VALIDATOR
+    Q_UNUSED(v);
+#else
     Q_D(QQuickTextInput);
     if (d->m_validator == v)
         return;
@@ -1127,14 +1136,15 @@ void QQuickTextInput::setValidator(QValidator* v)
         d->checkIsValid();
 
     emit validatorChanged();
+#endif // QT_NO_VALIDATOR
 }
 
+#ifndef QT_NO_VALIDATOR
 void QQuickTextInput::q_validatorChanged()
 {
     Q_D(QQuickTextInput);
     d->checkIsValid();
 }
-
 #endif // QT_NO_VALIDATOR
 
 void QQuickTextInputPrivate::checkIsValid()
@@ -1267,7 +1277,6 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     emit echoModeChanged(echoMode());
 }
 
-#ifndef QT_NO_IM
 /*!
     \qmlproperty enumeration QtQuick::TextInput::inputMethodHints
 
@@ -1316,12 +1325,19 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
 Qt::InputMethodHints QQuickTextInput::inputMethodHints() const
 {
+#ifdef QT_NO_IM
+    return Qt::ImhNone;
+#else
     Q_D(const QQuickTextInput);
     return d->inputMethodHints;
+#endif // QT_NO_IM
 }
 
 void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
 {
+#ifdef QT_NO_IM
+    Q_UNUSED(hints);
+#else
     Q_D(QQuickTextInput);
 
     if (hints == d->inputMethodHints)
@@ -1330,8 +1346,8 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
     d->inputMethodHints = hints;
     updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
-}
 #endif // QT_NO_IM
+}
 
 /*!
     \qmlproperty Component QtQuick::TextInput::cursorDelegate
@@ -2590,7 +2606,6 @@ void QQuickTextInput::focusOutEvent(QFocusEvent *event)
     QQuickImplicitSizeItem::focusOutEvent(event);
 }
 
-#ifndef QT_NO_IM
 /*!
     \qmlproperty bool QtQuick::TextInput::inputMethodComposing
 
@@ -2605,10 +2620,13 @@ void QQuickTextInput::focusOutEvent(QFocusEvent *event)
 */
 bool QQuickTextInput::isInputMethodComposing() const
 {
+#ifdef QT_NO_IM
+    return false;
+#else
     Q_D(const QQuickTextInput);
     return d->hasImState;
-}
 #endif
+}
 
 void QQuickTextInputPrivate::init()
 {
