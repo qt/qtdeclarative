@@ -105,8 +105,10 @@ MainWindow::MainWindow()
 
     m_checkboxTransparent = new QCheckBox(tr("Transparent background in QQuickWidget"));
     connect(m_radioWidget, &QCheckBox::toggled, m_checkboxTransparent, &QWidget::setEnabled);
+#ifdef Q_OS_LINUX
     connect(m_checkboxTransparent, &QCheckBox::toggled, this, &MainWindow::onTransparentChanged);
     layout->addWidget(m_checkboxTransparent);
+#endif
 
     setLayout(layout);
 
@@ -184,7 +186,7 @@ void MainWindow::updateView()
     if (m_currentRootObject) {
         m_currentRootObject->setProperty("currentText", text);
         m_currentRootObject->setProperty("multisample", m_checkboxMultiSample->isChecked());
-        m_currentRootObject->setProperty("color", QColor(m_transparent ? Qt::transparent : Qt::darkCyan));
+        m_currentRootObject->setProperty("translucency", m_transparent);
     }
 
     m_overlayLabel->raise();
