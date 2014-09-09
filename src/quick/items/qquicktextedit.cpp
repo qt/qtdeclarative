@@ -1232,15 +1232,21 @@ void QQuickTextEdit::setTextMargin(qreal margin)
     \endlist
 */
 
-#ifndef QT_NO_IM
 Qt::InputMethodHints QQuickTextEdit::inputMethodHints() const
 {
+#ifdef QT_NO_IM
+    return Qt::ImhNone;
+#else
     Q_D(const QQuickTextEdit);
     return d->inputMethodHints;
+#endif // QT_NO_IM
 }
 
 void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
 {
+#ifdef QT_NO_IM
+    Q_UNUSED(hints);
+#else
     Q_D(QQuickTextEdit);
 
     if (hints == d->inputMethodHints)
@@ -1249,8 +1255,8 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
     d->inputMethodHints = hints;
     updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
-}
 #endif // QT_NO_IM
+}
 
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
@@ -1956,7 +1962,6 @@ bool QQuickTextEdit::canRedo() const
     return d->document->isRedoAvailable();
 }
 
-#ifndef QT_NO_IM
 /*!
     \qmlproperty bool QtQuick::TextEdit::inputMethodComposing
 
@@ -1971,10 +1976,13 @@ bool QQuickTextEdit::canRedo() const
 */
 bool QQuickTextEdit::isInputMethodComposing() const
 {
+#ifdef QT_NO_IM
+    return false;
+#else
     Q_D(const QQuickTextEdit);
     return d->control->hasImState();
-}
 #endif // QT_NO_IM
+}
 
 void QQuickTextEditPrivate::init()
 {

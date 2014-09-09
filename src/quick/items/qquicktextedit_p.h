@@ -81,18 +81,14 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
     Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
     Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged)
-#ifndef QT_NO_IM
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
-#endif
     Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION 1)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
-#ifndef QT_NO_IM
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
-#endif
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument FINAL REVISION 1)
@@ -192,10 +188,8 @@ public:
     qreal textMargin() const;
     void setTextMargin(qreal margin);
 
-#ifndef QT_NO_IM
     Qt::InputMethodHints inputMethodHints() const;
     void setInputMethodHints(Qt::InputMethodHints hints);
-#endif
 
     bool selectByKeyboard() const;
     void setSelectByKeyboard(bool);
@@ -239,9 +233,7 @@ public:
     QRectF boundingRect() const Q_DECL_OVERRIDE;
     QRectF clipRect() const Q_DECL_OVERRIDE;
 
-#ifndef QT_NO_IM
     bool isInputMethodComposing() const;
-#endif
 
     RenderType renderType() const;
     void setRenderType(RenderType renderType);
@@ -286,14 +278,10 @@ Q_SIGNALS:
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();
-#ifndef QT_NO_IM
     void inputMethodComposingChanged();
-#endif
     void effectiveHorizontalAlignmentChanged();
     void baseUrlChanged();
-#ifndef QT_NO_IM
     void inputMethodHintsChanged();
-#endif
     void renderTypeChanged();
 
 public Q_SLOTS:
