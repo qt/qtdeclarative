@@ -57,6 +57,8 @@ Renderer::Renderer(QSGRenderContext *context)
 
 void Renderer::renderScene(GLuint fboId)
 {
+    Q_UNUSED(fboId)
+
     class B : public QSGBindable
     {
     public:

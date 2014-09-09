@@ -124,9 +124,8 @@ bool RenderingVisitor::visit(QSGPainterNode *node)
     return true;
 }
 
-void RenderingVisitor::endVisit(QSGPainterNode *node)
+void RenderingVisitor::endVisit(QSGPainterNode *)
 {
-
 }
 
 bool RenderingVisitor::visit(QSGRectangleNode *node)
