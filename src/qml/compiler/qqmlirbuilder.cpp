@@ -1805,13 +1805,14 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
     }
 
     if (type->isCompositeSingleton()) {
-        QQmlTypeData *tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
-        Q_ASSERT(tdata->isComplete());
-        initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
-        tdata->release();
-        resolver->flags |= AllPropertiesAreFinal;
-        return resolver->resolveMember(qmlEngine, resolver, member);
+        // When a singleton tries to reference itself, it may not be complete yet.
+        if (tdata->isComplete()) {
+            initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+            resolver->flags |= AllPropertiesAreFinal;
+            return resolver->resolveMember(qmlEngine, resolver, member);
+        }
     }  else if (type->isSingleton()) {
         const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
         if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
