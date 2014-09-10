@@ -3905,11 +3905,6 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     d->renderJobMutex.unlock();
 }
 
-QQuickWindowAttached *QQuickWindow::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickWindowAttached(object);
-}
-
 void QQuickWindowPrivate::runAndClearJobs(QList<QRunnable *> *jobs)
 {
     renderJobMutex.lock();
