@@ -53,6 +53,7 @@ public:
     QRect viewRect() const;
 
     bool clipsChildren() const;
+    QAccessibleInterface *childAt(int x, int y) const;
 
     QAccessibleInterface *parent() const;
     QAccessibleInterface *child(int index) const;
@@ -118,6 +119,7 @@ private:
 };
 
 QRect itemScreenRect(QQuickItem *item);
+QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder = false);
 
 
 #endif // QT_NO_ACCESSIBILITY

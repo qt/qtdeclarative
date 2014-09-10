@@ -82,17 +82,42 @@ bool QAccessibleQuickItem::clipsChildren() const
     return static_cast<QQuickItem *>(item())->clip();
 }
 
+QAccessibleInterface *QAccessibleQuickItem::childAt(int x, int y) const
+{
+    if (item()->clip()) {
+        if (!rect().contains(x, y))
+            return 0;
+    }
+
+    const QList<QQuickItem*> kids = accessibleUnignoredChildren(item(), true);
+    for (int i = kids.count() - 1; i >= 0; --i) {
+        QAccessibleInterface *childIface = QAccessible::queryAccessibleInterface(kids.at(i));
+        if (QAccessibleInterface *childChild = childIface->childAt(x, y))
+            return childChild;
+        if (childIface && !childIface->state().invisible) {
+            if (childIface->rect().contains(x, y))
+                return childIface;
+        }
+    }
+
+    return 0;
+}
+
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
     QQuickItem *parent = item()->parentItem();
+    QQuickWindow *window = item()->window();
+    QQuickItem *ci = window ? window->contentItem() : 0;
+    while (parent && parent != ci)
+        parent = parent->parentItem();
+
     if (parent) {
-        QQuickWindow *window = item()->window();
-        // Jump out to the scene widget if the parent is the root item.
-        // There are two root items, QQuickWindow::rootItem and
-        // QQuickView::declarativeRoot. The former is the true root item,
-        // but is not a part of the accessibility tree. Check if we hit
-        // it here and return an interface for the scene instead.
-        if (window && (parent == window->contentItem())) {
+        if (parent == ci) {
+            // Jump out to the scene widget if the parent is the root item.
+            // There are two root items, QQuickWindow::rootItem and
+            // QQuickView::declarativeRoot. The former is the true root item,
+            // but is not a part of the accessibility tree. Check if we hit
+            // it here and return an interface for the scene instead.
             return QAccessible::queryAccessibleInterface(window);
         } else {
             return QAccessible::queryAccessibleInterface(parent);
@@ -121,6 +146,19 @@ int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
     return kids.indexOf(static_cast<QQuickItem*>(iface->object()));
 }
 
+QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder)
+{
+    QList<QQuickItem *> items;
+    QList<QQuickItem*> childItems = paintOrder ? QQuickItemPrivate::get(item)->paintOrderChildItems()
+                                               : item->childItems();
+    Q_FOREACH (QQuickItem *child, childItems) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(child);
+        if (itemPrivate->isAccessible)
+            items.append(child);
+    }
+    return items;
+}
+
 QList<QQuickItem *> QAccessibleQuickItem::childItems() const
 {
     if (    role() == QAccessible::Button ||
@@ -133,13 +171,7 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
             role() == QAccessible::ProgressBar)
         return QList<QQuickItem *>();
 
-    QList<QQuickItem *> items;
-    Q_FOREACH (QQuickItem *child, item()->childItems()) {
-        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(child);
-        if (itemPrivate->isAccessible)
-            items.append(child);
-    }
-    return items;
+    return accessibleUnignoredChildren(item());
 }
 
 QAccessible::State QAccessibleQuickItem::state() const
