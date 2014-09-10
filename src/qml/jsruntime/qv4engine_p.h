@@ -190,6 +190,7 @@ public:
     Value uRIErrorCtor;
     Value sequencePrototype;
     Value arrayBufferCtor;
+    Value dataViewCtor;
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
@@ -226,6 +227,7 @@ public:
     InternalClass *memberDataClass;
 
     InternalClass *arrayBufferClass;
+    InternalClass *dataViewClass;
 
     EvalFunction *evalFunction;
     FunctionObject *thrower;
@@ -266,6 +268,8 @@ public:
     StringValue id_destroy;
     StringValue id_valueOf;
     StringValue id_byteLength;
+    StringValue id_byteOffset;
+    StringValue id_buffer;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
 

@@ -804,6 +804,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "undefined"
         << "JSON"
         << "ArrayBuffer"
+        << "DataView"
         ;
     QSet<QString> actualNames;
     {

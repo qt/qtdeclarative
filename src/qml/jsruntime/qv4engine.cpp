@@ -62,6 +62,7 @@
 #include "qv4qmlextensions_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
+#include "qv4dataview_p.h"
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -254,6 +255,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_destroy = newIdentifier(QStringLiteral("destroy"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
     id_byteLength = newIdentifier(QStringLiteral("byteLength"));
+    id_byteOffset = newIdentifier(QStringLiteral("byteOffset"));
+    id_buffer = newIdentifier(QStringLiteral("buffer"));
 
     memberDataClass = InternalClass::create(this, MemberData::staticVTable(), 0);
 
@@ -369,9 +372,14 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // typed arrays
 
     arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(rootContext);
-    Scoped<ArrayBufferPrototype> arrayBufferPrototype(scope, memoryManager->alloc<ArrayBufferPrototype>(arrayBufferClass));
+    Scoped<ArrayBufferPrototype> arrayBufferPrototype(scope, memoryManager->alloc<ArrayBufferPrototype>(objectClass));
     arrayBufferPrototype->init(this, arrayBufferCtor.asObject());
     arrayBufferClass = InternalClass::create(this, ArrayBuffer::staticVTable(), arrayBufferPrototype);
+
+    dataViewCtor = memoryManager->alloc<DataViewCtor>(rootContext);
+    Scoped<DataViewPrototype> dataViewPrototype(scope, memoryManager->alloc<DataViewPrototype>(objectClass));
+    dataViewPrototype->init(this, dataViewCtor.asObject());
+    dataViewClass = InternalClass::create(this, DataView::staticVTable(), dataViewPrototype);
 
     //
     // set up the global object
@@ -397,6 +405,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
@@ -899,6 +908,8 @@ void ExecutionEngine::markObjects()
     id_destroy->mark(this);
     id_valueOf->mark(this);
     id_byteLength->mark(this);
+    id_byteOffset->mark(this);
+    id_buffer->mark(this);
 
     objectCtor.mark(this);
     stringCtor.mark(this);
@@ -916,6 +927,7 @@ void ExecutionEngine::markObjects()
     typeErrorCtor.mark(this);
     uRIErrorCtor.mark(this);
     arrayBufferCtor.mark(this);
+    dataViewCtor.mark(this);
     sequencePrototype.mark(this);
 
     exceptionValue.mark(this);
