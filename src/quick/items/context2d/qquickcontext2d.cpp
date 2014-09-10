@@ -3548,7 +3548,7 @@ void QQuickContext2D::clip()
         state.clip = true;
         state.clipPath = clipPath;
     }
-    buffer()->clip(state.clipPath);
+    buffer()->clip(state.clip, state.clipPath);
 }
 
 void QQuickContext2D::stroke()
@@ -4283,8 +4283,8 @@ void QQuickContext2D::popState()
     if (newState.miterLimit != state.miterLimit)
         buffer()->setMiterLimit(newState.miterLimit);
 
-    if (newState.clip && (!state.clip || newState.clipPath != state.clipPath))
-        buffer()->clip(newState.clipPath);
+    if (newState.clip != state.clip || newState.clipPath != state.clipPath)
+        buffer()->clip(newState.clip, newState.clipPath);
 
     if (newState.shadowBlur != state.shadowBlur)
         buffer()->setShadowBlur(newState.shadowBlur);
