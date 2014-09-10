@@ -51,6 +51,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
+#include <private/qflagpointer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,8 +73,8 @@ public:
         Q_ASSERT(!value.isEmpty());
     }
     QJSValuePrivate(const QString &s)
-        : PersistentValuePrivate(QV4::Primitive::emptyValue().asReturnedValue())
-        , string(s)
+        : PersistentValuePrivate(QV4::Primitive::emptyValue().asReturnedValue()),
+          unboundData(s)
     {
     }
 
@@ -81,7 +82,7 @@ public:
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
 
-    QString string;
+    QVariant unboundData;
 };
 
 QT_END_NAMESPACE

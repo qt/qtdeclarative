@@ -420,17 +420,19 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
         QV4::ScopedValue v(scope, vp->getValue(engine->m_v4Engine));
         return engine->metaTypeFromJS(v, type, ptr);
     } else if (vp->value.isEmpty()) {
-        // have a string based value without engine. Do conversion manually
-        if (type == QMetaType::Bool) {
-            *reinterpret_cast<bool*>(ptr) = vp->string.length() != 0;
-            return true;
-        }
-        if (type == QMetaType::QString) {
-            *reinterpret_cast<QString*>(ptr) = vp->string;
-            return true;
-        }
-        double d = QV4::RuntimeHelpers::stringToNumber(vp->string);
-        switch (type) {
+        if (vp->unboundData.userType() == QMetaType::QString) {
+            QString string = vp->unboundData.toString();
+            // have a string based value without engine. Do conversion manually
+            if (type == QMetaType::Bool) {
+                *reinterpret_cast<bool*>(ptr) = string.length() != 0;
+                return true;
+            }
+            if (type == QMetaType::QString) {
+                *reinterpret_cast<QString*>(ptr) = string;
+                return true;
+            }
+            double d = QV4::RuntimeHelpers::stringToNumber(string);
+            switch (type) {
             case QMetaType::Int:
                 *reinterpret_cast<int*>(ptr) = QV4::Primitive::toInt32(d);
                 return true;
@@ -466,6 +468,9 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
                 return true;
             default:
                 return false;
+            }
+        } else {
+            return QMetaType::convert(&vp->unboundData.data_ptr(), vp->unboundData.userType(), ptr, type);
         }
     } else {
         switch (type) {

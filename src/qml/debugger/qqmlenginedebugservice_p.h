@@ -111,7 +111,7 @@ private:
     void buildStatesList(bool cleanList, const QList<QPointer<QObject> > &instances);
     QQmlObjectData objectData(QObject *);
     QQmlObjectProperty propertyData(QObject *, int);
-    QVariant valueContents(const QVariant &defaultValue) const;
+    QVariant valueContents(QVariant defaultValue) const;
     bool setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1, int column = 0);
     bool resetBinding(int objectId, const QString &propertyName);
     bool setMethodBody(int objectId, const QString &method, const QString &body);

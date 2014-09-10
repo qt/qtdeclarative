@@ -249,16 +249,22 @@ void tst_QQmlMetaObject::property()
     QSignalSpy changedSpy(object, SIGNAL(testChanged()));
     QObject::connect(object, SIGNAL(testChanged()), object, SLOT(deleteLater()));
 
+    QVariant value = prop.read(object);
+    if (value.userType() == qMetaTypeId<QJSValue>())
+        value = value.value<QJSValue>().toVariant();
     if (expectedValue.isValid())
-        QCOMPARE(prop.read(object), expectedValue);
+        QCOMPARE(value, expectedValue);
     else
-        QVERIFY(prop.read(object).isValid());
+        QVERIFY(value.isValid());
     QCOMPARE(changedSpy.count(), 0);
 
     if (isWritable) {
         QVERIFY(prop.write(object, newValue));
         QCOMPARE(changedSpy.count(), 1);
-        QCOMPARE(prop.read(object), newValue);
+        QVariant value = prop.read(object);
+        if (value.userType() == qMetaTypeId<QJSValue>())
+            value = value.value<QJSValue>().toVariant();
+        QCOMPARE(value, newValue);
     } else {
         QVERIFY(!prop.write(object, prop.read(object)));
         QCOMPARE(changedSpy.count(), 0);

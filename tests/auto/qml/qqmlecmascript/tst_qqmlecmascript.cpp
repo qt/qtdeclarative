@@ -746,13 +746,13 @@ void tst_qqmlecmascript::arrayExpressions()
 
     MyExpression expr(&context, "[a, b, c, 10]");
     QVariant result = expr.evaluate();
-    QCOMPARE(result.userType(), qMetaTypeId<QVariantList>());
-    QVariantList list = qvariant_cast<QVariantList>(result);
-    QCOMPARE(list.count(), 4);
-    QCOMPARE(list.at(0).value<QObject*>(), &obj1);
-    QCOMPARE(list.at(1).value<QObject*>(), &obj2);
-    QCOMPARE(list.at(2).value<QObject*>(), &obj3);
-    QCOMPARE(list.at(3).value<int>(), 10);
+    QCOMPARE(result.userType(), qMetaTypeId<QJSValue>());
+    QJSValue list = qvariant_cast<QJSValue>(result);
+    QCOMPARE(list.property("length").toInt(), 4);
+    QCOMPARE(list.property(0).toQObject(), &obj1);
+    QCOMPARE(list.property(1).toQObject(), &obj2);
+    QCOMPARE(list.property(2).toQObject(), &obj3);
+    QCOMPARE(list.property(3).toInt(), 10);
 }
 
 // Tests that modifying a context property will reevaluate expressions
@@ -4811,7 +4811,7 @@ void tst_qqmlecmascript::propertyVarCpp()
     QCOMPARE(object->property("varProperty2"), QVariant(QLatin1String("randomString")));
     QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::String);
     // now enforce behaviour when accessing JavaScript objects from cpp.
-    QCOMPARE(object->property("jsobject").userType(), (int)QVariant::Map);
+    QCOMPARE(object->property("jsobject").userType(), qMetaTypeId<QJSValue>());
     delete object;
 }
 
@@ -5166,7 +5166,7 @@ void tst_qqmlecmascript::objectConversion()
     QVERIFY(object != 0);
     QVariant retn;
     QMetaObject::invokeMethod(object, "circularObject", Q_RETURN_ARG(QVariant, retn));
-    QCOMPARE(retn.value<QVariantMap>().value("test"), QVariant(100));
+    QCOMPARE(retn.value<QJSValue>().property("test").toInt(), int(100));
 
     delete object;
 }
@@ -5434,7 +5434,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         QVERIFY(seq != 0);
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to an unregistered type");
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to an unregistered type");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");

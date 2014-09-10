@@ -1330,6 +1330,11 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
 
         QVariant value = object[key];
 
+        // A JS array/object is translated into a (hierarchical) QQmlListModel,
+        // so translate to a variant map/list first with toVariant().
+        if (value.userType() == qMetaTypeId<QJSValue>())
+            value = value.value<QJSValue>().toVariant();
+
         if (value.type() == QVariant::List) {
             QQmlListModel *subModel = QQmlListModel::createWithOwner(m_owner);
 
@@ -1392,6 +1397,12 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     QQmlListModel *parentModel = m_owner->m_owner;
 
     QVariant v = value(index);
+
+    // A JS array/object is translated into a (hierarchical) QQmlListModel,
+    // so translate to a variant map/list first with toVariant().
+    if (v.userType() == qMetaTypeId<QJSValue>())
+        v= v.value<QJSValue>().toVariant();
+
     if (v.type() == QVariant::List) {
         QQmlListModel *subModel = QQmlListModel::createWithOwner(parentModel);
 

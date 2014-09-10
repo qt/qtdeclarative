@@ -197,8 +197,12 @@ public:
 
     void freezeObject(const QV4::ValueRef value);
 
-    QVariant toVariant(const QV4::ValueRef value, int typeHint);
+    QVariant toVariant(const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
+    QVariant objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects = 0);
     QV4::ReturnedValue fromVariant(const QVariant &);
+
+    QVariantMap variantMapFromJS(QV4::Object *o)
+    { return objectToVariant(o).toMap(); }
 
     // Return a JS string for the given QString \a string
     QV4::ReturnedValue toString(const QString &string);
@@ -218,16 +222,8 @@ public:
     void setExtensionData(int, Deletable *);
 
     QV4::ReturnedValue variantListToJS(const QVariantList &lst);
-    inline QVariantList variantListFromJS(QV4::ArrayObject *array)
-    { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
-
     QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
-    inline QVariantMap variantMapFromJS(QV4::Object *object)
-    { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
-
     QV4::ReturnedValue variantToJS(const QVariant &value);
-    inline QVariant variantFromJS(const QV4::ValueRef value)
-    { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
@@ -265,15 +261,9 @@ protected:
 
     QHash<QString, quint32> m_consoleCount;
 
-    QVariant toBasicVariant(const QV4::ValueRef);
-
     void initializeGlobal();
 
 private:
-    QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
-    QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
-    QVariant variantFromJS(const QV4::ValueRef value, V8ObjectSet &visitedObjects);
-
     Q_DISABLE_COPY(QV8Engine)
 };
 
