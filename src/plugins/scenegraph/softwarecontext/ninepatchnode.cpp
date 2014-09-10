@@ -35,21 +35,35 @@ void NinePatchNode::setTexture(QSGTexture *texture)
         return;
     }
     m_pixmap = pt->pixmap();
+    markDirty(DirtyMaterial);
 }
 
 void NinePatchNode::setBounds(const QRectF &bounds)
 {
+    if (m_bounds == bounds)
+        return;
+
     m_bounds = bounds;
+    markDirty(DirtyGeometry);
 }
 
 void NinePatchNode::setDevicePixelRatio(qreal ratio)
 {
+    if (m_pixelRatio == ratio)
+        return;
+
     m_pixelRatio = ratio;
+    markDirty(DirtyGeometry);
 }
 
 void NinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal bottom)
 {
+    QMargins margins(qRound(left), qRound(top), qRound(right), qRound(bottom));
+    if (m_margins == margins)
+        return;
+
     m_margins = QMargins(qRound(left), qRound(top), qRound(right), qRound(bottom));
+    markDirty(DirtyGeometry);
 }
 
 void NinePatchNode::update()

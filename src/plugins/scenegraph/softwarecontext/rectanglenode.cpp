@@ -37,6 +37,7 @@ void RectangleNode::setRect(const QRectF &rect)
     QRect alignedRect = rect.toAlignedRect();
     if (m_rect != alignedRect) {
         m_rect = alignedRect;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -45,6 +46,7 @@ void RectangleNode::setColor(const QColor &color)
     if (m_color != color) {
         m_color = color;
         m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -53,6 +55,7 @@ void RectangleNode::setPenColor(const QColor &color)
     if (m_penColor != color) {
         m_penColor = color;
         m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -61,6 +64,7 @@ void RectangleNode::setPenWidth(qreal width)
     if (m_penWidth != width) {
         m_penWidth = width;
         m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -155,6 +159,7 @@ void RectangleNode::setGradientStops(const QGradientStops &stops)
         m_stops = stops;
     }
     m_cornerPixmapIsDirty = true;
+    markDirty(DirtyMaterial);
 }
 
 void RectangleNode::setRadius(qreal radius)
@@ -162,6 +167,7 @@ void RectangleNode::setRadius(qreal radius)
     if (m_radius != radius) {
         m_radius = radius;
         m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 

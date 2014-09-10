@@ -303,22 +303,34 @@ ImageNode::ImageNode()
 
 void ImageNode::setTargetRect(const QRectF &rect)
 {
+    if (rect == m_targetRect)
+        return;
     m_targetRect = rect;
+    markDirty(DirtyGeometry);
 }
 
 void ImageNode::setInnerTargetRect(const QRectF &rect)
 {
+    if (rect == m_innerTargetRect)
+        return;
     m_innerTargetRect = rect;
+    markDirty(DirtyGeometry);
 }
 
 void ImageNode::setInnerSourceRect(const QRectF &rect)
 {
+    if (rect == m_innerSourceRect)
+        return;
     m_innerSourceRect = rect;
+    markDirty(DirtyGeometry);
 }
 
 void ImageNode::setSubSourceRect(const QRectF &rect)
 {
+    if (rect == m_subSourceRect)
+        return;
     m_subSourceRect = rect;
+    markDirty(DirtyGeometry);
 }
 
 void ImageNode::setTexture(QSGTexture *texture)
@@ -326,6 +338,7 @@ void ImageNode::setTexture(QSGTexture *texture)
     if (m_texture != texture) {
         m_texture = texture;
         m_cachedMirroredPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -334,6 +347,7 @@ void ImageNode::setMirror(bool mirror)
     if (m_mirror != mirror) {
         m_mirror = mirror;
         m_cachedMirroredPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -343,17 +357,32 @@ void ImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
 
 void ImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
-    m_smooth = (filtering == QSGTexture::Nearest);
+    bool smooth = (filtering == QSGTexture::Nearest);
+    if (smooth == m_smooth)
+        return;
+
+    m_smooth = smooth;
+    markDirty(DirtyMaterial);
 }
 
 void ImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 {
-    m_tileHorizontal = (wrapMode == QSGTexture::Repeat);
+    bool tileHorizontal = (wrapMode == QSGTexture::Repeat);
+    if (tileHorizontal == m_tileHorizontal)
+        return;
+
+    m_tileHorizontal = tileHorizontal;
+    markDirty(DirtyMaterial);
 }
 
 void ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
+    bool tileVertical = (wrapMode == QSGTexture::Repeat);
+    if (tileVertical == m_tileVertical)
+        return;
+
     m_tileVertical = (wrapMode == QSGTexture::Repeat);
+    markDirty(DirtyMaterial);
 }
 
 void ImageNode::update()
