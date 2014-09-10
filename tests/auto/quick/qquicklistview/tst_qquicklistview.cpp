@@ -7801,6 +7801,8 @@ void tst_QQuickListView::QTBUG_38209()
 
 void tst_QQuickListView::programmaticFlickAtBounds()
 {
+    QSKIP("Disabled due to false negatives (QTBUG-41228)");
+
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("simplelistview.qml"));
     window->show();
