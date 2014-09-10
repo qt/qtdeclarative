@@ -61,6 +61,7 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
 #include "qv4memberdata_p.h"
+#include "qv4arraybuffer_p.h"
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -252,6 +253,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_toString = newIdentifier(QStringLiteral("toString"));
     id_destroy = newIdentifier(QStringLiteral("destroy"));
     id_valueOf = newIdentifier(QStringLiteral("valueOf"));
+    id_byteLength = newIdentifier(QStringLiteral("byteLength"));
 
     memberDataClass = InternalClass::create(this, MemberData::staticVTable(), 0);
 
@@ -363,6 +365,14 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     static_cast<VariantPrototype *>(variantPrototype.getPointer())->init();
     static_cast<SequencePrototype *>(sequencePrototype.managed())->init();
 
+
+    // typed arrays
+
+    arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(rootContext);
+    Scoped<ArrayBufferPrototype> arrayBufferPrototype(scope, memoryManager->alloc<ArrayBufferPrototype>(arrayBufferClass));
+    arrayBufferPrototype->init(this, arrayBufferCtor.asObject());
+    arrayBufferClass = InternalClass::create(this, ArrayBuffer::staticVTable(), arrayBufferPrototype);
+
     //
     // set up the global object
     //
@@ -386,6 +396,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
@@ -887,6 +898,7 @@ void ExecutionEngine::markObjects()
     id_toString->mark(this);
     id_destroy->mark(this);
     id_valueOf->mark(this);
+    id_byteLength->mark(this);
 
     objectCtor.mark(this);
     stringCtor.mark(this);
@@ -903,6 +915,7 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark(this);
     typeErrorCtor.mark(this);
     uRIErrorCtor.mark(this);
+    arrayBufferCtor.mark(this);
     sequencePrototype.mark(this);
 
     exceptionValue.mark(this);

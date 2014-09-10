@@ -802,8 +802,8 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "unescape"
         << "SyntaxError"
         << "undefined"
-        // JavaScriptCore
         << "JSON"
+        << "ArrayBuffer"
         ;
     QSet<QString> actualNames;
     {

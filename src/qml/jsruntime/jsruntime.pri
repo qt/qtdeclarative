@@ -42,7 +42,8 @@ SOURCES += \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4qmlextensions.cpp \
     $$PWD/qv4vme_moth.cpp \
-    $$PWD/qv4profiling.cpp
+    $$PWD/qv4profiling.cpp \
+    $$PWD/qv4arraybuffer.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
@@ -89,7 +90,8 @@ HEADERS += \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4qmlextensions_p.h \
     $$PWD/qv4vme_moth_p.h \
-    $$PWD/qv4profiling_p.h
+    $$PWD/qv4profiling_p.h \
+    $$PWD/qv4arraybuffer_p.h
 
 }
 
