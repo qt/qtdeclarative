@@ -320,7 +320,7 @@ QV4::CompiledData::CompilationUnit *Script::precompile(IR::Module *module, Compi
 
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
-    lexer.setCode(source, /*line*/1, /*qml mode*/true);
+    lexer.setCode(source, /*line*/1, /*qml mode*/false);
     QQmlJS::Parser parser(&ee);
 
     parser.parseProgram();
