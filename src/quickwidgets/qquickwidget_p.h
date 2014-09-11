@@ -75,6 +75,7 @@ public:
     void updateSize();
     void updateFrambufferObjectSize();
     void setRootObject(QObject *);
+    void render(bool needsSync);
     void renderSceneGraph();
     void createContext();
     void destroyContext();

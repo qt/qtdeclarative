@@ -200,6 +200,26 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
     QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
 }
 
+void QQuickWidgetPrivate::render(bool needsSync)
+{
+    context->makeCurrent(offscreenSurface);
+
+    if (needsSync) {
+        renderControl->polishItems();
+        renderControl->sync();
+    }
+
+    renderControl->render();
+    context->functions()->glFlush();
+
+    if (resolvedFbo) {
+        QRect rect(QPoint(0, 0), fbo->size());
+        QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
+    }
+
+    context->doneCurrent();
+}
+
 void QQuickWidgetPrivate::renderSceneGraph()
 {
     Q_Q(QQuickWidget);
@@ -215,19 +235,8 @@ void QQuickWidgetPrivate::renderSceneGraph()
     }
 
     Q_ASSERT(offscreenSurface);
-    context->makeCurrent(offscreenSurface);
-    renderControl->polishItems();
-    renderControl->sync();
-    renderControl->render();
-    context->functions()->glFlush();
-
-    if (resolvedFbo) {
-        QRect rect(QPoint(0, 0), fbo->size());
-        QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
-    }
-
-    context->doneCurrent();
-    q->update();
+    render(true);
+    q->update(); // schedule composition
 }
 
 QImage QQuickWidgetPrivate::grabFramebuffer()
@@ -942,22 +951,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         return;
     }
 
-    context->makeCurrent(d->offscreenSurface);
-
-    if (needsSync) {
-        d->renderControl->polishItems();
-        d->renderControl->sync();
-    }
-
-    d->renderControl->render();
-    context->functions()->glFlush();
-
-    if (d->resolvedFbo) {
-        QRect rect(QPoint(0, 0), d->fbo->size());
-        QOpenGLFramebufferObject::blitFramebuffer(d->resolvedFbo, rect, d->fbo, rect);
-    }
-
-    context->doneCurrent();
+    d->render(needsSync);
 }
 
 /*! \reimp */
@@ -1104,6 +1098,16 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
         break;
+
+    case QEvent::ScreenChangeInternal:
+        if (d->fbo) {
+            // This will check the size taking the devicePixelRatio into account
+            // and recreate if needed.
+            createFramebufferObject();
+            d->render(true);
+        }
+        break;
+
     default:
         break;
     }
