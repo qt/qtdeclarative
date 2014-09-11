@@ -454,7 +454,7 @@ void RenderThread::sync(bool inExpose)
 
 void RenderThread::syncAndRender()
 {
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::featuresEnabled;
     if (profileFrames) {
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
@@ -985,7 +985,7 @@ void ThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qint64 polishTime = 0;
     qint64 waitTime = 0;
     qint64 syncTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()  || QQuickProfiler::enabled;
+    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()  || QQuickProfiler::featuresEnabled;
     if (profileFrames)
         timer.start();
 
