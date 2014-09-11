@@ -90,6 +90,8 @@ static ReturnedValue throwTypeError(CallContext *ctx)
     return ctx->throwTypeError();
 }
 
+const int MinimumStackSize = 256; // in kbytes
+
 quintptr getStackLimit()
 {
     quintptr stackLimit;
@@ -149,7 +151,7 @@ quintptr getStackLimit()
 #endif
 
     // 256k slack
-    return stackLimit + 256*1024;
+    return stackLimit + MinimumStackSize*1024;
 }
 
 
@@ -203,6 +205,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
     cStackLimit = getStackLimit();
+    if (!recheckCStackLimits())
+        qFatal("Fatal: Not enough stack space available for QML. Please increase the process stack size to more than %d KBytes.", MinimumStackSize);
 
     Scope scope(this);
 
