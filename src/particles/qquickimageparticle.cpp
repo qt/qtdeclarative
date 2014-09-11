@@ -1223,6 +1223,9 @@ void QQuickImageParticle::buildParticleNodes(QSGNode** passThrough)
 
 void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 {
+    if (!QOpenGLContext::currentContext())
+        return;
+
     if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
         return;
