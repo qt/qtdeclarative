@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -956,7 +948,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     To use this type, you will need to import the module with the following line:
     \code
-    import QtQuick.Window 2.1
+    import QtQuick.Window 2.2
     \endcode
 
     Omitting this import will allow you to have a QML environment without
@@ -1116,8 +1108,6 @@ QQuickWindow::~QQuickWindow()
         d->windowManager->windowDestroyed(this);
     }
 
-    QCoreApplication::removePostedEvents(this, QEvent::DeferredDelete);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 #ifndef QT_NO_DRAGANDDROP
     delete d->dragGrabber; d->dragGrabber = 0;
@@ -2255,10 +2245,12 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
     cursorItem = findCursorItem(contentItem, scenePos);
 
     if (cursorItem != oldCursorItem) {
+        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(q);
+        QWindow *window = renderWindow ? renderWindow : q;
         if (cursorItem)
-            q->setCursor(cursorItem->cursor());
+            window->setCursor(cursorItem->cursor());
         else
-            q->unsetCursor();
+            window->unsetCursor();
     }
 }
 
@@ -2593,6 +2585,18 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         p->paintNode = 0;
 
         p->dirty(QQuickItemPrivate::Window);
+    }
+
+    // Qt 6: Make invalidateSceneGraph a virtual member of QQuickItem
+    if (p->flags & QQuickItem::ItemHasContents) {
+        const QMetaObject *mo = item->metaObject();
+        int index = mo->indexOfSlot("invalidateSceneGraph()");
+        if (index >= 0) {
+            const QMetaMethod &method = mo->method(index);
+            // Skip functions named invalidateSceneGraph() in QML items.
+            if (strstr(method.enclosingMetaObject()->className(), "_QML_") == 0)
+                method.invoke(item, Qt::DirectConnection);
+        }
     }
 
     for (int ii = 0; ii < p->childItems.count(); ++ii)
@@ -3620,87 +3624,6 @@ void QQuickWindow::resetOpenGLState()
     gl->glUseProgram(0);
 
     QOpenGLFramebufferObject::bindDefault();
-}
-
-/*!
-    \brief QQuickWindow::glslVersion
-    \since 5.4
-    \return The OpenGL Shading Language version for this window.
-
-    QML components that need to be usable on different platforms and environments may need
-    to deal with different OpenGL versions if they include ShaderEffect items. The source
-    code for a given shader may not be compatible with an OpenGL context that targets a
-    different OpenGL version or profile, hence it might be necessary to provide multiple
-    versions of the shader. This property helps in deciding which shader source should be
-    chosen.
-
-    The value corresponds to GLSL version declarations, for example an OpenGL 4.2 core
-    profile context will result in the value \e{420 core}, while an OpenGL ES 3.0 context
-    gives \e{300 es}. For OpenGL (ES) 2 the value will be an empty string since the
-    corresponding shading language does not use version declarations.
-
-    \note The value does not necessarily indicate that the shader source must target that
-    specific version. For example, compatibility profiles and ES 3.x all allow using
-    OpenGL 2 style shaders. The most important for reusable components is to check for
-    core profiles since these do not accept shaders with the old syntax.
-
-    \sa setFormat(), glslIsCoreProfile()
- */
-QString QQuickWindow::glslVersion() const
-{
-    QString ver;
-    QOpenGLContext *ctx = openglContext();
-    if (ctx) {
-        const QSurfaceFormat fmt = ctx->format();
-        if (fmt.renderableType() == QSurfaceFormat::OpenGLES
-                && fmt.majorVersion() >= 3) {
-            ver += QLatin1Char(fmt.majorVersion() + '0');
-            ver += QLatin1Char(fmt.minorVersion() + '0');
-            ver += QLatin1String("0 es");
-        } else if (fmt.renderableType() == QSurfaceFormat::OpenGL
-                   && fmt.majorVersion() >= 3) {
-            if (fmt.version() == qMakePair(3, 0)) {
-                ver = QStringLiteral("130");
-            } else if (fmt.version() == qMakePair(3, 1)) {
-                ver = QStringLiteral("140");
-            } else if (fmt.version() == qMakePair(3, 2)) {
-                ver = QStringLiteral("150");
-            } else {
-                ver += QLatin1Char(fmt.majorVersion() + '0');
-                ver += QLatin1Char(fmt.minorVersion() + '0');
-                ver += QLatin1Char('0');
-            }
-            if (fmt.version() >= qMakePair(3, 2)) {
-                if (fmt.profile() == QSurfaceFormat::CoreProfile)
-                    ver += QStringLiteral(" core");
-                else if (fmt.profile() == QSurfaceFormat::CompatibilityProfile)
-                    ver += QStringLiteral(" compatibility");
-            }
-        }
-    }
-    return ver;
-}
-
-/*!
-    \brief QQuickWindow::glslIsCoreProfile
-    \since 5.4
-    \return True if the window is rendering using OpenGL core profile.
-
-    This is convenience function to check if the window's OpenGL context is a core profile
-    context. It is more efficient to perform the check via this function than parsing the
-    string returned from glslVersion().
-
-    Resusable QML components will typically use this function in bindings in order to
-    choose between core and non core profile compatible shader sources.
-
-    To retrieve more information about the shading language, use glslVersion().
-
-    \sa glslVersion(), setFormat()
- */
-bool QQuickWindow::glslIsCoreProfile() const
-{
-    QOpenGLContext *ctx = openglContext();
-    return ctx ? ctx->format().profile() == QSurfaceFormat::CoreProfile : false;
 }
 
 /*!

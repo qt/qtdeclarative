@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the V4VM module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -53,7 +45,8 @@ struct Use {
     unsigned pos  : 31;
 
     Use(): flag(MustHaveRegister), pos(0) {}
-    Use(int pos, RegisterFlag flag): flag(flag), pos(pos) {}
+    Use(int position, RegisterFlag flag): flag(flag), pos(position)
+    { Q_ASSERT(position >= 0); }
 
     bool mustHaveRegister() const { return flag == MustHaveRegister; }
 };
@@ -84,15 +77,7 @@ public:
 protected:
     void addStmtNr(Stmt *s)
     {
-        QString posStr;
-        int pos = intervals->positionForStatement(s);
-        if (pos != Stmt::InvalidId)
-            posStr = QString::number(pos);
-        *out << posStr.rightJustified(positionSize);
-        if (pos == Stmt::InvalidId)
-            *out << "  ";
-        else
-            *out << ": ";
+        addJustifiedNr(intervals->positionForStatement(s));
     }
 };
 
@@ -125,9 +110,7 @@ protected:
             const RegisterInfo *ri = e->type == DoubleType ? _infoForFPRegister.value(e->index, 0)
                                                            : _infoForRegularRegister.value(e->index, 0);
             if (ri) {
-                *out << dumpStart(e);
                 *out << ri->prettyName();
-                *out << dumpEnd(e);
                 break;
             }
         }
@@ -162,14 +145,12 @@ class RegAllocInfo: public IRDecoder
     std::vector<int> _calls;
     std::vector<QList<Temp> > _hints;
 
-    int defPosition(Stmt *s) const
-    {
-        return usePosition(s) + 1;
-    }
-
     int usePosition(Stmt *s) const
     {
-        return _lifeTimeIntervals->positionForStatement(s);
+        int usePos = _lifeTimeIntervals->positionForStatement(s);
+        if (usePos == Stmt::InvalidId) // phi-node operand, so:
+            usePos = _lifeTimeIntervals->startPosition(_currentBB);
+        return usePos;
     }
 
 public:
@@ -752,9 +733,7 @@ private:
 
     void addUses(Expr *e, Use::RegisterFlag flag)
     {
-        int usePos = usePosition(_currentStmt);
-        if (usePos == Stmt::InvalidId)
-            usePos = _lifeTimeIntervals->startPosition(_currentBB);
+        const int usePos = usePosition(_currentStmt);
         Q_ASSERT(usePos > 0);
         if (!e)
             return;
@@ -762,7 +741,7 @@ private:
         if (!t)
             return;
         if (t && t->kind == Temp::VirtualRegister)
-            _uses[t->index].push_back(Use(usePosition(_currentStmt), flag));
+            _uses[t->index].push_back(Use(usePos, flag));
     }
 
     void addUses(ExprList *l, Use::RegisterFlag flag)
@@ -1254,6 +1233,9 @@ RegisterAllocator::RegisterAllocator(const QV4::JIT::RegisterInformation &regist
     Q_ASSERT(_fpRegisters.size() >= 2);
     _active.reserve((_normalRegisters.size() + _fpRegisters.size()) * 2);
     _inactive.reserve(_active.size());
+
+    _regularRegsInUse.resize(_normalRegisters.size());
+    _fpRegsInUse.resize(_fpRegisters.size());
 }
 
 RegisterAllocator::~RegisterAllocator()
@@ -1316,6 +1298,31 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     }
 }
 
+RegisterInformation RegisterAllocator::usedRegisters() const
+{
+    RegisterInformation regInfo;
+
+    for (int i = 0, ei = _normalRegisters.size(); i != ei; ++i) {
+        if (_regularRegsInUse.testBit(i))
+            regInfo.append(*_normalRegisters.at(i));
+    }
+
+    for (int i = 0, ei = _fpRegisters.size(); i != ei; ++i) {
+        if (_fpRegsInUse.testBit(i))
+            regInfo.append(*_fpRegisters.at(i));
+    }
+
+    return regInfo;
+}
+
+void RegisterAllocator::markInUse(int reg, bool isFPReg)
+{
+    if (isFPReg)
+        _fpRegsInUse.setBit(reg);
+    else
+        _regularRegsInUse.setBit(reg);
+}
+
 static inline LifeTimeInterval createFixedInterval(int rangeCount)
 {
     LifeTimeInterval i(rangeCount);
@@ -1353,24 +1360,26 @@ void RegisterAllocator::prepareRanges()
         ltiWithCalls.addRange(callPosition, callPosition);
 
     const int regCount = _normalRegisters.size();
-    _fixedRegisterRanges.reserve(regCount);
+    _fixedRegisterRanges.resize(regCount);
     for (int reg = 0; reg < regCount; ++reg) {
         if (_normalRegisters.at(reg)->isCallerSaved()) {
             LifeTimeInterval *lti = cloneFixedInterval(reg, false, ltiWithCalls);
-            _fixedRegisterRanges.append(lti);
-            if (lti->isValid())
+            if (lti->isValid()) {
+                _fixedRegisterRanges[reg] = lti;
                 _active.append(lti);
+            }
         }
     }
 
     const int fpRegCount = _fpRegisters.size();
-    _fixedFPRegisterRanges.reserve(fpRegCount);
+    _fixedFPRegisterRanges.resize(fpRegCount);
     for (int fpReg = 0; fpReg < fpRegCount; ++fpReg) {
         if (_fpRegisters.at(fpReg)->isCallerSaved()) {
             LifeTimeInterval *lti = cloneFixedInterval(fpReg, true, ltiWithCalls);
-            _fixedFPRegisterRanges.append(lti);
-            if (lti->isValid())
+            if (lti->isValid()) {
+                _fixedFPRegisterRanges[fpReg] = lti;
                 _active.append(lti);
+            }
         }
     }
 }
@@ -1576,6 +1585,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
             qDebug() << "*** allocating register" << reg << "for the whole interval of %" << current.temp().index;
         current.setReg(reg);
         _lastAssignedRegister[current.temp().index] = reg;
+        markInUse(reg, needsFPReg);
     } else {
         // register available for the first part of the interval
 
@@ -1591,6 +1601,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
         if (DebugRegAlloc)
             qDebug() << "*** allocating register" << reg << "for the first part of interval of %" << current.temp().index;
         split(current, freeUntilPos_reg, true);
+        markInUse(reg, needsFPReg);
     }
 }
 
@@ -1684,16 +1695,18 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
     splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
     // make sure that current does not intersect with the fixed interval for reg
-    const LifeTimeInterval &fixedRegRange = needsFPReg ? *_fixedFPRegisterRanges.at(reg)
-                                                       : *_fixedRegisterRanges.at(reg);
-    int ni = nextIntersection(current, fixedRegRange);
-    if (ni != -1) {
-        if (DebugRegAlloc) {
-            QTextStream out(stderr, QIODevice::WriteOnly);
-            out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
+    const LifeTimeInterval *fixedRegRange = needsFPReg ? _fixedFPRegisterRanges.at(reg)
+                                                       : _fixedRegisterRanges.at(reg);
+    if (fixedRegRange) {
+        int ni = nextIntersection(current, *fixedRegRange);
+        if (ni != -1) {
+            if (DebugRegAlloc) {
+                QTextStream out(stderr, QIODevice::WriteOnly);
+                out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
+            }
+            // current does overlap with a fixed interval, so split current before that intersection.
+            split(current, ni, true);
         }
-        // current does overlap with a fixed interval, so split current before that intersection.
-        split(current, ni, true);
     }
 }
 

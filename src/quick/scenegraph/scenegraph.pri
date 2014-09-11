@@ -45,7 +45,7 @@ HEADERS += \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider.h \
-    $$PWD/util/qsgpainternode_p.h \
+    $$PWD/util/qsgdefaultpainternode_p.h \
     $$PWD/util/qsgdistancefieldutil_p.h \
     $$PWD/util/qsgshadersourcebuilder_p.h
 
@@ -61,7 +61,7 @@ SOURCES += \
     $$PWD/util/qsgvertexcolormaterial.cpp \
     $$PWD/util/qsgtexture.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
-    $$PWD/util/qsgpainternode.cpp \
+    $$PWD/util/qsgdefaultpainternode.cpp \
     $$PWD/util/qsgdistancefieldutil.cpp \
     $$PWD/util/qsgsimplematerial.cpp \
     $$PWD/util/qsgshadersourcebuilder.cpp
@@ -81,7 +81,8 @@ HEADERS += \
     $$PWD/qsgshareddistancefieldglyphcache_p.h \
     $$PWD/qsgrenderloop_p.h \
     $$PWD/qsgthreadedrenderloop_p.h \
-    $$PWD/qsgwindowsrenderloop_p.h
+    $$PWD/qsgwindowsrenderloop_p.h \
+    $$PWD/qsgdefaultlayer_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -97,7 +98,8 @@ SOURCES += \
     $$PWD/qsgshareddistancefieldglyphcache.cpp \
     $$PWD/qsgrenderloop.cpp \
     $$PWD/qsgthreadedrenderloop.cpp \
-    $$PWD/qsgwindowsrenderloop.cpp
+    $$PWD/qsgwindowsrenderloop.cpp \
+    $$PWD/qsgdefaultlayer.cpp
 
 RESOURCES += \
     $$PWD/scenegraph.qrc

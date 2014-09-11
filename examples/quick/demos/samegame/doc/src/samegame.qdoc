@@ -38,6 +38,9 @@
     \image qtquick-demo-samegame-med-1.png
     \image qtquick-demo-samegame-med-2.png
 
+    For more details about different parts of the example, see
+    \l{QML Advanced Tutorial}.
+
     \include examples-run.qdocinc
 
     \sa {QML Applications}

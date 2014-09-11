@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -779,8 +771,7 @@ QRectF QQuickTextInput::cursorRectangle() const
         return QRectF();
     qreal x = l.cursorToX(c) - d->hscroll;
     qreal y = l.y() - d->vscroll;
-    qreal height = l.ascent() + l.descent();
-    return QRectF(x, y, 1, height);
+    return QRectF(x, y, 1, l.height());
 }
 
 /*!
@@ -1396,8 +1387,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         return QRectF();
     qreal x = l.cursorToX(pos) - d->hscroll;
     qreal y = l.y() - d->vscroll;
-    qreal height = l.ascent() + l.descent();
-    return QRectF(x, y, 1, height);
+    return QRectF(x, y, 1, l.height());
 }
 
 /*!
@@ -1860,17 +1850,13 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node = new QQuickTextNode(this);
     d->textNode = node;
 
-    if (!d->textLayoutDirty && oldNode != 0) {
-        QSGSimpleRectNode *cursorNode = node->cursorNode();
-        if (cursorNode != 0 && !isReadOnly()) {
-            cursorNode->setRect(cursorRectangle());
+    const bool showCursor = !isReadOnly() && d->cursorItem == 0 && d->cursorVisible && (d->m_blinkStatus || d->m_blinkPeriod == 0);
 
-            if (!d->cursorVisible || d->cursorItem || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
-                d->hideCursor();
-            } else {
-                d->showCursor();
-            }
-        }
+    if (!d->textLayoutDirty && oldNode != 0) {
+        if (showCursor)
+            node->setCursor(cursorRectangle(), d->color);
+        else
+            node->clearCursor();
     } else {
         node->setUseNativeRenderer(d->renderType == NativeRendering);
         node->deleteContent();
@@ -1880,9 +1866,9 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
             QFontMetricsF fm(d->font);
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = -QPoint(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
+            offset = -QPointF(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
         } else {
-            offset = -QPoint(d->hscroll, d->vscroll);
+            offset = -QPointF(d->hscroll, d->vscroll);
         }
 
         if (!d->m_textLayout.text().isEmpty()
@@ -1898,14 +1884,8 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
                                                                  // selection
         }
 
-        if (!isReadOnly() && d->cursorItem == 0) {
-            node->setCursor(cursorRectangle(), d->color);
-            if (!d->cursorVisible || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
-                d->hideCursor();
-            } else {
-                d->showCursor();
-            }
-        }
+        if (showCursor)
+                node->setCursor(cursorRectangle(), d->color);
 
         d->textLayoutDirty = false;
     }
@@ -2702,18 +2682,6 @@ void QQuickTextInput::selectionChanged()
             d->lastSelectionEnd = d->m_cursor;
         emit selectionEndChanged();
     }
-}
-
-void QQuickTextInputPrivate::showCursor()
-{
-    if (textNode != 0 && textNode->cursorNode() != 0)
-        textNode->cursorNode()->setColor(color);
-}
-
-void QQuickTextInputPrivate::hideCursor()
-{
-    if (textNode != 0 && textNode->cursorNode() != 0)
-        textNode->cursorNode()->setColor(QColor(0, 0, 0, 0));
 }
 
 QRectF QQuickTextInput::boundingRect() const

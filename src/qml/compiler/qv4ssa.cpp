@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -81,8 +73,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
 void showMeTheCode(IR::Function *function)
 {
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
-    if (showCode)
+    if (showCode) {
         IRPrinter(&qout).print(function);
+        qout << endl;
+    }
 }
 
 class ProcessedBlocks
@@ -337,7 +331,9 @@ class DominatorTree
 {
     enum {
         DebugDominatorFrontiers = 0,
-        DebugImmediateDominators = 0
+        DebugImmediateDominators = 0,
+
+        DebugCodeCanUseLotsOfCpu = 0
     };
 
     typedef int BasicBlockIndex;
@@ -493,11 +489,6 @@ class DominatorTree
             }
         }
 
-#if defined(SHOW_SSA)
-        for (int i = 0; i < nodes.size(); ++i)
-            qDebug("\tL%d: ancestor = %d, semi = %d, samedom = %d", i, ancestor[i], semi[i], samedom[i]);
-#endif // SHOW_SSA
-
         for (int i = 1; i < d->N; ++i) {
             BasicBlockIndex n = d->vertex[i];
             Q_ASSERT(n != InvalidBasicBlockIndex);
@@ -617,26 +608,28 @@ public:
             }
         }
 
-#if !defined(QT_NO_DEBUG) && defined(CAN_TAKE_LOSTS_OF_TIME)
-        foreach (BasicBlock *n, nodes) {
-            const BasicBlockSet &fBlocks = DF[n->index];
-            for (BasicBlockSet::const_iterator it = fBlocks.begin(), eit = fBlocks.end(); it != eit; ++it) {
-                BasicBlock *fBlock = *it;
-                Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
-                bool hasDominatedSucc = false;
-                foreach (BasicBlock *succ, fBlock->in) {
-                    if (dominates(n, succ)) {
-                        hasDominatedSucc = true;
-                        break;
+        if (DebugDominatorFrontiers && DebugCodeCanUseLotsOfCpu) {
+            foreach (BasicBlock *n, function->basicBlocks()) {
+                if (n->isRemoved())
+                    continue;
+                const BasicBlockSet &fBlocks = DF[n->index()];
+                for (BasicBlockSet::const_iterator it = fBlocks.begin(), eit = fBlocks.end(); it != eit; ++it) {
+                    BasicBlock *fBlock = *it;
+                    Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
+                    bool hasDominatedSucc = false;
+                    foreach (BasicBlock *succ, fBlock->in) {
+                        if (dominates(n, succ)) {
+                            hasDominatedSucc = true;
+                            break;
+                        }
                     }
+                    if (!hasDominatedSucc) {
+                        qout << fBlock << " in DF[" << n->index() << "] has no dominated predecessors" << endl;
+                    }
+                    Q_ASSERT(hasDominatedSucc);
                 }
-                if (!hasDominatedSucc) {
-                    qout << fBlock << " in DF[" << n->index << "] has no dominated predecessors" << endl;
-                }
-                Q_ASSERT(hasDominatedSucc);
             }
         }
-#endif // !QT_NO_DEBUG
     }
 
     const BasicBlockSet &dominatorFrontier(BasicBlock *n) const {
@@ -669,7 +662,7 @@ public:
         }
     }
 
-    void updateImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
+    void setImmediateDominator(BasicBlock *bb, BasicBlock *newDominator)
     {
         Q_ASSERT(bb->index() >= 0);
         Q_ASSERT(!newDominator || newDominator->index() >= 0);
@@ -680,7 +673,33 @@ public:
             idom.resize(function->basicBlockCount(), InvalidBasicBlockIndex);
         }
 
-        idom[bb->index()] = newDominator ? newDominator->index() : 0;
+        const BasicBlockIndex newIdx = newDominator ? newDominator->index() : InvalidBasicBlockIndex;
+        if (DebugImmediateDominators)
+            qDebug() << "Setting idom of" << bb->index() << "from" << idom[bb->index()] << "to" << newIdx;
+        idom[bb->index()] = newIdx;
+    }
+
+    void collectSiblings(BasicBlock *node, BasicBlockSet &siblings)
+    {
+        siblings.insert(node);
+        const BasicBlockIndex dominator = idom[node->index()];
+        if (dominator == InvalidBasicBlockIndex)
+            return;
+        for (size_t i = 0, ei = idom.size(); i != ei; ++i) {
+            if (idom[i] == dominator) {
+                BasicBlock *bb = function->basicBlock(i);
+                if (!bb->isRemoved())
+                    siblings.insert(bb);
+            }
+        }
+    }
+
+    void recalculateIDoms(const BasicBlockSet &nodes, BasicBlock *limit = 0)
+    {
+        const BasicBlockIndex limitIndex = limit ? limit->index() : InvalidBasicBlockIndex;
+        BasicBlockSet todo(nodes), postponed(function);
+        while (!todo.empty())
+            recalculateIDom(*todo.begin(), todo, postponed, limitIndex);
     }
 
     bool dominates(BasicBlock *dominator, BasicBlock *dominated) const {
@@ -800,6 +819,97 @@ private:
             nodeDepths[*it] = ++depth;
 
         return depth;
+    }
+
+    // The immediate-dominator recalculation is used when edges are removed from the CFG. See
+    // [Ramalingam] for a description. Note that instead of calculating the priority, a recursive
+    // algorithm is used: when recalculating the immediate dominator of a node by looking for the
+    // least-common ancestor, and a node is hit that also needs recalculation, a recursive call
+    // is done to calculate that nodes immediate dominator first.
+    //
+    // Note that this simplified algorithm cannot cope with back-edges. It only works for
+    // non-looping edges (which is our use-case).
+    void recalculateIDom(BasicBlock *node, BasicBlockSet &todo, BasicBlockSet &postponed, BasicBlockIndex limit) {
+        Q_ASSERT(!postponed.contains(node));
+        Q_ASSERT(todo.contains(node));
+        todo.remove(node);
+
+        if (node->in.size() == 1) {
+            // Special case: if the node has only one incoming edge, then that is the immediate
+            // dominator.
+            setImmediateDominator(node, node->in.first());
+            return;
+        }
+
+        std::vector<BasicBlockIndex> prefix;
+        prefix.reserve(32);
+
+        for (int i = 0, ei = node->in.size(); i != ei; ++i) {
+            BasicBlock *in = node->in.at(i);
+            if (node == in) // back-edge to self
+                continue;
+            if (dominates(node->index(), in->index())) // a known back-edge
+                continue;
+
+            if (prefix.empty()) {
+                calculatePrefix(node, in, prefix, todo, postponed, limit);
+
+                if (!prefix.empty()) {
+                    std::reverse(prefix.begin(), prefix.end());
+                    Q_ASSERT(!prefix.empty());
+                    Q_ASSERT(prefix.front() == limit || limit == InvalidBasicBlockIndex);
+                }
+            } else {
+                std::vector<BasicBlockIndex> anotherPrefix;
+                anotherPrefix.reserve(prefix.size());
+                calculatePrefix(node, in, anotherPrefix, todo, postponed, limit);
+
+                if (!anotherPrefix.empty())
+                    commonPrefix(prefix, anotherPrefix);
+            }
+        }
+
+        Q_ASSERT(!prefix.empty());
+        idom[node->index()] = prefix.back();
+    }
+
+    void calculatePrefix(BasicBlock *node, BasicBlock *in, std::vector<BasicBlockIndex> &prefix, BasicBlockSet &todo, BasicBlockSet &postponed, BasicBlockIndex limit)
+    {
+        for (BasicBlockIndex it = in->index(); it != InvalidBasicBlockIndex; it = idom[it]) {
+            prefix.push_back(it);
+            if (it == limit)
+                return;
+            BasicBlock *n = function->basicBlock(it);
+            if (postponed.contains(n)) { // possible back-edge, bail out.
+                prefix.clear();
+                return;
+            }
+            if (todo.contains(n)) {
+                postponed.insert(node);
+                recalculateIDom(n, todo, postponed, limit);
+                postponed.remove(node);
+            }
+        }
+    }
+
+    // Calculate the LCA (Least Common Ancestor) by finding the longest common prefix between two
+    // dominator chains. Note that "anotherPrefix" has the node's immediate dominator first, while
+    // "bestPrefix" has it last (meaning: is in reverse order). The reason for this is that removing
+    // nodes from "bestPrefix" is cheaper because it's done at the end of the vector, while
+    // reversing all "anotherPrefix" nodes would take unnecessary time.
+    static void commonPrefix(std::vector<BasicBlockIndex> &bestPrefix, const std::vector<BasicBlockIndex> &anotherPrefix)
+    {
+        const size_t anotherSize = anotherPrefix.size();
+        size_t minLen = qMin(bestPrefix.size(), anotherPrefix.size());
+        while (minLen != 0) {
+            --minLen;
+            if (bestPrefix[minLen] == anotherPrefix[anotherSize - minLen - 1]) {
+                ++minLen;
+                break;
+            }
+        }
+        if (minLen != bestPrefix.size())
+            bestPrefix.erase(bestPrefix.begin() + minLen, bestPrefix.end());
     }
 };
 
@@ -1659,7 +1769,7 @@ class StatementWorklist
 public:
     StatementWorklist(IR::Function *function)
         : theFunction(function)
-        , stmts(function->statementCount(), 0)
+        , stmts(function->statementCount(), static_cast<Stmt *>(0))
         , worklist(function->statementCount(), false)
         , worklistSize(0)
         , replaced(function->statementCount(), Stmt::InvalidId)
@@ -1684,6 +1794,9 @@ public:
 
     void reset()
     {
+        worklist.assign(worklist.size(), false);
+        worklistSize = 0;
+
         foreach (Stmt *s, stmts) {
             if (!s)
                 continue;
@@ -2102,10 +2215,14 @@ class TypeInference: public StmtVisitor, public ExprVisitor
         DiscoveredType type;
         bool fullyTyped;
 
-        TypingResult(const DiscoveredType &type = DiscoveredType())
-            : type(type)
-            , fullyTyped(type.type != UnknownType)
-        {}
+        TypingResult(const DiscoveredType &type = DiscoveredType()) {
+#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 6
+            // avoid optimization bug in gcc 4.6.3 armhf
+            ((int volatile &) this->type.type) = type.type;
+#endif
+            this->type = type;
+            fullyTyped = type.type != UnknownType;
+        }
         explicit TypingResult(MemberExpressionResolver memberResolver)
             : type(memberResolver)
             , fullyTyped(true)
@@ -2845,37 +2962,47 @@ protected:
 
 void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist, DefUses &defUses)
 {
-    foreach (BasicBlock *bb, f->basicBlocks()) {
-        if (bb->isRemoved())
+    foreach (BasicBlock *toBB, f->basicBlocks()) {
+        if (toBB->isRemoved())
             continue;
-        if (bb->in.size() < 2)
+        if (toBB->in.size() < 2)
             continue;
 
-        for (int inIdx = 0, eInIdx = bb->in.size(); inIdx != eInIdx; ++inIdx) {
-            BasicBlock *inBB = bb->in[inIdx];
-            if (inBB->out.size() < 2)
+        for (int inIdx = 0, eInIdx = toBB->in.size(); inIdx != eInIdx; ++inIdx) {
+            BasicBlock *fromBB = toBB->in[inIdx];
+            if (fromBB->out.size() < 2)
                 continue;
 
             // We found a critical edge.
             // create the basic block:
-            BasicBlock *newBB = f->newBasicBlock(bb->catchBlock);
+            BasicBlock *newBB = f->newBasicBlock(toBB->catchBlock);
             Jump *s = f->NewStmt<Jump>();
             worklist.registerNewStatement(s);
             defUses.registerNewStatement(s);
-            s->init(bb);
+            s->init(toBB);
             newBB->appendStatement(s);
 
             // rewire the old outgoing edge
-            int outIdx = inBB->out.indexOf(bb);
-            inBB->out[outIdx] = newBB;
-            newBB->in.append(inBB);
+            int outIdx = fromBB->out.indexOf(toBB);
+            fromBB->out[outIdx] = newBB;
+            newBB->in.append(fromBB);
 
             // rewire the old incoming edge
-            bb->in[inIdx] = newBB;
-            newBB->out.append(bb);
+            toBB->in[inIdx] = newBB;
+            newBB->out.append(toBB);
+
+            BasicBlock *container = 0;
+            for (container = fromBB->containingGroup(); container; container = container->containingGroup()) {
+                if (container == toBB || container == toBB->containingGroup())
+                    break;
+            }
+            if (container == 0)
+                container = fromBB->containingGroup();
+
+            newBB->setContainingGroup(container);
 
             // patch the terminator
-            Stmt *terminator = inBB->terminator();
+            Stmt *terminator = fromBB->terminator();
             if (Jump *j = terminator->asJump()) {
                 Q_ASSERT(outIdx == 0);
                 j->target = newBB;
@@ -2892,8 +3019,21 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
                 Q_ASSERT(!"Unknown terminator!");
             }
 
+//            qDebug() << "splitting edge" << fromBB->index() << "->" << toBB->index()
+//                     << "by inserting block" << newBB->index();
+
             // Set the immediate dominator of the new block to inBB
-            df.updateImmediateDominator(newBB, inBB);
+            df.setImmediateDominator(newBB, fromBB);
+
+            bool toNeedsNewIdom = true;
+            foreach (BasicBlock *bb, toBB->in) {
+                if (bb != newBB && !df.dominates(toBB, bb)) {
+                    toNeedsNewIdom = false;
+                    break;
+                }
+            }
+            if (toNeedsNewIdom)
+                df.setImmediateDominator(toBB, newBB);
         }
     }
 }
@@ -3507,78 +3647,113 @@ namespace {
 /// This function removes the basic-block from the function's list, unlinks any uses and/or defs,
 /// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
 /// anymore.
-/// Important: this assumes that there are no critical edges in the control-flow graph!
-void purgeBB(BasicBlock *bb, IR::Function *func, DefUses &defUses, StatementWorklist &W,
-             DominatorTree &df)
+void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUses,
+            StatementWorklist &W, DominatorTree &dt)
 {
-    // TODO: after the change above: if we keep on detaching the block from predecessors or
-    //       successors, update the DominatorTree too.
+    struct Util {
+        static void removeIncomingEdge(BasicBlock *from, BasicBlock *to, DefUses &defUses, StatementWorklist &W)
+        {
+            int idx = to->in.indexOf(from);
+            if (idx == -1)
+                return;
+
+            to->in.remove(idx);
+            foreach (Stmt *outStmt, to->statements()) {
+                if (!outStmt)
+                    continue;
+                if (Phi *phi = outStmt->asPhi()) {
+                    if (Temp *t = phi->d->incoming[idx]->asTemp()) {
+                        defUses.removeUse(phi, *t);
+                        W += defUses.defStmt(*t);
+                    }
+                    phi->d->incoming.remove(idx);
+                    W += phi;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        static bool isReachable(BasicBlock *bb, const DominatorTree &dt)
+        {
+            foreach (BasicBlock *in, bb->in) {
+                if (in->isRemoved())
+                    continue;
+                if (dt.dominates(bb, in)) // a back-edge, not interesting
+                    continue;
+                return true;
+            }
+
+            return false;
+        }
+    };
 
     // don't purge blocks that are entry points for catch statements. They might not be directly
     // connected, but are required anyway
-    if (bb->isExceptionHandler())
+    if (to->isExceptionHandler())
         return;
 
-    QVector<BasicBlock *> toPurge;
-    toPurge.reserve(8);
-    toPurge.append(bb);
+    // First, unlink the edge
+    from->out.removeOne(to);
+    Util::removeIncomingEdge(from, to, defUses, W);
 
-    while (!toPurge.isEmpty()) {
-        bb = toPurge.first();
-        toPurge.removeFirst();
+    BasicBlockSet siblings;
+    siblings.init(func);
 
-        if (bb->isRemoved())
-            continue;
+    // Check if the target is still reachable...
+    if (Util::isReachable(to, dt)) { // yes, recalculate the immediate dominator, and we're done.
+        dt.collectSiblings(to, siblings);
+    } else {
+        // The target is unreachable, so purge it:
+        QVector<BasicBlock *> toPurge;
+        toPurge.reserve(8);
+        toPurge.append(to);
+        while (!toPurge.isEmpty()) {
+            BasicBlock *bb = toPurge.first();
+            toPurge.removeFirst();
 
-        // unlink all incoming edges
-        foreach (BasicBlock *in, bb->in) {
-            int idx = in->out.indexOf(bb);
-            if (idx != -1)
-                in->out.remove(idx);
-        }
+            if (bb->isRemoved())
+                continue;
 
-        // unlink all outgoing edges, including "arguments" to phi statements
-        foreach (BasicBlock *out, bb->out) {
-            int idx = out->in.indexOf(bb);
-            if (idx != -1) {
-                out->in.remove(idx);
-                foreach (Stmt *outStmt, out->statements()) {
-                    if (!outStmt)
-                        continue;
-                    if (Phi *phi = outStmt->asPhi()) {
-                        if (Temp *t = phi->d->incoming[idx]->asTemp()) {
-                            defUses.removeUse(phi, *t);
-                            W += defUses.defStmt(*t);
-                        }
-                        phi->d->incoming.remove(idx);
-                        W += phi;
-                    } else
-                        break;
+            // unlink all incoming edges
+            foreach (BasicBlock *in, bb->in) {
+                int idx = in->out.indexOf(bb);
+                if (idx != -1)
+                    in->out.remove(idx);
+            }
+
+            // unlink all outgoing edges, including "arguments" to phi statements
+            foreach (BasicBlock *out, bb->out) {
+                if (out->isRemoved())
+                    continue;
+
+                Util::removeIncomingEdge(bb, out, defUses, W);
+
+                if (Util::isReachable(out, dt)) {
+                    dt.collectSiblings(out, siblings);
+                } else {
+                    // if a successor has no incoming edges after unlinking the current basic block,
+                    // then it is unreachable, and can be purged too
+                    toPurge.append(out);
                 }
             }
 
-            if (out->in.isEmpty()) {
-                // if a successor has no incoming edges after unlinking the current basic block, then
-                // it is unreachable, and can be purged too
-                toPurge.append(out);
-            } else if (out->in.size() == 1) {
-                // if the successor now has only one incoming edge, we that edge is the new
-                // immediate dominator
-                df.updateImmediateDominator(out, out->in.first());
+            // unlink all defs/uses from the statements in the basic block
+            foreach (Stmt *s, bb->statements()) {
+                if (!s)
+                    continue;
+
+                W += defUses.removeDefUses(s);
+                W -= s;
             }
+
+            siblings.remove(bb);
+            dt.setImmediateDominator(bb, 0);
+            func->removeBasicBlock(bb);
         }
-
-        // unlink all defs/uses from the statements in the basic block
-        foreach (Stmt *s, bb->statements()) {
-            if (!s)
-                continue;
-
-            W += defUses.removeDefUses(s);
-            W -= s;
-        }
-
-        func->removeBasicBlock(bb);
     }
+
+    dt.recalculateIDoms(siblings);
 }
 
 bool tryOptimizingComparison(Expr *&expr)
@@ -3762,6 +3937,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
 
                 // constant propagation:
                 if (Const *sourceConst = m->source->asConst()) {
+                    Q_ASSERT(sourceConst->type != UnknownType);
                     replaceUses(targetTemp, sourceConst, W);
                     defUses.removeDef(*targetTemp);
                     W.remove(s);
@@ -3826,7 +4002,8 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                                 doneSomething = true;
                                 break;
                             case OpUPlus:
-                                constOperand->type = unop->type;
+                                if (unop->type != UnknownType)
+                                    constOperand->type = unop->type;
                                 doneSomething = true;
                                 break;
                             case OpCompl:
@@ -3971,10 +4148,10 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 W.registerNewStatement(jump);
                 if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
-                    purgeBB(cjump->iffalse, function, defUses, W, df);
+                    unlink(cjump->parent, cjump->iffalse, function, defUses, W, df);
                 } else {
                     jump->target = cjump->iffalse;
-                    purgeBB(cjump->iftrue, function, defUses, W, df);
+                    unlink(cjump->parent, cjump->iftrue, function, defUses, W, df);
                 }
                 W.replace(s, jump);
 
@@ -4331,6 +4508,199 @@ private:
     bool convertArgs;
     std::vector<int> tempForFormal;
     std::vector<int> tempForLocal;
+};
+
+class CloneBasicBlock: protected IR::StmtVisitor, protected CloneExpr
+{
+public:
+    BasicBlock *operator()(IR::BasicBlock *originalBlock)
+    {
+        block = new BasicBlock(originalBlock->function, 0);
+
+        foreach (Stmt *s, originalBlock->statements()) {
+            s->accept(this);
+            clonedStmt->location = s->location;
+        }
+
+        return block;
+    }
+
+protected:
+    virtual void visitExp(Exp *stmt)
+    { clonedStmt = block->EXP(clone(stmt->expr)); }
+
+    virtual void visitMove(Move *stmt)
+    { clonedStmt = block->MOVE(clone(stmt->target), clone(stmt->source)); }
+
+    virtual void visitJump(Jump *stmt)
+    { clonedStmt = block->JUMP(stmt->target); }
+
+    virtual void visitCJump(CJump *stmt)
+    { clonedStmt = block->CJUMP(clone(stmt->cond), stmt->iftrue, stmt->iffalse); }
+
+    virtual void visitRet(Ret *stmt)
+    { clonedStmt = block->RET(clone(stmt->expr)); }
+
+    virtual void visitPhi(Phi *stmt)
+    {
+        Phi *phi = block->function->NewStmt<Phi>();
+        clonedStmt = phi;
+
+        phi->targetTemp = clone(stmt->targetTemp);
+        phi->d = new Stmt::Data;
+        foreach (Expr *in, stmt->d->incoming)
+            phi->d->incoming.append(clone(in));
+        block->appendStatement(phi);
+    }
+
+private:
+    IR::Stmt *clonedStmt;
+};
+
+// Loop-peeling is done by unfolding the loop once. The "original" loop basic blocks stay where they
+// are, and a copy of the loop is placed after it. Special care is taken while copying the loop body:
+// by having the copies of the basic-blocks point to the same nodes as the "original" basic blocks,
+// updating the immediate dominators is easy: if the edge of a copied basic-block B points to a
+// block C that has also been copied, set the immediate dominator of B to the corresponding
+// immediate dominator of C. Finally, for any node outside the loop that gets a new edge attached,
+// the immediate dominator has to be re-calculated.
+class LoopPeeling
+{
+    DominatorTree &dt;
+
+public:
+    LoopPeeling(DominatorTree &dt)
+        : dt(dt)
+    {}
+
+    void run(const QVector<LoopDetection::LoopInfo *> &loops)
+    {
+        foreach (LoopDetection::LoopInfo *loopInfo, loops)
+            peelLoop(loopInfo);
+    }
+
+private:
+    // All copies have their outgoing edges pointing to the same successor block as the originals.
+    // For each copied block, check where the outgoing edges point to. If it's a block inside the
+    // (original) loop, rewire it to the corresponding copy. Otherwise, which is when it points
+    // out of the loop, leave it alone.
+    // As an extra, collect all edges that point out of the copied loop, because the targets need
+    // to have their immediate dominator rechecked.
+    void rewire(BasicBlock *newLoopBlock, const QVector<BasicBlock *> &from, const QVector<BasicBlock *> &to, QVector<BasicBlock *> &loopExits)
+    {
+        for (int i = 0, ei = newLoopBlock->out.size(); i != ei; ++i) {
+            BasicBlock *&out = newLoopBlock->out[i];
+            const int idx = from.indexOf(out);
+            if (idx == -1) {
+                if (!loopExits.contains(out))
+                    loopExits.append(out);
+            } else {
+                out->in.removeOne(newLoopBlock);
+                BasicBlock *newTo = to.at(idx);
+                newTo->in.append(newLoopBlock);
+                out = newTo;
+
+                Stmt *terminator = newLoopBlock->terminator();
+                if (Jump *jump = terminator->asJump()) {
+                    Q_ASSERT(i == 0);
+                    jump->target = newTo;
+                } else if (CJump *cjump = terminator->asCJump()) {
+                    Q_ASSERT(i == 0 || i == 1);
+                    if (i == 0)
+                        cjump->iftrue = newTo;
+                    else
+                        cjump->iffalse = newTo;
+                }
+            }
+        }
+    }
+
+    void peelLoop(LoopDetection::LoopInfo *loop)
+    {
+        CloneBasicBlock clone;
+
+        LoopDetection::LoopInfo unpeeled(*loop);
+        unpeeled.loopHeader = clone(unpeeled.loopHeader);
+        unpeeled.loopHeader->setContainingGroup(loop->loopHeader->containingGroup());
+        unpeeled.loopHeader->markAsGroupStart(true);
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *&bodyBlock = unpeeled.loopBody[i];
+            bodyBlock = clone(bodyBlock);
+            bodyBlock->setContainingGroup(unpeeled.loopHeader);
+            Q_ASSERT(bodyBlock->statementCount() == loop->loopBody[i]->statementCount());
+        }
+
+        // The cloned blocks will have no incoming edges, but they do have outgoing ones (copying
+        // the terminators will automatically insert that edge). The blocks where the originals
+        // pointed to will have an extra incoming edge from the copied blocks.
+
+        foreach (BasicBlock *in, loop->loopHeader->in) {
+            if (unpeeled.loopHeader != in // this can happen for really tight loops (where there are no body blocks). This is a back-edge in that case.
+                    && !unpeeled.loopBody.contains(in) // if the edge is not coming from within the copied set, leave it alone
+                    && !dt.dominates(loop->loopHeader, in)) // an edge coming from within the loop (so a back-edge): this is handled when rewiring all outgoing edges
+                continue;
+
+            unpeeled.loopHeader->in.append(in);
+            loop->loopHeader->in.removeOne(in);
+
+            Stmt *terminator = in->terminator();
+            if (Jump *jump = terminator->asJump()) {
+                jump->target = unpeeled.loopHeader;
+                in->out[0] = unpeeled.loopHeader;
+            } else if (CJump *cjump = terminator->asCJump()) {
+                if (cjump->iftrue == loop->loopHeader) {
+                    cjump->iftrue = unpeeled.loopHeader;
+                    Q_ASSERT(in->out[0] == loop->loopHeader);
+                    in->out[0] = unpeeled.loopHeader;
+                } else if (cjump->iffalse == loop->loopHeader) {
+                    cjump->iffalse = unpeeled.loopHeader;
+                    Q_ASSERT(in->out[1] == loop->loopHeader);
+                    in->out[1] = unpeeled.loopHeader;
+                } else {
+                    Q_UNREACHABLE();
+                }
+            }
+        }
+
+        QVector<BasicBlock *> loopExits;
+        loopExits.reserve(8);
+        loopExits.append(unpeeled.loopHeader);
+
+        IR::Function *f = unpeeled.loopHeader->function;
+        rewire(unpeeled.loopHeader, loop->loopBody, unpeeled.loopBody, loopExits);
+        f->addBasicBlock(unpeeled.loopHeader);
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
+            rewire(bodyBlock, loop->loopBody, unpeeled.loopBody, loopExits);
+            f->addBasicBlock(bodyBlock);
+        }
+
+        // The original loop is now peeled off, and won't jump back to the loop header. Meaning, it
+        // is not a loop anymore, so unmark it.
+        loop->loopHeader->markAsGroupStart(false);
+        foreach (BasicBlock *bb, loop->loopBody)
+            bb->setContainingGroup(loop->loopHeader->containingGroup());
+
+        // calculate the idoms in a separate loop, because addBasicBlock in the previous loop will
+        // set the block index, which in turn is used by the dominator tree.
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
+            BasicBlock *idom = dt.immediateDominator(loop->loopBody.at(i));
+            const int idx = loop->loopBody.indexOf(idom);
+            if (idom == loop->loopHeader)
+                idom = unpeeled.loopHeader;
+            else if (idx != -1)
+                idom = unpeeled.loopBody.at(idx);
+            Q_ASSERT(idom);
+            dt.setImmediateDominator(bodyBlock, idom);
+        }
+
+        BasicBlockSet siblings(f);
+        foreach (BasicBlock *bb, loopExits)
+            dt.collectSiblings(bb, siblings);
+
+        dt.recalculateIDoms(siblings, loop->loopHeader);
+    }
 };
 
 static void verifyCFG(IR::Function *function)
@@ -4692,7 +5062,7 @@ Optimizer::Optimizer(IR::Function *function)
     , inSSA(false)
 {}
 
-void Optimizer::run(QQmlEnginePrivate *qmlEngine)
+void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool peelLoops)
 {
 #if defined(SHOW_SSA)
     qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
@@ -4717,6 +5087,31 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
         // Calculate the dominator tree:
         DominatorTree df(function);
+
+        {
+            // This is in a separate scope, because loop-peeling doesn't (yet) update the LoopInfo
+            // calculated by the LoopDetection. So by putting it in a separate scope, it is not
+            // available after peeling.
+
+            LoopDetection loopDetection(df);
+            loopDetection.run(function);
+            showMeTheCode(function);
+//            cfg2dot(function, loopDetection.allLoops());
+
+            if (peelLoops) {
+                QVector<LoopDetection::LoopInfo *> innerLoops = loopDetection.innermostLoops();
+                LoopPeeling(df).run(innerLoops);
+
+//                cfg2dot(function, loopDetection.allLoops());
+                showMeTheCode(function);
+                if (!innerLoops.isEmpty())
+                    verifyImmediateDominators(df, function);
+            }
+        }
+
+        verifyCFG(function);
+        verifyNoPointerSharing(function);
+
         df.computeDF();
 
         verifyCFG(function);
@@ -4731,39 +5126,37 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 
 //        qout << "Cleaning up phi nodes..." << endl;
         cleanupPhis(defUses);
-//        showMeTheCode(function);
+        showMeTheCode(function);
 
         StatementWorklist worklist(function);
 
-//        qout << "Running type inference..." << endl;
-        TypeInference(qmlEngine, defUses).run(worklist);
-//        showMeTheCode(function);
+        if (doTypeInference) {
+//            qout << "Running type inference..." << endl;
+            TypeInference(qmlEngine, defUses).run(worklist);
+            showMeTheCode(function);
 
-//        qout << "Doing reverse inference..." << endl;
-        ReverseInference(defUses).run(function);
-//        showMeTheCode(function);
+//            qout << "Doing reverse inference..." << endl;
+            ReverseInference(defUses).run(function);
+//            showMeTheCode(function);
 
-//        qout << "Doing type propagation..." << endl;
-        TypePropagation(defUses).run(function, worklist);
-//        showMeTheCode(function);
-        verifyNoPointerSharing(function);
-
-        // Transform the CFG into edge-split SSA.
-//        qout << "Starting edge splitting..." << endl;
-        splitCriticalEdges(function, df, worklist, defUses);
-//        showMeTheCode(function);
+//            qout << "Doing type propagation..." << endl;
+            TypePropagation(defUses).run(function, worklist);
+//            showMeTheCode(function);
+            verifyNoPointerSharing(function);
+        }
 
         static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
             worklist.reset();
             optimizeSSA(worklist, defUses, df);
-//            showMeTheCode(function);
+            showMeTheCode(function);
+
+            verifyImmediateDominators(df, function);
+            verifyCFG(function);
         }
 
-//        qout << "Doing block merging..." << endl;
-//        mergeBasicBlocks(function);
-//        showMeTheCode(function);
+        verifyNoPointerSharing(function);
 
         // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
         // condition is calculated to be always false) are not yet removed. This will choke the
@@ -4772,13 +5165,19 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine)
         cleanupBasicBlocks(function);
 //        showMeTheCode(function);
 
-        LoopDetection(df).run(function);
-        showMeTheCode(function);
+        // Transform the CFG into edge-split SSA.
+//        qout << "Starting edge splitting..." << endl;
+        splitCriticalEdges(function, df, worklist, defUses);
+//        showMeTheCode(function);
+
+        verifyImmediateDominators(df, function);
+        verifyCFG(function);
 
 //        qout << "Doing block scheduling..." << endl;
 //        df.dumpImmediateDominators();
         startEndLoops = BlockScheduler(function, df).go();
         showMeTheCode(function);
+//        cfg2dot(function);
 
 #ifndef QT_NO_DEBUG
         checkCriticalEdges(function->basicBlocks());
@@ -5063,3 +5462,5 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
 //            Construction and Destruction of Static Single Assignment Form.
 //  [Appel]   A.W. Appel. Modern Compiler Implementation in Java. Second edition, Cambridge
 //            University Press.
+//  [Ramalingam] G. Ramalingam and T. Reps. An Incremental Algorithm for Maintaining the Dominator
+//               Tree of a Reducible Flowgraph.

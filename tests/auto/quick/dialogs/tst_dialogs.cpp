@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -73,6 +65,7 @@ void tst_dialogs::fileDialogDefaultModality()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     // Click to show
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
@@ -118,14 +111,15 @@ void tst_dialogs::fileDialogNonModal()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     // Click to toggle visibility
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
     dlg->setProperty("modality", QVariant((int)Qt::NonModal));
     QSignalSpy spyVisibilityChanged(dlg, SIGNAL(visibilityChanged()));
     QTest::mouseClick(window, Qt::LeftButton, 0, QPoint(1000, 100));  // show
+    QTRY_VERIFY(spyVisibilityChanged.count() > 0);
     int visibilityChangedCount = spyVisibilityChanged.count();
-    QTRY_VERIFY(visibilityChangedCount > 0);
     QCOMPARE(dlg->property("visible").toBool(), true);
     QTest::mouseClick(window, Qt::LeftButton, 0, QPoint(1000, 100));  // hide
     QTRY_VERIFY(spyVisibilityChanged.count() > visibilityChangedCount);
@@ -142,6 +136,7 @@ void tst_dialogs::fileDialogNameFilters()
     window->setGeometry(240,240,1024,320);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject());
 
     QObject *dlg = qvariant_cast<QObject *>(window->rootObject()->property("fileDialog"));
     QStringList filters;

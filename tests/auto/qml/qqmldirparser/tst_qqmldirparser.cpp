@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -133,118 +125,135 @@ void tst_qqmldirparser::parse_data()
     QTest::addColumn<QStringList>("plugins");
     QTest::addColumn<QStringList>("components");
     QTest::addColumn<QStringList>("scripts");
+    QTest::addColumn<bool>("designerSupported");
 
     QTest::newRow("empty")
         << "empty/qmldir"
         << QStringList()
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("no-content")
         << "no-content/qmldir"
         << QStringList()
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("one-section")
         << "one-section/qmldir"
         << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 1 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("four-sections")
         << "four-sections/qmldir"
         << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 4 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("incomplete-module")
         << "incomplete-module/qmldir"
         << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 0 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("excessive-module")
         << "excessive-module/qmldir"
         << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 2 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("repeated-module")
         << "repeated-module/qmldir"
         << (QStringList() << "qmldir:2: only one module identifier directive may be defined in a qmldir file")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("non-first-module")
         << "non-first-module/qmldir"
         << (QStringList() << "qmldir:2: module identifier directive must be the first directive in a qmldir file")
         << (QStringList() << "foo|")
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("incomplete-plugin")
         << "incomplete-plugin/qmldir"
         << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 0 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("excessive-plugin")
         << "excessive-plugin/qmldir"
         << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 3 were provided")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("name-plugin")
         << "name-plugin/qmldir"
         << QStringList()
         << (QStringList() << "foo|")
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("name-path-plugin")
         << "name-path-plugin/qmldir"
         << QStringList()
         << (QStringList() << "foo|bar")
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("unversioned-component")
         << "unversioned-component/qmldir"
         << QStringList()
         << QStringList()
         << (QStringList() << "foo|bar|-1|-1|false")
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("invalid-versioned-component")
         << "invalid-versioned-component/qmldir"
         << (QStringList() << "qmldir:1: expected '.'")
         << QStringList()
         << QStringList()
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("versioned-component")
         << "versioned-component/qmldir"
         << QStringList()
         << QStringList()
         << (QStringList() << "foo|bar|33|66|false")
-        << QStringList();
+        << QStringList()
+        << false;
 
     QTest::newRow("versioned-script")
         << "versioned-script/qmldir"
         << QStringList()
         << QStringList()
         << QStringList()
-        << (QStringList() << "foo|bar.js|33|66");
+        << (QStringList() << "foo|bar.js|33|66")
+        << false;
 
     QTest::newRow("multiple")
         << "multiple/qmldir"
@@ -253,7 +262,24 @@ void tst_qqmldirparser::parse_data()
         << (QStringList() << "ComponentA|componenta-1_0.qml|1|0|false"
                           << "ComponentA|componenta-1_5.qml|1|5|false"
                           << "ComponentB|componentb-1_5.qml|1|5|false")
-        << (QStringList() << "ScriptA|scripta-1_0.js|1|0");
+        << (QStringList() << "ScriptA|scripta-1_0.js|1|0")
+        << false;
+
+    QTest::newRow("designersupported-yes")
+        << "designersupported-yes/qmldir"
+        << QStringList()
+        << (QStringList() << "foo|")
+        << QStringList()
+        << QStringList()
+        << true;
+
+    QTest::newRow("designersupported-no")
+        << "designersupported-no/qmldir"
+        << QStringList()
+        << (QStringList() << "foo|")
+        << QStringList()
+        << QStringList()
+        << false;
 }
 
 void tst_qqmldirparser::parse()
@@ -263,6 +289,7 @@ void tst_qqmldirparser::parse()
     QFETCH(QStringList, plugins);
     QFETCH(QStringList, components);
     QFETCH(QStringList, scripts);
+    QFETCH(bool, designerSupported);
 
     QFile f(testFile(file));
     f.open(QIODevice::ReadOnly);
@@ -280,6 +307,7 @@ void tst_qqmldirparser::parse()
     QCOMPARE(toStringList(p.plugins()), plugins);
     QCOMPARE(toStringList(p.components()), components);
     QCOMPARE(toStringList(p.scripts()), scripts);
+    QCOMPARE(p.designerSupported(), designerSupported);
 }
 
 QTEST_MAIN(tst_qqmldirparser)

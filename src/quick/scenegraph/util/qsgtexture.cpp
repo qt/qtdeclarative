@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -671,12 +663,28 @@ void QSGPlainTexture::bind()
         bindTime = qsg_renderer_timer.nsecsElapsed();
 
     // ### TODO: check for out-of-memory situations...
-    int w = m_image.width();
-    int h = m_image.height();
 
     QImage tmp = (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied)
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
+    // Downscale the texture to fit inside the max texture limit if it is too big.
+    // It would be better if the image was already downscaled to the right size,
+    // but this information is not always available at that time, so as a last
+    // resort we can do it here. Texture coordinates are normalized, so it
+    // won't cause any problems and actual texture sizes will be written
+    // based on QSGTexture::textureSize which is updated after this, so that
+    // should be ok.
+    int max;
+    if (QSGRenderContext *rc = QSGRenderContext::from(context))
+        max = rc->maxTextureSize();
+    else
+        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
+    if (tmp.width() > max || tmp.height() > max) {
+        tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        m_texture_size = tmp.size();
+    }
+
     if (tmp.width() * 4 != tmp.bytesPerLine())
         tmp = tmp.copy();
 
@@ -726,7 +734,7 @@ void QSGPlainTexture::bind()
     if (profileFrames)
         swizzleTime = qsg_renderer_timer.nsecsElapsed();
 
-    funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
+    funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_texture_size.width(), m_texture_size.height(), 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
     qint64 uploadTime = 0;
     if (profileFrames)
@@ -741,7 +749,7 @@ void QSGPlainTexture::bind()
     if (profileFrames) {
         mipmapTime = qsg_renderer_timer.nsecsElapsed();
         qCDebug(QSG_LOG_TIME_TEXTURE,
-                "plain texture uploaded in: %dms (%dx%d), bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d",
+                "plain texture uploaded in: %dms (%dx%d), bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d%s",
                 int(mipmapTime / 1000000),
                 m_texture_size.width(), m_texture_size.height(),
                 int(bindTime / 1000000),
@@ -750,7 +758,8 @@ void QSGPlainTexture::bind()
                 (externalFormat == GL_BGRA ? "BGRA" : "RGBA"),
                 (internalFormat == GL_BGRA ? "BGRA" : "RGBA"),
                 int((uploadTime - swizzleTime)/1000000),
-                int((mipmapTime - uploadTime)/1000000));
+                int((mipmapTime - uploadTime)/1000000),
+                m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
     }
 
     Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
@@ -760,7 +769,6 @@ void QSGPlainTexture::bind()
             uploadTime - swizzleTime,
             qsg_renderer_timer.nsecsElapsed() - uploadTime));
 
-    m_texture_size = QSize(w, h);
     m_texture_rect = QRectF(0, 0, 1, 1);
 
     m_dirty_bind_options = false;

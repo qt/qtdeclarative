@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -710,14 +702,16 @@ struct CJump: Stmt {
     Expr *cond; // Temp, Binop
     BasicBlock *iftrue;
     BasicBlock *iffalse;
+    BasicBlock *parent;
 
     CJump(int id): Stmt(id) {}
 
-    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
+    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse, BasicBlock *parent)
     {
         this->cond = cond;
         this->iftrue = iftrue;
         this->iffalse = iffalse;
+        this->parent = parent;
     }
 
     virtual Stmt *asTerminator() { return this; }
@@ -877,7 +871,7 @@ public:
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
-    Stmt *RET(Temp *expr);
+    Stmt *RET(Expr *expr);
 
     BasicBlock *containingGroup() const
     {
@@ -897,10 +891,10 @@ public:
         return _groupStart;
     }
 
-    void markAsGroupStart()
+    void markAsGroupStart(bool mark = true)
     {
         Q_ASSERT(!isRemoved());
-        _groupStart = true;
+        _groupStart = mark;
     }
 
     // Returns the index of the basic-block.
@@ -1043,13 +1037,17 @@ struct Function {
     void setScheduledBlocks(const QVector<BasicBlock *> &scheduled);
     void renumberBasicBlocks();
 
-    unsigned getNewStatementId() { return _statementCount++; }
-    unsigned statementCount() const { return _statementCount; }
+    int getNewStatementId() { return _statementCount++; }
+    int statementCount() const { return _statementCount; }
+
+private:
+    BasicBlock *getOrCreateBasicBlock(int index);
+    void setStatementCount(int cnt);
 
 private:
     QVector<BasicBlock *> _basicBlocks;
     QVector<BasicBlock *> *_allBasicBlocks;
-    unsigned _statementCount;
+    int _statementCount;
 };
 
 class CloneExpr: protected IR::ExprVisitor
@@ -1059,20 +1057,20 @@ public:
 
     void setBasicBlock(IR::BasicBlock *block);
 
-    template <typename _Expr>
-    _Expr *operator()(_Expr *expr)
+    template <typename ExprSubclass>
+    ExprSubclass *operator()(ExprSubclass *expr)
     {
         return clone(expr);
     }
 
-    template <typename _Expr>
-    _Expr *clone(_Expr *expr)
+    template <typename ExprSubclass>
+    ExprSubclass *clone(ExprSubclass *expr)
     {
         Expr *c = expr;
         qSwap(cloned, c);
         expr->accept(this);
         qSwap(cloned, c);
-        return static_cast<_Expr *>(c);
+        return static_cast<ExprSubclass *>(c);
     }
 
     static Const *cloneConst(Const *c, Function *f)
@@ -1131,12 +1129,14 @@ protected:
     virtual void visitSubscript(Subscript *);
     virtual void visitMember(Member *);
 
-private:
+protected:
     IR::BasicBlock *block;
+
+private:
     IR::Expr *cloned;
 };
 
-class IRPrinter: public StmtVisitor, public ExprVisitor
+class Q_AUTOTEST_EXPORT IRPrinter: public StmtVisitor, public ExprVisitor
 {
 public:
     IRPrinter(QTextStream *out);
@@ -1175,13 +1175,13 @@ public:
 
 protected:
     virtual void addStmtNr(Stmt *s);
-    QString dumpStart(const Expr *e);
-    const char *dumpEnd(const Expr *e);
-    void printBlockStart(BasicBlock *bb);
+    void addJustifiedNr(int pos);
+    void printBlockStart();
 
 protected:
     QTextStream *out;
-    bool printElse;
+    int positionSize;
+    BasicBlock *currentBB;
 };
 
 } // end of namespace IR

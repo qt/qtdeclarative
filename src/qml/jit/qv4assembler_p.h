@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -135,9 +127,10 @@ struct ExceptionCheck<void (*)(QV4::NoThrowContext *, A, B, C)> {
 
 class Assembler : public JSC::MacroAssembler, public TargetPlatform
 {
+    Q_DISABLE_COPY(Assembler)
+
 public:
-    Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
-              int maxArgCountForBuiltins);
+    Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -167,9 +160,9 @@ public:
     //   callee saved reg n
     //   ...
     //   callee saved reg 0
-    //   saved reg arg 0
+    //   saved reg arg n
     //   ...
-    //   saved reg arg n            <- SP
+    //   saved reg arg 0            <- SP
     //
     // Stack layout for the JS stack:
     //   function call argument n   <- LocalsRegister
@@ -181,8 +174,9 @@ public:
     class StackLayout
     {
     public:
-        StackLayout(IR::Function *function, int maxArgCountForBuiltins)
-            : calleeSavedRegCount(Assembler::calleeSavedRegisterCount() + 1)
+        StackLayout(IR::Function *function, int maxArgCountForBuiltins, int normalRegistersToSave, int fpRegistersToSave)
+            : normalRegistersToSave(normalRegistersToSave)
+            , fpRegistersToSave(fpRegistersToSave)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedRegCount(maxArgCountForBuiltins)
@@ -211,25 +205,29 @@ public:
 
         int calculateStackFrameSize() const
         {
+            // sp was aligned before executing the call instruction. So, calculate all contents
+            // that were saved after that aligned stack...:
             const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
                                                      + RegisterSize; // saved StackFrameRegister
 
-            // space for the callee saved registers
-            int frameSize = RegisterSize * calleeSavedRegisterCount();
-            frameSize += savedRegCount * sizeof(QV4::Value); // these get written out as Values, not as native registers
+            // ... then calculate the stuff we want to store ...:
+            int frameSize = RegisterSize * normalRegistersToSave + sizeof(double) * fpRegistersToSave;
+            frameSize += savedRegCount * sizeof(QV4::Value); // (these get written out as Values, not as native registers)
 
             Q_ASSERT(frameSize + stackSpaceAllocatedOtherwise < INT_MAX);
+            // .. then align that chunk ..:
             frameSize = static_cast<int>(WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise));
+            // ... which now holds our frame size + the extra stuff that was pushed due to the call.
+            // So subtract that extra stuff, and we have our frame size:
             frameSize -= stackSpaceAllocatedOtherwise;
 
             return frameSize;
         }
 
+        /// \return the stack frame size in number of Value items.
         int calculateJSStackFrameSize() const
         {
-            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
-            int frameSize = locals * sizeof(QV4::Value);
-            return frameSize;
+            return (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
         }
 
         Address stackSlotPointer(int idx) const
@@ -262,18 +260,17 @@ public:
             Q_ASSERT(offset >= 0);
             Q_ASSERT(offset < savedRegCount);
 
-            const int off = offset * sizeof(QV4::Value);
-            return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
-        }
-
-        int calleeSavedRegisterSpace() const
-        {
-            // plus 1 for the old FP
-            return RegisterSize * (calleeSavedRegCount + 1);
+            // Get the address of the bottom-most element of our frame:
+            Address ptr(Assembler::StackFrameRegister, -calculateStackFrameSize());
+            // This now is the element with offset 0. So:
+            ptr.offset += offset * sizeof(QV4::Value);
+            // and we're done!
+            return ptr;
         }
 
     private:
-        int calleeSavedRegCount;
+        int normalRegistersToSave;
+        int fpRegistersToSave;
 
         /// arg count for calls to JS functions
         int maxOutgoingArgumentCount;
@@ -385,7 +382,7 @@ public:
     {
         Q_ASSERT(t->kind == IR::Temp::StackSlot);
 
-        return Pointer(_stackLayout.stackSlotPointer(t->index));
+        return Pointer(_stackLayout->stackSlotPointer(t->index));
     }
 
     template <int argumentNumber>
@@ -395,7 +392,7 @@ public:
             return;
         if (IR::Temp *t = arg.value->asTemp()) {
             if (t->kind == IR::Temp::PhysicalRegister) {
-                Pointer addr(_stackLayout.savedRegPointer(argumentNumber));
+                Pointer addr(_stackLayout->savedRegPointer(argumentNumber));
                 switch (t->type) {
                 case IR::BoolType:
                     storeBool((RegisterID) t->index, addr);
@@ -551,9 +548,11 @@ public:
 
     void storeUInt32ReturnValue(RegisterID dest)
     {
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
+        Pointer tmp(StackPointerRegister, 0);
         storeReturnValue(tmp);
         toUInt32Register(tmp, dest);
+        addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
     }
 
     void storeReturnValue(FPRegisterID dest)
@@ -562,10 +561,16 @@ public:
         move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
         xor64(ScratchRegister, ReturnValueRegister);
         move64ToDouble(ReturnValueRegister, dest);
+#elif defined(Q_PROCESSOR_ARM)
+        moveIntsToDouble(JSC::ARMRegisters::r0, JSC::ARMRegisters::r1, dest, FPGpr0);
+#elif defined(Q_PROCESSOR_X86)
+        moveIntsToDouble(JSC::X86Registers::eax, JSC::X86Registers::edx, dest, FPGpr0);
 #else
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
+        Pointer tmp(StackPointerRegister, 0);
         storeReturnValue(tmp);
         loadDouble(tmp, dest);
+        addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
 #endif
     }
 
@@ -786,8 +791,10 @@ public:
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
 
-    void enterStandardStackFrame();
-    void leaveStandardStackFrame();
+    void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                 const RegisterInformation &fpRegistersToSave);
+    void leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                 const RegisterInformation &fpRegistersToSave);
 
     void checkException() {
         loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, engine)), ScratchRegister);
@@ -934,7 +941,7 @@ public:
     Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)
     {
         if (IR::Const *c = e->asConst()) {
-            Address addr = _stackLayout.savedRegPointer(offset);
+            Address addr = _stackLayout->savedRegPointer(offset);
             Address tagAddr = addr;
             tagAddr.offset += 4;
 
@@ -946,7 +953,7 @@ public:
 
         if (IR::Temp *t = e->asTemp())
             if (t->kind == IR::Temp::PhysicalRegister)
-                return Pointer(_stackLayout.savedRegPointer(offset));
+                return Pointer(_stackLayout->savedRegPointer(offset));
 
         return loadAddress(tmpReg, e);
     }
@@ -1138,14 +1145,15 @@ public:
 
     JSC::MacroAssemblerCodeRef link(int *codeSize);
 
-    const StackLayout stackLayout() const { return _stackLayout; }
+    void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave);
+    const StackLayout &stackLayout() const { return *_stackLayout.data(); }
     ConstantTable &constantTable() { return _constTable; }
 
     Label exceptionReturnLabel;
     IR::BasicBlock * catchBlock;
     QVector<Jump> exceptionPropagationJumps;
 private:
-    const StackLayout _stackLayout;
+    QScopedPointer<const StackLayout> _stackLayout;
     ConstantTable _constTable;
     IR::Function *_function;
     QHash<IR::BasicBlock *, Label> _addrs;

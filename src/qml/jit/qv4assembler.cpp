@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -93,10 +85,8 @@ QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int fu
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
-                     int maxArgCountForBuiltins)
-    : _stackLayout(function, maxArgCountForBuiltins)
-    , _constTable(this)
+Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+    : _constTable(this)
     , _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
@@ -241,33 +231,50 @@ void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame()
+void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                        const RegisterInformation &fpRegistersToSave)
 {
     platformEnterStandardStackFrame(this);
 
-    // ### FIXME: Handle through calleeSavedRegisters mechanism
-    // or eliminate StackFrameRegister altogether.
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    int frameSize = _stackLayout.calculateStackFrameSize();
-
+    const int frameSize = _stackLayout->calculateStackFrameSize();
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
-    for (int i = 0; i < calleeSavedRegisterCount(); ++i)
-        storePtr(calleeSavedRegisters[i].reg<RegisterID>(), Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
-
+    Address slotAddr(StackFrameRegister, 0);
+    for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
+        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
+        slotAddr.offset -= RegisterSize;
+        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
+    }
+    for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
+        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
+        slotAddr.offset -= sizeof(double);
+        JSC::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
+    }
 }
 
-void Assembler::leaveStandardStackFrame()
+void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+                                        const RegisterInformation &fpRegistersToSave)
 {
-    // restore the callee saved registers
-    const RegisterInformation &calleeSavedRegisters = getCalleeSavedRegisters();
-    for (int i = calleeSavedRegisterCount() - 1; i >= 0; --i)
-        loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i].reg<RegisterID>());
+    Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
 
-    int frameSize = _stackLayout.calculateStackFrameSize();
+    // restore the callee saved registers
+    for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
+        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
+        JSC::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
+        slotAddr.offset += sizeof(double);
+    }
+    for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
+        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
+        loadPtr(slotAddr, regularRegistersToSave.at(i).reg<RegisterID>());
+        slotAddr.offset += RegisterSize;
+    }
+
+    Q_ASSERT(slotAddr.offset == 0);
+
+    const int frameSize = _stackLayout->calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -386,6 +393,11 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
     return JSC::MacroAssembler::branch32(cond,
                                          toInt32Register(left, Assembler::ScratchRegister),
                                          toInt32Register(right, Assembler::ReturnValueRegister));
+}
+
+void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
+{
+    _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
 }
 
 #endif

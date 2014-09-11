@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -317,8 +309,15 @@ public:
                 << RI(JSC::ARMRegisters::d4,  QStringLiteral("d4"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::d5,  QStringLiteral("d5"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::d6,  QStringLiteral("d6"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d8,  QStringLiteral("d8"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d9,  QStringLiteral("d9"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d10, QStringLiteral("d10"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d11, QStringLiteral("d11"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d12, QStringLiteral("d12"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d13, QStringLiteral("d13"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d14, QStringLiteral("d14"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARMRegisters::d15, QStringLiteral("d15"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
-        // TODO: someone should check what's up with d8-d15: are they alway available, and are they caller or callee saved?
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
@@ -353,30 +352,6 @@ public: // utility functions
         static const RegisterInformation info = getPlatformRegisterInfo();
 
         return info;
-    }
-
-    static RegisterInformation &getCalleeSavedRegisters()
-    {
-        static RegisterInformation regs;
-        if (regs.isEmpty()) {
-            foreach (const RegisterInfo &info, getRegisterInfo()) {
-#if defined(RESTORE_EBX_ON_CALL)
-                if (info.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
-                    regs.append(info);
-                    continue;
-                }
-#endif // RESTORE_EBX_ON_CALL
-                if (info.isCalleeSaved())
-                    regs.append(info);
-            }
-        }
-
-        return regs;
-    }
-
-    static int calleeSavedRegisterCount()
-    {
-        return getCalleeSavedRegisters().size();
     }
 };
 

@@ -57,11 +57,13 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent*);
+
 private slots:
     void updateView();
     void onStatusChangedView(QQuickView::Status status);
     void onStatusChangedWidget(QQuickWidget::Status status);
     void onSceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+    void onTransparentChanged(bool enabled);
 
 private:
     void switchTo(QWidget *view);
@@ -75,6 +77,18 @@ private:
     QObject *m_currentRootObject;
     QLabel *m_overlayLabel;
     QCheckBox *m_checkboxOverlayVisible;
+
+    enum State {
+        Unknown,
+        UseWidget,
+        UseWindow
+    } m_state;
+
+    QSurfaceFormat m_format;
+
+    QCheckBox *m_checkboxTransparent;
+
+    bool m_transparent;
 };
 
 #endif

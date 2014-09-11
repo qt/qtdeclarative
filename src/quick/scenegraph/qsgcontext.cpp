@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -45,12 +37,14 @@
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultrectanglenode_p.h>
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
 #include <QtQuick/private/qsgrenderloop_p.h>
+#include <QtQuick/private/qsgdefaultlayer_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -252,6 +246,7 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
         QSet<QByteArray> exts = renderContext->openglContext()->extensions();
         QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
         qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
+        qCDebug(QSG_LOG_INFO) << "Max Texture Size: " << renderContext->maxTextureSize();
     }
 
     d->mutex.unlock();
@@ -259,6 +254,19 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
 
 void QSGContext::renderContextInvalidated(QSGRenderContext *)
 {
+}
+
+
+/*!
+    Convenience factory function for creating a colored rectangle with the given geometry.
+ */
+QSGRectangleNode *QSGContext::createRectangleNode(const QRectF &rect, const QColor &c)
+{
+    QSGRectangleNode *node = createRectangleNode();
+    node->setRect(rect);
+    node->setColor(c);
+    node->update();
+    return node;
 }
 
 /*!
@@ -281,6 +289,14 @@ QSGImageNode *QSGContext::createImageNode()
     return d->antialiasingMethod == MsaaAntialiasing
             ? new QSGMultisampleAntialiasing::ImageNode
             : new QSGDefaultImageNode;
+}
+
+/*!
+    Factory function for scene graph backends of Painter elements
+ */
+QSGPainterNode *QSGContext::createPainterNode(QQuickPaintedItem *item)
+{
+    return new QSGDefaultPainterNode(item);
 }
 
 /*!
@@ -308,6 +324,14 @@ QSGNinePatchNode *QSGContext::createNinePatchNode()
     return 0;
 }
 
+/*!
+    Factory function for scene graph backends of layers.
+ */
+QSGLayer *QSGContext::createLayer(QSGRenderContext *renderContext)
+{
+    return new QSGDefaultLayer(renderContext);
+}
+
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 {
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
@@ -328,10 +352,10 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 QSize QSGContext::minimumFBOSize() const
 {
 #ifdef Q_OS_MAC
-    return QSize(33, 33);
-#else
-    return QSize(1, 1);
+    if (QSysInfo::MacintoshVersion < QSysInfo::MV_10_8)
+        return QSize(33, 33);
 #endif
+    return QSize(1, 1);
 }
 
 
@@ -370,6 +394,7 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
     , m_atlasManager(0)
     , m_depthStencilManager(0)
     , m_distanceFieldCacheManager(0)
+    , m_maxTextureSize(0)
     , m_brokenIBOs(false)
     , m_serializedRender(false)
     , m_attachToGLContext(true)
@@ -471,6 +496,9 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
  */
 void QSGRenderContext::initialize(QOpenGLContext *context)
 {
+    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+    funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
+
     // Sanity check the surface format, in case it was overridden by the application
     QSurfaceFormat requested = m_sg->defaultSurfaceFormat();
     QSurfaceFormat actual = context->format();
@@ -491,7 +519,6 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
     m_sg->renderContextInitialized(this);
 
 #ifdef Q_OS_LINUX
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
     if (strstr(vendor, "nouveau"))
         m_brokenIBOs = true;

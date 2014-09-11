@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -810,7 +802,7 @@ int ListElement::setDoubleProperty(const ListLayout::Role &role, double d)
 
     if (role.type == ListLayout::Role::Number) {
         char *mem = getPropertyMemory(role);
-        double *value = new (mem) double;
+        double *value = reinterpret_cast<double *>(mem);
         bool changed = *value != d;
         *value = d;
         if (changed)
@@ -826,7 +818,7 @@ int ListElement::setBoolProperty(const ListLayout::Role &role, bool b)
 
     if (role.type == ListLayout::Role::Bool) {
         char *mem = getPropertyMemory(role);
-        bool *value = new (mem) bool;
+        bool *value = reinterpret_cast<bool *>(mem);
         bool changed = *value != b;
         *value = b;
         if (changed)
@@ -842,8 +834,8 @@ int ListElement::setListProperty(const ListLayout::Role &role, ListModel *m)
 
     if (role.type == ListLayout::Role::List) {
         char *mem = getPropertyMemory(role);
-        ListModel **value = new (mem) ListModel *;
-        if (*value) {
+        ListModel **value = reinterpret_cast<ListModel **>(mem);
+        if (*value && *value != m) {
             (*value)->destroy();
             delete *value;
         }
@@ -2285,12 +2277,12 @@ void QQmlListModel::sync()
     qmlInfo(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding)
+bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
         const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
-        QString objName = qmlUnit->header.stringAt(target->inheritedTypeNameIndex);
+        QString objName = qmlUnit->stringAt(target->inheritedTypeNameIndex);
         if (objName != listElementTypeName) {
             const QMetaObject *mo = resolveType(objName);
             if (mo != &QQmlListElement::staticMetaObject) {
@@ -2300,14 +2292,14 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
             listElementTypeName = objName; // cache right name for next time
         }
 
-        if (!qmlUnit->header.stringAt(target->idIndex).isEmpty()) {
+        if (!qmlUnit->stringAt(target->idIndex).isEmpty()) {
             error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
         }
 
         const QV4::CompiledData::Binding *binding = target->bindingTable();
         for (quint32 i = 0; i < target->nBindings; ++i, ++binding) {
-            QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+            QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
             if (propName.isEmpty()) {
                 error(binding, QQmlListModel::tr("ListElement: cannot contain nested elements"));
                 return false;
@@ -2316,7 +2308,7 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
                 return false;
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+        QString scriptStr = binding->valueAsScriptString(qmlUnit);
         if (!definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
@@ -2331,9 +2323,9 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::QmlUnit *qmlUn
     return true;
 }
 
-bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+bool QQmlListModelParser::applyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
-    const QString elementName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+    const QString elementName = qmlUnit->stringAt(binding->propertyNameIndex);
 
     bool roleSet = false;
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
@@ -2366,13 +2358,13 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUni
         QVariant value;
 
         if (binding->evaluatesToString()) {
-            value = binding->valueAsString(&qmlUnit->header);
+            value = binding->valueAsString(qmlUnit);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             value = binding->valueAsNumber();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-            QString scriptStr = binding->valueAsScriptString(&qmlUnit->header);
+            QString scriptStr = binding->valueAsScriptString(qmlUnit);
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
                 ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
@@ -2392,12 +2384,12 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::QmlUnit *qmlUni
     return roleSet;
 }
 
-void QQmlListModelParser::verifyBindings(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlListModelParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     listElementTypeName = QString(); // unknown
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
-        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
         if (!propName.isEmpty()) { // isn't default property
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
             return;
@@ -2414,7 +2406,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, QQmlCompiledData *cdata, c
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(qmlEngine(rv));
     rv->m_engine = engine;
 
-    const QV4::CompiledData::QmlUnit *qmlUnit = cdata->qmlUnit;
+    const QV4::CompiledData::Unit *qmlUnit = cdata->compilationUnit->data;
 
     bool setRoles = false;
 

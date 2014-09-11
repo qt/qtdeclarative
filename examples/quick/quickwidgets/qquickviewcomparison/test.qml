@@ -44,9 +44,25 @@ import fbitem 1.0
 
 Rectangle {
     id: root
-    color: "lightBlue"
     property alias currentText: edit.text
     property alias multisample: fbitem.multisample
+    property bool translucency: false
+
+    gradient: Gradient {
+        id: grad
+        GradientStop { position: 0; color: "steelblue" }
+        GradientStop { position: 1; color: "black" }
+    }
+
+    onTranslucencyChanged: {
+        if (translucency) {
+            root.color = "transparent";
+            root.gradient = null;
+        } else {
+            root.color = "white";
+            root.gradient = grad;
+        }
+    }
 
     ParticleSystem {
         anchors.fill: parent
@@ -90,14 +106,6 @@ Rectangle {
             focus: true
             font.pointSize: 20
         }
-    }
-
-    Rectangle {
-        width: 300
-        height: 300
-        anchors.centerIn: parent
-        color: "red"
-        NumberAnimation on rotation { from: 0; to: 360; duration: 20000; loops: Animation.Infinite; }
     }
 
     FbItem {

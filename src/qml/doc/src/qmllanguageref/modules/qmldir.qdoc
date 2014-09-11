@@ -221,6 +221,28 @@ typeinfo mymodule.qmltypes
             \code
 # this is a comment
             \endcode
+
+    \row
+    \li designersupported
+    \li
+        \code
+          designersupported
+         \endcode
+
+     \li Set this property if the plugin is supported by Qt Quick Designer.
+         By default, the plugin will not be supported.
+
+         A plugin that is supported by Qt Quick Designer has to be properly
+         tested. This means that the plugin does not crash when running inside
+         the qml2puppet that is used by Qt Quick Designer to execute QML.
+         Generally the plugin should work well in the Qt Quick Designer
+         and not cause any show stoppers, like taking huge amounts of memory,
+         slowing down the qml2puppet heavily or anything else that renders
+         the plugin effectively unusable in the Qt Quick Designer.
+
+         The items of an unsupported plugin are not painted in the Qt Quick Designer,
+         but they are still available as empty boxes and the properties can be edited.
+
 \endtable
 
 Each command in a \c qmldir file must be on a separate line.

@@ -49,7 +49,8 @@
 
 MainWindow::MainWindow()
     : m_currentView(0),
-      m_currentRootObject(0)
+      m_currentRootObject(0),
+      m_transparent(false)
 {
     QVBoxLayout *layout = new QVBoxLayout;
 
@@ -57,11 +58,12 @@ MainWindow::MainWindow()
     QVBoxLayout *vbox = new QVBoxLayout;
     m_radioView = new QRadioButton(tr("QQuickView in a window container (direct)"));
     m_radioWidget = new QRadioButton(tr("QQuickWidget (indirect through framebuffer objects)"));
-    vbox->addWidget(m_radioView);
     vbox->addWidget(m_radioWidget);
+    vbox->addWidget(m_radioView);
     m_radioWidget->setChecked(true);
-    connect(m_radioView, &QRadioButton::toggled, this, &MainWindow::updateView);
+    m_state = Unknown;
     connect(m_radioWidget, &QRadioButton::toggled, this, &MainWindow::updateView);
+    connect(m_radioView, &QRadioButton::toggled, this, &MainWindow::updateView);
     groupBox->setLayout(vbox);
 
     layout->addWidget(groupBox);
@@ -101,6 +103,13 @@ MainWindow::MainWindow()
     connect(m_checkboxOverlayVisible, &QCheckBox::toggled, m_overlayLabel, &QWidget::setVisible);
     layout->addWidget(m_checkboxOverlayVisible);
 
+    m_checkboxTransparent = new QCheckBox(tr("Transparent background in QQuickWidget"));
+    connect(m_radioWidget, &QCheckBox::toggled, m_checkboxTransparent, &QWidget::setEnabled);
+#ifdef Q_OS_LINUX
+    connect(m_checkboxTransparent, &QCheckBox::toggled, this, &MainWindow::onTransparentChanged);
+    layout->addWidget(m_checkboxTransparent);
+#endif
+
     setLayout(layout);
 
     updateView();
@@ -127,29 +136,45 @@ void MainWindow::switchTo(QWidget *view)
 
 void MainWindow::updateView()
 {
+    QSurfaceFormat format;
+    format.setDepthBufferSize(16);
+    format.setStencilBufferSize(8);
+    if (m_transparent)
+        format.setAlphaBufferSize(8);
+    if (m_checkboxMultiSample->isChecked())
+        format.setSamples(4);
+
+    State state = m_radioView->isChecked() ? UseWindow : UseWidget;
+
+    if (m_format == format && m_state == state)
+        return;
+
+    m_format = format;
+    m_state = state;
+
     QString text = m_currentRootObject
             ? m_currentRootObject->property("currentText").toString()
             : QStringLiteral("Hello Qt");
 
     QUrl source("qrc:qquickviewcomparison/test.qml");
-    QSurfaceFormat format;
-    format.setDepthBufferSize(16);
-    format.setStencilBufferSize(8);
-    if (m_checkboxMultiSample->isChecked())
-        format.setSamples(4);
 
-    if (m_radioView->isChecked()) {
+    if (m_state == UseWindow) {
         QQuickView *quickView = new QQuickView;
-        quickView->setFormat(format);
+        // m_transparent is not supported here since many systems have problems with semi-transparent child windows
+        quickView->setFormat(m_format);
         quickView->setResizeMode(QQuickView::SizeRootObjectToView);
         connect(quickView, &QQuickView::statusChanged, this, &MainWindow::onStatusChangedView);
         connect(quickView, &QQuickView::sceneGraphError, this, &MainWindow::onSceneGraphError);
         quickView->setSource(source);
         m_currentRootObject = quickView->rootObject();
         switchTo(QWidget::createWindowContainer(quickView));
-    } else {
+    } else if (m_state == UseWidget) {
         QQuickWidget *quickWidget = new QQuickWidget;
-        quickWidget->setFormat(format);
+        if (m_transparent) {
+            quickWidget->setClearColor(Qt::transparent);
+            quickWidget->setAttribute(Qt::WA_TranslucentBackground);
+        }
+        quickWidget->setFormat(m_format);
         quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
         connect(quickWidget, &QQuickWidget::statusChanged, this, &MainWindow::onStatusChangedWidget);
         connect(quickWidget, &QQuickWidget::sceneGraphError, this, &MainWindow::onSceneGraphError);
@@ -158,8 +183,11 @@ void MainWindow::updateView()
         switchTo(quickWidget);
     }
 
-    m_currentRootObject->setProperty("currentText", text);
-    m_currentRootObject->setProperty("multisample", m_checkboxMultiSample->isChecked());
+    if (m_currentRootObject) {
+        m_currentRootObject->setProperty("currentText", text);
+        m_currentRootObject->setProperty("multisample", m_checkboxMultiSample->isChecked());
+        m_currentRootObject->setProperty("translucency", m_transparent);
+    }
 
     m_overlayLabel->raise();
 }
@@ -213,4 +241,10 @@ void MainWindow::onStatusChangedWidget(QQuickWidget::Status status)
 void MainWindow::onSceneGraphError(QQuickWindow::SceneGraphError error, const QString &message)
 {
     m_labelStatus->setText(tr("Scenegraph error %1: %2").arg(error).arg(message));
+}
+
+void MainWindow::onTransparentChanged(bool enabled)
+{
+    m_transparent = enabled;
+    updateView();
 }

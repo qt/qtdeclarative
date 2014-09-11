@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -42,6 +34,7 @@
 #include "qquickitem.h"
 
 #include "qquickwindow.h"
+#include "qquickrendercontrol.h"
 #include <QtQml/qjsengine.h>
 #include "qquickwindow_p.h"
 
@@ -1706,11 +1699,14 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \list
 
     \li The scene graph is invalidated; This can happen, for instance,
-    if the window is hidden using QQuickWindow::hide(). The signal
-    QQuickItem::sceneGraphInvalidated() is emitted on the rendering
-    thread and the GUI thread is blocked for the duration of this
-    call. Graphics resources can be deleted directly when this signal
-    is connected to using a Qt::DirectConnection.
+    if the window is hidden using QQuickWindow::hide(). If the item
+    class implements a \c slot named \c invalidateSceneGraph(), this
+    slot will be called on the rendering thread while the GUI thread
+    is blocked. This is equivalent to connecting to
+    QQuickWindow::sceneGraphInvalidated(). The OpenGL context of this
+    item's window will be bound when this slot is called. The only
+    exception is if the native OpenGL has been destroyed outside Qt's
+    control, for instance through \c EGL_CONTEXT_LOST.
 
     \li The item is removed from the scene; If an item is taken out of
     the scene, for instance because it's parent was set to \c null or
@@ -2167,6 +2163,17 @@ QQuickItem::~QQuickItem()
     }
 
     d->changeListeners.clear();
+
+    /*
+       Remove any references our transforms have to us, in case they try to
+       remove themselves from our list of transforms when that list has already
+       been destroyed after ~QQuickItem() has run.
+    */
+    for (int ii = 0; ii < d->transforms.count(); ++ii) {
+        QQuickTransform *t = d->transforms.at(ii);
+        QQuickTransformPrivate *tp = QQuickTransformPrivate::get(t);
+        tp->items.removeOne(this);
+    }
 
     if (d->extra.isAllocated()) {
         delete d->extra->contents; d->extra->contents = 0;
@@ -2673,11 +2680,6 @@ void QQuickItemPrivate::refWindow(QQuickWindow *c)
     Q_ASSERT(window == 0);
     window = c;
 
-    if (q->flags() & QQuickItem::ItemHasContents) {
-        QObject::connect(window, SIGNAL(sceneGraphInvalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-        QObject::connect(window, SIGNAL(sceneGraphInitialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-    }
-
     if (polishScheduled)
         QQuickWindowPrivate::get(window)->itemsToPolish.insert(q);
 
@@ -2706,11 +2708,6 @@ void QQuickItemPrivate::derefWindow()
 
     if (--windowRefCount > 0)
         return; // There are still other references, so don't set window to null yet.
-
-    if (q->flags() & QQuickItem::ItemHasContents) {
-        QObject::disconnect(window, SIGNAL(sceneGraphInvalidated()), q, SIGNAL(sceneGraphInvalidated()));
-        QObject::disconnect(window, SIGNAL(sceneGraphInitialized()), q, SIGNAL(sceneGraphInitialized()));
-    }
 
     q->releaseResources();
     removeFromDirtyList();
@@ -5173,6 +5170,8 @@ void QQuickItem::setScale(qreal s)
   rectangle has specified an opacity of 0.5, which affects the opacity of
   its blue child rectangle even though the child has not specified an opacity.
 
+  Values outside the range of 0 to 1 will be clamped.
+
   \table
   \row
   \li \image declarative-item_opacity1.png
@@ -5220,9 +5219,10 @@ qreal QQuickItem::opacity() const
     return d->opacity();
 }
 
-void QQuickItem::setOpacity(qreal o)
+void QQuickItem::setOpacity(qreal newOpacity)
 {
     Q_D(QQuickItem);
+    qreal o = qBound<qreal>(0, newOpacity, 1);
     if (d->opacity() == o)
         return;
 
@@ -5859,65 +5859,8 @@ void QQuickItem::setFlags(Flags flags)
     if (int(flags & ItemClipsChildrenToShape) != int(d->flags & ItemClipsChildrenToShape))
         d->dirty(QQuickItemPrivate::Clip);
 
-    if (window() && (flags & ItemHasContents) ^ (d->flags & ItemHasContents)) {
-        if (flags & ItemHasContents)  {
-            connect(window(), SIGNAL(sceneGraphInvalidated()), this, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-            connect(window(), SIGNAL(sceneGraphInitialized()), this, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-        } else {
-            disconnect(window(), SIGNAL(sceneGraphInvalidated()), this, SIGNAL(sceneGraphInvalidated()));
-            disconnect(window(), SIGNAL(sceneGraphInitialized()), this, SIGNAL(sceneGraphInitialized()));
-        }
-    }
-
     d->flags = flags;
 }
-
-/*!
-    \fn void QQuickItem::sceneGraphInvalidated()
-
-    This signal is emitted when the scene graph is invalidated for
-    items that have the ItemHasContents flag set.
-
-    QSGNode instances will be cleaned up by the scene graph
-    automatically. An application will only need to react to this signal
-    to clean up resources that are stored and managed outside the
-    QSGNode structure returned from updatePaintNode().
-
-    When the scene graph is using a dedicated render thread, this
-    signal will be emitted on the scene graph's render thread. The
-    GUI thread is blocked for the duration of this call. Connections
-    should for this reason be made using Qt::DirectConnection.
-
-    The OpenGL context of this item's window will be bound when this
-    signal is emitted. The only exception is if the native OpenGL has
-    been destroyed outside Qt's control, for instance through
-    EGL_CONTEXT_LOST.
-
-    \since 5.4
-    \since QtQuick 2.4
-
-    \sa QQuickWindow::sceneGraphInvalidated(), {Graphics Resource Handling}
- */
-
-/*!
-    \fn void QQuickItem::sceneGraphInitialized()
-
-    This signal is emitted when the scene graph is initialized for
-    items that have the ItemHasContents flag set.
-
-    When the scene graph is using a dedicated render thread, this
-    function will be called on the scene graph's render thread. The
-    GUI thread is blocked for the duration of this call. Connections
-    should for this reason be made using Qt::DirectConnection.
-
-    The OpenGL context of this item's window will be bound when
-    this signal is emitted.
-
-    \since 5.4
-    \since QtQuick 2.4
-
-    \sa QQuickWindow::sceneGraphInitialized()
- */
 
 /*!
   \qmlproperty real QtQuick::Item::x
@@ -6754,9 +6697,10 @@ void QQuickItem::setCursor(const QCursor &cursor)
     if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
         d->extra.value().cursor = cursor;
         if (d->window) {
-            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(d->window);
-            if (windowPrivate->cursorItem == this)
-                d->window->setCursor(cursor);
+            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
+            QWindow *window = renderWindow ? renderWindow : d->window; // this may not be a QQuickWindow
+            if (QQuickWindowPrivate::get(d->window)->cursorItem == this)
+                window->setCursor(cursor);
         }
     }
 
@@ -6764,7 +6708,9 @@ void QQuickItem::setCursor(const QCursor &cursor)
         d->incrementCursorCount(+1);
         d->hasCursor = true;
         if (d->window) {
-            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
+            QWindow *window = renderWindow ? renderWindow : d->window;
+            QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
             if (contains(mapFromScene(pos)))
                 QQuickWindowPrivate::get(d->window)->updateCursor(pos);
         }

@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -46,6 +38,7 @@
 #include <QQmlInfo>
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QQmlExpression>
 
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv8engine_p.h>
@@ -54,7 +47,6 @@
 
 SignalTransition::SignalTransition(QState *parent)
     : QSignalTransition(this, SIGNAL(invokeYourself()), parent)
-    , m_guard(true)
 {
     connect(this, SIGNAL(signalChanged()), SIGNAL(qmlSignalChanged()));
 }
@@ -65,7 +57,23 @@ bool SignalTransition::eventTest(QEvent *event)
     if (!QSignalTransition::eventTest(event))
         return false;
 
-    return m_guard;
+    if (m_guard.isEmpty())
+        return true;
+
+    QQmlContext context(QQmlEngine::contextForObject(this));
+
+    QStateMachine::SignalEvent *e = static_cast<QStateMachine::SignalEvent*>(event);
+
+    // Set arguments as context properties
+    int count = e->arguments().count();
+    QMetaMethod metaMethod = e->sender()->metaObject()->method(e->signalIndex());
+    for (int i = 0; i < count; i++)
+        context.setContextProperty(metaMethod.parameterNames()[i], QVariant::fromValue(e->arguments().at(i)));
+
+    QQmlExpression expr(m_guard, &context, this);
+    QVariant result = expr.evaluate();
+
+    return result.toBool();
 }
 
 const QJSValue& SignalTransition::signal()
@@ -97,17 +105,18 @@ void SignalTransition::setSignal(const QJSValue &signal)
     QSignalTransition::setSignal(metaMethod.methodSignature());
 }
 
-bool SignalTransition::guard() const
+QQmlScriptString SignalTransition::guard() const
 {
     return m_guard;
 }
 
-void SignalTransition::setGuard(bool guard)
+void SignalTransition::setGuard(const QQmlScriptString &guard)
 {
-    if (guard != m_guard) {
-        m_guard = guard;
-        emit guardChanged();
-    }
+    if (m_guard == guard)
+        return;
+
+    m_guard = guard;
+    emit guardChanged();
 }
 
 void SignalTransition::invoke()
@@ -235,4 +244,12 @@ void SignalTransition::invoke()
     Guard conditions affect the behavior of a state machine by enabling
     transitions only when they evaluate to true and disabling them when
     they evaluate to false.
+
+    When the signal associated with this signal transition is emitted the
+    guard condition is evaluated. In the guard condition the arguments
+    of the signal can be used as demonstrated in the example below.
+
+    \snippet qml/statemachine/guardcondition.qml document
+
+    \sa signal
 */

@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -225,21 +217,26 @@ void InstructionSelection::run(int functionIndex)
 
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
     if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
-        RegisterAllocator(Assembler::getRegisterInfo()).run(_function, opt);
+        RegisterAllocator regalloc(Assembler::getRegisterInfo());
+        regalloc.run(_function, opt);
+        calculateRegistersToSave(regalloc.usedRegisters());
     } else {
         if (opt.isInSSA())
             // No register allocator available for this platform, or env. var was set, so:
             opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
         IR::Optimizer::showMeTheCode(_function);
+        calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
     QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, executableAllocator, 6); // 6 == max argc for calls to built-ins with an argument array
-
-    _as->enterStandardStackFrame();
+    _as = new Assembler(this, _function, executableAllocator);
+    _as->setStackLayout(6, // 6 == max argc for calls to built-ins with an argument array
+                        regularRegistersToSave.size(),
+                        fpRegistersToSave.size());
+    _as->enterStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
 
 #ifdef ARGUMENTS_IN_REGISTERS
     _as->move(_as->registerForArgument(0), Assembler::ContextRegister);
@@ -1470,7 +1467,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
-    _as->leaveStandardStackFrame();
+    _as->leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     _as->ret();
 }
 
@@ -1525,6 +1522,31 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
     return argc;
 }
 
+void InstructionSelection::calculateRegistersToSave(const RegisterInformation &used)
+{
+    regularRegistersToSave.clear();
+    fpRegistersToSave.clear();
+
+    foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
+        if (ri.isCallerSaved())
+            continue;
+
+        if (ri.isRegularRegister()) {
+#if defined(RESTORE_EBX_ON_CALL)
+            if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+                regularRegistersToSave.append(ri);
+                continue;
+            }
+#endif // RESTORE_EBX_ON_CALL
+            if (ri.isPredefined() || used.contains(ri))
+                regularRegistersToSave.append(ri);
+        } else {
+            Q_ASSERT(ri.isFloatingPoint());
+            if (ri.isPredefined() || used.contains(ri))
+                fpRegistersToSave.append(ri);
+        }
+    }
+}
 
 QT_BEGIN_NAMESPACE
 namespace QV4 {

@@ -3,13 +3,14 @@ TEMPLATE = subdirs
 SUBDIRS += \
            binding \
            creation \
+           compilation \
            javascript \
            holistic \
            pointers \
            qqmlcomponent \
            qqmlimage \
            qqmlmetaproperty \
-           script \
+#            script \ ### FIXME: doesn't build
            qmltime \
            js \
            qquickwindow

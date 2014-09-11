@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -148,10 +140,11 @@ void SmoothTextureMaterialShader::initialize()
 QSGDefaultImageNode::QSGDefaultImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
-    , m_antialiasing(false)
     , m_mirror(false)
     , m_dirtyGeometry(false)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
+    , m_antialiasing(AntialiasingNone)
+
 {
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
@@ -257,10 +250,20 @@ void QSGDefaultImageNode::setTexture(QSGTexture *texture)
 
 void QSGDefaultImageNode::setAntialiasing(bool antialiasing)
 {
-    if (antialiasing == m_antialiasing)
+    AntialiasingFlags antialiasingFlags = antialiasing
+                                          ? AntialiasingAll
+                                          : AntialiasingNone;
+
+    setAntialiasing(antialiasingFlags);
+}
+
+void QSGDefaultImageNode::setAntialiasing(AntialiasingFlags antialiasingFlags)
+{
+    if (antialiasingFlags == m_antialiasing)
         return;
-    m_antialiasing = antialiasing;
-    if (m_antialiasing) {
+
+    m_antialiasing = antialiasingFlags;
+    if (m_antialiasing != AntialiasingNone) {
         setMaterial(&m_smoothMaterial);
         setOpaqueMaterial(0);
         setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
@@ -292,7 +295,7 @@ void QSGDefaultImageNode::update()
 void QSGDefaultImageNode::preprocess()
 {
     bool doDirty = false;
-    QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
+    QSGLayer *t = qobject_cast<QSGLayer *>(m_material.texture());
     if (t) {
         doDirty = t->updateTexture();
         updateGeometry();
@@ -372,11 +375,14 @@ void QSGDefaultImageNode::updateGeometry()
         }
 
         // An image can be rendered as a single quad if:
+        // - There is antialiasing on all or no edges
         // - There are no margins, and either:
         //   - the image isn't repeated
         //   - the source rectangle fills the entire texture so that texture wrapping can be used,
         //     and NPOT is supported
-        if (!hasMargins && (!hasTiles || (fullTexture && wrapSupported))) {
+        if (!hasMargins
+                && (m_antialiasing == AntialiasingAll || m_antialiasing == AntialiasingNone)
+                && (!hasTiles || (fullTexture && wrapSupported))) {
             QRectF sr;
             if (!fullTexture) {
                 sr = QRectF(innerSourceRect.x() + (m_subSourceRect.left() - floorLeft) * innerSourceRect.width(),
@@ -555,9 +561,34 @@ void QSGDefaultImageNode::updateGeometry()
                     topDv = bottomDv *= 0.5f;
                 }
 
+                if (!m_antialiasing.testFlag(AntialiasingTop)) {
+                    topDy = 0.0f;
+                    topDv = 0.0f;
+                }
+
+                if (!m_antialiasing.testFlag(AntialiasingBottom)) {
+                    bottomDy = 0.0f;
+                    bottomDv = 0.0f;
+                }
+
+                if (!m_antialiasing.testFlag(AntialiasingLeft)) {
+                    leftDx = 0.0f;
+                    leftDu = 0.0f;
+                }
+
+                if (!m_antialiasing.testFlag(AntialiasingRight)) {
+                    rightDx = 0.0f;
+                    rightDu = 0.0f;
+                }
+
                 // This delta is how much the fuzziness can reach out from the image.
                 float delta = float(qAbs(m_targetRect.width()) < qAbs(m_targetRect.height())
                                     ? m_targetRect.width() : m_targetRect.height()) * 0.5f;
+
+                float deltaTop = m_antialiasing.testFlag(AntialiasingTop) ? delta : 0.0f;
+                float deltaBottom = m_antialiasing.testFlag(AntialiasingBottom) ? delta : 0.0f;
+                float deltaLeft = m_antialiasing.testFlag(AntialiasingLeft) ? delta : 0.0f;
+                float deltaRight = m_antialiasing.testFlag(AntialiasingRight) ? delta : 0.0f;
 
                 quint16 index = 0;
                 ys = yData.data();
@@ -608,28 +639,28 @@ void QSGDefaultImageNode::updateGeometry()
                         if (isTop) {
                             vertices[topLeft].dy = vertices[topRight].dy = topDy;
                             vertices[topLeft].dv = vertices[topRight].dv = topDv;
-                            vertices[topLeft + 1].dy = vertices[topRight + 1].dy = -delta;
+                            vertices[topLeft + 1].dy = vertices[topRight + 1].dy = -deltaTop;
                             appendQuad(&indices, topLeft + 1, topRight + 1, topLeft, topRight);
                         }
 
                         if (isBottom) {
                             vertices[bottomLeft].dy = vertices[bottomRight].dy = -bottomDy;
                             vertices[bottomLeft].dv = vertices[bottomRight].dv = -bottomDv;
-                            vertices[bottomLeft + 1].dy = vertices[bottomRight + 1].dy = delta;
+                            vertices[bottomLeft + 1].dy = vertices[bottomRight + 1].dy = deltaBottom;
                             appendQuad(&indices, bottomLeft, bottomRight, bottomLeft + 1, bottomRight + 1);
                         }
 
                         if (isLeft) {
                             vertices[topLeft].dx = vertices[bottomLeft].dx = leftDx;
                             vertices[topLeft].du = vertices[bottomLeft].du = leftDu;
-                            vertices[topLeft + 1].dx = vertices[bottomLeft + 1].dx = -delta;
+                            vertices[topLeft + 1].dx = vertices[bottomLeft + 1].dx = -deltaLeft;
                             appendQuad(&indices, topLeft + 1, topLeft, bottomLeft + 1, bottomLeft);
                         }
 
                         if (isRight) {
                             vertices[topRight].dx = vertices[bottomRight].dx = -rightDx;
                             vertices[topRight].du = vertices[bottomRight].du = -rightDu;
-                            vertices[topRight + 1].dx = vertices[bottomRight + 1].dx = delta;
+                            vertices[topRight + 1].dx = vertices[bottomRight + 1].dx = deltaRight;
                             appendQuad(&indices, topRight, topRight + 1, bottomRight, bottomRight + 1);
                         }
                     }

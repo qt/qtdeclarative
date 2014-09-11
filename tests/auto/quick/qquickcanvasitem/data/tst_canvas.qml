@@ -247,5 +247,348 @@ CanvasTestCase {
        c.destroy();
 
   }
+
+    Image {
+        id: image
+        source: "anim-gr.png"
+    }
+
+    /*
+        Ensures that extra arguments to functions are ignored,
+        by checking that drawing, clearing, etc. still occurs.
+    */
+    function test_extraArgumentsIgnored_data() {
+        var extra = 0;
+        return [
+            {
+                tag: "arc",
+                test: function(ctx) {
+                    ctx.arc(10, 10, 5, 0, Math.PI * 2, true, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 10, 10, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "arcTo",
+                test: function(ctx) {
+                    ctx.translate(-50, -25);
+                    ctx.moveTo(20,20);
+                    ctx.arcTo(150, 20, 100, 70, 50, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "bezierCurveTo",
+                test: function(ctx) {
+                    ctx.beginPath();
+                    ctx.moveTo(-20, -20);
+                    ctx.bezierCurveTo(20, 100, 100, 100, 100, 20, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "clearRect",
+                test: function(ctx) {
+                    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.clearRect(0, 0, 10, 10, extra);
+                    comparePixel(ctx, 0, 0, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "createConicalGradient",
+                test: function(ctx) {
+                    verify(ctx.createConicalGradient(0, 0, 0, extra) !== ctx);
+                }
+            },
+            {
+                tag: "createLinearGradient",
+                test: function(ctx) {
+                    verify(ctx.createLinearGradient(0, 0, 10, 10, extra) !== ctx);
+                }
+            },
+            {
+                tag: "createRadialGradient",
+                test: function(ctx) {
+                    verify(ctx.createRadialGradient(0, 0, 10, 20, 20, 10, extra) !== ctx);
+                }
+            },
+            {
+                tag: "createPattern-image",
+                test: function(ctx) {
+                    verify(ctx.createPattern(image, "repeat", extra) !== undefined);
+                }
+            },
+            {
+                tag: "createPattern-color",
+                test: function(ctx) {
+                    verify(ctx.createPattern("red", Qt.SolidPattern, extra) !== undefined);
+                }
+            },
+            {
+                tag: "drawImage-9-args",
+                test: function(ctx) {
+                    ctx.drawImage(image, 0, 0, image.sourceSize.width, image.sourceSize.height,
+                        0, 0, image.sourceSize.width, image.sourceSize.height, extra);
+                    comparePixel(ctx, 10, 10, 0, 255, 0, 255);
+                }
+            },
+            {
+                tag: "drawImage-5-args",
+                test: function(ctx) {
+                    ctx.drawImage(image, 0, 0, image.sourceSize.width, image.sourceSize.height, extra);
+                    comparePixel(ctx, 10, 10, 0, 255, 0, 255);
+                }
+            },
+            {
+                tag: "drawImage-3-args",
+                test: function(ctx) {
+                    ctx.drawImage(image, 0, 0, extra);
+                    comparePixel(ctx, 10, 10, 0, 255, 0, 255);
+                }
+            },
+            {
+                tag: "ellipse",
+                test: function(ctx) {
+                    ctx.ellipse(0, 0, 10, 10);
+                    ctx.fill();
+                    comparePixel(ctx, 5, 5, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "fillRect",
+                test: function(ctx) {
+                    ctx.fillRect(0, 0, 10, 10, extra);
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255, 200);
+                }
+            },
+            {
+                tag: "fillText",
+                test: function(ctx) {
+                    ctx.font = "100px sans-serif";
+                    ctx.fillText("Hello", -10, 10, extra);
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "getImageData",
+                test: function(ctx) {
+                    verify(ctx.getImageData(0, 0, 1, 1, extra) !== null);
+                }
+            },
+            {
+                tag: "isPointInPath",
+                test: function(ctx) {
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(10, 10);
+                    verify(ctx.isPointInPath(0, 0, extra));
+                }
+            },
+            {
+                tag: "lineTo",
+                test: function(ctx) {
+                    ctx.lineWidth = 5;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(10, 10, extra);
+                    ctx.stroke();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "measureText",
+                test: function(ctx) {
+                    var textMetrics = ctx.measureText("Hello", extra);
+                    verify(textMetrics !== undefined);
+                    verify(textMetrics.width > 0);
+                }
+            },
+            {
+                tag: "moveTo",
+                test: function(ctx) {
+                    ctx.lineWidth = 5;
+                    ctx.moveTo(10, 10, extra);
+                    ctx.lineTo(20, 20, extra);
+                    ctx.stroke();
+                    comparePixel(ctx, 0, 0, 0, 0, 0, 0);
+                    comparePixel(ctx, 10, 10, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "putImageData",
+                test: function(ctx) {
+                    ctx.drawImage(image, 0, 0);
+                    comparePixel(ctx, 0, 0, 0, 255, 0, 255);
+                    var imageData = ctx.getImageData(0, 0, 1, 1);
+                    // Swap green with red.
+                    imageData.data[0] = 255;
+                    imageData.data[1] = 0;
+                    ctx.putImageData(imageData, 0, 0, 0, 0, ctx.canvas.width, ctx.canvas.height, extra);
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "quadraticCurveTo",
+                test: function(ctx) {
+                    ctx.lineWidth = 5;
+                    ctx.moveTo(0, 0);
+                    ctx.quadraticCurveTo(20, 100, 100, 20, extra);
+                    ctx.stroke();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "rect",
+                test: function(ctx) {
+                    ctx.rect(0, 0, 1, 1, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "rotate",
+                test: function(ctx) {
+                    // If we don't rotate, it should be red in the middle.
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    // If we do rotate, it shouldn't be there.
+                    ctx.rotate(Math.PI / 4, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "roundedRect",
+                test: function(ctx) {
+                    ctx.roundedRect(0, 0, 50, 50, 5, 5, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 25, 25, 255, 0, 0, 255);
+                }
+            },
+            {
+                tag: "scale",
+                test: function(ctx) {
+                    // If we don't scale, it should be red in the middle.
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    // If we do scale, it shouldn't be there.
+                    ctx.scale(1.25, 1.25, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "setTransform",
+                test: function(ctx) {
+                    // The same as the scale test, except with setTransform.
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    ctx.setTransform(1.25, 0, 0, 1.25, 0, 0, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "shear",
+                test: function(ctx) {
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    ctx.shear(0.5, 0, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "strokeRect",
+                test: function(ctx) {
+                    ctx.strokeRect(0, 0, 10, 10, extra);
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255, 200);
+                }
+            },
+            {
+                tag: "strokeText",
+                test: function(ctx) {
+                    ctx.font = "10px sans-serif";
+                    ctx.strokeText("Hello", -1, 5, extra);
+                    comparePixel(ctx, 0, 5, 255, 0, 0, 255, 200);
+                }
+            },
+            {
+                tag: "text",
+                test: function(ctx) {
+                    ctx.font = "100px sans-serif";
+                    ctx.text(".", -15, 8, extra);
+                    ctx.fill();
+                    comparePixel(ctx, 0, 0, 255, 0, 0, 255, 200);
+                }
+            },
+            {
+                tag: "transform",
+                test: function(ctx) {
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    ctx.transform(1.25, 0, 0, 1.25, 0, 0, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            },
+            {
+                tag: "translate",
+                test: function(ctx) {
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 255, 0, 0, 255);
+
+                    ctx.reset();
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+
+                    ctx.translate(1, 1, extra);
+                    ctx.fillRect(50, 50, 1, 1);
+                    comparePixel(ctx, 50, 50, 0, 0, 0, 0);
+                }
+            }
+        ];
+    }
+
+    function test_extraArgumentsIgnored(data) {
+        var canvas = Qt.createQmlObject("import QtQuick 2.3; Canvas { onPaint: {} }", testCase);
+        verify(canvas);
+        canvas.width = 100;
+        canvas.height = 100;
+
+        var ctx = canvas.getContext("2d");
+
+        ctx.beginPath();
+        ctx.fillStyle = "red";
+        ctx.strokeStyle = "red";
+        data.test(ctx);
+
+        canvas.destroy();
+    }
 }
 

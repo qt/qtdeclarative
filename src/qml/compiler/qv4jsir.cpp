@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -86,41 +78,41 @@ const char *opname(AluOp op)
     case OpInvalid: return "?";
 
     case OpIfTrue: return "(bool)";
-    case OpNot: return "!";
-    case OpUMinus: return "-";
-    case OpUPlus: return "+";
-    case OpCompl: return "~";
-    case OpIncrement: return "++";
-    case OpDecrement: return "--";
+    case OpNot: return "not";
+    case OpUMinus: return "neg";
+    case OpUPlus: return "plus";
+    case OpCompl: return "invert";
+    case OpIncrement: return "incr";
+    case OpDecrement: return "decr";
 
-    case OpBitAnd: return "&";
-    case OpBitOr: return "|";
-    case OpBitXor: return "^";
+    case OpBitAnd: return "bitand";
+    case OpBitOr: return "bitor";
+    case OpBitXor: return "bitxor";
 
-    case OpAdd: return "+";
-    case OpSub: return "-";
-    case OpMul: return "*";
-    case OpDiv: return "/";
-    case OpMod: return "%";
+    case OpAdd: return "add";
+    case OpSub: return "sub";
+    case OpMul: return "mul";
+    case OpDiv: return "div";
+    case OpMod: return "mod";
 
-    case OpLShift: return "<<";
-    case OpRShift: return ">>";
-    case OpURShift: return ">>>";
+    case OpLShift: return "shl";
+    case OpRShift: return "shr";
+    case OpURShift: return "asr";
 
-    case OpGt: return ">";
-    case OpLt: return "<";
-    case OpGe: return ">=";
-    case OpLe: return "<=";
-    case OpEqual: return "==";
-    case OpNotEqual: return "!=";
-    case OpStrictEqual: return "===";
-    case OpStrictNotEqual: return "!==";
+    case OpGt: return "gt";
+    case OpLt: return "lt";
+    case OpGe: return "ge";
+    case OpLe: return "le";
+    case OpEqual: return "eq";
+    case OpNotEqual: return "ne";
+    case OpStrictEqual: return "se";
+    case OpStrictNotEqual: return "sne";
 
     case OpInstanceof: return "instanceof";
     case OpIn: return "in";
 
-    case OpAnd: return "&&";
-    case OpOr: return "||";
+    case OpAnd: return "and";
+    case OpOr: return "or";
 
     default: return "?";
 
@@ -311,7 +303,7 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
     this->column = column;
 }
 
-static const char *builtin_to_string(Name::Builtin b)
+const char *builtin_to_string(Name::Builtin b)
 {
     switch (b) {
     case Name::builtin_invalid:
@@ -492,6 +484,26 @@ void Function::renumberBasicBlocks()
 {
     for (int i = 0, ei = basicBlockCount(); i != ei; ++i)
         basicBlock(i)->changeIndex(i);
+}
+
+BasicBlock *Function::getOrCreateBasicBlock(int index)
+{
+    if (_basicBlocks.size() <= index) {
+        const int oldSize = _basicBlocks.size();
+        _basicBlocks.resize(index + 1);
+        for (int i = oldSize; i <= index; ++i) {
+            BasicBlock *block = new BasicBlock(this, 0);
+            block->setIndex(i);
+            _basicBlocks[i] = block;
+        }
+    }
+
+    return _basicBlocks.at(index);
+}
+
+void Function::setStatementCount(int cnt)
+{
+    _statementCount = cnt;
 }
 
 BasicBlock::~BasicBlock()
@@ -715,7 +727,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     }
 
     CJump *s = function->NewStmt<CJump>();
-    s->init(cond, iftrue, iffalse);
+    s->init(cond, iftrue, iffalse, this);
     appendStatement(s);
 
     Q_ASSERT(! out.contains(iftrue));
@@ -733,7 +745,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     return s;
 }
 
-Stmt *BasicBlock::RET(Temp *expr)
+Stmt *BasicBlock::RET(Expr *expr)
 {
     Q_ASSERT(!isRemoved());
     if (isTerminated())
@@ -760,7 +772,7 @@ void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
 void BasicBlock::appendStatement(Stmt *statement)
 {
     Q_ASSERT(!isRemoved());
-    if (nextLocation.isValid())
+    if (nextLocation.startLine)
         statement->location = nextLocation;
     _statements.append(statement);
 }
@@ -912,7 +924,8 @@ void CloneExpr::visitMember(Member *e)
 
 IRPrinter::IRPrinter(QTextStream *out)
     : out(out)
-    , printElse(true)
+    , positionSize(Stmt::InvalidId)
+    , currentBB(0)
 {
 }
 
@@ -937,6 +950,9 @@ void IRPrinter::print(Expr *e)
 
 void IRPrinter::print(Function *f)
 {
+    if (positionSize == Stmt::InvalidId)
+        positionSize = QString::number(f->statementCount()).size();
+
     QString n = f->name ? *f->name : QString();
     if (n.isEmpty())
         n.sprintf("%p", f);
@@ -951,21 +967,31 @@ void IRPrinter::print(Function *f)
         << '{' << endl;
 
     foreach (const QString *local, f->locals)
-        *out << "    var " << *local << ';' << endl;
+        *out << "    local var " << *local << endl;
 
-    foreach (BasicBlock *bb, f->basicBlocks())
-        if (!bb->isRemoved())
-            print(bb);
+    bool needsSeperator = !f->locals.isEmpty();
+    foreach (BasicBlock *bb, f->basicBlocks()) {
+        if (bb->isRemoved())
+            continue;
+
+        if (needsSeperator)
+            *out << endl;
+        else
+            needsSeperator = true;
+        print(bb);
+    }
     *out << '}' << endl;
 }
 
 void IRPrinter::print(BasicBlock *bb)
 {
-    bool prevPrintElse = false;
-    std::swap(printElse, prevPrintElse);
-    printBlockStart(bb);
+    std::swap(currentBB, bb);
+    printBlockStart();
 
-    foreach (Stmt *s, bb->statements()) {
+    foreach (Stmt *s, currentBB->statements()) {
+        if (!s)
+            continue;
+
         QByteArray str;
         QBuffer buf(&str);
         buf.open(QIODevice::WriteOnly);
@@ -974,36 +1000,34 @@ void IRPrinter::print(BasicBlock *bb)
         std::swap(out, prevOut);
         addStmtNr(s);
         s->accept(this);
-        if (s->location.isValid()) {
+        if (s->location.startLine) {
             out->flush();
             for (int i = 58 - str.length(); i > 0; --i)
                 *out << ' ';
-            *out << "    // line: " << s->location.startLine << " column: " << s->location.startColumn;
+            *out << "    ; line: " << s->location.startLine << ", column: " << s->location.startColumn;
         }
 
         out->flush();
         std::swap(out, prevOut);
 
-        *out << "    " << str;
-        *out << endl;
-
-        if (s->asCJump()) {
-            *out << "    else goto L" << s->asCJump()->iffalse->index() << ";" << endl;
-        }
+        *out << "    " << str << endl;
     }
 
-    std::swap(printElse, prevPrintElse);
+    std::swap(currentBB, bb);
 }
 
 void IRPrinter::visitExp(Exp *s)
 {
-    *out << "(void) ";
+    *out << "void ";
     s->expr->accept(this);
-    *out << ';';
 }
 
 void IRPrinter::visitMove(Move *s)
 {
+    if (Temp *targetTemp = s->target->asTemp())
+        if (!s->swap && targetTemp->type != UnknownType)
+            *out << typeName(targetTemp->type) << ' ';
+
     s->target->accept(this);
     *out << ' ';
     if (s->swap)
@@ -1011,21 +1035,19 @@ void IRPrinter::visitMove(Move *s)
     else
         *out << "= ";
     s->source->accept(this);
-    *out << ';';
 }
 
 void IRPrinter::visitJump(Jump *s)
 {
-    *out << "goto L" << s->target->index() << ';';
+    *out << "goto L" << s->target->index();
 }
 
 void IRPrinter::visitCJump(CJump *s)
 {
-    *out << "if (";
+    *out << "if ";
     s->cond->accept(this);
-    *out << ") goto L" << s->iftrue->index() << ';';
-    if (printElse)
-        *out << " else goto L" << s->iffalse->index() << ';';
+    *out << " goto L" << s->iftrue->index()
+         << " else goto L" << s->iffalse->index();
 }
 
 void IRPrinter::visitRet(Ret *s)
@@ -1035,26 +1057,27 @@ void IRPrinter::visitRet(Ret *s)
         *out << ' ';
         s->expr->accept(this);
     }
-    *out << ';';
 }
 
 void IRPrinter::visitPhi(Phi *s)
 {
+    if (s->targetTemp->type != UnknownType)
+        *out << typeName(s->targetTemp->type) << ' ';
+
     s->targetTemp->accept(this);
-    *out << " = phi(";
+    *out << " = phi ";
     for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
         if (i > 0)
             *out << ", ";
+        if (currentBB)
+            *out << 'L' << currentBB->in.at(i)->index() << ": ";
         if (s->d->incoming[i])
             s->d->incoming[i]->accept(this);
     }
-    *out << ");";
 }
 
 void IRPrinter::visitConst(Const *e)
 {
-    if (e->type != UndefinedType && e->type != NullType)
-        *out << dumpStart(e);
     switch (e->type) {
     case QV4::IR::UndefinedType:
         *out << "undefined";
@@ -1079,8 +1102,6 @@ void IRPrinter::visitConst(Const *e)
         }
         break;
     }
-    if (e->type != UndefinedType && e->type != NullType)
-        *out << dumpEnd(e);
 }
 
 void IRPrinter::visitString(String *e)
@@ -1105,15 +1126,17 @@ void IRPrinter::visitRegExp(RegExp *e)
 
 void IRPrinter::visitName(Name *e)
 {
-    if (e->id)
+    if (e->id) {
+        if (*e->id != QStringLiteral("this"))
+            *out << '.';
         *out << *e->id;
-    else
+    } else {
         *out << builtin_to_string(e->builtin);
+    }
 }
 
 void IRPrinter::visitTemp(Temp *e)
 {
-    *out << dumpStart(e);
     switch (e->kind) {
     case Temp::VirtualRegister:  *out << '%' << e->index; break;
     case Temp::PhysicalRegister: *out << (e->type == DoubleType ? "fp" : "r")
@@ -1121,12 +1144,10 @@ void IRPrinter::visitTemp(Temp *e)
     case Temp::StackSlot:        *out << '&' << e->index; break;
     default:                     *out << "INVALID";
     }
-    *out << dumpEnd(e);
 }
 
 void IRPrinter::visitArgLocal(ArgLocal *e)
 {
-    *out << dumpStart(e);
     switch (e->kind) {
     case ArgLocal::Formal:           *out << '#' << e->index; break;
     case ArgLocal::ScopedFormal:     *out << '#' << e->index
@@ -1136,7 +1157,6 @@ void IRPrinter::visitArgLocal(ArgLocal *e)
                                      << '@' << e->scope; break;
     default:                     *out << "INVALID";
     }
-    *out << dumpEnd(e);
 }
 
 void IRPrinter::visitClosure(Closure *e)
@@ -1144,35 +1164,32 @@ void IRPrinter::visitClosure(Closure *e)
     QString name = e->functionName ? *e->functionName : QString();
     if (name.isEmpty())
         name.sprintf("%x", e->value);
-    *out << "closure(" << name << ')';
+    *out << "closure " << name;
 }
 
 void IRPrinter::visitConvert(Convert *e)
 {
-    *out << dumpStart(e);
-    *out << "convert(";
+    *out << "convert " << typeName(e->expr->type) << " to " << typeName(e->type) << ' ';
     e->expr->accept(this);
-    *out << ')' << dumpEnd(e);
 }
 
 void IRPrinter::visitUnop(Unop *e)
 {
-    *out << dumpStart(e) << opname(e->op);
+    *out << opname(e->op) << ' ';
     e->expr->accept(this);
-    *out << dumpEnd(e);
 }
 
 void IRPrinter::visitBinop(Binop *e)
 {
-    *out << dumpStart(e);
+    *out << opname(e->op) << ' ';
     e->left->accept(this);
-    *out << ' ' << opname(e->op) << ' ';
+    *out << ", ";
     e->right->accept(this);
-    *out << dumpEnd(e);
 }
 
 void IRPrinter::visitCall(Call *e)
 {
+    *out << "call ";
     e->base->accept(this);
     *out << '(';
     for (ExprList *it = e->args; it; it = it->next) {
@@ -1244,64 +1261,54 @@ QString IRPrinter::escape(const QString &s)
 void IRPrinter::addStmtNr(Stmt *s)
 {
     if (s->id() >= 0)
-        *out << s->id() << ": ";
+        addJustifiedNr(s->id());
 }
 
-QString IRPrinter::dumpStart(const Expr *e)
+void IRPrinter::addJustifiedNr(int pos)
 {
-    if (e->type == UnknownType)
-        return QString();
-
-    QString result = typeName(e->type);
-#ifndef V4_BOOTSTRAP
-    const Temp *temp = const_cast<Expr*>(e)->asTemp();
-    if (e->type == QObjectType && temp && temp->memberResolver.isQObjectResolver) {
-        result += QLatin1Char('<');
-        result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
-        result += QLatin1Char('>');
+    if (positionSize == Stmt::InvalidId) {
+        *out << pos << ": ";
+    } else {
+        QString posStr;
+        if (pos != Stmt::InvalidId)
+            posStr = QString::number(pos);
+        *out << posStr.rightJustified(positionSize);
+        if (pos == Stmt::InvalidId)
+            *out << "  ";
+        else
+            *out << ": ";
     }
-#endif
-    result += QLatin1Char('{');
-    return result;
 }
 
-const char *IRPrinter::dumpEnd(const Expr *e)
+void IRPrinter::printBlockStart()
 {
-    if (e->type == UnknownType)
-        return "";
-    else
-        return "}";
-}
-
-void IRPrinter::printBlockStart(BasicBlock *bb)
-{
-    if (bb->isRemoved()) {
+    if (currentBB->isRemoved()) {
         *out << "(block has been removed)";
         return;
     }
 
     QByteArray str;
     str.append('L');
-    str.append(QByteArray::number(bb->index()));
+    str.append(QByteArray::number(currentBB->index()));
     str.append(':');
-    if (bb->catchBlock) {
+    if (currentBB->catchBlock) {
         str.append(" (exception handler L");
-        str.append(QByteArray::number(bb->catchBlock->index()));
+        str.append(QByteArray::number(currentBB->catchBlock->index()));
         str.append(')');
     }
     for (int i = 66 - str.length(); i; --i)
         str.append(' ');
     *out << str;
 
-    *out << "// predecessor blocks:";
-    foreach (BasicBlock *in, bb->in)
+    *out << "; predecessors:";
+    foreach (BasicBlock *in, currentBB->in)
         *out << " L" << in->index();
-    if (bb->in.isEmpty())
-        *out << " (none)";
-    if (BasicBlock *container = bb->containingGroup())
-        *out << "; container block: L" << container->index();
-    if (bb->isGroupStart())
-        *out << "; group start";
+    if (currentBB->in.isEmpty())
+        *out << " none";
+    if (BasicBlock *container = currentBB->containingGroup())
+        *out << ", container: L" << container->index();
+    if (currentBB->isGroupStart())
+        *out << ", loop_header: yes";
     *out << endl;
 }
 
