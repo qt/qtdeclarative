@@ -191,6 +191,8 @@ public:
     Value sequencePrototype;
     Value arrayBufferCtor;
     Value dataViewCtor;
+    enum { NTypedArrayTypes = 9 }; // avoid header dependency
+    Value typedArrayCtors[NTypedArrayTypes];
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
@@ -228,6 +230,7 @@ public:
 
     InternalClass *arrayBufferClass;
     InternalClass *dataViewClass;
+    InternalClass *typedArrayClasses[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
 
     EvalFunction *evalFunction;
     FunctionObject *thrower;

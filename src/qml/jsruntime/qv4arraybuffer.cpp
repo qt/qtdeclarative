@@ -59,6 +59,8 @@ ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)
         return v4->currentContext()->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
 
     Scoped<ArrayBuffer> a(scope, v4->memoryManager->alloc<ArrayBuffer>(v4, len));
+    if (scope.engine->hasException)
+        return Encode::undefined();
     return a.asReturnedValue();
 }
 

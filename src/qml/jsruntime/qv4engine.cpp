@@ -63,6 +63,7 @@
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4dataview_p.h"
+#include "qv4typedarray_p.h"
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -381,6 +382,13 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     dataViewPrototype->init(this, dataViewCtor.asObject());
     dataViewClass = InternalClass::create(this, DataView::staticVTable(), dataViewPrototype);
 
+    for (int i = 0; i < TypedArray::NTypes; ++i) {
+        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(rootContext, TypedArray::Type(i));
+        Scoped<TypedArrayPrototype> typedArrayPrototype(scope, memoryManager->alloc<TypedArrayPrototype>(this, TypedArray::Type(i)));
+        typedArrayPrototype->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
+        typedArrayClasses[i] = InternalClass::create(this, TypedArray::staticVTable(), typedArrayPrototype);
+    }
+
     //
     // set up the global object
     //
@@ -404,8 +412,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
+
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
+    ScopedString str(scope);
+    for (int i = 0; i < TypedArray::NTypes; ++i)
+        globalObject->defineDefaultProperty((str = typedArrayCtors[i].asFunctionObject()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(QV4::InternalClass::create(this, JsonObject::staticVTable(), objectPrototype))));
@@ -928,6 +940,8 @@ void ExecutionEngine::markObjects()
     uRIErrorCtor.mark(this);
     arrayBufferCtor.mark(this);
     dataViewCtor.mark(this);
+    for (int i = 0; i < TypedArray::NTypes; ++i)
+        typedArrayCtors[i].mark(this);
     sequencePrototype.mark(this);
 
     exceptionValue.mark(this);

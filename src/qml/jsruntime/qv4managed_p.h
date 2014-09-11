@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 #define Q_MANAGED_CHECK \
-    template <typename T> inline void qt_check_for_QMANAGED_macro(const T *_q_argument) const \
+    template <typename _T> inline void qt_check_for_QMANAGED_macro(const _T *_q_argument) const \
     { int i = qYouForgotTheQ_MANAGED_Macro(this, _q_argument); i = i + 1; }
 
 template <typename T>
@@ -66,8 +66,8 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         typedef superClass SuperClass; \
         static const QV4::ManagedVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
-        template <typename T> \
-        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+        template <typename _T> \
+        QV4::Returned<_T> *asReturned() { return QV4::Returned<_T>::create(this); } \
         V4_MANAGED_SIZE_TEST \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
@@ -78,8 +78,8 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         typedef superClass SuperClass; \
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
-        template <typename T> \
-        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+        template <typename _T> \
+        QV4::Returned<_T> *asReturned() { return QV4::Returned<_T>::create(this); } \
         V4_MANAGED_SIZE_TEST \
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
