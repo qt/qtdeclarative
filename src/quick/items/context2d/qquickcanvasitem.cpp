@@ -667,7 +667,7 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
         return;
 
     d->window = value.window;
-    if (d->window->openglContext() != 0) // available context == initialized
+    if (QQuickWindowPrivate::get(d->window)->context != 0) // available context == initialized
         sceneGraphInitialized();
     else
         connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
