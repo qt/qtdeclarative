@@ -322,24 +322,24 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             d->derefWindow();
     }
 
-    if (window() == item->window()) {
-        m_sourceItem = item;
-    } else {
-        qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
-        m_sourceItem = 0;
-    }
+    m_sourceItem = item;
 
     if (m_sourceItem) {
-        QQuickItemPrivate *d = QQuickItemPrivate::get(item);
-        // 'item' needs a window to get a scene graph node. It usually gets one through its
-        // parent, but if the source item is "inline" rather than a reference -- i.e.
-        // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
-        // In those cases, 'item' should get the window from 'this'.
-        if (window())
-            d->refWindow(window());
-        d->refFromEffectItem(m_hideSource);
-        d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-        connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        if (window() == m_sourceItem->window()) {
+            QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+            // 'item' needs a window to get a scene graph node. It usually gets one through its
+            // parent, but if the source item is "inline" rather than a reference -- i.e.
+            // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
+            // In those cases, 'item' should get the window from 'this'.
+            if (window())
+                d->refWindow(window());
+            d->refFromEffectItem(m_hideSource);
+            d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+            connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        } else {
+            qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
+            m_sourceItem = 0;
+        }
     }
     update();
     emit sourceItemChanged();
