@@ -887,6 +887,8 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
     handling.  If the item accepts the key event it will not be
     handled by the Keys attached property handler.
     \endlist
+
+    \sa {Key Handling Priorities}
 */
 
 /*!
@@ -914,6 +916,9 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
         focus: true
     }
     \endqml
+
+    To see the order in which events are received when using forwardTo, see
+    \l {Key Handling Priorities}.
 */
 
 /*!
