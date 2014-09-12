@@ -36,7 +36,7 @@
 
     \include examples-run.qdocinc
 
-    \section1 Get data
+    \section1 Get Data
 
     \e{Get data} uses the XMLHttpRequest API to fetch an XML document from a
     server. It displays the header of the HTTP response and the body of the XML

@@ -172,7 +172,7 @@ See \l{Qt Quick Examples - Key Interaction} for a
 demonstration of moving keyboard focus between multiple areas using FocusScope
 types.
 
-\section1 Advanced uses of Focus Scopes
+\section1 Advanced Uses of Focus Scopes
 
 Focus scopes allow focus to allocation to be easily partitioned. Several
 QML items use it to this effect.

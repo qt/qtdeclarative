@@ -36,7 +36,7 @@ The \c Person type can be used from QML like this:
 
 \snippet referenceexamples/adding/example.qml 0
 
-\section1 Declare the Person class
+\section1 Declare the Person Class
 
 All QML types map to C++ types.  Here we declare a basic C++ Person class
 with the two properties we want accessible on the QML type - name and shoeSize.
@@ -45,7 +45,7 @@ type, the C++ class can be named differently, or appear in a namespace.
 
 \snippet referenceexamples/adding/person.h 0
 
-\section1 Define the Person class
+\section1 Define the Person Class
 
 \snippet referenceexamples/adding/person.cpp 0
 
@@ -56,7 +56,7 @@ The \c main.cpp file also calls the \c qmlRegisterType() function to
 register the \c Person type with QML as a type in the People library version 1.0,
 and defines the mapping between the C++ and QML class names.
 
-\section1 Running the example
+\section1 Running the Example
 
 The main.cpp file in the example includes a simple shell application that
 loads and runs the QML snippet shown at the beginning of this page.
@@ -106,7 +106,7 @@ The implementation of BirthdayParty property accessors is straight forward.
 
 \snippet referenceexamples/properties/birthdayparty.cpp 0
 
-\section1 Running the example
+\section1 Running the Example
 
 The main.cpp file in the example includes a simple shell application that
 loads and runs the QML snippet shown at the beginning of this page.
@@ -162,7 +162,7 @@ The implementation of Boy and Girl are trivial.
 All that is necessary is to implement the constructor, and to register the types
 and their QML name with the QML engine.
 
-\section1 Running the example
+\section1 Running the Example
 
 The BirthdayParty type has not changed since the previous example.  The
 celebrant and guests property still use the People type.
@@ -196,7 +196,7 @@ specification of a BirthdayParty through the use of a default property.
 
 \snippet referenceexamples/default/example.qml 0
 
-\section1 Declaring the BirthdayParty class
+\section1 Declaring the BirthdayParty Class
 
 The only difference between this example and the last, is the addition of the
 \c DefaultProperty class info annotation.
@@ -209,7 +209,7 @@ property.  It is purely a syntactic simplification, the behavior is identical
 to specifying the property by name, but it can add a more natural feel in many
 situations.  The default property must be either an object or list property.
 
-\section1 Running the example
+\section1 Running the Example
 
 The main.cpp file in the example includes a simple shell application that
 loads and runs the QML snippet shown at the beginning of this page.

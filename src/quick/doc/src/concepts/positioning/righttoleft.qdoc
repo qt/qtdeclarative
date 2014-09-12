@@ -69,7 +69,7 @@ the effective alignment of the text element that takes the mirroring into accoun
 
 \snippet qml/righttoleft.qml 0
 
-\section1 Layout direction of positioners and views
+\section1 Layout Direction of Positioners and Views
 
 (This applies to the \l Row, \l Grid, \l Flow, \l ListView and \l GridView types.)
 
@@ -85,7 +85,7 @@ views that takes the mirroring into account can be read from the \c effectiveLay
 
 \snippet qml/righttoleft.qml 1
 
-\section1 Layout mirroring
+\section1 Layout Mirroring
 
 The attached property \l LayoutMirroring is provided as a convenience for easily implementing right-to-left
 support for existing left-to-right Qt Quick applications. It mirrors the behavior of \l {anchor-layout}
@@ -127,7 +127,7 @@ the animations and transitions continue to work as expected. If you do not have 
 right-to-left support for your application, it may be better to just keep the application layouts left
 aligned and just make sure that text is translated and aligned properly.
 
-\section1 Mirroring icons
+\section1 Mirroring Icons
 
 (This applies to \l Image, \l BorderImage and \l AnimatedImage types.)
 
@@ -136,7 +136,7 @@ The painting of these icons can be mirrored with a dedicated \c mirror property 
 
 \snippet qml/righttoleft.qml 5
 
-\section1 Default layout direction
+\section1 Default Layout Direction
 
 The \l {QtQml::Qt::application}{Qt.application.layoutDirection} property can be used to query the active layout direction of the
 application. It is based on QGuiApplication::layoutDirection(), which most commonly determines the layout

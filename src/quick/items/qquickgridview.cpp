@@ -1173,7 +1173,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     fully outside the view.
 
 
-    \section1 GridView layouts
+    \section1 GridView Layouts
 
     The layout of the items in a GridView can be controlled by these properties:
 

@@ -275,7 +275,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \l{http://en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
     impact pixel operations with \c Canvas.FrambufferObject render target.
 
-    \section1 Tips for Porting Existing HTML5 Canvas applications
+    \section1 Tips for Porting Existing HTML5 Canvas Applications
 
     Although the Canvas item is provides a HTML5 like API, HTML5 canvas
     applications need to be modified to run in the Canvas item:

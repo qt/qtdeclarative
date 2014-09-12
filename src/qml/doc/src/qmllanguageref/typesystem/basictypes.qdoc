@@ -646,7 +646,7 @@ property is only invoked when the property is reassigned to a different object v
     This basic type is provided by the QML language.  Some enumeration values
     are provided by the QtQuick import.
 
-    \section1 Using the enumeration type in QML
+    \section1 Using the enumeration Type in QML
 
     The \c enumeration type is a representation of a C++ \c enum type. It is
     not possible to refer to the \c enumeration type in QML itself; instead, the

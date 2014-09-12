@@ -73,7 +73,7 @@
     \e Banner is a simple example showing how to create a banner using a row of
     text types and a \l NumberAnimation.
 
-    \section1 Img tag
+    \section1 Img Tag
 
     \e{Img tag} shows different ways of displaying images in text objects using
     the \c{<img>} tag.

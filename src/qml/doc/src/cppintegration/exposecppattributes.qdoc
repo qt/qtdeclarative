@@ -359,7 +359,7 @@ implementation, whereas an object-type property can be freely created and
 destroyed through QML code.
 
 
-\section1 Exposing Methods (including Qt Slots)
+\section1 Exposing Methods (Including Qt Slots)
 
 Any method of a QObject-derived type is accessible from QML code if it is:
 

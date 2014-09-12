@@ -72,7 +72,7 @@ public:
     \ingroup qtquick-interceptors
     \brief Enables the arbitrary creation of property bindings
 
-    \section1 Binding to an inaccessible property
+    \section1 Binding to an Inaccessible Property
 
     Sometimes it is necessary to bind to a property of an object that wasn't
     directly instantiated by QML - generally a property of a class exported
