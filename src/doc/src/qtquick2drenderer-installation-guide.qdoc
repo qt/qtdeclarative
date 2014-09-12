@@ -1,0 +1,127 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 Digia Plc
+** All rights reserved.
+** For any questions to Digia, please use the contact form at
+** http://qt.digia.com/
+**
+** This file is part of Qt Quick 2d Renderer.
+**
+** Licensees holding valid Qt Enterprise licenses may use this file in
+** accordance with the Qt Enterprise License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.
+**
+** If you have questions regarding the use of this file, please use
+** the contact form at http://qt.digia.com/
+**
+****************************************************************************/
+
+/*!
+    \contentspage{index.html}{Qt Quick 2D Renderer}
+    \page qtquick2drenderer-installation-guide.html
+    \previouspage index.html
+    \nextpage qtquick2drenderer-limitations.html
+
+    \title Installation Guide
+
+    The building of \RENDERER is made complicated by the fact that Qt Quick 2
+    always requires OpenGL support regardless of whether is is being used or
+    not. You will need to build Qt with support for OpenGL even if the target
+    system does not have support for using it. If you have a build of Qt that
+    already supports OpenGL you can skip to Building \RENDERER
+
+    \target Providing the OpenGL Dependency
+    \section1 Providing the OpenGL Dependency
+
+    The way that \RENDERER works is to render the Qt Quick 2 scene graph with
+    QPainter instead of using hardware acceleration via the OpenGL API.
+    However, Qt Quick 2 still assumes that OpenGL is always available. With
+    \RENDERER we can avoid making OpenGL calls, but that does not change the
+    fact that QtQuick 2 requires the OpenGL development headers to be available
+    at build-time and will link against OpenGL libraries at run-time.
+
+    The solution to is to provide a dummy OpenGL library and development
+    headers to build Qt against. This way you can build Qt with virtual OpenGL
+    support and get access to the QtQuick 2 APIs. Provided you use a platform
+    plugin that does not make calls EGL or OpenGL commands, and you refrain
+    from using APIs that access OpenGL directly you should have no problems
+    using \RENDERER.
+
+    \target How to use the OpenGL dummy libraries
+    \section1 How to use the OpenGL dummy libraries
+
+    The OpenGL dummy libraries provide both headers and shared object files
+    containing the symbols for both OpenGL and EGL. The headers get copied
+    into your INCLUDE path, and the shared object files gets copied into your LIB
+    path in both the sysroot, as well as in the target image distributed on the
+    device. The library that is generated contains all the symbols needed to
+    link an application as if you had support for OpenGL and EGL. It is important
+    to make sure that you do not call any of these symbols in your application.
+
+    \target Prerequisites
+    \section2 Prerequisites
+
+    You need to have three things:
+    \list 1
+        \li Toolchain to cross compile code for your device
+        \li Sysroot containing development headers and shared objects to link
+        against when building applications
+        \li Target image inteded to be deployed to your device.
+    \endlist
+
+    \target How to build the OpenGL dummy libraries
+    \section2 How to build the OpengL dummy libraries
+
+    Setup your build environment by defining where your compiler and sysroot
+    are located:
+    \badcode
+    export CC=/opt/arm-toolchain/usr/bin/arm-linux-gnueabi-g++
+    export SYSROOT=/opt/device-name/sysroot/
+    \endcode
+    Run the build script inside the client-dummy directory:
+    \badcode
+    cd client-dummy
+    ./build-gcc.sh
+    \endcode
+    That should generate a two files: libEGL.so, libGLESv2.so
+
+    \target Installation of Files
+    \section2 Installation of Files
+
+    Copy the include folder to the /usr/include folder in your sysroot.  This
+    installs the OpenGL/EGL headers:
+    \badcode
+    cp -r include/* ${SYSROOT}/usr/include/
+    \endcode
+    Copy libEGL.so and libGLESv2.so to the /usr/lib folder in your sysroot:
+    \badcode
+    cp src/lib*.so ${SYSROOT}/usr/lib/
+    \endcode
+
+    Copy the libEGL.so and libGLESv2.so libraries to the target device image as well.
+
+    \target Building Qt
+    \section1 Building Qt
+
+    When configuring Qt make sure to append -opengl es2 to your configure arguments.
+
+    \target Building \RENDERER
+    \section1 Building \RENDERER
+
+    Build \RENDERER like any other Qt module:
+    \badcode
+    qmake
+    make
+    make install
+    \endcode
+
+    \target Deployment
+    \section1 Deployment
+
+    Now when you deploy your Qt build to the device it will depend on the dummy
+    libs libEGL.so and libGLESv2.so, but as long as you are using the \RENDERER
+    plugin you will be able to use Qt Quick 2 without actually making any
+    OpenGL or EGL calls.
+
+*/

@@ -1,0 +1,85 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 Digia Plc
+** All rights reserved.
+** For any questions to Digia, please use the contact form at
+** http://qt.digia.com/
+**
+** This file is part of Qt Quick 2d Renderer.
+**
+** Licensees holding valid Qt Enterprise licenses may use this file in
+** accordance with the Qt Enterprise License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.
+**
+** If you have questions regarding the use of this file, please use
+** the contact form at http://qt.digia.com/
+**
+****************************************************************************/
+
+/*!
+    \contentspage{index.html}{Qt Quick 2D Renderer}
+    \page qtquick2drenderer-performance.html
+    \previouspage qtquick2drenderer-limitations.html
+
+    \title Performance Guide
+
+    Since \RENDERER does not use OpenGL we loose the ability to use many
+    optimizations that can improve rendering speed. To get the most out of
+    \RENDERER there are some guidelines that should be followed.
+
+    \target 2D Hardware Acceleration
+    \section1 2D Hardware Acceleration
+
+    \RENDERER is designed to use operations that can be accelerated by 2D
+    acceleration hardware.  By using platform plugins that take advantage of
+    the QBlitter API (like DirectFB) is is possible to make use of such 2D
+    hardware acceleration.
+
+    \target Animation
+    \section1 Animation
+
+    It is important to keep in mind the fact that with Qt Quick 2 every time
+    a node in the scene graph is marked dirty the entire window will need to be
+    rendered again. There is no partial update mechanimism that will only
+    update the regions of the window that are dirty. This means that any
+    animation that is running will be forcing a full repaint of the window and
+    with \RENDERER this can cause heavy CPU load.
+
+    \target Transforms
+    \section1 Transforms
+
+    When rendering the scene graph with the OpenGL renderer transformations
+    come with no performance penality. This is not the case with \RENDERER.
+    Translation operations do not come with performance penalties but scaling
+    and rotation transformations should be avoided when possible.
+
+    \target Hidden Items
+    \section1 Hidden Items
+
+    \RENDERER will paint all items that are not hidden explicitly with either
+    the visibility property or an opacity of 0. Without OpenGL there is no
+    depth buffer to check for items completely obscured by opaque items, so
+    everything will be painted even if it is unnecessary.
+
+    \target Pixel Fill Budget
+    \section1 Pixel Fill Budget
+
+    When developing an application that will be using \RENDERER it is important
+    to keep in mind your pixel fill budget, or the the amount of pixels you
+    can push to the screen in the time needed for your target framerate.  For
+    example if your goal is to render your application at 60 frames per second
+    then you have about 16 milliseconds render to the framebuffer before
+    needing flush the pixels to screen.  Depending on your hardware's
+    performance you will only be able to handle a finite amount of pixel write
+    operations before the 16 milliseconds expires.  The interface you design
+    should take into consideration that each item that is added subtracts from
+    your pixel fill budget.
+
+    \RENDERER uses the painters algorithm to paint each item in the scene
+    back-to-front.  If you have an interface that stacks many items on top of
+    each other keep in mind that each layer is painted completely, not just the
+    parts that are visible.  It can be very easy to waste your pixel fill
+    budget with too many over-paints.
+
+*/

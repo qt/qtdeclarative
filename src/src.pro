@@ -1,2 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS += plugins
+SUBDIRS += \
+    plugins \
+    doc

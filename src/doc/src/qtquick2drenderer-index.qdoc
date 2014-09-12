@@ -1,0 +1,49 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 Digia Plc
+** All rights reserved.
+** For any questions to Digia, please use the contact form at
+** http://qt.digia.com/
+**
+** This file is part of Qt Quick 2d Renderer.
+**
+** Licensees holding valid Qt Enterprise licenses may use this file in
+** accordance with the Qt Enterprise License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.
+**
+** If you have questions regarding the use of this file, please use
+** the contact form at http://qt.digia.com/
+**
+****************************************************************************/
+
+/*!
+    \contentspage{index.html}{Qt Quick 2D Renderer}
+    \page index.html
+    \nextpage qtquick2drenderer-installation-guide.html
+    \title Qt Quick 2D Renderer
+
+    \RENDERER is an alternative renderer for Qt Quick 2 that uses the Raster
+    paint engine to render the contents of the scene graph instead of OpenGL.
+    As a result of not using OpenGL to render the scene graph some features
+    and optimizations are no longer available. Most Qt Quick 2 applications
+    will run without modification though any attempts to use unsupported
+    features will be ignored. By using the \RENDERER is now possible to run Qt
+    Quick 2 applications on hardware and platforms that do not have OpenGL
+    support.
+
+    \RENDERER is a Qt module that contains a scene graph renderer plugin.
+
+    To use \RENDERER add the following to your run environment:
+    \badcode
+    export QMLSCENE_DEVICE=softwarecontext
+    \endcode
+
+    \section1 Contents
+
+    \list
+        \li \l{Installation Guide}
+        \li \l{Limitations}
+        \li \l{Performance Guide}
+    \endlist
+*/

@@ -1,0 +1,58 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 Digia Plc
+** All rights reserved.
+** For any questions to Digia, please use the contact form at
+** http://qt.digia.com/
+**
+** This file is part of Qt Quick 2d Renderer.
+**
+** Licensees holding valid Qt Enterprise licenses may use this file in
+** accordance with the Qt Enterprise License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.
+**
+** If you have questions regarding the use of this file, please use
+** the contact form at http://qt.digia.com/
+**
+****************************************************************************/
+
+/*!
+    \contentspage{index.html}{Qt Quick 2D Renderer}
+    \page qtquick2drenderer-limitations.html
+    \previouspage qtquick2drenderer-installation-guide.html
+    \nextpage qtquick2drenderer-performance.html
+
+    \title Limitations
+
+    Qt Quick 2 was designed to take full advantage of OpenGL to make the most
+    out of available graphics hardware.  By not relying on OpenGL, \RENDERER
+    presents certain limitations regarding the available features.
+
+    Since \RENDERER does not use OpenGL there are some features that can not be
+    supported.  The following are known limitations:
+
+    \target ShaderEffects
+    \section1 ShaderEffects
+    ShaderEffect components in QtQuick 2 can not be rendered with \RENDERER.
+
+    \target QtGraphicalEffects
+    \section1 QtGraphicalEffects
+    QtGraphicalEffects uses ShaderEffect items to render effects.  If you use a
+    graphical effect from QtGraphicalEffects the you should not hide the source
+    item so that the original item can still be rendered.
+
+    \target Particles
+    \section1 Particles
+    It is not possible to render particle effects with \RENDERER. Whenever
+    possible, remove particles completely from the scene. Otherwise, even
+    though they are not visible with \RENDERER, a certain amount of processing
+    is done for them.
+
+    \target Sprites
+    \section1 Sprites
+    The Sprite item depends on OpenGL functions we dont have access to and will
+    not be visible.
+
+
+*/
