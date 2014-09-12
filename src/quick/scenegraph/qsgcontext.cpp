@@ -50,6 +50,7 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <QGuiApplication>
+#include <QScreen>
 #include <QOpenGLContext>
 #include <QQuickWindow>
 #include <QtGui/qopenglframebufferobject.h>
@@ -58,6 +59,7 @@
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtCore/private/qabstractanimation_p.h>
 #include <qpa/qplatformintegration.h>
 
 #include <qpa/qplatformsharedgraphicscache.h>
@@ -132,6 +134,135 @@ public:
     bool distanceFieldDisabled;
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
     bool distanceFieldAntialiasingDecided;
+};
+
+static bool qsg_useConsistentTiming()
+{
+    static int use = -1;
+    if (use < 0) {
+        QByteArray fixed = qgetenv("QSG_FIXED_ANIMATION_STEP");
+        use = !(fixed.isEmpty() || fixed == "no");
+        qCDebug(QSG_LOG_INFO, "Using %s", bool(use) ? "fixed animation steps" : "sg animation driver");
+    }
+    return bool(use);
+}
+
+class QSGAnimationDriver : public QAnimationDriver
+{
+    Q_OBJECT
+public:
+    enum Mode {
+        VSyncMode,
+        TimerMode
+    };
+
+    QSGAnimationDriver(QObject *parent)
+        : QAnimationDriver(parent)
+        , m_time(0)
+        , m_vsync(0)
+        , m_mode(VSyncMode)
+        , m_bad(0)
+        , m_reallyBad(0)
+        , m_good(0)
+    {
+        QScreen *screen = QGuiApplication::primaryScreen();
+        if (screen && !qsg_useConsistentTiming()) {
+            m_vsync = 1000.0 / screen->refreshRate();
+            if (m_vsync <= 0)
+                m_mode = TimerMode;
+        } else {
+            m_mode = TimerMode;
+            if (qsg_useConsistentTiming())
+                QUnifiedTimer::instance(true)->setConsistentTiming(true);
+        }
+        if (m_mode == VSyncMode)
+            qCDebug(QSG_LOG_INFO, "Animation Driver: using vsync: %.2f ms", m_vsync);
+        else
+            qCDebug(QSG_LOG_INFO, "Animation Driver: using walltime");
+    }
+
+    void start() Q_DECL_OVERRIDE
+    {
+        m_time = 0;
+        m_timer.start();
+        QAnimationDriver::start();
+    }
+
+    qint64 elapsed() const Q_DECL_OVERRIDE
+    {
+        return m_mode == VSyncMode
+                ? qint64(m_time)
+                : QAnimationDriver::elapsed();
+    }
+
+    void advance() Q_DECL_OVERRIDE
+    {
+        qint64 delta = m_timer.restart();
+
+        if (m_mode == VSyncMode) {
+            // If a frame is skipped, either because rendering was slow or because
+            // the QML was slow, we accept it and continue advancing with a single
+            // vsync tick. The reason for this is that by the time we notice this
+            // on the GUI thread, the temporal distortion has already gone to screen
+            // and by catching up, we will introduce a second distortion which will
+            // worse. We accept that the animation time falls behind wall time because
+            // it comes out looking better.
+            // Only when multiple bad frames are hit in a row, do we consider
+            // switching. A few really bad frames and we switch right away. For frames
+            // just above the vsync delta, we tolerate a bit more since a buffered
+            // driver can have vsync deltas on the form: 4, 21, 21, 2, 23, 16, and
+            // still manage to put the frames to screen at 16 ms intervals. In addition
+            // to that, we tolerate a 25% margin of error on the value of m_vsync
+            // reported from the system as this value is often not precise.
+
+            m_time += m_vsync;
+
+            if (delta > m_vsync * 5) {
+                ++m_reallyBad;
+                ++m_bad;
+            } else if (delta > m_vsync * 1.25) {
+                ++m_bad;
+            } else {
+                // reset counters on a good frame.
+                m_reallyBad = 0;
+                m_bad = 0;
+            }
+
+            // rational for the 3 and 50. If we have several really bad frames
+            // in a row, that would indicate a huge performance problem and we should
+            // switch right away. For the case of m_bad, we're a bit more tolerant.
+            if (m_reallyBad > 3 || m_bad > 50) {
+                m_mode = TimerMode;
+                qCDebug(QSG_LOG_INFO, "animation driver switched to timer mode");
+            }
+
+        } else {
+            if (delta < 1.25 * m_vsync) {
+                ++m_good;
+            } else {
+                m_good = 0;
+            }
+
+            // We've been solid for a while, switch back to vsync mode. Tolerance
+            // for switching back is lower than switching to timer mode, as we
+            // want to stay in vsync mode as much as possible.
+            if (m_good > 10 && !qsg_useConsistentTiming()) {
+                m_time = elapsed();
+                m_mode = VSyncMode;
+                qCDebug(QSG_LOG_INFO, "animation driver switched to vsync mode");
+            }
+        }
+
+        advanceAnimation();
+    }
+
+    float m_time;
+    float m_vsync;
+    Mode m_mode;
+    QElapsedTimer m_timer;
+    int m_bad;
+    int m_reallyBad;
+    int m_good;
 };
 
 class QSGTextureCleanupEvent : public QEvent
@@ -385,7 +516,7 @@ bool QSGContext::isDistanceFieldEnabled() const
 
 QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 {
-    return new QAnimationDriver(parent);
+    return new QSGAnimationDriver(parent);
 }
 
 QSGRenderContext::QSGRenderContext(QSGContext *context)
@@ -725,5 +856,7 @@ void QSGRenderContext::initialize(QSGMaterialShader *shader)
     shader->program()->bind();
     shader->initialize();
 }
+
+#include "qsgcontext.moc"
 
 QT_END_NAMESPACE
