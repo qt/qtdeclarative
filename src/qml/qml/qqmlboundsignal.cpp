@@ -76,8 +76,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
                                                      const QString &handlerName,
                                                      const QString &parameterString)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
-      m_target(target),
       m_index(index),
+      m_target(target),
       m_extra(new ExtraData(handlerName, parameterString, expression, fileName, line, column))
 {
     setExpressionFunctionValid(false);
@@ -88,9 +88,9 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+      m_index(index),
       m_v8function(function),
       m_target(target),
-      m_index(index),
       m_extra(0)
 {
     setExpressionFunctionValid(true);
@@ -101,8 +101,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
-      m_target(target),
       m_index(index),
+      m_target(target),
       m_extra(0)
 {
     setExpressionFunctionValid(true);

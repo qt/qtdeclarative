@@ -98,10 +98,10 @@ private:
     bool invalidParameterName() const { return m_extra.flag2(); }
     void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
 
+    int m_index;
     QV4::PersistentValue m_v8function;
 
     QObject *m_target;
-    int m_index;
 
     // only needed when !expressionFunctionValid()
     struct ExtraData {
