@@ -11,7 +11,7 @@ CanvasTestCase {
        canvas.loadImage('rgrg-256x256.png');
        canvas.loadImage('ggrr-256x256.png');
        canvas.loadImage('broken.png');
-       if (!canvas.isImageLoaded('green.png'))
+       while (!canvas.isImageLoaded('green.png'))
           wait(200);
    }
 
