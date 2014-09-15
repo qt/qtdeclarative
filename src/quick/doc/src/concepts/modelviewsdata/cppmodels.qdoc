@@ -146,14 +146,14 @@ within the Qt install directory.
 QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML
 can only display list data.
 In order to display the child lists of a hierarchical model,
-use the VisualDataModel type, which provides the following properties and functions to be used
+use the DelegateModel QML type, which provides the following properties and functions to be used
 with list models of QAbstractItemModel type:
 
 \list
 \li \e hasModelChildren role property to determine whether a node has child nodes.
-\li \l VisualDataModel::rootIndex allows the root node to be specified
-\li \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
-\li \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+\li \l DelegateModel::rootIndex allows the root node to be specified
+\li \l DelegateModel::modelIndex() returns a QModelIndex which can be assigned to DelegateModel::rootIndex
+\li \l DelegateModel::parentModelIndex() returns a QModelIndex which can be assigned to DelegateModel::rootIndex
 \endlist
 
 \section2 Exposing C++ Data Models to QML

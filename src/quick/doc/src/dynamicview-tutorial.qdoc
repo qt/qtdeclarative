@@ -136,7 +136,7 @@ so that is above other items in the stacking order and isn't obscured as it is d
 
 The next step in our application to move items within the list as they're dragged so that we
 can re-order the list.  To achieve this we introduce three new types to our application;
-VisualDataModel, \l Drag and DropArea.
+DelegateModel, \l Drag and DropArea.
 
 \snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 0
 \snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 1
@@ -162,17 +162,17 @@ to the index of the item it was dragged over.
 
 \snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 3
 
-To move the items within the view we use a VisualDataModel.  The VisualDataModel type is used by
+To move the items within the view we use a DelegateModel.  The DelegateModel type is used by
 the view types to instantiate delegate items from model data and when constructed explicitly can
 be used to filter and re-order the model items provided to ListView.  The
-\l {QtQuick::VisualDataModel::items}{items} property of VisualDataModel provides access to the
+\l {QtQuick::DelegateModel::items}{items} property of DelegateModel provides access to the
 view's items and allows us to change the visible order without modifying the source model.  To
-determine the current visible index of the items we use \l {QtQuick::VisualDataModel::itemsIndex}
-{itemsIndex} property on the VisualDataModel attached property of the delegate item.
+determine the current visible index of the items we use \l {QtQuick::DelegateModel::itemsIndex}
+{itemsIndex} property on the DelegateModel attached property of the delegate item.
 
-To utilize a VisualDataModel with a ListView we bind it to the \l {QtQuick::ListView::model}{model}
-property of the view and bind the \l {QtQuick::VisualDataModel::model}{model} and
-\l {QtQuick::VisualDataModel::delegate}{delegate} to the VisualDataModel.
+To utilize a DelegateModel with a ListView we bind it to the \l {QtQuick::ListView::model}{model}
+property of the view and bind the \l {QtQuick::DelegateModel::model}{model} and
+\l {QtQuick::DelegateModel::delegate}{delegate} to the DelegateModel.
 
 \snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 4
 
@@ -185,16 +185,16 @@ property of the view and bind the \l {QtQuick::VisualDataModel::model}{model} an
 
 \example tutorials/dynamicview/dynamicview4
 
-Drag and drop isn't the only way items in a view can be re-ordered, using a VisualDataModel it is
-also possible to sort items based on model data.  To do that we extend our VisualDataModel instance
+Drag and drop isn't the only way items in a view can be re-ordered, using a DelegateModel it is
+also possible to sort items based on model data.  To do that we extend our DelegateModel instance
 like this:
 
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 0
 
 \section2 Walkthrough
 
-Items in a VisualDataModel are filtered into groups represented by the VisualDataGroup type,
-normally all items in the model belong to a default \l {QtQuick::VisualDataModel::items}{items}
+Items in a DelegateModel are filtered into groups represented by the DelegateModelGroup type,
+normally all items in the model belong to a default \l {QtQuick::DelegateModel::items}{items}
 group but this default can be changed with the includeByDefault property.  To implement our sorting
 we want items to first be added to an unsorted group from where we can transfer them to a sorted
 position in the items group.  To do that we clear includeByDefault on the items group and set it on
@@ -208,7 +208,7 @@ item and then transfer the item to the items group before moving it to the pre-d
 repeat until the unsorted group is empty.
 
 To find the insert position for an item we request a handle for the item from the unsorted group
-with the \l {QtQuick::VisualDataModel::get} {get} function.  Through the model property on this
+with the \l {QtQuick::DelegateModel::get} {get} function.  Through the model property on this
 handle we can access the same model data that is available in a delegate instance of that item and
 compare against other items to determine relative position.
 
@@ -219,8 +219,8 @@ of the list.  In this example it can be one of the following:
 
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 4
 
-A sort is triggered whenever new items are added to the unsorted VisualDataGroup which we are
-notified of by the \l {QtQuick::VisualDataGroup::onChanged}{onChanged} handler.  If no sort
+A sort is triggered whenever new items are added to the unsorted DelegateModel which we are
+notified of by the \l {QtQuick::DelegateModelGroup::onChanged}{onChanged} handler.  If no sort
 function is currently selected we simply transfer all items from the unsorted group to the items
 group, otherwise we call sort with the selected sort function.
 
@@ -228,8 +228,8 @@ group, otherwise we call sort with the selected sort function.
 
 Finally when the selected sort order changes we can trigger a full re-sort of the list by moving
 all items from the items group to the unsorted group, which will trigger the
-\l {QtQuick::VisualDataGroup::onChanged}{onChanged} handler and transfer the items back to the
-items group in correct order.  Note that the \l {QtQuick::VisualDataGroup::onChanged}{onChanged}
+\l {QtQuick::DelegateModelGroup::onChanged}{onChanged} handler and transfer the items back to the
+items group in correct order.  Note that the \l {QtQuick::DelegateModelGroup::onChanged}{onChanged}
 handler will not be invoked recursively so there's no issue with it being invoked during a sort.
 
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 6
