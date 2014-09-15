@@ -32,18 +32,22 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 1.0
+import QtQuick.Particles 2.0
 
 Item {
     id: block
     property bool dying: false
     property bool spawned: false
     property int type: 0
-    property int targetX: 0
-    property int targetY: 0
+    property ParticleSystem particleSystem
 
-    SpringFollow on x { enabled: spawned; to: targetX; spring: 2; damping: 0.2 }
-    SpringFollow on y { to: targetY; spring: 2; damping: 0.2 }
+    Behavior on x {
+        enabled: spawned;
+        SpringAnimation{ spring: 2; damping: 0.2 }
+    }
+    Behavior on y {
+        SpringAnimation{ spring: 2; damping: 0.2 }
+    }
 
     Image {
         id: img
@@ -60,26 +64,28 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 200 } }
         anchors.fill: parent
     }
-
-    Particles {
+    Emitter {
         id: particles
-
-        width: 1; height: 1
-        anchors.centerIn: parent
-
-        emissionRate: 0
-        lifeSpan: 700; lifeSpanDeviation: 600
-        angle: 0; angleDeviation: 360;
-        velocity: 100; velocityDeviation: 30
-        source: {
+        system: particleSystem
+        group: {
             if(type == 0){
-                "pics/redStar.png";
+                "red";
             } else if (type == 1) {
-                "pics/blueStar.png";
+                "blue";
             } else {
-                "pics/greenStar.png";
+                "green";
             }
         }
+        anchors.fill: parent
+
+        velocity: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
+        shape: EllipseShape{fill:true}
+        enabled: false;
+        lifeSpan: 700; lifeSpanVariation: 100
+        emitRate: 1000
+        maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
+        size: 28
+        endSize: 14
     }
 
     states: [
@@ -90,7 +96,7 @@ Item {
 
         State {
             name: "DeathState"; when: dying == true
-            StateChangeScript { script: particles.burst(50); }
+            StateChangeScript { script: particles.pulse(0.1); }
             PropertyChanges { target: img; opacity: 0 }
             StateChangeScript { script: block.destroy(1000); }
         }

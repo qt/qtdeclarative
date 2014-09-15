@@ -84,7 +84,7 @@ void tst_compilation::boomblock()
     QBENCHMARK {
         QQmlComponent c(&engine);
         c.setData(data, QUrl());
-//        QVERIFY(c.isReady());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     }
 }
 
