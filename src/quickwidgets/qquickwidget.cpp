@@ -294,6 +294,11 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
 
+    \note Avoid calling winId() on a QQuickWidget. This function triggers the creation of
+    a native window, resulting in reduced performance and possibly rendering glitches. The
+    entire purpose of QQuickWidget is to render Quick scenes without a separate native
+    window, hence making it a native widget should always be avoided.
+
     \section1 Limitations
 
     Putting other widgets underneath and making the QQuickWidget transparent will not lead
