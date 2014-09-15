@@ -728,6 +728,8 @@ void QQmlDataBlob::ThreadData::setProgress(quint8 v)
 QQmlDataLoaderThread::QQmlDataLoaderThread(QQmlDataLoader *loader)
 : m_loader(loader), m_networkAccessManager(0), m_networkReplyProxy(0)
 {
+    // Do that after initializing all the members.
+    startup();
 }
 
 QNetworkAccessManager *QQmlDataLoaderThread::networkAccessManager() const

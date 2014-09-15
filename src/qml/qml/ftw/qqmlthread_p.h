@@ -60,6 +60,8 @@ class QQmlThread
 public:
     QQmlThread();
     virtual ~QQmlThread();
+
+    void startup();
     void shutdown();
     bool isShutdown() const;
 

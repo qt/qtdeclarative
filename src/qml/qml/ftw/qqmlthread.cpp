@@ -207,17 +207,20 @@ void QQmlThreadPrivate::threadEvent()
 QQmlThread::QQmlThread()
 : d(new QQmlThreadPrivate(this))
 {
-    d->lock();
-    d->start();
-    d->wait();
-    d->unlock();
-    d->moveToThread(d);
-
 }
 
 QQmlThread::~QQmlThread()
 {
     delete d;
+}
+
+void QQmlThread::startup()
+{
+    d->lock();
+    d->start();
+    d->wait();
+    d->unlock();
+    d->moveToThread(d);
 }
 
 void QQmlThread::shutdown()
