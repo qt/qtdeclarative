@@ -100,6 +100,10 @@ bool QQmlDirParser::parse(const QString &source)
     _plugins.clear();
     _components.clear();
     _scripts.clear();
+#ifdef Q_OS_NACL
+    // ### Work around "only one module identifier" error below
+    _typeNamespace.clear();
+#endif
     _designerSupported = false;
 
     quint16 lineNumber = 0;

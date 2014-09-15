@@ -1706,9 +1706,14 @@ Returns a QQmlQmldirData for \a url.  The QQmlQmldirData may be cached.
 */
 QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
 {
+#ifdef Q_OS_NACL
+    // ### NaCl asserts here on urls like "qml/QtQuick.2.1/qmldir",
+    // which are relative urls we want to load over the network.
+#else
     Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
+#endif
 
     LockHolder<QQmlTypeLoader> holder(this);
 

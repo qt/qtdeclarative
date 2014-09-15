@@ -609,7 +609,15 @@ static inline QString ToLocaleTimeString(double t)
 
 static double getLocalTZA()
 {
-#ifndef Q_OS_WIN
+#ifdef Q_OS_WIN
+    TIME_ZONE_INFORMATION tzInfo;
+    GetTimeZoneInformation(&tzInfo);
+    return -tzInfo.Bias * 60.0 * 1000.0;
+#elif defined(Q_OS_NACL_NEWLIB)
+    // ### tzset hidden behind __STRICT_ANSI__
+    qWarning("Not implemented: getLocalTZA()");
+    return 0;
+#else
     struct tm t;
     time_t curr;
     tzset();
@@ -619,10 +627,6 @@ static double getLocalTZA()
     gmtime_r(&curr, &t);
     time_t globl = mktime(&t);
     return (double(locl) - double(globl)) * 1000.0;
-#else
-    TIME_ZONE_INFORMATION tzInfo;
-    GetTimeZoneInformation(&tzInfo);
-    return -tzInfo.Bias * 60.0 * 1000.0;
 #endif
 }
 

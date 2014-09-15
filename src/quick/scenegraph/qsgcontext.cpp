@@ -634,6 +634,11 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
         m_brokenIBOs = true;
 #endif
 
+#ifdef Q_OS_NACL
+    // Standard path fails with "glBindBuffer: buffer bound to more than 1 target"
+    m_brokenIBOs = true;
+#endif
+
     emit initialized();
 }
 

@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-!contains(QT_CONFIG, no-qml-debug):SUBDIRS += qmltooling
+!nacl:!contains(QT_CONFIG, no-qml-debug):SUBDIRS += qmltooling
+!nacl:SUBDIRS +=  qmltooling

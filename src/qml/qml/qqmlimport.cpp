@@ -1206,6 +1206,10 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoader::QmldirConte
         }
     }
 
+#ifdef Q_OS_NACL
+    // ### This check triggers on NaCl: lowest_min/highest_min do not
+    // get set to senisble values. Disabling allows loading to continue.
+#else
     if (lowest_min > vmin || highest_min < vmin) {
         QQmlError error;
         error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
@@ -1213,6 +1217,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoader::QmldirConte
         return false;
     }
 
+#endif
     return true;
 }
 
@@ -1565,7 +1570,13 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     // Search order is applicationDirPath(), $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
 
+#ifdef Q_OS_NACL
+    // Hardcode the qml imports to "qml/" relative to the app nexe.
+    // This should perhaps be set via Qml2Imports in qt.conf.
+    QString installImportsPath = QStringLiteral("qml/");
+#else
     QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#endif
     addImportPath(installImportsPath);
 
     // env import paths

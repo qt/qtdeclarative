@@ -113,7 +113,7 @@ QT_WARNING_DISABLE_MSVC(4172) // MSVC 2015: warning C4172: returning address of 
 quintptr getStackLimit()
 {
     quintptr stackLimit;
-#if USE(PTHREADS) && !OS(QNX)
+#if USE(PTHREADS) && !OS(QNX) && !defined(Q_OS_NACL)
 #  if OS(DARWIN)
     pthread_t thread_self = pthread_self();
     void *stackTop = pthread_get_stackaddr_np(thread_self);
