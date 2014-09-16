@@ -168,7 +168,7 @@ Rectangle {
 
         property int pixelSkip: 1
         property int numPoints: 1
-        property int tickMargin: 32
+        property int tickMargin: 34
 
         property real xGridStep: (width - tickMargin) / numPoints
         property real yGridOffset: height / 26
@@ -214,6 +214,21 @@ Rectangle {
             ctx.restore();
         }
 
+        // Returns a shortened, readable version of the potentially
+        // large volume number.
+        function volumeToString(value) {
+            if (value < 1000)
+                return value;
+            var exponent = parseInt(Math.log(value) / Math.log(1000));
+            var shortVal = parseFloat(parseFloat(value) / Math.pow(1000, exponent)).toFixed(1);
+
+            // Drop the decimal point on 3-digit values to make it fit
+            if (shortVal >= 100.0) {
+                shortVal = parseFloat(shortVal).toFixed(0);
+            }
+            return shortVal + "KMBTG".charAt(exponent - 1);
+        }
+
         function drawScales(ctx, high, low, vol)
         {
             ctx.save();
@@ -229,8 +244,11 @@ Rectangle {
                 ctx.text(price, x, canvas.yGridOffset + i * yGridStep - 2);
             }
 
-            // highest volume
-            ctx.text(vol, 0, canvas.yGridOffset + 9 * yGridStep + 12);
+            // volume scale
+            for (i = 0; i < 3; i++) {
+                var volume = volumeToString(vol - (i * (vol/3)));
+                ctx.text(volume, x, canvas.yGridOffset + (i + 9) * yGridStep + 10);
+            }
 
             ctx.closePath();
             ctx.stroke();
