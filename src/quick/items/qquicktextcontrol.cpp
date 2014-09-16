@@ -435,12 +435,12 @@ void QQuickTextControlPrivate::setClipboardSelection()
 }
 #endif
 
-void QQuickTextControlPrivate::_q_emitCursorPosChanged(const QTextCursor &someCursor)
+void QQuickTextControlPrivate::_q_updateCursorPosChanged(const QTextCursor &someCursor)
 {
     Q_Q(QQuickTextControl);
     if (someCursor.isCopyOf(cursor)) {
         emit q->cursorPositionChanged();
-        cursorRectangleChanged = true;
+        q->updateCursorRectangle(true);
     }
 }
 
@@ -578,7 +578,7 @@ QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
     qmlobject_connect(layout, QAbstractTextDocumentLayout, SIGNAL(updateBlock(QTextBlock)), this, QQuickTextControl, SIGNAL(updateRequest()));
     qmlobject_connect(doc, QTextDocument, SIGNAL(contentsChanged()), this, QQuickTextControl, SIGNAL(textChanged()));
     qmlobject_connect(doc, QTextDocument, SIGNAL(contentsChanged()), this, QQuickTextControl, SLOT(_q_updateCurrentCharFormatAndSelection()));
-    qmlobject_connect(doc, QTextDocument, SIGNAL(cursorPositionChanged(QTextCursor)), this, QQuickTextControl, SLOT(_q_emitCursorPosChanged(QTextCursor)));
+    qmlobject_connect(doc, QTextDocument, SIGNAL(cursorPositionChanged(QTextCursor)), this, QQuickTextControl, SLOT(_q_updateCursorPosChanged(QTextCursor)));
     connect(doc, &QTextDocument::contentsChange, this, &QQuickTextControl::contentsChange);
 
     layout->setProperty("cursorWidth", textCursorWidth);

@@ -88,7 +88,7 @@ public:
     void setClipboardSelection();
 #endif
 
-    void _q_emitCursorPosChanged(const QTextCursor &someCursor);
+    void _q_updateCursorPosChanged(const QTextCursor &someCursor);
 
     void setBlinkingCursorEnabled(bool enable);
 

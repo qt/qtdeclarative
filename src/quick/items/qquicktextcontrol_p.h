@@ -169,7 +169,7 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickTextControl)
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentCharFormatAndSelection())
-    Q_PRIVATE_SLOT(d_func(), void _q_emitCursorPosChanged(const QTextCursor &))
+    Q_PRIVATE_SLOT(d_func(), void _q_updateCursorPosChanged(const QTextCursor &))
 };
 
 
