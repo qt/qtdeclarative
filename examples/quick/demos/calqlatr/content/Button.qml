@@ -59,18 +59,11 @@ Item {
         color: "white"
     }
 
-//    Rectangle {
-//        color: "red"
-//        opacity: 0.2
-//        anchors.fill: mouse
-//    }
-
     MouseArea {
         id: mouse
         anchors.fill: parent
         anchors.margins: -5
         onClicked: {
-            //parent.clicked()
             if (operator)
                 window.operatorPressed(parent.text)
             else

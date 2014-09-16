@@ -75,6 +75,43 @@ Rectangle {
         }
     }
 
+    Keys.onPressed: {
+        if (event.key == Qt.Key_0)
+            digitPressed("0")
+        else if (event.key == Qt.Key_1)
+            digitPressed("1")
+        else if (event.key == Qt.Key_2)
+            digitPressed("2")
+        else if (event.key == Qt.Key_3)
+            digitPressed("3")
+        else if (event.key == Qt.Key_4)
+            digitPressed("4")
+        else if (event.key == Qt.Key_5)
+            digitPressed("5")
+        else if (event.key == Qt.Key_6)
+            digitPressed("6")
+        else if (event.key == Qt.Key_7)
+            digitPressed("7")
+        else if (event.key == Qt.Key_8)
+            digitPressed("8")
+        else if (event.key == Qt.Key_9)
+            digitPressed("9")
+        else if (event.key == Qt.Key_Plus)
+            operatorPressed("+")
+        else if (event.key == Qt.Key_Minus)
+            operatorPressed("−")
+        else if (event.key == Qt.Key_Asterisk)
+            operatorPressed("×")
+        else if (event.key == Qt.Key_Slash)
+            operatorPressed("÷")
+        else if (event.key == Qt.Key_Enter || event.key == Qt.Key_Return)
+            operatorPressed("=")
+        else if (event.key == Qt.Key_Comma || event.key == Qt.Key_Period)
+            digitPressed(".")
+        else if (event.key == Qt.Key_Backspace)
+            operatorPressed("backspace")
+    }
+
     Display {
         id: display
         x: -16

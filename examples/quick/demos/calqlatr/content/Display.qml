@@ -48,6 +48,7 @@ Item {
     {
         listView.model.append({ "operator": operator, "operand": "" })
         enteringDigits = true
+        listView.positionViewAtEnd()
     }
 
     function newLine(operator, operand)
@@ -64,6 +65,7 @@ Item {
         var i = listView.model.count - 1;
         listView.model.get(i).operand = listView.model.get(i).operand + digit;
         enteringDigits = true
+        listView.positionViewAtEnd()
     }
 
     function clear()

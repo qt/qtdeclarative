@@ -59,7 +59,7 @@ function digitPressed(op)
 {
     if (disabled(op))
         return
-    if (digits.toString().length >= 14)
+    if (digits.toString().length >= 8)
         return
     if (lastOp.toString().length == 1 && ((lastOp >= "0" && lastOp <= "9") || lastOp == ".") ) {
         digits = digits + op.toString()
@@ -80,7 +80,7 @@ function operatorPressed(op)
     if (previousOperator == "+") {
         digits = Number(digits.valueOf()) + Number(curVal.valueOf())
     } else if (previousOperator == "−") {
-        digits = Number(curVal) - Number(digits.valueOf())
+        digits = Number(curVal.valueOf()) - Number(digits.valueOf())
     } else if (previousOperator == "×") {
         digits = Number(curVal) * Number(digits.valueOf())
     } else if (previousOperator == "÷") {
@@ -91,11 +91,15 @@ function operatorPressed(op)
     if (op == "+" || op == "−" || op == "×" || op == "÷") {
         previousOperator = op
         curVal = digits.valueOf()
+        digits = ""
         display.displayOperator(previousOperator)
         return
     }
 
     if (op == "=") {
+        if (digits.toString().length >= 9)
+            digits = digits.toExponential(2)
+
         display.newLine("=", digits.toString())
     }
 
@@ -112,6 +116,8 @@ function operatorPressed(op)
         digits = (Math.floor(digits.valueOf())).toString()
     } else if (op == "±") {
         digits = (digits.valueOf() * -1).toString()
+        display.clear()
+        display.appendDigit(digits)
     } else if (op == "√") {
         digits = (Math.sqrt(digits.valueOf())).toString()
     } else if (op == "mc") {
@@ -122,22 +128,23 @@ function operatorPressed(op)
         digits = memory.toString()
     } else if (op == "m-") {
         memory = digits.valueOf()
-    } else if (op == window.leftArrow) {
+    } else if (op == "backspace") {
         digits = digits.toString().slice(0, -1)
-        if (digits.length == 0) {
-            digits = "0"
-        }
+        display.clear()
+        display.appendDigit(digits)
     } else if (op == "Off") {
         Qt.quit();
     } else if (op == "C") {
         display.clear()
+        curVal = 0
+        memory = 0
+        lastOp = ""
+        digits ="0"
     } else if (op == "AC") {
         curVal = 0
         memory = 0
         lastOp = ""
         digits ="0"
     }
-
-
 }
 
