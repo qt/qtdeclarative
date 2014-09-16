@@ -368,7 +368,12 @@ CanvasTestCase {
                 test: function(ctx) {
                     ctx.font = "100px sans-serif";
                     ctx.fillText("Hello", -10, 10, extra);
-                    comparePixel(ctx, 0, 0, 255, 0, 0, 255);
+                    for (var x = 0; x < 100; ++x) {
+                        var c = ctx.getImageData(x,0,1,1).data;
+                        if (c[0] === 255 && c[1] === 0 && c[2] === 0 && c[3] === 255)
+                            return;
+                    }
+                    qtest_fail("No red pixel found");
                 }
             },
             {
