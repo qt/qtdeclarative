@@ -63,15 +63,19 @@ extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfac
 namespace QSGBatchRenderer
 {
 
-const bool debug_render     = qgetenv("QSG_RENDERER_DEBUG").contains("render");
-const bool debug_build      = qgetenv("QSG_RENDERER_DEBUG").contains("build");
-const bool debug_change     = qgetenv("QSG_RENDERER_DEBUG").contains("change");
-const bool debug_upload     = qgetenv("QSG_RENDERER_DEBUG").contains("upload");
-const bool debug_roots      = qgetenv("QSG_RENDERER_DEBUG").contains("roots");
-const bool debug_dump       = qgetenv("QSG_RENDERER_DEBUG").contains("dump");
-const bool debug_noalpha    = qgetenv("QSG_RENDERER_DEBUG").contains("noalpha");
-const bool debug_noopaque   = qgetenv("QSG_RENDERER_DEBUG").contains("noopaque");
-const bool debug_noclip     = qgetenv("QSG_RENDERER_DEBUG").contains("noclip");
+#define DECLARE_DEBUG_VAR(variable) \
+    static bool debug_ ## variable() \
+    { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
+DECLARE_DEBUG_VAR(render)
+DECLARE_DEBUG_VAR(build)
+DECLARE_DEBUG_VAR(change)
+DECLARE_DEBUG_VAR(upload)
+DECLARE_DEBUG_VAR(roots)
+DECLARE_DEBUG_VAR(dump)
+DECLARE_DEBUG_VAR(noalpha)
+DECLARE_DEBUG_VAR(noopaque)
+DECLARE_DEBUG_VAR(noclip)
+#undef DECLARE_DEBUG_VAR
 
 static QElapsedTimer qsg_renderer_timer;
 
@@ -268,10 +272,10 @@ void Updater::updateStates(QSGNode *n)
     Node *sn = renderer->m_nodes.value(n, 0);
     Q_ASSERT(sn);
 
-    if (Q_UNLIKELY(debug_roots))
+    if (Q_UNLIKELY(debug_roots()))
         qsg_dumpShadowRoots(sn);
 
-    if (Q_UNLIKELY(debug_build)) {
+    if (Q_UNLIKELY(debug_build())) {
         qDebug() << "Updater::updateStates()";
         if (sn->dirtyState & (QSGNode::DirtyNodeAdded << 16))
             qDebug() << " - nodes have been added";
@@ -785,7 +789,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
         if (ok)
             m_batchVertexThreshold = threshold;
     }
-    if (Q_UNLIKELY(debug_build || debug_render)) {
+    if (Q_UNLIKELY(debug_build() || debug_render())) {
         qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
         qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));
     }
@@ -1048,7 +1052,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
 void Renderer::turnNodeIntoBatchRoot(Node *node)
 {
-    if (Q_UNLIKELY(debug_change)) qDebug() << " - new batch root";
+    if (Q_UNLIKELY(debug_change())) qDebug() << " - new batch root";
     m_rebuild |= FullRebuild;
     node->isBatchRoot = true;
     node->becameBatchRoot = true;
@@ -1069,7 +1073,7 @@ void Renderer::turnNodeIntoBatchRoot(Node *node)
 
 void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 {
-    if (Q_UNLIKELY(debug_change)) {
+    if (Q_UNLIKELY(debug_change())) {
         QDebug debug = qDebug();
         debug << "dirty:";
         if (state & QSGNode::DirtyGeometry)
@@ -1616,7 +1620,7 @@ void Renderer::prepareAlphaBatches()
 
 void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, quint16 *iBase, int *indexCount)
 {
-    if (Q_UNLIKELY(debug_upload)) qDebug() << "  - uploading element:" << e << e->node << (void *) *vertexData << (qintptr) (*zData - *vertexData) << (qintptr) (*indexData - *vertexData);
+    if (Q_UNLIKELY(debug_upload())) qDebug() << "  - uploading element:" << e << e->node << (void *) *vertexData << (qintptr) (*zData - *vertexData) << (qintptr) (*indexData - *vertexData);
     QSGGeometry *g = e->node->geometry();
 
     const QMatrix4x4 &localx = *e->node->matrix();
@@ -1689,17 +1693,17 @@ void Renderer::uploadBatch(Batch *b)
 {
         // Early out if nothing has changed in this batch..
         if (!b->needsUpload) {
-            if (Q_UNLIKELY(debug_upload)) qDebug() << " Batch:" << b << "already uploaded...";
+            if (Q_UNLIKELY(debug_upload())) qDebug() << " Batch:" << b << "already uploaded...";
             return;
         }
 
         if (!b->first) {
-            if (Q_UNLIKELY(debug_upload)) qDebug() << " Batch:" << b << "is invalid...";
+            if (Q_UNLIKELY(debug_upload())) qDebug() << " Batch:" << b << "is invalid...";
             return;
         }
 
         if (b->isRenderNode) {
-            if (Q_UNLIKELY(debug_upload)) qDebug() << " Batch: " << b << "is a render node...";
+            if (Q_UNLIKELY(debug_upload())) qDebug() << " Batch: " << b << "is a render node...";
             return;
         }
 
@@ -1778,7 +1782,7 @@ void Renderer::uploadBatch(Batch *b)
 #endif
         map(&b->vbo, bufferSize);
 
-        if (Q_UNLIKELY(debug_upload)) qDebug() << " - batch" << b << " first:" << b->first << " root:"
+        if (Q_UNLIKELY(debug_upload())) qDebug() << " - batch" << b << " first:" << b->first << " root:"
                                    << b->root << " merged:" << b->merged << " positionAttribute" << b->positionAttribute
                                    << " vbo:" << b->vbo.id << ":" << b->vbo.size;
 
@@ -1844,7 +1848,7 @@ void Renderer::uploadBatch(Batch *b)
             }
         }
 
-        if (Q_UNLIKELY(debug_upload)) {
+        if (Q_UNLIKELY(debug_upload())) {
             const char *vd = b->vbo.data;
             qDebug() << "  -- Vertex Data, count:" << b->vertexCount << " - " << g->sizeOfVertex() << "bytes/vertex";
             for (int i=0; i<b->vertexCount; ++i) {
@@ -1902,11 +1906,11 @@ void Renderer::uploadBatch(Batch *b)
         unmap(&b->ibo, true);
 #endif
 
-        if (Q_UNLIKELY(debug_upload)) qDebug() << "  --- vertex/index buffers unmapped, batch upload completed...";
+        if (Q_UNLIKELY(debug_upload())) qDebug() << "  --- vertex/index buffers unmapped, batch upload completed...";
 
         b->needsUpload = false;
 
-        if (Q_UNLIKELY(debug_render))
+        if (Q_UNLIKELY(debug_render()))
             b->uploadedThisFrame = true;
 }
 
@@ -2038,7 +2042,7 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
 
 void Renderer::updateClip(const QSGClipNode *clipList, const Batch *batch)
 {
-    if (clipList != m_currentClip && Q_LIKELY(!debug_noclip)) {
+    if (clipList != m_currentClip && Q_LIKELY(!debug_noclip())) {
         m_currentClip = clipList;
         // updateClip sets another program, so force-reactivate our own
         if (m_currentShader)
@@ -2117,7 +2121,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
     Element *e = batch->first;
     Q_ASSERT(e);
 
-    if (Q_UNLIKELY(debug_render)) {
+    if (Q_UNLIKELY(debug_render())) {
         QDebug debug = qDebug();
         debug << " -"
               << batch
@@ -2226,7 +2230,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     Element *e = batch->first;
     Q_ASSERT(e);
 
-    if (Q_UNLIKELY(debug_render)) {
+    if (Q_UNLIKELY(debug_render())) {
         qDebug() << " -"
                  << batch
                  << (batch->uploadedThisFrame ? "[  upload]" : "[retained]")
@@ -2356,7 +2360,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
 void Renderer::renderBatches()
 {
-    if (Q_UNLIKELY(debug_render)) {
+    if (Q_UNLIKELY(debug_render())) {
         qDebug().nospace() << "Rendering:" << endl
                            << " -> Opaque: " << qsg_countNodesInBatches(m_opaqueBatches) << " nodes in " << m_opaqueBatches.size() << " batches..." << endl
                            << " -> Alpha: " << qsg_countNodesInBatches(m_alphaBatches) << " nodes in " << m_alphaBatches.size() << " batches...";
@@ -2389,8 +2393,8 @@ void Renderer::renderBatches()
     m_currentProgram = 0;
     m_currentClip = 0;
 
-    bool renderOpaque = !debug_noopaque;
-    bool renderAlpha = !debug_noalpha;
+    bool renderOpaque = !debug_noopaque();
+    bool renderAlpha = !debug_noalpha();
 
     if (Q_LIKELY(renderOpaque)) {
         for (int i=0; i<m_opaqueBatches.size(); ++i) {
@@ -2466,12 +2470,12 @@ void Renderer::preprocess()
 
 void Renderer::render()
 {
-    if (Q_UNLIKELY(debug_dump)) {
+    if (Q_UNLIKELY(debug_dump())) {
         qDebug("\n");
         QSGNodeDumper::dump(rootNode());
     }
 
-    if (Q_UNLIKELY(debug_render || debug_build)) {
+    if (Q_UNLIKELY(debug_render() || debug_build())) {
 
         QByteArray type("rebuild:");
         if (m_rebuild == 0)
@@ -2498,7 +2502,7 @@ void Renderer::render()
             buildRenderListsForTaggedRoots();
         m_rebuild |= BuildBatches;
 
-        if (Q_UNLIKELY(debug_build)) {
+        if (Q_UNLIKELY(debug_build())) {
             qDebug() << "Opaque render lists" << (complete ? "(complete)" : "(partial)") << ":";
             for (int i=0; i<m_opaqueRenderList.size(); ++i) {
                 Element *e = m_opaqueRenderList.at(i);
@@ -2525,7 +2529,7 @@ void Renderer::render()
         prepareOpaqueBatches();
         prepareAlphaBatches();
 
-        if (Q_UNLIKELY(debug_build)) {
+        if (Q_UNLIKELY(debug_build())) {
             qDebug() << "Opaque Batches:";
             for (int i=0; i<m_opaqueBatches.size(); ++i) {
                 Batch *b = m_opaqueBatches.at(i);
@@ -2561,11 +2565,11 @@ void Renderer::render()
     }
 
 
-    if (Q_UNLIKELY(debug_upload)) qDebug() << "Uploading Opaque Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Opaque Batches:";
     for (int i=0; i<m_opaqueBatches.size(); ++i)
         uploadBatch(m_opaqueBatches.at(i));
 
-    if (Q_UNLIKELY(debug_upload)) qDebug() << "Uploading Alpha Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Alpha Batches:";
     for (int i=0; i<m_alphaBatches.size(); ++i)
         uploadBatch(m_alphaBatches.at(i));
 
@@ -2584,7 +2588,7 @@ void Renderer::render()
 
 void Renderer::renderRenderNode(Batch *batch)
 {
-    if (Q_UNLIKELY(debug_render))
+    if (Q_UNLIKELY(debug_render()))
         qDebug() << " -" << batch << "rendernode";
 
     Q_ASSERT(batch->first->isRenderNode);
