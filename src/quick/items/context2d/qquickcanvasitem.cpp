@@ -667,7 +667,10 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
         return;
 
     d->window = value.window;
-    if (QQuickWindowPrivate::get(d->window)->context != 0) // available context == initialized
+    QSGRenderContext *context = QQuickWindowPrivate::get(d->window)->context;
+
+    // Rendering to FramebufferObject needs a valid OpenGL context.
+    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid()))
         sceneGraphInitialized();
     else
         connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
