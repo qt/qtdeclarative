@@ -1258,7 +1258,7 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
 
   \value JavaScriptOwnership The object is owned by JavaScript.
   When the object is returned to QML as the return value of a method
-  call or property access, QML will track it, and delete the object
+  call, QML will track it, and delete the object
   if there are no remaining JavaScript references to it and it has no
   QObject::parent().  An object tracked by one QQmlEngine
   will be deleted during that QQmlEngine's destructor, and thus
