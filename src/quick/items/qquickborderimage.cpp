@@ -563,6 +563,8 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     QRectF innerSourceRect(0, 0, 1, 1);
     QRectF innerTargetRect(0, 0, width(), height());
     int borderLeft, borderTop, borderRight, borderBottom;
+
+    bool updateNode = !oldNode;
     if (d->border) {
         const QQuickScaleGrid *border = d->getScaleGrid();
 
@@ -579,11 +581,17 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
                                  borderTop,
                                  qMax<qreal>(0, width() - border->right() - border->left()),
                                  qMax<qreal>(0, height() - border->bottom() - border->top()));
+
+        if (innerSourceRect != d->oldInnerSourceRect || innerTargetRect != d->oldInnerTargetRect)
+            updateNode = true;
+        d->oldInnerSourceRect = innerSourceRect;
+        d->oldInnerTargetRect = innerTargetRect;
     }
 
     bool updatePixmap = d->pixmapChanged;
     d->pixmapChanged = false;
-    if (!oldNode) {
+    if (updateNode) {
+        delete oldNode;
         oldNode = new QSGNode;
         updatePixmap = true;
 
@@ -591,33 +599,130 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
             d->regions[i].node = 0;
 
         if (innerSourceRect.left() > 0) {
-            if (innerSourceRect.top() > 0)
-                d->regions[0].node = d->sceneGraphContext()->createImageNode();
-            if (innerSourceRect.bottom() < 1)
-                d->regions[6].node = d->sceneGraphContext()->createImageNode();
+            if (innerSourceRect.top() > 0) {
+                QRectF rect(0,
+                            0,
+                            innerTargetRect.left(),
+                            innerTargetRect.top());
 
-            if (innerSourceRect.top() < innerSourceRect.bottom())
-                d->regions[3].node = d->sceneGraphContext()->createImageNode();
+                if (!rect.isEmpty()) {
+                    d->regions[0].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[0].node->setTargetRect(rect);
+                    d->regions[0].node->setInnerTargetRect(rect);
+                    d->regions[0].targetRect = rect;
+                }
+            }
+
+            if (innerSourceRect.bottom() < 1) {
+                QRectF rect(0,
+                            innerTargetRect.bottom(),
+                            innerTargetRect.left(),
+                            height() - innerTargetRect.height() - innerTargetRect.top());
+
+                if (!rect.isEmpty()) {
+                    d->regions[6].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[6].node->setTargetRect(rect);
+                    d->regions[6].node->setInnerTargetRect(rect);
+                    d->regions[6].targetRect = rect;
+                }
+            }
+
+            if (innerSourceRect.top() < innerSourceRect.bottom()) {
+                QRectF rect(0,
+                            innerTargetRect.top(),
+                            innerTargetRect.left(),
+                            innerTargetRect.height());
+
+                if (!rect.isEmpty()) {
+                    d->regions[3].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[3].node->setTargetRect(rect);
+                    d->regions[3].node->setInnerTargetRect(rect);
+                    d->regions[3].targetRect = rect;
+                }
+            }
         }
 
         if (innerSourceRect.right() < 1) {
-            if (innerSourceRect.top() > 0)
-                d->regions[2].node = d->sceneGraphContext()->createImageNode();
-            if (innerSourceRect.bottom() < 1)
-                d->regions[8].node = d->sceneGraphContext()->createImageNode();
+            if (innerSourceRect.top() > 0) {
+                QRectF rect(innerTargetRect.right(),
+                            0,
+                            width() - innerTargetRect.width() - innerTargetRect.left(),
+                            innerTargetRect.top());
 
-            if (innerSourceRect.top() < innerSourceRect.bottom())
-                d->regions[5].node = d->sceneGraphContext()->createImageNode();
+                if (!rect.isEmpty()) {
+                    d->regions[2].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[2].node->setTargetRect(rect);
+                    d->regions[2].node->setInnerTargetRect(rect);
+                    d->regions[2].targetRect = rect;
+                }
+            }
+
+            if (innerSourceRect.bottom() < 1) {
+                QRectF rect(innerTargetRect.right(),
+                            innerTargetRect.bottom(),
+                            width() - innerTargetRect.width() - innerTargetRect.left(),
+                            height() - innerTargetRect.height() - innerTargetRect.top());
+
+                if (!rect.isEmpty()) {
+                    d->regions[8].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[8].node->setTargetRect(rect);
+                    d->regions[8].node->setInnerTargetRect(rect);
+                    d->regions[8].targetRect = rect;
+                }
+            }
+
+            if (innerSourceRect.top() < innerSourceRect.bottom()) {
+                QRectF rect(innerTargetRect.right(),
+                            innerTargetRect.top(),
+                            width() - innerTargetRect.width() - innerTargetRect.left(),
+                            innerTargetRect.height());
+
+                if (!rect.isEmpty()) {
+                    d->regions[5].node = d->sceneGraphContext()->createImageNode();
+                    d->regions[5].node->setTargetRect(rect);
+                    d->regions[5].node->setInnerTargetRect(rect);
+                    d->regions[5].targetRect = rect;
+                }
+            }
         }
 
-        if (innerSourceRect.top() > 0 && innerSourceRect.left() < innerSourceRect.right())
-            d->regions[1].node = d->sceneGraphContext()->createImageNode();
+        if (innerSourceRect.top() > 0 && innerSourceRect.left() < innerSourceRect.right()) {
+            QRectF rect(innerTargetRect.left(),
+                        0,
+                        innerTargetRect.width(),
+                        innerTargetRect.top());
 
-        if (innerSourceRect.bottom() < 1 && innerSourceRect.left() < innerSourceRect.right())
-            d->regions[7].node = d->sceneGraphContext()->createImageNode();
+            if (!rect.isEmpty()) {
+                d->regions[1].node = d->sceneGraphContext()->createImageNode();
+                d->regions[1].node->setTargetRect(rect);
+                d->regions[1].node->setInnerTargetRect(rect);
+                d->regions[1].targetRect = rect;
+            }
+        }
 
-        if (innerSourceRect.left() < innerSourceRect.right() && innerSourceRect.top() < innerSourceRect.bottom())
-            d->regions[4].node = d->sceneGraphContext()->createImageNode();
+        if (innerSourceRect.bottom() < 1 && innerSourceRect.left() < innerSourceRect.right()) {
+            QRectF rect(innerTargetRect.left(),
+                        innerTargetRect.bottom(),
+                        innerTargetRect.width(),
+                        height() - innerTargetRect.height() - innerTargetRect.top());
+
+            if (!rect.isEmpty()) {
+                d->regions[7].node = d->sceneGraphContext()->createImageNode();
+                d->regions[7].node->setTargetRect(rect);
+                d->regions[7].node->setInnerTargetRect(rect);
+                d->regions[7].targetRect = rect;
+            }
+        }
+
+        if (innerSourceRect.left() < innerSourceRect.right()
+                && innerSourceRect.top() < innerSourceRect.bottom()) {
+            if (!innerTargetRect.isEmpty()) {
+                d->regions[4].node = d->sceneGraphContext()->createImageNode();
+                d->regions[4].node->setInnerTargetRect(innerTargetRect);
+                d->regions[4].node->setTargetRect(innerTargetRect);
+                d->regions[4].targetRect = innerTargetRect;
+            }
+        }
 
         for (int i=0; i<9; ++i) {
             if (d->regions[i].node != 0)
@@ -638,14 +743,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[3].node == 0 && d->regions[6].node == 0)
             antialiasing |= QSGImageNode::AntialiasingBottom;
         d->regions[0].node->setAntialiasing(antialiasing);
-
-        QRectF rect(0,
-                    0,
-                    innerTargetRect.left(),
-                    innerTargetRect.top());
-        d->regions[0].node->setTargetRect(rect);
-        d->regions[0].node->setInnerTargetRect(rect);
-        d->regions[0].targetRect = rect;
     }
 
     if (d->regions[1].node != 0) {
@@ -660,14 +757,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[4].node == 0 && d->regions[7].node == 0)
             antialiasing |= QSGImageNode::AntialiasingBottom;
         d->regions[1].node->setAntialiasing(antialiasing);
-
-        QRectF rect(innerTargetRect.left(),
-                    0,
-                    innerTargetRect.width(),
-                    innerTargetRect.top());
-        d->regions[1].node->setTargetRect(rect);
-        d->regions[1].node->setInnerTargetRect(rect);
-        d->regions[1].targetRect = rect;
     }
 
     if (d->regions[2].node != 0) {
@@ -680,14 +769,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[5].node == 0 && d->regions[8].node == 0)
             antialiasing |= QSGImageNode::AntialiasingBottom;
         d->regions[2].node->setAntialiasing(antialiasing);
-
-        QRectF rect(innerTargetRect.right(),
-                    0,
-                    width() - innerTargetRect.width() - innerTargetRect.left(),
-                    innerTargetRect.top());
-        d->regions[2].node->setTargetRect(rect);
-        d->regions[2].node->setInnerTargetRect(rect);
-        d->regions[2].targetRect = rect;
     }
 
     if (d->regions[3].node != 0) {
@@ -702,14 +783,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[0].node == 0)
             antialiasing |= QSGImageNode::AntialiasingTop;
         d->regions[3].node->setAntialiasing(antialiasing);
-
-        QRectF rect(0,
-                    innerTargetRect.top(),
-                    innerTargetRect.left(),
-                    innerTargetRect.height());
-        d->regions[3].node->setTargetRect(rect);
-        d->regions[3].node->setInnerTargetRect(rect);
-        d->regions[3].targetRect = rect;
     }
 
     if (d->regions[4].node != 0) {
@@ -731,10 +804,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[7].node == 0)
             antialiasing |= QSGImageNode::AntialiasingBottom;
         d->regions[4].node->setAntialiasing(antialiasing);
-
-        d->regions[4].node->setInnerTargetRect(innerTargetRect);
-        d->regions[4].node->setTargetRect(innerTargetRect);
-        d->regions[4].targetRect = innerTargetRect;
     }
 
     if (d->regions[5].node != 0) {
@@ -749,14 +818,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[8].node == 0)
             antialiasing |= QSGImageNode::AntialiasingBottom;
         d->regions[5].node->setAntialiasing(antialiasing);
-
-        QRectF rect(innerTargetRect.right(),
-                    innerTargetRect.top(),
-                    width() - innerTargetRect.width() - innerTargetRect.left(),
-                    innerTargetRect.height());
-        d->regions[5].node->setTargetRect(rect);
-        d->regions[5].node->setInnerTargetRect(rect);
-        d->regions[5].targetRect = rect;
     }
 
     if (d->regions[6].node != 0) {
@@ -769,14 +830,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[3].node == 0 && d->regions[0].node == 0)
             antialiasing |= QSGImageNode::AntialiasingTop;
         d->regions[6].node->setAntialiasing(antialiasing);
-
-        QRectF rect(0,
-                    innerTargetRect.bottom(),
-                    innerTargetRect.left(),
-                    height() - innerTargetRect.height() - innerTargetRect.top());
-        d->regions[6].node->setTargetRect(rect);
-        d->regions[6].node->setInnerTargetRect(rect);
-        d->regions[6].targetRect = rect;
     }
 
     if (d->regions[7].node != 0) {
@@ -791,14 +844,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[4].node == 0 && d->regions[1].node == 0)
             antialiasing |= QSGImageNode::AntialiasingTop;
         d->regions[7].node->setAntialiasing(antialiasing);
-
-        QRectF rect(innerTargetRect.left(),
-                    innerTargetRect.bottom(),
-                    innerTargetRect.width(),
-                    height() - innerTargetRect.height() - innerTargetRect.top());
-        d->regions[7].node->setTargetRect(rect);
-        d->regions[7].node->setInnerTargetRect(rect);
-        d->regions[7].targetRect = rect;
     }
 
     if (d->regions[8].node != 0) {
@@ -811,14 +856,6 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         if (d->regions[5].node == 0 && d->regions[2].node == 0)
             antialiasing |= QSGImageNode::AntialiasingTop;
         d->regions[8].node->setAntialiasing(antialiasing);
-
-        QRectF rect(innerTargetRect.right(),
-                    innerTargetRect.bottom(),
-                    width() - innerTargetRect.width() - innerTargetRect.left(),
-                    height() - innerTargetRect.height() - innerTargetRect.top());
-        d->regions[8].node->setTargetRect(rect);
-        d->regions[8].node->setInnerTargetRect(rect);
-        d->regions[8].targetRect = rect;
     }
 
     for (int i=0; i<9; ++i) {
