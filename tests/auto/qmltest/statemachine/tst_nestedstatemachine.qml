@@ -40,26 +40,32 @@ TestCase {
         initialState: parentState
         StateBase {
             id: parentState
-            initialState: childState1
-            StateBase {
-                id: childState1
-            }
-            StateBase {
-                id: childState2
+            initialState: childStateMachine
+            StateMachine {
+                id: childStateMachine
+                initialState: childState2
+                StateBase {
+                    id: childState1
+                }
+                StateBase {
+                    id: childState2
+                }
             }
         }
     }
-    name: "nestedInitalStates"
+    name: "nestedStateMachine"
 
-    function test_nestedInitalStates() {
+    function test_nestedStateMachine() {
         compare(myStateMachine.running, false);
         compare(parentState.active, false);
+        compare(childStateMachine.running, false);
         compare(childState1.active, false);
         compare(childState2.active, false);
         myStateMachine.start();
         tryCompare(myStateMachine, "running", true);
         tryCompare(parentState, "active", true);
-        tryCompare(childState1, "active", true);
-        compare(childState2.active, false);
+        tryCompare(childStateMachine, "running", true);
+        tryCompare(childState1, "active", false);
+        tryCompare(childState2, "active", true);
     }
 }
