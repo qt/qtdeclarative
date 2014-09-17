@@ -73,8 +73,7 @@ QUICKTESTS =  \
     qquickview \
     qquickcanvasitem \
     qquickscreen \
-    touchmouse \
-    dialogs \
+    touchmouse
 
 
 SUBDIRS += $$PUBLICTESTS
