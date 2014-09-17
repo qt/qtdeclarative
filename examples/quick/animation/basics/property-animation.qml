@@ -48,8 +48,8 @@ Item {
     Rectangle {
         anchors { left: parent.left; top: parent.top; right: parent.right; bottom: parent.verticalCenter }
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "DeepSkyBlue" }
-            GradientStop { position: 1.0; color: "LightSkyBlue" }
+            GradientStop { position: 0.0; color: "#14148c" }
+            GradientStop { position: 1.0; color: "#14aaff" }
         }
     }
 
@@ -57,8 +57,8 @@ Item {
     Rectangle {
         anchors { left: parent.left; top: parent.verticalCenter; right: parent.right; bottom: parent.bottom }
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "ForestGreen" }
-            GradientStop { position: 1.0; color: "DarkGreen" }
+            GradientStop { position: 0.0; color: "#80c342" }
+            GradientStop { position: 1.0; color: "#006325" }
         }
     }
 

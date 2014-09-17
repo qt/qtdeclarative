@@ -43,7 +43,7 @@ import QtQuick 2.0
 Rectangle {
     id: page
     width: 320; height: 480;
-    color: "Black"
+    color: "#1e1b18"
 
     // Make a ball to bounce
     Rectangle {
@@ -53,7 +53,7 @@ Rectangle {
         property variant direction : "right"
 
         x: 20; width: 20; height: 20; z: 1
-        color: "Lime"
+        color: "#80c342"
 
         // Move the ball to the right and back to the left repeatedly
         SequentialAnimation on x {
@@ -84,7 +84,7 @@ Rectangle {
     // coordinates of the ball.
     Rectangle {
         id: leftBat
-        color: "Lime"
+        color: "#328930"
         x: 2; width: 20; height: 90
         // ![0]
         y: ball.direction == 'left' ? ball.y - 45 : page.height/2 -45;
@@ -93,19 +93,19 @@ Rectangle {
     }
     Rectangle {
         id: rightBat
-        color: "Lime"
+        color: "#328930"
         x: page.width - 22; width: 20; height: 90
         y: ball.direction == 'right' ? ball.y - 45 : page.height/2 -45;
         Behavior on y { SpringAnimation{ velocity: 300 } }
     }
 
     // The rest, to make it look realistic, if neither ever scores...
-    Rectangle { color: "Lime"; x: page.width/2-80; y: 0; width: 40; height: 60 }
-    Rectangle { color: "Black"; x: page.width/2-70; y: 10; width: 20; height: 40 }
-    Rectangle { color: "Lime"; x: page.width/2+40; y: 0; width: 40; height: 60 }
-    Rectangle { color: "Black"; x: page.width/2+50; y: 10; width: 20; height: 40 }
+    Rectangle { color: "#328930"; x: page.width/2-80; y: 0; width: 40; height: 60 }
+    Rectangle { color: "#1e1b18"; x: page.width/2-70; y: 10; width: 20; height: 40 }
+    Rectangle { color: "#328930"; x: page.width/2+40; y: 0; width: 40; height: 60 }
+    Rectangle { color: "#1e1b18"; x: page.width/2+50; y: 10; width: 20; height: 40 }
     Repeater {
         model: page.height / 20
-        Rectangle { color: "Lime"; x: page.width/2-5; y: index * 20; width: 10; height: 10 }
+        Rectangle { color: "#328930"; x: page.width/2-5; y: index * 20; width: 10; height: 10 }
     }
 }
