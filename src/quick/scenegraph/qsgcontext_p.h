@@ -93,7 +93,7 @@ public:
 
     QOpenGLContext *openglContext() const { return m_gl; }
     QSGContext *sceneGraphContext() const { return m_sg; }
-    bool isValid() const { return m_gl; }
+    virtual bool isValid() const { return m_gl; }
 
     virtual void initialize(QOpenGLContext *context);
     virtual void invalidate();

@@ -2926,6 +2926,15 @@ QOpenGLContext *QQuickWindow::openglContext() const
 }
 
 /*!
+    Returns true if the scene graph has been initialized; otherwise returns false.
+ */
+bool QQuickWindow::isSceneGraphInitialized() const
+{
+    Q_D(const QQuickWindow);
+    return d->context != 0 && d->context->isValid();
+}
+
+/*!
     \fn void QQuickWindow::frameSwapped()
 
     This signal is emitted when the frame buffers have been swapped.

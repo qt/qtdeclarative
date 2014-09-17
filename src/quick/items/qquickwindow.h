@@ -139,6 +139,7 @@ public:
     bool isPersistentSceneGraph() const;
 
     QOpenGLContext *openglContext() const;
+    bool isSceneGraphInitialized() const;
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
