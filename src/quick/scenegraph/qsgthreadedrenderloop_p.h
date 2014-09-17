@@ -82,6 +82,7 @@ private:
         QSurfaceFormat actualWindowFormat;
         int timerId;
         uint updateDuringSync : 1;
+        uint forceRenderPass : 1;
     };
 
     friend class QSGRenderThread;
