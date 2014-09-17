@@ -2922,7 +2922,7 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 QOpenGLContext *QQuickWindow::openglContext() const
 {
     Q_D(const QQuickWindow);
-    return d->context->openglContext();
+    return d->context ? d->context->openglContext() : 0;
 }
 
 /*!
