@@ -194,16 +194,8 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
 }
 
 // Scan a single qml file for import statements
-QVariantList findQmlImportsInQmlFile(const QString &filePath)
+static QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &code)
 {
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-           std::cerr << "Cannot open input file " << QDir::toNativeSeparators(file.fileName()).toStdString()
-                     << ':' << file.errorString().toStdString() << std::endl;
-           return QVariantList();
-    }
-    QString code = QString::fromUtf8(file.readAll());
-
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
     lexer.setCode(code, /*line = */ 1);
@@ -212,12 +204,25 @@ QVariantList findQmlImportsInQmlFile(const QString &filePath)
     if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
         // Extract errors from the parser
         foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
-            std::cerr << QDir::toNativeSeparators(file.fileName()).toStdString() << ':'
+            std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
                       << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }
-    return findImportsInAst(parser.ast()->headers, code, file.fileName());
+    return findImportsInAst(parser.ast()->headers, code, filePath);
+}
+
+// Scan a single qml file for import statements
+static QVariantList findQmlImportsInQmlFile(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+           std::cerr << "Cannot open input file " << QDir::toNativeSeparators(file.fileName()).toStdString()
+                     << ':' << file.errorString().toStdString() << std::endl;
+           return QVariantList();
+    }
+    QString code = QString::fromUtf8(file.readAll());
+    return findQmlImportsInQmlCode(filePath, code);
 }
 
 // Scan a single javascrupt file for import statements
@@ -272,10 +277,15 @@ QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
 QVariantList findQmlImportsInFile(const QString &filePath)
 {
     QVariantList imports;
-    if (filePath.endsWith(QStringLiteral(".qml")))
-         imports = findQmlImportsInQmlFile(filePath);
-    else if (filePath.endsWith(QStringLiteral(".js")))
+    if (filePath == QLatin1String("-")) {
+        QFile f;
+        if (f.open(stdin, QIODevice::ReadOnly))
+            imports = findQmlImportsInQmlCode(QLatin1String("<stdin>"), QString::fromUtf8(f.readAll()));
+    } else if (filePath.endsWith(QStringLiteral(".qml"))) {
+        imports = findQmlImportsInQmlFile(filePath);
+    } else if (filePath.endsWith(QStringLiteral(".js"))) {
         imports = findQmlImportsInJavascriptFile(filePath);
+    }
 
     return findPathsForModuleImports(imports);
 }
@@ -390,7 +400,7 @@ int main(int argc, char *argv[])
         const QString &arg = args.at(i);
         ++i;
         QStringList *argReceiver = 0;
-        if (!arg.startsWith(QLatin1Char('-'))) {
+        if (!arg.startsWith(QLatin1Char('-')) || arg == QLatin1String("-")) {
             qmlRootPaths += arg;
         } else if (arg == QLatin1String("-rootPath")) {
             if (i >= args.count())
@@ -415,7 +425,7 @@ int main(int argc, char *argv[])
 
         while (i < args.count()) {
             const QString arg = args.at(i);
-            if (arg.startsWith(QLatin1Char('-')))
+            if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
             *argReceiver += arg;
