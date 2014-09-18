@@ -529,7 +529,6 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
     indices[5] = 2;
 
 
-    m_timestamp.start();
     m_node = new QSGGeometryNode();
     m_node->setGeometry(g);
     m_node->setMaterial(m_material);
