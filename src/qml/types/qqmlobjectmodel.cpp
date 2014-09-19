@@ -138,6 +138,7 @@ public:
     The example below places three colored rectangles in a ListView.
     \code
     import QtQuick 2.0
+    import QtQml.Models 2.1
 
     Rectangle {
         ObjectModel {
