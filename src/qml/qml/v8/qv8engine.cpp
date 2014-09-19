@@ -88,7 +88,11 @@ ReturnType convertJSValueToVariantType(const QJSValue &value)
 static void saveJSValue(QDataStream &stream, const void *data)
 {
     const QJSValue *jsv = reinterpret_cast<const QJSValue *>(data);
-    const quint32 isNullOrUndefined = jsv->isNull() | (jsv->isUndefined() << 1);
+    quint32 isNullOrUndefined = 0;
+    if (jsv->isNull())
+        isNullOrUndefined |= 0x1;
+    if (jsv->isUndefined())
+        isNullOrUndefined |= 0x2;
     stream << isNullOrUndefined;
     if (!isNullOrUndefined)
         reinterpret_cast<const QJSValue*>(data)->toVariant().save(stream);
