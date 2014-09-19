@@ -265,37 +265,24 @@ void QSGGuiThreadRenderLoop::show(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return;
-
-    m_windows.remove(window);
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (gl)
-        gl->makeCurrent(window);
     cd->fireAboutToStop();
-    cd->cleanupNodesOnShutdown();
-
-    if (m_windows.size() == 0) {
-        if (!cd->persistentSceneGraph) {
-            rc->invalidate();
-            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-            if (!cd->persistentGLContext) {
-                delete gl;
-                gl = 0;
-            }
-        }
-    }
 }
 
 void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 {
+    m_windows.remove(window);
     hide(window);
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    if (gl)
+        gl->makeCurrent(window);
+    d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete gl;
         gl = 0;
-    } else if (window == gl->surface()) {
+    } else if (gl && window == gl->surface()) {
         gl->doneCurrent();
     }
 }

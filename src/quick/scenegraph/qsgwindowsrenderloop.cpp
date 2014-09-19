@@ -185,14 +185,6 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
 void QSGWindowsRenderLoop::hide(QQuickWindow *window)
 {
     RLDEBUG("hide");
-
-    for (int i=0; i<m_windows.size(); ++i) {
-        if (m_windows.at(i).window == window) {
-            m_windows.removeAt(i);
-            break;
-        }
-    }
-
     // The expose event is queued while hide is sent synchronously, so
     // the value might not be updated yet. (plus that the windows plugin
     // sends exposed=true when it goes to hidden, so it is doubly broken)
@@ -200,47 +192,41 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
     // anyoneShowing will report the right value.
     if (window->isExposed())
         handleObscurity();
-
     if (!m_gl)
         return;
-
-    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    m_gl->makeCurrent(window);
-    cd->fireAboutToStop();
-    cd->cleanupNodesOnShutdown();
-
-    // If this is the last tracked window, check for persistent SG and GL and
-    // potentially clean up.
-    if (m_windows.size() == 0) {
-        if (!cd->persistentSceneGraph) {
-            QQuickWindowPrivate::get(window)->context->invalidate();
-            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-            if (!cd->persistentGLContext) {
-                delete m_gl;
-                m_gl = 0;
-            }
-        }
-    }
+    QQuickWindowPrivate::get(window)->fireAboutToStop();
 }
 
 void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
 {
     RLDEBUG("windowDestroyed");
+    for (int i=0; i<m_windows.size(); ++i) {
+        if (m_windows.at(i).window == window) {
+            m_windows.removeAt(i);
+            break;
+        }
+    }
+
     hide(window);
 
-    // If this is the last tracked window, clean up SG and GL.
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    if (m_gl)
+        m_gl->makeCurrent(window);
+    d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
-        QQuickWindowPrivate::get(window)->context->invalidate();
+        d->context->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete m_gl;
         m_gl = 0;
+    } else if (m_gl) {
+        m_gl->doneCurrent();
     }
 }
 
 bool QSGWindowsRenderLoop::anyoneShowing() const
 {
     foreach (const WindowData &wd, m_windows)
-        if (wd.window->isExposed() && wd.window->size().isValid())
+        if (wd.window->isVisible() && wd.window->isExposed() && wd.window->size().isValid())
             return true;
     return false;
 }
@@ -251,7 +237,7 @@ void QSGWindowsRenderLoop::exposureChanged(QQuickWindow *window)
     if (windowData(window) == 0)
         return;
 
-    if (window->isExposed()) {
+    if (window->isExposed() && window->isVisible()) {
 
         // Stop non-visual animation timer as we now have a window rendering
         if (m_animationTimer && anyoneShowing()) {
