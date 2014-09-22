@@ -2,6 +2,8 @@ import QtQuick 2.0
 
 Rectangle {
     id: root
+    width: 260
+    height: 320
 
     Component {
         id: myDelegate

@@ -3707,6 +3707,7 @@ void tst_QQuickGridView::resizeGrid()
     ctxt->setContextProperty("testRightToLeft", layoutDirection == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickGridView::BottomToTop);
     window->setSource(testFileUrl("resizegrid.qml"));
+    QQuickViewTestUtil::centerOnScreen(window, window->size());
     window->show();
     qApp->processEvents();
 
