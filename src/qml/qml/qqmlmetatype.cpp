@@ -98,7 +98,7 @@ struct QQmlMetaTypeData
     QBitArray lists;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
-    QQmlPrivate::QmlUnitCacheLookupFunction lookupCachedQmlUnit;
+    QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
     QSet<QString> protectedNamespaces;
 
@@ -135,7 +135,6 @@ static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 }
 
 QQmlMetaTypeData::QQmlMetaTypeData()
-    : lookupCachedQmlUnit(0)
 {
 }
 
@@ -1347,7 +1346,7 @@ int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRe
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
     QWriteLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    data->lookupCachedQmlUnit = hookRegistration.lookupCachedQmlUnit;
+    data->lookupCachedQmlUnit << hookRegistration.lookupCachedQmlUnit;
     return 0;
 }
 
@@ -1877,8 +1876,11 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
 {
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    if (data->lookupCachedQmlUnit)
-        return data->lookupCachedQmlUnit(uri);
+    for (QVector<QQmlPrivate::QmlUnitCacheLookupFunction>::ConstIterator it = data->lookupCachedQmlUnit.constBegin(), end = data->lookupCachedQmlUnit.constEnd();
+         it != end; ++it) {
+        if (const QQmlPrivate::CachedQmlUnit *unit = (*it)(uri))
+            return unit;
+    }
     return 0;
 }
 
