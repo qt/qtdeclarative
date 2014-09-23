@@ -82,6 +82,33 @@ TestCase {
         objectName: "nestedChildItem2"
     }
 
+    Loader {
+        id: loader
+
+        sourceComponent: Item {
+            id: loaderItem
+            objectName: "loaderItem"
+
+            Item {
+                objectName: "nestedLoaderItem"
+            }
+
+            Repeater {
+                model: 5
+                delegate: Item {
+                    objectName: "repeaterItem" + index
+                }
+            }
+
+            ListView {
+                model: 5
+                delegate: Item {
+                    objectName: "listViewItem" + index
+                }
+            }
+        }
+    }
+
     function test_findChild() {
         compare(findChild(null, ""), null);
         compare(findChild(undefined, ""), null);
@@ -99,6 +126,14 @@ TestCase {
 
         var mostDirectChild = duplicateNestedChildItem2Component.createObject(nestedChildItem0);
         compare(nestedChildItem0.children.length, 2);
-        compare(findChild(nestedChildrenItem, "nestedChildItem2"), mostDirectChild);
+        compare(findChild(nestedChildrenItem, "nestedChildItem2"), mostDirectChild,
+            "Dynamically created nested child items are found");
+
+        compare(findChild(loader, "loaderItem"), loader.item);
+        verify(findChild(loader, "nestedLoaderItem"));
+
+        // These don't make their delegate items QObject children, only visual.
+        verify(findChild(loader, "repeaterItem0"));
+        verify(findChild(loader, "listViewItem0"));
     }
 }

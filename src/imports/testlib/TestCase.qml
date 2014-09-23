@@ -633,15 +633,43 @@ Item {
         \since 5.4
         \qmlmethod QtObject TestCase::findChild(parent, objectName)
 
-        Returns the first child of \a parent with \a objectName,
-        or \c null if no such item exists. Children are searched recursively.
+        Returns the first child of \a parent with \a objectName, or \c null if
+        no such item exists. Both visual and non-visual children are searched
+        recursively, with visual children being searched first.
 
         \code
         compare(findChild(item, "childObject"), expectedChildObject);
         \endcode
     */
     function findChild(parent, objectName) {
+        // First, search the visual item hierarchy.
+        var child = qtest_findVisualChild(parent, objectName);
+        if (child)
+            return child;
+
+        // If it's not a visual child, it might be a QObject child.
         return qtest_results.findChild(parent, objectName);
+    }
+
+    /*! \internal */
+    function qtest_findVisualChild(parent, objectName) {
+        if (!parent || parent.children === undefined)
+            return null;
+
+        for (var i = 0; i < parent.children.length; ++i) {
+            // Is this direct child of ours the child we're after?
+            var child = parent.children[i];
+            if (child.objectName === objectName)
+                return child;
+        }
+
+        for (i = 0; i < parent.children.length; ++i) {
+            // Try the direct child's children.
+            child = qtest_findVisualChild(parent.children[i], objectName);
+            if (child)
+                return child;
+        }
+        return null;
     }
 
     /*!
