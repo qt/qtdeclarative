@@ -77,12 +77,12 @@ bool RenderingVisitor::visit(QSGGeometryNode *node)
             const QImage &im = pt->image();
             painter->drawImage(tn->rect(), im, QRectF(0, 0, im.width(), im.height()));
         } else {
-            Q_UNREACHABLE();
+            //Do nothing
         }
     } else if (QQuickShaderEffectNode *sn = dynamic_cast<QQuickShaderEffectNode *>(node)) {
         Q_UNUSED(sn)
     } else {
-        Q_UNREACHABLE();
+        //Do nothing
     }
     return true;
 }
