@@ -82,8 +82,9 @@ void Renderer::render()
     QPaintDevice *device = m_backingStore->paintDevice();
     QPainter painter(device);
     painter.setRenderHint(QPainter::Antialiasing);
-
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
     painter.fillRect(rect, clearColor());
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     RenderingVisitor(&painter).visitChildren(rootNode());
 
     m_backingStore->endPaint();
