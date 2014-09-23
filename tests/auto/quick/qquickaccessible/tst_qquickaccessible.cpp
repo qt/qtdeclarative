@@ -332,40 +332,46 @@ void tst_QQuickAccessible::hitTest()
     // check the root item from app
     QAccessibleInterface *appIface = QAccessible::queryAccessibleInterface(qApp);
     QVERIFY(appIface);
-    QAccessibleInterface *itemHit(appIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
+    QAccessibleInterface *itemHit = appIface->childAt(rootRect.x() + 200, rootRect.y() + 50);
     QVERIFY(itemHit);
-    QCOMPARE(rootRect, itemHit->rect());
+    QCOMPARE(itemHit->rect(), rootRect);
 
-    // hit rect1
-    QAccessibleInterface *rect1(rootItem->child(0));
-    QRect rect1Rect = rect1->rect();
-    QAccessibleInterface *rootItemIface = rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10);
-    QVERIFY(rootItemIface);
-    QCOMPARE(rect1Rect, rootItemIface->rect());
-    QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect1"));
+    QAccessibleInterface *rootItemIface;
+    for (int c = 0; c < rootItem->childCount(); ++c) {
+        QAccessibleInterface *iface = rootItem->child(c);
+        QString name = iface->text(QAccessible::Name);
+        if (name == QLatin1String("rect1")) {
+            // hit rect1
+            QAccessibleInterface *rect1 = iface;
+            QRect rect1Rect = rect1->rect();
+            QAccessibleInterface *rootItemIface = rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10);
+            QVERIFY(rootItemIface);
+            QCOMPARE(rect1Rect, rootItemIface->rect());
+            QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect1"));
 
-    // should also work from top level (app)
-    QAccessibleInterface *app(QAccessible::queryAccessibleInterface(qApp));
-    QAccessibleInterface *itemHit2(topLevelChildAt(app, rect1Rect.x() + 10, rect1Rect.y() + 10));
-    QVERIFY(itemHit2);
-    QCOMPARE(itemHit2->rect(), rect1Rect);
-    QCOMPARE(itemHit2->text(QAccessible::Name), QLatin1String("rect1"));
+            // should also work from top level (app)
+            QAccessibleInterface *app(QAccessible::queryAccessibleInterface(qApp));
+            QAccessibleInterface *itemHit2(topLevelChildAt(app, rect1Rect.x() + 10, rect1Rect.y() + 10));
+            QVERIFY(itemHit2);
+            QCOMPARE(itemHit2->rect(), rect1Rect);
+            QCOMPARE(itemHit2->text(QAccessible::Name), QLatin1String("rect1"));
+        } else if (name == QLatin1String("rect2")) {
+            QAccessibleInterface *rect2 = iface;
+            // FIXME: This is seems broken on OS X
+            // QCOMPARE(rect2->rect().translated(rootItem->rect().x(), rootItem->rect().y()), QRect(0, 50, 100, 100));
+            QAccessibleInterface *rect20 = rect2->child(0);
+            QVERIFY(rect20);
+            QCOMPARE(rect20->text(QAccessible::Name), QLatin1String("rect20"));
+            QPoint p = rect20->rect().bottomRight() + QPoint(20, 20);
+            QAccessibleInterface *rect201 = rect20->childAt(p.x(), p.y());
+            QVERIFY(rect201);
+            QCOMPARE(rect201->text(QAccessible::Name), QLatin1String("rect201"));
+            rootItemIface = topLevelChildAt(windowIface, p.x(), p.y());
+            QVERIFY(rootItemIface);
+            QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
 
-    // hit rect201
-    QAccessibleInterface *rect2(rootItem->child(1));
-    QVERIFY(rect2);
-    // FIXME: This is seems broken on mac
-    // QCOMPARE(rect2->rect().translated(rootItem->rect().x(), rootItem->rect().y()), QRect(0, 50, 100, 100));
-    QAccessibleInterface *rect20(rect2->child(0));
-    QVERIFY(rect20);
-    QAccessibleInterface *rect201(rect20->child(1));
-    QVERIFY(rect201);
-
-    QRect rect201Rect = rect201->rect();
-    rootItemIface = windowIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20);
-    QVERIFY(rootItemIface);
-    QCOMPARE(rootItemIface->rect(), rect201Rect);
-    QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
+        }
+    }
 
     delete window;
     QTestAccessibility::clearEvents();
