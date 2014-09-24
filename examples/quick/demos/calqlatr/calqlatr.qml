@@ -53,13 +53,22 @@ Rectangle {
     onWidthChanged: controller.reload()
     onHeightChanged: controller.reload()
 
-    function operatorPressed(operator) { CalcEngine.operatorPressed(operator) }
-    function digitPressed(digit) { CalcEngine.digitPressed(digit) }
+    function operatorPressed(operator) {
+        CalcEngine.operatorPressed(operator)
+        numPad.buttonPressed()
+    }
+    function digitPressed(digit) {
+        CalcEngine.digitPressed(digit)
+        numPad.buttonPressed()
+    }
+    function isButtonDisabled(op) {
+        return CalcEngine.disabled(op)
+    }
 
     Item {
         id: pad
         width: 180
-        NumberPad { y: 10; anchors.horizontalCenter: parent.horizontalCenter }
+        NumberPad { id: numPad; y: 10; anchors.horizontalCenter: parent.horizontalCenter }
     }
 
     AnimationController {

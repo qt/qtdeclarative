@@ -45,6 +45,8 @@ Grid {
     columnSpacing: 32
     rowSpacing: 16
 
+    signal buttonPressed
+
     Button { text: "7" }
     Button { text: "8" }
     Button { text: "9" }
@@ -55,15 +57,15 @@ Grid {
     Button { text: "2" }
     Button { text: "3" }
     Button { text: "0" }
-    Button { text: "." }
+    Button { text: "."; dimmable: true }
     Button { text: " " }
-    Button { text: "±"; color: "#6da43d"; operator: true }
-    Button { text: "−"; color: "#6da43d"; operator: true }
-    Button { text: "+"; color: "#6da43d"; operator: true }
-    Button { text: "√"; color: "#6da43d"; operator: true }
-    Button { text: "÷"; color: "#6da43d"; operator: true }
-    Button { text: "×"; color: "#6da43d"; operator: true }
+    Button { text: "±"; color: "#6da43d"; operator: true; dimmable: true }
+    Button { text: "−"; color: "#6da43d"; operator: true; dimmable: true }
+    Button { text: "+"; color: "#6da43d"; operator: true; dimmable: true }
+    Button { text: "√"; color: "#6da43d"; operator: true; dimmable: true }
+    Button { text: "÷"; color: "#6da43d"; operator: true; dimmable: true }
+    Button { text: "×"; color: "#6da43d"; operator: true; dimmable: true }
     Button { text: "C"; color: "#6da43d"; operator: true }
     Button { text: " "; color: "#6da43d"; operator: true }
-    Button { text: "="; color: "#6da43d"; operator: true }
+    Button { text: "="; color: "#6da43d"; operator: true; dimmable: true }
 }

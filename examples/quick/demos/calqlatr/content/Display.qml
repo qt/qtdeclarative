@@ -39,10 +39,16 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.0
 
 Item {
     id: display
+    property real fontSize: Math.floor(Screen.pixelDensity * 5.0)
     property bool enteringDigits: false
+    property int maxDigits: (width / fontSize) + 1
+    property string displayedOperand
+    property string errorString: qsTr("ERROR")
+    property bool isError: displayedOperand === errorString
 
     function displayOperator(operator)
     {
@@ -53,7 +59,8 @@ Item {
 
     function newLine(operator, operand)
     {
-        listView.model.append({ "operator": operator, "operand": operand })
+        displayedOperand = displayNumber(operand)
+        listView.model.append({ "operator": operator, "operand": displayedOperand })
         enteringDigits = false
         listView.positionViewAtEnd()
     }
@@ -68,14 +75,58 @@ Item {
         listView.positionViewAtEnd()
     }
 
+    function setDigit(digit)
+    {
+        var i = listView.model.count - 1;
+        listView.model.get(i).operand = digit;
+        listView.positionViewAtEnd()
+    }
+
     function clear()
     {
+        displayedOperand = ""
         if (enteringDigits) {
             var i = listView.model.count - 1
             if (i >= 0)
                 listView.model.remove(i)
             enteringDigits = false
         }
+    }
+
+    // Returns a string representation of a number that fits in
+    // display.maxDigits characters, trying to keep as much precision
+    // as possible. If the number cannot be displayed, returns an
+    // error string.
+    function displayNumber(num) {
+        if (typeof(num) != "number")
+            return errorString;
+
+        var intNum = parseInt(num);
+        var intLen = intNum.toString().length;
+
+        // Do not count the minus sign as a digit
+        var maxLen = num < 0 ? maxDigits + 1 : maxDigits;
+
+        if (num.toString().length <= maxLen) {
+            if (isFinite(num))
+                return num.toString();
+            return errorString;
+        }
+
+        // Integer part of the number is too long - try
+        // an exponential notation
+        if (intNum == num || intLen > maxLen - 3) {
+            var expVal = num.toExponential(maxDigits - 6).toString();
+            if (expVal.length <= maxLen)
+                return expVal;
+        }
+
+        // Try a float presentation with fixed number of digits
+        var floatStr = parseFloat(num).toFixed(maxDigits - intLen - 1).toString();
+        if (floatStr.length <= maxLen)
+            return floatStr;
+
+        return errorString;
     }
 
     Item {
@@ -121,16 +172,16 @@ Item {
                 width: parent.width
                 Text {
                     id: operator
-                    x: 8
-                    font.pixelSize: 18
+                    x: 6
+                    font.pixelSize: display.fontSize
                     color: "#6da43d"
                     text: model.operator
                 }
                 Text {
                     id: operand
-                    font.pixelSize: 18
+                    font.pixelSize: display.fontSize
                     anchors.right: parent.right
-                    anchors.rightMargin: 26
+                    anchors.rightMargin: 22
                     text: model.operand
                 }
             }
