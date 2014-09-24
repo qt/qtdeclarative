@@ -40,10 +40,16 @@
 
 import QtQuick 2.0
 
-Rectangle {
+Item {
     id: page
-    width: 320; height: 480
+
     property real effectiveOpacity: 1.0
+    property real ratio: width / 320 < height / 440 ? width / 320 : height / 440
+    property int smallSize: 45 * ratio
+    property int bigSize: 2 * smallSize
+    property int elementSpacing: 0.14 * smallSize
+
+    anchors.fill: parent
 
     Timer {
         interval: 2000
@@ -53,10 +59,16 @@ Rectangle {
     }
 
     Column {
-        y: 0
+        anchors {
+            left: parent.left
+            leftMargin: page.width / 32
+            top: parent.top
+            topMargin: page.height / 48
+        }
+        spacing: elementSpacing
 
         populate: Transition {
-            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+            NumberAnimation { properties: "x,y"; from: 200; duration: 100; easing.type: Easing.OutBounce }
         }
         add: Transition {
             NumberAnimation { properties: "y"; easing.type: Easing.OutQuad }
@@ -65,41 +77,45 @@ Rectangle {
             NumberAnimation { properties: "y"; easing.type: Easing.OutBounce }
         }
 
-        Rectangle { color: "red"; width: 100; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: bigSize; height: smallSize }
 
         Rectangle {
-            id: blueV1
+            id: greenV1
             visible: opacity != 0
-            width: 100; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: bigSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "green"; width: 100; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#14aaff"; width: bigSize; height: smallSize }
 
         Rectangle {
-            id: blueV2
+            id: greenV2
             visible: opacity != 0
-            width: 100; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: bigSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "orange"; width: 100; height: 50; border.color: "black"; radius: 15 }
-        Rectangle { color: "red"; width: 100; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#6400aa"; width: bigSize; height: smallSize }
+        Rectangle { color: "#80c342"; width: bigSize; height: smallSize }
     }
 
     Row {
-        y: 320
+        anchors {
+            left: page.left
+            leftMargin: page.width / 32
+            bottom: page.bottom
+            bottomMargin: page.height / 48
+        }
+        spacing: elementSpacing
 
         populate: Transition {
-            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+            NumberAnimation { properties: "x,y"; from: 200; duration: 100; easing.type: Easing.OutBounce }
         }
         add: Transition {
             NumberAnimation { properties: "x"; easing.type: Easing.OutQuad }
@@ -108,42 +124,43 @@ Rectangle {
             NumberAnimation { properties: "x"; easing.type: Easing.OutBounce }
         }
 
-        Rectangle { color: "red"; width: 50; height: 100; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: smallSize; height: bigSize }
 
         Rectangle {
             id: blueH1
             visible: opacity != 0
-            width: 50; height: 100
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: smallSize; height: bigSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "green"; width: 50; height: 100; border.color: "black"; radius: 15 }
+        Rectangle { color: "#14aaff"; width: smallSize; height: bigSize }
 
         Rectangle {
-            id: blueH2
+            id: greenH2
             visible: opacity != 0
-            width: 50; height: 100
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: smallSize; height: bigSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "orange"; width: 50; height: 100; border.color: "black"; radius: 15 }
-        Rectangle { color: "red"; width: 50; height: 100; border.color: "black"; radius: 15 }
+        Rectangle { color: "#6400aa"; width: smallSize; height: bigSize }
+        Rectangle { color: "#80c342"; width: smallSize; height: bigSize }
     }
 
     Grid {
-        x: 120; y: 0
+        anchors.top: parent.top
+        anchors.topMargin: page.height / 48
+        anchors.left: flow.left
         columns: 3
+        spacing: elementSpacing
 
         populate: Transition {
-            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+            NumberAnimation { properties: "x,y"; from: 200; duration: 100; easing.type: Easing.OutBounce }
         }
         add: Transition {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
@@ -152,53 +169,55 @@ Rectangle {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
         }
 
-
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: smallSize; height: smallSize }
 
         Rectangle {
-            id: blueG1
+            id: greenG1
             visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: smallSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "green"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#14aaff"; width: smallSize; height: smallSize }
 
         Rectangle {
-            id: blueG2
+            id: greenG2
             visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: smallSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#6400aa"; width: smallSize; height: smallSize }
 
         Rectangle {
-            id: blueG3
+            id: greenG3
             visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: smallSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
-        Rectangle { color: "green"; width: 50; height: 50; border.color: "black"; radius: 15 }
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: smallSize; height: smallSize }
+        Rectangle { color: "#14aaff"; width: smallSize; height: smallSize }
+        Rectangle { color: "#6400aa"; width: smallSize; height: smallSize }
     }
 
     Flow {
-        x: 120; y: 160; width: 150
+        id: flow
+
+        anchors.right: page.right
+        anchors.rightMargin: page.width / 32
+        y: 2 * bigSize
+        width: 1.8 * bigSize
+        spacing: elementSpacing
 
         //! [move]
         move: Transition {
@@ -214,49 +233,46 @@ Rectangle {
 
         //! [populate]
         populate: Transition {
-            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+            NumberAnimation { properties: "x,y"; from: 200; duration: 100; easing.type: Easing.OutBounce }
         }
         //! [populate]
 
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: smallSize; height: smallSize }
 
         Rectangle {
-            id: blueF1
+            id: greenF1
             visible: opacity != 0
-            width: 60; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: 0.6 * bigSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "green"; width: 30; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#14aaff"; width: 0.3 * bigSize; height: smallSize }
 
         Rectangle {
-            id: blueF2
+            id: greenF2
             visible: opacity != 0
-            width: 60; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: 0.6 * bigSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#6400aa"; width: smallSize; height: smallSize }
 
         Rectangle {
-            id: blueF3
+            id: greenF3
             visible: opacity != 0
-            width: 40; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
+            width: 0.4 * bigSize; height: smallSize
+            color: "#006325"
+            border.color: "transparent"
             Behavior on opacity { NumberAnimation {} }
             opacity: effectiveOpacity
         }
 
-        Rectangle { color: "red"; width: 80; height: 50; border.color: "black"; radius: 15 }
+        Rectangle { color: "#80c342"; width: 0.8 * bigSize; height: smallSize }
     }
 }
