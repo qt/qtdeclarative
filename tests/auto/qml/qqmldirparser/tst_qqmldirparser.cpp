@@ -125,10 +125,12 @@ void tst_qqmldirparser::parse_data()
     QTest::addColumn<QStringList>("plugins");
     QTest::addColumn<QStringList>("components");
     QTest::addColumn<QStringList>("scripts");
+    QTest::addColumn<QStringList>("dependencies");
     QTest::addColumn<bool>("designerSupported");
 
     QTest::newRow("empty")
         << "empty/qmldir"
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -141,11 +143,13 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("one-section")
         << "one-section/qmldir"
         << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 1 were provided")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -157,11 +161,13 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("incomplete-module")
         << "incomplete-module/qmldir"
         << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 0 were provided")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -173,11 +179,13 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("repeated-module")
         << "repeated-module/qmldir"
         << (QStringList() << "qmldir:2: only one module identifier directive may be defined in a qmldir file")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -189,11 +197,13 @@ void tst_qqmldirparser::parse_data()
         << (QStringList() << "foo|")
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("incomplete-plugin")
         << "incomplete-plugin/qmldir"
         << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 0 were provided")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -205,12 +215,14 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("name-plugin")
         << "name-plugin/qmldir"
         << QStringList()
         << (QStringList() << "foo|")
+        << QStringList()
         << QStringList()
         << QStringList()
         << false;
@@ -221,6 +233,7 @@ void tst_qqmldirparser::parse_data()
         << (QStringList() << "foo|bar")
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("unversioned-component")
@@ -229,11 +242,13 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << (QStringList() << "foo|bar|-1|-1|false")
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("invalid-versioned-component")
         << "invalid-versioned-component/qmldir"
         << (QStringList() << "qmldir:1: expected '.'")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -245,6 +260,7 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << (QStringList() << "foo|bar|33|66|false")
         << QStringList()
+        << QStringList()
         << false;
 
     QTest::newRow("versioned-script")
@@ -253,6 +269,7 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << (QStringList() << "foo|bar.js|33|66")
+        << QStringList()
         << false;
 
     QTest::newRow("multiple")
@@ -263,12 +280,14 @@ void tst_qqmldirparser::parse_data()
                           << "ComponentA|componenta-1_5.qml|1|5|false"
                           << "ComponentB|componentb-1_5.qml|1|5|false")
         << (QStringList() << "ScriptA|scripta-1_0.js|1|0")
+        << QStringList()
         << false;
 
     QTest::newRow("designersupported-yes")
         << "designersupported-yes/qmldir"
         << QStringList()
         << (QStringList() << "foo|")
+        << QStringList()
         << QStringList()
         << QStringList()
         << true;
@@ -279,7 +298,17 @@ void tst_qqmldirparser::parse_data()
         << (QStringList() << "foo|")
         << QStringList()
         << QStringList()
+        << QStringList()
         << false;
+
+    QTest::newRow("dependency")
+            << "dependency/qmldir"
+            << QStringList()
+            << (QStringList() << "foo|")
+            << QStringList()
+            << QStringList()
+            << (QStringList() << "bar||1|0|true")
+            << false;
 }
 
 void tst_qqmldirparser::parse()
@@ -289,6 +318,7 @@ void tst_qqmldirparser::parse()
     QFETCH(QStringList, plugins);
     QFETCH(QStringList, components);
     QFETCH(QStringList, scripts);
+    QFETCH(QStringList, dependencies);
     QFETCH(bool, designerSupported);
 
     QFile f(testFile(file));
@@ -307,6 +337,8 @@ void tst_qqmldirparser::parse()
     QCOMPARE(toStringList(p.plugins()), plugins);
     QCOMPARE(toStringList(p.components()), components);
     QCOMPARE(toStringList(p.scripts()), scripts);
+    QCOMPARE(toStringList(p.dependencies()), dependencies);
+
     QCOMPARE(p.designerSupported(), designerSupported);
 }
 

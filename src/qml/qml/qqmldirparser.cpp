@@ -231,6 +231,28 @@ bool QQmlDirParser::parse(const QString &source)
                 reportError(lineNumber, 0, QString::fromLatin1("designersupported does not expect any argument"));
             else
                 _designerSupported = true;
+        } else if (sections[0] == QLatin1String("depends")) {
+            if (sectionCount != 3) {
+                reportError(lineNumber, 0,
+                            QString::fromLatin1("depends requires 2 arguments, but %1 were provided").arg(sectionCount - 1));
+                continue;
+            }
+
+            const QString &version = sections[2];
+            const int dotIndex = version.indexOf(QLatin1Char('.'));
+            bool validVersionNumber = false;
+            const int majorVersion = parseInt(QStringRef(&version, 0, dotIndex), &validVersionNumber);
+            if (validVersionNumber) {
+                const int minorVersion = parseInt(QStringRef(&version, dotIndex+1, version.length()-dotIndex-1), &validVersionNumber);
+
+                if (validVersionNumber) {
+                    Component entry(sections[1], QString(), majorVersion, minorVersion);
+                    entry.internal = true;
+                    _dependencies.insert(entry.typeName, entry);
+                }
+            } else {
+                reportError(lineNumber, 0, QString(QLatin1String("invalid version %1")).arg(version));
+            }
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], -1, -1);
@@ -346,6 +368,11 @@ QList<QQmlDirParser::Plugin> QQmlDirParser::plugins() const
 QHash<QString, QQmlDirParser::Component> QQmlDirParser::components() const
 {
     return _components;
+}
+
+QHash<QString, QQmlDirParser::Component> QQmlDirParser::dependencies() const
+{
+    return _dependencies;
 }
 
 QList<QQmlDirParser::Script> QQmlDirParser::scripts() const
