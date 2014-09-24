@@ -60,8 +60,10 @@ QQmlListProperty<QObject> StateBase::children()
 
 /*!
     \qmltype QAbstractState
-    \inqmlmodule QtStateMachine 1.0
-    \ingroup qmlstatemachine
+    \inqmlmodule QtQml.StateMachine
+    \omit
+    \ingroup statemachine-qmltypes
+    \endomit
     \since 5.4
 
     \brief The QAbstractState type is the base type of States of a StateMachine.
@@ -104,9 +106,9 @@ QQmlListProperty<QObject> StateBase::children()
 
 /*!
     \qmltype StateBase
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QAbstractState
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief Provides a general-purpose state for StateMachine.
@@ -177,9 +179,9 @@ QQmlListProperty<QObject> StateBase::children()
 
 /*!
     \qmltype HistoryState
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QAbstractState
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief The HistoryState type provides a means of returning to a previously active substate.

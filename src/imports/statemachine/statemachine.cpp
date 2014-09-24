@@ -79,9 +79,9 @@ QQmlListProperty<QObject> StateMachine::children()
 
 /*!
     \qmltype StateMachine
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits StateBase
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief Provides a hierarchical finite state machine.

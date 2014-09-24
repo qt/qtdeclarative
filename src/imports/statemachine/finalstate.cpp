@@ -49,9 +49,9 @@ QQmlListProperty<QObject> FinalState::children()
 
 /*!
     \qmltype FinalState
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QAbstractState
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief Provides a final state.
