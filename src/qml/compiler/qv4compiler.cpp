@@ -66,8 +66,11 @@ void QV4::Compiler::StringTableGenerator::clear()
     stringDataSize = 0;
 }
 
-void QV4::Compiler::StringTableGenerator::serialize(uint *stringTable, char *dataStart, char *stringData)
+void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
+    char *dataStart = reinterpret_cast<char *>(unit);
+    uint *stringTable = reinterpret_cast<uint *>(dataStart + unit->offsetToStringTable);
+    char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     for (int i = 0; i < strings.size(); ++i) {
         stringTable[i] = stringData - dataStart;
         const QString &qstr = strings.at(i);
@@ -190,7 +193,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
     return jsClasses.size() - 1;
 }
 
-QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
+QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(irModule->fileName);
     foreach (QV4::IR::Function *f, irModule->functions) {
@@ -214,7 +217,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
-    const int totalSize = unitSize + functionDataSize + jsClassDataSize + stringTable.sizeOfTableAndData();
+    const int totalSize = unitSize + functionDataSize + jsClassDataSize + (option == GenerateWithStringTable ? stringTable.sizeOfTableAndData() : 0);
     char *data = (char *)malloc(totalSize);
     memset(data, 0, totalSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
@@ -234,8 +237,13 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToConstantTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
     unit->jsClassTableSize = jsClasses.count();
     unit->offsetToJSClassTable = unit->offsetToConstantTable + unit->constantTableSize * sizeof(ReturnedValue);
-    unit->stringTableSize = stringTable.stringCount();
-    unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
+    if (option == GenerateWithStringTable) {
+        unit->stringTableSize = stringTable.stringCount();
+        unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
+    } else {
+        unit->stringTableSize = 0;
+        unit->offsetToStringTable = 0;
+    }
     unit->indexOfRootFunction = -1;
     unit->sourceFileIndex = getStringId(irModule->fileName);
     unit->nImports = 0;
@@ -287,11 +295,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     }
 
     // write strings and string table
-    {
-        uint *stringTablePtr = (uint *)(data + unit->offsetToStringTable);
-        char *string = data + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
-        stringTable.serialize(stringTablePtr, data, string);
-    }
+    if (option == GenerateWithStringTable)
+        stringTable.serialize(unit);
 
     return unit;
 }

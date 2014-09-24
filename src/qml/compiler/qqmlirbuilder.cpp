@@ -1523,7 +1523,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectsSize += signalTableSize;
     }
 
-    const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize;
+    const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
     if (jsUnit != compilationUnit->data)
@@ -1539,6 +1539,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     qmlUnit->offsetToObjects = unitSize + importSize;
     qmlUnit->nObjects = output.objects.count();
     qmlUnit->indexOfRootObject = output.indexOfRootObject;
+    qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
+    qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
@@ -1629,6 +1631,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             break;
         }
     }
+
+    output.jsGenerator.stringTable.serialize(qmlUnit);
 
     return qmlUnit;
 }

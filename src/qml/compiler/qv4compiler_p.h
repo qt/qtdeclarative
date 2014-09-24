@@ -63,7 +63,7 @@ struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
 
     void clear();
 
-    void serialize(uint *stringTable, char *dataStart, char *stringData);
+    void serialize(CompiledData::Unit *unit);
 
 private:
     QHash<QString, int> stringToId;
@@ -90,7 +90,12 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     int registerJSClass(int count, IR::ExprList *args);
 
-    QV4::CompiledData::Unit *generateUnit();
+    enum GeneratorOption {
+        GenerateWithStringTable,
+        GenerateWithoutStringTable
+    };
+
+    QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     // Returns bytes written
     int writeFunction(char *f, int index, IR::Function *irFunction);
 
