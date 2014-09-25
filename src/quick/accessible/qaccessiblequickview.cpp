@@ -50,19 +50,16 @@ QAccessibleQuickWindow::QAccessibleQuickWindow(QQuickWindow *object)
 {
 }
 
-QQuickItem *QAccessibleQuickWindow::rootItem() const
+QList<QQuickItem *> QAccessibleQuickWindow::rootItems() const
 {
-    if (QQuickItem *ci = window()->contentItem()) {
-        const QList<QQuickItem *> &childItems = accessibleUnignoredChildren(ci);
-        if (!childItems.isEmpty())
-            return childItems.first();
-    }
-    return 0;
+    if (QQuickItem *ci = window()->contentItem())
+        return accessibleUnignoredChildren(ci);
+    return QList<QQuickItem *>();
 }
 
 int QAccessibleQuickWindow::childCount() const
 {
-    return rootItem() ? 1 : 0;
+    return rootItems().count();
 }
 
 QAccessibleInterface *QAccessibleQuickWindow::parent() const
@@ -73,8 +70,9 @@ QAccessibleInterface *QAccessibleQuickWindow::parent() const
 
 QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 {
-    if (index == 0)
-        return QAccessible::queryAccessibleInterface(rootItem());
+    const QList<QQuickItem*> &kids = rootItems();
+    if (index >= 0 && index < kids.count())
+        return QAccessible::queryAccessibleInterface(kids.at(index));
     return 0;
 }
 
@@ -127,12 +125,17 @@ QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const
 
 int QAccessibleQuickWindow::indexOfChild(const QAccessibleInterface *iface) const
 {
+    int i = -1;
     if (iface) {
-        QQuickItem *declarativeRoot = rootItem();
-        if (declarativeRoot == iface->object())
-            return 0;
+        const QList<QQuickItem *> &roots = rootItems();
+        i = roots.count() - 1;
+        while (i >= 0) {
+            if (iface->object() == roots.at(i))
+                break;
+            --i;
+        }
     }
-    return -1;
+    return i;
 }
 
 QT_END_NAMESPACE
