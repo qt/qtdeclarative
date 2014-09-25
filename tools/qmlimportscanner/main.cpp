@@ -124,6 +124,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     // a qml import may contain several plugins
     QString plugins;
     QString classnames;
+    QStringList dependencies;
     QByteArray line;
     do {
         line = qmldirFile.readLine();
@@ -133,6 +134,12 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
         } else if (line.startsWith("classname")) {
             classnames += QString::fromUtf8(line.split(' ').at(1));
             classnames += QStringLiteral(" ");
+        } else if (line.startsWith("depends")) {
+            QList<QByteArray> dep = line.split(' ');
+            if (dep.length() != 3)
+                std::cerr << "depends: expected 2 arguments: module identifier and version" << std::endl;
+            else
+                dependencies << QString::fromUtf8(dep[1]) + QStringLiteral(" ") + QString::fromUtf8(dep[2]).simplified();
         }
 
     } while (line.length() > 0);
@@ -140,6 +147,8 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     QVariantMap pluginInfo;
     pluginInfo[QStringLiteral("plugins")] = plugins.simplified();
     pluginInfo[QStringLiteral("classnames")] = classnames.simplified();
+    if (dependencies.length())
+        pluginInfo[QStringLiteral("dependencies")] = dependencies;
     return pluginInfo;
 }
 
@@ -173,9 +182,10 @@ QString resolveImportPath(const QString &uri, const QString &version)
 QVariantList findPathsForModuleImports(const QVariantList &imports)
 {
     QVariantList done;
+    QVariantList importsCopy(imports);
 
-    foreach (QVariant importVariant, imports) {
-        QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
+    for (int i = 0; i < importsCopy.length(); ++i) {
+        QVariantMap import = qvariant_cast<QVariantMap>(importsCopy[i]);
         if (import[QStringLiteral("type")] == QStringLiteral("module")) {
             QString path = resolveImportPath(import.value(QStringLiteral("name")).toString(), import.value(QStringLiteral("version")).toString());
             if (!path.isEmpty())
@@ -187,6 +197,17 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                 import[QStringLiteral("plugin")] = plugins;
             if (!classnames.isEmpty())
                 import[QStringLiteral("classname")] = classnames;
+            if (plugininfo.contains(QStringLiteral("dependencies"))) {
+                QStringList dependencies = plugininfo.value(QStringLiteral("dependencies")).toStringList();
+                foreach (QString line, dependencies) {
+                    QList<QString> dep = line.split(QStringLiteral(" "));
+                    QVariantMap depImport;
+                    depImport[QStringLiteral("type")] = QStringLiteral("module");
+                    depImport[QStringLiteral("name")] = dep[0];
+                    depImport[QStringLiteral("version")] = dep[1];
+                    importsCopy.append(depImport);
+                }
+            }
         }
         done.append(import);
     }
