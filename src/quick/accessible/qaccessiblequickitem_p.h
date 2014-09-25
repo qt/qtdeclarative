@@ -121,7 +121,6 @@ private:
 QRect itemScreenRect(QQuickItem *item);
 QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder = false);
 
-
 #endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE

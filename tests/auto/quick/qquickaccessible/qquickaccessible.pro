@@ -10,10 +10,11 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-OTHER_FILES += data/checkbuttons.qml
-OTHER_FILES += data/hittest.qml
-OTHER_FILES += data/pushbutton.qml
-OTHER_FILES += data/statictext.qml
+OTHER_FILES += data/checkbuttons.qml \
+    data/hittest.qml \
+    data/pushbutton.qml \
+    data/statictext.qml \
+    data/ignored.qml \
 
 CONFIG += parallel_test
 

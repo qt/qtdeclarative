@@ -106,6 +106,7 @@ private slots:
     void basicPropertiesTest();
     void hitTest();
     void checkableTest();
+    void ignoredTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -453,6 +454,38 @@ void tst_QQuickAccessible::checkableTest()
     QVERIFY(!(checkBox2->state().checked));
     QVERIFY(checkBox2->state().checkable);
 
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::ignoredTest()
+{
+    QScopedPointer<QQuickView> window(new QQuickView());
+    window->setSource(testFileUrl("ignored.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    // the window becomes active
+    QAccessible::State activatedChange;
+    activatedChange.active = true;
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window.data());
+    QVERIFY(iface);
+    QAccessibleInterface *rectangleA = iface->child(0);
+
+    QCOMPARE(rectangleA->role(), QAccessible::StaticText);
+    QCOMPARE(rectangleA->text(QAccessible::Name), QLatin1String("A"));
+    static const char *expected = "BEFIHD";
+    // check if node "C" and "G" is skipped and that the order is as expected.
+    for (int i = 0; i < rectangleA->childCount(); ++i) {
+        QAccessibleInterface *child = rectangleA->child(i);
+        QCOMPARE(child->text(QAccessible::Name), QString(QLatin1Char(expected[i])));
+    }
     QTestAccessibility::clearEvents();
 }
 

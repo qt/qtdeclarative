@@ -41,6 +41,7 @@ Rectangle {
     height: 480
     color: "white"
     Accessible.name: "root"
+    Accessible.role: Accessible.Client
     Rectangle {
         id: header
         color: "#c0c0c0"

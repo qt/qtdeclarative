@@ -510,7 +510,7 @@ public:
     inline qreal rotation() const { return extra.isAllocated()?extra->rotation:0; }
     inline qreal opacity() const { return extra.isAllocated()?extra->opacity:1; }
 
-    void setAccessibleFlagAndListener();
+    void setAccessible();
 
     virtual qreal getImplicitWidth() const;
     virtual qreal getImplicitHeight() const;

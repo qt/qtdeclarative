@@ -1607,17 +1607,9 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
     }
 }
 
-void QQuickItemPrivate::setAccessibleFlagAndListener()
+void QQuickItemPrivate::setAccessible()
 {
-    Q_Q(QQuickItem);
-    QQuickItem *item = q;
-    while (item) {
-        if (item->d_func()->isAccessible)
-            break; // already set - grandparents should have the flag set as well.
-
-        item->d_func()->isAccessible = true;
-        item = item->d_func()->parentItem;
-    }
+    isAccessible = true;
 }
 
 /*!
@@ -2584,9 +2576,6 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
     d->parentNotifier.notify();
-    if (d->isAccessible && d->parentItem) {
-        d->parentItem->d_func()->setAccessibleFlagAndListener();
-    }
 
     emit parentChanged(d->parentItem);
     if (isVisible() && d->parentItem)

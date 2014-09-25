@@ -108,7 +108,7 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
     QQuickItem *parent = item()->parentItem();
     QQuickWindow *window = item()->window();
     QQuickItem *ci = window ? window->contentItem() : 0;
-    while (parent && parent != ci)
+    while (parent && !QQuickItemPrivate::get(parent)->isAccessible && parent != ci)
         parent = parent->parentItem();
 
     if (parent) {
@@ -120,6 +120,8 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
             // it here and return an interface for the scene instead.
             return QAccessible::queryAccessibleInterface(window);
         } else {
+            while (parent && !parent->d_func()->isAccessible)
+                parent = parent->parentItem();
             return QAccessible::queryAccessibleInterface(parent);
         }
     }
@@ -146,16 +148,23 @@ int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
     return kids.indexOf(static_cast<QQuickItem*>(iface->object()));
 }
 
-QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder)
+static void unignoredChildren(QQuickItem *item, QList<QQuickItem *> *items, bool paintOrder)
 {
-    QList<QQuickItem *> items;
     QList<QQuickItem*> childItems = paintOrder ? QQuickItemPrivate::get(item)->paintOrderChildItems()
                                                : item->childItems();
     Q_FOREACH (QQuickItem *child, childItems) {
-        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(child);
-        if (itemPrivate->isAccessible)
-            items.append(child);
+        if (QQuickItemPrivate::get(child)->isAccessible) {
+            items->append(child);
+        } else {
+            unignoredChildren(child, items, paintOrder);
+        }
     }
+}
+
+QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder)
+{
+    QList<QQuickItem *> items;
+    unignoredChildren(item, &items, paintOrder);
     return items;
 }
 
