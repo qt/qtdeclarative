@@ -562,7 +562,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     // Don't implicitly create the scalegrid in the rendering thread...
     QRectF innerSourceRect(0, 0, 1, 1);
     QRectF innerTargetRect(0, 0, width(), height());
-    int borderLeft, borderTop, borderRight, borderBottom;
+    int borderLeft = 0, borderTop = 0, borderRight = 0, borderBottom = 0;
 
     bool updateNode = !oldNode;
     if (d->border) {
