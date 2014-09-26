@@ -6,7 +6,7 @@ SOURCES += piechart.cpp \
 
 RESOURCES += chapter3-binding.qrc
 
-DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending/chapter3-binding
+DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending-qml/chapter3-binding
 target.path = $$DESTPATH
 
 qml.files = *.qml

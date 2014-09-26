@@ -8,7 +8,7 @@ SOURCES += piechart.cpp \
 
 RESOURCES += chapter5-listproperties.qrc
 
-DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending/chapter5-listproperties
+DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending-qml/chapter5-listproperties
 target.path = $$DESTPATH
 
 qml.files = *.qml

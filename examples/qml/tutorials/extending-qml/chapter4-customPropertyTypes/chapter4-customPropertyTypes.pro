@@ -8,7 +8,7 @@ SOURCES += piechart.cpp \
 
 RESOURCES += chapter4-customPropertyTypes.qrc
 
-DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending/chapter4-customPropertyTypes
+DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending-qml/chapter4-customPropertyTypes
 target.path = $$DESTPATH
 
 qml.files = *.qml
