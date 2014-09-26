@@ -102,7 +102,7 @@ public:
     bool isOnCustomThread() const { return m_onCustomThread; }
 
     // Called during sync() on the scene graph thread while GUI is blocked.
-    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame) = 0;
+    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) = 0;
     bool event(QEvent *e);
 
     void initializeOpenGL(QOpenGLContext *gl, QOffscreenSurface *s) {
@@ -173,7 +173,7 @@ public:
     virtual void compositeTile(QQuickContext2DTile* tile);
     QSize adjustedTileSize(const QSize &ts);
 
-    QSGTexture *textureForNextFrame(QSGTexture *);
+    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window);
 
 protected:
     QVector2D scaleFactor() const Q_DECL_OVERRIDE;
@@ -209,7 +209,7 @@ public:
     virtual void endPainting();
     virtual void compositeTile(QQuickContext2DTile* tile);
 
-    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame);
+    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window);
 
 public Q_SLOTS:
     virtual void grabImage(const QRectF& region = QRectF());

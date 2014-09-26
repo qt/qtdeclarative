@@ -749,7 +749,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     QQuickContext2D *ctx = qobject_cast<QQuickContext2D *>(d->context);
     QQuickContext2DTexture *factory = ctx->texture();
-    QSGTexture *texture = factory->textureForNextFrame(node->texture());
+    QSGTexture *texture = factory->textureForNextFrame(node->texture(), window());
     if (!texture) {
         delete node;
         d->node = 0;

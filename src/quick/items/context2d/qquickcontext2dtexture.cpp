@@ -427,7 +427,7 @@ QVector2D QQuickContext2DFBOTexture::scaleFactor() const
                      m_fbo->height() / m_fboSize.height());
 }
 
-QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture)
+QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTexture, QQuickWindow *)
 {
     QSGPlainTexture *texture = static_cast<QSGPlainTexture *>(lastTexture);
 
@@ -666,22 +666,15 @@ void QQuickContext2DImageTexture::grabImage(const QRectF& rf)
     QQuickContext2D::mutex.unlock();
 }
 
-QSGTexture *QQuickContext2DImageTexture::textureForNextFrame(QSGTexture *last)
+QSGTexture *QQuickContext2DImageTexture::textureForNextFrame(QSGTexture *last, QQuickWindow *window)
 {
-    QSGPlainTexture *texture = static_cast<QSGPlainTexture *>(last);
-
     if (m_onCustomThread)
         m_mutex.lock();
 
-    if (!texture) {
-        texture = new QSGPlainTexture();
-        texture->setHasAlphaChannel(true);
-        m_dirtyTexture = true;
-    }
-    if (m_dirtyTexture) {
-        texture->setImage(m_displayImage);
-        m_dirtyTexture = false;
-    }
+    delete last;
+
+    QSGTexture *texture = window->createTextureFromImage(m_displayImage, QQuickWindow::TextureCanUseAtlas);
+    m_dirtyTexture = false;
 
     if (m_onCustomThread)
         m_mutex.unlock();
