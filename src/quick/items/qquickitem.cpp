@@ -1838,6 +1838,101 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     their layouts.
 
     See LayoutMirroring for more details.
+
+    \section1 Item Layers
+
+    An Item will normally be rendered directly into the window it
+    belongs to. However, by setting \l layer.enabled, it is possible
+    to delegate the item and its entire subtree into an offscreen
+    surface. Only the offscreen surface, a texture, will be then drawn
+    into the window.
+
+    If it is desired to have a texture size different from that of the
+    item, this is possible using \l layer.textureSize. To render only
+    a section of the item into the texture, use \l
+    layer.sourceRect. It is also possible to specify \l
+    layer.sourceRect so it extends beyond the bounds of the item. In
+    this case, the exterior will be padded with transparent pixels.
+
+    The item will use linear interpolation for scaling if
+    \l layer.smooth is set to \c true and will use mipmap for
+    downsampling if \l layer.mipmap is set to \c true. Mipmapping may
+    improve visual quality of downscaled items. For mipmapping of
+    single Image items, prefer Image::mipmap.
+
+    \section2 Layer Opacity vs Item Opacity
+
+    When applying \l opacity to an item hierarchy the opacity is
+    applied to each item individually. This can lead to undesired
+    visual results when the opacity is applied to a subtree. Consider
+    the following example:
+
+    \table
+    \row
+      \li \inlineimage qml-blending-nonlayered.png
+      \li \b {Non-layered Opacity} \snippet qml/layerblending.qml non-layered
+    \endtable
+
+    A layer is rendered with the root item's opacity being 1, and then
+    the root item's opacity is applied to the texture when it is
+    drawn. This means that fading in a large item hierarchy from
+    transparent to opaque, or vice versa, can be done without the
+    overlap artifacts that the normal item by item alpha blending
+    has. Here is the same example with layer enabled:
+
+    \table
+    \row
+      \li \image qml-blending-layered.png
+      \li \b {Layered Opacity} \snippet qml/layerblending.qml layered
+    \endtable
+
+    \section2 Combined with ShaderEffects
+
+    Setting \l layer.enabled to true will turn the item into a \l
+    {QQuickItem::isTextureProvider}{texture provider}, making it
+    possible to use the item directly as a texture, for instance
+    in combination with the ShaderEffect type.
+
+    It is possible to apply an effect on a layer at runtime using
+    layer.effect:
+
+    \snippet qml/layerwitheffect.qml 1
+
+    In this example, we implement the shader effect manually. The \l
+    {Qt Graphical Effects} module contains a suite of ready-made
+    effects for use with Qt Quick.
+
+    See ShaderEffect for more information about using effects.
+
+    \note \l layer.enabled is actually just a more convenient way of using
+    ShaderEffectSource.
+
+
+    \section2 Memory and Performance
+
+    When an item's layer is enabled, the scene graph will allocate memory
+    in the GPU equal to \c {width x height x 4}. In memory constrained
+    configurations, large layers should be used with care.
+
+    In the QPainter / QWidget world, it is some times favorable to
+    cache complex content in a pixmap, image or texture. In Qt Quick,
+    because of the techniques already applied by the \l {Qt Quick
+    Scene Graph Renderer} {scene graph renderer}, this will in most
+    cases not be the case. Excessive draw calls are already reduced
+    because of batching and a cache will in most cases end up blending
+    more pixels than the original content. The overhead of rendering
+    to an offscreen and the blending involved with drawing the
+    resulting texture is therefore often more costly than simply
+    letting the item and its children be drawn normally.
+
+    Also, an item using a layer can not be \l {Batching} {batched} during
+    rendering. This means that a scene with many layered items may
+    have performance problems.
+
+    Layering can be convenient and useful for visual effects, but
+    should in most cases be enabled for the duration of the effect and
+    disabled afterwards.
+
 */
 
 /*!
@@ -7486,12 +7581,15 @@ void QQuickItemLayer::setMipmap(bool mipmap)
     allow you to save some texture memory.
 
     \list
-    \li ShaderEffectSource.Alpha - GL_ALPHA
+    \li ShaderEffectSource.Alpha - GL_ALPHA;
     \li ShaderEffectSource.RGB - GL_RGB
     \li ShaderEffectSource.RGBA - GL_RGBA
     \endlist
 
-    \note Some OpenGL implementations do not support the GL_ALPHA format.
+    \note ShaderEffectSource.RGB and ShaderEffectSource.Alpha should
+    be used with caution, as support for these formats in the underlying
+    hardare and driver is often not present.
+
  */
 
 void QQuickItemLayer::setFormat(QQuickShaderEffectSource::Format f)

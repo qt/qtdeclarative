@@ -641,10 +641,34 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     corner. For non-linear vertex transformations, like page curl, you can
     specify a fine grid of vertices by specifying a \l mesh resolution.
 
+    \section1 ShaderEffect and Item Layers
+
+    The ShaderEffect type can be combined with \l {Item Layers} {layered items}.
+
+    \table
+    \row
+      \li \b {Layer with effect disabled} \inlineimage qml-shadereffect-nolayereffect.png
+      \li \b {Layer with effect enabled} \inlineimage qml-shadereffect-layereffect.png
+      \li \snippet qml/layerwitheffect.qml 1
+    \endtable
+
+    It is also possible to combine multiple layered items:
+
+    \table
+    \row
+      \li \inlineimage qml-shadereffect-opacitymask.png
+      \li \snippet qml/opacitymask.qml 1
+    \endtable
+
+    The \l {Qt Graphical Effects} module contains several ready-made effects
+    for using with Qt Quick applications.
+
     \note Scene Graph textures have origin in the top-left corner rather than
     bottom-left which is common in OpenGL.
 
     For information about the GLSL version being used, see \l QtQuick::OpenGLInfo.
+
+    \sa {Item Layers}
 */
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
