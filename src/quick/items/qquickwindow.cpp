@@ -1654,8 +1654,8 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 
                 // Leaving from previous hovered items until we reach the item or one of its ancestors.
                 while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
-                    sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
-                    hoverItems.removeFirst();
+                    QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
+                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, accepted);
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
