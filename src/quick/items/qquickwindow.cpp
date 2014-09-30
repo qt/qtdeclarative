@@ -364,19 +364,22 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
     animationController->advance();
     emit q->beforeRendering();
     runAndClearJobs(&beforeRenderingJobs);
-    int fboId = 0;
-    const qreal devicePixelRatio = q->devicePixelRatio();
-    renderer->setDeviceRect(QRect(QPoint(0, 0), size * devicePixelRatio));
-    if (renderTargetId) {
-        fboId = renderTargetId;
-        renderer->setViewportRect(QRect(QPoint(0, 0), renderTargetSize));
-    } else {
-        renderer->setViewportRect(QRect(QPoint(0, 0), size * devicePixelRatio));
-    }
-    renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
-    renderer->setDevicePixelRatio(q->devicePixelRatio());
+    if (!customRenderStage || !customRenderStage->render()) {
+        int fboId = 0;
+        const qreal devicePixelRatio = q->devicePixelRatio();
+        renderer->setDeviceRect(QRect(QPoint(0, 0), size * devicePixelRatio));
+        if (renderTargetId) {
+            fboId = renderTargetId;
+            renderer->setViewportRect(QRect(QPoint(0, 0), renderTargetSize));
+        } else {
+            renderer->setViewportRect(QRect(QPoint(0, 0), size * devicePixelRatio));
+        }
+        renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+        renderer->setDevicePixelRatio(q->devicePixelRatio());
 
-    context->renderNextFrame(renderer, fboId);
+        context->renderNextFrame(renderer, fboId);
+    }
+
     emit q->afterRendering();
     runAndClearJobs(&afterRenderingJobs);
 }
@@ -399,6 +402,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , windowManager(0)
     , renderControl(0)
     , touchRecursionGuard(0)
+    , customRenderStage(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , persistentGLContext(true)
@@ -418,6 +422,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
 {
+    delete customRenderStage;
 }
 
 void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)

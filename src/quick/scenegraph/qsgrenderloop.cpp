@@ -363,7 +363,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     }
 
     if (alsoSwap && window->isVisible()) {
-        gl->swapBuffers(window);
+        if (!cd->customRenderStage || !cd->customRenderStage->swap())
+            gl->swapBuffers(window);
         cd->fireFrameSwapped();
     }
 

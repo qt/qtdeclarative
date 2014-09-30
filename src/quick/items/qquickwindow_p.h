@@ -89,6 +89,14 @@ class QQuickWindowIncubationController;
 
 class QOpenGLVertexArrayObjectHelper;
 
+class Q_QUICK_PRIVATE_EXPORT QQuickCustomRenderStage
+{
+public:
+    virtual ~QQuickCustomRenderStage() {}
+    virtual bool render() = 0;
+    virtual bool swap() = 0;
+};
+
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate : public QWindowPrivate
 {
 public:
@@ -209,6 +217,7 @@ public:
     QQuickAnimatorController *animationController;
     QTouchEvent *delayedTouch;
     int touchRecursionGuard;
+    QQuickCustomRenderStage *customRenderStage;
 
     QColor clearColor;
 

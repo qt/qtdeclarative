@@ -534,16 +534,19 @@ void QSGRenderThread::syncAndRender()
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "syncAndRender()";
 
     syncResultedInChanges = false;
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    uint pending = pendingUpdate;
+    bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage;
+    bool syncRequested = pendingUpdate & SyncRequest;
+    bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     pendingUpdate = 0;
 
-    if (pending & SyncRequest) {
+    if (syncRequested) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- updatePending, doing sync";
-        sync(pending == ExposeRequest);
+        sync(exposeRequested);
     }
 
-    if (!syncResultedInChanges && ((pending & RepaintRequest) == 0)) {
+    if (!syncResultedInChanges && !repaintRequested) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- no changes, render aborted";
         int waitTime = vsyncDelta - (int) waitTimer.elapsed();
         if (waitTime > 0)
@@ -557,7 +560,6 @@ void QSGRenderThread::syncAndRender()
 
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering started";
 
-    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
     if (animatorDriver->isRunning()) {
         d->animationController->lock();
@@ -573,7 +575,8 @@ void QSGRenderThread::syncAndRender()
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
-        gl->swapBuffers(window);
+        if (!d->customRenderStage || !d->customRenderStage->swap())
+            gl->swapBuffers(window);
         d->fireFrameSwapped();
     } else {
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame, 1);
@@ -587,7 +590,7 @@ void QSGRenderThread::syncAndRender()
     // that to avoid blocking the GUI thread in the case where it
     // has started rendering with a bad window, causing makeCurrent to
     // fail or if the window has a bad size.
-    if (pending == ExposeRequest) {
+    if (exposeRequested) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- wake Gui after initial expose";
         waitCondition.wakeOne();
         mutex.unlock();
