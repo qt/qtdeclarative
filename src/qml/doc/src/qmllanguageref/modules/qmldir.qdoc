@@ -210,6 +210,25 @@ typeinfo mymodule.qmltypes
             as code completion for the types defined in your plugins.
 
     \row
+        \li Dependency Declaration
+        \li
+            \code
+depends <ModuleIdentifier> <InitialVersion>
+            \endcode
+        \li Declares that this module depends on another.
+
+            Example:
+            \code
+depends MyOtherModule 1.0
+            \endcode
+
+            This declaration is necessary only in cases when the dependency is
+            hidden: for example, when the C++ code for one module is used to
+            load QML (perhaps conditionally) which then depends on other
+            modules. In such cases, the \c depends declaration is necessary
+            to include the other modules in application packages.
+
+    \row
         \li Comment
         \li
             \code
