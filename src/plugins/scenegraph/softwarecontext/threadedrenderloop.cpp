@@ -574,7 +574,6 @@ void RenderThread::run()
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "run()";
     animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
     animatorDriver->install();
-    QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
     if (QQmlDebugService::isDebuggingEnabled())
         QQuickProfiler::registerAnimationCallback();
 
