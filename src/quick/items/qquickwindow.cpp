@@ -1376,6 +1376,11 @@ bool QQuickWindow::event(QEvent *e)
         if (d->mouseGrabberItem)
             d->mouseGrabberItem->ungrabMouse();
         break;
+    case QEvent::UpdateRequest: {
+        if (d->windowManager)
+            d->windowManager->handleUpdateRequest(this);
+        break;
+    }
     default:
         break;
     }
