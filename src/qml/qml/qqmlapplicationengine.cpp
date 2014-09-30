@@ -160,6 +160,10 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   }
   \endcode
 
+  Unlike QQuickView, QQmlApplicationEngine does not automatically create a root
+  window. If you are using visual items from Qt Quick, you will need to place
+  them inside of a \l [QML] {Window}.
+
   You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as \c QtQuick).
 
   List of configuration changes from a default QQmlEngine:
@@ -167,7 +171,7 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   \list
   \li Connecting Qt.quit() to QCoreApplication::quit()
   \li Automatically loads translation files from an i18n directory adjacent to the main QML file.
-  \li Automatically sets an incubuation controller if the scene contains a QQuickWindow.
+  \li Automatically sets an incubation controller if the scene contains a QQuickWindow.
   \li Automatically sets a \c QQmlFileSelector as the url interceptor, applying file selectors to all
   QML files and assets.
   \endlist
