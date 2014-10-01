@@ -47,12 +47,12 @@ is delivered to it.
 \li The key event is delivered by the scene to the \l Item with
 \e {active focus}. If no item has active focus, the key event is ignored.
 \li If the \l QQuickItem with active focus accepts the key event, propagation
-stops. Otherwise the event is send to the Item's parent until
+stops. Otherwise the event is sent to the Item's parent until
 the event is accepted, or the root item is reached.
 
 If the \c {Rectangle} type in the following example has active focus and the \c A key is pressed,
-the event will not be propagated further. Pressing the \c B key the event will propagate to the root
-item and thus subsequently be ignored.
+the event will not be propagated further. Upon pressing the \c B key, the event will propagate to the root
+item and thus be ignored.
 
 \snippet qml/focus/rectangle.qml simple key event
 \snippet qml/focus/rectangle.qml simple key event end
