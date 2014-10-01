@@ -339,25 +339,4 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
     }
 }
 
-void QSGLayer::markDirtyTextureLater()
-{
-    QCoreApplication::postEvent(this, new QEvent(static_cast<QEvent::Type>(markDirtyEventType())));
-}
-
-void QSGLayer::customEvent(QEvent *event)
-{
-    if (event->type() == markDirtyEventType())
-        markDirtyTexture();
-    else
-        QObject::customEvent(event);
-}
-
-int QSGLayer::markDirtyEventType()
-{
-    static int type = QEvent::None;
-    if (type == QEvent::None)
-        type = QEvent::registerEventType();
-    return type;
-}
-
 QT_END_NAMESPACE

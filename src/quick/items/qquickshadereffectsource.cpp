@@ -74,7 +74,6 @@ public:
     QSGTexture::WrapMode horizontalWrap;
     QSGTexture::WrapMode verticalWrap;
 };
-#include "qquickshadereffectsource.moc"
 
 class QQuickShaderEffectSourceCleanup : public QRunnable
 {
@@ -586,13 +585,24 @@ void QQuickShaderEffectSource::releaseResources()
     }
 }
 
+class QQuickShaderSourceAttachedNode : public QObject, public QSGNode
+{
+    Q_OBJECT
+public:
+    Q_SLOT void markTextureDirty() {
+        QSGNode *pn = QSGNode::parent();
+        if (pn) {
+            Q_ASSERT(pn->type() == QSGNode::GeometryNodeType);
+            pn->markDirty(DirtyMaterial);
+        }
+    }
+};
+
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
-        if (m_texture) {
+        if (m_texture)
             m_texture->setItem(0);
-            m_texture->setShaderSourceNode(0);
-        }
         delete oldNode;
         return 0;
     }
@@ -658,7 +668,9 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
         node = d->sceneGraphContext()->createImageNode();
         node->setFlag(QSGNode::UsePreprocess);
         node->setTexture(m_texture);
-        m_texture->setShaderSourceNode(node);
+        QQuickShaderSourceAttachedNode *attached = new QQuickShaderSourceAttachedNode;
+        node->appendChildNode(attached);
+        connect(m_texture, SIGNAL(updateRequested()), attached, SLOT(markTextureDirty()));
     }
 
     // If live and recursive, update continuously.
@@ -697,5 +709,7 @@ void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeDat
     }
     QQuickItem::itemChange(change, value);
 }
+
+#include "qquickshadereffectsource.moc"
 
 QT_END_NAMESPACE
