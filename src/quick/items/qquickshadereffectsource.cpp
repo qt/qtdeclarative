@@ -324,7 +324,9 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
     m_sourceItem = item;
 
     if (m_sourceItem) {
-        if (window() == m_sourceItem->window()) {
+        if (window() == m_sourceItem->window()
+                || (window() == 0 && m_sourceItem->window())
+                || (m_sourceItem->window() == 0 && window())) {
             QQuickItemPrivate *d = QQuickItemPrivate::get(item);
             // 'item' needs a window to get a scene graph node. It usually gets one through its
             // parent, but if the source item is "inline" rather than a reference -- i.e.
@@ -332,6 +334,8 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             // In those cases, 'item' should get the window from 'this'.
             if (window())
                 d->refWindow(window());
+            else if (m_sourceItem->window())
+                d->refWindow(m_sourceItem->window());
             d->refFromEffectItem(m_hideSource);
             d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
             connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
