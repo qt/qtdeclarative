@@ -70,7 +70,9 @@ Item {
         name: "shadersource-dynamic-sourceobject"
         function test_endresult() {
             var image = grabImage(shaderSource);
-            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0, 1));
+            compare(image.red(0,0), 255);
+            compare(image.green(0,0), 0);
+            compare(image.blue(0,0), 0);
         }
     }
 }
