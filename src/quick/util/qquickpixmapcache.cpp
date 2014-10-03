@@ -40,6 +40,7 @@
 #include <private/qqmlengine_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qimage_p.h>
 #include <qpa/qplatformintegration.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
@@ -331,6 +332,29 @@ QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
     return accessManager;
 }
 
+static void maybeRemoveAlpha(QImage *image)
+{
+    // If the image
+    if (image->hasAlphaChannel() && image->data_ptr()
+            && !image->data_ptr()->checkForAlphaPixels()) {
+        switch (image->format()) {
+        case QImage::Format_RGBA8888:
+        case QImage::Format_RGBA8888_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_RGBX8888);
+            break;
+        case QImage::Format_A2BGR30_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_BGR30);
+            break;
+        case QImage::Format_A2RGB30_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_RGB30);
+            break;
+        default:
+            *image = image->convertToFormat(QImage::Format_RGB32);
+            break;
+        }
+    }
+}
+
 static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *errorString, QSize *impsize,
                       const QSize &requestSize)
 {
@@ -360,6 +384,7 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
         *impsize = imgio.size();
 
     if (imgio.read(image)) {
+        maybeRemoveAlpha(image);
         if (impsize && impsize->width() < 0)
             *impsize = image->size();
         return true;
