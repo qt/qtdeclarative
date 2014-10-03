@@ -201,10 +201,12 @@ int QQuickSpriteEngine::spriteFrames(int sprite)
         extra = (m_sprites[state]->m_generatedCount - 1) - extra;
 
 
-    if (extra == m_sprites[state]->m_generatedCount - 1)//last state
-        return m_sprites[state]->frames() % m_sprites[state]->m_framesPerRow;
-    else
-        return m_sprites[state]->m_framesPerRow;
+    if (extra == m_sprites[state]->m_generatedCount - 1) {//last state
+        const int framesRemaining = m_sprites[state]->frames() % m_sprites[state]->m_framesPerRow;
+        if (framesRemaining > 0)
+            return framesRemaining;
+    }
+    return m_sprites[state]->m_framesPerRow;
 }
 
 int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
@@ -219,10 +221,12 @@ int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
     if (m_sprites[state]->reverse())
         extra = (m_sprites[state]->m_generatedCount - 1) - extra;
 
-    if (extra == m_sprites[state]->m_generatedCount - 1)//last state
-        return m_duration[sprite] % rowDuration;
-    else
-        return rowDuration;
+    if (extra == m_sprites[state]->m_generatedCount - 1) {//last state
+        const int durationRemaining = m_duration[sprite] % rowDuration;
+        if (durationRemaining > 0)
+            return durationRemaining;
+    }
+    return rowDuration;
 }
 
 int QQuickSpriteEngine::spriteY(int sprite)
