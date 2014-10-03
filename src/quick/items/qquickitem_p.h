@@ -634,7 +634,7 @@ public:
     bool backtabSet : 1;
 };
 
-class QQuickKeyNavigationAttached : public QObject, public QQuickItemKeyFilter
+class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, public QQuickItemKeyFilter
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeyNavigationAttached)
