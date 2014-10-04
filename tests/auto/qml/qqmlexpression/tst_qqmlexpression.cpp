@@ -47,6 +47,7 @@ public:
 private slots:
     void scriptString();
     void syntaxError();
+    void expressionFromDataComponent();
 };
 
 class TestObject : public QObject
@@ -106,6 +107,31 @@ void tst_qqmlexpression::syntaxError()
     QQmlExpression expression(engine.rootContext(), 0, "asd asd");
     QVariant v = expression.evaluate();
     QCOMPARE(v, QVariant());
+}
+
+void tst_qqmlexpression::expressionFromDataComponent()
+{
+    qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+
+    QUrl url = testFileUrl("expressionFromDataComponent.qml");
+
+    {
+        QFile f(url.toLocalFile());
+        QVERIFY(f.open(QIODevice::ReadOnly));
+        c.setData(f.readAll(), url);
+    }
+
+    QScopedPointer<TestObject> object;
+    object.reset(qobject_cast<TestObject*>(c.create()));
+    Q_ASSERT(!object.isNull());
+
+    QQmlExpression expression(object->scriptString());
+    QVariant result = expression.evaluate();
+    QVERIFY(result.type() == QVariant::String);
+    QCOMPARE(result.toString(), QStringLiteral("success"));
 }
 
 QTEST_MAIN(tst_qqmlexpression)

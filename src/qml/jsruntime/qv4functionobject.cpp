@@ -108,7 +108,7 @@ FunctionObject::Data::Data(InternalClass *ic)
 FunctionObject::Data::~Data()
 {
     if (function)
-        function->compilationUnit->deref();
+        function->compilationUnit->release();
 }
 
 void FunctionObject::init(String *n, bool createProto)
@@ -226,7 +226,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
     QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
-    QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
     return FunctionObject::createScriptFunction(v4->rootContext, vmf)->asReturnedValue();
@@ -416,7 +416,7 @@ SimpleScriptFunction::Data::Data(ExecutionContext *scope, Function *function, bo
     setVTable(staticVTable());
 
     this->function = function;
-    function->compilationUnit->ref();
+    function->compilationUnit->addref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 

@@ -232,8 +232,6 @@ bool QQmlTypeCompiler::compile()
     document->javaScriptCompilationUnit->data = qmlUnit;
 
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
-    if (compiledData->compilationUnit)
-        compiledData->compilationUnit->ref();
 
     // Add to type registry of composites
     if (compiledData->isCompositeType())

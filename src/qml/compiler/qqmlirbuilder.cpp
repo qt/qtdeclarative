@@ -538,7 +538,6 @@ Document::Document(bool debugMode)
     , program(0)
     , jsGenerator(&jsModule)
     , unitFlags(0)
-    , javaScriptCompilationUnit(0)
 {
 }
 
@@ -1502,7 +1501,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 
 QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
 {
-    QV4::CompiledData::CompilationUnit *compilationUnit = output.javaScriptCompilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
     const uint unitSize = jsUnit->unitSize;
 

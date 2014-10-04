@@ -2541,7 +2541,6 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData:
 QQmlScriptData::QQmlScriptData()
     : importCache(0)
     , m_loaded(false)
-    , m_precompiledScript(0)
     , m_program(0)
 {
 }
@@ -2549,10 +2548,6 @@ QQmlScriptData::QQmlScriptData()
 QQmlScriptData::~QQmlScriptData()
 {
     delete m_program;
-    if (m_precompiledScript) {
-        m_precompiledScript->deref();
-        m_precompiledScript = 0;
-    }
 }
 
 void QQmlScriptData::initialize(QQmlEngine *engine)
@@ -2713,13 +2708,10 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     }
 
     QList<QQmlError> errors;
-    QV4::CompiledData::CompilationUnit *unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, v4, finalUrl(), source, &errors);
-    if (unit)
-        unit->ref();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, v4, finalUrl(), source, &errors);
+    // No need to addref on unit, it's initial refcount is 1
     source.clear();
     if (!errors.isEmpty()) {
-        if (unit)
-            unit->deref();
         setError(errors);
         return;
     }
@@ -2732,7 +2724,6 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     unit->data = unitData;
 
     initializeFromCompilationUnit(unit);
-    unit->deref();
 }
 
 void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
@@ -2805,8 +2796,6 @@ void QQmlScriptBlob::initializeFromCompilationUnit(QV4::CompiledData::Compilatio
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
     m_scriptData->m_precompiledScript = unit;
-    if (m_scriptData->m_precompiledScript)
-        m_scriptData->m_precompiledScript->ref();
 
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 

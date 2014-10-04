@@ -80,23 +80,23 @@ public:
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
         m_function(function), m_start(start), m_end(end)
-    { m_function->compilationUnit->ref(); }
+    { m_function->compilationUnit->addref(); }
 
     FunctionCall(const FunctionCall &other) :
         m_function(other.m_function), m_start(other.m_start), m_end(other.m_end)
-    { m_function->compilationUnit->ref(); }
+    { m_function->compilationUnit->addref(); }
 
     ~FunctionCall()
-    { m_function->compilationUnit->deref(); }
+    { m_function->compilationUnit->release(); }
 
     FunctionCall &operator=(const FunctionCall &other) {
         if (&other != this) {
             if (m_function)
-                m_function->compilationUnit->deref();
+                m_function->compilationUnit->release();
             m_function = other.m_function;
             m_start = other.m_start;
             m_end = other.m_end;
-            m_function->compilationUnit->ref();
+            m_function->compilationUnit->addref();
         }
         return *this;
     }

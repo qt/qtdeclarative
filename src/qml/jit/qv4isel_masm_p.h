@@ -66,7 +66,7 @@ public:
 
     const void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
-    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
+    virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> backendCompileStep();
 
     virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result);
     virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Expr *result);

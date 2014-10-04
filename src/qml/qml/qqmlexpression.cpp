@@ -148,20 +148,13 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     if (scriptPrivate->context) {
         QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-            QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
-            Q_ASSERT(typeData);
+        if (engine && ctxtdata && !ctxtdata->url.isEmpty() && ctxtdata->typeCompilationUnit) {
+            d->url = ctxtdata->url.toString();
+            d->line = scriptPrivate->lineNumber;
+            d->column = scriptPrivate->columnNumber;
 
-            if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                d->url = cdata->fileName();
-                d->line = scriptPrivate->lineNumber;
-                d->column = scriptPrivate->columnNumber;
-
-                if (scriptPrivate->bindingId != QQmlBinding::Invalid)
-                    runtimeFunction = cdata->compilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
-            }
-
-            typeData->release();
+            if (scriptPrivate->bindingId != QQmlBinding::Invalid)
+                runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
         }
     }
 

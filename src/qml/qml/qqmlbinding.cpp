@@ -93,17 +93,10 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
     QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-    if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-        QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
-        Q_ASSERT(typeData);
-
-        if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            url = cdata->fileName();
-            if (scriptPrivate->bindingId != QQmlBinding::Invalid)
-                runtimeFunction = cdata->compilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
-        }
-
-        typeData->release();
+    if (engine && ctxtdata && !ctxtdata->url.isEmpty() && ctxtdata->typeCompilationUnit) {
+        url = ctxtdata->url.toString();
+        if (scriptPrivate->bindingId != QQmlBinding::Invalid)
+            runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
     }
 
     setNotifyOnValueChanged(true);
