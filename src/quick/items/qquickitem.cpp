@@ -452,7 +452,7 @@ QQuickItem *QQuickKeyNavigationAttached::left() const
 void QQuickKeyNavigationAttached::setLeft(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->left == i)
+    if (d->leftSet && d->left == i)
         return;
     d->left = i;
     d->leftSet = true;
@@ -474,7 +474,7 @@ QQuickItem *QQuickKeyNavigationAttached::right() const
 void QQuickKeyNavigationAttached::setRight(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->right == i)
+    if (d->rightSet && d->right == i)
         return;
     d->right = i;
     d->rightSet = true;
@@ -496,7 +496,7 @@ QQuickItem *QQuickKeyNavigationAttached::up() const
 void QQuickKeyNavigationAttached::setUp(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->up == i)
+    if (d->upSet && d->up == i)
         return;
     d->up = i;
     d->upSet = true;
@@ -518,7 +518,7 @@ QQuickItem *QQuickKeyNavigationAttached::down() const
 void QQuickKeyNavigationAttached::setDown(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->down == i)
+    if (d->downSet && d->down == i)
         return;
     d->down = i;
     d->downSet = true;
@@ -540,7 +540,7 @@ QQuickItem *QQuickKeyNavigationAttached::tab() const
 void QQuickKeyNavigationAttached::setTab(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->tab == i)
+    if (d->tabSet && d->tab == i)
         return;
     d->tab = i;
     d->tabSet = true;
@@ -562,7 +562,7 @@ QQuickItem *QQuickKeyNavigationAttached::backtab() const
 void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->backtab == i)
+    if (d->backtabSet && d->backtab == i)
         return;
     d->backtab = i;
     d->backtabSet = true;
