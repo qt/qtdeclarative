@@ -247,6 +247,7 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
         QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
         qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
         qCDebug(QSG_LOG_INFO) << "Max Texture Size: " << renderContext->maxTextureSize();
+        qCDebug(QSG_LOG_INFO) << "Debug context:    " << format.testOption(QSurfaceFormat::DebugContext);
     }
 
     d->mutex.unlock();
@@ -337,8 +338,11 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
+    static bool enableDebug = qEnvironmentVariableIsSet("QSG_OPENGL_DEBUG");
     format.setDepthBufferSize(useDepth ? 24 : 0);
     format.setStencilBufferSize(useStencil ? 8 : 0);
+    if (enableDebug)
+        format.setOption(QSurfaceFormat::DebugContext);
     if (QQuickWindow::hasDefaultAlphaBuffer())
         format.setAlphaBufferSize(8);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
