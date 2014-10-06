@@ -122,7 +122,7 @@ public:
     QEasingCurve easingCurve() const { return m_easing; }
     void setEasingCurve(const QEasingCurve &curve) { m_easing = curve; }
 
-    void targetWasDeleted();
+    virtual void targetWasDeleted();
     virtual void initialize(QQuickAnimatorController *controller);
     virtual void writeBack() = 0;
     virtual void nodeWasDestroyed() = 0;
@@ -204,6 +204,7 @@ protected:
     QQuickTransformAnimatorJob();
     void initialize(QQuickAnimatorController *controller);
     void nodeWasDestroyed();
+    void targetWasDeleted() Q_DECL_OVERRIDE;
 
     Helper *m_helper;
 };

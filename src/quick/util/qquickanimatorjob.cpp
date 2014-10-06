@@ -256,6 +256,10 @@ QQuickTransformAnimatorJob::QQuickTransformAnimatorJob()
 QQuickTransformAnimatorJob::~QQuickTransformAnimatorJob()
 {
     if (m_helper && --m_helper->ref == 0) {
+        // The only condition for not having a controller is when target was
+        // destroyed, in which case we have neither m_helper nor m_contorller.
+        Q_ASSERT(m_controller);
+        Q_ASSERT(m_helper->item);
         m_controller->m_transforms.remove(m_helper->item);
         delete m_helper;
     }
@@ -266,6 +270,7 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
     QQuickAnimatorJob::initialize(controller);
 
     if (m_controller) {
+        bool newHelper = m_helper == 0;
         m_helper = m_controller->m_transforms.value(m_target);
         if (!m_helper) {
             m_helper = new Helper();
@@ -273,7 +278,8 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
             m_controller->m_transforms.insert(m_target, m_helper);
             QObject::connect(m_target, SIGNAL(destroyed(QObject*)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
         } else {
-            ++m_helper->ref;
+            if (newHelper) // only add reference the first time around..
+                ++m_helper->ref;
             // Make sure leftovers from previous runs are being used...
             m_helper->wasSynced = false;
         }
@@ -285,6 +291,12 @@ void QQuickTransformAnimatorJob::nodeWasDestroyed()
 {
     if (m_helper)
         m_helper->node = 0;
+}
+
+void QQuickTransformAnimatorJob::targetWasDeleted()
+{
+    m_helper = 0;
+    QQuickAnimatorJob::targetWasDeleted();
 }
 
 void QQuickTransformAnimatorJob::Helper::sync()
