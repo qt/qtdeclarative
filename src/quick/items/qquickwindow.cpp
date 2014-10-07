@@ -458,8 +458,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
 
-    animationController = new QQuickAnimatorController();
-    animationController->m_window = q;
+    animationController = new QQuickAnimatorController(q);
 
     delayedTouch = 0;
 

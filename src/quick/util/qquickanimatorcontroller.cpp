@@ -44,10 +44,19 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickAnimatorController::QQuickAnimatorController()
-    : m_window(0)
+QQuickAnimatorController::QQuickAnimatorController(QQuickWindow *window)
+    : m_window(window)
     , m_nodesAreInvalid(false)
 {
+    m_guiEntity = new QQuickAnimatorControllerGuiThreadEntity();
+    m_guiEntity->controller = this;
+    connect(window, SIGNAL(frameSwapped()), m_guiEntity, SLOT(frameSwapped()));
+}
+
+void QQuickAnimatorControllerGuiThreadEntity::frameSwapped()
+{
+    if (!controller.isNull())
+        controller->stopProxyJobs();
 }
 
 QQuickAnimatorController::~QQuickAnimatorController()
@@ -71,6 +80,8 @@ QQuickAnimatorController::~QQuickAnimatorController()
         if (!m_animatorRoots.contains(job))
             delete job;
     }
+
+    delete m_guiEntity;
 }
 
 static void qquickanimator_invalidate_node(QAbstractAnimationJob *job)
@@ -211,6 +222,27 @@ void QQuickAnimatorController::afterNodeSync()
     }
 }
 
+void QQuickAnimatorController::proxyWasDestroyed(QQuickAnimatorProxyJob *proxy)
+{
+    lock();
+    m_proxiesToStop.remove(proxy);
+    unlock();
+}
+
+void QQuickAnimatorController::stopProxyJobs()
+{
+    // Need to make a copy under lock and then stop while unlocked.
+    // Stopping triggers writeBack which in turn may lock, so it needs
+    // to be outside the lock. It is also safe because deletion of
+    // proxies happens on the GUI thread, where this code is also executing.
+    lock();
+    QSet<QQuickAnimatorProxyJob *> jobs = m_proxiesToStop;
+    m_proxiesToStop.clear();
+    unlock();
+    foreach (QQuickAnimatorProxyJob *p, jobs)
+        p->stop();
+}
+
 void QQuickAnimatorController::animationFinished(QAbstractAnimationJob *job)
 {
     /* We are currently on the render thread and m_deleting is primarily
@@ -221,8 +253,10 @@ void QQuickAnimatorController::animationFinished(QAbstractAnimationJob *job)
      */
     if (!m_deleting.contains(job)) {
         QQuickAnimatorProxyJob *proxy = m_animatorRoots[job];
-        if (proxy)
-            QCoreApplication::postEvent(proxy, new QEvent(QEvent::User));
+        if (proxy) {
+            m_window->update();
+            m_proxiesToStop << proxy;
+        }
         // else already gone...
     }
 }
@@ -254,12 +288,14 @@ void QQuickAnimatorController::startJob(QQuickAnimatorProxyJob *proxy, QAbstract
 {
     proxy->markJobManagedByController();
     m_starting[job] = proxy;
+    m_stopping.remove(job);
     requestSync();
 }
 
 void QQuickAnimatorController::stopJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job)
 {
     m_stopping[job] = proxy;
+    m_starting.remove(job);
     requestSync();
 }
 

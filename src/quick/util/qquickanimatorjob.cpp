@@ -85,6 +85,8 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
 QQuickAnimatorProxyJob::~QQuickAnimatorProxyJob()
 {
     deleteJob();
+    if (m_controller)
+        m_controller->proxyWasDestroyed(this);
 }
 
 void QQuickAnimatorProxyJob::deleteJob()
@@ -177,15 +179,6 @@ void QQuickAnimatorProxyJob::readyToAnimate()
 void QQuickAnimatorProxyJob::startedByController()
 {
     m_internalState = State_Running;
-}
-
-bool QQuickAnimatorProxyJob::event(QEvent *e)
-{
-    if (e->type() == QEvent::User) {
-        stop();
-        return true;
-    }
-    return QObject::event(e);
 }
 
 static void qquick_syncback_helper(QAbstractAnimationJob *job)
