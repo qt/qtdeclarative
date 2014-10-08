@@ -980,7 +980,18 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             continue;
 
         QTextCharFormat charFormat = fragment.charFormat();
-        setPosition(blockPosition);
+        QFont font(charFormat.font());
+        QFontMetricsF fontMetrics(font);
+
+        int fontHeight = fontMetrics.descent() + fontMetrics.ascent();
+        int valign = charFormat.verticalAlignment();
+        if (valign == QTextCharFormat::AlignSuperScript)
+            setPosition(QPointF(blockPosition.x(), blockPosition.y() - fontHeight / 2));
+        else if (valign == QTextCharFormat::AlignSubScript)
+            setPosition(QPointF(blockPosition.x(), blockPosition.y() + fontHeight / 6));
+        else
+            setPosition(blockPosition);
+
         if (text.contains(QChar::ObjectReplacementCharacter)) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
             if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow) {
