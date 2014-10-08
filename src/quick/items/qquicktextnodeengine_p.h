@@ -75,12 +75,7 @@ public:
 
         BinaryTreeNode(const QGlyphRun &g, SelectionState selState, const QRectF &brect,
                        const QQuickTextNode::Decorations &decs, const QColor &c, const QColor &bc,
-                       const QPointF &pos, qreal a, int rangeStart, int rangeEnd)
-            : glyphRun(g), boundingRect(brect), selectionState(selState), clipNode(0), decorations(decs)
-            , color(c), backgroundColor(bc), position(pos), ascent(a), leftChildIndex(-1), rightChildIndex(-1)
-        {
-            ranges.append(qMakePair(rangeStart, rangeEnd));
-        }
+                       const QPointF &pos, qreal a);
 
         QGlyphRun glyphRun;
         QRectF boundingRect;
@@ -102,8 +97,7 @@ public:
         { insert(binaryTree, BinaryTreeNode(rect, image, selectionState, ascent)); }
 
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
-                           QQuickTextNode::Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position,
-                           int rangeStart, int rangeEnd);
+                           QQuickTextNode::Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position);
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode);
         static void inOrder(const QVarLengthArray<BinaryTreeNode, 16> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
     };
@@ -138,8 +132,8 @@ public:
                        SelectionState selectionState,
                        QTextDocument *textDocument, int pos,
                        QTextFrameFormat::Position layoutPosition = QTextFrameFormat::InFlow);
-    void addSelectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd);
-    void addUnselectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd);
+    void addSelectedGlyphs(const QGlyphRun &glyphRun);
+    void addUnselectedGlyphs(const QGlyphRun &glyphRun);
     void addGlyphsInRange(int rangeStart, int rangeEnd,
                           const QColor &color, const QColor &backgroundColor,
                           int selectionStart, int selectionEnd);
