@@ -42,12 +42,11 @@ Item {
     TestCase {
         id: testCase
         name: "animators-rotation"
-        when: !animation.running
+        when: box.rotation == 180
         function test_endresult() {
             compare(box.rotationChangeCounter, 1);
-            compare(box.rotation, 180);
             var image = grabImage(root);
-            compare(image.pixel(50, 50), Qt.rgba(0, 0, 1));
+            verify(image.pixel(50, 50) == Qt.rgba(0, 0, 1));
         }
     }
 

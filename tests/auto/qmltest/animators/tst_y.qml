@@ -42,13 +42,12 @@ Item {
     TestCase {
         id: testCase
         name: "animators-y"
-        when: !animation.running
+        when: box.y == 100
         function test_endresult() {
             compare(box.yChangeCounter, 1);
-            compare(box.y, 100);
             var image = grabImage(root);
-            compare(image.pixel(50, 100), Qt.rgba(1, 0, 0));
-            compare(image.pixel(50, 99), Qt.rgba(1, 1, 1)); // outside on the left
+            verify(image.pixel(0, 100) == Qt.rgba(1, 0, 0));
+            verify(image.pixel(0, 99) == Qt.rgba(1, 1, 1)); // outside on the top
         }
     }
 
