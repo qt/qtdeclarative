@@ -1714,9 +1714,6 @@ void tst_qquickwindow::testWindowVisibilityOrder()
     window5->hide();
 
     window3->hide();
-#if defined(Q_OS_OSX)
-    QEXPECT_FAIL("","Focus is not transferred to transient parent on window close (QTBUG-33423)", Continue);
-#endif
     QTRY_COMPARE(window2 == QGuiApplication::focusWindow(), true);
 
     window2->hide();
