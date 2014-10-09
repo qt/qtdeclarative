@@ -83,7 +83,7 @@
     returned by the \l {QQuickPaintedItem::}{contentsBoundingRect()} function is the size
     of the item as defined in the QML file.
 
-    \section1 textballoons.qml file
+    \section1 Textballoons.qml File
 
     The Interface consists of two main parts. The scrollable area with the
     textballoons and the controls button to add new balloons.

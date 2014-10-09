@@ -1523,7 +1523,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectsSize += signalTableSize;
     }
 
-    const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize;
+    const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
     if (jsUnit != compilationUnit->data)
@@ -1539,6 +1539,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     qmlUnit->offsetToObjects = unitSize + importSize;
     qmlUnit->nObjects = output.objects.count();
     qmlUnit->indexOfRootObject = output.indexOfRootObject;
+    qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
+    qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
@@ -1629,6 +1631,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             break;
         }
     }
+
+    output.jsGenerator.stringTable.serialize(qmlUnit);
 
     return qmlUnit;
 }
@@ -1805,13 +1809,14 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
     }
 
     if (type->isCompositeSingleton()) {
-        QQmlTypeData *tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
-        Q_ASSERT(tdata->isComplete());
-        initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
-        tdata->release();
-        resolver->flags |= AllPropertiesAreFinal;
-        return resolver->resolveMember(qmlEngine, resolver, member);
+        // When a singleton tries to reference itself, it may not be complete yet.
+        if (tdata->isComplete()) {
+            initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+            resolver->flags |= AllPropertiesAreFinal;
+            return resolver->resolveMember(qmlEngine, resolver, member);
+        }
     }  else if (type->isSingleton()) {
         const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
         if (singletonMeta) { // QJSValue-based singletons cannot be accelerated

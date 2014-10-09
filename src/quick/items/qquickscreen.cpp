@@ -171,6 +171,9 @@ QT_BEGIN_NAMESPACE
     change, then probably you are using a device which does not rotate its own
     display. In that case you may need to use \l {Item::rotation}{Item.rotation} or
     \l {Item::transform}{Item.transform} to rotate your content.
+
+    \note This property does not update unless a Screen::orientationUpdateMask
+    is set to a value other than \c 0.
 */
 /*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
@@ -178,10 +181,21 @@ QT_BEGIN_NAMESPACE
     Returns the rotation angle, in degrees, between the two specified angles.
 */
 
+/*!
+    \qmlattachedproperty Qt::ScreenOrientations Screen::orientationUpdateMask
+    \since 5.4
+
+    This contains the update mask for the orientation. Screen::orientation
+    only emits changes for the screen orientations matching this mask.
+
+    The default, \c 0, means Screen::orientation never updates.
+*/
+
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     : QObject(attachee)
     , m_screen(NULL)
     , m_window(NULL)
+    , m_updateMask(0)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
 
@@ -260,6 +274,24 @@ Qt::ScreenOrientation QQuickScreenAttached::orientation() const
     return m_screen->orientation();
 }
 
+Qt::ScreenOrientations QQuickScreenAttached::orientationUpdateMask() const
+{
+    return m_updateMask;
+}
+
+void QQuickScreenAttached::setOrientationUpdateMask(Qt::ScreenOrientations mask)
+{
+    if (m_updateMask == mask)
+        return;
+
+    m_updateMask = mask;
+
+    if (m_screen)
+        m_screen->setOrientationUpdateMask(m_updateMask);
+
+    emit orientationUpdateMaskChanged();
+}
+
 int QQuickScreenAttached::angleBetween(int a, int b)
 {
     if (!m_screen)
@@ -289,6 +321,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
 
         if (!screen)
             return; //Don't bother emitting signals, because the new values are garbage anyways
+
+        screen->setOrientationUpdateMask(m_updateMask);
 
         if (!oldScreen || screen->size() != oldScreen->size()) {
             emit widthChanged();

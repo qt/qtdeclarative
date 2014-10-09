@@ -46,12 +46,37 @@
 #include <private/qtextdocumentlayout_p.h>
 #include <private/qtextimagehandler_p.h>
 #include <private/qrawfont_p.h>
+#include <private/qglyphrun_p.h>
 
 QT_BEGIN_NAMESPACE
 
+QQuickTextNodeEngine::BinaryTreeNode::BinaryTreeNode(const QGlyphRun &g,
+                                                     SelectionState selState,
+                                                     const QRectF &brect,
+                                                     const QQuickTextNode::Decorations &decs,
+                                                     const QColor &c,
+                                                     const QColor &bc,
+                                                     const QPointF &pos, qreal a)
+    : glyphRun(g)
+    , boundingRect(brect)
+    , selectionState(selState)
+    , clipNode(0)
+    , decorations(decs)
+    , color(c)
+    , backgroundColor(bc)
+    , position(pos)
+    , ascent(a)
+    , leftChildIndex(-1)
+    , rightChildIndex(-1)
+{
+    QGlyphRunPrivate *d = QGlyphRunPrivate::get(g);
+    ranges.append(qMakePair(d->textRangeStart, d->textRangeEnd));
+}
+
+
 void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
                                              QQuickTextNode::Decorations decorations, const QColor &textColor,
-                                             const QColor &backgroundColor, const QPointF &position, int rangeStart, int rangeEnd)
+                                             const QColor &backgroundColor, const QPointF &position)
 {
     QRectF searchRect = glyphRun.boundingRect();
     searchRect.translate(position);
@@ -65,8 +90,14 @@ void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode
     decorations |= (backgroundColor.isValid() ? QQuickTextNode::Background : QQuickTextNode::NoDecoration);
 
     qreal ascent = glyphRun.rawFont().ascent();
-    insert(binaryTree, BinaryTreeNode(glyphRun, selectionState, searchRect, decorations,
-                                      textColor, backgroundColor, position, ascent, rangeStart, rangeEnd));
+    insert(binaryTree, BinaryTreeNode(glyphRun,
+                                      selectionState,
+                                      searchRect,
+                                      decorations,
+                                      textColor,
+                                      backgroundColor,
+                                      position,
+                                      ascent));
 }
 
 void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode)
@@ -441,19 +472,27 @@ void QQuickTextNodeEngine::addTextObject(const QPointF &position, const QTextCha
     }
 }
 
-void QQuickTextNodeEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd)
+void QQuickTextNodeEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun)
 {
-    BinaryTreeNode::insert(&m_currentLineTree, glyphRun, Unselected,
-                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position,
-                           rangeStart, rangeEnd);
+    BinaryTreeNode::insert(&m_currentLineTree,
+                           glyphRun,
+                           Unselected,
+                           QQuickTextNode::NoDecoration,
+                           m_textColor,
+                           m_backgroundColor,
+                           m_position);
 }
 
-void QQuickTextNodeEngine::addSelectedGlyphs(const QGlyphRun &glyphRun, int rangeStart, int rangeEnd)
+void QQuickTextNodeEngine::addSelectedGlyphs(const QGlyphRun &glyphRun)
 {
     int currentSize = m_currentLineTree.size();
-    BinaryTreeNode::insert(&m_currentLineTree, glyphRun, Selected,
-                           QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position,
-                           rangeStart, rangeEnd);
+    BinaryTreeNode::insert(&m_currentLineTree,
+                           glyphRun,
+                           Selected,
+                           QQuickTextNode::NoDecoration,
+                           m_textColor,
+                           m_backgroundColor,
+                           m_position);
     m_hasSelection = m_hasSelection || m_currentLineTree.size() > currentSize;
 }
 
@@ -526,7 +565,7 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
         QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart, rangeLength);
         for (int j=0; j<glyphRuns.size(); ++j) {
             const QGlyphRun &glyphRun = glyphRuns.at(j);
-            addUnselectedGlyphs(glyphRun, rangeStart, rangeEnd - 1);
+            addUnselectedGlyphs(glyphRun);
         }
     } else {
         if (rangeStart < selectionStart) {
@@ -534,7 +573,7 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
             QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart, length);
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addUnselectedGlyphs(glyphRun, rangeStart, rangeStart + length - 1);
+                addUnselectedGlyphs(glyphRun);
             }
         }
 
@@ -545,8 +584,8 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
 
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addSelectedGlyphs(glyphRun, start, start + length - 1);
-                addUnselectedGlyphs(glyphRun, start, start + length - 1);
+                addSelectedGlyphs(glyphRun);
+                addUnselectedGlyphs(glyphRun);
             }
         }
 
@@ -556,7 +595,7 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
             QList<QGlyphRun> glyphRuns = line.glyphRuns(start, length);
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
-                addUnselectedGlyphs(glyphRun, start, start + length - 1);
+                addUnselectedGlyphs(glyphRun);
             }
         }
     }
@@ -927,7 +966,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
             QList<QGlyphRun> glyphRuns = layout.glyphRuns();
             for (int i=0; i<glyphRuns.size(); ++i)
-                addUnselectedGlyphs(glyphRuns.at(i), 0, layout.text().length() - 1);
+                addUnselectedGlyphs(glyphRuns.at(i));
         }
     }
 

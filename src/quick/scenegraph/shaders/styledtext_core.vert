@@ -14,5 +14,5 @@ void main()
 {
      sampleCoord = tCoord * textureScale;
      shiftedSampleCoord = (tCoord - shift) * textureScale;
-     gl_Position = matrix * vCoord;
+     gl_Position = matrix * round(vCoord);
 }

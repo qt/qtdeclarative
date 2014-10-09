@@ -1585,11 +1585,14 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
                     propertyType = propertyMetaObject.className();
             }
         } else if (value.userType() != QVariant::Invalid) {
-            valueType = QMetaType::typeName(value.userType());
+            if (value.userType() == QMetaType::VoidStar)
+                valueType = "null";
+            else
+                valueType = QMetaType::typeName(value.userType());
         }
 
         if (!valueType)
-            valueType = "null";
+            valueType = "undefined";
         if (!propertyType)
             propertyType = QMetaType::typeName(type);
         if (!propertyType)

@@ -55,40 +55,50 @@
 
 QT_BEGIN_NAMESPACE
 
-#define Q_QUICK_PROFILE_IF_ENABLED(Code)\
-    if (QQuickProfiler::enabled) {\
+#define Q_QUICK_PROFILE_IF_ENABLED(feature, Code)\
+    if (QQuickProfiler::featuresEnabled & (1 << feature)) {\
         Code;\
     } else\
         (void)0
 
-#define Q_QUICK_PROFILE(Method)\
-    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::Method)
+#define Q_QUICK_PROFILE(feature, Method)\
+    Q_QUICK_PROFILE_IF_ENABLED(feature, QQuickProfiler::Method)
 
 #define Q_QUICK_SG_PROFILE_START(Type)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::startSceneGraphFrame<Type>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::startSceneGraphFrame<Type>()))
 
 #define Q_QUICK_SG_PROFILE_RECORD(Type)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::recordSceneGraphTimestamp<Type>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::recordSceneGraphTimestamp<Type>()))
 
 #define Q_QUICK_SG_PROFILE_SKIP(Type, Skip)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::skipSceneGraphTimestamps<Type, Skip>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::skipSceneGraphTimestamps<Type, Skip>()))
 
 #define Q_QUICK_SG_PROFILE_START_SYNCHRONIZED(Type1, Type2)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::startSceneGraphFrame<Type1, Type2>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::startSceneGraphFrame<Type1, Type2>()))
 
 #define Q_QUICK_SG_PROFILE_SWITCH(Type1, Type2) \
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::reportSceneGraphFrame<Type1, true, Type2>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::reportSceneGraphFrame<Type1, true, Type2>()))
 
 #define Q_QUICK_SG_PROFILE_REPORT(Type)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::reportSceneGraphFrame<Type, false>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::reportSceneGraphFrame<Type, false>()))
 
 #define Q_QUICK_SG_PROFILE_END(Type)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::reportSceneGraphFrame<Type, true>()))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::reportSceneGraphFrame<Type, true>()))
 
 #define Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(Type, Payload)\
-    Q_QUICK_PROFILE_IF_ENABLED((QQuickProfiler::reportSceneGraphFrame<Type, true>(Payload)))
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
+                               (QQuickProfiler::reportSceneGraphFrame<Type, true>(Payload)))
 
 
+#define Q_QUICK_INPUT_PROFILE(Method)\
+    Q_QUICK_PROFILE(QQuickProfiler::ProfileInputEvents, Method)
 
 // This struct is somewhat dangerous to use:
 // You can save values either with 32 or 64 bit precision. toByteArrays will
@@ -302,7 +312,11 @@ public:
 
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
-    static bool enabled;
+    static quint64 featuresEnabled;
+    static bool profilingSceneGraph()
+    {
+        return featuresEnabled & (1 << QQuickProfiler::ProfileSceneGraph);
+    }
 
     static void initialize();
 
@@ -325,7 +339,7 @@ protected:
     }
 
 protected slots:
-    void startProfilingImpl();
+    void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
     void reportDataImpl();
     void setTimer(const QElapsedTimer &t);

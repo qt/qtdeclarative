@@ -48,10 +48,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "DeepSkyBlue" }
-            GradientStop { position: 0.499; color: "LightSkyBlue" }
-            GradientStop { position: 0.5; color: "ForestGreen" }
-            GradientStop { position: 1.0; color: "DarkGreen" }
+            GradientStop { position: 0.0; color: "#14148c" }
+            GradientStop { position: 0.499; color: "#14aaff" }
+            GradientStop { position: 0.5; color: "#80c342" }
+            GradientStop { position: 1.0; color: "#006325" }
         }
     }
 

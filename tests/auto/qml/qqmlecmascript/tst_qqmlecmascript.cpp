@@ -199,6 +199,7 @@ private slots:
     void sequenceSort_data();
     void sequenceSort();
     void dateParse();
+    void utcDate();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -213,6 +214,7 @@ private slots:
     void deletedEngine();
     void libraryScriptAssert();
     void variantsAssignedUndefined();
+    void variants();
     void qtbug_9792();
     void qtcreatorbug_1289();
     void noSpuriousWarningsAtShutdown();
@@ -315,6 +317,7 @@ private slots:
     void lazyBindingEvaluation();
     void varPropertyAccessOnObjectWithInvalidContext();
     void importedScriptsAccessOnObjectWithInvalidContext();
+    void importedScriptsWithoutQmlMode();
     void contextObjectOnLazyBindings();
     void garbageCollectionDuringCreation();
     void qtbug_39520();
@@ -743,13 +746,13 @@ void tst_qqmlecmascript::arrayExpressions()
 
     MyExpression expr(&context, "[a, b, c, 10]");
     QVariant result = expr.evaluate();
-    QCOMPARE(result.userType(), qMetaTypeId<QVariantList>());
-    QVariantList list = qvariant_cast<QVariantList>(result);
-    QCOMPARE(list.count(), 4);
-    QCOMPARE(list.at(0).value<QObject*>(), &obj1);
-    QCOMPARE(list.at(1).value<QObject*>(), &obj2);
-    QCOMPARE(list.at(2).value<QObject*>(), &obj3);
-    QCOMPARE(list.at(3).value<int>(), 10);
+    QCOMPARE(result.userType(), qMetaTypeId<QJSValue>());
+    QJSValue list = qvariant_cast<QJSValue>(result);
+    QCOMPARE(list.property("length").toInt(), 4);
+    QCOMPARE(list.property(0).toQObject(), &obj1);
+    QCOMPARE(list.property(1).toQObject(), &obj2);
+    QCOMPARE(list.property(2).toQObject(), &obj3);
+    QCOMPARE(list.property(3).toInt(), 10);
 }
 
 // Tests that modifying a context property will reevaluate expressions
@@ -4808,7 +4811,7 @@ void tst_qqmlecmascript::propertyVarCpp()
     QCOMPARE(object->property("varProperty2"), QVariant(QLatin1String("randomString")));
     QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::String);
     // now enforce behaviour when accessing JavaScript objects from cpp.
-    QCOMPARE(object->property("jsobject").userType(), (int)QVariant::Map);
+    QCOMPARE(object->property("jsobject").userType(), qMetaTypeId<QJSValue>());
     delete object;
 }
 
@@ -5163,7 +5166,7 @@ void tst_qqmlecmascript::objectConversion()
     QVERIFY(object != 0);
     QVariant retn;
     QMetaObject::invokeMethod(object, "circularObject", Q_RETURN_ARG(QVariant, retn));
-    QCOMPARE(retn.value<QVariantMap>().value("test"), QVariant(100));
+    QCOMPARE(retn.value<QJSValue>().property("test").toInt(), int(100));
 
     delete object;
 }
@@ -5431,7 +5434,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         QVERIFY(seq != 0);
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to an unregistered type");
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to an unregistered type");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
@@ -5734,6 +5737,29 @@ void tst_qqmlecmascript::variantsAssignedUndefined()
 
 
     delete object;
+}
+
+void tst_qqmlecmascript::variants()
+{
+    QQmlComponent component(&engine, testFileUrl("variants.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVERIFY(object->property("undefinedVariant").type() == QVariant::Invalid);
+    QVERIFY(object->property("nullVariant").type() == (int)QMetaType::VoidStar);
+    QVERIFY(object->property("intVariant").type() == QVariant::Int);
+    QVERIFY(object->property("doubleVariant").type() == QVariant::Double);
+
+    QVariant result;
+    QMetaObject::invokeMethod(object, "checkNull", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
+    QMetaObject::invokeMethod(object, "checkUndefined", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
+
+    QMetaObject::invokeMethod(object, "checkNumber", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
 }
 
 void tst_qqmlecmascript::qtbug_9792()
@@ -7337,6 +7363,21 @@ void tst_qqmlecmascript::dateParse()
 
 }
 
+void tst_qqmlecmascript::utcDate()
+{
+    QQmlComponent component(&engine, testFileUrl("utcdate.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QVariant val = QString::fromLatin1("2014-07-16T23:30:31");
+    QMetaObject::invokeMethod(object, "check_utc", Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
+    QVERIFY(q.toBool() == true);
+}
+
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
 {
     QQmlComponent component(&engine, testFileUrl("concatenatedStringPropertyAccess.qml"));
@@ -7629,6 +7670,16 @@ void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
 void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
 {
    QQmlComponent component(&engine, testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml"));
+   QScopedPointer<QObject> obj(component.create());
+   if (obj.isNull())
+       qDebug() << component.errors().first().toString();
+   QVERIFY(!obj.isNull());
+   QTRY_VERIFY(obj->property("success") == true);
+}
+
+void tst_qqmlecmascript::importedScriptsWithoutQmlMode()
+{
+   QQmlComponent component(&engine, testFileUrl("importScriptsWithoutQmlMode.qml"));
    QScopedPointer<QObject> obj(component.create());
    if (obj.isNull())
        qDebug() << component.errors().first().toString();

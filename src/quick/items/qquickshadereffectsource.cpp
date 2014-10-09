@@ -74,7 +74,6 @@ public:
     QSGTexture::WrapMode horizontalWrap;
     QSGTexture::WrapMode verticalWrap;
 };
-#include "qquickshadereffectsource.moc"
 
 class QQuickShaderEffectSourceCleanup : public QRunnable
 {
@@ -322,24 +321,28 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             d->derefWindow();
     }
 
-    if (window() == item->window()) {
-        m_sourceItem = item;
-    } else {
-        qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
-        m_sourceItem = 0;
-    }
+    m_sourceItem = item;
 
     if (m_sourceItem) {
-        QQuickItemPrivate *d = QQuickItemPrivate::get(item);
-        // 'item' needs a window to get a scene graph node. It usually gets one through its
-        // parent, but if the source item is "inline" rather than a reference -- i.e.
-        // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
-        // In those cases, 'item' should get the window from 'this'.
-        if (window())
-            d->refWindow(window());
-        d->refFromEffectItem(m_hideSource);
-        d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-        connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        if (window() == m_sourceItem->window()
+                || (window() == 0 && m_sourceItem->window())
+                || (m_sourceItem->window() == 0 && window())) {
+            QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+            // 'item' needs a window to get a scene graph node. It usually gets one through its
+            // parent, but if the source item is "inline" rather than a reference -- i.e.
+            // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
+            // In those cases, 'item' should get the window from 'this'.
+            if (window())
+                d->refWindow(window());
+            else if (m_sourceItem->window())
+                d->refWindow(m_sourceItem->window());
+            d->refFromEffectItem(m_hideSource);
+            d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+            connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        } else {
+            qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
+            m_sourceItem = 0;
+        }
     }
     update();
     emit sourceItemChanged();
@@ -586,13 +589,24 @@ void QQuickShaderEffectSource::releaseResources()
     }
 }
 
+class QQuickShaderSourceAttachedNode : public QObject, public QSGNode
+{
+    Q_OBJECT
+public:
+    Q_SLOT void markTextureDirty() {
+        QSGNode *pn = QSGNode::parent();
+        if (pn) {
+            Q_ASSERT(pn->type() == QSGNode::GeometryNodeType);
+            pn->markDirty(DirtyMaterial);
+        }
+    }
+};
+
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
-        if (m_texture) {
+        if (m_texture)
             m_texture->setItem(0);
-            m_texture->setShaderSourceNode(0);
-        }
         delete oldNode;
         return 0;
     }
@@ -658,7 +672,9 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
         node = d->sceneGraphContext()->createImageNode();
         node->setFlag(QSGNode::UsePreprocess);
         node->setTexture(m_texture);
-        m_texture->setShaderSourceNode(node);
+        QQuickShaderSourceAttachedNode *attached = new QQuickShaderSourceAttachedNode;
+        node->appendChildNode(attached);
+        connect(m_texture, SIGNAL(updateRequested()), attached, SLOT(markTextureDirty()));
     }
 
     // If live and recursive, update continuously.
@@ -697,5 +713,7 @@ void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeDat
     }
     QQuickItem::itemChange(change, value);
 }
+
+#include "qquickshadereffectsource.moc"
 
 QT_END_NAMESPACE

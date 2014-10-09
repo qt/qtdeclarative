@@ -50,7 +50,7 @@
 #include <math.h>
 #include <qmath.h>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_OSX
 #include <Carbon/Carbon.h>
 #endif
 

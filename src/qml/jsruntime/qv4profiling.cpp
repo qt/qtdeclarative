@@ -53,7 +53,7 @@ FunctionCallProperties FunctionCall::resolve() const
 }
 
 
-Profiler::Profiler(QV4::ExecutionEngine *engine) : enabled(false), m_engine(engine)
+Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(engine)
 {
     static int metatype = qRegisterMetaType<QList<QV4::Profiling::FunctionCallProperties> >();
     static int metatype2 = qRegisterMetaType<QList<QV4::Profiling::MemoryAllocationProperties> >();
@@ -69,7 +69,7 @@ struct FunctionCallComparator {
 
 void Profiler::stopProfiling()
 {
-    enabled = false;
+    featuresEnabled = 0;
     reportData();
 }
 
@@ -85,27 +85,29 @@ void Profiler::reportData()
     emit dataReady(resolved, m_memory_data);
 }
 
-void Profiler::startProfiling()
+void Profiler::startProfiling(quint64 features)
 {
-    if (!enabled) {
+    if (featuresEnabled == 0) {
         m_data.clear();
         m_memory_data.clear();
 
-        qint64 timestamp = m_timer.nsecsElapsed();
-        MemoryAllocationProperties heap = {timestamp,
-                                           (qint64)m_engine->memoryManager->getAllocatedMem(),
-                                           HeapPage};
-        m_memory_data.append(heap);
-        MemoryAllocationProperties small = {timestamp,
-                                            (qint64)m_engine->memoryManager->getUsedMem(),
-                                            SmallItem};
-        m_memory_data.append(small);
-        MemoryAllocationProperties large = {timestamp,
-                                            (qint64)m_engine->memoryManager->getLargeItemsMem(),
-                                            LargeItem};
-        m_memory_data.append(large);
+        if (features & (1 << FeatureMemoryAllocation)) {
+            qint64 timestamp = m_timer.nsecsElapsed();
+            MemoryAllocationProperties heap = {timestamp,
+                                               (qint64)m_engine->memoryManager->getAllocatedMem(),
+                                               HeapPage};
+            m_memory_data.append(heap);
+            MemoryAllocationProperties small = {timestamp,
+                                                (qint64)m_engine->memoryManager->getUsedMem(),
+                                                SmallItem};
+            m_memory_data.append(small);
+            MemoryAllocationProperties large = {timestamp,
+                                                (qint64)m_engine->memoryManager->getLargeItemsMem(),
+                                                LargeItem};
+            m_memory_data.append(large);
+        }
 
-        enabled = true;
+        featuresEnabled = features;
     }
 }
 

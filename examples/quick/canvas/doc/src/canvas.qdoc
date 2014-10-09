@@ -38,12 +38,12 @@
 
     \include examples-run.qdocinc
 
-    \section1 Red heart
+    \section1 Red Heart
 
     \e{Red heart} uses the bezier curve API to stroke and fill a red heart.
     \snippet canvas/bezierCurve/bezierCurve.qml 0
 
-    \section1 Talk bubble
+    \section1 Talk Bubble
 
     \e{Talk bubble} uses the quadraticCurveTo() API to stroke and fill a
     customized talk bubble:
@@ -57,12 +57,12 @@
     \e Squircle uses a collection of simple moveTo() and lineTo() path APIs to
     draw a smooth squircle.
 
-    \section1 Rounded rectangle
+    \section1 Rounded Rectangle
 
     \e{Rounded rectangle} uses a collection of lineTo() and arcTo() path APIs to
     draw a rounded rectangle.
 
-    \section1 Smile face
+    \section1 Smile Face
 
     \e{Smile face} uses several paths to draw and fill a smiling face.
 

@@ -40,6 +40,7 @@
 #include <private/qqmlengine_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qimage_p.h>
 #include <qpa/qplatformintegration.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
@@ -69,6 +70,8 @@
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
 #define CACHE_EXPIRE_TIME 30
 #define CACHE_REMOVAL_FRACTION 4
+
+#define PIXMAP_PROFILE(Code) Q_QUICK_PROFILE(QQuickProfiler::ProfilePixmapCache, Code)
 
 QT_BEGIN_NAMESPACE
 
@@ -329,6 +332,29 @@ QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
     return accessManager;
 }
 
+static void maybeRemoveAlpha(QImage *image)
+{
+    // If the image
+    if (image->hasAlphaChannel() && image->data_ptr()
+            && !image->data_ptr()->checkForAlphaPixels()) {
+        switch (image->format()) {
+        case QImage::Format_RGBA8888:
+        case QImage::Format_RGBA8888_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_RGBX8888);
+            break;
+        case QImage::Format_A2BGR30_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_BGR30);
+            break;
+        case QImage::Format_A2RGB30_Premultiplied:
+            *image = image->convertToFormat(QImage::Format_RGB30);
+            break;
+        default:
+            *image = image->convertToFormat(QImage::Format_RGB32);
+            break;
+        }
+    }
+}
+
 static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *errorString, QSize *impsize,
                       const QSize &requestSize)
 {
@@ -358,6 +384,7 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
         *impsize = imgio.size();
 
     if (imgio.read(image)) {
+        maybeRemoveAlpha(image);
         if (impsize && impsize->width() < 0)
             *impsize = image->size();
         return true;
@@ -500,7 +527,7 @@ void QQuickPixmapReader::processJobs()
                     replies.remove(reply);
                     reply->close();
                 }
-                Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
+                PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
                 // deleteLater, since not owned by this thread
                 job->deleteLater();
             }
@@ -512,7 +539,7 @@ void QQuickPixmapReader::processJobs()
             runningJob->loading = true;
 
             QUrl url = runningJob->url;
-            Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
+            PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
 
             QSize requestSize = runningJob->requestSize;
             locker.unlock();
@@ -660,7 +687,7 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
         // If loading was started (reply removed from jobs) but the reply was never processed
         // (otherwise it would have deleted itself) we need to profile an error.
         if (jobs.removeAll(reply) == 0) {
-            Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(reply->url));
+            PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(reply->url));
         }
         delete reply;
     }
@@ -896,12 +923,12 @@ bool QQuickPixmapReply::event(QEvent *event)
             if (data->pixmapStatus == QQuickPixmap::Ready) {
                 data->textureFactory = de->textureFactory;
                 data->implicitSize = de->implicitSize;
-                Q_QUICK_PROFILE(pixmapLoadingFinished(data->url,
+                PIXMAP_PROFILE(pixmapLoadingFinished(data->url,
                         data->textureFactory != 0 && data->textureFactory->textureSize().isValid() ?
                         data->textureFactory->textureSize() :
                         (data->requestSize.isValid() ? data->requestSize : data->implicitSize)));
             } else {
-                Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(data->url));
+                PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(data->url));
                 data->errorString = de->errorString;
                 data->removeFromCache(); // We don't continue to cache error'd pixmaps
             }
@@ -909,7 +936,7 @@ bool QQuickPixmapReply::event(QEvent *event)
             data->reply = 0;
             emit finished();
         } else {
-            Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(url));
+            PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(url));
         }
 
         delete this;
@@ -929,7 +956,7 @@ int QQuickPixmapData::cost() const
 void QQuickPixmapData::addref()
 {
     ++refCount;
-    Q_QUICK_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapReferenceCountChanged>(url, refCount));
+    PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapReferenceCountChanged>(url, refCount));
     if (prevUnreferencedPtr)
         pixmapStore()->referencePixmap(this);
 }
@@ -938,7 +965,7 @@ void QQuickPixmapData::release()
 {
     Q_ASSERT(refCount > 0);
     --refCount;
-    Q_QUICK_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapReferenceCountChanged>(url, refCount));
+    PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapReferenceCountChanged>(url, refCount));
     if (refCount == 0) {
         if (reply) {
             QQuickPixmapReply *cancelReply = reply;
@@ -969,7 +996,7 @@ void QQuickPixmapData::addToCache()
         QQuickPixmapKey key = { &url, &requestSize };
         pixmapStore()->m_cache.insert(key, this);
         inCache = true;
-        Q_QUICK_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
+        PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
                 url, pixmapStore()->m_cache.count()));
     }
 }
@@ -980,7 +1007,7 @@ void QQuickPixmapData::removeFromCache()
         QQuickPixmapKey key = { &url, &requestSize };
         pixmapStore()->m_cache.remove(key);
         inCache = false;
-        Q_QUICK_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
+        PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
                 url, pixmapStore()->m_cache.count()));
     }
 }
@@ -1259,16 +1286,16 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
 
         if (!(options & QQuickPixmap::Asynchronous)) {
             bool ok = false;
-            Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
+            PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
             d = createPixmapDataSync(this, engine, url, requestSize, &ok);
             if (ok) {
-                Q_QUICK_PROFILE(pixmapLoadingFinished(url, QSize(width(), height())));
+                PIXMAP_PROFILE(pixmapLoadingFinished(url, QSize(width(), height())));
                 if (options & QQuickPixmap::Cache)
                     d->addToCache();
                 return;
             }
             if (d) { // loadable, but encountered error while loading
-                Q_QUICK_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(url));
+                PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(url));
                 return;
             }
         }

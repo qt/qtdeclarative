@@ -111,8 +111,11 @@ Window::Window()
 
 Window::~Window()
 {
-    // Make sure the context is current while doing cleanup.
-    m_context->makeCurrent(this);
+    // Make sure the context is current while doing cleanup. Note that we use the
+    // offscreen surface here because passing 'this' at this point is not safe: the
+    // underlying platform window may already be destroyed. To avoid all the trouble, use
+    // another surface that is valid for sure.
+    m_context->makeCurrent(m_offscreenSurface);
 
     // Delete the render control first since it will free the scenegraph resources.
     // Destroy the QQuickWindow only afterwards.

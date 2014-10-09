@@ -563,7 +563,7 @@ QSGPlainTexture::QSGPlainTexture()
 
 QSGPlainTexture::~QSGPlainTexture()
 {
-    if (m_texture_id && m_owns_texture)
+    if (m_texture_id && m_owns_texture && QOpenGLContext::currentContext())
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
 }
 

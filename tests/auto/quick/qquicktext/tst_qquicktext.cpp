@@ -2675,14 +2675,15 @@ void tst_qquicktext::lineLaidOutRelayout()
 
     qreal maxH = 0;
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
-        QRectF r = textPrivate->layout.lineAt(i).rect();
-
+        QTextLine line = textPrivate->layout.lineAt(i);
+        const QRectF r = line.rect();
+        const qreal h = line.height();
         if (r.x() == 0) {
-            QCOMPARE(r.y(), i * r.height());
-            maxH = qMax(maxH, r.y() + r.height());
+            QCOMPARE(r.y(), i * h);
+            maxH = qMax(maxH, r.y() + h);
         } else {
             QCOMPARE(r.x(), myText->width() / 2);
-            QCOMPARE(r.y(), (i * r.height()) - maxH);
+            QCOMPARE(r.y(), i * h - maxH);
         }
     }
 

@@ -78,8 +78,8 @@ public:
     void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
     void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
 
-    void startProfiling(QQmlEngine *engine = 0);
-    void stopProfiling(QQmlEngine *engine = 0);
+    void startProfiling(QQmlEngine *engine, quint64 features = std::numeric_limits<quint64>::max());
+    void stopProfiling(QQmlEngine *engine);
 
     QQmlProfilerService();
     ~QQmlProfilerService();

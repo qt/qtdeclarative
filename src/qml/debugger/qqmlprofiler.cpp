@@ -82,9 +82,9 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
     QQmlAbstractProfilerAdapter(service)
 {
     engine->enableProfiler();
-    connect(this, SIGNAL(profilingEnabled()), engine->profiler, SLOT(startProfiling()));
-    connect(this, SIGNAL(profilingEnabledWhileWaiting()),
-            engine->profiler, SLOT(startProfiling()), Qt::DirectConnection);
+    connect(this, SIGNAL(profilingEnabled(quint64)), engine->profiler, SLOT(startProfiling(quint64)));
+    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
+            engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
     connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
     connect(this, SIGNAL(profilingDisabledWhileWaiting()),
             engine->profiler, SLOT(stopProfiling()), Qt::DirectConnection);
@@ -111,21 +111,21 @@ void QQmlProfilerAdapter::receiveData(const QList<QQmlProfilerData> &new_data)
 }
 
 
-QQmlProfiler::QQmlProfiler() : enabled(false)
+QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
 {
     static int metatype = qRegisterMetaType<QList<QQmlProfilerData> >();
     Q_UNUSED(metatype);
     m_timer.start();
 }
 
-void QQmlProfiler::startProfiling()
+void QQmlProfiler::startProfiling(quint64 features)
 {
-    enabled = true;
+    featuresEnabled = features;
 }
 
 void QQmlProfiler::stopProfiling()
 {
-    enabled = false;
+    featuresEnabled = false;
     reportData();
     m_data.clear();
 }

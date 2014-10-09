@@ -11,5 +11,5 @@ uniform vec2 textureScale;
 void main()
 {
      sampleCoord = tCoord * textureScale;
-     gl_Position = matrix * vCoord;
+     gl_Position = matrix * round(vCoord);
 }

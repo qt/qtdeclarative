@@ -49,6 +49,7 @@ Window {
     color: "black"
     property int highestZ: 0
     property real defaultSize: 200
+    property var currentFrame: undefined
 
     FileDialog {
         id: fileDialog
@@ -90,15 +91,17 @@ Window {
                 pinch.maximumRotation: 360
                 pinch.minimumScale: 0.1
                 pinch.maximumScale: 10
-                onPinchFinished: photoFrame.border.color = "black";
+                onPinchStarted: setFrameColor();
                 MouseArea {
                     id: dragArea
                     hoverEnabled: true
                     anchors.fill: parent
                     drag.target: photoFrame
-                    onPressed: photoFrame.z = ++root.highestZ;
-                    onEntered: photoFrame.border.color = "red";
-                    onExited: photoFrame.border.color = "black";
+                    onPressed: {
+                        photoFrame.z = ++root.highestZ;
+                        parent.setFrameColor();
+                    }
+                    onEntered: parent.setFrameColor();
                     onWheel: {
                         if (wheel.modifiers & Qt.ControlModifier) {
                             photoFrame.rotation += wheel.angleDelta.y / 120 * 5;
@@ -114,6 +117,12 @@ Window {
                             photoFrame.y -= image.height * (image.scale - scaleBefore) / 2.0;
                         }
                     }
+                }
+                function setFrameColor() {
+                    if (currentFrame)
+                        currentFrame.border.color = "black";
+                    currentFrame = photoFrame;
+                    currentFrame.border.color = "red";
                 }
             }
         }

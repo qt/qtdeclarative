@@ -115,7 +115,10 @@ void tst_QQuickWorkerScript::messaging()
     waitForEchoMessage(worker);
 
     const QMetaObject *mo = worker->metaObject();
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), value);
+    QVariant response = mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>();
+    if (response.userType() == qMetaTypeId<QJSValue>())
+        response = response.value<QJSValue>().toVariant();
+    QCOMPARE(response, value);
 
     qApp->processEvents();
     delete worker;

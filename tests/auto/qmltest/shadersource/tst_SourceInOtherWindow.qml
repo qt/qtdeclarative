@@ -37,6 +37,9 @@ import QtQuick.Window 2.0
 import QtTest 1.0
 
 Item {
+    width: 100
+    height: 100
+
     Rectangle {
         id: box
         color: "red"
@@ -65,7 +68,7 @@ Item {
 
     TestCase {
         name: "shadersource-from-other-window"
-        when: childWindow.isRendered
+        when: childWindow.rendered
         function test_endresult() {
             verify(true); // that we got here without problems...
         }

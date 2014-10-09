@@ -75,6 +75,8 @@ public:
     QSize sourcesize;
     QSize oldSourceSize;
     qreal devicePixelRatio;
+    QRectF oldInnerSourceRect;
+    QRectF oldInnerTargetRect;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;

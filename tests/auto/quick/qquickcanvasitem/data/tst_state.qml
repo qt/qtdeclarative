@@ -30,7 +30,7 @@ CanvasTestCase {
        ctx.restore();
        ctx.fillStyle = '#0f0';
        ctx.fillRect(0, 0, 100, 50);
-       //comparePixel(ctx, 50,25, 0,255,0,255);
+       comparePixel(ctx, 50,25, 0,255,0,255);
        canvas.destroy()
    }
    function test_fillStyle(row) {

@@ -69,6 +69,7 @@ public:
 
     void startedByController();
     void controllerWasDeleted();
+    void markJobManagedByController() { m_jobManagedByController = true; }
 
 protected:
     bool event(QEvent *);
@@ -87,7 +88,7 @@ private:
     void setWindow(QQuickWindow *window);
     static QObject *findAnimationContext(QQuickAbstractAnimation *);
 
-    QQuickAnimatorController *m_controller;
+    QPointer<QQuickAnimatorController> m_controller;
     QQuickAbstractAnimation *m_animation;
     QAbstractAnimationJob *m_job;
     int m_duration;
@@ -100,6 +101,7 @@ private:
     };
 
     InternalState m_internalState;
+    bool m_jobManagedByController;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorJob : public QAbstractAnimationJob
@@ -120,7 +122,7 @@ public:
     QEasingCurve easingCurve() const { return m_easing; }
     void setEasingCurve(const QEasingCurve &curve) { m_easing = curve; }
 
-    void targetWasDeleted();
+    virtual void targetWasDeleted();
     virtual void initialize(QQuickAnimatorController *controller);
     virtual void writeBack() = 0;
     virtual void nodeWasDestroyed() = 0;
@@ -202,6 +204,7 @@ protected:
     QQuickTransformAnimatorJob();
     void initialize(QQuickAnimatorController *controller);
     void nodeWasDestroyed();
+    void targetWasDeleted() Q_DECL_OVERRIDE;
 
     Helper *m_helper;
 };

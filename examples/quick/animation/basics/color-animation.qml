@@ -54,16 +54,16 @@ Item {
                 position: 0.0
                 SequentialAnimation on color {
                     loops: Animation.Infinite
-                    ColorAnimation { from: "DeepSkyBlue"; to: "#0E1533"; duration: 5000 }
-                    ColorAnimation { from: "#0E1533"; to: "DeepSkyBlue"; duration: 5000 }
+                    ColorAnimation { from: "#14148c"; to: "#0E1533"; duration: 5000 }
+                    ColorAnimation { from: "#0E1533"; to: "#14148c"; duration: 5000 }
                 }
             }
             GradientStop {
                 position: 1.0
                 SequentialAnimation on color {
                     loops: Animation.Infinite
-                    ColorAnimation { from: "SkyBlue"; to: "#437284"; duration: 5000 }
-                    ColorAnimation { from: "#437284"; to: "SkyBlue"; duration: 5000 }
+                    ColorAnimation { from: "#14aaff"; to: "#437284"; duration: 5000 }
+                    ColorAnimation { from: "#437284"; to: "#14aaff"; duration: 5000 }
                 }
             }
         }
@@ -113,11 +113,11 @@ Item {
                 position: 0.0
                 SequentialAnimation on color {
                     loops: Animation.Infinite
-                    ColorAnimation { from: "ForestGreen"; to: "#001600"; duration: 5000 }
-                    ColorAnimation { from: "#001600"; to: "ForestGreen"; duration: 5000 }
+                    ColorAnimation { from: "#80c342"; to: "#001600"; duration: 5000 }
+                    ColorAnimation { from: "#001600"; to: "#80c342"; duration: 5000 }
                 }
             }
-            GradientStop { position: 1.0; color: "DarkGreen" }
+            GradientStop { position: 1.0; color: "#006325" }
         }
     }
 }

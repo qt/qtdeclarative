@@ -184,8 +184,6 @@ void QQuickAnimatorController::beforeNodeSync()
         m_nodesAreInvalid = false;
     }
 
-
-
     foreach (QQuickAnimatorJob *job, m_activeLeafAnimations) {
         if (!job->target())
             continue;
@@ -197,9 +195,9 @@ void QQuickAnimatorController::beforeNodeSync()
         }
     }
     foreach (QQuickItem *wiped, m_deletedSinceLastFrame) {
-        QQuickTransformAnimatorJob::Helper *helper = m_transforms.value(wiped);
-        if (helper)
-            helper->item = 0;
+        QQuickTransformAnimatorJob::Helper *helper = m_transforms.take(wiped);
+        // Helper will now already have been reset in all animators referencing it.
+        delete helper;
     }
 
     m_deletedSinceLastFrame.clear();
@@ -254,6 +252,7 @@ void QQuickAnimatorController::requestSync()
 // These functions are called on the GUI thread.
 void QQuickAnimatorController::startJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job)
 {
+    proxy->markJobManagedByController();
     m_starting[job] = proxy;
     requestSync();
 }

@@ -275,7 +275,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \l{http://en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
     impact pixel operations with \c Canvas.FrambufferObject render target.
 
-    \section1 Tips for Porting Existing HTML5 Canvas applications
+    \section1 Tips for Porting Existing HTML5 Canvas Applications
 
     Although the Canvas item is provides a HTML5 like API, HTML5 canvas
     applications need to be modified to run in the Canvas item:
@@ -667,7 +667,10 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
         return;
 
     d->window = value.window;
-    if (d->window->isSceneGraphInitialized())
+    QSGRenderContext *context = QQuickWindowPrivate::get(d->window)->context;
+
+    // Rendering to FramebufferObject needs a valid OpenGL context.
+    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid()))
         sceneGraphInitialized();
     else
         connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
@@ -746,7 +749,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     QQuickContext2D *ctx = qobject_cast<QQuickContext2D *>(d->context);
     QQuickContext2DTexture *factory = ctx->texture();
-    QSGTexture *texture = factory->textureForNextFrame(node->texture());
+    QSGTexture *texture = factory->textureForNextFrame(node->texture(), window());
     if (!texture) {
         delete node;
         d->node = 0;

@@ -17,7 +17,7 @@ QtObject {
     }
 
     function releaseScarceResource() {
-        root.scarceResourceCopy = null;
+        root.scarceResourceCopy = undefined;
     }
 }
 

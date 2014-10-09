@@ -307,7 +307,8 @@ static void displayFileDialog(Options *options)
 #ifndef QT_NO_TRANSLATION
 static void loadTranslationFile(QTranslator &translator, const QString& directory)
 {
-    translator.load(QLatin1String("qml_" )+QLocale::system().name(), directory + QLatin1String("/i18n"));
+    QLocale locale;
+    translator.load(locale, QLatin1String("qml"), QLatin1String("_"), directory + QLatin1String("/i18n"));
     QCoreApplication::installTranslator(&translator);
 }
 #endif
@@ -415,17 +416,18 @@ int main(int argc, char ** argv)
     app.setOrganizationDomain("qt-project.org");
 
 #ifndef QT_NO_TRANSLATION
-    QTranslator translator;
+    QLocale locale;
     QTranslator qtTranslator;
-    QString sysLocale = QLocale::system().name();
-    if (qtTranslator.load(QLatin1String("qt_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslator.load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&qtTranslator);
-    if (translator.load(QLatin1String("qmlscene_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+
+    QTranslator translator;
+    if (translator.load(locale, QLatin1String("qmlscene"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&translator);
 
     QTranslator qmlTranslator;
     if (!options.translationFile.isEmpty()) {
-        if (qmlTranslator.load(options.translationFile)) {
+        if (qmlTranslator.load(locale, options.translationFile)) {
             app.installTranslator(&qmlTranslator);
         } else {
             qWarning() << "Could not load the translation file" << options.translationFile;

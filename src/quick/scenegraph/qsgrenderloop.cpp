@@ -147,19 +147,6 @@ public:
     bool eventPending;
 };
 
-bool QSGRenderLoop::useConsistentTiming()
-{
-    bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
-    // Enable fixed animation steps...
-    QByteArray fixed = qgetenv("QSG_FIXED_ANIMATION_STEP");
-    bool fixedAnimationSteps = bufferQueuing;
-    if (fixed == "no")
-        fixedAnimationSteps = false;
-    else if (fixed.length())
-        fixedAnimationSteps = true;
-    return fixedAnimationSteps;
-}
-
 QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
@@ -169,11 +156,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
             ((QLoggingCategory &) QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 
         s_instance = QSGContext::createWindowManager();
-
-        if (useConsistentTiming()) {
-            QUnifiedTimer::instance(true)->setConsistentTiming(true);
-            qCDebug(QSG_LOG_INFO, "using fixed animation steps");
-        }
 
         if (!s_instance) {
 
@@ -283,37 +265,24 @@ void QSGGuiThreadRenderLoop::show(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return;
-
-    m_windows.remove(window);
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (gl)
-        gl->makeCurrent(window);
     cd->fireAboutToStop();
-    cd->cleanupNodesOnShutdown();
-
-    if (m_windows.size() == 0) {
-        if (!cd->persistentSceneGraph) {
-            rc->invalidate();
-            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-            if (!cd->persistentGLContext) {
-                delete gl;
-                gl = 0;
-            }
-        }
-    }
 }
 
 void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 {
+    m_windows.remove(window);
     hide(window);
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    if (gl)
+        gl->makeCurrent(window);
+    d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete gl;
         gl = 0;
-    } else if (window == gl->surface()) {
+    } else if (gl && window == gl->surface()) {
         gl->doneCurrent();
     }
 }

@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include <QtGui/QGuiApplication>
+#include <QtGui/QScreen>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtQuick/QQuickWindow>
@@ -48,6 +49,9 @@
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
+    foreach (QScreen * screen, QGuiApplication::screens())
+        screen->setOrientationUpdateMask(Qt::LandscapeOrientation | Qt::PortraitOrientation |
+                                         Qt::InvertedLandscapeOrientation | Qt::InvertedPortraitOrientation);
     QQmlEngine engine;
     QQmlComponent component(&engine);
     QQuickWindow::setDefaultAlphaBuffer(true);

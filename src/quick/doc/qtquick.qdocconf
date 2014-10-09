@@ -62,9 +62,9 @@ headerdirs += ../../plugins
 sourcedirs += ../../plugins
 
 #exclude certain directories
-excludedirs += ../../imports/dialogs \
-               ../../imports/models \
-               ../../../examples/quick/dialogs
+excludedirs += ../../imports/models
+
+examples.fileextensions        += "*.qm"
 
 manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example"
 

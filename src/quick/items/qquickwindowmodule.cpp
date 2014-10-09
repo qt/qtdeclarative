@@ -79,6 +79,11 @@ public:
             QQuickWindow::setVisibility(visibility);
     }
 
+    static QQuickWindowAttached *qmlAttachedProperties(QObject *object)
+    {
+        return new QQuickWindowAttached(object);
+    }
+
 Q_SIGNALS:
     void visibleChanged(bool arg);
     void visibilityChanged(QWindow::Visibility visibility);
@@ -166,16 +171,13 @@ void QQuickWindowModule::defineModule()
 {
     const char uri[] = "QtQuick.Window";
 
-    // Since Window is both an attached property and a createable type,
-    // the attached property declaration must come first so that it can
-    // be overridden below.
-    qmlRegisterUncreatableType<QQuickWindow>(uri, 2, 2, "Window", QQuickWindow::tr("Window is available via attached properties"));
     qmlRegisterType<QQuickWindow>(uri, 2, 0, "Window");
     qmlRegisterRevision<QWindow,1>(uri, 2, 1);
     qmlRegisterRevision<QWindow,2>(uri, 2, 2);
     qmlRegisterRevision<QQuickWindow,1>(uri, 2, 1);//Type moved to a subclass, but also has new members
     qmlRegisterRevision<QQuickWindow,2>(uri, 2, 2);
     qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");
+    qmlRegisterType<QQuickWindowQmlImpl,1>(uri, 2, 2, "Window");
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
 }
 
@@ -183,3 +185,4 @@ void QQuickWindowModule::defineModule()
 
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPEINFO(QQuickWindowQmlImpl, QML_HAS_ATTACHED_PROPERTIES)

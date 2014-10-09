@@ -41,9 +41,10 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     QQmlAbstractProfilerAdapter(service)
 {
     engine->enableProfiler();
-    connect(this, SIGNAL(profilingEnabled()), engine->profiler, SLOT(startProfiling()));
-    connect(this, SIGNAL(profilingEnabledWhileWaiting()), engine->profiler, SLOT(startProfiling()),
-            Qt::DirectConnection);
+    connect(this, SIGNAL(profilingEnabled(quint64)),
+            engine->profiler, SLOT(startProfiling(quint64)));
+    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
+            engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
     connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
     connect(this, SIGNAL(profilingDisabledWhileWaiting()), engine->profiler, SLOT(stopProfiling()),
             Qt::DirectConnection);

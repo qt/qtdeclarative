@@ -49,6 +49,7 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
     : m_controller(0)
     , m_job(job)
     , m_internalState(State_Stopped)
+    , m_jobManagedByController(false)
 {
     m_isRenderThreadProxy = true;
     m_animation = qobject_cast<QQuickAbstractAnimation *>(item);
@@ -93,7 +94,10 @@ void QQuickAnimatorProxyJob::deleteJob()
         // so delete it through the controller to clean up properly.
         if (m_controller)
             m_controller->deleteJob(m_job);
-        else
+
+        // We explicitly delete the job if the animator controller has never touched
+        // it. If it has, it will have ownership as well.
+        else if (!m_jobManagedByController)
             delete m_job;
         m_job = 0;
     }
@@ -141,11 +145,13 @@ void QQuickAnimatorProxyJob::controllerWasDeleted()
 void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 {
     if (!window) {
-        // Stop will trigger syncBackCurrentValues so best to do it before
-        // we delete m_job.
         stop();
         deleteJob();
-        return;
+
+        // Upon leaving a window, we reset the controller. This means that
+        // animators will only enter the Starting phase and won't be making
+        // calls to QQuickAnimatorController::startjob().
+        m_controller = 0;
 
     } else if (!m_controller && m_job) {
         m_controller = QQuickWindowPrivate::get(window)->animationController;
@@ -250,6 +256,10 @@ QQuickTransformAnimatorJob::QQuickTransformAnimatorJob()
 QQuickTransformAnimatorJob::~QQuickTransformAnimatorJob()
 {
     if (m_helper && --m_helper->ref == 0) {
+        // The only condition for not having a controller is when target was
+        // destroyed, in which case we have neither m_helper nor m_contorller.
+        Q_ASSERT(m_controller);
+        Q_ASSERT(m_helper->item);
         m_controller->m_transforms.remove(m_helper->item);
         delete m_helper;
     }
@@ -260,6 +270,7 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
     QQuickAnimatorJob::initialize(controller);
 
     if (m_controller) {
+        bool newHelper = m_helper == 0;
         m_helper = m_controller->m_transforms.value(m_target);
         if (!m_helper) {
             m_helper = new Helper();
@@ -267,7 +278,8 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
             m_controller->m_transforms.insert(m_target, m_helper);
             QObject::connect(m_target, SIGNAL(destroyed(QObject*)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
         } else {
-            ++m_helper->ref;
+            if (newHelper) // only add reference the first time around..
+                ++m_helper->ref;
             // Make sure leftovers from previous runs are being used...
             m_helper->wasSynced = false;
         }
@@ -279,6 +291,12 @@ void QQuickTransformAnimatorJob::nodeWasDestroyed()
 {
     if (m_helper)
         m_helper->node = 0;
+}
+
+void QQuickTransformAnimatorJob::targetWasDeleted()
+{
+    m_helper = 0;
+    QQuickAnimatorJob::targetWasDeleted();
 }
 
 void QQuickTransformAnimatorJob::Helper::sync()

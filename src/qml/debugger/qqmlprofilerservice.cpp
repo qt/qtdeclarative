@@ -171,12 +171,12 @@ void QQmlProfilerService::addGlobalProfiler(QQmlAbstractProfilerAdapter *profile
     // Global profiler, not connected to a specific engine.
     // Global profilers are started whenever any engine profiler is started and stopped when
     // all engine profilers are stopped.
-    foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers) {
-        if (engineProfiler->isRunning()) {
-            profiler->startProfiling();
-            break;
-        }
-    }
+    quint64 features = 0;
+    foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers)
+        features |= engineProfiler->features();
+
+    if (features != 0)
+        profiler->startProfiling(features);
 }
 
 void QQmlProfilerService::removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler)
@@ -206,7 +206,7 @@ void QQmlProfilerService::removeProfilerFromStartTimes(const QQmlAbstractProfile
  *
  * If any engine profiler is started like that also start all global profilers.
  */
-void QQmlProfilerService::startProfiling(QQmlEngine *engine)
+void QQmlProfilerService::startProfiling(QQmlEngine *engine, quint64 features)
 {
     QMutexLocker lock(configMutex());
 
@@ -218,7 +218,7 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine)
     if (engine != 0) {
         foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
             if (!profiler->isRunning()) {
-                profiler->startProfiling();
+                profiler->startProfiling(features);
                 startedAny = true;
             }
         }
@@ -230,7 +230,7 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine)
                 i != m_engineProfilers.end(); ++i) {
             if (!i.value()->isRunning()) {
                 engines << i.key();
-                i.value()->startProfiling();
+                i.value()->startProfiling(features);
                 startedAny = true;
             }
         }
@@ -241,7 +241,7 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine)
     if (startedAny) {
         foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
             if (!profiler->isRunning())
-                profiler->startProfiling();
+                profiler->startProfiling(features);
         }
     }
 
@@ -359,14 +359,17 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     QQmlDebugStream stream(&rwData, QIODevice::ReadOnly);
 
     int engineId = -1;
+    quint64 features = std::numeric_limits<quint64>::max();
     bool enabled;
     stream >> enabled;
     if (!stream.atEnd())
         stream >> engineId;
+    if (!stream.atEnd())
+        stream >> features;
 
     // If engineId == -1 objectForId() and then the cast will return 0.
     if (enabled)
-        startProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
+        startProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)), features);
     else
         stopProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
 

@@ -169,9 +169,13 @@ QQmlEngineDebugService::propertyData(QObject *obj, int propIdx)
     return rv;
 }
 
-QVariant QQmlEngineDebugService::valueContents(const QVariant &value) const
+QVariant QQmlEngineDebugService::valueContents(QVariant value) const
 {
-    int userType = value.userType();
+    // We can't send JS objects across the wire, so transform them to variant
+    // maps for serialization.
+    if (value.userType() == qMetaTypeId<QJSValue>())
+        value = value.value<QJSValue>().toVariant();
+    const int userType = value.userType();
 
     //QObject * is not streamable.
     //Convert all such instances to a String value

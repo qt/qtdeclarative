@@ -254,6 +254,7 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
             n->fbo = 0;
             delete n->msDisplayFbo;
             n->msDisplayFbo = 0;
+            n->invalidatePending = false;
         }
     }
 

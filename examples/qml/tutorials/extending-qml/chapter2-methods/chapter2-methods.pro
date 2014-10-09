@@ -6,7 +6,7 @@ SOURCES += piechart.cpp \
 
 RESOURCES += chapter2-methods.qrc
 
-DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending/chapter2-methods
+DESTPATH = $$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending-qml/chapter2-methods
 target.path = $$DESTPATH
 
 qml.files = *.qml

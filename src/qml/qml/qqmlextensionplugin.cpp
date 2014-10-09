@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
     or other issues in the library user's code.
 
 
-    \section1 An example
+    \section1 An Example
 
     Suppose there is a new \c TimeModel C++ class that should be made available
     as a new QML element. It provides the current time through \c hour and \c minute

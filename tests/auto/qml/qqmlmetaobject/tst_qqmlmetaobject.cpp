@@ -249,16 +249,22 @@ void tst_QQmlMetaObject::property()
     QSignalSpy changedSpy(object, SIGNAL(testChanged()));
     QObject::connect(object, SIGNAL(testChanged()), object, SLOT(deleteLater()));
 
+    QVariant value = prop.read(object);
+    if (value.userType() == qMetaTypeId<QJSValue>())
+        value = value.value<QJSValue>().toVariant();
     if (expectedValue.isValid())
-        QCOMPARE(prop.read(object), expectedValue);
+        QCOMPARE(value, expectedValue);
     else
-        QVERIFY(prop.read(object).isValid());
+        QVERIFY(value.isValid());
     QCOMPARE(changedSpy.count(), 0);
 
     if (isWritable) {
         QVERIFY(prop.write(object, newValue));
         QCOMPARE(changedSpy.count(), 1);
-        QCOMPARE(prop.read(object), newValue);
+        QVariant value = prop.read(object);
+        if (value.userType() == qMetaTypeId<QJSValue>())
+            value = value.value<QJSValue>().toVariant();
+        QCOMPARE(value, newValue);
     } else {
         QVERIFY(!prop.write(object, prop.read(object)));
         QCOMPARE(changedSpy.count(), 0);
@@ -321,11 +327,11 @@ void tst_QQmlMetaObject::method_data()
             << (QList<QByteArray>() << "int" << "bool" << "double")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(variant foo, var bar)") << "signal.4.qml"
-            << "testSignal(QVariant,QJSValue)"
+            << "testSignal(QVariant,QVariant)"
             << QMetaMethod::Signal
             << int(QMetaType::Void) << "void"
-            << (QList<int>() << QMetaType::QVariant << qMetaTypeId<QJSValue>())
-            << (QList<QByteArray>() << "QVariant" << "QJSValue")
+            << (QList<int>() << QMetaType::QVariant << QMetaType::QVariant)
+            << (QList<QByteArray>() << "QVariant" << "QVariant")
             << (QList<QByteArray>() << "foo" << "bar");
     QTest::newRow("testSignal(color foo, date bar, url baz)") << "signal.5.qml"
             << "testSignal(QColor,QDateTime,QUrl)"

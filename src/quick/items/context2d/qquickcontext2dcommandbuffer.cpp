@@ -207,6 +207,7 @@ void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, const QQuickCont
    if (state.globalCompositeOperation != p->compositionMode())
        p->setCompositionMode(state.globalCompositeOperation);
 
+   p->setClipping(state.clip);
    if (state.clip)
        p->setClipPath(state.clipPath);
 }
@@ -383,9 +384,11 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
         }
         case QQuickContext2D::Clip:
         {
+            state.clip = takeBool();
             state.clipPath = takePath();
-            p->setClipping(true);
-            p->setClipPath(state.clipPath);
+            p->setClipping(state.clip);
+            if (state.clip)
+                p->setClipPath(state.clipPath);
             break;
         }
         case QQuickContext2D::GlobalAlpha:

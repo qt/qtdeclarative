@@ -49,7 +49,6 @@
         \li Button.qml
         \li Display.qml
         \li NumberPad.qml
-        \li StyleLabel.qml
     \endlist
 
     To use the custom types, we add an import statement to the main QML file,
@@ -70,7 +69,7 @@
     \printuntil }
     \printuntil }
 
-    Further, we use the Button type in the NumberPad type to create the
+    Further, we use the Button type in the \c NumberPad type to create the
     calculator buttons. Button.qml specifies the basic properties for a
     button that we can modify for each button instance in NumberPad.qml. For the
     digit and separator buttons, we additionally specify the text property using
@@ -86,6 +85,11 @@
     \skipto Grid
     \printuntil /^\}/
 
+    Some of the buttons also have a \c dimmable property set, meaning that they
+    can be visually disabled (dimmed) whenever the calculator engine does not
+    accept input from that button. As an example, the button for square root
+    operator is dimmed for negative values.
+
     \section1 Animating Components
 
     We use the Display type to display calculations. In Display.qml, we use
@@ -100,7 +104,11 @@
     is the id of our AnimationController:
 
     \quotefromfile demos/calqlatr/calqlatr.qml
-    \skipto onPressed
+    \skipto MouseArea
+    \printuntil {
+    \dots 12
+    \skipto onReleased
+    \printuntil }
     \printuntil }
 
     Unlike other QML animation types, AnimationController is not driven by
@@ -123,26 +131,63 @@
     We use the easing curve of the type \c Easing.InOutQuad to accelerate the
     motion until halfway and then decelerate it.
 
+    In Button.qml, the text colors of the number pad buttons are also animated.
+
+    \quotefromfile demos/calqlatr/content/Button.qml
+    \skipto Text
+    \printuntil id:
+    \dots 8
+    \skipto color:
+    \printuntil ]
+    \printuntil }
+
+    We use \l {QtQml::Qt::darker()}{Qt.darker()} to darken the color when the
+    button is dimmed, and \l {QtQml::Qt::lighter()}{Qt.lighter()} to \e {light up}
+    the button when pressed. The latter is done in a separate \l [QML] {State}
+    {state} called \e "pressed", which activates when the \c pressed
+    property of the button's MouseArea is set.
+
+    The color changes are animated by defining a \l Behavior on the \c color
+    property.
+
+    In order to dynamically change the \c dimmed property of all the buttons
+    of the \c NumberPad, we connect its \c buttonPressed signal to the
+    \c Button's \c updateDimmed() function in Button.qml:
+
+    \quotefromfile demos/calqlatr/content/Button.qml
+    \skipto function updateDimmed() {
+    \printuntil buttonPressed.connect
+    \printuntil }
+
+    This way, when a button is pressed, all buttons on the \c NumPad
+    receive a \c buttonPressed signal and are activated or deactivated
+    according to the state of the calculator engine.
+
     \section1 Performing Calculations
 
-    The calculator.js file contains definitions for the functions to execute
-    when users press the digit and operator buttons. To use the functions, we
+    The calculator.js file defines our calculator engine. It contains variables
+    to store the calculator state, and functions that are called when the
+    user presses the digit and operator buttons. To use the engine, we
     import calculator.js in the calqlatr.qml file as \c CalcEngine:
 
     \code
     import "content/calculator.js" as CalcEngine
     \endcode
 
-    We can then declare the functions to execute depending on whether the
-    operator property for a button is set to \c true in NumberPad.qml:
+    Importing the engine creates a new instance of it. Therefore, we only do it
+    in the main QML file, \c calqlatr.qml. The root item defined in this file
+    contains helper functions that allow other types to access the calculator
+    engine:
 
     \quotefromfile demos/calqlatr/calqlatr.qml
     \skipto operatorPressed
-    \printuntil digitPressed
+    \printuntil CalcEngine.disabled
+    \printuntil }
 
-    When users press a digit or operator, the text from the digit appears on the
-    display. When they press the equals operator (=), the appropriate
-    calculation is performed, and the results appear on the display.
+    When users press a digit, the text from the digit appears on the
+    display. When they press an operator, the appropriate calculation is
+    performed, and the result can be displayed using the equals (=) operator.
+    The clear (C) operator resets the calculator engine.
 
     \section1 List of Files
 

@@ -143,8 +143,6 @@ public:
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
-    static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
-
 Q_SIGNALS:
     void frameSwapped();
     Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
@@ -209,7 +207,6 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickWindow *)
-QML_DECLARE_TYPEINFO(QQuickWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKWINDOW_H
 

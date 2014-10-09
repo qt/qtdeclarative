@@ -1742,7 +1742,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     nicely.
 
 
-    \section1 ListView layouts
+    \section1 ListView Layouts
 
     The layout of the items in a ListView can be controlled by these properties:
 

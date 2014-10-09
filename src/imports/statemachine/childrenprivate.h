@@ -51,9 +51,6 @@ public:
     {
         QAbstractState *state = qobject_cast<QAbstractState*>(item);
         if (state) {
-            if (qobject_cast<QStateMachine*>(item))
-                qmlInfo(static_cast<T *>(prop->object)) << "StateMachines should not be nested.";
-
             item->setParent(prop->object);
         } else {
             QAbstractTransition *trans = qobject_cast<QAbstractTransition*>(item);
@@ -68,9 +65,6 @@ public:
     {
         QAbstractState *state = qobject_cast<QAbstractState*>(item);
         if (state) {
-            if (qobject_cast<QStateMachine*>(item))
-                qmlInfo(static_cast<T *>(prop->object)) << "StateMachines should not be nested.";
-
             item->setParent(prop->object);
         }
         static_cast<ChildrenPrivate<T>*>(prop->data)->children.append(item);

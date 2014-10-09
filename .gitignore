@@ -55,7 +55,6 @@ bin/pixeltool*
 bin/qmake*
 bin/qdoc3*
 bin/qt3to4*
-bin/qtdemo*
 bin/qttracereplay*
 bin/rcc*
 bin/uic*
@@ -106,7 +105,6 @@ tools/activeqt/testcon/testcon.tlb
 translations/*.qm
 translations/*_untranslated.ts
 qrc_*.cpp
-src/imports/dialogs/dialogs.qrc
 
 # Test generated files
 QObject.log

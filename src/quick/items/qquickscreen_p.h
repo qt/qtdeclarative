@@ -50,15 +50,19 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged);
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged)
     Q_PROPERTY(int desktopAvailableHeight READ desktopAvailableHeight NOTIFY desktopGeometryChanged)
     Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged)
     Q_PROPERTY(qreal pixelDensity READ pixelDensity NOTIFY pixelDensityChanged)
+    // TODO Qt 6 Rename primaryOrientation to orientation
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
+    // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
+    Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
+               WRITE setOrientationUpdateMask NOTIFY orientationUpdateMaskChanged)
 
 public:
     QQuickScreenAttached(QObject* attachee);
@@ -72,6 +76,8 @@ public:
     qreal pixelDensity() const;
     Qt::ScreenOrientation primaryOrientation() const;
     Qt::ScreenOrientation orientation() const;
+    Qt::ScreenOrientations orientationUpdateMask() const;
+    void setOrientationUpdateMask(Qt::ScreenOrientations mask);
 
     //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
     Q_INVOKABLE int angleBetween(int a, int b);
@@ -87,6 +93,7 @@ Q_SIGNALS:
     void pixelDensityChanged();
     void primaryOrientationChanged();
     void orientationChanged();
+    void orientationUpdateMaskChanged();
 
 protected Q_SLOTS:
     void screenChanged(QScreen*);
@@ -95,6 +102,7 @@ private:
     QScreen* m_screen;
     QQuickWindow* m_window;
     QQuickItem* m_attachee;
+    Qt::ScreenOrientations m_updateMask;
 };
 
 class Q_AUTOTEST_EXPORT QQuickScreen : public QObject

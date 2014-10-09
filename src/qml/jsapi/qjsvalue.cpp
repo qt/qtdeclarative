@@ -58,14 +58,14 @@ QV4::ReturnedValue QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
     }
 
     if (value.isEmpty()) {
-        value = QV4::Encode(engine->newString(string));
+        value = QV4::Encode(engine->v8Engine->fromVariant(unboundData));
         PersistentValuePrivate **listRoot = &engine->memoryManager->m_persistentValues;
         prev = listRoot;
         next = *listRoot;
         *prev = this;
         if (next)
             next->prev = &this->next;
-        string = QString();
+        unboundData.clear();
     }
     return value.asReturnedValue();
 }
@@ -353,8 +353,21 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    if (d->value.isEmpty())
-        return d->string;
+    if (d->value.isEmpty()) {
+        if (d->unboundData.type() == QVariant::Map)
+            return QStringLiteral("[object Object]");
+        else if (d->unboundData.type() == QVariant::List) {
+            const QVariantList list = d->unboundData.toList();
+            QString result;
+            for (int i = 0; i < list.count(); ++i) {
+                if (i > 0)
+                    result.append(QLatin1Char(','));
+                result.append(list.at(i).toString());
+            }
+            return result;
+        }
+        return d->unboundData.toString();
+    }
     return d->value.toQStringNoThrow();
 }
 
@@ -372,8 +385,14 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    if (d->value.isEmpty())
-        return RuntimeHelpers::stringToNumber(d->string);
+    if (d->value.isEmpty()) {
+        if (d->unboundData.type() == QVariant::String)
+            return RuntimeHelpers::stringToNumber(d->unboundData.toString());
+        else if (d->unboundData.canConvert<double>())
+            return d->unboundData.value<double>();
+        else
+            return std::numeric_limits<double>::quiet_NaN();
+    }
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
@@ -398,8 +417,12 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    if (d->value.isEmpty())
-        return d->string.length() > 0;
+    if (d->value.isEmpty()) {
+        if (d->unboundData.userType() == QMetaType::QString)
+            return d->unboundData.toString().length() > 0;
+        else
+            return d->unboundData.toBool();
+    }
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     bool b = d->value.toBoolean();
@@ -424,8 +447,12 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    if (d->value.isEmpty())
-        return QV4::Primitive::toInt32(RuntimeHelpers::stringToNumber(d->string));
+    if (d->value.isEmpty()) {
+        if (d->unboundData.userType() == QMetaType::QString)
+            return QV4::Primitive::toInt32(RuntimeHelpers::stringToNumber(d->unboundData.toString()));
+        else
+            return d->unboundData.toInt();
+    }
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
@@ -450,8 +477,12 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    if (d->value.isEmpty())
-        return QV4::Primitive::toUInt32(RuntimeHelpers::stringToNumber(d->string));
+    if (d->value.isEmpty()) {
+        if (d->unboundData.userType() == QMetaType::QString)
+            return QV4::Primitive::toUInt32(RuntimeHelpers::stringToNumber(d->unboundData.toString()));
+        else
+            return d->unboundData.toUInt();
+    }
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
@@ -487,7 +518,7 @@ quint32 QJSValue::toUInt() const
 QVariant QJSValue::toVariant() const
 {
     if (d->value.isEmpty())
-        return QVariant(d->string);
+        return d->unboundData;
 
     return QV4::VariantObject::toVariant(d->value);
 }
@@ -775,8 +806,10 @@ bool QJSValue::equals(const QJSValue& other) const
 {
     if (d->value.isEmpty()) {
         if (other.d->value.isEmpty())
-            return d->string == other.d->string;
-        return js_equal(d->string, QV4::ValueRef(other.d->value));
+            return d->unboundData == other.d->unboundData;
+        if (d->unboundData.type() == QVariant::Map || d->unboundData.type() == QVariant::List)
+            return false;
+        return js_equal(d->unboundData.toString(), QV4::ValueRef(other.d->value));
     }
     if (other.d->value.isEmpty())
         return other.equals(*this);
@@ -810,9 +843,11 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
 {
     if (d->value.isEmpty()) {
         if (other.d->value.isEmpty())
-            return d->string == other.d->string;
+            return d->unboundData == other.d->unboundData;
+        if (d->unboundData.type() == QVariant::Map || d->unboundData.type() == QVariant::List)
+            return false;
         if (other.d->value.isString())
-            return d->string == other.d->value.stringValue()->toQString();
+            return d->unboundData.toString() == other.d->value.stringValue()->toQString();
         return false;
     }
     if (other.d->value.isEmpty())

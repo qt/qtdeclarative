@@ -82,8 +82,6 @@ public:
     static QSGRenderLoop *instance();
     static void setInstance(QSGRenderLoop *instance);
 
-    static bool useConsistentTiming();
-
     virtual bool interleaveIncubation() const { return false; }
 
     static void cleanup();

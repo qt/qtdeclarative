@@ -53,7 +53,7 @@
 
     \quotefromfile demos/photosurface/photosurface.qml
     \skipto Window {
-    \printuntil defaultSize
+    \printuntil currentFrame
 
     To use the \l{Window} type, we must import it:
 
@@ -123,9 +123,7 @@
     We use a PinchArea that contains a MouseArea in the photo frames to handle
     dragging, rotation and pinch zooming of the frame:
 
-    \quotefromfile demos/photosurface/photosurface.qml
-    \skipto PinchArea
-    \printuntil onPinchFinished
+    \printuntil onPinchStarted
 
     We use the \c pinch group property to control how the photo frames react to
     pinch gestures. The \c pinch.target sets \c photoFrame as the item to
@@ -136,18 +134,14 @@
     In the MouseArea's \c onPressed signal handler, we raise the selected photo
     frame to the top by increasing the value of its \c z property. The root item
     stores the z value of the top-most frame. The border color of the photo
-    frame is controlled in the \c onEntered and \c onExited signal handlers to
-    highlight the selected image.
+    frame is controlled in the \c onEntered signal handler to highlight the
+    selected image:
 
-    \quotefromfile demos/photosurface/photosurface.qml
-    \skipto MouseArea
-    \printuntil onExited
+    \printuntil onEntered
 
     To enable you to test the example on the desktop, we use the MouseArea's
     \c onWheel signal handler to simulate pinch gestures by using a mouse:
 
-    \quotefromfile demos/photosurface/photosurface.qml
-    \skipto onWheel
     \printuntil photoFrame.y
     \printuntil }
     \printuntil }
@@ -156,8 +150,6 @@
     The \c onWheel signal handler is called in response to mouse wheel gestures.
     Use the vertical wheel to zoom and Ctrl and the vertical wheel to rotate
     frames. If the mouse has a horizontal wheel, use it to rotate frames.
-
-    \section1 List of Files
 
     \sa {QML Applications}
 */

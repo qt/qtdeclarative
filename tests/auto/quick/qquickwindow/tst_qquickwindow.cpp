@@ -1188,6 +1188,7 @@ void tst_qquickwindow::headless()
 
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->isVisible());
+    bool threaded = window->openglContext()->thread() != QThread::currentThread();
 
     QSignalSpy initialized(window, SIGNAL(sceneGraphInitialized()));
     QSignalSpy invalidated(window, SIGNAL(sceneGraphInvalidated()));
@@ -1202,8 +1203,10 @@ void tst_qquickwindow::headless()
     window->hide();
     window->releaseResources();
 
-    QTRY_COMPARE(invalidated.size(), 1);
-    QVERIFY(window->openglContext() == 0);
+    if (threaded) {
+        QTRY_COMPARE(invalidated.size(), 1);
+        QVERIFY(window->openglContext() == 0);
+    }
 
     // Destroy the native windowing system buffers
     window->destroy();
@@ -1213,7 +1216,8 @@ void tst_qquickwindow::headless()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QTRY_COMPARE(initialized.size(), 1);
+    if (threaded)
+        QTRY_COMPARE(initialized.size(), 1);
     QVERIFY(window->openglContext() != 0);
 
     // Verify that the visual output is the same
@@ -1536,6 +1540,7 @@ void tst_qquickwindow::hideThenDelete()
 
     QSignalSpy *openglDestroyed = 0;
     QSignalSpy *sgInvalidated = 0;
+    bool threaded = false;
 
     {
         QQuickWindow window;
@@ -1548,6 +1553,7 @@ void tst_qquickwindow::hideThenDelete()
         window.show();
 
         QTest::qWaitForWindowExposed(&window);
+        threaded = window.openglContext()->thread() != QThread::currentThread();
 
         openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
         sgInvalidated = new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated()));
@@ -1556,15 +1562,17 @@ void tst_qquickwindow::hideThenDelete()
 
         QTRY_VERIFY(!window.isExposed());
 
-        if (!persistentSG) {
-            QVERIFY(sgInvalidated->size() > 0);
-            if (!persistentGL)
-                QVERIFY(openglDestroyed->size() > 0);
-            else
+        if (threaded) {
+            if (!persistentSG) {
+                QVERIFY(sgInvalidated->size() > 0);
+                if (!persistentGL)
+                    QVERIFY(openglDestroyed->size() > 0);
+                else
+                    QVERIFY(openglDestroyed->size() == 0);
+            } else {
+                QVERIFY(sgInvalidated->size() == 0);
                 QVERIFY(openglDestroyed->size() == 0);
-        } else {
-            QVERIFY(sgInvalidated->size() == 0);
-            QVERIFY(openglDestroyed->size() == 0);
+            }
         }
     }
 
@@ -1706,9 +1714,6 @@ void tst_qquickwindow::testWindowVisibilityOrder()
     window5->hide();
 
     window3->hide();
-#if defined(Q_OS_OSX)
-    QEXPECT_FAIL("","Focus is not transferred to transient parent on window close (QTBUG-33423)", Continue);
-#endif
     QTRY_COMPARE(window2 == QGuiApplication::focusWindow(), true);
 
     window2->hide();

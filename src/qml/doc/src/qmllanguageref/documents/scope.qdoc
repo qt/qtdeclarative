@@ -163,14 +163,14 @@ Item {
     property string title
 
     Text {
-        id: title
+        id: titletype
         text: "<b>" + title + "</b>"
         font.pixelSize: 22
         anchors.top: parent.top
     }
 
     Text {
-        text: title.text
+        text: titletype.text
         font.pixelSize: 18
         anchors.bottom: parent.bottom
     }

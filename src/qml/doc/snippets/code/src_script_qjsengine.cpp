@@ -79,12 +79,12 @@ if (result.isError())
 
 
 //! [5]
-QPushButton button;
-QJSValue scriptButton = myEngine.newQObject(&button);
+QPushButton *button = new QPushButton;
+QJSValue scriptButton = myEngine.newQObject(button);
 myEngine.globalObject().setProperty("button", scriptButton);
 
 myEngine.evaluate("button.checkable = true");
 
-qDebug() << scriptButton.property("checkable").toBoolean();
+qDebug() << scriptButton.property("checkable").toBool();
 scriptButton.property("show").call(); // call the show() slot
 //! [5]

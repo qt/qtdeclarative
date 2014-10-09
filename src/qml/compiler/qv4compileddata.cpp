@@ -181,7 +181,7 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 {
-    return irDocument->jsGenerator.generateUnit();
+    return irDocument->jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
 }
 
 QString Binding::valueAsString(const Unit *unit) const

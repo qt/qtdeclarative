@@ -113,7 +113,11 @@ FlipBar {
                 hint: flipBar.placeHolder
                 focus: flipBar.opened
                 anchors { fill: parent; margins: 6 }
-                onAccepted: flipBar.ok()
+                onAccepted: {
+                    if (Qt.inputMethod.visible)
+                        Qt.inputMethod.hide()
+                    flipBar.ok()
+                }
             }
         }
     }

@@ -189,9 +189,15 @@ public:
 class WMSyncEvent : public WMWindowEvent
 {
 public:
-    WMSyncEvent(QQuickWindow *c, bool inExpose) : WMWindowEvent(c, WM_RequestSync), size(c->size()), syncInExpose(inExpose) { }
+    WMSyncEvent(QQuickWindow *c, bool inExpose, bool force)
+        : WMWindowEvent(c, WM_RequestSync)
+        , size(c->size())
+        , syncInExpose(inExpose)
+        , forceRenderPass(force)
+    {}
     QSize size;
     bool syncInExpose;
+    bool forceRenderPass;
 };
 
 
@@ -367,6 +373,10 @@ bool QSGRenderThread::event(QEvent *e)
         if (se->syncInExpose) {
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- triggered from expose";
             pendingUpdate |= ExposeRequest;
+        }
+        if (se->forceRenderPass) {
+            qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- repaint regardless";
+            pendingUpdate |= RepaintRequest;
         }
         return true; }
 
@@ -641,7 +651,6 @@ void QSGRenderThread::run()
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "run()";
     animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
     animatorDriver->install();
-    QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
     if (QQmlDebugService::isDebuggingEnabled())
         QQuickProfiler::registerAnimationCallback();
 
@@ -855,6 +864,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
         win.timerId = 0;
         win.updateDuringSync = false;
+        win.forceRenderPass = true; // also covered by polishAndSync(inExpose=true), but doesn't hurt
         m_windows << win;
         w = &m_windows.last();
     }
@@ -998,7 +1008,9 @@ void QSGThreadedRenderLoop::update(QQuickWindow *window)
     }
 
     qCDebug(QSG_LOG_RENDERLOOP) << "update on window" << w->window;
-    w->thread->postEvent(new QEvent(WM_RequestRepaint));
+    // We set forceRenderPass because we want to make sure the QQuickWindow
+    // actually does a full render pass after the next sync.
+    w->forceRenderPass = true;
     maybeUpdate(w);
 }
 
@@ -1107,7 +1119,8 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qCDebug(QSG_LOG_RENDERLOOP) << "- lock for sync";
     w->thread->mutex.lock();
     m_lockedForSync = true;
-    w->thread->postEvent(new WMSyncEvent(window, inExpose));
+    w->thread->postEvent(new WMSyncEvent(window, inExpose, w->forceRenderPass));
+    w->forceRenderPass = false;
 
     qCDebug(QSG_LOG_RENDERLOOP) << "- wait for sync";
     if (profileFrames)

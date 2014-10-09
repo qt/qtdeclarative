@@ -65,7 +65,8 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 #ifndef QT_NO_TRANSLATION
     QTranslator* qtTranslator = new QTranslator;
-    if (qtTranslator->load(QLatin1String("qt_") + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    QLocale locale;
+    if (qtTranslator->load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         QCoreApplication::installTranslator(qtTranslator);
     translators << qtTranslator;
 #endif
@@ -82,7 +83,8 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
     QFileInfo fi(rootFile.toLocalFile());
 
     QTranslator *translator = new QTranslator;
-    if (translator->load(QLatin1String("qml_") + QLocale::system().name(), fi.path() + QLatin1String("/i18n"))) {
+    QLocale locale;
+    if (translator->load(locale, QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"))) {
         QCoreApplication::installTranslator(translator);
         translators << translator;
     } else {
@@ -160,6 +162,10 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   }
   \endcode
 
+  Unlike QQuickView, QQmlApplicationEngine does not automatically create a root
+  window. If you are using visual items from Qt Quick, you will need to place
+  them inside of a \l [QML] {Window}.
+
   You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as \c QtQuick).
 
   List of configuration changes from a default QQmlEngine:
@@ -167,7 +173,7 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   \list
   \li Connecting Qt.quit() to QCoreApplication::quit()
   \li Automatically loads translation files from an i18n directory adjacent to the main QML file.
-  \li Automatically sets an incubuation controller if the scene contains a QQuickWindow.
+  \li Automatically sets an incubation controller if the scene contains a QQuickWindow.
   \li Automatically sets a \c QQmlFileSelector as the url interceptor, applying file selectors to all
   QML files and assets.
   \endlist

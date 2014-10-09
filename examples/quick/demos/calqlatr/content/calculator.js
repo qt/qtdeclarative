@@ -38,7 +38,6 @@
 **
 ****************************************************************************/
 
-
 var curVal = 0
 var memory = 0
 var lastOp = ""
@@ -46,9 +45,13 @@ var previousOperator = ""
 var digits = ""
 
 function disabled(op) {
-    if (op == "." && digits.toString().search(/\./) != -1) {
+    if (digits == "" && !((op >= "0" && op <= "9") || op == "."))
         return true
-    } else if (op == window.squareRoot &&  digits.toString().search(/-/) != -1) {
+    else if (op == '=' && previousOperator.length != 1)
+        return true
+    else if (op == "." && digits.toString().search(/\./) != -1) {
+        return true
+    } else if (op == "√" &&  digits.toString().search(/-/) != -1) {
         return true
     } else {
         return false
@@ -59,7 +62,7 @@ function digitPressed(op)
 {
     if (disabled(op))
         return
-    if (digits.toString().length >= 14)
+    if (digits.toString().length >= display.maxDigits)
         return
     if (lastOp.toString().length == 1 && ((lastOp >= "0" && lastOp <= "9") || lastOp == ".") ) {
         digits = digits + op.toString()
@@ -77,26 +80,32 @@ function operatorPressed(op)
         return
     lastOp = op
 
+    if (op == "±") {
+            digits = Number(digits.valueOf() * -1)
+            display.setDigit(display.displayNumber(digits))
+            return
+        }
+
     if (previousOperator == "+") {
         digits = Number(digits.valueOf()) + Number(curVal.valueOf())
     } else if (previousOperator == "−") {
-        digits = Number(curVal) - Number(digits.valueOf())
+        digits = Number(curVal.valueOf()) - Number(digits.valueOf())
     } else if (previousOperator == "×") {
         digits = Number(curVal) * Number(digits.valueOf())
     } else if (previousOperator == "÷") {
         digits = Number(curVal) / Number(digits.valueOf())
-    } else if (previousOperator == "=") {
     }
 
     if (op == "+" || op == "−" || op == "×" || op == "÷") {
         previousOperator = op
         curVal = digits.valueOf()
+        digits = ""
         display.displayOperator(previousOperator)
         return
     }
 
     if (op == "=") {
-        display.newLine("=", digits.toString())
+        display.newLine("=", digits.valueOf())
     }
 
     curVal = 0
@@ -110,10 +119,9 @@ function operatorPressed(op)
         digits = (Math.abs(digits.valueOf())).toString()
     } else if (op == "Int") {
         digits = (Math.floor(digits.valueOf())).toString()
-    } else if (op == "±") {
-        digits = (digits.valueOf() * -1).toString()
     } else if (op == "√") {
-        digits = (Math.sqrt(digits.valueOf())).toString()
+        digits = Number(Math.sqrt(digits.valueOf()))
+        display.newLine("√", digits.valueOf())
     } else if (op == "mc") {
         memory = 0;
     } else if (op == "m+") {
@@ -122,22 +130,22 @@ function operatorPressed(op)
         digits = memory.toString()
     } else if (op == "m-") {
         memory = digits.valueOf()
-    } else if (op == window.leftArrow) {
+    } else if (op == "backspace") {
         digits = digits.toString().slice(0, -1)
-        if (digits.length == 0) {
-            digits = "0"
-        }
+        display.clear()
+        display.appendDigit(digits)
     } else if (op == "Off") {
         Qt.quit();
-    } else if (op == "C") {
+    }
+
+    // Reset the state on 'C' operator or after
+    // an error occurred
+    if (op == "C" || display.isError) {
         display.clear()
-    } else if (op == "AC") {
         curVal = 0
         memory = 0
         lastOp = ""
-        digits ="0"
+        digits = ""
     }
-
-
 }
 

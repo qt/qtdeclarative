@@ -52,8 +52,7 @@ TestCase {
     name: "nestedInitalStates"
 
     function test_nestedInitalStates() {
-        // uncomment me after vm problems are fixed.
-        //            compare(myStateMachine.running, false);
+        compare(myStateMachine.running, false);
         compare(parentState.active, false);
         compare(childState1.active, false);
         compare(childState2.active, false);

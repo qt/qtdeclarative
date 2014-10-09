@@ -9,5 +9,5 @@ varying highp vec2 sampleCoord;
 void main()
 {
      sampleCoord = tCoord * textureScale;
-     gl_Position = matrix * vCoord;
+     gl_Position = matrix * floor(vCoord + 0.5);
 }

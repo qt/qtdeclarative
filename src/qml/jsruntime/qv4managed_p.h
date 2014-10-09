@@ -212,6 +212,7 @@ struct Q_QML_PRIVATE_EXPORT Managed
 
         void *operator new(size_t, Managed *m) { return m; }
         void *operator new(size_t, Managed::Data *m) { return m; }
+        void operator delete(void *, Managed::Data *) {}
     };
     Data data;
     V4_MANAGED(Managed)

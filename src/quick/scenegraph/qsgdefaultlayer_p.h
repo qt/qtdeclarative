@@ -60,8 +60,6 @@ public:
     QSGNode *item() const { return m_item; }
     void setItem(QSGNode *item);
 
-    void setShaderSourceNode(QSGNode *node) { m_shaderSourceNode = node; }
-
     QRectF rect() const { return m_rect; }
     void setRect(const QRectF &rect);
 
@@ -100,7 +98,6 @@ private:
     void grab();
 
     QSGNode *m_item;
-    QSGNode *m_shaderSourceNode;
     QRectF m_rect;
     QSize m_size;
     qreal m_device_pixel_ratio;

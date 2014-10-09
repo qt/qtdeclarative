@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,7 +39,8 @@
 ****************************************************************************/
 
 //! [imports]
-import QtQuick 2.0
+import QtQuick 2.2
+import QtQuick.Window 2.1
 import "content"
 //! [imports]
 
@@ -53,12 +54,13 @@ Rectangle {
     Dial {
         id: dial
         anchors.centerIn: parent
-        value: slider.x * 100 / (container.width - 34)
+        value: slider.x * 100 / (container.width - 32)
     }
     //! [the dial in use]
 
     Rectangle {
         id: container
+        property int oldWidth: 0
         anchors { bottom: parent.bottom; left: parent.left
             right: parent.right; leftMargin: 20; rightMargin: 20
             bottomMargin: 10
@@ -71,6 +73,17 @@ Rectangle {
         gradient: Gradient {
             GradientStop { position: 0.0; color: "gray" }
             GradientStop { position: 1.0; color: "white" }
+        }
+
+        onWidthChanged: {
+            if (oldWidth === 0) {
+                oldWidth = width;
+                return
+            }
+
+            var desiredPercent = slider.x * 100 / (oldWidth - 32)
+            slider.x = desiredPercent * (width - 32) / 100
+            oldWidth = width
         }
 
         Rectangle {

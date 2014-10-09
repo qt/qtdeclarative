@@ -93,7 +93,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     sharedState->rootContext = 0;
 
     QQmlProfiler *profiler = QQmlEnginePrivate::get(engine)->profiler;
-    Q_QML_PROFILE_IF_ENABLED(profiler,
+    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
             sharedState->profiler.init(profiler, compiledData->totalParserStatusCount));
 }
 

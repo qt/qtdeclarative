@@ -1654,8 +1654,8 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 
                 // Leaving from previous hovered items until we reach the item or one of its ancestors.
                 while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
-                    sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
-                    hoverItems.removeFirst();
+                    QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
+                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, accepted);
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
@@ -2922,7 +2922,7 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 QOpenGLContext *QQuickWindow::openglContext() const
 {
     Q_D(const QQuickWindow);
-    return d->context->openglContext();
+    return d->context ? d->context->openglContext() : 0;
 }
 
 /*!
@@ -3530,7 +3530,7 @@ void QQuickWindow::setColor(const QColor &color)
     }
     d->clearColor = color;
     emit colorChanged(color);
-    d->dirtyItem(contentItem());
+    update();
 }
 
 QColor QQuickWindow::color() const
@@ -3912,11 +3912,6 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     else if (stage == AfterSwapStage)
         d->afterSwapJobs << job;
     d->renderJobMutex.unlock();
-}
-
-QQuickWindowAttached *QQuickWindow::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickWindowAttached(object);
 }
 
 void QQuickWindowPrivate::runAndClearJobs(QList<QRunnable *> *jobs)

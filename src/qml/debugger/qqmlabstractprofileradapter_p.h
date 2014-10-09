@@ -59,12 +59,12 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public 
 
 public:
     QQmlAbstractProfilerAdapter(QQmlProfilerService *service) :
-        service(service), waiting(true), running(false) {}
+        service(service), waiting(true), featuresEnabled(0) {}
     virtual ~QQmlAbstractProfilerAdapter() {}
 
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) = 0;
 
-    void startProfiling();
+    void startProfiling(quint64 features);
 
     void stopProfiling();
 
@@ -73,13 +73,14 @@ public:
     void stopWaiting() { waiting = false; }
     void startWaiting() { waiting = true; }
 
-    bool isRunning() const { return running; }
+    bool isRunning() const { return featuresEnabled != 0; }
+    quint64 features() const { return featuresEnabled; }
 
     void synchronize(const QElapsedTimer &t) { emit referenceTimeKnown(t); }
 
 signals:
-    void profilingEnabled();
-    void profilingEnabledWhileWaiting();
+    void profilingEnabled(quint64 features);
+    void profilingEnabledWhileWaiting(quint64 features);
 
     void profilingDisabled();
     void profilingDisabledWhileWaiting();
@@ -92,7 +93,7 @@ protected:
 
 private:
     bool waiting;
-    bool running;
+    quint64 featuresEnabled;
 };
 
 QT_END_NAMESPACE

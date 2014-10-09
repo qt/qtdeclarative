@@ -200,6 +200,26 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
     QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
 }
 
+void QQuickWidgetPrivate::render(bool needsSync)
+{
+    context->makeCurrent(offscreenSurface);
+
+    if (needsSync) {
+        renderControl->polishItems();
+        renderControl->sync();
+    }
+
+    renderControl->render();
+    context->functions()->glFlush();
+
+    if (resolvedFbo) {
+        QRect rect(QPoint(0, 0), fbo->size());
+        QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
+    }
+
+    context->doneCurrent();
+}
+
 void QQuickWidgetPrivate::renderSceneGraph()
 {
     Q_Q(QQuickWidget);
@@ -215,19 +235,8 @@ void QQuickWidgetPrivate::renderSceneGraph()
     }
 
     Q_ASSERT(offscreenSurface);
-    context->makeCurrent(offscreenSurface);
-    renderControl->polishItems();
-    renderControl->sync();
-    renderControl->render();
-    context->functions()->glFlush();
-
-    if (resolvedFbo) {
-        QRect rect(QPoint(0, 0), fbo->size());
-        QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
-    }
-
-    context->doneCurrent();
-    q->update();
+    render(true);
+    q->update(); // schedule composition
 }
 
 QImage QQuickWidgetPrivate::grabFramebuffer()
@@ -293,6 +302,11 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
     some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
     animations, will not be available.
+
+    \note Avoid calling winId() on a QQuickWidget. This function triggers the creation of
+    a native window, resulting in reduced performance and possibly rendering glitches. The
+    entire purpose of QQuickWidget is to render Quick scenes without a separate native
+    window, hence making it a native widget should always be avoided.
 
     \section1 Limitations
 
@@ -937,29 +951,14 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
         return;
     }
 
-    context->makeCurrent(d->offscreenSurface);
-
-    if (needsSync) {
-        d->renderControl->polishItems();
-        d->renderControl->sync();
-    }
-
-    d->renderControl->render();
-    context->functions()->glFlush();
-
-    if (d->resolvedFbo) {
-        QRect rect(QPoint(0, 0), d->fbo->size());
-        QOpenGLFramebufferObject::blitFramebuffer(d->resolvedFbo, rect, d->fbo, rect);
-    }
-
-    context->doneCurrent();
+    d->render(needsSync);
 }
 
 /*! \reimp */
 void QQuickWidget::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
 
     QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
@@ -968,7 +967,7 @@ void QQuickWidget::keyPressEvent(QKeyEvent *e)
 void QQuickWidget::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Key>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
 
     QCoreApplication::sendEvent(d->offscreenWindow, e);
 }
@@ -977,7 +976,7 @@ void QQuickWidget::keyReleaseEvent(QKeyEvent *e)
 void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // Use the constructor taking localPos and screenPos. That puts localPos into the
     // event's localPos and windowPos, and screenPos into the event's screenPos. This way
@@ -992,7 +991,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
 void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // As the second mouse press is suppressed in widget windows we emulate it here for QML.
     // See QTBUG-25831
@@ -1025,7 +1024,7 @@ void QQuickWidget::hideEvent(QHideEvent *)
 void QQuickWidget::mousePressEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
@@ -1036,7 +1035,7 @@ void QQuickWidget::mousePressEvent(QMouseEvent *e)
 void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
@@ -1048,7 +1047,7 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
 void QQuickWidget::wheelEvent(QWheelEvent *e)
 {
     Q_D(QQuickWidget);
-    Q_QUICK_PROFILE(addEvent<QQuickProfiler::Mouse>());
+    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
 
     // Wheel events only have local and global positions, no need to map.
     QCoreApplication::sendEvent(d->offscreenWindow, e);
@@ -1099,6 +1098,16 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
         break;
+
+    case QEvent::ScreenChangeInternal:
+        if (d->fbo) {
+            // This will check the size taking the devicePixelRatio into account
+            // and recreate if needed.
+            createFramebufferObject();
+            d->render(true);
+        }
+        break;
+
     default:
         break;
     }

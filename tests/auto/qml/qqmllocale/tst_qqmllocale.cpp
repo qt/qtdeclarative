@@ -486,7 +486,7 @@ void tst_qqmllocale::weekDays()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("weekDays");
-    QVERIFY(val.type() == QVariant::List);
+    QVERIFY(val.userType() == qMetaTypeId<QJSValue>());
 
     QList<QVariant> qmlDays = val.toList();
     QList<Qt::DayOfWeek> days = QLocale(locale).weekdays();
@@ -528,7 +528,7 @@ void tst_qqmllocale::uiLanguages()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("uiLanguages");
-    QVERIFY(val.type() == QVariant::List);
+    QVERIFY(val.userType() == qMetaTypeId<QJSValue>());
 
     QList<QVariant> qmlLangs = val.toList();
     QStringList langs = QLocale(locale).uiLanguages();

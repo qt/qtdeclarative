@@ -569,12 +569,26 @@ void tst_qquickanimations::alwaysRunToEnd()
     animation.setAlwaysRunToEnd(true);
     QVERIFY(animation.loops() == -1);
     QVERIFY(animation.alwaysRunToEnd() == true);
+
+    QElapsedTimer timer;
+    timer.start();
     animation.start();
-    QTest::qWait(1500);
+
+    // Make sure the animation has started but is not finished, yet.
+    QTRY_VERIFY(rect.x() > qreal(0) && rect.x() != qreal(200));
+
     animation.stop();
-    QVERIFY(rect.x() != qreal(200));
-    QTest::qWait(500);
-    QTIMED_COMPARE(rect.x(), qreal(200));
+
+    // Make sure it didn't just jump to the end and also didn't revert to the start.
+    QVERIFY(rect.x() > qreal(0) && rect.x() != qreal(200));
+
+    // Make sure it eventually reaches the end.
+    QTRY_COMPARE(rect.x(), qreal(200));
+
+    // This should have taken at least 1s but less than 2s
+    // (otherwise it has run the animation twice).
+    qint64 elapsed = timer.elapsed();
+    QVERIFY(elapsed >= 1000 && elapsed < 2000);
 }
 
 void tst_qquickanimations::complete()
@@ -592,8 +606,7 @@ void tst_qquickanimations::complete()
     animation.stop();
     QVERIFY(rect.x() != qreal(200));
     animation.start();
-    QTest::qWait(50);
-    QVERIFY(animation.isRunning());
+    QTRY_VERIFY(animation.isRunning());
     animation.complete();
     QCOMPARE(rect.x(), qreal(200));
 }
@@ -718,10 +731,10 @@ void tst_qquickanimations::badTypes()
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("state1");
-        QTest::qWait(1000 + 50);
-        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
-        QVERIFY(myRect);
-        QCOMPARE(myRect->x(),qreal(200));
+
+        QQuickRectangle *myRect = 0;
+        QTRY_VERIFY(myRect = rect->findChild<QQuickRectangle*>("MyRect"));
+        QTRY_COMPARE(myRect->x(),qreal(200));
     }
 }
 
@@ -764,7 +777,7 @@ void tst_qquickanimations::mixedTypes()
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
         QVERIFY(myRect);
 
-        //rather inexact -- is there a better way?
+        // We cannot get that more exact than that without dependable real-time behavior.
         QVERIFY(myRect->x() > 100 && myRect->x() < 200);
         QVERIFY(myRect->border()->width() > 1 && myRect->border()->width() < 10);
     }
@@ -780,7 +793,7 @@ void tst_qquickanimations::mixedTypes()
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
         QVERIFY(myRect);
 
-        //rather inexact -- is there a better way?
+        // We cannot get that more exact than that without dependable real-time behavior.
         QVERIFY(myRect->x() > 100 && myRect->x() < 200);
         QVERIFY(myRect->color() != QColor("red") && myRect->color() != QColor("blue"));
     }
@@ -1215,29 +1228,21 @@ void tst_qquickanimations::startStopSignals()
     QCOMPARE(root->property("startedCount").toInt(), 1);
     QCOMPARE(root->property("stoppedCount").toInt(), 1);
 
+    QElapsedTimer timer;
+    timer.start();
     QMetaObject::invokeMethod(root, "start");
 
     QCOMPARE(root->property("startedCount").toInt(), 2);
     QCOMPARE(root->property("stoppedCount").toInt(), 1);
-
-    QTest::qWait(100);
-
-    QCOMPARE(root->property("startedCount").toInt(), 2);
-    QCOMPARE(root->property("stoppedCount").toInt(), 1);
-
-    QTest::qWait(100);
 
     QTRY_COMPARE(root->property("stoppedCount").toInt(), 2);
     QCOMPARE(root->property("startedCount").toInt(), 2);
+    QVERIFY(timer.elapsed() >= 200);
 
     root->setProperty("alwaysRunToEnd", true);
 
+    timer.restart();
     QMetaObject::invokeMethod(root, "start");
-
-    QCOMPARE(root->property("startedCount").toInt(), 3);
-    QCOMPARE(root->property("stoppedCount").toInt(), 2);
-
-    QTest::qWait(100);
 
     QCOMPARE(root->property("startedCount").toInt(), 3);
     QCOMPARE(root->property("stoppedCount").toInt(), 2);
@@ -1247,10 +1252,9 @@ void tst_qquickanimations::startStopSignals()
     QCOMPARE(root->property("startedCount").toInt(), 3);
     QCOMPARE(root->property("stoppedCount").toInt(), 2);
 
-    QTest::qWait(100);
-
     QTRY_COMPARE(root->property("stoppedCount").toInt(), 3);
     QCOMPARE(root->property("startedCount").toInt(), 3);
+    QVERIFY(timer.elapsed() >= 200);
 }
 
 void tst_qquickanimations::runningTrueBug()
@@ -1352,10 +1356,13 @@ void tst_qquickanimations::alwaysRunToEndRestartBug()
     animation.stop();
     animation.start();
     animation.stop();
-    QTest::qWait(500);
-    QVERIFY(rect.x() != qreal(200));
-    QTest::qWait(800);
-    QTIMED_COMPARE(rect.x(), qreal(200));
+
+    // Waiting for a fixed time here would be dangerous as the starting and stopping itself takes
+    // time and clocks are unreliable. The only thing we do know is that the animation should
+    // eventually start and eventually stop. As its duration is 1000ms we can be pretty sure to hit
+    // an in between state with the 50ms iterations QTRY_VERIFY does.
+    QTRY_VERIFY(rect.x() != qreal(200));
+    QTRY_COMPARE(rect.x(), qreal(200));
     QCOMPARE(static_cast<QQuickAbstractAnimation*>(&animation)->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
 }
 

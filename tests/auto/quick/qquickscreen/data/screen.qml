@@ -8,4 +8,7 @@ Item {
     property int h: Window.Screen.height
     property int curOrientation: Window.Screen.orientation
     property int priOrientation: Window.Screen.primaryOrientation
+    property int updateMask: Window.Screen.orientationUpdateMask
+
+    Window.Screen.orientationUpdateMask: Qt.LandscapeOrientation | Qt.InvertedLandscapeOrientation
 }

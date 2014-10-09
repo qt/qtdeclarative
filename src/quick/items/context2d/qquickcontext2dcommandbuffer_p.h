@@ -145,9 +145,10 @@ public:
         pathes << path;
     }
 
-    inline void clip(const QPainterPath& path)
+    inline void clip(bool enabled, const QPainterPath& path)
     {
         commands << QQuickContext2D::Clip;
+        bools << enabled;
         pathes << path;
     }
 

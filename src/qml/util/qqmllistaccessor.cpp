@@ -61,6 +61,11 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
 {
     d = v;
 
+    // An incoming JS array as model is treated as a variant list, so we need to
+    // convert it first with toVariant().
+    if (d.userType() == qMetaTypeId<QJSValue>())
+        d = d.value<QJSValue>().toVariant();
+
     QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):0;
 
     if (!d.isValid()) {
@@ -73,7 +78,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
         m_type = Integer;
     } else if ((!enginePrivate && QQmlMetaType::isQObject(d.userType())) ||
                (enginePrivate && enginePrivate->isQObject(d.userType()))) {
-        QObject *data = enginePrivate?enginePrivate->toQObject(v):QQmlMetaType::toQObject(v);
+        QObject *data = enginePrivate?enginePrivate->toQObject(d):QQmlMetaType::toQObject(d);
         d = QVariant::fromValue(data);
         m_type = Instance;
     } else if (d.userType() == qMetaTypeId<QQmlListReference>()) {

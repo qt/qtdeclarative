@@ -109,9 +109,6 @@ void tst_qquickspritesequence::test_framerateAdvance()
 
 void tst_qquickspritesequence::test_jumpToCrash()
 {
-#if defined(QT_OPENGL_ES_2_ANGLE) && _MSC_VER==1600
-    QSKIP("QTBUG-40658");
-#endif
     QQuickView *window = new QQuickView(0);
 
     window->setSource(testFileUrl("crashonstart.qml"));

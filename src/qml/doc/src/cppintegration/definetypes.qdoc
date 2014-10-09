@@ -47,7 +47,7 @@ features such as \e{attached properties} and \e{default properties} in C++.
 demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
 
 
-\section1 Registering C++ types with the QML type system
+\section1 Registering C++ Types with the QML Type System
 
 A QObject-derived class can be registered with the QML type system to enable the
 type to be used as a data type from within QML code.

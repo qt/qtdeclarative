@@ -173,6 +173,10 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     QFETCH(bool, msaa);
     QFETCH(QSize, textureSize);
 
+#if defined(Q_OS_WIN32) && defined(QT_OPENGL_ES_2_ANGLE)
+    QSKIP("QTBUG-41815");
+#endif
+
     frameInfo.renderCount = 0;
     frameInfo.msaaEnabled = false;
     frameInfo.msaaSupported = false;
