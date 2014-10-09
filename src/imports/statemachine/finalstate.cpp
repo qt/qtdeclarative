@@ -59,9 +59,9 @@ QQmlListProperty<QObject> FinalState::children()
 
     A final state is used to communicate that (part of) a StateMachine has
     finished its work.  When a final top-level state is entered, the state
-    machine's \l{StateBase::finished}{finished}() signal is emitted. In
+    machine's \l{State::finished}{finished}() signal is emitted. In
     general, when a final substate (a child of a State) is entered, the parent
-    state's \l{StateBase::finished}{finished}() signal is emitted.  FinalState
+    state's \l{State::finished}{finished}() signal is emitted.  FinalState
     is part of \l{The Declarative State Machine Framework}.
 
     To use a final state, you create a FinalState object and add a transition
@@ -73,5 +73,5 @@ QQmlListProperty<QObject> FinalState::children()
 
     \clearfloat
 
-    \sa StateMachine, StateBase
+    \sa StateMachine, State
 */

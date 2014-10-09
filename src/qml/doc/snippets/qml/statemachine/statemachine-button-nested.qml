@@ -39,8 +39,8 @@
 ****************************************************************************/
 
 //! [document]
-import QtQml.StateMachine 1.0
 import QtQuick 2.0
+import QtQml.StateMachine 1.0
 
 Rectangle {
 //![0]
@@ -67,7 +67,7 @@ Rectangle {
         // start the state machine
         running: true
 
-        StateBase {
+        State {
             id: s1
             // set the initial state
             initialState: s11
@@ -80,7 +80,7 @@ Rectangle {
             // do something when the state enters/exits
             onEntered: console.log("s1 entered")
             onExited: console.log("s1 exited")
-            StateBase {
+            State {
                 id: s11
                 // create a transition from s11 to s12 when the button is clicked
                 SignalTransition {
@@ -92,7 +92,7 @@ Rectangle {
                 onExited: console.log("s11 exited")
             }
 
-            StateBase {
+            State {
                 id: s12
                 // create a transition from s12 to s13 when the button is clicked
                 SignalTransition {
@@ -103,7 +103,7 @@ Rectangle {
                 onEntered: console.log("s12 entered")
                 onExited: console.log("s12 exited")
             }
-            StateBase {
+            State {
                 id: s13
                 // create a transition from s13 to s11 when the button is clicked
                 SignalTransition {

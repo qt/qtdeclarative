@@ -31,15 +31,15 @@
 **
 ****************************************************************************/
 
-import QtQml.StateMachine 1.0
 import QtTest 1.0
+import QtQml.StateMachine 1.0
 
 TestCase {
     StateMachine {
         id: myStateMachine
         initialState: myState;
         running: true
-        StateBase {
+        State {
             id: myState
         }
     }

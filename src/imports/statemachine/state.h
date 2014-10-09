@@ -42,7 +42,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class StateBase : public QState, public QQmlParserStatus
+class State : public QState, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -50,7 +50,7 @@ class StateBase : public QState, public QQmlParserStatus
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
-    explicit StateBase(QState *parent = 0);
+    explicit State(QState *parent = 0);
 
     void classBegin() {}
     void componentComplete();
@@ -61,7 +61,7 @@ Q_SIGNALS:
     void childrenChanged();
 
 private:
-    ChildrenPrivate<StateBase> m_children;
+    ChildrenPrivate<State> m_children;
 };
 
 QT_END_NAMESPACE

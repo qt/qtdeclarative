@@ -31,18 +31,18 @@
 **
 ****************************************************************************/
 
-#include "statebase.h"
+#include "state.h"
 
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQmlInfo>
 
-StateBase::StateBase(QState *parent)
+State::State(QState *parent)
     : QState(parent)
 {
 }
 
-void StateBase::componentComplete()
+void State::componentComplete()
 {
     if (this->machine() == NULL) {
         static bool once = false;
@@ -53,7 +53,7 @@ void StateBase::componentComplete()
     }
 }
 
-QQmlListProperty<QObject> StateBase::children()
+QQmlListProperty<QObject> State::children()
 {
     return QQmlListProperty<QObject>(this, &m_children, m_children.append, m_children.count, m_children.at, m_children.clear);
 }
@@ -68,10 +68,10 @@ QQmlListProperty<QObject> StateBase::children()
 
     \brief The QAbstractState type is the base type of States of a StateMachine.
 
-    Do not use QAbstractState directly; use StateBase, FinalState or
+    Do not use QAbstractState directly; use State, FinalState or
     StateMachine instead.
 
-    \sa StateMachine, StateBase
+    \sa StateMachine, State
 */
 
 /*!
@@ -105,7 +105,7 @@ QQmlListProperty<QObject> StateBase::children()
 */
 
 /*!
-    \qmltype StateBase
+    \qmltype State
     \inqmlmodule QtQml.StateMachine
     \inherits QAbstractState
     \ingroup statemachine-qmltypes
@@ -114,8 +114,8 @@ QQmlListProperty<QObject> StateBase::children()
     \brief Provides a general-purpose state for StateMachine.
 
 
-    StateBase objects can have child states as well as transitions to other
-    states. StateBase is part of \l{The Declarative State Machine Framework}.
+    State objects can have child states as well as transitions to other
+    states. State is part of \l{The Declarative State Machine Framework}.
 
     \section1 States with Child States
 
@@ -125,7 +125,7 @@ QQmlListProperty<QObject> StateBase::children()
     and the state machine needs to know which child state to enter when the
     parent state is the target of a transition.
 
-    The state emits the StateBase::finished() signal when a final child state
+    The state emits the State::finished() signal when a final child state
     (FinalState) is entered.
 
     The errorState sets the state's error state.  The error state is the state
@@ -142,7 +142,7 @@ QQmlListProperty<QObject> StateBase::children()
 */
 
 /*!
-    \qmlproperty enumeration StateBase::childMode
+    \qmlproperty enumeration State::childMode
 
     \brief The child mode of this state
 
@@ -156,19 +156,19 @@ QQmlListProperty<QObject> StateBase::children()
 */
 
 /*!
-    \qmlproperty QAbstractState StateBase::errorState
+    \qmlproperty QAbstractState State::errorState
 
     \brief The error state of this state.
 */
 
 /*!
-    \qmlproperty QAbstractState StateBase::initialState
+    \qmlproperty QAbstractState State::initialState
 
     \brief The initial state of this state (one of its child states).
 */
 
 /*!
-    \qmlsignal StateBase::finished()
+    \qmlsignal State::finished()
 
     This signal is emitted when a final child state of this state is entered.
 
@@ -204,7 +204,7 @@ QQmlListProperty<QObject> StateBase::children()
     By default, a history state is shallow, meaning that it will not remember
     nested states.  This can be configured through the historyType property.
 
-    \sa StateMachine, StateBase
+    \sa StateMachine, State
 */
 
 /*!

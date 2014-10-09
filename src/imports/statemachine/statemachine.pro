@@ -8,7 +8,7 @@ QT = core-private qml-private
 SOURCES = \
     $$PWD/finalstate.cpp \
     $$PWD/signaltransition.cpp \
-    $$PWD/statebase.cpp \
+    $$PWD/state.cpp \
     $$PWD/statemachine.cpp \
     $$PWD/timeouttransition.cpp \
     $$PWD/plugin.cpp
@@ -17,7 +17,7 @@ HEADERS = \
     $$PWD/childrenprivate.h \
     $$PWD/finalstate.h  \
     $$PWD/signaltransition.h  \
-    $$PWD/statebase.h  \
+    $$PWD/state.h  \
     $$PWD/statemachine.h  \
     $$PWD/timeouttransition.h
 

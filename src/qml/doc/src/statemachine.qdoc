@@ -61,7 +61,39 @@
 
   \annotatedlist statemachine-qmltypes
 
-  \section1 A Simple Example
+  \section1 Using both QtQuick and QtQml.StateMachine imports
+
+  \warning If you're attempting to import both \l{QtQuick} and
+    \e{QtQml.StateMachine} in one single QML file, make sure to import
+    \e{QtQml.StateMachine} \e{last}. This way, the \e{State} type is provided
+    by the Declarative State Machine Framework and not by \l{QtQuick}:
+
+  \qml
+    import QtQuick 2.0
+    import QtQml.StateMachine 1.0
+
+    StateMachine {
+        State {
+            // okay, is of type QtQml.StateMachine.State
+        }
+    }
+  \endqml
+
+  Alternatively, you can import \e{QtQml.StateMachine} into a separate
+  namespace to avoid any ambiguity with QtQuick's \e{State} item:
+
+  \qml
+    import QtQuick 2.0
+    import QtQml.StateMachine 1.0 as DSM
+
+    DSM.StateMachine {
+        DSM.State {
+            // ...
+        }
+    }
+  \endqml
+
+  \section1 A Simple State Machine
 
   To demonstrate the core functionality of the State Machine API, let's look
   at an example: A state machine with three states, \c s1, \c s2 and \c
@@ -84,7 +116,7 @@
   The state machine defined in the previous section never finishes. In order
   for a state machine to be able to finish, it needs to have a top-level \e
   final state (FinalState object). When the state machine enters the top-level
-  final state, the machine emits the \l{StateBase::finished}{finished}
+  final state, the machine emits the \l{State::finished}{finished}
   signal and halts.
 
   All you need to do to introduce a final state in the graph is create a
@@ -191,13 +223,13 @@
   To create a parallel state group, set childMode to QState.ParallelStates.
 
   \qml
-    StateBase {
+    State {
         id: s1
         childMode: QState.ParallelStates
-        StateBase {
+        State {
             id: s11
         }
-        StateBase {
+        State {
             id: s12
         }
     }
@@ -221,18 +253,18 @@
   \section1 Exiting a Composite State
 
   A child state can be final (a FinalState object); when a final child state
-  is entered, the parent state emits the StateBase::finished signal. The
+  is entered, the parent state emits the State::finished signal. The
   following diagram shows a composite state \c s1 which does some processing
   before entering a final state:
 
     \image statemachine-finished.png
 
   When \c s1 's final state is entered, \c s1 will automatically emit
-  \l{StateBase::finished}{finished}. We use a signal transition to cause this event to
+  \l{State::finished}{finished}. We use a signal transition to cause this event to
   trigger a state change:
 
   \qml
-    StateBase {
+    State {
         id: s1
         SignalTransition {
             targetState: s2
@@ -251,7 +283,7 @@
   finished() signal, but with the consequence that implementation details of
   \c s1 are exposed and depended on).
 
-  For parallel state groups, the StateBase::finished signal is emitted when \e
+  For parallel state groups, the State::finished signal is emitted when \e
   all the child states have entered final states.
 
   \section1 Targetless Transitions
@@ -270,7 +302,7 @@
             id: stateMachine
             initialState: s1
             running: true
-            StateBase {
+            State {
                 id: s1
                 SignalTransition {
                     signal: button.clicked
