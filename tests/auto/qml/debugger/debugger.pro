@@ -7,7 +7,8 @@ PUBLICTESTS += \
     qqmlprofilerservice \
     qpacketprotocol \
     qqmlenginedebuginspectorintegrationtest \
-    qqmlenginecontrol
+    qqmlenginecontrol \
+    qqmldebuggingenabler
 
 PRIVATETESTS += \
     qqmldebugclient \
