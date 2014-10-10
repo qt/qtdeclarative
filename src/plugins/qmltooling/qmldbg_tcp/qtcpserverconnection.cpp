@@ -134,7 +134,7 @@ bool QTcpServerConnection::waitForMessage()
     return d->protocol->waitForReadyRead(-1);
 }
 
-void QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
+bool QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
                                         const QString &hostaddress)
 {
     Q_D(QTcpServerConnection);
@@ -143,12 +143,16 @@ void QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
     d->block = block;
     d->hostaddress = hostaddress;
 
-    listen();
-    if (block)
-        d->tcpServer->waitForNewConnection(-1);
+    return listen();
 }
 
-void QTcpServerConnection::listen()
+void QTcpServerConnection::waitForConnection()
+{
+    Q_D(QTcpServerConnection);
+    d->tcpServer->waitForNewConnection(-1);
+}
+
+bool QTcpServerConnection::listen()
 {
     Q_D(QTcpServerConnection);
 
@@ -177,6 +181,9 @@ void QTcpServerConnection::listen()
             qWarning("QML Debugger: Unable to listen to port %d.", d->portFrom);
         else
             qWarning("QML Debugger: Unable to listen to ports %d - %d.", d->portFrom, d->portTo);
+        return false;
+    } else {
+        return true;
     }
 }
 

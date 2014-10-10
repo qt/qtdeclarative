@@ -59,10 +59,11 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QObject
     Q_DECLARE_PRIVATE(QQmlDebugServer)
     Q_DISABLE_COPY(QQmlDebugServer)
 public:
-    ~QQmlDebugServer();
 
     static QQmlDebugServer *instance();
 
+    bool hasThread() const;
+    bool hasConnection() const;
     bool hasDebuggingClient() const;
     bool blockingMode() const;
 
@@ -78,6 +79,7 @@ public:
     void receiveMessage(const QByteArray &message);
 
     void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
+    static bool enable(int portFrom, int portTo, bool block, const QString &hostAddress);
 
 private slots:
     void wakeEngine(QQmlEngine *engine);
@@ -91,6 +93,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_changeServiceState(const QString &serviceName,
                                                         QQmlDebugService::State state))
     Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
+    Q_PRIVATE_SLOT(d_func(), void _q_removeThread())
 
 public:
     static int s_dataStreamVersion;

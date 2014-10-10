@@ -59,10 +59,11 @@ public:
     virtual ~QQmlDebugServerConnection() {}
 
     virtual void setServer(QQmlDebugServer *server) = 0;
-    virtual void setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress) = 0;
+    virtual bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress) = 0;
     virtual bool isConnected() const = 0;
     virtual void send(const QList<QByteArray> &messages) = 0;
     virtual void disconnect() = 0;
+    virtual void waitForConnection() = 0;
     virtual bool waitForMessage() = 0;
 };
 

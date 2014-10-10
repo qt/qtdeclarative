@@ -53,14 +53,14 @@ public:
     ~QTcpServerConnection();
 
     void setServer(QQmlDebugServer *server);
-    void setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
+    bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
 
     bool isConnected() const;
     void send(const QList<QByteArray> &messages);
     void disconnect();
     bool waitForMessage();
 
-    void listen();
+    bool listen();
     void waitForConnection();
 
 private Q_SLOTS:

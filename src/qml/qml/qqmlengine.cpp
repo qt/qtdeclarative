@@ -1448,6 +1448,26 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 #endif
 }
 
+/*!
+ * Enables debugging for QML engines created after calling this function. The debug server will
+ * listen on \a port at \a hostName and block the QML engine until it receives a connection if
+ * \a block is true. If \a block is not specified it won't block and if \a hostName isn't specified
+ * it will listen on all available interfaces. You can only start one debug server at a time. A
+ * debug server may have already been started if the -qmljsdebugger= command line argument was
+ * given. This method returns \c true if a new debug server was successfully started, or \c false
+ * otherwise.
+ */
+bool QQmlDebuggingEnabler::startTcpDebugServer(int port, bool block, const QString &hostName)
+{
+#ifndef QQML_NO_DEBUG_PROTOCOL
+    return QQmlDebugServer::enable(port, port, block, hostName);
+#else
+    Q_UNUSED(port);
+    Q_UNUSED(block);
+    Q_UNUSED(hostName);
+    return false;
+#endif
+}
 
 class QQmlDataExtended {
 public:

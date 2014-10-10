@@ -42,6 +42,8 @@ QT_BEGIN_NAMESPACE
 struct Q_QML_EXPORT QQmlDebuggingEnabler
 {
     QQmlDebuggingEnabler(bool printWarning = true);
+    static bool startTcpDebugServer(int port, bool block = false,
+                                    const QString &hostName = QString());
 };
 
 // Execute code in constructor before first QQmlEngine is instantiated
