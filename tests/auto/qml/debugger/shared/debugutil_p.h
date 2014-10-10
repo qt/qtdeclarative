@@ -92,6 +92,7 @@ public:
 
     QString output() const;
     void stop();
+    void setMaximumBindErrors(int numErrors);
 
 signals:
     void readyReadStandardOutput();
@@ -112,6 +113,8 @@ private:
     bool m_started;
     QStringList m_environment;
     int m_port;
+    int m_maximumBindErrors;
+    int m_receivedBindErrors;
 };
 
 #endif // DEBUGUTIL_H

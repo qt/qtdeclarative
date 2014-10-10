@@ -84,6 +84,8 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     , m_executable(executable)
     , m_started(false)
     , m_port(0)
+    , m_maximumBindErrors(0)
+    , m_receivedBindErrors(0)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     m_timer.setSingleShot(true);
@@ -150,6 +152,11 @@ void QQmlDebugProcess::stop()
         m_process.kill();
         m_process.waitForFinished(5000);
     }
+}
+
+void QQmlDebugProcess::setMaximumBindErrors(int ignore)
+{
+    m_maximumBindErrors = ignore;
 }
 
 void QQmlDebugProcess::timeout()
@@ -222,10 +229,13 @@ void QQmlDebugProcess::processAppOutput()
                 continue;
             }
             if (line.contains("Unable to listen")) {
-                qWarning() << "App was unable to bind to port!";
-                m_timer.stop();
-                m_eventLoop.quit();
-                continue;
+                if (++m_receivedBindErrors >= m_maximumBindErrors) {
+                    if (m_maximumBindErrors == 0)
+                        qWarning() << "App was unable to bind to port!";
+                    m_timer.stop();
+                    m_eventLoop.quit();
+                 }
+                 continue;
             }
         } else {
             // set to true if there is output not coming from the debugger
