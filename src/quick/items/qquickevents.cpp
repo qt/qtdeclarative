@@ -61,8 +61,7 @@ Item {
     See \l {Qt::Key}{Qt.Key} for the list of keyboard codes. These codes are
     independent of the underlying window system. Note that this
     function does not distinguish between capital and non-capital
-    letters, use the text() function (returning the Unicode text the
-    key generated) for this purpose.
+    letters; use the \l {KeyEvent::}{text} property for this purpose.
 
     A value of either 0 or \l {Qt::Key_unknown}{Qt.Key_Unknown} means that the event is not
     the result of a known key; for example, it may be the result of
