@@ -122,7 +122,7 @@ public:
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
 
-    void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
+    void setNativeCursorEnabled(bool) {}
     void handleFocusEvent(QFocusEvent *event);
     void addCurrentTextNodeToRoot(QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
     QQuickTextNode* createTextNode();

@@ -965,7 +965,6 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
     const QTextBlock block = doc->findBlock(position);
     if (!block.isValid())
         return QRectF();
-    const QAbstractTextDocumentLayout *docLayout = doc->documentLayout();
     const QTextLayout *layout = block.layout();
     const QPointF layoutPos = q->blockBoundingRect(block).topLeft();
     int relativePos = position - block.position();
@@ -980,24 +979,14 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
 #endif
     QTextLine line = layout->lineForTextPosition(relativePos);
 
-    int cursorWidth;
-    {
-        bool ok = false;
-#ifndef QT_NO_PROPERTIES
-        cursorWidth = docLayout->property("cursorWidth").toInt(&ok);
-#endif
-        if (!ok)
-            cursorWidth = 1;
-    }
-
     QRectF r;
 
     if (line.isValid()) {
         qreal x = line.cursorToX(relativePos);
         qreal w = 0;
-        r = QRectF(layoutPos.x() + x, layoutPos.y() + line.y(), cursorWidth + w, line.height());
+        r = QRectF(layoutPos.x() + x, layoutPos.y() + line.y(), textCursorWidth + w, line.height());
     } else {
-        r = QRectF(layoutPos.x(), layoutPos.y(), cursorWidth, 10); // #### correct height
+        r = QRectF(layoutPos.x(), layoutPos.y(), textCursorWidth, 10); // #### correct height
     }
 
     return r;
@@ -1508,19 +1497,6 @@ QString QQuickTextControl::anchorAt(const QPointF &pos) const
 {
     Q_D(const QQuickTextControl);
     return d->doc->documentLayout()->anchorAt(pos);
-}
-
-void QQuickTextControl::setCursorWidth(int width)
-{
-    Q_D(QQuickTextControl);
-#ifdef QT_NO_PROPERTIES
-    Q_UNUSED(width);
-#else
-    if (width == -1)
-        width = textCursorWidth;
-    d->doc->documentLayout()->setProperty("cursorWidth", width);
-#endif
-    d->repaintCursor();
 }
 
 void QQuickTextControl::setAcceptRichText(bool accept)

@@ -171,6 +171,7 @@ private slots:
 
     void preeditCursorRectangle();
     void inputMethodComposing();
+    void cursorRectangleSize_data();
     void cursorRectangleSize();
 
     void getText_data();
@@ -3654,11 +3655,27 @@ void tst_qquicktextedit::inputMethodComposing()
     QCOMPARE(spy.count(), 8);
 }
 
+void tst_qquicktextedit::cursorRectangleSize_data()
+{
+    QTest::addColumn<bool>("useCursorDelegate");
+
+    QTest::newRow("default cursor") << false;
+    QTest::newRow("custom cursor delegate") << true;
+}
+
 void tst_qquicktextedit::cursorRectangleSize()
 {
+    QFETCH(bool, useCursorDelegate);
+
     QQuickView *window = new QQuickView(testFileUrl("positionAt.qml"));
     QVERIFY(window->rootObject() != 0);
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(window->rootObject());
+
+    QQmlComponent cursorDelegate(window->engine());
+    if (useCursorDelegate) {
+        cursorDelegate.setData("import QtQuick 2.0\nRectangle { width:10; height:10; }", QUrl());
+        textEdit->setCursorDelegate(&cursorDelegate);
+    }
 
     // make sure cursor rectangle is not at (0,0)
     textEdit->setX(10);
@@ -3676,6 +3693,10 @@ void tst_qquicktextedit::cursorRectangleSize()
 
     QRectF cursorRectFromItem = textEdit->cursorRectangle();
     QRectF cursorRectFromPositionToRectangle = textEdit->positionToRectangle(textEdit->cursorPosition());
+
+    QVERIFY(cursorRectFromItem.isValid());
+    QVERIFY(cursorRectFromQuery.isValid());
+    QVERIFY(cursorRectFromPositionToRectangle.isValid());
 
     // item and input query cursor rectangles match
     QCOMPARE(cursorRectFromItem, cursorRectFromQuery);
