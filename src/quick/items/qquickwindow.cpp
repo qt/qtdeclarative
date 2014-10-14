@@ -2720,16 +2720,21 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
-    if (dirty & QQuickItemPrivate::ChildrenUpdateMask)
-        itemPriv->childContainerNode()->removeAllChildNodes();
-
     if (effectRefEffectivelyChanged) {
+        QSGNode *child = 0;
+
+        if (dirty & QQuickItemPrivate::ChildrenUpdateMask) {
+            child = itemPriv->childContainerNode();
+            child->removeAllChildNodes();
+        } else {
+            child = itemPriv->groupNode;
+        }
+
         QSGNode *parent = itemPriv->clipNode();
         if (!parent)
             parent = itemPriv->opacityNode();
         if (!parent)
             parent = itemPriv->itemNode();
-        QSGNode *child = itemPriv->groupNode;
 
         if (itemPriv->extra.isAllocated() && itemPriv->extra->effectRefCount) {
             Q_ASSERT(itemPriv->rootNode() == 0);
