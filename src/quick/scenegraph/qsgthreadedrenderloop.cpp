@@ -552,6 +552,10 @@ void QSGRenderThread::syncAndRender()
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- updatePending, doing sync";
         sync(pending == ExposeRequest);
     }
+#ifndef QSG_NO_RENDER_TIMING
+    if (profileFrames)
+        syncTime = threadTimer.nsecsElapsed();
+#endif
 
     if (!syncResultedInChanges && ((pending & RepaintRequest) == 0)) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- no changes, render aborted";
@@ -560,9 +564,6 @@ void QSGRenderThread::syncAndRender()
             msleep(waitTime);
         return;
     }
-
-    if (profileFrames)
-        syncTime = threadTimer.nsecsElapsed();
 
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering started";
 

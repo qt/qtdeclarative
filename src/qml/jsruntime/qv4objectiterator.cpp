@@ -46,17 +46,7 @@ ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint
     , memberIndex(0)
     , flags(flags)
 {
-    object->o = o;
-    current->o = o;
-#if QT_POINTER_SIZE == 4
-    object->tag = QV4::Value::Managed_Type;
-    current->tag = QV4::Value::Managed_Type;
-#endif
-
-    if (object->as<ArgumentsObject>()) {
-        Scope scope(object->engine());
-        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
-    }
+    init(o);
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
@@ -67,8 +57,27 @@ ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
     , memberIndex(0)
     , flags(flags)
 {
+    init(o);
+}
+
+ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, uint flags)
+    : object(scratch1)
+    , current(scratch2)
+    , arrayNode(0)
+    , arrayIndex(0)
+    , memberIndex(0)
+    , flags(flags)
+{
+    object->o = (Object*)0;
+    current->o = (Object*)0;
+    // Caller needs to call init!
+}
+
+void ObjectIterator::init(Object *o)
+{
     object->o = o;
     current->o = o;
+
 #if QT_POINTER_SIZE == 4
     object->tag = QV4::Value::Managed_Type;
     current->tag = QV4::Value::Managed_Type;
