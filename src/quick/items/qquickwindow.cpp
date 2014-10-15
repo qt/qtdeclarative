@@ -2277,10 +2277,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
             return 0;
     }
 
-    const int numCursorsInHierarchy = itemPrivate->extra.isAllocated() ? itemPrivate->extra.value().numItemsWithCursor : 0;
-    const int numChildrenWithCursor = itemPrivate->hasCursor ? numCursorsInHierarchy-1 : numCursorsInHierarchy;
-
-    if (numChildrenWithCursor > 0) {
+    if (itemPrivate->hasCursorInChild) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);

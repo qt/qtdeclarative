@@ -342,7 +342,6 @@ public:
         mutable QQuickItemLayer *layer;
 #ifndef QT_NO_CURSOR
         QCursor cursor;
-        int numItemsWithCursor;
 #endif
         QPointF userTransformOriginPoint;
 
@@ -353,6 +352,8 @@ public:
         QQuickDefaultClipNode *clipNode;
         QSGRootNode *rootNode;
 
+        QObjectList resourcesList;
+
         // Although acceptedMouseButtons is inside ExtraData, we actually store
         // the LeftButton flag in the extra.flag() bit.  This is because it is
         // extremely common to set acceptedMouseButtons to LeftButton, but very
@@ -362,7 +363,7 @@ public:
         QQuickItem::TransformOrigin origin:5;
         uint transparentForPositioner : 1;
 
-        QObjectList resourcesList;
+        // 26 bits padding
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -414,6 +415,7 @@ public:
     bool culled:1;
     bool hasCursor:1;
     // Bit 32
+    bool hasCursorInChild:1;
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
@@ -576,7 +578,7 @@ public:
 
     virtual void mirrorChange() {}
 
-    void incrementCursorCount(int delta);
+    void setHasCursorInChild(bool hasCursor);
 
     // recursive helper to let a visual parent mark its visual children
     void markObjects(QV4::ExecutionEngine *e);
