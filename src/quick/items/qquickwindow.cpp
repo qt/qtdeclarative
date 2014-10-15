@@ -2636,6 +2636,19 @@ void QQuickWindowPrivate::updateDirtyNodes()
     }
 }
 
+static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
+{
+    if (!d->extra.isAllocated())
+        return 0;
+    const QList<QQuickItem *> childItems = d->paintOrderChildItems();
+    for (int i=0; i<childItems.size(); ++i) {
+        if (Q_LIKELY(QQuickItemPrivate::get(childItems.at(i))->z() >= 0)) {
+            return Q_LIKELY(i == 0) ? 0 : QQuickItemPrivate::get(childItems.at(i))->itemNode();
+        }
+    }
+    return 0;
+}
+
 void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 {
     QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(item);
@@ -2753,10 +2766,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
             itemPriv->childContainerNode()->appendChildNode(childPrivate->itemNode());
         }
 
-        QSGNode *beforePaintNode = itemPriv->groupNode ? itemPriv->groupNode->lastChild() : 0;
-        if (beforePaintNode || itemPriv->extra.isAllocated())
-            itemPriv->extra.value().beforePaintNode = beforePaintNode;
-
         if (itemPriv->paintNode)
             itemPriv->childContainerNode()->appendChildNode(itemPriv->paintNode);
 
@@ -2814,8 +2823,9 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
             if (itemPriv->paintNode && itemPriv->paintNode->parent() == 0) {
-                if (itemPriv->extra.isAllocated() && itemPriv->extra->beforePaintNode)
-                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, itemPriv->extra->beforePaintNode);
+                QSGNode *before = qquickitem_before_paintNode(itemPriv);
+                if (before)
+                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, before);
                 else
                     itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
             }
