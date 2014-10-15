@@ -188,6 +188,8 @@ public:
 
     QAccessible::State state() { return m_state; }
     bool ignored() const;
+    bool doAction(const QString &actionName);
+    void availableActions(QStringList *actions) const;
 
 public Q_SLOTS:
     void valueChanged() {
@@ -206,6 +208,10 @@ Q_SIGNALS:
     void nameChanged();
     void descriptionChanged();
     void ignoredChanged();
+    void pressAction();
+    void toggleAction();
+    void increaseAction();
+    void decreaseAction();
 
 private:
     QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
@@ -214,6 +220,11 @@ private:
     QAccessible::State m_state;
     QString m_name;
     QString m_description;
+
+    static const QMetaMethod sigPress;
+    static const QMetaMethod sigToggle;
+    static const QMetaMethod sigIncrease;
+    static const QMetaMethod sigDecrease;
 
 public:
     using QObject::property;

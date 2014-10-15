@@ -39,7 +39,6 @@
 #include "QtQuick/private/qquicktext_p.h"
 #include "QtQuick/private/qquickaccessibleattached_p.h"
 #include "QtQuick/qquicktextdocument.h"
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -217,16 +216,24 @@ QStringList QAccessibleQuickItem::actionNames() const
     QStringList actions = QQmlAccessible::actionNames();
     if (state().focusable)
         actions.append(QAccessibleActionInterface::setFocusAction());
+
+    // ### The following can lead to duplicate action names. We'll fix that when we kill QQmlAccessible
+    if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
+        attached->availableActions(&actions);
     return actions;
 }
 
 void QAccessibleQuickItem::doAction(const QString &actionName)
 {
+    bool accepted = false;
     if (actionName == QAccessibleActionInterface::setFocusAction()) {
         item()->forceActiveFocus();
-    } else {
-        QQmlAccessible::doAction(actionName);
+        accepted = true;
     }
+    if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
+        accepted = attached->doAction(actionName);
+    if (!accepted)
+        QQmlAccessible::doAction(actionName);
 }
 
 QStringList QAccessibleQuickItem::keyBindingsForAction(const QString &actionName) const
