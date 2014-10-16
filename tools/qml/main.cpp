@@ -450,8 +450,10 @@ int main(int argc, char *argv[])
         verboseMode = false;
 
 #ifndef QT_NO_TRANSLATION
-    // qt_ translations are loaded by QQmlApplicationEngine
-    if (!translationFile.isEmpty()) { // Note: installed before QQmlApplicationEngine's automatic translation loading
+    //qt_ translations loaded by QQmlApplicationEngine
+    QString sysLocale = QLocale::system().name();
+
+    if (!translationFile.isEmpty()) { //Note: installed before QQmlApplicationEngine's automatic translation loading
         QTranslator translator;
 
         if (translator.load(translationFile)) {
