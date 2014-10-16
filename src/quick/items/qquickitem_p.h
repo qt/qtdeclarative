@@ -555,8 +555,7 @@ public:
          - itemNode
          - (opacityNode)
          - (clipNode)
-         - (effectNode)
-         - groupNode
+         - (rootNode) (shader effect source's root node)
      */
 
     QSGOpacityNode *opacityNode() const { return extra.isAllocated()?extra->opacityNode:0; }
@@ -564,7 +563,6 @@ public:
     QSGRootNode *rootNode() const { return extra.isAllocated()?extra->rootNode:0; }
 
     QSGTransformNode *itemNodeInstance;
-    QSGNode *groupNode;
     QSGNode *paintNode;
 
     virtual QSGTransformNode *createTransformNode();
@@ -867,7 +865,7 @@ QSGTransformNode *QQuickItemPrivate::itemNode()
         itemNodeInstance->setFlag(QSGNode::OwnedByParent, false);
 #ifdef QSG_RUNTIME_DESCRIPTION
         Q_Q(QQuickItem);
-        qsgnode_set_description(itemNodeInstance, QString::fromLatin1("QQuickItem(%1)").arg(QString::fromLatin1(q->metaObject()->className())));
+        qsgnode_set_description(itemNodeInstance, QString::fromLatin1("QQuickItem(%1:%2)").arg(QString::fromLatin1(q->metaObject()->className())).arg(q->objectName()));
 #endif
     }
     return itemNodeInstance;
@@ -875,21 +873,14 @@ QSGTransformNode *QQuickItemPrivate::itemNode()
 
 QSGNode *QQuickItemPrivate::childContainerNode()
 {
-    if (!groupNode) {
-        groupNode = new QSGNode();
-        if (rootNode())
-            rootNode()->appendChildNode(groupNode);
-        else if (clipNode())
-            clipNode()->appendChildNode(groupNode);
-        else if (opacityNode())
-            opacityNode()->appendChildNode(groupNode);
-        else
-            itemNode()->appendChildNode(groupNode);
-#ifdef QSG_RUNTIME_DESCRIPTION
-        qsgnode_set_description(groupNode, QLatin1String("group"));
-#endif
-    }
-    return groupNode;
+    if (rootNode())
+        return rootNode();
+    else if (clipNode())
+        return clipNode();
+    else if (opacityNode())
+        return opacityNode();
+    else
+        return itemNode();
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes)

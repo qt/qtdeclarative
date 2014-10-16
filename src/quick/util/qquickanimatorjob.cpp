@@ -412,21 +412,33 @@ void QQuickOpacityAnimatorJob::initialize(QQuickAnimatorController *controller)
     m_opacityNode = d->opacityNode();
     if (!m_opacityNode) {
         m_opacityNode = new QSGOpacityNode();
-        d->extra.value().opacityNode = m_opacityNode;
 
-        QSGNode *child = d->clipNode();
-        if (!child)
-            child = d->rootNode();
-        if (!child)
-            child = d->groupNode;
-
-        if (child) {
+        /* The item node subtree is like this
+         *
+         * itemNode
+         * (opacityNode)            optional
+         * (clipNode)               optional
+         * (rootNode)               optional
+         * children / paintNode
+         *
+         * If the opacity node doesn't exist, we need to insert it into
+         * the hierarchy between itemNode and clipNode or rootNode. If
+         * neither clip or root exists, we need to reparent all children
+         * from itemNode to opacityNode.
+         */
+        QSGNode *iNode = d->itemNode();
+        QSGNode *child = d->childContainerNode();
+        if (child != iNode) {
             if (child->parent())
                 child->parent()->removeChildNode(child);
             m_opacityNode->appendChildNode(child);
+            iNode->appendChildNode(m_opacityNode);
+        } else {
+            iNode->reparentChildNodesTo(m_opacityNode);
+            iNode->appendChildNode(m_opacityNode);
         }
 
-        d->itemNode()->appendChildNode(m_opacityNode);
+        d->extra.value().opacityNode = m_opacityNode;
     }
 }
 

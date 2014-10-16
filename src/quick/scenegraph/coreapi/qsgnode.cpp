@@ -575,6 +575,21 @@ void QSGNode::removeAllChildNodes()
     }
 }
 
+/*!
+ * \internal
+ *
+ * Reparents all nodes of this node to \a newParent.
+ */
+void QSGNode::reparentChildNodesTo(QSGNode *newParent)
+{
+    Q_ASSERT_X(!newParent->parent(), "QSGNode::reparentChildNodesTo", "newParent is already part of a hierarchy");
+
+    for (QSGNode *c = firstChild(); c; c = c->nextSibling()) {
+        removeChildNode(c);
+        newParent->appendChildNode(c);
+    }
+}
+
 
 int QSGNode::childCount() const
 {

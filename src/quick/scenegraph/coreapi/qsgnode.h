@@ -132,6 +132,7 @@ public:
     void appendChildNode(QSGNode *node);
     void insertChildNodeBefore(QSGNode *node, QSGNode *before);
     void insertChildNodeAfter(QSGNode *node, QSGNode *after);
+    void reparentChildNodesTo(QSGNode *newParent);
 
     int childCount() const;
     QSGNode *childAtIndex(int i) const;

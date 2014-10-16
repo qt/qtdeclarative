@@ -2591,7 +2591,6 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
             p->extra->rootNode = 0;
         }
 
-        p->groupNode = 0;
         p->paintNode = 0;
 
         p->dirty(QQuickItemPrivate::Window);
@@ -2698,42 +2697,43 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
     if (clipEffectivelyChanged) {
         QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *) itemPriv->opacityNode() :
-                                                    (QSGNode *)itemPriv->itemNode();
-        QSGNode *child = itemPriv->rootNode() ? (QSGNode *)itemPriv->rootNode() :
-                                                (QSGNode *)itemPriv->groupNode;
+                                                    (QSGNode *) itemPriv->itemNode();
+        QSGNode *child = itemPriv->rootNode();
 
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode() == 0);
-            itemPriv->extra.value().clipNode = new QQuickDefaultClipNode(item->clipRect());
-            itemPriv->clipNode()->update();
+            QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
+            itemPriv->extra.value().clipNode = clip;
+            clip->update();
 
-            if (child)
+            if (!child) {
+                parent->reparentChildNodesTo(clip);
+                parent->appendChildNode(clip);
+            } else {
                 parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->clipNode());
-            if (child)
-                itemPriv->clipNode()->appendChildNode(child);
+                clip->appendChildNode(child);
+                parent->appendChildNode(clip);
+            }
 
         } else {
-            Q_ASSERT(itemPriv->clipNode() != 0);
-            parent->removeChildNode(itemPriv->clipNode());
-            if (child)
-                itemPriv->clipNode()->removeChildNode(child);
+            QQuickDefaultClipNode *clip = itemPriv->clipNode();
+            Q_ASSERT(clip);
+            parent->removeChildNode(clip);
+            if (child) {
+                clip->removeChildNode(child);
+                parent->appendChildNode(child);
+            } else {
+                clip->reparentChildNodesTo(parent);
+            }
+
             delete itemPriv->clipNode();
             itemPriv->extra->clipNode = 0;
-            if (child)
-                parent->appendChildNode(child);
         }
     }
 
     if (effectRefEffectivelyChanged) {
-        QSGNode *child = 0;
-
-        if (dirty & QQuickItemPrivate::ChildrenUpdateMask) {
-            child = itemPriv->childContainerNode();
-            child->removeAllChildNodes();
-        } else {
-            child = itemPriv->groupNode;
-        }
+        if (dirty & QQuickItemPrivate::ChildrenUpdateMask)
+            itemPriv->childContainerNode()->removeAllChildNodes();
 
         QSGNode *parent = itemPriv->clipNode();
         if (!parent)
@@ -2743,29 +2743,23 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
         if (itemPriv->extra.isAllocated() && itemPriv->extra->effectRefCount) {
             Q_ASSERT(itemPriv->rootNode() == 0);
-            itemPriv->extra->rootNode = new QSGRootNode;
-
-            if (child)
-                parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->rootNode());
-            if (child)
-                itemPriv->rootNode()->appendChildNode(child);
+            QSGRootNode *root = new QSGRootNode();
+            itemPriv->extra->rootNode = root;
+            parent->reparentChildNodesTo(root);
+            parent->appendChildNode(root);
         } else {
             Q_ASSERT(itemPriv->rootNode() != 0);
-            parent->removeChildNode(itemPriv->rootNode());
-            if (child)
-                itemPriv->rootNode()->removeChildNode(child);
+            QSGRootNode *root = itemPriv->rootNode();
+            parent->removeChildNode(root);
+            root->reparentChildNodesTo(parent);
             delete itemPriv->rootNode();
             itemPriv->extra->rootNode = 0;
-            if (child)
-                parent->appendChildNode(child);
         }
     }
 
     if (dirty & QQuickItemPrivate::ChildrenUpdateMask) {
-        QSGNode *groupNode = itemPriv->groupNode;
-        if (groupNode)
-            groupNode->removeAllChildNodes();
+        QSGNode *parent = itemPriv->childContainerNode();
+        parent->removeAllChildNodes();
 
         QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
         int ii = 0;
@@ -2808,20 +2802,22 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                       ? itemPriv->opacity() : qreal(0);
 
         if (opacity != 1 && !itemPriv->opacityNode()) {
-            itemPriv->extra.value().opacityNode = new QSGOpacityNode;
+            QSGOpacityNode *node = new QSGOpacityNode;
+            itemPriv->extra.value().opacityNode = node;
 
             QSGNode *parent = itemPriv->itemNode();
             QSGNode *child = itemPriv->clipNode();
             if (!child)
                 child = itemPriv->rootNode();
-            if (!child)
-                child = itemPriv->groupNode;
 
-            if (child)
+            if (child) {
                 parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->opacityNode());
-            if (child)
-                itemPriv->opacityNode()->appendChildNode(child);
+                node->appendChildNode(child);
+                parent->appendChildNode(node);
+            } else {
+                parent->reparentChildNodesTo(node);
+                parent->appendChildNode(node);
+            }
         }
         if (itemPriv->opacityNode())
             itemPriv->opacityNode()->setOpacity(opacity);
@@ -2852,37 +2848,22 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
 #ifndef QT_NO_DEBUG
     // Check consistency.
-    const QSGNode *nodeChain[] = {
-        itemPriv->itemNodeInstance,
-        itemPriv->opacityNode(),
-        itemPriv->clipNode(),
-        itemPriv->rootNode(),
-        itemPriv->groupNode,
-        itemPriv->paintNode,
-    };
 
-    int ip = 0;
-    for (;;) {
-        while (ip < 5 && nodeChain[ip] == 0)
-            ++ip;
-        if (ip == 5)
-            break;
-        int ic = ip + 1;
-        while (ic < 5 && nodeChain[ic] == 0)
-            ++ic;
-        const QSGNode *parent = nodeChain[ip];
-        const QSGNode *child = nodeChain[ic];
-        if (child == 0) {
-            Q_ASSERT(parent == itemPriv->groupNode || parent->childCount() == 0);
-        } else {
-            Q_ASSERT(parent == itemPriv->groupNode || parent->childCount() == 1);
-            Q_ASSERT(child->parent() == parent);
-            bool containsChild = false;
-            for (QSGNode *n = parent->firstChild(); n; n = n->nextSibling())
-                containsChild |= (n == child);
-            Q_ASSERT(containsChild);
-        }
-        ip = ic;
+    QList<QSGNode *> nodes;
+    nodes << itemPriv->itemNodeInstance
+          << itemPriv->opacityNode()
+          << itemPriv->clipNode()
+          << itemPriv->rootNode()
+          << itemPriv->paintNode;
+    nodes.removeAll(0);
+
+    Q_ASSERT(nodes.first() == itemPriv->itemNodeInstance);
+    for (int i=1; i<nodes.size(); ++i) {
+        QSGNode *n = nodes.at(i);
+        // Failing this means we messed up reparenting
+        Q_ASSERT(n->parent() == nodes.at(i-1));
+        // Only the paintNode and the one who is childContainer may have more than one child.
+        Q_ASSERT(n == itemPriv->paintNode || n == itemPriv->childContainerNode() || n->childCount() == 1);
     }
 #endif
 
