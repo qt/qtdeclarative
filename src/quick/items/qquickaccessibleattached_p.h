@@ -88,6 +88,7 @@ public:
     STATE_PROPERTY(defaultButton)
     STATE_PROPERTY(passwordEdit)
     STATE_PROPERTY(selectableText)
+    STATE_PROPERTY(searchEdit)
 
     QQuickAccessibleAttached(QObject *parent);
     ~QQuickAccessibleAttached();

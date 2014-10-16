@@ -179,6 +179,12 @@ QT_BEGIN_NAMESPACE
 
     By default this property is \c false.
 */
+/*! \qmlproperty bool QtQuick::Accessible::searchEdit
+    \brief This property holds whether this item is input for a search query.
+    This property will only affect editable text.
+
+    By default this property is \c false.
+*/
 /*! \qmlproperty bool QtQuick::Accessible::ignored
     \brief This property holds whether this item should be ignored by the accessibility framework.
 
