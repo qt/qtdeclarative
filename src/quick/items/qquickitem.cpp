@@ -1749,6 +1749,19 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     surface. Using scene graph API directly is always significantly
     faster.
 
+    \section1 Behavior Animations
+
+    If your Item uses the \l Behavior type to define animations for property
+    changes, you should always use either QObject::setProperty(),
+    QQmlProperty(), or QMetaProperty::write() when you need to modify those
+    properties from C++. This ensures that the QML engine knows about the
+    property change. Otherwise, the engine won't be able to carry out your
+    requested animation. For example, if you call \l setPosition() directly,
+    any behavior that reacts to changes in the x or y properties will not take
+    effect, as you are bypassing Qt's meta-object system. Note that these
+    functions incur a slight performance penalty. For more details, see
+    \l {Accessing Members of a QML Object Type from C++}.
+
     \sa QQuickWindow, QQuickPaintedItem
 */
 
