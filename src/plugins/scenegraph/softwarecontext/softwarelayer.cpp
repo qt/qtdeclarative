@@ -23,7 +23,6 @@
 
 SoftwareLayer::SoftwareLayer(QSGRenderContext *renderContext)
     : m_item(0)
-    , m_shaderSourceNode(0)
     , m_context(renderContext)
     , m_renderer(0)
     , m_device_pixel_ratio(1)
@@ -87,11 +86,6 @@ void SoftwareLayer::setItem(QSGNode *item)
     markDirtyTexture();
 }
 
-void SoftwareLayer::setShaderSourceNode(QSGNode *node)
-{
-    m_shaderSourceNode = node;
-}
-
 void SoftwareLayer::setRect(const QRectF &rect)
 {
     if (rect == m_rect)
@@ -119,8 +113,6 @@ void SoftwareLayer::scheduleUpdate()
     m_grab = true;
     if (m_dirtyTexture) {
         emit updateRequested();
-        if (m_shaderSourceNode)
-            m_shaderSourceNode->markDirty(QSGNode::DirtyMaterial);
     }
 }
 
@@ -164,8 +156,6 @@ void SoftwareLayer::markDirtyTexture()
     m_dirtyTexture = true;
     if (m_live || m_grab) {
         emit updateRequested();
-        if (m_shaderSourceNode)
-            m_shaderSourceNode->markDirty(QSGNode::DirtyMaterial);
     }
 }
 
@@ -190,7 +180,7 @@ void SoftwareLayer::grab()
 
     if (!m_renderer) {
         m_renderer = new SoftwareContext::PixmapRenderer(m_context);
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTextureLater()));
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
