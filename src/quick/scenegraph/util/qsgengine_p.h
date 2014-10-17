@@ -45,8 +45,8 @@ class QSGRenderContext;
 class QSGEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QSGEngine)
-
 public:
+    static QSGEnginePrivate *get(QSGEngine *engine) { return engine->d_func(); }
     QSGEnginePrivate();
 
     QScopedPointer<QSGContext> sgContext;
