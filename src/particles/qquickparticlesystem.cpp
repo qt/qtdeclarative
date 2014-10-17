@@ -922,8 +922,8 @@ void QQuickParticleSystem::emittersChanged()
     }
 
     foreach (QQuickParticleEmitter* e, m_emitters) {//Populate groups and set sizes.
-        if (!groupIds.contains(e->group())
-                || (!e->group().isEmpty() && !groupIds[e->group()])) {//or it was accidentally inserted by a failed lookup earlier
+        if (!e->group().isEmpty() &&
+            !groupIds.contains(e->group())) {
             int id = m_nextGroupId++;
             QQuickParticleGroupData* gd = new QQuickParticleGroupData(id, this);
             groupIds.insert(e->group(), id);
