@@ -911,9 +911,6 @@ void QQuickParticleSystem::emittersChanged()
     if (!m_componentComplete)
         return;
 
-    m_emitters.removeAll(0);
-
-
     QList<int> previousSizes;
     QList<int> newSizes;
     for (int i=0; i<m_nextGroupId; i++) {
@@ -921,7 +918,15 @@ void QQuickParticleSystem::emittersChanged()
         newSizes << 0;
     }
 
-    foreach (QQuickParticleEmitter* e, m_emitters) {//Populate groups and set sizes.
+    // Populate groups and set sizes.
+    for (int i = 0; i < m_emitters.count(); ++i) {
+        QQuickParticleEmitter *e = m_emitters.at(i);
+        if (!e) {
+            m_emitters.removeAt(i);
+            i--;
+            continue;
+        }
+
         if (!e->group().isEmpty() &&
             !groupIds.contains(e->group())) {
             int id = m_nextGroupId++;
