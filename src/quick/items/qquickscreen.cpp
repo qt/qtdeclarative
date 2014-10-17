@@ -142,6 +142,15 @@ QT_BEGIN_NAMESPACE
     The number of physical pixels per millimeter.
 */
 /*!
+    \qmlattachedproperty real Screen::devicePixelRatio
+    \readonly
+    \since 5.4
+
+    The ratio between physical pixels and device-independent pixels for the screen.
+
+    Common values are 1.0 on normal displays and 2.0 on Apple "retina" displays.
+*/
+/*!
     \qmlattachedproperty Qt::ScreenOrientation Screen::primaryOrientation
     \readonly
 
@@ -260,6 +269,13 @@ qreal QQuickScreenAttached::pixelDensity() const
     return m_screen->physicalDotsPerInch() / 25.4;
 }
 
+qreal QQuickScreenAttached::devicePixelRatio() const
+{
+    if (!m_screen)
+        return 1.0;
+    return m_screen->devicePixelRatio();
+}
+
 Qt::ScreenOrientation QQuickScreenAttached::primaryOrientation() const
 {
     if (!m_screen)
@@ -340,6 +356,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
             emit logicalPixelDensityChanged();
         if (!oldScreen || screen->physicalDotsPerInch() != oldScreen->physicalDotsPerInch())
             emit pixelDensityChanged();
+        if (!oldScreen || screen->devicePixelRatio() != oldScreen->devicePixelRatio())
+            emit devicePixelRatioChanged();
 
         connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(widthChanged()));

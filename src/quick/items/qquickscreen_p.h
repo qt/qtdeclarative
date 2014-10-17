@@ -57,6 +57,7 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
     Q_PROPERTY(int desktopAvailableHeight READ desktopAvailableHeight NOTIFY desktopGeometryChanged)
     Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged)
     Q_PROPERTY(qreal pixelDensity READ pixelDensity NOTIFY pixelDensityChanged)
+    Q_PROPERTY(qreal devicePixelRatio READ devicePixelRatio NOTIFY devicePixelRatioChanged)
     // TODO Qt 6 Rename primaryOrientation to orientation
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
     // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
@@ -74,6 +75,7 @@ public:
     int desktopAvailableHeight() const;
     qreal logicalPixelDensity() const;
     qreal pixelDensity() const;
+    qreal devicePixelRatio() const;
     Qt::ScreenOrientation primaryOrientation() const;
     Qt::ScreenOrientation orientation() const;
     Qt::ScreenOrientations orientationUpdateMask() const;
@@ -91,6 +93,7 @@ Q_SIGNALS:
     void desktopGeometryChanged();
     void logicalPixelDensityChanged();
     void pixelDensityChanged();
+    void devicePixelRatioChanged();
     void primaryOrientationChanged();
     void orientationChanged();
     void orientationUpdateMaskChanged();

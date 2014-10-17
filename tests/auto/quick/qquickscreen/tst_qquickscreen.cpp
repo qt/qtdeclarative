@@ -63,6 +63,8 @@ void tst_qquickscreen::basicProperties()
     QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
     QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
     QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
+    QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
+    QVERIFY(screen->devicePixelRatio() >= 1.0);
 }
 
 QTEST_MAIN(tst_qquickscreen)
