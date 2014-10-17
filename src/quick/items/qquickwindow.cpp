@@ -2660,6 +2660,38 @@ static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
     return Q_UNLIKELY(before) ? QQuickItemPrivate::get(before)->itemNode() : 0;
 }
 
+static QVector<QSGNode *> buildOrderedNodeList(QQuickItemPrivate *itemPriv)
+{
+    QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
+    QVector<QSGNode *> desiredNodes;
+    desiredNodes.reserve(orderedChildren.size() + 1); // + 1 for the paintNode
+
+    int ii = 0;
+
+    for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
+        QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
+        if (!childPrivate->explicitVisible &&
+            (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
+            continue;
+
+        desiredNodes.append(childPrivate->itemNode());
+    }
+
+    if (itemPriv->paintNode)
+        desiredNodes.append(itemPriv->paintNode);
+
+    for (; ii < orderedChildren.count(); ++ii) {
+        QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
+        if (!childPrivate->explicitVisible &&
+            (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
+            continue;
+
+        desiredNodes.append(childPrivate->itemNode());
+    }
+
+    return desiredNodes;
+}
+
 void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 {
     QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(item);
@@ -2760,36 +2792,78 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     if (dirty & QQuickItemPrivate::ChildrenUpdateMask) {
-        QSGNode *parent = itemPriv->childContainerNode();
-        parent->removeAllChildNodes();
+        QVector<QSGNode *> desiredNodes = buildOrderedNodeList(itemPriv);
 
-        QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
-        int ii = 0;
+        // now start making current state match the promised land of
+        // desiredNodes. in the case of our current state matching desiredNodes
+        // (though why would we get ChildrenUpdateMask with no changes?) then we
+        // should make no changes at all.
 
-        for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
-            QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
-            if (!childPrivate->explicitVisible &&
-                (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
-                continue;
-            if (childPrivate->itemNode()->parent())
-                childPrivate->itemNode()->parent()->removeChildNode(childPrivate->itemNode());
+        // how many nodes did we process, when examining changes
+        int desiredNodesProcessed = 0;
 
-            itemPriv->childContainerNode()->appendChildNode(childPrivate->itemNode());
+        // currentNode is how far, in our present tree, we have processed. we
+        // make use of this later on to trim the current child list if the
+        // desired list is shorter.
+        QSGNode *groupNode = itemPriv->childContainerNode();
+        QSGNode *currentNode = groupNode->firstChild();
+        int added = 0;
+        int removed = 0;
+        int replaced = 0;
+#if defined(CHILDRENUPDATE_DEBUG)
+        // This is slow! Do not do this in a normal/profiling build!
+        int initialCount = groupNode->childCount();
+#endif
+
+        while (currentNode && desiredNodesProcessed < desiredNodes.size()) {
+            QSGNode *desiredNode = desiredNodes.at(desiredNodesProcessed);
+
+            // uh oh... reality and our utopic paradise are diverging!
+            // we need to reconcile this...
+            if (currentNode != desiredNode) {
+                // for now, we're just removing the node from the children -
+                // and replacing it with the new node.
+                if (desiredNode->parent())
+                    desiredNode->parent()->removeChildNode(desiredNode);
+                groupNode->insertChildNodeAfter(desiredNode, currentNode);
+                groupNode->removeChildNode(currentNode);
+                replaced++;
+
+                // since we just replaced currentNode, we also need to reset
+                // the pointer.
+                currentNode = desiredNode;
+            }
+
+            currentNode = currentNode->nextSibling();
+            desiredNodesProcessed++;
         }
 
-        if (itemPriv->paintNode)
-            itemPriv->childContainerNode()->appendChildNode(itemPriv->paintNode);
-
-        for (; ii < orderedChildren.count(); ++ii) {
-            QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
-            if (!childPrivate->explicitVisible &&
-                (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
-                continue;
-            if (childPrivate->itemNode()->parent())
-                childPrivate->itemNode()->parent()->removeChildNode(childPrivate->itemNode());
-
-            itemPriv->childContainerNode()->appendChildNode(childPrivate->itemNode());
+        // if we didn't process as many nodes as in the new list, then we have
+        // more nodes at the end of desiredNodes to append to our list.
+        // this will be the case when adding new nodes, for instance.
+        if (desiredNodesProcessed < desiredNodes.size()) {
+            for (int i = desiredNodesProcessed; i < desiredNodes.size(); ++i) {
+                QSGNode *desiredNode = desiredNodes.at(i);
+                if (desiredNode->parent())
+                    desiredNode->parent()->removeChildNode(desiredNode);
+                groupNode->appendChildNode(desiredNode);
+                added++;
+            }
+        } else if (currentNode) {
+            // on the other hand, if we processed less than our current node
+            // tree, then nodes have been _removed_ from the scene, and we need
+            // to take care of that here.
+            while (currentNode) {
+                QSGNode *node = currentNode->nextSibling();
+                groupNode->removeChildNode(currentNode);
+                currentNode = node;
+                removed++;
+            }
         }
+
+#if defined(CHILDRENUPDATE_DEBUG)
+        qDebug() << "Done children update for " << itemPriv << "- before:" << initialCount << "after:" << groupNode->childCount() <<  "added:" << added << "removed:" << removed << "replaced:" << replaced;
+#endif
     }
 
     if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
