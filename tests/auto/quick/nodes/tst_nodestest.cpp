@@ -47,6 +47,13 @@
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
+QT_BEGIN_NAMESPACE
+inline bool operator==(const QSGGeometry::TexturedPoint2D& l, const QSGGeometry::TexturedPoint2D& r)
+{
+    return l.x == r.x && l.y == r.y && l.tx == r.tx && l.ty == r.ty;
+}
+QT_END_NAMESPACE
+
 class NodesTest : public QObject
 {
     Q_OBJECT
@@ -69,6 +76,7 @@ private Q_SLOTS:
     void isBlockedCheck();
 
     void textureNodeTextureOwnership();
+    void textureNodeRect();
 
 private:
     QOffscreenSurface *surface;
@@ -279,6 +287,56 @@ void NodesTest::textureNodeTextureOwnership()
         delete tn;
         QVERIFY(texture.isNull());
     }
+}
+
+void NodesTest::textureNodeRect()
+{
+    QSGPlainTexture texture;
+    texture.setTextureSize(QSize(400, 400));
+    QSGSimpleTextureNode tn;
+    tn.setTexture(&texture);
+    QSGGeometry::TexturedPoint2D *vertices = tn.geometry()->vertexDataAsTexturedPoint2D();
+
+    QSGGeometry::TexturedPoint2D topLeft, bottomLeft, topRight, bottomRight;
+    topLeft.set(0, 0, 0, 0);
+    bottomLeft.set(0, 0, 0, 1);
+    topRight.set(0, 0, 1, 0);
+    bottomRight.set(0, 0, 1, 1);
+    QCOMPARE(vertices[0], topLeft);
+    QCOMPARE(vertices[1], bottomLeft);
+    QCOMPARE(vertices[2], topRight);
+    QCOMPARE(vertices[3], bottomRight);
+
+    tn.setRect(1, 2, 100, 100);
+    topLeft.set(1, 2, 0, 0);
+    bottomLeft.set(1, 102, 0, 1);
+    topRight.set(101, 2, 1, 0);
+    bottomRight.set(101, 102, 1, 1);
+    QCOMPARE(vertices[0], topLeft);
+    QCOMPARE(vertices[1], bottomLeft);
+    QCOMPARE(vertices[2], topRight);
+    QCOMPARE(vertices[3], bottomRight);
+
+    tn.setRect(0, 0, 100, 100);
+    tn.setSourceRect(100, 100, 200, 200);
+    topLeft.set(0, 0, 0.25, 0.25);
+    bottomLeft.set(0, 100, 0.25, 0.75);
+    topRight.set(100, 0, 0.75, 0.25);
+    bottomRight.set(100, 100, 0.75, 0.75);
+    QCOMPARE(vertices[0], topLeft);
+    QCOMPARE(vertices[1], bottomLeft);
+    QCOMPARE(vertices[2], topRight);
+    QCOMPARE(vertices[3], bottomRight);
+
+    tn.setSourceRect(300, 300, -200, -200);
+    topLeft.set(0, 0, 0.75, 0.75);
+    bottomLeft.set(0, 100, 0.75, 0.25);
+    topRight.set(100, 0, 0.25, 0.75);
+    bottomRight.set(100, 100, 0.25, 0.25);
+    QCOMPARE(vertices[0], topLeft);
+    QCOMPARE(vertices[1], bottomLeft);
+    QCOMPARE(vertices[2], topRight);
+    QCOMPARE(vertices[3], bottomRight);
 }
 
 QTEST_MAIN(NodesTest);

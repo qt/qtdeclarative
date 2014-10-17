@@ -42,12 +42,13 @@ class QSGSimpleTextureNodePrivate : public QSGGeometryNodePrivate
 public:
     QSGSimpleTextureNodePrivate()
         : QSGGeometryNodePrivate()
-        , m_texCoordMode(QSGSimpleTextureNode::NoTransform)
+        , texCoordMode(QSGSimpleTextureNode::NoTransform)
         , isAtlasTexture(false)
         , ownsTexture(false)
     {}
 
-    QSGSimpleTextureNode::TextureCoordinatesTransformMode m_texCoordMode;
+    QRectF sourceRect;
+    QSGSimpleTextureNode::TextureCoordinatesTransformMode texCoordMode;
     uint isAtlasTexture : 1;
     uint ownsTexture : 1;
 };
@@ -55,13 +56,16 @@ public:
 static void qsgsimpletexturenode_update(QSGGeometry *g,
                                         QSGTexture *texture,
                                         const QRectF &rect,
+                                        QRectF sourceRect,
                                         QSGSimpleTextureNode::TextureCoordinatesTransformMode texCoordMode)
 {
     if (!texture)
         return;
 
-    QSize ts = texture->textureSize();
-    QRectF sourceRect(0, 0, ts.width(), ts.height());
+    if (!sourceRect.width() || !sourceRect.height()) {
+        QSize ts = texture->textureSize();
+        sourceRect = QRectF(0, 0, ts.width(), ts.height());
+    }
 
     // Maybe transform the texture coordinates
     if (texCoordMode.testFlag(QSGSimpleTextureNode::MirrorHorizontally)) {
@@ -151,7 +155,7 @@ void QSGSimpleTextureNode::setRect(const QRectF &r)
         return;
     m_rect = r;
     Q_D(QSGSimpleTextureNode);
-    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->m_texCoordMode);
+    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->sourceRect, d->texCoordMode);
     markDirty(DirtyGeometry);
 }
 
@@ -172,6 +176,41 @@ QRectF QSGSimpleTextureNode::rect() const
 }
 
 /*!
+    Sets the source rect of this texture node to \a r.
+
+    \since 5.5
+ */
+void QSGSimpleTextureNode::setSourceRect(const QRectF &r)
+{
+    Q_D(QSGSimpleTextureNode);
+    if (d->sourceRect == r)
+        return;
+    d->sourceRect = r;
+    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->sourceRect, d->texCoordMode);
+    markDirty(DirtyGeometry);
+}
+
+/*!
+    \fn void QSGSimpleTextureNode::setSourceRect(qreal x, qreal y, qreal w, qreal h)
+    \overload
+    \since 5.5
+
+    Sets the rectangle of this texture node to show its texture from (\a x, \a y) and
+    have width \a w and height \a h relatively to the QSGTexture::textureSize.
+ */
+
+/*!
+    Returns the source rect of this texture node.
+
+    \since 5.5
+ */
+QRectF QSGSimpleTextureNode::sourceRect() const
+{
+    Q_D(const QSGSimpleTextureNode);
+    return d->sourceRect;
+}
+
+/*!
     Sets the texture of this texture node to \a texture.
 
     Use setOwnsTexture() to set whether the node should take
@@ -187,7 +226,7 @@ void QSGSimpleTextureNode::setTexture(QSGTexture *texture)
     m_material.setTexture(texture);
     m_opaque_material.setTexture(texture);
     Q_D(QSGSimpleTextureNode);
-    qsgsimpletexturenode_update(&m_geometry, texture, m_rect, d->m_texCoordMode);
+    qsgsimpletexturenode_update(&m_geometry, texture, m_rect, d->sourceRect, d->texCoordMode);
 
     DirtyState dirty = DirtyMaterial;
     // It would be tempting to skip the extra bit here and instead use
@@ -236,10 +275,10 @@ QSGTexture *QSGSimpleTextureNode::texture() const
 void QSGSimpleTextureNode::setTextureCoordinatesTransform(QSGSimpleTextureNode::TextureCoordinatesTransformMode mode)
 {
     Q_D(QSGSimpleTextureNode);
-    if (d->m_texCoordMode == mode)
+    if (d->texCoordMode == mode)
         return;
-    d->m_texCoordMode = mode;
-    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->m_texCoordMode);
+    d->texCoordMode = mode;
+    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->sourceRect, d->texCoordMode);
     markDirty(DirtyMaterial);
 }
 
@@ -251,7 +290,7 @@ void QSGSimpleTextureNode::setTextureCoordinatesTransform(QSGSimpleTextureNode::
 QSGSimpleTextureNode::TextureCoordinatesTransformMode QSGSimpleTextureNode::textureCoordinatesTransform() const
 {
     Q_D(const QSGSimpleTextureNode);
-    return d->m_texCoordMode;
+    return d->texCoordMode;
 }
 
 /*!

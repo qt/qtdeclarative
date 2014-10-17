@@ -52,6 +52,10 @@ public:
     inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }
     QRectF rect() const;
 
+    void setSourceRect(const QRectF &r);
+    inline void setSourceRect(qreal x, qreal y, qreal w, qreal h) { setSourceRect(QRectF(x, y, w, h)); }
+    QRectF sourceRect() const;
+
     void setTexture(QSGTexture *texture);
     QSGTexture *texture() const;
 
