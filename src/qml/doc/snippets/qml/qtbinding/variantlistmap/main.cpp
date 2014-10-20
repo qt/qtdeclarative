@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 QQuickView view(QUrl::fromLocalFile("MyItem.qml"));
 
 QVariantList list;
-list << 10 << Qt::green << "bottles";
+list << 10 << QColor(Qt::green) << "bottles";
 
 QVariantMap map;
 map.insert("language", "QML");
