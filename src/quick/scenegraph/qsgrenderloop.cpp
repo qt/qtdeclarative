@@ -41,6 +41,7 @@
 #include <QtCore/private/qabstractanimation_p.h>
 
 #include <QtGui/QOpenGLContext>
+#include <QtGui/QOffscreenSurface>
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
@@ -274,15 +275,30 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     m_windows.remove(window);
     hide(window);
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
-    if (gl)
-        gl->makeCurrent(window);
+
+    bool current = false;
+    QScopedPointer<QOffscreenSurface> offscreenSurface;
+    if (gl) {
+        QSurface *surface = window;
+        // There may be no platform window if the window got closed.
+        if (!window->handle()) {
+            offscreenSurface.reset(new QOffscreenSurface);
+            offscreenSurface->setFormat(gl->format());
+            offscreenSurface->create();
+            surface = offscreenSurface.data();
+        }
+        current = gl->makeCurrent(surface);
+    }
+    if (Q_UNLIKELY(!current))
+        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete gl;
         gl = 0;
-    } else if (gl && window == gl->surface()) {
+    } else if (gl && window == gl->surface() && current) {
         gl->doneCurrent();
     }
 }
