@@ -2650,12 +2650,14 @@ static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
     if (!d->extra.isAllocated())
         return 0;
     const QList<QQuickItem *> childItems = d->paintOrderChildItems();
+    QQuickItem *before = 0;
     for (int i=0; i<childItems.size(); ++i) {
-        if (Q_LIKELY(QQuickItemPrivate::get(childItems.at(i))->z() >= 0)) {
-            return Q_LIKELY(i == 0) ? 0 : QQuickItemPrivate::get(childItems.at(i))->itemNode();
-        }
+        if (Q_UNLIKELY(QQuickItemPrivate::get(childItems.at(i))->z() < 0))
+            before = childItems.at(i);
+        else
+            break;
     }
-    return 0;
+    return Q_UNLIKELY(before) ? QQuickItemPrivate::get(before)->itemNode() : 0;
 }
 
 void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
