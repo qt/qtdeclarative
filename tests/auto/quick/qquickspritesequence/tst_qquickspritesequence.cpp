@@ -46,6 +46,8 @@ private slots:
     void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
     void test_huge();//Separate codepath for QQuickSpriteEngine
     void test_jumpToCrash();
+    void test_spriteBeforeGoal();
+    void test_spriteAfterGoal();
 };
 
 void tst_qquickspritesequence::test_properties()
@@ -112,6 +114,30 @@ void tst_qquickspritesequence::test_jumpToCrash()
     QQuickView *window = new QQuickView(0);
 
     window->setSource(testFileUrl("crashonstart.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    //verify: Don't crash
+
+    delete window;
+}
+
+void tst_qquickspritesequence::test_spriteBeforeGoal()
+{
+    QQuickView *window = new QQuickView(0);
+
+    window->setSource(testFileUrl("spritebeforegoal.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    //verify: Don't crash
+
+    delete window;
+}
+
+void tst_qquickspritesequence::test_spriteAfterGoal()
+{
+    QQuickView *window = new QQuickView(0);
+
+    window->setSource(testFileUrl("spriteaftergoal.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     //verify: Don't crash

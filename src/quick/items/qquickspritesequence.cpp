@@ -243,7 +243,8 @@ void QQuickSpriteSequence::setGoalSprite(const QString &sprite)
     if (m_goalState != sprite){
         m_goalState = sprite;
         emit goalSpriteChanged(sprite);
-        m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite));
+        if (m_spriteEngine)
+            m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite));
     }
 }
 
@@ -257,10 +258,13 @@ void QQuickSpriteSequence::createEngine()
     //TODO: delay until component complete
     if (m_spriteEngine)
         delete m_spriteEngine;
-    if (m_sprites.count())
+    if (m_sprites.count()) {
         m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
-    else
+        if (!m_goalState.isEmpty())
+            m_spriteEngine->setGoal(m_spriteEngine->stateIndex(m_goalState));
+    } else {
         m_spriteEngine = 0;
+    }
     reset();
 }
 
