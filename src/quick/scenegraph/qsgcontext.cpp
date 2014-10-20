@@ -162,7 +162,6 @@ public:
         , m_vsync(0)
         , m_mode(VSyncMode)
         , m_bad(0)
-        , m_reallyBad(0)
         , m_good(0)
     {
         QScreen *screen = QGuiApplication::primaryScreen();
@@ -185,6 +184,7 @@ public:
     {
         m_time = 0;
         m_timer.start();
+        m_wallTime.restart();
         QAnimationDriver::start();
     }
 
@@ -192,7 +192,7 @@ public:
     {
         return m_mode == VSyncMode
                 ? qint64(m_time)
-                : QAnimationDriver::elapsed();
+                : qint64(m_time) + m_wallTime.elapsed();
     }
 
     void advance() Q_DECL_OVERRIDE
@@ -217,23 +217,20 @@ public:
 
             m_time += m_vsync;
 
-            if (delta > m_vsync * 5) {
-                ++m_reallyBad;
-                ++m_bad;
-            } else if (delta > m_vsync * 1.25) {
-                ++m_bad;
+            if (delta > m_vsync * 1.25) {
+                m_lag += (delta / m_vsync);
+                m_bad++;
+               // We tolerate one bad frame without resorting to timer based. This is
+                // done to cope with a slow loader frame followed by smooth animation.
+                // However, on the second frame with massive lag, we switch.
+                if (m_lag > 10 && m_bad > 2) {
+                    m_mode = TimerMode;
+                    qCDebug(QSG_LOG_INFO, "animation driver switched to timer mode");
+                    m_wallTime.restart();
+                }
             } else {
-                // reset counters on a good frame.
-                m_reallyBad = 0;
+                m_lag = 0;
                 m_bad = 0;
-            }
-
-            // rational for the 3 and 50. If we have several really bad frames
-            // in a row, that would indicate a huge performance problem and we should
-            // switch right away. For the case of m_bad, we're a bit more tolerant.
-            if (m_reallyBad > 3 || m_bad > 50) {
-                m_mode = TimerMode;
-                qCDebug(QSG_LOG_INFO, "animation driver switched to timer mode");
             }
 
         } else {
@@ -249,6 +246,8 @@ public:
             if (m_good > 10 && !qsg_useConsistentTiming()) {
                 m_time = elapsed();
                 m_mode = VSyncMode;
+                m_bad = 0;
+                m_lag = 0;
                 qCDebug(QSG_LOG_INFO, "animation driver switched to vsync mode");
             }
         }
@@ -260,8 +259,9 @@ public:
     float m_vsync;
     Mode m_mode;
     QElapsedTimer m_timer;
+    QElapsedTimer m_wallTime;
+    float m_lag;
     int m_bad;
-    int m_reallyBad;
     int m_good;
 };
 
