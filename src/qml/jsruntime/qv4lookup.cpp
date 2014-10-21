@@ -164,9 +164,10 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const ValueRef object, c
 
     Object *o = object->objectValue();
     if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
-        if (idx < static_cast<SimpleArrayData *>(o->arrayData())->len())
-            if (!o->arrayData()->arrayData()[idx].isEmpty())
-                return o->arrayData()->arrayData()[idx].asReturnedValue();
+        SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
+        if (idx < s->len())
+            if (!s->data(idx).isEmpty())
+                return s->data(idx).asReturnedValue();
     }
 
     return indexedGetterFallback(l, object, index);
@@ -197,8 +198,8 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
     if (idx < UINT_MAX) {
         if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
             SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
-            if (s && idx < s->len() && !s->arrayData()[idx].isEmpty()) {
-                s->arrayData()[idx] = value;
+            if (idx < s->len() && !s->data(idx).isEmpty()) {
+                s->data(idx) = value;
                 return;
             }
         }
@@ -221,8 +222,8 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const Valu
     Object *o = object->objectValue();
     if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
         SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
-        if (idx < s->len() && !s->arrayData()[idx].isEmpty()) {
-            s->arrayData()[idx] = v;
+        if (idx < s->len() && !s->data(idx).isEmpty()) {
+            s->data(idx) = v;
             return;
         }
     }

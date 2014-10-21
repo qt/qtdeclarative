@@ -90,6 +90,14 @@ struct Q_QML_EXPORT ArrayData : public Managed
         uint alloc;
         Type type;
         PropertyAttributes *attrs;
+        union {
+            uint len;
+            uint freeList;
+        };
+        union {
+            uint offset;
+            SparseArray *sparse;
+        };
         Value *arrayData;
     };
     V4_MANAGED(Managed)
@@ -103,7 +111,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
     Value *arrayData() const { return d()->arrayData; }
     Value *&arrayData() { return d()->arrayData; }
-    void setArrayData(Value *v) { d()->arrayData = v; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
     bool isSparse() const { return this && type() == Sparse; }
@@ -136,7 +143,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     inline Property *getProperty(uint index) const;
 
     static void ensureAttributes(Object *o);
-    static void realloc(Object *o, Type newType, uint offset, uint alloc, bool enforceAttributes);
+    static void realloc(Object *o, Type newType, uint alloc, bool enforceAttributes);
 
     static void sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint dataLen);
     static uint append(Object *obj, const ArrayObject *otherObj, uint n);
@@ -150,17 +157,25 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
         Data(ExecutionEngine *engine)
             : ArrayData::Data(engine->simpleArrayDataClass)
         {}
-        uint len;
-        uint offset;
     };
     V4_ARRAYDATA
 
+    uint realIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
+    Value data(uint index) const { return d()->arrayData[realIndex(index)]; }
+    Value &data(uint index) { return d()->arrayData[realIndex(index)]; }
+
+    Property *getProperty(uint index) const {
+        if (index >= len())
+            return 0;
+        index = realIndex(index);
+        if (d()->arrayData[index].isEmpty())
+            return 0;
+        return reinterpret_cast<Property *>(d()->arrayData + index);
+    }
+
     uint &len() { return d()->len; }
     uint len() const { return d()->len; }
-    uint &offset() { return d()->offset; }
-    uint offset() const { return d()->offset; }
 
-    static void getHeadRoom(Object *o);
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
     static void markObjects(Managed *d, ExecutionEngine *e);
@@ -183,9 +198,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         Data(ExecutionEngine *engine)
             : ArrayData::Data(engine->emptyClass)
         { setVTable(staticVTable()); }
-
-        uint freeList;
-        SparseArray *sparse;
     };
     V4_ARRAYDATA
 
@@ -220,14 +232,13 @@ inline Property *ArrayData::getProperty(uint index) const
         return 0;
     if (type() != Sparse) {
         const SimpleArrayData *that = static_cast<const SimpleArrayData *>(this);
-        if (index >= that->len() || arrayData()[index].isEmpty())
-            return 0;
-        return reinterpret_cast<Property *>(arrayData() + index);
+        return that->getProperty(index);
     } else {
-        SparseArrayNode *n = static_cast<const SparseArrayData *>(this)->sparse()->findNode(index);
+        const SparseArrayData *that = static_cast<const SparseArrayData *>(this);
+        SparseArrayNode *n = that->sparse()->findNode(index);
         if (!n)
             return 0;
-        return reinterpret_cast<Property *>(arrayData() + n->value);
+        return reinterpret_cast<Property *>(that->arrayData() + n->value);
     }
 }
 

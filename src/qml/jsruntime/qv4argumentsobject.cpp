@@ -78,7 +78,7 @@ void ArgumentsObject::fullyCreate()
 
     uint numAccessors = qMin((int)context()->d()->function->formalParameterCount(), context()->d()->realArgumentCount);
     uint argCount = qMin(context()->d()->realArgumentCount, context()->d()->callData->argc);
-    ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
+    ArrayData::realloc(this, ArrayData::Sparse, argCount, true);
     context()->d()->engine->requireArgumentsAccessors(numAccessors);
     mappedArguments().ensureIndex(engine(), numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {

@@ -298,9 +298,9 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            int alen = qMin(len, arr->arrayData()->length());
-            if (alen)
-                memcpy(callData->args, arr->arrayData()->arrayData(), alen*sizeof(Value));
+            uint alen = qMin(len, arr->arrayData()->length());
+            for (uint i = 0; i < alen; ++i)
+                callData->args[i] = static_cast<SimpleArrayData *>(arr->arrayData())->data(i);
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

@@ -222,12 +222,12 @@ public:
     }
 
     inline void arrayReserve(uint n) {
-        ArrayData::realloc(this, ArrayData::Simple, 0, n, false);
+        ArrayData::realloc(this, ArrayData::Simple, n, false);
     }
 
     void arrayCreate() {
         if (!arrayData())
-            ArrayData::realloc(this, ArrayData::Simple, 0, 0, false);
+            ArrayData::realloc(this, ArrayData::Simple, 0, false);
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif

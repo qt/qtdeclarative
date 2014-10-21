@@ -614,20 +614,17 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         return Encode(-1);
     } else {
         Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
-        if (len > instance->arrayData()->length())
-            len = instance->arrayData()->length();
-        Value *val = instance->arrayData()->arrayData();
-        Value *end = val + len;
-        val += fromIndex;
-        while (val < end) {
-            if (!val->isEmpty()) {
-                value = *val;
-                if (scope.hasException())
-                    return Encode::undefined();
-                if (RuntimeHelpers::strictEqual(value, searchValue))
-                    return Encode((uint)(val - instance->arrayData()->arrayData()));
-            }
-            ++val;
+        SimpleArrayData *sa = static_cast<SimpleArrayData *>(instance->arrayData());
+        if (len > sa->len())
+            len = sa->len();
+        uint idx = fromIndex;
+        while (idx < len) {
+            value = sa->data(idx);
+            if (scope.hasException())
+                return Encode::undefined();
+            if (RuntimeHelpers::strictEqual(value, searchValue))
+                return Encode(idx);
+            ++idx;
         }
     }
     return Encode(-1);
