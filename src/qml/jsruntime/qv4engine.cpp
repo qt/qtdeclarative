@@ -201,7 +201,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // reserve space for the JS stack
     // we allow it to grow to 2 times JSStackLimit, as we can overshoot due to garbage collection
     // and ScopedValues allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(2*JSStackLimit, WTF::OSAllocator::JSVMStackPages, true);
+    *jsStack = WTF::PageAllocation::allocate(2*JSStackLimit, WTF::OSAllocator::JSVMStackPages, true,
+                                             false, true);
     jsStackBase = (Value *)jsStack->base();
     jsStackTop = jsStackBase;
 
