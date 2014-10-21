@@ -118,6 +118,7 @@ private slots:
     void dynamicProperties();
     void dynamicPropertiesNested();
     void listProperties();
+    void badListItemType();
     void dynamicObjectProperties();
     void dynamicSignalsAndSlots();
     void simpleBindings();
@@ -1330,6 +1331,13 @@ void tst_qqmllanguage::listProperties()
     QVERIFY(object != 0);
 
     QCOMPARE(object->property("test").toInt(), 2);
+}
+
+void tst_qqmllanguage::badListItemType()
+{
+    QQmlComponent component(&engine, testFileUrl("badListItemType.qml"));
+    QVERIFY(component.isError());
+    VERIFY_ERRORS("badListItemType.errors.txt");
 }
 
 // Tests the creation and assignment of dynamic object properties
