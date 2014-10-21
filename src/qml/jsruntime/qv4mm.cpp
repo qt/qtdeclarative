@@ -255,6 +255,15 @@ Managed *MemoryManager::allocData(std::size_t size)
     return m;
 }
 
+static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
+{
+    while (engine->jsStackTop > markBase) {
+        Managed *m = engine->popForGC();
+        Q_ASSERT (m->internalClass()->vtable->markObjects);
+        m->internalClass()->vtable->markObjects(m, engine);
+    }
+}
+
 void MemoryManager::mark()
 {
     Value *markBase = m_d->engine->jsStackTop;
@@ -272,6 +281,9 @@ void MemoryManager::mark()
         }
         persistent->value.mark(m_d->engine);
         persistent = persistent->next;
+
+        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
+            drainMarkStack(m_d->engine, markBase);
     }
 
     collectFromJSStack();
@@ -304,14 +316,12 @@ void MemoryManager::mark()
 
         if (keepAlive)
             qobjectWrapper->getPointer()->mark(m_d->engine);
+
+        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
+            drainMarkStack(m_d->engine, markBase);
     }
 
-    // now that we marked all roots, start marking recursively and popping from the mark stack
-    while (m_d->engine->jsStackTop > markBase) {
-        Managed *m = m_d->engine->popForGC();
-        Q_ASSERT (m->internalClass()->vtable->markObjects);
-        m->internalClass()->vtable->markObjects(m, m_d->engine);
-    }
+    drainMarkStack(m_d->engine, markBase);
 }
 
 void MemoryManager::sweep(bool lastSweep)
