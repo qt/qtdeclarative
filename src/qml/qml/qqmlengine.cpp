@@ -2305,8 +2305,12 @@ static inline QString shellNormalizeFileName(const QString &name)
         return name;
 #endif
     TCHAR buffer[MAX_PATH];
-    if (!SHGetPathFromIDList(file, buffer))
+    bool gotPath = SHGetPathFromIDList(file, buffer);
+    ILFree(file);
+
+    if (!gotPath)
         return name;
+
     QString canonicalName = QString::fromWCharArray(buffer);
     // Upper case drive letter
     if (canonicalName.size() > 2 && canonicalName.at(1) == QLatin1Char(':'))
