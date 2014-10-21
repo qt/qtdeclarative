@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "OSAllocator.h"
+#include "PageBlock.h"
 
 #if OS(WINDOWS)
 
@@ -48,11 +49,20 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool writable, bool e
     return result;
 }
 
-void* OSAllocator::reserveAndCommit(size_t bytes, Usage, bool writable, bool executable, bool)
+void* OSAllocator::reserveAndCommit(size_t bytes, Usage, bool writable, bool executable,
+                                    bool includesGuardPages)
 {
     void* result = VirtualAlloc(0, bytes, MEM_RESERVE | MEM_COMMIT, protection(writable, executable));
     if (!result)
         CRASH();
+    if (includesGuardPages) {
+        size_t guardSize = pageSize();
+        DWORD oldProtect;
+        if (!VirtualProtect(result, guardSize, protection(false, false), &oldProtect) ||
+            !VirtualProtect(static_cast<char*>(result) + bytes - guardSize, guardSize,
+                            protection(false, false), &oldProtect))
+            CRASH();
+    }
     return result;
 }
 
