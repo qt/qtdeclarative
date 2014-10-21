@@ -33,7 +33,7 @@
 
 namespace WTF {
 
-void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool, bool, bool)
+void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool, bool)
 {
     void* result = _aligned_malloc(bytes, 16);
     if (!result)

@@ -104,13 +104,7 @@ public:
     static PageReservation reserve(size_t size, OSAllocator::Usage usage = OSAllocator::UnknownUsage, bool writable = true, bool executable = false)
     {
         ASSERT(isPageAligned(size));
-        return PageReservation(OSAllocator::reserveUncommitted(size, usage, writable, executable), size, writable, executable, false);
-    }
-    
-    static PageReservation reserveWithGuardPages(size_t size, OSAllocator::Usage usage = OSAllocator::UnknownUsage, bool writable = true, bool executable = false)
-    {
-        ASSERT(isPageAligned(size));
-        return PageReservation(OSAllocator::reserveUncommitted(size + pageSize() * 2, usage, writable, executable, true), size, writable, executable, true);
+        return PageReservation(OSAllocator::reserveUncommitted(size, usage, writable, executable), size, writable, executable);
     }
 
     void deallocate()
@@ -129,8 +123,8 @@ public:
     }
 
 private:
-    PageReservation(void* base, size_t size, bool writable, bool executable, bool hasGuardPages)
-        : PageBlock(base, size, hasGuardPages)
+    PageReservation(void* base, size_t size, bool writable, bool executable)
+        : PageBlock(base, size, false)
         , m_committed(0)
         , m_writable(writable)
         , m_executable(executable)

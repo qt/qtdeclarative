@@ -38,7 +38,7 @@
 
 namespace WTF {
 
-void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable, bool includesGuardPages)
+void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable)
 {
 #if OS(QNX)
     // Reserve memory with PROT_NONE and MAP_LAZY so it isn't committed now.
@@ -49,14 +49,13 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     UNUSED_PARAM(usage);
     UNUSED_PARAM(writable);
     UNUSED_PARAM(executable);
-    UNUSED_PARAM(includesGuardPages);
 
     void* result = mmap(0, bytes, PROT_NONE, MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
     if (result == MAP_FAILED)
         CRASH();
     madvise(result, bytes, MADV_DONTNEED);
 #else
-    void* result = reserveAndCommit(bytes, usage, writable, executable, includesGuardPages);
+    void* result = reserveAndCommit(bytes, usage, writable, executable);
 #if HAVE(MADV_FREE_REUSE)
     // To support the "reserve then commit" model, we have to initially decommit.
     while (madvise(result, bytes, MADV_FREE_REUSABLE) == -1 && errno == EAGAIN) { }
