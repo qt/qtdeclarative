@@ -40,8 +40,13 @@ public:
     PageBlock(const PageBlock&);
     PageBlock(void*, size_t, bool hasGuardPages);
     
+    void* realBase() const { return m_realBase; }
     void* base() const { return m_base; }
-    size_t size() const { return m_size; }
+    size_t size() const
+    {
+        return m_size - 2 * (static_cast<char *>(m_base) - static_cast<char *>(m_realBase));
+    }
+    size_t realSize() const { return m_size; }
 
     operator bool() const { return !!m_realBase; }
 

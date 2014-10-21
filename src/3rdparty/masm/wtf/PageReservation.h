@@ -125,7 +125,7 @@ public:
         ASSERT(tmp);
         ASSERT(!*this);
 
-        OSAllocator::releaseDecommitted(tmp.base(), tmp.size());
+        OSAllocator::releaseDecommitted(tmp.realBase(), tmp.realSize());
     }
 
 private:
