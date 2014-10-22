@@ -228,6 +228,7 @@ void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
 
 void qsg_dumpShadowRoots(Node *n)
 {
+#ifndef QT_NO_DEBUG_OUTPUT
     static int indent = 0;
     ++indent;
 
@@ -247,6 +248,9 @@ void qsg_dumpShadowRoots(Node *n)
             qsg_dumpShadowRoots(*child);
 
     --indent;
+#else
+    Q_UNUSED(n)
+#endif
 }
 
 Updater::Updater(Renderer *r)
@@ -1073,6 +1077,7 @@ void Renderer::turnNodeIntoBatchRoot(Node *node)
 
 void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 {
+#ifndef QT_NO_DEBUG_OUTPUT
     if (Q_UNLIKELY(debug_change())) {
         QDebug debug = qDebug();
         debug << "dirty:";
@@ -1100,7 +1105,7 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         else
             debug << node;
     }
-
+#endif
     // As this function calls nodeChanged recursively, we do it at the top
     // to avoid that any of the others are processed twice.
     if (state & QSGNode::DirtySubtreeBlocked) {
@@ -1847,7 +1852,7 @@ void Renderer::uploadBatch(Batch *b)
                 e = e->nextInBatch;
             }
         }
-
+#ifndef QT_NO_DEBUG_OUTPUT
         if (Q_UNLIKELY(debug_upload())) {
             const char *vd = b->vbo.data;
             qDebug() << "  -- Vertex Data, count:" << b->vertexCount << " - " << g->sizeOfVertex() << "bytes/vertex";
@@ -1880,11 +1885,11 @@ void Renderer::uploadBatch(Batch *b)
             }
 
             const quint16 *id =
-#ifdef QSG_SEPARATE_INDEX_BUFFER
+# ifdef QSG_SEPARATE_INDEX_BUFFER
                     (const quint16 *) (b->ibo.data);
-#else
+# else
                     (const quint16 *) (b->vbo.data + b->drawSets.at(0).indices);
-#endif
+# endif
             {
                 QDebug iDump = qDebug();
                 iDump << "  -- Index Data, count:" << b->indexCount;
@@ -1900,6 +1905,7 @@ void Renderer::uploadBatch(Batch *b)
                 qDebug() << "  -- DrawSet: indexCount:" << s.indexCount << " vertices:" << s.vertices << " z:" << s.zorders << " indices:" << s.indices;
             }
         }
+#endif // QT_NO_DEBUG_OUTPUT
 
         unmap(&b->vbo);
 #ifdef QSG_SEPARATE_INDEX_BUFFER
@@ -2121,6 +2127,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
     Element *e = batch->first;
     Q_ASSERT(e);
 
+#ifndef QT_NO_DEBUG_OUTPUT
     if (Q_UNLIKELY(debug_render())) {
         QDebug debug = qDebug();
         debug << " -"
@@ -2139,6 +2146,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
             debug << "opacity:" << e->node->inheritedOpacity();
         batch->uploadedThisFrame = false;
     }
+#endif
 
     QSGGeometryNode *gn = e->node;
 
