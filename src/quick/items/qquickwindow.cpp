@@ -365,7 +365,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
     emit q->beforeRendering();
     runAndClearJobs(&beforeRenderingJobs);
     int fboId = 0;
-    const qreal devicePixelRatio = q->devicePixelRatio();
+    const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     renderer->setDeviceRect(QRect(QPoint(0, 0), size * devicePixelRatio));
     if (renderTargetId) {
         fboId = renderTargetId;
@@ -374,7 +374,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
         renderer->setViewportRect(QRect(QPoint(0, 0), size * devicePixelRatio));
     }
     renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
-    renderer->setDevicePixelRatio(q->devicePixelRatio());
+    renderer->setDevicePixelRatio(devicePixelRatio);
 
     context->renderNextFrame(renderer, fboId);
     emit q->afterRendering();
@@ -3160,7 +3160,7 @@ QImage QQuickWindow::grabWindow()
         d->syncSceneGraph();
         d->renderSceneGraph(size());
 
-        QImage image = qt_gl_read_framebuffer(size() * devicePixelRatio(), false, false);
+        QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), false, false);
         d->cleanupNodesOnShutdown();
         d->context->invalidate();
         context.doneCurrent();
@@ -3923,6 +3923,23 @@ void QQuickWindow::runJobsAfterSwap()
     d->runAndClearJobs(&d->afterSwapJobs);
 }
 
+/*!
+ * Returns the device pixel ratio for this window.
+ *
+ * This is different from QWindow::devicePixelRatio() in that it supports
+ * redirected rendering via QQuickRenderControl. When using a
+ * QQuickRenderControl, the QQuickWindow is often not created, meaning it is
+ * never shown and there is no underlying native window created in the
+ * windowing system. As a result, querying properties like the device pixel
+ * ratio cannot give correct results. Use this function instead.
+ *
+ * \sa QWindow::devicePixelRatio()
+ */
+int QQuickWindow::effectiveDevicePixelRatio() const
+{
+    QWindow *w = QQuickRenderControl::renderWindowFor(const_cast<QQuickWindow *>(this));
+    return w ? w->devicePixelRatio() : devicePixelRatio();
+}
 
 #include "moc_qquickwindow.cpp"
 

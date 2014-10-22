@@ -41,6 +41,7 @@
 #include <private/qfontengine_p.h>
 #include <private/qopenglextensions_p.h>
 
+#include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
 #include <private/qrawfont_p.h>
@@ -350,8 +351,16 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
                         : QFontEngine::Format_A32;
         }
 
-        qreal devicePixelRatio = ctx->surface()->surfaceClass() == QSurface::Window ?
-            static_cast<QWindow *>(ctx->surface())->devicePixelRatio() : ctx->screen()->devicePixelRatio();
+        qreal devicePixelRatio;
+        if (ctx->surface()->surfaceClass() == QSurface::Window) {
+            QWindow *w = static_cast<QWindow *>(ctx->surface());
+            if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w))
+                devicePixelRatio = qw->effectiveDevicePixelRatio();
+            else
+                devicePixelRatio = w->devicePixelRatio();
+        } else {
+            devicePixelRatio = ctx->screen()->devicePixelRatio();
+        }
 
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
         if (!fontEngine->supportsTransformation(glyphCacheTransform))

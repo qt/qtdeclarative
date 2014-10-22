@@ -628,7 +628,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
 
     // Crate large textures on high-dpi displays.
     if (sourceItem())
-        textureSize *= d->window->devicePixelRatio();
+        textureSize *= d->window->effectiveDevicePixelRatio();
 
     const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
     // Keep power-of-two by doubling the size.
@@ -637,7 +637,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     while (textureSize.height() < minTextureSize.height())
         textureSize.rheight() *= 2;
 
-    m_texture->setDevicePixelRatio(d->window->devicePixelRatio());
+    m_texture->setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
     m_texture->setSize(textureSize);
     m_texture->setRecursive(m_recursive);
     m_texture->setFormat(GLenum(m_format));

@@ -372,7 +372,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         renderTime = renderTimer.nsecsElapsed();
 
     if (data.grabOnly) {
-        grabContent = qt_gl_read_framebuffer(window->size() * window->devicePixelRatio(), false, false);
+        grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), false, false);
         data.grabOnly = false;
     }
 
