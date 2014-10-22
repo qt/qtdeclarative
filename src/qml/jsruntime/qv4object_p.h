@@ -114,8 +114,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     Members &memberData() { return d()->memberData; }
     const Members &memberData() const { return d()->memberData; }
-    const ArrayData *arrayData() const { return d()->arrayData; }
-    ArrayData *arrayData() { return d()->arrayData; }
+    ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData = a; }
 
     Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData().data() + index); }

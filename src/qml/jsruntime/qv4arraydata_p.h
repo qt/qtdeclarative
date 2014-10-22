@@ -98,7 +98,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
             uint offset;
             SparseArray *sparse;
         };
-        Value *arrayData;
+        Value arrayData[1];
     };
     V4_MANAGED(Managed)
 
@@ -109,8 +109,8 @@ struct Q_QML_EXPORT ArrayData : public Managed
     void setType(Type t) { d()->type = t; }
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
-    Value *arrayData() const { return d()->arrayData; }
-    Value *&arrayData() { return d()->arrayData; }
+    const Value *arrayData() const { return &d()->arrayData[0]; }
+    Value *arrayData() { return &d()->arrayData[0]; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
     bool isSparse() const { return this && type() == Sparse; }
@@ -140,13 +140,13 @@ struct Q_QML_EXPORT ArrayData : public Managed
             return Primitive::emptyValue().asReturnedValue();
         return vtable()->get(this, i);
     }
-    inline Property *getProperty(uint index) const;
+    inline Property *getProperty(uint index);
 
     static void ensureAttributes(Object *o);
     static void realloc(Object *o, Type newType, uint alloc, bool enforceAttributes);
 
     static void sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint dataLen);
-    static uint append(Object *obj, const ArrayObject *otherObj, uint n);
+    static uint append(Object *obj, ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
 };
 
@@ -160,14 +160,14 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     };
     V4_ARRAYDATA
 
-    uint realIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
-    Value data(uint index) const { return d()->arrayData[realIndex(index)]; }
-    Value &data(uint index) { return d()->arrayData[realIndex(index)]; }
+    uint mappedIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
+    Value data(uint index) const { return d()->arrayData[mappedIndex(index)]; }
+    Value &data(uint index) { return d()->arrayData[mappedIndex(index)]; }
 
-    Property *getProperty(uint index) const {
+    Property *getProperty(uint index) {
         if (index >= len())
             return 0;
-        index = realIndex(index);
+        index = mappedIndex(index);
         if (d()->arrayData[index].isEmpty())
             return 0;
         return reinterpret_cast<Property *>(d()->arrayData + index);
@@ -209,6 +209,20 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
+    Property *getProperty(uint index) {
+        SparseArrayNode *n = sparse()->findNode(index);
+        if (!n)
+            return 0;
+        return reinterpret_cast<Property *>(arrayData() + n->value);
+    }
+
+    uint mappedIndex(uint index) const {
+        SparseArrayNode *n = sparse()->findNode(index);
+        if (!n)
+            return UINT_MAX;
+        return n->value;
+    }
+
     static void destroy(Managed *d);
     static void markObjects(Managed *d, ExecutionEngine *e);
 
@@ -226,19 +240,16 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 };
 
 
-inline Property *ArrayData::getProperty(uint index) const
+inline Property *ArrayData::getProperty(uint index)
 {
     if (!this)
         return 0;
     if (type() != Sparse) {
-        const SimpleArrayData *that = static_cast<const SimpleArrayData *>(this);
+        SimpleArrayData *that = static_cast<SimpleArrayData *>(this);
         return that->getProperty(index);
     } else {
-        const SparseArrayData *that = static_cast<const SparseArrayData *>(this);
-        SparseArrayNode *n = that->sparse()->findNode(index);
-        if (!n)
-            return 0;
-        return reinterpret_cast<Property *>(that->arrayData() + n->value);
+        SparseArrayData *that = static_cast<SparseArrayData *>(this);
+        return that->getProperty(index);
     }
 }
 

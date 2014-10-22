@@ -1075,9 +1075,8 @@ void Object::copyArrayData(Object *other)
     } else if (other->hasAccessorProperty() && other->arrayData()->attrs() && other->arrayData()->isSparse()){
         // do it the slow way
         ScopedValue v(scope);
-        const SparseArrayData *osa = static_cast<const SparseArrayData *>(other->arrayData());
-        for (const SparseArrayNode *it = osa->sparse()->begin();
-             it != osa->sparse()->end(); it = it->nextNode()) {
+        SparseArrayData *osa = static_cast<SparseArrayData *>(other->arrayData());
+        for (const SparseArrayNode *it = osa->sparse()->begin(); it != osa->sparse()->end(); it = it->nextNode()) {
             v = other->getValue(reinterpret_cast<Property *>(osa->arrayData() + it->value), other->arrayData()->attrs()[it->value]);
             arraySet(it->key(), v);
         }

@@ -119,7 +119,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
     while (alloc < requested)
         alloc *= 2;
-    size_t size = sizeof(ArrayData::Data) + alloc*sizeof(Value);
+    size_t size = sizeof(ArrayData::Data) + (alloc - 1)*sizeof(Value);
     if (enforceAttributes)
         size += alloc*sizeof(PropertyAttributes);
 
@@ -137,7 +137,6 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     }
     newData->setAlloc(alloc);
     newData->setType(newType);
-    newData->d()->arrayData = reinterpret_cast<Value *>(newData->d() + 1);
     newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->arrayData + alloc) : 0);
     o->setArrayData(newData);
 
@@ -417,10 +416,10 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
 ReturnedValue SparseArrayData::get(const ArrayData *d, uint index)
 {
     const SparseArrayData *s = static_cast<const SparseArrayData *>(d);
-    SparseArrayNode *n = s->sparse()->findNode(index);
-    if (!n)
+    index = s->mappedIndex(index);
+    if (index == UINT_MAX)
         return Primitive::emptyValue().asReturnedValue();
-    return s->arrayData()[n->value].asReturnedValue();
+    return s->arrayData()[index].asReturnedValue();
 }
 
 bool SparseArrayData::put(Object *o, uint index, ValueRef value)
@@ -428,7 +427,7 @@ bool SparseArrayData::put(Object *o, uint index, ValueRef value)
     if (value->isEmpty())
         return true;
 
-    const SparseArrayData *s = static_cast<const SparseArrayData *>(o->arrayData());
+    SparseArrayData *s = static_cast<SparseArrayData *>(o->arrayData());
     SparseArrayNode *n = s->sparse()->insert(index);
     Q_ASSERT(n->value == UINT_MAX || !o->arrayData()->attrs() || !o->arrayData()->attrs()[n->value].isAccessor());
     if (n->value == UINT_MAX)
@@ -442,6 +441,7 @@ bool SparseArrayData::put(Object *o, uint index, ValueRef value)
 bool SparseArrayData::del(Object *o, uint index)
 {
     SparseArrayData *dd = static_cast<SparseArrayData *>(o->arrayData());
+
     SparseArrayNode *n = dd->sparse()->findNode(index);
     if (!n)
         return true;
@@ -567,14 +567,14 @@ bool SparseArrayData::putArray(Object *o, uint index, Value *values, uint n)
 }
 
 
-uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
+uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
 {
     Q_ASSERT(!obj->arrayData()->hasAttributes());
 
     if (!n)
         return obj->getLength();
 
-    const ArrayData *other = otherObj->arrayData();
+    ArrayData *other = otherObj->arrayData();
 
     if (other->isSparse())
         obj->initSparseArray();
@@ -584,7 +584,7 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
     uint oldSize = obj->getLength();
 
     if (other->isSparse()) {
-        const SparseArrayData *os = static_cast<const SparseArrayData *>(other);
+        SparseArrayData *os = static_cast<SparseArrayData *>(other);
         if (otherObj->hasAccessorProperty() && other->hasAttributes()) {
             Scope scope(obj->engine());
             ScopedValue v(scope);
@@ -599,7 +599,7 @@ uint ArrayData::append(Object *obj, const ArrayObject *otherObj, uint n)
                 obj->arraySet(oldSize + it->key(), ValueRef(os->arrayData()[it->value]));
         }
     } else {
-        const SimpleArrayData *os = static_cast<const SimpleArrayData *>(other);
+        SimpleArrayData *os = static_cast<SimpleArrayData *>(other);
         uint toCopy = n;
         uint chunk = toCopy;
         if (chunk > os->alloc() - os->d()->offset)
@@ -628,7 +628,7 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
                     d->data(i) = Primitive::emptyValue();
                 d->len() = index + 1;
             }
-            return reinterpret_cast<Property *>(d->d()->arrayData + d->realIndex(index));
+            return reinterpret_cast<Property *>(d->d()->arrayData + d->mappedIndex(index));
         }
     }
 
