@@ -31,14 +31,16 @@
 **
 ****************************************************************************/
 
-#ifndef ULTRARENDERER_H
-#define ULTRARENDERER_H
+#ifndef QSGBATCHRENDERER_P_H
+#define QSGBATCHRENDERER_P_H
 
 #include <private/qsgrenderer_p.h>
 #include <private/qsgnodeupdater_p.h>
 #include <private/qdatabuffer_p.h>
 
 #include <private/qsgrendernode_p.h>
+
+#include <QtCore/QBitArray>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,6 +60,115 @@ struct Node;
 class Updater;
 class Renderer;
 class ShaderManager;
+
+template <typename Type, int PageSize> class AllocatorPage
+{
+public:
+    // The memory used by this allocator
+    char data[sizeof(Type) * PageSize];
+
+    // 'blocks' contains a list of free indices which can be allocated.
+    // The first available index is found in PageSize - available.
+    int blocks[PageSize];
+
+    // 'available' is the number of available instances this page has left to allocate.
+    int available;
+
+    // This is not strictly needed, but useful for sanity checking and anyway
+    // pretty small..
+    QBitArray allocated;
+
+    AllocatorPage()
+        : available(PageSize)
+        , allocated(PageSize)
+    {
+        for (int i=0; i<PageSize; ++i) blocks[i] = i;
+    }
+
+    Type *at(uint index) const
+    {
+        return (Type *) &data[index * sizeof(Type)];
+    }
+};
+
+template <typename Type, int PageSize> class Allocator
+{
+public:
+    Allocator()
+    {
+        pages.push_back(new AllocatorPage<Type, PageSize>());
+    }
+
+    ~Allocator()
+    {
+        qDeleteAll(pages);
+    }
+
+    Type *allocate()
+    {
+        AllocatorPage<Type, PageSize> *p = 0;
+        for (int i=0; i<pages.size(); ++i) {
+            if (pages.at(i)->available > 0) {
+                p = pages.at(i);
+                break;
+            }
+        }
+        if (!p) {
+            p = new AllocatorPage<Type, PageSize>();
+            pages.push_back(p);
+        }
+        uint pos = p->blocks[PageSize - p->available];
+        void *mem = p->at(pos);
+        p->available--;
+        p->allocated.setBit(pos);
+        Type *t = new (mem) Type();
+        return t;
+    }
+
+    void releaseExplicit(uint pageIndex, uint index)
+    {
+        AllocatorPage<Type, PageSize> *page = pages.at(pageIndex);
+        if (!page->allocated.testBit(index))
+            qFatal("Double delete in allocator: page=%d, index=%d", pageIndex , index);
+
+        // Call the destructor
+        page->at(index)->~Type();
+
+        page->allocated[index] = false;
+        page->available++;
+        page->blocks[PageSize - page->available] = index;
+
+        // Remove the pages if they are empty and they are the last ones. We need to keep the
+        // order of pages since we have references to their index, so we can only remove
+        // from the end.
+        while (page->available == PageSize && pages.size() > 1 && pages.back() == page) {
+            pages.pop_back();
+            delete page;
+            page = pages.back();
+        }
+    }
+
+    void release(Type *t)
+    {
+        int pageIndex = -1;
+        for (int i=0; i<pages.size(); ++i) {
+            AllocatorPage<Type, PageSize> *p = pages.at(i);
+            if ((Type *) (&p->data[0]) <= t && (Type *) (&p->data[PageSize * sizeof(Type)]) > t) {
+                pageIndex = i;
+                break;
+            }
+        }
+        Q_ASSERT(pageIndex >= 0);
+
+        AllocatorPage<Type, PageSize> *page = pages.at(pageIndex);
+        int index = (quint64(t) - quint64(&page->data[0])) / sizeof(Type);
+
+        releaseExplicit(pageIndex, index);
+    }
+
+    QVector<AllocatorPage<Type, PageSize> *> pages;
+};
+
 
 inline bool hasMaterialWithBlending(QSGGeometryNode *n)
 {
@@ -149,8 +260,8 @@ struct Buffer {
 
 struct Element {
 
-    Element(QSGGeometryNode *n)
-        : node(n)
+    Element()
+        : node(0)
         , batch(0)
         , nextInBatch(0)
         , root(0)
@@ -161,8 +272,13 @@ struct Element {
         , removed(false)
         , orphaned(false)
         , isRenderNode(false)
-        , isMaterialBlended(n ? hasMaterialWithBlending(n) : false)
+        , isMaterialBlended(false)
     {
+    }
+
+    void setNode(QSGGeometryNode *n) {
+        node = n;
+        isMaterialBlended = hasMaterialWithBlending(n);
     }
 
     inline void ensureBoundsValid() {
@@ -192,8 +308,7 @@ struct Element {
 struct RenderNodeElement : public Element {
 
     RenderNodeElement(QSGRenderNode *rn)
-        : Element(0)
-        , renderNode(rn)
+        : renderNode(rn)
     {
         isRenderNode = true;
     }
@@ -289,15 +404,14 @@ struct Batch
 
 struct Node
 {
-    Node(QSGNode *node, Node *sparent = 0)
-        : sgNode(node)
-        , parent(sparent)
+    Node()
+        : sgNode(0)
+        , parent(0)
         , data(0)
         , dirtyState(0)
         , isOpaque(false)
         , isBatchRoot(false)
     {
-
     }
 
     QSGNode *sgNode;
@@ -435,7 +549,6 @@ private:
 
     friend class Updater;
 
-
     void map(Buffer *buffer, int size);
     void unmap(Buffer *buffer, bool isIndexBuf = false);
 
@@ -532,6 +645,9 @@ private:
 
     QHash<Node *, uint> m_visualizeChanceSet;
     VisualizeMode m_visualizeMode;
+
+    Allocator<Node, 256> m_nodeAllocator;
+    Allocator<Element, 64> m_elementAllocator;
 };
 
 Batch *Renderer::newBatch()
@@ -556,4 +672,4 @@ Batch *Renderer::newBatch()
 
 QT_END_NAMESPACE
 
-#endif // ULTRARENDERER_H
+#endif // QSGBATCHRENDERER_P_H
