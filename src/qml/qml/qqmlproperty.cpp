@@ -1611,15 +1611,14 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
 QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engine, int userType)
 {
-    if (engine) {
-        return engine->rawMetaObjectForType(userType);
-    }
-    QQmlType *type = QQmlMetaType::qmlType(userType);
-    if (type)
-        return QQmlMetaObject(type->baseMetaObject());
     QMetaType metaType(userType);
     if ((metaType.flags() & QMetaType::PointerToQObject) && metaType.metaObject())
         return metaType.metaObject();
+    if (engine)
+        return engine->rawMetaObjectForType(userType);
+    QQmlType *type = QQmlMetaType::qmlType(userType);
+    if (type)
+        return QQmlMetaObject(type->baseMetaObject());
     return QQmlMetaObject((QObject*)0);
 }
 
