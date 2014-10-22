@@ -1292,6 +1292,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
     \li Qt.ImhDate - The text editor functions as a date field.
     \li Qt.ImhTime - The text editor functions as a time field.
+    \li Qt.ImhMultiLine - The text editor doesn't close software input keyboard when Return or Enter key is pressed (since QtQuick 2.4).
     \endlist
 
     Flags that restrict input (exclusive flags) are:
@@ -4192,6 +4193,12 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 
     if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (hasAcceptableInput(m_text) == AcceptableInput || fixup()) {
+
+            QInputMethod *inputMethod = QGuiApplication::inputMethod();
+            inputMethod->commit();
+            if (!(q->inputMethodHints() & Qt::ImhMultiLine))
+                inputMethod->hide();
+
             emit q->accepted();
             emit q->editingFinished();
         }
