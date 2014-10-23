@@ -1023,7 +1023,7 @@ QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
 void QQmlEngine::setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *factory)
 {
     Q_D(QQmlEngine);
-    QMutexLocker locker(&d->mutex);
+    QMutexLocker locker(&d->networkAccessManagerMutex);
     d->networkAccessManagerFactory = factory;
 }
 
@@ -1050,7 +1050,7 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 
 QNetworkAccessManager *QQmlEnginePrivate::createNetworkAccessManager(QObject *parent) const
 {
-    QMutexLocker locker(&mutex);
+    QMutexLocker locker(&networkAccessManagerMutex);
     QNetworkAccessManager *nam;
     if (networkAccessManagerFactory) {
         nam = networkAccessManagerFactory->create(parent);

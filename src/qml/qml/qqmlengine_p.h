@@ -260,6 +260,7 @@ public:
 
     static bool qml_debugging_enabled;
 
+    mutable QMutex networkAccessManagerMutex;
     mutable QMutex mutex;
 
 private:
