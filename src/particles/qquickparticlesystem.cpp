@@ -478,6 +478,26 @@ QQuickParticleData::~QQuickParticleData()
     delete v8Datum;
 }
 
+QQuickParticleData::QQuickParticleData(const QQuickParticleData &other)
+{
+    *this = other;
+}
+
+QQuickParticleData &QQuickParticleData::operator=(const QQuickParticleData &other)
+{
+    clone(other);
+
+    group = other.group;
+    e = other.e;
+    system = other.system;
+    index = other.index;
+    systemIndex = other.systemIndex;
+    // Lazily initialized
+    v8Datum = 0;
+
+    return *this;
+}
+
 void QQuickParticleData::clone(const QQuickParticleData& other)
 {
     x = other.x;

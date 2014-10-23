@@ -706,10 +706,6 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
 QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
-    , m_image(0)
-    , m_colorTable(0)
-    , m_sizeTable(0)
-    , m_opacityTable(0)
     , m_color_variation(0.0)
     , m_material(0)
     , m_alphaVariation(0.0)
@@ -742,6 +738,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
 
 QQuickImageParticle::~QQuickImageParticle()
 {
+    clearShadows();
 }
 
 QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
@@ -759,15 +756,14 @@ void QQuickImageParticle::setImage(const QUrl &image)
 {
     if (image.isEmpty()){
         if (m_image) {
-            delete m_image;
-            m_image = 0;
+            m_image.reset();
             emit imageChanged();
         }
         return;
     }
 
     if (!m_image)
-        m_image = new ImageData;
+        m_image.reset(new ImageData);
     if (image == m_image->source)
         return;
     m_image->source = image;
@@ -780,14 +776,14 @@ void QQuickImageParticle::setColortable(const QUrl &table)
 {
     if (table.isEmpty()){
         if (m_colorTable) {
-            delete m_colorTable;
+            m_colorTable.reset();
             emit colortableChanged();
         }
         return;
     }
 
     if (!m_colorTable)
-        m_colorTable = new ImageData;
+        m_colorTable.reset(new ImageData);
     if (table == m_colorTable->source)
         return;
     m_colorTable->source = table;
@@ -799,14 +795,14 @@ void QQuickImageParticle::setSizetable(const QUrl &table)
 {
     if (table.isEmpty()){
         if (m_sizeTable) {
-            delete m_sizeTable;
+            m_sizeTable.reset();
             emit sizetableChanged();
         }
         return;
     }
 
     if (!m_sizeTable)
-        m_sizeTable = new ImageData;
+        m_sizeTable.reset(new ImageData);
     if (table == m_sizeTable->source)
         return;
     m_sizeTable->source = table;
@@ -818,14 +814,14 @@ void QQuickImageParticle::setOpacitytable(const QUrl &table)
 {
     if (table.isEmpty()){
         if (m_opacityTable) {
-            delete m_opacityTable;
+            m_opacityTable.reset();
             emit opacitytableChanged();
         }
         return;
     }
 
     if (!m_opacityTable)
-        m_opacityTable = new ImageData;
+        m_opacityTable.reset(new ImageData);
     if (table == m_opacityTable->source)
         return;
     m_opacityTable->source = table;
@@ -1406,6 +1402,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         else //Simple
             g = new QSGGeometry(SimpleParticle_AttributeSet, count, 0);
 
+        node->setFlag(QSGNode::OwnsGeometry);
         node->setGeometry(g);
         if (perfLevel <= Colored){
             g->setDrawingMode(GL_POINTS);
