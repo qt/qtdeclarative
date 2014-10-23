@@ -151,6 +151,7 @@ private slots:
     void nestedComponentRoots();
     void registrationOrder();
     void readonly();
+    void readonlyObjectProperties();
     void receivers();
     void registeredCompositeType();
     void implicitImportsLast();
@@ -3272,6 +3273,24 @@ void tst_qqmllanguage::readonly()
     QCOMPARE(o->property("test3").toInt(), 2);
 
     delete o;
+}
+
+void tst_qqmllanguage::readonlyObjectProperties()
+{
+    QQmlComponent component(&engine, testFileUrl("readonlyObjectProperty.qml"));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlProperty prop(o.data(), QStringLiteral("subObject"), &engine);
+    QVERIFY(!prop.isWritable());
+    QVERIFY(!prop.write(QVariant::fromValue(o.data())));
+
+    QObject *subObject = qvariant_cast<QObject*>(prop.read());
+    QVERIFY(subObject);
+    QCOMPARE(subObject->property("readWrite").toInt(), int(42));
+    subObject->setProperty("readWrite", QVariant::fromValue(int(100)));
+    QCOMPARE(subObject->property("readWrite").toInt(), int(100));
 }
 
 void tst_qqmllanguage::receivers()

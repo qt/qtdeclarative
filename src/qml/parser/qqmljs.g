@@ -1084,6 +1084,31 @@ case $rule_number: {
 }   break;
 ./
 
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON UiQualifiedId UiObjectInitializer ;
+/.
+case $rule_number: {
+    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(stringRef(3), stringRef(4));
+    node->isReadonlyMember = true;
+    node->readonlyToken = loc(1);
+    node->propertyToken = loc(2);
+    node->typeToken = loc(3);
+    node->identifierToken = loc(4);
+    node->semicolonToken = loc(5); // insert a fake ';' before ':'
+
+    AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
+    propertyName->identifierToken = loc(4);
+    propertyName->next = 0;
+
+    AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
+      propertyName, sym(6).UiQualifiedId, sym(7).UiObjectInitializer);
+    binding->colonToken = loc(5);
+
+    node->binding = binding;
+
+    sym(1).Node = node;
+}   break;
+./
+
 UiObjectMember: FunctionDeclaration ;
 /.
 case $rule_number: {
