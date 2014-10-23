@@ -59,6 +59,21 @@ static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
     return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
 }
 
+static inline int qsg_device_pixel_ratio(QOpenGLContext *ctx)
+{
+    int devicePixelRatio = 1;
+    if (ctx->surface()->surfaceClass() == QSurface::Window) {
+        QWindow *w = static_cast<QWindow *>(ctx->surface());
+        if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w))
+            devicePixelRatio = qw->effectiveDevicePixelRatio();
+        else
+            devicePixelRatio = w->devicePixelRatio();
+    } else {
+        devicePixelRatio = ctx->screen()->devicePixelRatio();
+    }
+    return devicePixelRatio;
+}
+
 class QSGTextMaskShader : public QSGMaterialShader
 {
 public:
@@ -102,6 +117,7 @@ void QSGTextMaskShader::initialize()
     m_matrix_id = program()->uniformLocation("matrix");
     m_color_id = program()->uniformLocation("color");
     m_textureScale_id = program()->uniformLocation("textureScale");
+    program()->setUniformValue("dpr", (float) qsg_device_pixel_ratio(QOpenGLContext::currentContext()));
 }
 
 void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -351,16 +367,8 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
                         : QFontEngine::Format_A32;
         }
 
-        qreal devicePixelRatio;
-        if (ctx->surface()->surfaceClass() == QSurface::Window) {
-            QWindow *w = static_cast<QWindow *>(ctx->surface());
-            if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w))
-                devicePixelRatio = qw->effectiveDevicePixelRatio();
-            else
-                devicePixelRatio = w->devicePixelRatio();
-        } else {
-            devicePixelRatio = ctx->screen()->devicePixelRatio();
-        }
+        qreal devicePixelRatio = qsg_device_pixel_ratio(ctx);
+
 
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
