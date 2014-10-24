@@ -557,7 +557,13 @@ static inline QString ToString(double t)
 {
     if (std::isnan(t))
         return QStringLiteral("Invalid Date");
-    QString str = ToDateTime(t, Qt::LocalTime).toString() + QStringLiteral(" GMT");
+    QDateTime dateTime = ToDateTime(t, Qt::LocalTime);
+
+    // JavaScript knows a year 0, while QDateTime doesn't. So, in order to show the right date we
+    // have to add a year to negative ones here.
+    if (dateTime.date().year() < 0)
+        dateTime = dateTime.addYears(1);
+    QString str = dateTime.toString() + QStringLiteral(" GMT");
     double tzoffset = LocalTZA + DaylightSavingTA(t);
     if (tzoffset) {
         int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);

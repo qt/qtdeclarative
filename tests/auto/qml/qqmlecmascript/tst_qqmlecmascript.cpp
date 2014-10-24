@@ -200,6 +200,7 @@ private slots:
     void sequenceSort();
     void dateParse();
     void utcDate();
+    void negativeYear();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -7376,6 +7377,22 @@ void tst_qqmlecmascript::utcDate()
     QVariant val = QString::fromLatin1("2014-07-16T23:30:31");
     QMetaObject::invokeMethod(object, "check_utc", Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
     QVERIFY(q.toBool() == true);
+}
+
+void tst_qqmlecmascript::negativeYear()
+{
+    QQmlComponent component(&engine, testFileUrl("negativeyear.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, "check_negative",
+                              Q_RETURN_ARG(QVariant, q));
+    // Strip the timezone. It should be irrelevant as the date was created with the same one.
+    QCOMPARE(q.toString().left(32), QStringLiteral("result: Mon Jan 1 00:00:00 -2000"));
 }
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
