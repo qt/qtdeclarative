@@ -494,6 +494,7 @@ int main(int argc, char *argv[])
 
     foreach (const QString &path, files) {
         //QUrl::fromUserInput doesn't treat no scheme as relative file paths
+#ifndef QT_NO_REGULAREXPRESSION
         QRegularExpression urlRe("[[:word:]]+://.*");
         if (urlRe.match(path).hasMatch()) { //Treat as a URL
             QUrl url = QUrl::fromUserInput(path);
@@ -503,7 +504,9 @@ int main(int argc, char *argv[])
                         ? QDir::toNativeSeparators(url.toLocalFile())
                         : url.toString()));
             e.load(url);
-        } else { //Local file path
+        } else
+#endif
+        { //Local file path
             if (verboseMode)
                 printf("qml: loading %s\n", qPrintable(QDir::toNativeSeparators(path)));
 
