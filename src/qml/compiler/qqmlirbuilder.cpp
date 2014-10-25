@@ -1810,6 +1810,7 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
     if (type->isCompositeSingleton()) {
         QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
+        tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
         // When a singleton tries to reference itself, it may not be complete yet.
         if (tdata->isComplete()) {
             initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
