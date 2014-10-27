@@ -139,7 +139,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
     }
 
     if (idx < UINT_MAX) {
-        if (!o->arrayData()->hasAttributes()) {
+        if (o->arrayData() && !o->arrayData()->hasAttributes()) {
             ScopedValue v(scope, o->arrayData()->get(idx));
             if (!v->isEmpty())
                 return v->asReturnedValue();

@@ -268,6 +268,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         return Encode::undefined();
 
     instance->arrayCreate();
+    Q_ASSERT(instance->arrayData());
 
     uint len = instance->getLength();
 
@@ -347,6 +348,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
         return Encode::undefined();
 
     instance->arrayCreate();
+    Q_ASSERT(instance->arrayData());
 
     uint len = instance->getLength();
 
@@ -534,6 +536,7 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
         return Encode::undefined();
 
     instance->arrayCreate();
+    Q_ASSERT(instance->arrayData());
 
     uint len = instance->getLength();
 

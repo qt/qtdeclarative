@@ -116,8 +116,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
     bool isSparse() const { return this && type() == Sparse; }
 
     uint length() const {
-        if (!this)
-            return 0;
         return vtable()->length(this);
     }
 
@@ -130,14 +128,10 @@ struct Q_QML_EXPORT ArrayData : public Managed
     }
 
     bool isEmpty(uint i) const {
-        if (!this)
-            return true;
         return (vtable()->get(this, i) == Primitive::emptyValue().asReturnedValue());
     }
 
     ReturnedValue get(uint i) const {
-        if (!this)
-            return Primitive::emptyValue().asReturnedValue();
         return vtable()->get(this, i);
     }
     inline Property *getProperty(uint index);
@@ -242,8 +236,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 
 inline Property *ArrayData::getProperty(uint index)
 {
-    if (!this)
-        return 0;
     if (type() != Sparse) {
         SimpleArrayData *that = static_cast<SimpleArrayData *>(this);
         return that->getProperty(index);

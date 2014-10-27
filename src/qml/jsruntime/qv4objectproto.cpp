@@ -329,11 +329,11 @@ ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
     if (!o->arrayData() || !o->arrayData()->length())
         return Encode(true);
 
-    if (o->arrayData()->length() && !o->arrayData()->attrs())
+    Q_ASSERT(o->arrayData() && o->arrayData()->length());
+    if (!o->arrayData()->attrs())
         return Encode(false);
 
     for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
-        // ### Fix for sparse arrays
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable())
                 return Encode(false);
@@ -355,14 +355,14 @@ ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
     if (o->internalClass() != o->internalClass()->frozen())
         return Encode(false);
 
-    if (!o->arrayData()->length())
+    if (!o->arrayData() || !o->arrayData()->length())
         return Encode(true);
 
-    if (o->arrayData()->length() && !o->arrayData()->attrs())
+    Q_ASSERT(o->arrayData() && o->arrayData()->length());
+    if (!o->arrayData()->attrs())
         return Encode(false);
 
     for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
-        // ### Fix for sparse arrays
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable() || o->arrayData()->attributes(i).isWritable())
                 return Encode(false);

@@ -580,7 +580,7 @@ ReturnedValue Runtime::getElement(ExecutionContext *ctx, const ValueRef object, 
     }
 
     if (idx < UINT_MAX) {
-        if (!o->arrayData()->hasAttributes()) {
+        if (o->arrayData() && !o->arrayData()->hasAttributes()) {
             ScopedValue v(scope, o->arrayData()->get(idx));
             if (!v->isEmpty())
                 return v->asReturnedValue();

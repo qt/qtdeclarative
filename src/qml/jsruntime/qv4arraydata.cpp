@@ -740,7 +740,7 @@ void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueR
     if (!len)
         return;
 
-    if (!thisObject->arrayData()->length())
+    if (!thisObject->arrayData() || !thisObject->arrayData()->length())
         return;
 
     if (!(comparefn->isUndefined() || comparefn->asObject())) {

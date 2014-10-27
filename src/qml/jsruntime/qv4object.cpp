@@ -244,7 +244,7 @@ Property *Object::__getOwnProperty__(String *name, PropertyAttributes *attrs)
 
 Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
 {
-    Property *p = arrayData()->getProperty(index);
+    Property *p = arrayData() ? arrayData()->getProperty(index) : 0;
     if (p) {
         if (attrs)
             *attrs = arrayData()->attributes(index);
@@ -289,7 +289,7 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
 {
     const Object *o = this;
     while (o) {
-        Property *p = o->arrayData()->getProperty(index);
+        Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
         if (p) {
             if (attrs)
                 *attrs = o->arrayData()->attributes(index);
@@ -355,7 +355,7 @@ bool Object::hasOwnProperty(String *name) const
 
 bool Object::hasOwnProperty(uint index) const
 {
-    if (!arrayData()->isEmpty(index))
+    if (arrayData() && !arrayData()->isEmpty(index))
         return true;
     if (isStringObject()) {
         String *s = static_cast<const StringObject *>(this)->d()->value.asString();
@@ -414,7 +414,7 @@ PropertyAttributes Object::query(const Managed *m, String *name)
 PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
 {
     const Object *o = static_cast<const Object *>(m);
-    if (o->arrayData()->get(index) != Primitive::emptyValue().asReturnedValue())
+    if (o->arrayData() && o->arrayData()->get(index) != Primitive::emptyValue().asReturnedValue())
         return o->arrayData()->attributes(index);
 
     if (o->isStringObject()) {
@@ -618,7 +618,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
     PropertyAttributes attrs;
     Object *o = this;
     while (o) {
-        Property *p = o->arrayData()->getProperty(index);
+        Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
         if (p) {
             pd = p;
             attrs = o->arrayData()->attributes(index);
@@ -738,7 +738,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 
     PropertyAttributes attrs;
 
-    Property *pd = arrayData()->getProperty(index);
+    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
     if (pd)
         attrs = arrayData()->attributes(index);
 
@@ -925,7 +925,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
     Property *current = 0;
 
     // Clause 1
-    {
+    if (arrayData()) {
         current = arrayData()->getProperty(index);
         if (!current && isStringObject())
             current = static_cast<StringObject *>(this)->getIndex(index);
@@ -962,12 +962,12 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *me
     if (attrs.isEmpty())
         return true;
 
-    Property *current;
+    Property *current = 0;
     PropertyAttributes cattrs;
     if (member) {
         current = propertyAt(index);
         cattrs = internalClass()->propertyData[index];
-    } else {
+    } else if (arrayData()) {
         current = arrayData()->getProperty(index);
         cattrs = arrayData()->attributes(index);
     }
@@ -1000,6 +1000,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *me
             if (!member) {
                 // need to convert the array and the slot
                 initSparseArray();
+                Q_ASSERT(arrayData());
                 setArrayAttributes(index, cattrs);
                 current = arrayData()->getProperty(index);
             }
