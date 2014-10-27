@@ -36,7 +36,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
-#include <QtQuick/private/qqmlaccessible_p.h>
+#include <QtGui/qaccessibleobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 class QTextDocument;
 
-class QAccessibleQuickItem : public QQmlAccessible, public QAccessibleValueInterface, public QAccessibleTextInterface
+class QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionInterface, public QAccessibleValueInterface, public QAccessibleTextInterface
 {
 public:
     QAccessibleQuickItem(QQuickItem *item);

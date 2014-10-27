@@ -39,7 +39,6 @@
 #include <QtQuick/private/qquickitem_p.h>
 
 #include "qaccessiblequickitem_p.h"
-#include "qqmlaccessible_p.h"
 
 #ifndef QT_NO_ACCESSIBILITY
 
