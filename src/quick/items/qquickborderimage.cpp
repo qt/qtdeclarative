@@ -582,10 +582,16 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
                                  qMax<qreal>(0, width() - border->right() - border->left()),
                                  qMax<qreal>(0, height() - border->bottom() - border->top()));
 
-        if (innerSourceRect != d->oldInnerSourceRect || innerTargetRect != d->oldInnerTargetRect)
+        QSizeF newSize(width(), height());
+        if (innerSourceRect != d->oldInnerSourceRect
+                || innerTargetRect != d->oldInnerTargetRect
+                || newSize != d->oldSize) {
             updateNode = true;
+        }
+
         d->oldInnerSourceRect = innerSourceRect;
         d->oldInnerTargetRect = innerTargetRect;
+        d->oldSize = newSize;
     }
 
     bool updatePixmap = d->pixmapChanged;
