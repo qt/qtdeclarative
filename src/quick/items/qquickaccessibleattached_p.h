@@ -212,6 +212,12 @@ Q_SIGNALS:
     void toggleAction();
     void increaseAction();
     void decreaseAction();
+    void scrollUpAction();
+    void scrollDownAction();
+    void scrollLeftAction();
+    void scrollRightAction();
+    void previousPageAction();
+    void nextPageAction();
 
 private:
     QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
@@ -225,6 +231,12 @@ private:
     static QMetaMethod sigToggle;
     static QMetaMethod sigIncrease;
     static QMetaMethod sigDecrease;
+    static QMetaMethod sigScrollUp;
+    static QMetaMethod sigScrollDown;
+    static QMetaMethod sigScrollLeft;
+    static QMetaMethod sigScrollRight;
+    static QMetaMethod sigPreviousPage;
+    static QMetaMethod sigNextPage;
 
 public:
     using QObject::property;

@@ -291,11 +291,59 @@ QT_BEGIN_NAMESPACE
 
     The corresponding handler is \c onDecreaseAction.
 */
+/*!
+    \qmlsignal QtQuick::Accessible::scrollUpAction()
+
+    This signal is emitted when a scroll up action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onScrollUpAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::scrollDownAction()
+
+    This signal is emitted when a scroll down action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onScrollDownAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::scrollLeftAction()
+
+    This signal is emitted when a scroll left action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onScrollLeftAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::scrollRightAction()
+
+    This signal is emitted when a scroll right action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onScrollRightAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::previousPageAction()
+
+    This signal is emitted when a previous page action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onPreviousPageAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::nextPageAction()
+
+    This signal is emitted when a next page action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onNextPageAction.
+*/
 
 QMetaMethod QQuickAccessibleAttached::sigPress;
 QMetaMethod QQuickAccessibleAttached::sigToggle;
 QMetaMethod QQuickAccessibleAttached::sigIncrease;
 QMetaMethod QQuickAccessibleAttached::sigDecrease;
+QMetaMethod QQuickAccessibleAttached::sigScrollUp;
+QMetaMethod QQuickAccessibleAttached::sigScrollDown;
+QMetaMethod QQuickAccessibleAttached::sigScrollLeft;
+QMetaMethod QQuickAccessibleAttached::sigScrollRight;
+QMetaMethod QQuickAccessibleAttached::sigPreviousPage;
+QMetaMethod QQuickAccessibleAttached::sigNextPage;
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
@@ -323,6 +371,12 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
         sigToggle = QMetaMethod::fromSignal(&QQuickAccessibleAttached::toggleAction);
         sigIncrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::increaseAction);
         sigDecrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::decreaseAction);
+        sigScrollUp = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollUpAction);
+        sigScrollDown = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollDownAction);
+        sigScrollLeft = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollLeftAction);
+        sigScrollRight = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollRightAction);
+        sigPreviousPage = QMetaMethod::fromSignal(&QQuickAccessibleAttached::previousPageAction);
+        sigNextPage= QMetaMethod::fromSignal(&QQuickAccessibleAttached::nextPageAction);
     }
 }
 
@@ -359,7 +413,18 @@ bool QQuickAccessibleAttached::doAction(const QString &actionName)
         sig = &sigIncrease;
     else if (actionName == QAccessibleActionInterface::decreaseAction())
         sig = &sigDecrease;
-
+    else if (actionName == QAccessibleActionInterface::scrollUpAction())
+        sig = &sigScrollUp;
+    else if (actionName == QAccessibleActionInterface::scrollDownAction())
+        sig = &sigScrollDown;
+    else if (actionName == QAccessibleActionInterface::scrollLeftAction())
+        sig = &sigScrollLeft;
+    else if (actionName == QAccessibleActionInterface::scrollRightAction())
+        sig = &sigScrollRight;
+    else if (actionName == QAccessibleActionInterface::previousPageAction())
+        sig = &sigPreviousPage;
+    else if (actionName == QAccessibleActionInterface::nextPageAction())
+        sig = &sigNextPage;
     if (sig && isSignalConnected(*sig))
         return sig->invoke(this);
     return false;
@@ -375,6 +440,18 @@ void QQuickAccessibleAttached::availableActions(QStringList *actions) const
         actions->append(QAccessibleActionInterface::increaseAction());
     if (isSignalConnected(sigDecrease))
         actions->append(QAccessibleActionInterface::decreaseAction());
+    if (isSignalConnected(sigScrollUp))
+        actions->append(QAccessibleActionInterface::scrollUpAction());
+    if (isSignalConnected(sigScrollDown))
+        actions->append(QAccessibleActionInterface::scrollDownAction());
+    if (isSignalConnected(sigScrollLeft))
+        actions->append(QAccessibleActionInterface::scrollLeftAction());
+    if (isSignalConnected(sigScrollRight))
+        actions->append(QAccessibleActionInterface::scrollRightAction());
+    if (isSignalConnected(sigPreviousPage))
+        actions->append(QAccessibleActionInterface::previousPageAction());
+    if (isSignalConnected(sigNextPage))
+        actions->append(QAccessibleActionInterface::nextPageAction());
 }
 
 QT_END_NAMESPACE
