@@ -379,10 +379,6 @@ QList<QQmlError> QQuickView::errors() const
     If this property is set to SizeRootObjectToView, the view will
     automatically resize the root item to the size of the view.
 
-    Regardless of this property, the sizeHint of the view
-    is the initial size of the root item. Note though that
-    since QML may load dynamically, that size may change.
-
     \sa initialSize()
 */
 
