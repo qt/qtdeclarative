@@ -292,10 +292,10 @@ QT_BEGIN_NAMESPACE
     The corresponding handler is \c onDecreaseAction.
 */
 
-const QMetaMethod QQuickAccessibleAttached::sigPress = QMetaMethod::fromSignal(&QQuickAccessibleAttached::pressAction);
-const QMetaMethod QQuickAccessibleAttached::sigToggle = QMetaMethod::fromSignal(&QQuickAccessibleAttached::toggleAction);
-const QMetaMethod QQuickAccessibleAttached::sigIncrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::increaseAction);
-const QMetaMethod QQuickAccessibleAttached::sigDecrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::decreaseAction);
+QMetaMethod QQuickAccessibleAttached::sigPress;
+QMetaMethod QQuickAccessibleAttached::sigToggle;
+QMetaMethod QQuickAccessibleAttached::sigIncrease;
+QMetaMethod QQuickAccessibleAttached::sigDecrease;
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
@@ -316,6 +316,13 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     }
     if (!parent->property("cursorPosition").isNull()) {
         connect(parent, SIGNAL(cursorPositionChanged()), this, SLOT(cursorPositionChanged()));
+    }
+
+    if (!sigPress.isValid()) {
+        sigPress = QMetaMethod::fromSignal(&QQuickAccessibleAttached::pressAction);
+        sigToggle = QMetaMethod::fromSignal(&QQuickAccessibleAttached::toggleAction);
+        sigIncrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::increaseAction);
+        sigDecrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::decreaseAction);
     }
 }
 
@@ -343,7 +350,7 @@ void QQuickAccessibleAttached::setIgnored(bool ignored)
 
 bool QQuickAccessibleAttached::doAction(const QString &actionName)
 {
-    const QMetaMethod *sig = 0;
+    QMetaMethod *sig = 0;
     if (actionName == QAccessibleActionInterface::pressAction())
         sig = &sigPress;
     else if (actionName == QAccessibleActionInterface::toggleAction())

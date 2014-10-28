@@ -221,10 +221,10 @@ private:
     QString m_name;
     QString m_description;
 
-    static const QMetaMethod sigPress;
-    static const QMetaMethod sigToggle;
-    static const QMetaMethod sigIncrease;
-    static const QMetaMethod sigDecrease;
+    static QMetaMethod sigPress;
+    static QMetaMethod sigToggle;
+    static QMetaMethod sigIncrease;
+    static QMetaMethod sigDecrease;
 
 public:
     using QObject::property;
