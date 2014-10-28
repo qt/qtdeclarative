@@ -405,6 +405,9 @@ int main(int argc, char ** argv)
         }
     }
 
+    // QtWebEngine needs a shared context in order for the GPU thread to
+    // upload textures.
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, options.contextSharing);
 #ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);
 #else
@@ -442,15 +445,6 @@ int main(int argc, char ** argv)
 #else
         displayFileDialog(&options);
 #endif
-
-    // QWebEngine needs a shared context in order for the GPU thread to
-    // upload textures.
-    QScopedPointer<QOpenGLContext> shareContext;
-    if (options.contextSharing) {
-        shareContext.reset(new QOpenGLContext);
-        shareContext->create();
-        qt_gl_set_global_share_context(shareContext.data());
-    }
 
     int exitCode = 0;
 
