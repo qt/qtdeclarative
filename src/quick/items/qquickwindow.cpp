@@ -2022,11 +2022,14 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     touchEvent.data()->setTarget(item);
     bool touchEventAccepted = false;
 
+    qCDebug(DBG_TOUCH) << " - considering delivering " << touchEvent << " to " << item;
+
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
     if (sendFilteredTouchEvent(item->parentItem(), item, event, hasFiltered)) {
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints
+        qCDebug(DBG_TOUCH) << " - can't. intercepted " << touchEvent.data() << " to " << item->parentItem() << " instead of " << item;
         foreach (int id, matchingNewPoints)
             acceptedNewPoints->insert(id);
         return true;
@@ -2037,6 +2040,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
         itemForTouchPointId[id] = item;
 
     // Deliver the touch event to the given item
+    qCDebug(DBG_TOUCH) << " - actually delivering " << touchEvent << " to " << item;
     QCoreApplication::sendEvent(item, touchEvent.data());
     touchEventAccepted = touchEvent->isAccepted();
 
@@ -2309,6 +2313,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
         QScopedPointer<QTouchEvent> targetEvent(touchEventForItemBounds(target, *event));
         if (!targetEvent->touchPoints().isEmpty()) {
             if (target->childMouseEventFilter(item, targetEvent.data())) {
+                qCDebug(DBG_TOUCH) << " - first chance intercepted on childMouseEventFilter by " << target;
                 QVector<int> touchIds;
                 for (int i = 0; i < targetEvent->touchPoints().size(); ++i)
                     touchIds.append(targetEvent->touchPoints().at(i).id());
@@ -2349,6 +2354,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                     // targetEvent is already transformed wrt local position, velocity, etc.
                     QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, tp, event, item, false));
                     if (target->childMouseEventFilter(item, mouseEvent.data())) {
+                        qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
                             itemForTouchPointId[tp.id()] = target;
                             touchMouseId = tp.id();
@@ -2561,7 +2567,9 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd: {
             QSet<QQuickItem*> hasFiltered;
-            d->sendFilteredTouchEvent(item->parentItem(), item, static_cast<QTouchEvent *>(e), &hasFiltered);
+            QTouchEvent *ev = static_cast<QTouchEvent *>(e);
+            qCDebug(DBG_TOUCH) << " - sendEvent for " << ev << " to " << item->parentItem() << " and " << item;
+            d->sendFilteredTouchEvent(item->parentItem(), item, ev, &hasFiltered);
         }
         break;
     default:
