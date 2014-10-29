@@ -62,7 +62,8 @@ headerdirs += ../../plugins
 sourcedirs += ../../plugins
 
 #exclude certain directories
-excludedirs += ../../imports/models
+excludedirs += ../../imports/models \
+               ../../imports/statemachine
 
 examples.fileextensions        += "*.qm"
 

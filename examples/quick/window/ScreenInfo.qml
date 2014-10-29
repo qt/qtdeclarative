@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.3
 import QtQuick.Window 2.1
 
 Item {
@@ -84,6 +84,9 @@ Item {
 
         Text { text: "logical pixel density" }
         Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
+
+        Text { text: "device pixel ratio" }
+        Text { text: Screen.devicePixelRatio.toFixed(2) }
 
         Text { text: "available virtual desktop" }
         Text { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }

@@ -39,97 +39,127 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Controls 1.1
 
 Rectangle {
-  width: 320
-  height: 480
+    id: page
 
-  // Create column with four rectangles, the fourth one is hidden
-  Column {
-    id: column
+    property real ratio: width / 320 < height / 440 ? width / 320 : height / 440
+    property int elementSpacing: 6.3 * ratio
 
-    //! [0]
-    Rectangle {
-      id: red
-      color: "red"
-      width: 100
-      height: 100
+    width: 320
+    height: 440
 
-      Text {
-          anchors.left: parent.right
-          anchors.leftMargin: 20
-          anchors.verticalCenter: parent.verticalCenter
-          text: "Index: " + parent.Positioner.index
-          + (parent.Positioner.isFirstItem ? " (First)" : "")
-          + (parent.Positioner.isLastItem ? " (Last)" : "")
-      }
-
-      // When mouse is clicked, display the values of the positioner
-      MouseArea {
-        anchors.fill: parent
-        onClicked: column.showInfo(red.Positioner)
-      }
-    }
-    //! [0]
-
-    Rectangle {
-      id: green
-      color: "green"
-      width: 100
-      height: 100
-
-      Text {
-          anchors.left: parent.right
-          anchors.leftMargin: 20
-          anchors.verticalCenter: parent.verticalCenter
-          text: "Index: " + parent.Positioner.index
-          + (parent.Positioner.isFirstItem ? " (First)" : "")
-          + (parent.Positioner.isLastItem ? " (Last)" : "")
-      }
-
-      // When mouse is clicked, display the values of the positioner
-      MouseArea {
-        anchors.fill: parent
-        onClicked: column.showInfo(green.Positioner)
-      }
+    Button {
+      anchors.top: parent.top
+      anchors.right: parent.right
+      anchors.margins: 10
+      text: hidingRect.visible ? "Hide" : "Show"
+      onClicked: hidingRect.visible = !hidingRect.visible
     }
 
-    Rectangle {
-      id: blue
-      color: "blue"
-      width: 100
-      height: 100
+    // Create column with four rectangles, the fourth one is hidden
+    Column {
+        id: column
 
-      Text {
-          anchors.left: parent.right
-          anchors.leftMargin: 20
-          anchors.verticalCenter: parent.verticalCenter
-          text: "Index: " + parent.Positioner.index
-          + (parent.Positioner.isFirstItem ? " (First)" : "")
-          + (parent.Positioner.isLastItem ? " (Last)" : "")
-      }
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.leftMargin: page.width / 32
+        anchors.topMargin: page.height / 48
+        spacing: elementSpacing
 
-      // When mouse is clicked, display the values of the positioner
-      MouseArea {
-        anchors.fill: parent
-        onClicked: column.showInfo(blue.Positioner)
-      }
+        //! [0]
+        Rectangle {
+            id: green
+            color: "#80c342"
+            width: 100 * ratio
+            height: 100 * ratio
+
+            Text {
+              anchors.left: parent.right
+              anchors.leftMargin: 20
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Index: " + parent.Positioner.index
+              + (parent.Positioner.isFirstItem ? " (First)" : "")
+              + (parent.Positioner.isLastItem ? " (Last)" : "")
+            }
+
+            // When mouse is clicked, display the values of the positioner
+            MouseArea {
+            anchors.fill: parent
+            onClicked: column.showInfo(green.Positioner)
+            }
+        }
+        //! [0]
+
+        Rectangle {
+            id: blue
+            color: "#14aaff"
+            width: 100 * ratio
+            height: 100 * ratio
+
+            Text {
+              anchors.left: parent.right
+              anchors.leftMargin: 20
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Index: " + parent.Positioner.index
+              + (parent.Positioner.isFirstItem ? " (First)" : "")
+              + (parent.Positioner.isLastItem ? " (Last)" : "")
+            }
+
+            // When mouse is clicked, display the values of the positioner
+            MouseArea {
+            anchors.fill: parent
+            onClicked: column.showInfo(blue.Positioner)
+            }
+        }
+
+        Rectangle {
+            id: purple
+            color: "#6400aa"
+            width: 100 * ratio
+            height: 100 * ratio
+
+            Text {
+              anchors.left: parent.right
+              anchors.leftMargin: 20
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Index: " + parent.Positioner.index
+              + (parent.Positioner.isFirstItem ? " (First)" : "")
+              + (parent.Positioner.isLastItem ? " (Last)" : "")
+            }
+
+            // When mouse is clicked, display the values of the positioner
+            MouseArea {
+            anchors.fill: parent
+            onClicked: column.showInfo(purple.Positioner)
+            }
+        }
+
+        // This rectangle is not visible, so it doesn't have a positioner value
+        Rectangle {
+            id: hidingRect
+            color: "#006325"
+            width: 100 * ratio
+            height: 100 * ratio
+            visible: false
+
+            Text {
+                anchors.left: parent.right
+                anchors.leftMargin: 20
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Index: " + parent.Positioner.index
+                + (parent.Positioner.isFirstItem ? " (First)" : "")
+                + (parent.Positioner.isLastItem ? " (Last)" : "")
+            }
+        }
+
+        // Print the index of the child item in the positioner and convenience
+        // properties showing if it's the first or last item.
+        function showInfo(positioner) {
+            console.log("Item Index = " + positioner.index)
+            console.log("  isFirstItem = " + positioner.isFirstItem)
+            console.log("  isLastItem = " + positioner.isLastItem)
+        }
     }
-
-    // This rectangle is not visible, so it doesn't have a positioner value
-    Rectangle {
-      color: "black"
-      width: 100
-      height: 100
-      visible: false
-    }
-
-    // Print the index of the child item in the positioner and convenience
-    // properties showing if it's the first or last item.
-    function showInfo(positioner) {
-      console.log("Item Index = " + positioner.index)
-      console.log("  isFirstItem = " + positioner.isFirstItem)
-      console.log("  isLastItem = " + positioner.isLastItem)
-    }
-  }
 }

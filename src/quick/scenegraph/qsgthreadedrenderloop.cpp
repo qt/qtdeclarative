@@ -407,7 +407,7 @@ bool QSGRenderThread::event(QEvent *e)
             QQuickWindowPrivate::get(window)->renderSceneGraph(windowSize);
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- grabbing result";
-            *ce->image = qt_gl_read_framebuffer(windowSize * window->devicePixelRatio(), false, false);
+            *ce->image = qt_gl_read_framebuffer(windowSize * window->effectiveDevicePixelRatio(), false, false);
         }
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- waking gui to handle result";
         waitCondition.wakeOne();
@@ -545,6 +545,11 @@ void QSGRenderThread::syncAndRender()
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- updatePending, doing sync";
         sync(exposeRequested);
     }
+#ifndef QSG_NO_RENDER_TIMING
+    if (profileFrames)
+        syncTime = threadTimer.nsecsElapsed();
+#endif
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (!syncResultedInChanges && !repaintRequested) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- no changes, render aborted";
@@ -553,10 +558,6 @@ void QSGRenderThread::syncAndRender()
             msleep(waitTime);
         return;
     }
-
-    if (profileFrames)
-        syncTime = threadTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering started";
 

@@ -47,11 +47,12 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qatomic.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 
-class QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlRefCount
 {
 public:
     inline QQmlRefCount();

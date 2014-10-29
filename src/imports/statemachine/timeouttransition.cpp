@@ -78,9 +78,9 @@ void TimeoutTransition::componentComplete()
 
 /*!
     \qmltype TimeoutTransition
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QSignalTransition
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief The TimeoutTransition type provides a transition based on a timer.

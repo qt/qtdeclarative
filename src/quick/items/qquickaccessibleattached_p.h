@@ -88,6 +88,7 @@ public:
     STATE_PROPERTY(defaultButton)
     STATE_PROPERTY(passwordEdit)
     STATE_PROPERTY(selectableText)
+    STATE_PROPERTY(searchEdit)
 
     QQuickAccessibleAttached(QObject *parent);
     ~QQuickAccessibleAttached();
@@ -187,6 +188,8 @@ public:
 
     QAccessible::State state() { return m_state; }
     bool ignored() const;
+    bool doAction(const QString &actionName);
+    void availableActions(QStringList *actions) const;
 
 public Q_SLOTS:
     void valueChanged() {
@@ -205,6 +208,10 @@ Q_SIGNALS:
     void nameChanged();
     void descriptionChanged();
     void ignoredChanged();
+    void pressAction();
+    void toggleAction();
+    void increaseAction();
+    void decreaseAction();
 
 private:
     QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
@@ -213,6 +220,11 @@ private:
     QAccessible::State m_state;
     QString m_name;
     QString m_description;
+
+    static QMetaMethod sigPress;
+    static QMetaMethod sigToggle;
+    static QMetaMethod sigIncrease;
+    static QMetaMethod sigDecrease;
 
 public:
     using QObject::property;

@@ -303,6 +303,9 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
 
 QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
 {
+    if (!QOpenGLContext::currentContext())
+        return 0;
+
     if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
         printf("CustomParticle: Too many particles... \n");
         return 0;

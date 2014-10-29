@@ -293,9 +293,11 @@ const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
     return finalValues.constData();
 }
 
-QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backendCompileStep()
 {
-    return compilationUnit.take();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
+    result.take(compilationUnit.take());
+    return result;
 }
 
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)

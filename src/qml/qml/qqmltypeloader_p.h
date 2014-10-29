@@ -513,7 +513,7 @@ private:
     void initialize(QQmlEngine *);
 
     bool m_loaded;
-    QV4::CompiledData::CompilationUnit *m_precompiledScript;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;
     QV4::Script *m_program;
     QV4::PersistentValue m_value;
 };

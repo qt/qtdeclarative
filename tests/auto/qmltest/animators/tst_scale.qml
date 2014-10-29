@@ -42,12 +42,11 @@ Item {
     TestCase {
         id: testCase
         name: "animators-scale"
-        when: !animation.running
+        when: box.scale == 2;
         function test_endresult() {
             compare(box.scaleChangeCounter, 1);
-            compare(box.scale, 2);
             var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
+            verify(image.pixel(0, 0) == Qt.rgba(1, 0, 0));
         }
     }
 

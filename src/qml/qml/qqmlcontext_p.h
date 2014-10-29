@@ -141,6 +141,9 @@ public:
     // VME data that is constructing this context if any
     void *activeVMEData;
 
+    // Compilation unit for contexts that belong to a compiled type.
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
+
     // Property name cache
     QV4::IdentifierHash<int> propertyNames;
 

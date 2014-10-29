@@ -54,27 +54,6 @@ QQmlAccessible::~QQmlAccessible()
 {
 }
 
-QAccessibleInterface *QQmlAccessible::childAt(int x, int y) const
-{
-    // Note that this function will disregard stacking order.
-    // (QAccessibleQuickView::childAt() does this correctly and more efficient)
-
-    // If the item clips its children, we can return early if the coordinate is outside its rect
-    if (clipsChildren()) {
-        if (!rect().contains(x, y))
-            return 0;
-    }
-
-    for (int i = childCount() - 1; i >= 0; --i) {
-        QAccessibleInterface *childIface = child(i);
-        if (childIface && !childIface->state().invisible) {
-            if (childIface->rect().contains(x, y))
-                return childIface;
-        }
-    }
-    return 0;
-}
-
 QAccessible::State QQmlAccessible::state() const
 {
     QAccessible::State state;

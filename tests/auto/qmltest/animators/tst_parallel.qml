@@ -49,8 +49,8 @@ Item {
             compare(box.scale, 2);
             compare(box.rotation, 180);
             var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
-            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
+            verify(image.pixel(0, 0) == Qt.rgba(0, 0, 1));
+            verify(image.pixel(199, 199) == Qt.rgba(1, 0, 0));
         }
     }
 

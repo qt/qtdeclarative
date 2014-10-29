@@ -7,9 +7,10 @@ out vec2 sampleCoord;
 
 uniform mat4 matrix;
 uniform vec2 textureScale;
+uniform float dpr;
 
 void main()
 {
      sampleCoord = tCoord * textureScale;
-     gl_Position = matrix * round(vCoord);
+     gl_Position = matrix * round(vCoord * dpr) / dpr;
 }

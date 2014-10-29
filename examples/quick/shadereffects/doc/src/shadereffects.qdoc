@@ -28,11 +28,12 @@
     \title Qt Quick Examples - Shader Effects
     \example shadereffects
     \image qml-shadereffects-example.png
-    \brief This is a shader effects example.
+    \brief A Qt Quick example demonstrating the use of shader effects.
     \ingroup qtquickexamples
 
     This example demonstrates a couple of visual effects that you can perform
-    with shaders in Qt Quick. For more information, visit
+    with shaders in Qt Quick. It applies five different effects on a text and
+    a couple of images. For more information, visit
     \l{Important Concepts In Qt Quick - Graphical Effects}
 
     \include examples-run.qdocinc

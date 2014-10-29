@@ -72,12 +72,12 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool generateUnitData)
+QQmlRefPointer<CompiledData::CompilationUnit> EvalInstructionSelection::compile(bool generateUnitData)
 {
     for (int i = 0; i < irModule->functions.size(); ++i)
         run(i);
 
-    QV4::CompiledData::CompilationUnit *unit = backendCompileStep();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = backendCompileStep();
     if (generateUnitData)
         unit->data = jsGenerator->generateUnit();
     return unit;

@@ -290,7 +290,7 @@ QImage QSGWindowsRenderLoop::grab(QQuickWindow *window)
     d->syncSceneGraph();
     d->renderSceneGraph(window->size());
 
-    QImage image = qt_gl_read_framebuffer(window->size() * window->devicePixelRatio(), false, false);
+    QImage image = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), false, false);
     return image;
 }
 

@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
         Accessible.role: Accessible.Button
         Accessible.name: label.text
         Accessible.description: "shows the next page"
-        function accessiblePressAction() {
+        Accessible.onPressAction: {
             // do a button click
         }
     }
@@ -79,8 +79,8 @@ QT_BEGIN_NAMESPACE
     The name is a short and consise description of the control and should reflect the visual label.
     In this case it is not clear what the button does with the name only, so \l description contains
     an explanation.
-    There is also a function \c accessiblePressAction() which can be invoked by assistive tools to trigger
-    the button. This function needs to have the same effect as tapping or clicking the button would have.
+    There is also a signal handler \l {Accessible::pressAction}{Accessible.pressAction} which can be invoked by assistive tools to trigger
+    the button. This signal handler needs to have the same effect as tapping or clicking the button would have.
 
     \sa Accessibility
 */
@@ -117,7 +117,7 @@ QT_BEGIN_NAMESPACE
     \table
     \header
         \li \b {Role}
-        \li \b {Properties and functions}
+        \li \b {Properties and signals}
         \li \b {Explanation}
     \row
         \li All interactive elements
@@ -128,13 +128,14 @@ QT_BEGIN_NAMESPACE
             can be moved from item to item.
     \row
         \li Button, CheckBox, RadioButton
-        \li \c accessiblePressAction()
-        \li A button should have a function with the name \c accessiblePressAction.
-            This function may be called by an assistive tool such as a screen-reader.
+        \li \l {Accessible::pressAction}{Accessible.pressAction}
+        \li A button should have a signal handler with the name \c onPressAction.
+            This signal may be emitted by an assistive tool such as a screen-reader.
             The implementation needs to behave the same as a mouse click or tap on the button.
     \row
        \li CheckBox, RadioButton
-       \li \l checkable, \l checked
+       \li \l checkable, \l checked, \l {Accessible::toggleAction}{Accessible.toggleAction}
+
        \li The check state of the check box. Updated on Press, Check and Uncheck actions.
     \row
        \li Slider, SpinBox, Dial, ScrollBar
@@ -142,7 +143,7 @@ QT_BEGIN_NAMESPACE
        \li These properties reflect the state and possible values for the elements.
     \row
        \li Slider, SpinBox, Dial, ScrollBar
-       \li \c accessibleIncreaseAction(), \c accessibleDecreaseAction()
+       \li \l {Accessible::increaseAction}{Accessible.increaseAction}, \l {Accessible::decreaseAction}{Accessible.decreaseAction}
        \li Actions to increase and decrease the value of the element.
     \endtable
 */
@@ -176,6 +177,12 @@ QT_BEGIN_NAMESPACE
 */
 /*! \qmlproperty bool QtQuick::Accessible::editable
     \brief This property holds whether this item has editable text.
+
+    By default this property is \c false.
+*/
+/*! \qmlproperty bool QtQuick::Accessible::searchEdit
+    \brief This property holds whether this item is input for a search query.
+    This property will only affect editable text.
 
     By default this property is \c false.
 */
@@ -256,6 +263,40 @@ QT_BEGIN_NAMESPACE
     By default this property is \c false.
 */
 
+/*!
+    \qmlsignal QtQuick::Accessible::pressAction()
+
+    This signal is emitted when a press action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onPressAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::toggleAction()
+
+    This signal is emitted when a toggle action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onToggleAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::increaseAction()
+
+    This signal is emitted when a increase action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onIncreaseAction.
+*/
+/*!
+    \qmlsignal QtQuick::Accessible::decreaseAction()
+
+    This signal is emitted when a decrease action is received from an assistive tool such as a screen-reader.
+
+    The corresponding handler is \c onDecreaseAction.
+*/
+
+QMetaMethod QQuickAccessibleAttached::sigPress;
+QMetaMethod QQuickAccessibleAttached::sigToggle;
+QMetaMethod QQuickAccessibleAttached::sigIncrease;
+QMetaMethod QQuickAccessibleAttached::sigDecrease;
+
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
 {
@@ -266,7 +307,7 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
 
     // Enable accessibility for items with accessible content. This also
     // enables accessibility for the ancestors of souch items.
-    item->d_func()->setAccessibleFlagAndListener();
+    item->d_func()->setAccessible();
     QAccessibleEvent ev(item, QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
 
@@ -275,6 +316,13 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     }
     if (!parent->property("cursorPosition").isNull()) {
         connect(parent, SIGNAL(cursorPositionChanged()), this, SLOT(cursorPositionChanged()));
+    }
+
+    if (!sigPress.isValid()) {
+        sigPress = QMetaMethod::fromSignal(&QQuickAccessibleAttached::pressAction);
+        sigToggle = QMetaMethod::fromSignal(&QQuickAccessibleAttached::toggleAction);
+        sigIncrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::increaseAction);
+        sigDecrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::decreaseAction);
     }
 }
 
@@ -298,6 +346,35 @@ void QQuickAccessibleAttached::setIgnored(bool ignored)
         item()->d_func()->isAccessible = !ignored;
         emit ignoredChanged();
     }
+}
+
+bool QQuickAccessibleAttached::doAction(const QString &actionName)
+{
+    QMetaMethod *sig = 0;
+    if (actionName == QAccessibleActionInterface::pressAction())
+        sig = &sigPress;
+    else if (actionName == QAccessibleActionInterface::toggleAction())
+        sig = &sigToggle;
+    else if (actionName == QAccessibleActionInterface::increaseAction())
+        sig = &sigIncrease;
+    else if (actionName == QAccessibleActionInterface::decreaseAction())
+        sig = &sigDecrease;
+
+    if (sig && isSignalConnected(*sig))
+        return sig->invoke(this);
+    return false;
+}
+
+void QQuickAccessibleAttached::availableActions(QStringList *actions) const
+{
+    if (isSignalConnected(sigPress))
+        actions->append(QAccessibleActionInterface::pressAction());
+    if (isSignalConnected(sigToggle))
+        actions->append(QAccessibleActionInterface::toggleAction());
+    if (isSignalConnected(sigIncrease))
+        actions->append(QAccessibleActionInterface::increaseAction());
+    if (isSignalConnected(sigDecrease))
+        actions->append(QAccessibleActionInterface::decreaseAction());
 }
 
 QT_END_NAMESPACE

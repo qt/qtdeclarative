@@ -104,6 +104,7 @@ struct MemoryManager::Data
     };
 
     LargeItem *largeItems;
+    std::size_t totalLargeItemsAllocated;
 
     GCDeletable *deletable;
 
@@ -120,6 +121,7 @@ struct MemoryManager::Data
         , maxShift(6)
         , maxChunkSize(32*1024)
         , largeItems(0)
+        , totalLargeItemsAllocated(0)
         , deletable(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
@@ -185,6 +187,9 @@ Managed *MemoryManager::allocData(std::size_t size)
 
     // doesn't fit into a small bucket
     if (size >= MemoryManager::Data::MaxItemSize) {
+        if (m_d->totalLargeItemsAllocated > 8 * 1024 * 1024)
+            runGC();
+
         // we use malloc for this
         MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(
                 malloc(Q_V4_PROFILE_ALLOC(m_d->engine, size + sizeof(MemoryManager::Data::LargeItem),
@@ -193,6 +198,7 @@ Managed *MemoryManager::allocData(std::size_t size)
         item->next = m_d->largeItems;
         item->size = size;
         m_d->largeItems = item;
+        m_d->totalLargeItemsAllocated += size;
         return item->managed();
     }
 
@@ -255,6 +261,15 @@ Managed *MemoryManager::allocData(std::size_t size)
     return m;
 }
 
+static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
+{
+    while (engine->jsStackTop > markBase) {
+        Managed *m = engine->popForGC();
+        Q_ASSERT (m->internalClass()->vtable->markObjects);
+        m->internalClass()->vtable->markObjects(m, engine);
+    }
+}
+
 void MemoryManager::mark()
 {
     Value *markBase = m_d->engine->jsStackTop;
@@ -272,6 +287,9 @@ void MemoryManager::mark()
         }
         persistent->value.mark(m_d->engine);
         persistent = persistent->next;
+
+        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
+            drainMarkStack(m_d->engine, markBase);
     }
 
     collectFromJSStack();
@@ -304,14 +322,12 @@ void MemoryManager::mark()
 
         if (keepAlive)
             qobjectWrapper->getPointer()->mark(m_d->engine);
+
+        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
+            drainMarkStack(m_d->engine, markBase);
     }
 
-    // now that we marked all roots, start marking recursively and popping from the mark stack
-    while (m_d->engine->jsStackTop > markBase) {
-        Managed *m = m_d->engine->popForGC();
-        Q_ASSERT (m->internalClass()->vtable->markObjects);
-        m->internalClass()->vtable->markObjects(m, m_d->engine);
-    }
+    drainMarkStack(m_d->engine, markBase);
 }
 
 void MemoryManager::sweep(bool lastSweep)
@@ -466,6 +482,7 @@ void MemoryManager::runGC()
 
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
     m_d->totalAlloc = 0;
+    m_d->totalLargeItemsAllocated = 0;
 }
 
 size_t MemoryManager::getUsedMem() const

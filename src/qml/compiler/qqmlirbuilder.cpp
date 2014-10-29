@@ -538,7 +538,6 @@ Document::Document(bool debugMode)
     , program(0)
     , jsGenerator(&jsModule)
     , unitFlags(0)
-    , javaScriptCompilationUnit(0)
 {
 }
 
@@ -1502,7 +1501,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 
 QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
 {
-    QV4::CompiledData::CompilationUnit *compilationUnit = output.javaScriptCompilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
     const uint unitSize = jsUnit->unitSize;
 
@@ -1811,6 +1810,7 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
     if (type->isCompositeSingleton()) {
         QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
+        tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
         // When a singleton tries to reference itself, it may not be complete yet.
         if (tdata->isComplete()) {
             initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));

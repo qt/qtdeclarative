@@ -39,6 +39,7 @@
 #include <QHash>
 #include <private/qv4value_p.h>
 #include <private/qv4executableallocator_p.h>
+#include <private/qqmlrefcount_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -559,18 +560,16 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 //    CompilationUnit * (for functions that need to clean up)
 //    CompiledData::Function *compiledFunction
 
-struct Q_QML_PRIVATE_EXPORT CompilationUnit
+struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 {
 #ifdef V4_BOOTSTRAP
     CompilationUnit()
-        : refCount(0)
-        , data(0)
+        : data(0)
     {}
     virtual ~CompilationUnit() {}
 #else
     CompilationUnit()
-        : refCount(0)
-        , data(0)
+        : data(0)
         , engine(0)
         , runtimeStrings(0)
         , runtimeLookups(0)
@@ -580,10 +579,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit
     virtual ~CompilationUnit();
 #endif
 
-    void ref() { ++refCount; }
-    void deref() { if (!--refCount) delete this; }
-
-    int refCount;
     Unit *data;
 
     // Called only when building QML, when we build the header for JS first and append QML data

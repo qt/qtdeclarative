@@ -334,7 +334,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         qreal dist = v2 / (accel * 2.0);
         if (v > 0)
             dist = -dist;
-        qreal target = qRound(data.move.value() - dist);
+        qreal target = -qRound(-(data.move.value() - dist));
         dist = -target + data.move.value();
         accel = v2 / (2.0f * qAbs(dist));
 
@@ -436,18 +436,18 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     } else if (data.move.value() < maxExtent) {
         resetTimeline(data);
         adjustContentPos(data, maxExtent);
-    } else if (qRound(data.move.value()) != data.move.value()) {
+    } else if (-qRound(-data.move.value()) != data.move.value()) {
         // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
         resetTimeline(data);
         qreal val = data.move.value();
-        if (qAbs(qRound(val) - val) < 0.25) // round small differences
-            val = qRound(val);
+        if (qAbs(-qRound(-val) - val) < 0.25) // round small differences
+            val = -qRound(-val);
         else if (data.smoothVelocity.value() > 0) // continue direction of motion for larger
-            val = qFloor(val);
+            val = -qFloor(-val);
         else if (data.smoothVelocity.value() < 0)
-            val = qCeil(val);
+            val = -qCeil(-val);
         else // otherwise round
-            val = qRound(val);
+            val = -qRound(-val);
         timeline.set(data.move, val);
     }
     data.inOvershoot = false;
@@ -1374,12 +1374,12 @@ void QQuickFlickablePrivate::replayDelayedPress()
 //XXX pixelAligned ignores the global position of the Flickable, i.e. assumes Flickable itself is pixel aligned.
 void QQuickFlickablePrivate::setViewportX(qreal x)
 {
-    contentItem->setX(pixelAligned ? qRound(x) : x);
+    contentItem->setX(pixelAligned ? -qRound(-x) : x);
 }
 
 void QQuickFlickablePrivate::setViewportY(qreal y)
 {
-    contentItem->setY(pixelAligned ? qRound(y) : y);
+    contentItem->setY(pixelAligned ? -qRound(-y) : y);
 }
 
 void QQuickFlickable::timerEvent(QTimerEvent *event)

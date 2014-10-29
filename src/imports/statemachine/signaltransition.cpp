@@ -126,8 +126,10 @@ void SignalTransition::invoke()
 
 /*!
     \qmltype QAbstractTransition
-    \inqmlmodule QtStateMachine 1.0
-    \ingroup qmlstatemachine
+    \inqmlmodule QtQml.StateMachine
+    \omit
+    \ingroup statemachine-qmltypes
+    \endomit
     \since 5.4
 
     \brief The QAbstractTransition type is the base type of transitions between QAbstractState objects.
@@ -184,9 +186,11 @@ void SignalTransition::invoke()
 
 /*!
     \qmltype QSignalTransition
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QAbstractTransition
-    \ingroup qmlstatemachine
+    \omit
+    \ingroup statemachine-qmltypes
+    \endomit
     \since 5.4
 
     \brief The QSignalTransition type provides a transition based on a Qt signal.
@@ -212,9 +216,9 @@ void SignalTransition::invoke()
 
 /*!
     \qmltype SignalTransition
-    \inqmlmodule QtStateMachine 1.0
+    \inqmlmodule QtQml.StateMachine
     \inherits QSignalTransition
-    \ingroup qmlstatemachine
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief The SignalTransition type provides a transition based on a Qt signal.

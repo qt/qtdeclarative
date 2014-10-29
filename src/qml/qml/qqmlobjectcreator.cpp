@@ -180,6 +180,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context->urlString = compiledData->fileName();
     context->imports = compiledData->importCache;
     context->imports->addref();
+    context->typeCompilationUnit = compiledData->compilationUnit;
     context->setParent(parentContext);
 
     if (!sharedState->rootContext) {
@@ -753,7 +754,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
     // ### resolve this at compile time
     if (property && property->propType == qMetaTypeId<QQmlScriptString>()) {
         QQmlScriptString ss(binding->valueAsScriptString(qmlUnit), context->asQQmlContext(), _scopeObject);
-        ss.d.data()->bindingId = binding->value.compiledScriptIndex;
+        ss.d.data()->bindingId = binding->type == QV4::CompiledData::Binding::Type_Script ? binding->value.compiledScriptIndex : QQmlBinding::Invalid;
         ss.d.data()->lineNumber = binding->location.line;
         ss.d.data()->columnNumber = binding->location.column;
         ss.d.data()->isStringLiteral = binding->type == QV4::CompiledData::Binding::Type_String;

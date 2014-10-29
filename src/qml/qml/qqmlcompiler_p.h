@@ -123,7 +123,7 @@ public:
     QVector<QQmlPropertyCache *> propertyCaches;
     QList<QQmlScriptData *> scripts;
 
-    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;

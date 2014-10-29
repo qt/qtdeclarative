@@ -490,7 +490,6 @@ void QQuickTextPrivate::updateSize()
         else
             extra->doc->setTextWidth(extra->doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
 
-        widthExceeded = extra->doc->textWidth() < extra->doc->idealWidth();
         QSizeF dsize = extra->doc->size();
         layedOutTextRect = QRectF(QPointF(0,0), dsize);
         size = QSizeF(extra->doc->idealWidth(),dsize.height());

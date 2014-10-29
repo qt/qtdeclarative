@@ -90,6 +90,7 @@ private slots:
     void pathview2();
     void pathview3();
     void initialCurrentIndex();
+    void initialCurrentItem();
     void insertModel_data();
     void insertModel();
     void removeModel_data();
@@ -235,6 +236,27 @@ void tst_QQuickPathView::items()
     offset.setX(pathview->highlightItem()->width()/2);
     offset.setY(pathview->highlightItem()->height()/2);
     QCOMPARE(pathview->highlightItem()->position() + offset, start);
+}
+
+void tst_QQuickPathView::initialCurrentItem()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    QaimModel model;
+    model.addItem("Jules", "12345");
+    model.addItem("Vicent", "2345");
+    model.addItem("Marvin", "54321");
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    window->setSource(testFileUrl("pathview4.qml"));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
+    QVERIFY(pathview != 0);
+    QVERIFY(pathview->currentIndex() != -1);
+    QVERIFY(!window->rootObject()->property("currentItemIsNull").toBool());
 }
 
 void tst_QQuickPathView::pathview2()

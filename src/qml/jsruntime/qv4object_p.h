@@ -114,8 +114,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     Members &memberData() { return d()->memberData; }
     const Members &memberData() const { return d()->memberData; }
-    const ArrayData *arrayData() const { return d()->arrayData; }
-    ArrayData *arrayData() { return d()->arrayData; }
+    ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData = a; }
 
     Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData().data() + index); }
@@ -222,12 +221,12 @@ public:
     }
 
     inline void arrayReserve(uint n) {
-        ArrayData::realloc(this, ArrayData::Simple, 0, n, false);
+        ArrayData::realloc(this, ArrayData::Simple, n, false);
     }
 
     void arrayCreate() {
         if (!arrayData())
-            ArrayData::realloc(this, ArrayData::Simple, 0, 0, false);
+            ArrayData::realloc(this, ArrayData::Simple, 0, false);
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif

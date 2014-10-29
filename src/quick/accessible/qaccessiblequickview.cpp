@@ -50,19 +50,16 @@ QAccessibleQuickWindow::QAccessibleQuickWindow(QQuickWindow *object)
 {
 }
 
-QQuickItem *QAccessibleQuickWindow::rootItem() const
+QList<QQuickItem *> QAccessibleQuickWindow::rootItems() const
 {
-    if (QQuickItem *ci = window()->contentItem()) {
-        const QList<QQuickItem *> &childItems = ci->childItems();
-        if (!childItems.isEmpty())
-            return childItems.first();
-    }
-    return 0;
+    if (QQuickItem *ci = window()->contentItem())
+        return accessibleUnignoredChildren(ci);
+    return QList<QQuickItem *>();
 }
 
 int QAccessibleQuickWindow::childCount() const
 {
-    return rootItem() ? 1 : 0;
+    return rootItems().count();
 }
 
 QAccessibleInterface *QAccessibleQuickWindow::parent() const
@@ -73,8 +70,9 @@ QAccessibleInterface *QAccessibleQuickWindow::parent() const
 
 QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 {
-    if (index == 0)
-        return QAccessible::queryAccessibleInterface(rootItem());
+    const QList<QQuickItem*> &kids = rootItems();
+    if (index >= 0 && index < kids.count())
+        return QAccessible::queryAccessibleInterface(kids.at(index));
     return 0;
 }
 
@@ -110,68 +108,34 @@ QString QAccessibleQuickWindow::text(QAccessible::Text text) const
     return window()->title();
 }
 
-
-/*!
-  \internal
-
-  Can also return \a item itself
-  */
-static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
-{
-    if (!item->isVisible() || !item->isEnabled())
-        return 0;
-
-    if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
-        if (!itemScreenRect(item).contains(x, y))
-            return 0;
-    }
-
-    QAccessibleInterface *accessibleInterface = QAccessible::queryAccessibleInterface(item);
-    // this item has no Accessible attached property
-    if (!accessibleInterface)
-        return 0;
-
-    if (accessibleInterface->childCount() == 0) {
-        return (itemScreenRect(item).contains(x, y)) ? item : 0;
-    }
-
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int i = children.count() - 1; i >= 0; --i) {
-        QQuickItem *child = children.at(i);
-        if (QQuickItem *childChild = childAt_helper(child, x, y))
-            return childChild;
-    }
-
-    QRect screenRect = itemScreenRect(item);
-
-    if (screenRect.contains(x, y))
-        return item;
-
-    return 0;
-}
-
 QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const
 {
     Q_ASSERT(window());
-    QQuickItem *root = rootItem();
-    if (root) {
-        if (QQuickItem *item = childAt_helper(root, x, y))
-            return QAccessible::queryAccessibleInterface(item);
-        return QAccessible::queryAccessibleInterface(root);
+    for (int i = childCount() - 1; i >= 0; --i) {
+        QAccessibleInterface *childIface = child(i);
+        if (childIface && !childIface->state().invisible) {
+            if (QAccessibleInterface *iface = childIface->childAt(x, y))
+                return iface;
+            if (childIface->rect().contains(x, y))
+                return childIface;
+        }
     }
     return 0;
 }
 
 int QAccessibleQuickWindow::indexOfChild(const QAccessibleInterface *iface) const
 {
+    int i = -1;
     if (iface) {
-        QQuickItem *declarativeRoot = rootItem();
-        if (declarativeRoot == iface->object())
-            return 0;
+        const QList<QQuickItem *> &roots = rootItems();
+        i = roots.count() - 1;
+        while (i >= 0) {
+            if (iface->object() == roots.at(i))
+                break;
+            --i;
+        }
     }
-    return -1;
+    return i;
 }
 
 QT_END_NAMESPACE

@@ -41,6 +41,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextMetrics
     \instantiates QQuickTextMetrics
     \inqmlmodule QtQuick
+    \since 5.4
     \ingroup qtquick-text-utility
     \brief Provides metrics for a given font and text
 

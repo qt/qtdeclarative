@@ -62,7 +62,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
     setVTable(staticVTable());
     function = f;
     if (function)
-        function->compilationUnit->ref();
+        function->compilationUnit->addref();
     needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
@@ -163,14 +163,9 @@ struct CompilationUnitHolder : public Object
             : Object::Data(engine)
             , unit(unit)
         {
-            unit->ref();
             setVTable(staticVTable());
         }
-        ~Data()
-        {
-            unit->deref();
-        }
-        QV4::CompiledData::CompilationUnit *unit;
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
     };
     V4_OBJECT(Object)
 
@@ -264,7 +259,7 @@ void Script::parse()
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
             isel->setUseFastLookups(false);
-        QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
         ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
@@ -313,7 +308,7 @@ Function *Script::function()
     return vmFunction;
 }
 
-QV4::CompiledData::CompilationUnit *Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
 {
     using namespace QQmlJS;
     using namespace QQmlJS::AST;

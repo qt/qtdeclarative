@@ -452,7 +452,7 @@ QQuickItem *QQuickKeyNavigationAttached::left() const
 void QQuickKeyNavigationAttached::setLeft(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->left == i)
+    if (d->leftSet && d->left == i)
         return;
     d->left = i;
     d->leftSet = true;
@@ -474,7 +474,7 @@ QQuickItem *QQuickKeyNavigationAttached::right() const
 void QQuickKeyNavigationAttached::setRight(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->right == i)
+    if (d->rightSet && d->right == i)
         return;
     d->right = i;
     d->rightSet = true;
@@ -496,7 +496,7 @@ QQuickItem *QQuickKeyNavigationAttached::up() const
 void QQuickKeyNavigationAttached::setUp(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->up == i)
+    if (d->upSet && d->up == i)
         return;
     d->up = i;
     d->upSet = true;
@@ -518,7 +518,7 @@ QQuickItem *QQuickKeyNavigationAttached::down() const
 void QQuickKeyNavigationAttached::setDown(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->down == i)
+    if (d->downSet && d->down == i)
         return;
     d->down = i;
     d->downSet = true;
@@ -540,7 +540,7 @@ QQuickItem *QQuickKeyNavigationAttached::tab() const
 void QQuickKeyNavigationAttached::setTab(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->tab == i)
+    if (d->tabSet && d->tab == i)
         return;
     d->tab = i;
     d->tabSet = true;
@@ -562,7 +562,7 @@ QQuickItem *QQuickKeyNavigationAttached::backtab() const
 void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
 {
     Q_D(QQuickKeyNavigationAttached);
-    if (d->backtab == i)
+    if (d->backtabSet && d->backtab == i)
         return;
     d->backtab = i;
     d->backtabSet = true;
@@ -1607,17 +1607,9 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
     }
 }
 
-void QQuickItemPrivate::setAccessibleFlagAndListener()
+void QQuickItemPrivate::setAccessible()
 {
-    Q_Q(QQuickItem);
-    QQuickItem *item = q;
-    while (item) {
-        if (item->d_func()->isAccessible)
-            break; // already set - grandparents should have the flag set as well.
-
-        item->d_func()->isAccessible = true;
-        item = item->d_func()->parentItem;
-    }
+    isAccessible = true;
 }
 
 /*!
@@ -1756,6 +1748,19 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     operation. First rasterize the surface, then draw the
     surface. Using scene graph API directly is always significantly
     faster.
+
+    \section1 Behavior Animations
+
+    If your Item uses the \l Behavior type to define animations for property
+    changes, you should always use either QObject::setProperty(),
+    QQmlProperty(), or QMetaProperty::write() when you need to modify those
+    properties from C++. This ensures that the QML engine knows about the
+    property change. Otherwise, the engine won't be able to carry out your
+    requested animation. For example, if you call \l setPosition() directly,
+    any behavior that reacts to changes in the x or y properties will not take
+    effect, as you are bypassing Qt's meta-object system. Note that these
+    functions incur a slight performance penalty. For more details, see
+    \l {Accessing Members of a QML Object Type from C++}.
 
     \sa QQuickWindow, QQuickPaintedItem
 */
@@ -2584,9 +2589,6 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
     d->parentNotifier.notify();
-    if (d->isAccessible && d->parentItem) {
-        d->parentItem->d_func()->setAccessibleFlagAndListener();
-    }
 
     emit parentChanged(d->parentItem);
     if (isVisible() && d->parentItem)

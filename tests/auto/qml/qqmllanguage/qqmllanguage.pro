@@ -16,3 +16,6 @@ QT += core-private gui-private  qml-private network testlib
 
 include (../../shared/util.pri)
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+
+OTHER_FILES += \
+    data/readonlyObjectProperty.qml

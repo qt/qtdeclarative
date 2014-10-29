@@ -66,7 +66,7 @@ public:
     virtual void run(int functionIndex);
 
 protected:
-    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
+    virtual QQmlRefPointer<CompiledData::CompilationUnit> backendCompileStep();
 
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);

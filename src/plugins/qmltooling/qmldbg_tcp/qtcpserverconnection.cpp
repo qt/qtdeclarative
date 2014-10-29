@@ -113,8 +113,13 @@ void QTcpServerConnection::disconnect()
 {
     Q_D(QTcpServerConnection);
 
-    while (d->socket && d->socket->bytesToWrite() > 0)
-        d->socket->waitForBytesWritten();
+    while (d->socket && d->socket->bytesToWrite() > 0) {
+        if (!d->socket->waitForBytesWritten()) {
+            qWarning("QML Debugger: Failed to send remaining %lld bytes on disconnect.",
+                     d->socket->bytesToWrite());
+            break;
+        }
+    }
 
     // protocol might still be processing packages at this point
     d->protocol->deleteLater();

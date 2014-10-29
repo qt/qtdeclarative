@@ -161,6 +161,7 @@ public:
         , renderer(0)
         , renderPending(true)
         , invalidatePending(false)
+        , devicePixelRatio(1)
     {
         qsgnode_set_description(this, QStringLiteral("fbonode"));
     }
@@ -202,14 +203,25 @@ public Q_SLOTS:
         }
     }
 
+    void handleScreenChange()
+    {
+        if (window->effectiveDevicePixelRatio() != devicePixelRatio) {
+            renderer->invalidateFramebufferObject();
+            quickFbo->update();
+        }
+    }
+
 public:
     QQuickWindow *window;
     QOpenGLFramebufferObject *fbo;
     QOpenGLFramebufferObject *msDisplayFbo;
     QQuickFramebufferObject::Renderer *renderer;
+    QQuickFramebufferObject *quickFbo;
 
     bool renderPending;
     bool invalidatePending;
+
+    int devicePixelRatio;
 };
 
 /*!
@@ -239,7 +251,9 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
         n->window = window();
         n->renderer = createRenderer();
         n->renderer->data = n;
+        n->quickFbo = this;
         connect(window(), SIGNAL(beforeRendering()), n, SLOT(render()));
+        connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
     }
 
     n->renderer->synchronize(this);
@@ -247,6 +261,9 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     QSize minFboSize = d->sceneGraphContext()->minimumFBOSize();
     QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
                          qMax<int>(minFboSize.height(), height()));
+
+    n->devicePixelRatio = window()->effectiveDevicePixelRatio();
+    desiredFboSize *= n->devicePixelRatio;
 
     if (n->fbo && (d->followsItemSize || n->invalidatePending)) {
         if (n->fbo->size() != desiredFboSize) {
@@ -414,6 +431,12 @@ void QQuickFramebufferObject::Renderer::invalidateFramebufferObject()
  * \note Some hardware has issues with small FBO sizes. \a size takes that into account, so
  * be cautious when overriding the size with a fixed size. A minimal size of 64x64 should
  * always work.
+ *
+ * \note \a size takes the device pixel ratio into account, meaning that it is
+ * already multiplied by the correct scale factor. When moving the window
+ * containing the QQuickFramebufferObject item to a screen with different
+ * settings, the FBO is automatically recreated and this function is invoked
+ * with the correct size.
  */
 QOpenGLFramebufferObject *QQuickFramebufferObject::Renderer::createFramebufferObject(const QSize &size)
 {

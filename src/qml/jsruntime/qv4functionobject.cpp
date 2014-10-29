@@ -108,7 +108,7 @@ FunctionObject::Data::Data(InternalClass *ic)
 FunctionObject::Data::~Data()
 {
     if (function)
-        function->compilationUnit->deref();
+        function->compilationUnit->release();
 }
 
 void FunctionObject::init(String *n, bool createProto)
@@ -226,7 +226,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
     QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
-    QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
     return FunctionObject::createScriptFunction(v4->rootContext, vmf)->asReturnedValue();
@@ -298,9 +298,11 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            int alen = qMin(len, arr->arrayData()->length());
-            if (alen)
-                memcpy(callData->args, arr->arrayData()->arrayData(), alen*sizeof(Value));
+            uint alen = arr->arrayData() ? arr->arrayData()->length() : 0;
+            if (alen > len)
+                alen = len;
+            for (uint i = 0; i < alen; ++i)
+                callData->args[i] = static_cast<SimpleArrayData *>(arr->arrayData())->data(i);
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }
@@ -416,7 +418,7 @@ SimpleScriptFunction::Data::Data(ExecutionContext *scope, Function *function, bo
     setVTable(staticVTable());
 
     this->function = function;
-    function->compilationUnit->ref();
+    function->compilationUnit->addref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 

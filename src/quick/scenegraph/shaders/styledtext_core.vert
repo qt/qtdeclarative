@@ -9,10 +9,11 @@ out vec2 shiftedSampleCoord;
 uniform mat4 matrix;
 uniform vec2 textureScale;
 uniform vec2 shift;
+uniform float dpr;
 
 void main()
 {
      sampleCoord = tCoord * textureScale;
      shiftedSampleCoord = (tCoord - shift) * textureScale;
-     gl_Position = matrix * round(vCoord);
+     gl_Position = matrix * round(vCoord * dpr) / dpr;
 }

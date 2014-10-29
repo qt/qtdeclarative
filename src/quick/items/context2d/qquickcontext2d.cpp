@@ -2801,28 +2801,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(QV4::CallContex
 }
 
 /*!
-  \qmltype TextMetrics
-    \inqmlmodule QtQuick
-    \since 5.0
-    \ingroup qtquick-canvas
-    \brief Provides a Context2D TextMetrics interface
+  \qmlmethod object QtQuick::Context2D::measureText(text)
 
-    The TextMetrics object can be created by QtQuick::Context2D::measureText method.
-    See \l{http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TextMetrics} for more details.
-
-    \sa Context2D::measureText
-    \sa width
-  */
-
-/*!
-  \qmlproperty int QtQuick::TextMetrics::width
-  Holds the advance width of the text that was passed to the QtQuick::Context2D::measureText() method.
-  This property is read only.
-  */
-
-/*!
-  \qmlmethod variant QtQuick::Context2D::measureText(text)
-  Returns a TextMetrics object with the metrics of the given text in the current font.
+  Returns an object with a \c width property, whose value is equivalent to
+  calling \l {QFontMetrics::width()} with the given \a text in the current font.
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallContext *ctx)
 {

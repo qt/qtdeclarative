@@ -130,16 +130,16 @@ Module {
         exports: ["QtQml.StateMachine/SignalTransition 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "signal"; type: "QJSValue" }
-        Property { name: "guard"; type: "bool" }
+        Property { name: "guard"; type: "QQmlScriptString" }
         Signal { name: "invokeYourself" }
         Signal { name: "qmlSignalChanged" }
         Method { name: "invoke" }
     }
     Component {
-        name: "StateBase"
+        name: "State"
         defaultProperty: "children"
         prototype: "QState"
-        exports: ["QtQml.StateMachine/StateBase 1.0"]
+        exports: ["QtQml.StateMachine/State 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "children"; type: "QObject"; isList: true; isReadonly: true }
     }

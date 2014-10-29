@@ -352,17 +352,16 @@ private:
         QUrl source;
         QQuickPixmap pix;
     };
-    ImageData *m_image;
-    ImageData *m_colorTable;
-    ImageData *m_sizeTable;
-    ImageData *m_opacityTable;
+    QScopedPointer<ImageData> m_image;
+    QScopedPointer<ImageData> m_colorTable;
+    QScopedPointer<ImageData> m_sizeTable;
+    QScopedPointer<ImageData> m_opacityTable;
     bool loadingSomething();
 
 
     QColor m_color;
     qreal m_color_variation;
 
-    QSGGeometryNode *m_rootNode;
     QHash<int, QSGGeometryNode *> m_nodes;
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
     QList<QPair<int, int> > m_startsIdx;//Same data, optimized for alternate retrieval

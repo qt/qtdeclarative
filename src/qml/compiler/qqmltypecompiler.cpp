@@ -232,8 +232,6 @@ bool QQmlTypeCompiler::compile()
     document->javaScriptCompilationUnit->data = qmlUnit;
 
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
-    if (compiledData->compilationUnit)
-        compiledData->compilationUnit->ref();
 
     // Add to type registry of composites
     if (compiledData->isCompositeType())
@@ -2336,8 +2334,6 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
 
         return true;
     }
-    if (isComponent(binding->value.objectIndex))
-        return true;
 
     if (QQmlMetaType::isInterface(property->propType)) {
         // Can only check at instantiation time if the created sub-object successfully casts to the
@@ -2355,6 +2351,8 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
                 return false;
             }
         }
+        return true;
+    } else if (isComponent(binding->value.objectIndex)) {
         return true;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return true;

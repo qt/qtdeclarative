@@ -61,60 +61,60 @@ Item {
 
 
             // topleft
-            compare(image.pixel(40, 40), white);
-            compare(image.pixel(60, 40), white);
-            compare(image.pixel(40, 60), white);
-            compare(image.pixel(60, 60), blue);
+            verify(image.pixel(40, 40) == white);
+            verify(image.pixel(60, 40) == white);
+            verify(image.pixel(40, 60) == white);
+            verify(image.pixel(60, 60) == blue);
 
             // top
-            compare(image.pixel(140, 40), white);
-            compare(image.pixel(160, 40), white);
-            compare(image.pixel(140, 60), blue);
-            compare(image.pixel(160, 60), blue);
+            verify(image.pixel(140, 40) == white);
+            verify(image.pixel(160, 40) == white);
+            verify(image.pixel(140, 60) == blue);
+            verify(image.pixel(160, 60) == blue);
 
             // topright
-            compare(image.pixel(240, 40), white);
-            compare(image.pixel(260, 40), white);
-            compare(image.pixel(240, 60), blue);
-            compare(image.pixel(260, 60), white);
+            verify(image.pixel(240, 40) == white);
+            verify(image.pixel(260, 40) == white);
+            verify(image.pixel(240, 60) == blue);
+            verify(image.pixel(260, 60) == white);
 
 
             // left
-            compare(image.pixel(40, 140), white);
-            compare(image.pixel(60, 140), blue);
-            compare(image.pixel(40, 160), white);
-            compare(image.pixel(60, 160), blue);
+            verify(image.pixel(40, 140) == white);
+            verify(image.pixel(60, 140) == blue);
+            verify(image.pixel(40, 160) == white);
+            verify(image.pixel(60, 160) == blue);
 
             // center
-            compare(image.pixel(140, 140), blue);
-            compare(image.pixel(160, 140), blue);
-            compare(image.pixel(140, 160), blue);
-            compare(image.pixel(160, 160), blue);
+            verify(image.pixel(140, 140) == blue);
+            verify(image.pixel(160, 140) == blue);
+            verify(image.pixel(140, 160) == blue);
+            verify(image.pixel(160, 160) == blue);
 
             // right
-            compare(image.pixel(240, 140), blue);
-            compare(image.pixel(260, 140), white);
-            compare(image.pixel(240, 160), blue);
-            compare(image.pixel(260, 160), white);
+            verify(image.pixel(240, 140) == blue);
+            verify(image.pixel(260, 140) == white);
+            verify(image.pixel(240, 160) == blue);
+            verify(image.pixel(260, 160) == white);
 
 
             // bottomleft
-            compare(image.pixel(40, 240), white);
-            compare(image.pixel(60, 240), blue);
-            compare(image.pixel(40, 260), white);
-            compare(image.pixel(60, 260), white);
+            verify(image.pixel(40, 240) == white);
+            verify(image.pixel(60, 240) == blue);
+            verify(image.pixel(40, 260) == white);
+            verify(image.pixel(60, 260) == white);
 
             // bottom
-            compare(image.pixel(140, 240), blue);
-            compare(image.pixel(160, 240), blue);
-            compare(image.pixel(140, 260), white);
-            compare(image.pixel(160, 260), white);
+            verify(image.pixel(140, 240) == blue);
+            verify(image.pixel(160, 240) == blue);
+            verify(image.pixel(140, 260) == white);
+            verify(image.pixel(160, 260) == white);
 
             // bottomright
-            compare(image.pixel(240, 240), blue);
-            compare(image.pixel(260, 240), white);
-            compare(image.pixel(240, 260), white);
-            compare(image.pixel(260, 260), white);
+            verify(image.pixel(240, 240) == blue);
+            verify(image.pixel(260, 240) == white);
+            verify(image.pixel(240, 260) == white);
+            verify(image.pixel(260, 260) == white);
 
         }
     }

@@ -39,26 +39,26 @@
 ****************************************************************************/
 
 //! [document]
-import QtQml.StateMachine 1.0
 import QtQuick 2.0
+import QtQml.StateMachine 1.0 as DSM
 
 Rectangle {
     Button {
         anchors.fill: parent
         id: button
         text: "Finish state"
-        StateMachine {
+        DSM.StateMachine {
             id: stateMachine
             initialState: state
             running: true
-            StateBase {
+            DSM.State {
                 id: state
-                SignalTransition {
+                DSM.SignalTransition {
                     targetState: finalState
                     signal: button.clicked
                 }
             }
-            FinalState {
+            DSM.FinalState {
                 id: finalState
             }
             onFinished: Qt.quit()

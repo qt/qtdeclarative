@@ -1987,12 +1987,14 @@ void QQuickPathView::refill()
         }
     }
 
+    bool currentChanged = false;
     if (!currentVisible) {
         d->currentItemOffset = 1.0;
         if (d->currentItem) {
             d->updateItem(d->currentItem, 1.0);
         } else if (!waiting && d->currentIndex >= 0 && d->currentIndex < d->modelCount) {
             if ((d->currentItem = d->getItem(d->currentIndex, d->currentIndex))) {
+                currentChanged = true;
                 d->updateItem(d->currentItem, 1.0);
                 if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
@@ -2000,6 +2002,7 @@ void QQuickPathView::refill()
         }
     } else if (!waiting && !d->currentItem) {
         if ((d->currentItem = d->getItem(d->currentIndex, d->currentIndex))) {
+            currentChanged = true;
             d->currentItem->setFocus(true);
             if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                 att->setIsCurrentItem(true);
@@ -2019,6 +2022,8 @@ void QQuickPathView::refill()
         d->releaseItem(d->itemCache.takeLast());
 
     d->inRefill = false;
+    if (currentChanged)
+        emit currentItemChanged();
 }
 
 void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)

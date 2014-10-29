@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-import QtQml.StateMachine 1.0
 import QtTest 1.0
+import QtQml.StateMachine 1.0
 
 TestCase {
     id: testCase
     StateMachine {
         id: machine
         initialState: startState
-        StateBase {
+        State {
             id: startState
             SignalTransition {
                 id: signalTrans
