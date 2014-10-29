@@ -607,9 +607,13 @@ QVariant QQuickPathView::model() const
     return d->modelVariant;
 }
 
-void QQuickPathView::setModel(const QVariant &model)
+void QQuickPathView::setModel(const QVariant &m)
 {
     Q_D(QQuickPathView);
+    QVariant model = m;
+    if (model.userType() == qMetaTypeId<QJSValue>())
+        model = model.value<QJSValue>().toVariant();
+
     if (d->modelVariant == model)
         return;
 

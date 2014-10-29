@@ -273,9 +273,13 @@ QVariant QQuickItemView::model() const
     return d->modelVariant;
 }
 
-void QQuickItemView::setModel(const QVariant &model)
+void QQuickItemView::setModel(const QVariant &m)
 {
     Q_D(QQuickItemView);
+    QVariant model = m;
+    if (model.userType() == qMetaTypeId<QJSValue>())
+        model = model.value<QJSValue>().toVariant();
+
     if (d->modelVariant == model)
         return;
     if (d->model) {

@@ -204,6 +204,8 @@ private slots:
     void displayMargin();
     void negativeDisplayMargin();
 
+    void jsArrayChange();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -6428,6 +6430,33 @@ void tst_QQuickGridView::negativeDisplayMargin()
     QTRY_COMPARE(delegateVisible(item), true);
 
     delete window;
+}
+
+void tst_QQuickGridView::jsArrayChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.4; GridView {}", QUrl());
+
+    QScopedPointer<QQuickGridView> view(qobject_cast<QQuickGridView *>(component.create()));
+    QVERIFY(!view.isNull());
+
+    QSignalSpy spy(view.data(), SIGNAL(modelChanged()));
+    QVERIFY(spy.isValid());
+
+    QJSValue array1 = engine.newArray(3);
+    QJSValue array2 = engine.newArray(3);
+    for (int i = 0; i < 3; ++i) {
+        array1.setProperty(i, i);
+        array2.setProperty(i, i);
+    }
+
+    view->setModel(QVariant::fromValue(array1));
+    QCOMPARE(spy.count(), 1);
+
+    // no change
+    view->setModel(QVariant::fromValue(array2));
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickGridView)
