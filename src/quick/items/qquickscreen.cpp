@@ -37,6 +37,7 @@
 #include "qquickitem_p.h"
 #include "qquickwindow.h"
 
+#include <QGuiApplication>
 #include <QScreen>
 
 QT_BEGIN_NAMESPACE
@@ -218,6 +219,9 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
         if (window)
             windowChanged(window);
     }
+
+    if (!m_screen)
+        screenChanged(QGuiApplication::primaryScreen());
 }
 
 QString QQuickScreenAttached::name() const

@@ -33,6 +33,7 @@
 
 #include <qtest.h>
 #include <QDebug>
+#include <QQmlEngine>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
@@ -43,6 +44,7 @@ class tst_qquickscreen : public QQmlDataTest
     Q_OBJECT
 private slots:
     void basicProperties();
+    void screenOnStartup();
 };
 
 void tst_qquickscreen::basicProperties()
@@ -56,6 +58,27 @@ void tst_qquickscreen::basicProperties()
     QVERIFY(root);
 
     QScreen* screen = view.screen();
+    QVERIFY(screen);
+
+    QCOMPARE(screen->size().width(), root->property("w").toInt());
+    QCOMPARE(screen->size().height(), root->property("h").toInt());
+    QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
+    QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
+    QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
+    QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
+    QVERIFY(screen->devicePixelRatio() >= 1.0);
+}
+
+void tst_qquickscreen::screenOnStartup()
+{
+    // We expect QQuickScreen to fall back to the primary screen
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("screen.qml"));
+
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(root);
+
+    QScreen* screen = QGuiApplication::primaryScreen();
     QVERIFY(screen);
 
     QCOMPARE(screen->size().width(), root->property("w").toInt());
