@@ -143,6 +143,8 @@ public:
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
+    int effectiveDevicePixelRatio() const;
+
 Q_SIGNALS:
     void frameSwapped();
     Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);

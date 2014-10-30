@@ -137,6 +137,9 @@ public:
     QQuickParticleData(QQuickParticleSystem* sys);
     ~QQuickParticleData();
 
+    QQuickParticleData(const QQuickParticleData &other);
+    QQuickParticleData &operator=(const QQuickParticleData &other);
+
     //Convenience functions for working backwards, because parameters are from the start of particle life
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
 

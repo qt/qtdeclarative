@@ -40,9 +40,8 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QLocale locale;
     QTranslator qtTranslator;
-    qtTranslator.load(locale, QLatin1String("qml"), QLatin1String("_"), QLatin1String(":/i18n"));
+    qtTranslator.load("qml_" + QLocale::system().name(), ":/i18n/");
     app.installTranslator(&qtTranslator);
 
     QQmlApplicationEngine engine;

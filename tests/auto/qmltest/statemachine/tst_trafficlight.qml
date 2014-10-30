@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-import QtQml.StateMachine 1.0
 import QtTest 1.0
+import QtQml.StateMachine 1.0
 
 TestCase {
     StateMachine {
@@ -42,10 +42,10 @@ TestCase {
             id: finalState
         }
 
-        StateBase {
+        State {
             id: red
             initialState: justRed
-            StateBase {
+            State {
                 id: justRed
                 SignalTransition {
                     id: e1
@@ -56,7 +56,7 @@ TestCase {
                     targetState: finalState
                 }
             }
-            StateBase {
+            State {
                 id: waitingForGreen
                 TimeoutTransition {
                     id: e2
@@ -65,7 +65,7 @@ TestCase {
                 }
             }
         }
-        StateBase {
+        State {
             id: yellowred
             TimeoutTransition {
                 id: e3
@@ -73,7 +73,7 @@ TestCase {
                 timeout: 10
             }
         }
-        StateBase {
+        State {
             id: green
             TimeoutTransition {
                 id: e4
@@ -81,7 +81,7 @@ TestCase {
                 timeout: 50
             }
         }
-        StateBase {
+        State {
             id: yellow
             TimeoutTransition {
                 id: e5

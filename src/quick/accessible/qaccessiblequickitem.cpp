@@ -39,7 +39,6 @@
 #include "QtQuick/private/qquicktext_p.h"
 #include "QtQuick/private/qquickaccessibleattached_p.h"
 #include "QtQuick/qquicktextdocument.h"
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -82,19 +81,46 @@ bool QAccessibleQuickItem::clipsChildren() const
     return static_cast<QQuickItem *>(item())->clip();
 }
 
+QAccessibleInterface *QAccessibleQuickItem::childAt(int x, int y) const
+{
+    if (item()->clip()) {
+        if (!rect().contains(x, y))
+            return 0;
+    }
+
+    const QList<QQuickItem*> kids = accessibleUnignoredChildren(item(), true);
+    for (int i = kids.count() - 1; i >= 0; --i) {
+        QAccessibleInterface *childIface = QAccessible::queryAccessibleInterface(kids.at(i));
+        if (QAccessibleInterface *childChild = childIface->childAt(x, y))
+            return childChild;
+        if (childIface && !childIface->state().invisible) {
+            if (childIface->rect().contains(x, y))
+                return childIface;
+        }
+    }
+
+    return 0;
+}
+
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
     QQuickItem *parent = item()->parentItem();
+    QQuickWindow *window = item()->window();
+    QQuickItem *ci = window ? window->contentItem() : 0;
+    while (parent && !QQuickItemPrivate::get(parent)->isAccessible && parent != ci)
+        parent = parent->parentItem();
+
     if (parent) {
-        QQuickWindow *window = item()->window();
-        // Jump out to the scene widget if the parent is the root item.
-        // There are two root items, QQuickWindow::rootItem and
-        // QQuickView::declarativeRoot. The former is the true root item,
-        // but is not a part of the accessibility tree. Check if we hit
-        // it here and return an interface for the scene instead.
-        if (window && (parent == window->contentItem())) {
+        if (parent == ci) {
+            // Jump out to the scene widget if the parent is the root item.
+            // There are two root items, QQuickWindow::rootItem and
+            // QQuickView::declarativeRoot. The former is the true root item,
+            // but is not a part of the accessibility tree. Check if we hit
+            // it here and return an interface for the scene instead.
             return QAccessible::queryAccessibleInterface(window);
         } else {
+            while (parent && !parent->d_func()->isAccessible)
+                parent = parent->parentItem();
             return QAccessible::queryAccessibleInterface(parent);
         }
     }
@@ -121,25 +147,29 @@ int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
     return kids.indexOf(static_cast<QQuickItem*>(iface->object()));
 }
 
+static void unignoredChildren(QQuickItem *item, QList<QQuickItem *> *items, bool paintOrder)
+{
+    QList<QQuickItem*> childItems = paintOrder ? QQuickItemPrivate::get(item)->paintOrderChildItems()
+                                               : item->childItems();
+    Q_FOREACH (QQuickItem *child, childItems) {
+        if (QQuickItemPrivate::get(child)->isAccessible) {
+            items->append(child);
+        } else {
+            unignoredChildren(child, items, paintOrder);
+        }
+    }
+}
+
+QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder)
+{
+    QList<QQuickItem *> items;
+    unignoredChildren(item, &items, paintOrder);
+    return items;
+}
+
 QList<QQuickItem *> QAccessibleQuickItem::childItems() const
 {
-    if (    role() == QAccessible::Button ||
-            role() == QAccessible::CheckBox ||
-            role() == QAccessible::RadioButton ||
-            role() == QAccessible::SpinBox ||
-            role() == QAccessible::EditableText ||
-            role() == QAccessible::Slider ||
-            role() == QAccessible::PageTab ||
-            role() == QAccessible::ProgressBar)
-        return QList<QQuickItem *>();
-
-    QList<QQuickItem *> items;
-    Q_FOREACH (QQuickItem *child, item()->childItems()) {
-        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(child);
-        if (itemPrivate->isAccessible)
-            items.append(child);
-    }
-    return items;
+    return accessibleUnignoredChildren(item());
 }
 
 QAccessible::State QAccessibleQuickItem::state() const
@@ -186,16 +216,24 @@ QStringList QAccessibleQuickItem::actionNames() const
     QStringList actions = QQmlAccessible::actionNames();
     if (state().focusable)
         actions.append(QAccessibleActionInterface::setFocusAction());
+
+    // ### The following can lead to duplicate action names. We'll fix that when we kill QQmlAccessible
+    if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
+        attached->availableActions(&actions);
     return actions;
 }
 
 void QAccessibleQuickItem::doAction(const QString &actionName)
 {
+    bool accepted = false;
     if (actionName == QAccessibleActionInterface::setFocusAction()) {
         item()->forceActiveFocus();
-    } else {
-        QQmlAccessible::doAction(actionName);
+        accepted = true;
     }
+    if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
+        accepted = attached->doAction(actionName);
+    if (!accepted)
+        QQmlAccessible::doAction(actionName);
 }
 
 QStringList QAccessibleQuickItem::keyBindingsForAction(const QString &actionName) const

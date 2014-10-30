@@ -398,13 +398,13 @@ methods, as shown below right:
 \li
 \code
  int main(int argc, char *argv[]) {
-     QCoreApplication app(argc, argv);
+     QGuiApplication app(argc, argv);
 
-     QQmlEngine engine;
-     Message msg;
-     engine.rootContext()->setContextProperty("msg", &msg);
-     QQmlComponent component(&engine, QUrl::fromLocalFile("MyItem.qml"));
-     component.create();
+     MessageBoard msgBoard;
+     QQuickView view;
+     view.engine()->rootContext()->setContextProperty("msgBoard", &msgBoard);
+     view.setSource(QUrl::fromLocalFile("MyItem.qml"));
+     view.show();
 
      return app.exec();
  }

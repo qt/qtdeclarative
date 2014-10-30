@@ -1934,6 +1934,9 @@ void tst_qquickpositioners::test_mirroring()
 
         QScopedPointer<QQuickView> windowB(createView(testFile(qmlFile)));
         QQuickItem *rootB = qobject_cast<QQuickItem*>(windowB->rootObject());
+        // On OS X the windows might get positioned exactly on top of each other
+        // that means no repaint for the bottom window will ever occur
+        windowB->setPosition(windowB->position() + QPoint(10, 10));
 
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 

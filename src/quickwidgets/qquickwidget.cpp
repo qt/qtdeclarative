@@ -216,8 +216,6 @@ void QQuickWidgetPrivate::render(bool needsSync)
         QRect rect(QPoint(0, 0), fbo->size());
         QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
     }
-
-    context->doneCurrent();
 }
 
 void QQuickWidgetPrivate::renderSceneGraph()
@@ -735,7 +733,7 @@ void QQuickWidget::createFramebufferObject()
     format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     format.setSamples(samples);
 
-    QSize fboSize = size() * window()->devicePixelRatio();
+    const QSize fboSize = size() * devicePixelRatio();
 
     // Could be a simple hide - show, in which case the previous fbo is just fine.
     if (!d->fbo || d->fbo->size() != fboSize) {

@@ -60,7 +60,7 @@ public:
 
 private:
     QQuickWindow *window() const { return static_cast<QQuickWindow*>(object()); }
-    QQuickItem *rootItem() const;
+    QList<QQuickItem *> rootItems() const;
 };
 
 #endif // QT_NO_ACCESSIBILITY

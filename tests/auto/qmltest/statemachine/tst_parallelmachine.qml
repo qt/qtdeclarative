@@ -31,30 +31,30 @@
 **
 ****************************************************************************/
 
-import QtQml.StateMachine 1.0
 import QtTest 1.0
+import QtQml.StateMachine 1.0
 
 TestCase {
     StateMachine {
         id: myStateMachine
-        childMode: StateBase.ParallelStates
-        StateBase {
+        childMode: State.ParallelStates
+        State {
             id: childState1
-            childMode: StateBase.ParallelStates
-            StateBase {
+            childMode: State.ParallelStates
+            State {
                 id: childState11
             }
-            StateBase {
+            State {
                 id: childState12
             }
         }
-        StateBase {
+        State {
             id: childState2
             initialState: childState21
-            StateBase {
+            State {
                 id: childState21
             }
-            StateBase {
+            State {
                 id: childState22
             }
         }

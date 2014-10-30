@@ -64,7 +64,6 @@ public:
     void *interface_cast(QAccessible::InterfaceType t);
 
     virtual QRect viewRect() const = 0;
-    QAccessibleInterface *childAt(int, int) const;
     QAccessible::State state() const;
 
     QStringList actionNames() const;
@@ -72,7 +71,6 @@ public:
     QStringList keyBindingsForAction(const QString &actionName) const;
 
 protected:
-    virtual bool clipsChildren() const = 0;
     // For subclasses, use instantiateObject factory method outside the class.
     QQmlAccessible(QObject *object);
 };

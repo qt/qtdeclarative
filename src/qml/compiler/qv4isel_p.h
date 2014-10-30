@@ -57,7 +57,7 @@ public:
     EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     virtual ~EvalInstructionSelection() = 0;
 
-    QV4::CompiledData::CompilationUnit *compile(bool generateUnitData = true);
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile(bool generateUnitData = true);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
     void setUseTypeInference(bool onoff) { useTypeInference = onoff; }
@@ -74,7 +74,7 @@ public:
 
 protected:
     virtual void run(int functionIndex) = 0;
-    virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
+    virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> backendCompileStep() = 0;
 
     bool useFastLookups;
     bool useTypeInference;

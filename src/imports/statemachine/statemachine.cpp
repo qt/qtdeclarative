@@ -79,9 +79,9 @@ QQmlListProperty<QObject> StateMachine::children()
 
 /*!
     \qmltype StateMachine
-    \inqmlmodule QtStateMachine 1.0
-    \inherits StateBase
-    \ingroup qmlstatemachine
+    \inqmlmodule QtQml.StateMachine
+    \inherits State
+    \ingroup statemachine-qmltypes
     \since 5.4
 
     \brief Provides a hierarchical finite state machine.
@@ -97,7 +97,7 @@ QQmlListProperty<QObject> StateMachine::children()
     algorithm. The framework's \l{The Declarative State Machine Framework}{overview}
     gives several state graphs and the code to build them.
 
-    Before the machine can be started, the \l{StateBase::initialState}{initialState}
+    Before the machine can be started, the \l{State::initialState}{initialState}
     must be set. The initial state is the state that the
     machine enters when started.  You can then set running property to true
     or start() the state machine.  The started signal is emitted when the
@@ -116,7 +116,7 @@ QQmlListProperty<QObject> StateMachine::children()
     \snippet qml/statemachine/simplestatemachine.qml document
 
     If an error is encountered, the machine will look for an
-    \l{StateBase::errorState}{errorState}, and if one is available, it will
+    \l{State::errorState}{errorState}, and if one is available, it will
     enter this state.  After the error state is entered, the type of the error
     can be retrieved with error().  The execution of the state graph will not
     stop when the error state is entered.  If no error state applies to the
@@ -125,7 +125,7 @@ QQmlListProperty<QObject> StateMachine::children()
 
     \clearfloat
 
-    \sa QAbstractState, StateBase, SignalTransition, TimeoutTransition, HistoryState {The Declarative State Machine Framework}
+    \sa QAbstractState, State, SignalTransition, TimeoutTransition, HistoryState {The Declarative State Machine Framework}
 */
 
 /*!
@@ -181,18 +181,18 @@ QQmlListProperty<QObject> StateMachine::children()
     the main application event loop started with QCoreApplication::exec() or
     QApplication::exec().
 
-    \sa started, StateBase::finished, stop(), StateBase::initialState, running
+    \sa started, State::finished, stop(), State::initialState, running
 */
 
 /*!
     \qmlsignal StateMachine::started()
 
     This signal is emitted when the state machine has entered its initial state
-    (StateBase::initialState).
+    (State::initialState).
 
     The corresponding handler is \c onStarted.
 
-    \sa running, start(), StateBase::finished
+    \sa running, start(), State::finished
 */
 
 /*!
@@ -211,5 +211,5 @@ QQmlListProperty<QObject> StateMachine::children()
 
     The corresponding handler is \c onStopped.
 
-    \sa running, stop(), StateBase::finished
+    \sa running, stop(), State::finished
 */

@@ -416,6 +416,35 @@ void tst_qquicktext::wrap()
         delete textObject;
     }
 
+    // Check that increasing width from idealWidth will cause a relayout
+    for (int i = 0; i < richText.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nText { wrapMode: Text.WordWrap; textFormat: Text.RichText; width: 30; text: \"" + richText.at(i) + "\" }";
+        QQmlComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QCOMPARE(textObject->width(), 30.);
+        QVERIFY(textObject->height() > textHeight);
+
+        QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->extra.isAllocated());
+
+        QTextDocument *doc = textPrivate->extra->doc;
+        QVERIFY(doc != 0);
+        textObject->setWidth(doc->idealWidth());
+        QCOMPARE(textObject->width(), doc->idealWidth());
+        QVERIFY(textObject->height() > textHeight);
+
+        qreal oldHeight = textObject->height();
+        textObject->setWidth(100);
+        QVERIFY(textObject->height() < oldHeight);
+
+        delete textObject;
+    }
+
     // richtext again with a fixed height
     for (int i = 0; i < richText.size(); i++)
     {

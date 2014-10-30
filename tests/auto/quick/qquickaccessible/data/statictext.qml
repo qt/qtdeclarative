@@ -3,6 +3,8 @@ import QtQuick 2.0
 Item {
     width: 400
     height: 400
+    Accessible.name: "root"
+    Accessible.role: Accessible.Client
 
     Text {
         x: 100

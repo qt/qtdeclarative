@@ -206,7 +206,7 @@ void QQuickImageBase::load()
             options |= QQuickPixmap::Cache;
         d->pix.clear(this);
 
-        const qreal targetDevicePixelRatio = (window() ? window()->devicePixelRatio() : qApp->devicePixelRatio());
+        const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
         d->devicePixelRatio = 1.0;
 
         QUrl loadUrl = d->url;

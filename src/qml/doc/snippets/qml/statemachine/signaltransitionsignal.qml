@@ -39,21 +39,21 @@
 ****************************************************************************/
 
 //! [document]
-import QtQml.StateMachine 1.0
 import QtQuick 2.0
+import QtQml.StateMachine 1.0 as DSM
 
 Rectangle {
     Button {
         anchors.fill: parent
         id: button
-        StateMachine {
-            StateBase {
-                SignalTransition {
+        DSM.StateMachine {
+            DSM.State {
+                DSM.SignalTransition {
                     targetState: finalState
                     signal: button.clicked
                 }
             }
-            FinalState {
+            DSM.FinalState {
                 id: finalState
             }
         }

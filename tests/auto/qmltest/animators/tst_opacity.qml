@@ -42,10 +42,9 @@ Item {
     TestCase {
         id: testCase
         name: "animators-opacity"
-        when: !animation.running
+        when: box.opacity == 0.5
         function test_endresult() {
             compare(box.opacityChangeCounter, 1);
-            compare(box.opacity, 0.5);
             var image = grabImage(root);
             compare(image.red(50, 50), 255);
             verify(image.green(50, 50) > 0);

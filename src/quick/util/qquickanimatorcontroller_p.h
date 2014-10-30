@@ -43,12 +43,14 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAnimatorControllerGuiThreadEntity;
+
 class QQuickAnimatorController : public QObject, public QAnimationJobChangeListener
 {
     Q_OBJECT
 
 public:
-    QQuickAnimatorController();
+    QQuickAnimatorController(QQuickWindow *window);
     ~QQuickAnimatorController();
 
     void advance();
@@ -68,6 +70,9 @@ public:
     void lock() { m_mutex.lock(); }
     void unlock() { m_mutex.unlock(); }
 
+
+    void proxyWasDestroyed(QQuickAnimatorProxyJob *proxy);
+    void stopProxyJobs();
     void windowNodesDestroyed();
 
 public Q_SLOTS:
@@ -85,10 +90,24 @@ public:
     QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> m_transforms;
     QSet<QQuickItem *> m_deletedSinceLastFrame;
     QQuickWindow *m_window;
+    QQuickAnimatorControllerGuiThreadEntity *m_guiEntity;
+    QSet<QQuickAnimatorProxyJob *> m_proxiesToStop;
     QMutex m_mutex;
 
     bool m_nodesAreInvalid;
 };
+
+class QQuickAnimatorControllerGuiThreadEntity : public QObject
+{
+    Q_OBJECT
+public:
+    QPointer<QQuickAnimatorController> controller;
+
+public Q_SLOTS:
+    void frameSwapped();
+};
+
+
 
 QT_END_NAMESPACE
 

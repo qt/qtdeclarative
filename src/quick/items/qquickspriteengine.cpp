@@ -385,6 +385,10 @@ QImage QQuickSpriteEngine::assembledImage()
     m_imageStateCount = 0;
     int maxSize = 0;
 
+    //If there is no current OpenGL Context
+    if (!QOpenGLContext::currentContext())
+        return QImage();
+
     QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
 #ifdef SPRITE_IMAGE_DEBUG
     qDebug() << "MAX TEXTURE SIZE" << maxSize;

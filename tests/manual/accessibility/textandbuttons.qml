@@ -50,9 +50,8 @@ Rectangle {
 
         Accessible.role : Accessible.Button
 
-        function accessibleAction(action) {
-            if (action == Qt.Press)
-                buttonAction()
+        Accessible.onPressAction: {
+            buttonAction()
         }
 
         function buttonAction() {

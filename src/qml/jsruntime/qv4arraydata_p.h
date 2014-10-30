@@ -90,7 +90,15 @@ struct Q_QML_EXPORT ArrayData : public Managed
         uint alloc;
         Type type;
         PropertyAttributes *attrs;
-        Value *arrayData;
+        union {
+            uint len;
+            uint freeList;
+        };
+        union {
+            uint offset;
+            SparseArray *sparse;
+        };
+        Value arrayData[1];
     };
     V4_MANAGED(Managed)
 
@@ -101,16 +109,13 @@ struct Q_QML_EXPORT ArrayData : public Managed
     void setType(Type t) { d()->type = t; }
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
-    Value *arrayData() const { return d()->arrayData; }
-    Value *&arrayData() { return d()->arrayData; }
-    void setArrayData(Value *v) { d()->arrayData = v; }
+    const Value *arrayData() const { return &d()->arrayData[0]; }
+    Value *arrayData() { return &d()->arrayData[0]; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
     bool isSparse() const { return this && type() == Sparse; }
 
     uint length() const {
-        if (!this)
-            return 0;
         return vtable()->length(this);
     }
 
@@ -123,23 +128,19 @@ struct Q_QML_EXPORT ArrayData : public Managed
     }
 
     bool isEmpty(uint i) const {
-        if (!this)
-            return true;
         return (vtable()->get(this, i) == Primitive::emptyValue().asReturnedValue());
     }
 
     ReturnedValue get(uint i) const {
-        if (!this)
-            return Primitive::emptyValue().asReturnedValue();
         return vtable()->get(this, i);
     }
-    inline Property *getProperty(uint index) const;
+    inline Property *getProperty(uint index);
 
     static void ensureAttributes(Object *o);
-    static void realloc(Object *o, Type newType, uint offset, uint alloc, bool enforceAttributes);
+    static void realloc(Object *o, Type newType, uint alloc, bool enforceAttributes);
 
     static void sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint dataLen);
-    static uint append(Object *obj, const ArrayObject *otherObj, uint n);
+    static uint append(Object *obj, ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
 };
 
@@ -150,17 +151,25 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
         Data(ExecutionEngine *engine)
             : ArrayData::Data(engine->simpleArrayDataClass)
         {}
-        uint len;
-        uint offset;
     };
     V4_ARRAYDATA
 
+    uint mappedIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
+    Value data(uint index) const { return d()->arrayData[mappedIndex(index)]; }
+    Value &data(uint index) { return d()->arrayData[mappedIndex(index)]; }
+
+    Property *getProperty(uint index) {
+        if (index >= len())
+            return 0;
+        index = mappedIndex(index);
+        if (d()->arrayData[index].isEmpty())
+            return 0;
+        return reinterpret_cast<Property *>(d()->arrayData + index);
+    }
+
     uint &len() { return d()->len; }
     uint len() const { return d()->len; }
-    uint &offset() { return d()->offset; }
-    uint offset() const { return d()->offset; }
 
-    static void getHeadRoom(Object *o);
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
     static void markObjects(Managed *d, ExecutionEngine *e);
@@ -183,9 +192,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         Data(ExecutionEngine *engine)
             : ArrayData::Data(engine->emptyClass)
         { setVTable(staticVTable()); }
-
-        uint freeList;
-        SparseArray *sparse;
     };
     V4_ARRAYDATA
 
@@ -196,6 +202,20 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 
     static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
+
+    Property *getProperty(uint index) {
+        SparseArrayNode *n = sparse()->findNode(index);
+        if (!n)
+            return 0;
+        return reinterpret_cast<Property *>(arrayData() + n->value);
+    }
+
+    uint mappedIndex(uint index) const {
+        SparseArrayNode *n = sparse()->findNode(index);
+        if (!n)
+            return UINT_MAX;
+        return n->value;
+    }
 
     static void destroy(Managed *d);
     static void markObjects(Managed *d, ExecutionEngine *e);
@@ -214,20 +234,14 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 };
 
 
-inline Property *ArrayData::getProperty(uint index) const
+inline Property *ArrayData::getProperty(uint index)
 {
-    if (!this)
-        return 0;
     if (type() != Sparse) {
-        const SimpleArrayData *that = static_cast<const SimpleArrayData *>(this);
-        if (index >= that->len() || arrayData()[index].isEmpty())
-            return 0;
-        return reinterpret_cast<Property *>(arrayData() + index);
+        SimpleArrayData *that = static_cast<SimpleArrayData *>(this);
+        return that->getProperty(index);
     } else {
-        SparseArrayNode *n = static_cast<const SparseArrayData *>(this)->sparse()->findNode(index);
-        if (!n)
-            return 0;
-        return reinterpret_cast<Property *>(arrayData() + n->value);
+        SparseArrayData *that = static_cast<SparseArrayData *>(this);
+        return that->getProperty(index);
     }
 }
 

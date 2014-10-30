@@ -39,38 +39,38 @@
 ****************************************************************************/
 
 //! [document]
-import QtQml.StateMachine 1.0
 import QtQuick 2.0
+import QtQml.StateMachine 1.0 as DSM
 
 Rectangle {
     Button {
         anchors.fill: parent
         id: button
         text: "Press me"
-        StateMachine {
+        DSM.StateMachine {
             id: stateMachine
             initialState: parentState
             running: true
-            StateBase {
+            DSM.State {
                 id: parentState
                 initialState: child2
                 onEntered: console.log("parentState entered")
                 onExited: console.log("parentState exited")
-                StateBase {
+                DSM.State {
                     id: child1
                     onEntered: console.log("child1 entered")
                     onExited: console.log("child1 exited")
                 }
-                StateBase {
+                DSM.State {
                     id: child2
                     onEntered: console.log("child2 entered")
                     onExited: console.log("child2 exited")
                 }
-                HistoryState {
+                DSM.HistoryState {
                     id: historyState
                     defaultState: child1
                 }
-                SignalTransition {
+                DSM.SignalTransition {
                     targetState: historyState
 
                     // Clicking the button will cause the state machine to enter the child state

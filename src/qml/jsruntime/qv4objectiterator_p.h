@@ -50,6 +50,7 @@ struct ExecutionContext;
 struct Property;
 struct String;
 struct InternalClass;
+struct ForEachIteratorObject;
 
 struct Q_QML_EXPORT ObjectIterator
 {
@@ -68,10 +69,14 @@ struct Q_QML_EXPORT ObjectIterator
 
     ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint flags);
     ObjectIterator(Scope &scope, Object *o, uint flags);
+    void init(Object *o);
     void next(String *&name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(ValueRef value);
     ReturnedValue nextPropertyNameAsString(ValueRef value);
     ReturnedValue nextPropertyNameAsString();
+private:
+    friend struct ForEachIteratorObject;
+    ObjectIterator(Value *scratch1, Value *scratch2, uint flags); // Constructor that requires calling init()
 };
 
 struct ForEachIteratorObject: Object {

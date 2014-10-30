@@ -78,7 +78,7 @@ void ArgumentsObject::fullyCreate()
 
     uint numAccessors = qMin((int)context()->d()->function->formalParameterCount(), context()->d()->realArgumentCount);
     uint argCount = qMin(context()->d()->realArgumentCount, context()->d()->callData->argc);
-    ArrayData::realloc(this, ArrayData::Sparse, 0, argCount, true);
+    ArrayData::realloc(this, ArrayData::Sparse, argCount, true);
     context()->d()->engine->requireArgumentsAccessors(numAccessors);
     mappedArguments().ensureIndex(engine(), numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
@@ -97,7 +97,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     fullyCreate();
 
     Scope scope(ctx);
-    Property *pd = arrayData()->getProperty(index);
+    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
     Property map;
     PropertyAttributes mapAttrs;
     bool isMapped = false;
@@ -106,6 +106,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         isMapped = arrayData()->attributes(index).isAccessor() && pd->getter() == context()->d()->engine->argumentsAccessors[index].getter();
 
     if (isMapped) {
+        Q_ASSERT(arrayData());
         mapAttrs = arrayData()->attributes(index);
         map.copy(*pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
@@ -119,6 +120,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     ctx->d()->strictMode = strict;
 
     if (isMapped && attrs.isData()) {
+        Q_ASSERT(arrayData());
         ScopedCallData callData(scope, 1);
         callData->thisObject = this->asReturnedValue();
         callData->args[0] = desc.value;

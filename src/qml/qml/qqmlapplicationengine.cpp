@@ -65,8 +65,7 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 #ifndef QT_NO_TRANSLATION
     QTranslator* qtTranslator = new QTranslator;
-    QLocale locale;
-    if (qtTranslator->load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslator->load(QLatin1String("qt_") + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         QCoreApplication::installTranslator(qtTranslator);
     translators << qtTranslator;
 #endif
@@ -83,8 +82,7 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
     QFileInfo fi(rootFile.toLocalFile());
 
     QTranslator *translator = new QTranslator;
-    QLocale locale;
-    if (translator->load(locale, QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"))) {
+    if (translator->load(QLatin1String("qml_") + QLocale::system().name(), fi.path() + QLatin1String("/i18n"))) {
         QCoreApplication::installTranslator(translator);
         translators << translator;
     } else {

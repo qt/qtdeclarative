@@ -40,6 +40,8 @@ Rectangle {
     width: 640
     height: 480
     color: "white"
+    Accessible.name: "root"
+    Accessible.role: Accessible.Client
     Rectangle {
         id: header
         color: "#c0c0c0"
@@ -165,4 +167,45 @@ Rectangle {
         }
     }
 
+    TextRect {
+        x: 0
+        y: 300
+        text: "rect3"
+        width: 200
+        height: 100
+        color: "#ffa0a0"
+        TextRect {
+            x: 10
+            y: 10
+            text: "rect30"
+            width: 80
+            height: 80
+            color: "#ffa0a0"
+            TextRect {
+                x: 30
+                y: 50
+                text: "rect300"
+                width: 80
+                height: 80
+                color: "#ffa0a0"
+            }
+        }
+        TextRect {
+            x: 100
+            y: 10
+            text: "rect31"
+            width: 80
+            height: 80
+            color: "#ffa0a0"
+            TextRect {
+                x: -50
+                y: 60
+                z: -3
+                text: "rect310"
+                width: 80
+                height: 80
+                color: "#ffa0a0"
+            }
+        }
+    }
 }

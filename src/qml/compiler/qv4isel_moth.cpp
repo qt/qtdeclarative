@@ -446,13 +446,15 @@ void InstructionSelection::run(int functionIndex)
     delete[] codeStart;
 }
 
-QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backendCompileStep()
 {
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
     foreach (IR::Function *irFunction, irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
-    return compilationUnit.take();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
+    result.take(compilationUnit.take());
+    return result;
 }
 
 void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)

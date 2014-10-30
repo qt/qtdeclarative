@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-import QtQml.StateMachine 1.0
 import QtTest 1.0
+import QtQml.StateMachine 1.0
 
 TestCase {
 
@@ -40,7 +40,7 @@ TestCase {
         id: stateMachine
         initialState: historyState1
 
-        StateBase {
+        State {
             id: state1
             SignalTransition {
                 id: st1
@@ -48,14 +48,14 @@ TestCase {
             }
         }
 
-        StateBase {
+        State {
             id: state2
             initialState: historyState2
             HistoryState {
                 id: historyState2
                 defaultState: state21
             }
-            StateBase {
+            State {
                 id: state21
             }
         }

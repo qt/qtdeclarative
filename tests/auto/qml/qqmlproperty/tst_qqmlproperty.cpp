@@ -1157,6 +1157,17 @@ void tst_qqmlproperty::read()
         QVERIFY(v.canConvert(QMetaType::QObjectStar));
         QVERIFY(qvariant_cast<QObject *>(v) == o.qObject());
     }
+    {
+        QQmlEngine engine;
+        PropertyObject o;
+        QQmlProperty p(&o, "qObject", &engine);
+        QCOMPARE(p.propertyTypeCategory(), QQmlProperty::Object);
+
+        QCOMPARE(p.propertyType(), qMetaTypeId<MyQObject*>());
+        QVariant v = p.read();
+        QVERIFY(v.canConvert(QMetaType::QObjectStar));
+        QVERIFY(qvariant_cast<QObject *>(v) == o.qObject());
+    }
 
     // Object property
     {
@@ -1419,6 +1430,23 @@ void tst_qqmlproperty::write()
     {
         PropertyObject o;
         QQmlProperty p(&o, QString("qObject"));
+        QCOMPARE(o.qObject(), (QObject*)0);
+        QObject *newObject = new MyQObject(this);
+        QCOMPARE(p.write(QVariant::fromValue(newObject)), true);
+        QCOMPARE(o.qObject(), newObject);
+        QVariant data = p.read();
+        QCOMPARE(data.value<QObject*>(), newObject);
+        QCOMPARE(data.value<MyQObject*>(), newObject);
+        // Incompatible types can not be written.
+        QCOMPARE(p.write(QVariant::fromValue(new MyQmlObject(this))), false);
+        QVariant newData = p.read();
+        QCOMPARE(newData.value<QObject*>(), newObject);
+        QCOMPARE(newData.value<MyQObject*>(), newObject);
+    }
+    {
+        QQmlEngine engine;
+        PropertyObject o;
+        QQmlProperty p(&o, QString("qObject"), &engine);
         QCOMPARE(o.qObject(), (QObject*)0);
         QObject *newObject = new MyQObject(this);
         QCOMPARE(p.write(QVariant::fromValue(newObject)), true);

@@ -72,8 +72,6 @@ public:
     void markJobManagedByController() { m_jobManagedByController = true; }
 
 protected:
-    bool event(QEvent *);
-
     void updateCurrentTime(int);
     void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 

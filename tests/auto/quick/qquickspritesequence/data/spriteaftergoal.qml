@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Ford Motor Company
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,39 +31,30 @@
 **
 ****************************************************************************/
 
-#ifndef STATE_H
-#define STATE_H
+// QTBUG-40595
+import QtQuick 2.0
 
-#include "childrenprivate.h"
+Rectangle {
+    width: 320
+    height: 320
 
-#include <QtCore/QState>
-#include <QtQml/QQmlParserStatus>
-#include <QtQml/QQmlListProperty>
+    SpriteSequence
+    {
+        anchors.centerIn: parent
 
-QT_BEGIN_NAMESPACE
+        width: 300
+        height: 300
 
-class StateBase : public QState, public QQmlParserStatus
-{
-    Q_OBJECT
-    Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged)
-    Q_CLASSINFO("DefaultProperty", "children")
+        goalSprite: "foobar"
 
-public:
-    explicit StateBase(QState *parent = 0);
+        sprites:
+        [
+            Sprite
+            {
+                name: "foobar"
+                source: "squarefacesprite.png"
+            }
+        ]
+    }
+}
 
-    void classBegin() {}
-    void componentComplete();
-
-    QQmlListProperty<QObject> children();
-
-Q_SIGNALS:
-    void childrenChanged();
-
-private:
-    ChildrenPrivate<StateBase> m_children;
-};
-
-QT_END_NAMESPACE
-
-#endif

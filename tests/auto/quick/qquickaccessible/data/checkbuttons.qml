@@ -3,6 +3,7 @@ import QtQuick 2.0
 Item {
     width: 400
     height: 400
+    Accessible.name: "root"
 
     // button, not checkable
     Rectangle {

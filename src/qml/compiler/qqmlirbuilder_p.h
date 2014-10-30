@@ -317,7 +317,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     QV4::Compiler::JSUnitGenerator jsGenerator;
     quint32 unitFlags;
 
-    QV4::CompiledData::CompilationUnit *javaScriptCompilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
     QHash<int, QStringList> extraSignalParameters;
 
     QV4::CompiledData::TypeReferenceMap typeReferences;
