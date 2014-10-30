@@ -460,12 +460,18 @@ void Updater::visitGeometryNode(Node *n)
 
         if (e->root) {
             BatchRootInfo *info = renderer->batchRootInfo(e->root);
-            info->availableOrders--;
-            if (info->availableOrders < 0) {
-                renderer->m_rebuild |= Renderer::BuildRenderLists;
-            } else {
-                renderer->m_rebuild |= Renderer::BuildRenderListsForTaggedRoots;
-                renderer->m_taggedRoots << e->root;
+            while (info != 0) {
+                info->availableOrders--;
+                if (info->availableOrders < 0) {
+                    renderer->m_rebuild |= Renderer::BuildRenderLists;
+                } else {
+                    renderer->m_rebuild |= Renderer::BuildRenderListsForTaggedRoots;
+                    renderer->m_taggedRoots << e->root;
+                }
+                if (info->parentRoot != 0)
+                    info = renderer->batchRootInfo(info->parentRoot);
+                else
+                    info = 0;
             }
         } else {
             renderer->m_rebuild |= Renderer::FullRebuild;
