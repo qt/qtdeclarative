@@ -97,7 +97,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
 {
     Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject(), QV4::Scoped<QmlContextWrapper>::Cast);
 
     return !!c ? c->getContext() : 0;
 }
@@ -128,11 +128,10 @@ void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
 
 ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
+    Q_ASSERT(m->as<QmlContextWrapper>());
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
-    QmlContextWrapper *resource = m->as<QmlContextWrapper>();
-    if (!resource)
-        return v4->currentContext()->throwTypeError();
+    QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
 
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
@@ -273,15 +272,12 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
 
 void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
 {
+    Q_ASSERT(m->as<QmlContextWrapper>());
     ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
     if (scope.hasException())
         return;
-    QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
-    if (!wrapper) {
-        v4->currentContext()->throwTypeError();
-        return;
-    }
+    QV4::Scoped<QmlContextWrapper> wrapper(scope, static_cast<QmlContextWrapper *>(m));
 
     PropertyAttributes attrs;
     Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
@@ -372,7 +368,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         return;
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject(), QV4::Scoped<QmlContextWrapper>::Cast);
     QQmlContextData *qmlContext = contextWrapper->getContext();
 
     const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();

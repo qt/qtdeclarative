@@ -571,21 +571,21 @@ bool SparseArrayData::putArray(Object *o, uint index, Value *values, uint n)
 
 uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
 {
-    Q_ASSERT(!obj->arrayData()->hasAttributes());
+    Q_ASSERT(!obj->arrayData() || !obj->arrayData()->hasAttributes());
 
     if (!n)
         return obj->getLength();
 
     ArrayData *other = otherObj->arrayData();
 
-    if (other->isSparse())
+    if (other && other->isSparse())
         obj->initSparseArray();
     else
         obj->arrayCreate();
 
     uint oldSize = obj->getLength();
 
-    if (other->isSparse()) {
+    if (other && other->isSparse()) {
         SparseArrayData *os = static_cast<SparseArrayData *>(other);
         if (otherObj->hasAccessorProperty() && other->hasAttributes()) {
             Scope scope(obj->engine());

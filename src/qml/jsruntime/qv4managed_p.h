@@ -269,9 +269,7 @@ public:
 
     template <typename T>
     T *as() {
-        // ### FIXME:
-        if (!this || !internalClass())
-            return 0;
+        Q_ASSERT(internalClass());
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
@@ -285,9 +283,7 @@ public:
     }
     template <typename T>
     const T *as() const {
-        // ### FIXME:
-        if (!this)
-            return 0;
+        Q_ASSERT(internalClass());
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
@@ -362,23 +358,23 @@ inline Managed *value_cast(const Value &v) {
 template<typename T>
 inline T *managed_cast(Managed *m)
 {
-    return m->as<T>();
+    return m ? m->as<T>() : 0;
 }
 
 template<>
 inline String *managed_cast(Managed *m)
 {
-    return m->asString();
+    return m ? m->asString() : 0;
 }
 template<>
 inline Object *managed_cast(Managed *m)
 {
-    return m->asObject();
+    return m ? m->asObject() : 0;
 }
 template<>
 inline FunctionObject *managed_cast(Managed *m)
 {
-    return m->asFunctionObject();
+    return m ? m->asFunctionObject() : 0;
 }
 
 }

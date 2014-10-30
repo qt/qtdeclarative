@@ -180,7 +180,8 @@ QVariant QmlValueTypeWrapper::toVariant() const
 
 void QmlValueTypeWrapper::destroy(Managed *that)
 {
-    QmlValueTypeWrapper *w = that->as<QmlValueTypeWrapper>();
+    Q_ASSERT(that->as<QmlValueTypeWrapper>());
+    QmlValueTypeWrapper *w = static_cast<QmlValueTypeWrapper *>(that);
     if (w->d()->objectType == Reference)
         static_cast<QmlValueTypeReference *>(w)->d()->~Data();
     else
@@ -189,8 +190,8 @@ void QmlValueTypeWrapper::destroy(Managed *that)
 
 bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
 {
-    QV4::QmlValueTypeWrapper *lv = m->as<QmlValueTypeWrapper>();
-    Q_ASSERT(lv);
+    Q_ASSERT(m && m->as<QmlValueTypeWrapper>() && other);
+    QV4::QmlValueTypeWrapper *lv = static_cast<QmlValueTypeWrapper *>(m);
 
     if (QV4::VariantObject *rv = other->as<VariantObject>())
         return lv->isEqual(rv->d()->data);
@@ -203,12 +204,8 @@ bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
 
 PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
 {
-    const QmlValueTypeWrapper *r = m->as<const QmlValueTypeWrapper>();
-    QV4::ExecutionEngine *v4 = m->engine();
-    if (!r) {
-        v4->currentContext()->throwTypeError();
-        return PropertyAttributes();
-    }
+    Q_ASSERT(m->as<const QmlValueTypeWrapper>());
+    const QmlValueTypeWrapper *r = static_cast<const QmlValueTypeWrapper *>(m);
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
@@ -267,10 +264,9 @@ ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
 
 ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
-    QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
+    Q_ASSERT(m->as<QmlValueTypeWrapper>());
+    QmlValueTypeWrapper *r = static_cast<QmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = m->engine();
-    if (!r)
-        return v4->currentContext()->throwTypeError();
 
     // Note: readReferenceValue() can change the reference->type.
     if (r->d()->objectType == QmlValueTypeWrapper::Reference) {
@@ -329,16 +325,13 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
 
 void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
+    Q_ASSERT(m->as<QmlValueTypeWrapper>());
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
     if (scope.hasException())
         return;
 
-    Scoped<QmlValueTypeWrapper> r(scope, m->as<QmlValueTypeWrapper>());
-    if (!r) {
-        v4->currentContext()->throwTypeError();
-        return;
-    }
+    Scoped<QmlValueTypeWrapper> r(scope, static_cast<QmlValueTypeWrapper *>(m));
 
     QByteArray propName = name->toQString().toUtf8();
     if (r->d()->objectType == QmlValueTypeWrapper::Reference) {

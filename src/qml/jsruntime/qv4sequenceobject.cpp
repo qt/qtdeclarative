@@ -331,6 +331,8 @@ public:
 
     bool containerIsEqualTo(Managed *other)
     {
+        if (!other)
+            return false;
         QQmlSequence<Container> *otherSequence = other->as<QQmlSequence<Container> >();
         if (!otherSequence)
             return false;
