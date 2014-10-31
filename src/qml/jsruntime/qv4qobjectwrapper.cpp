@@ -70,14 +70,9 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-# if (__GNUC__ * 100 + __GNUC_MINOR__) >= 405
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
-#  pragma GCC diagnostic ignored "-Wstrict-aliasing"
-# endif
-#endif
-
+QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
 
 using namespace QV4;
 

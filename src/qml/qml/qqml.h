@@ -502,17 +502,13 @@ namespace QtQml {
 }
 #endif
 
-#if defined(Q_CC_CLANG) && !defined(Q_CC_INTEL)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wheader-hygiene"
-#endif
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
 
 // This is necessary to allow for QtQuick1 and QtQuick2 scenes in a single application.
 using namespace QtQml;
 
-#if defined(Q_CC_CLANG) && !defined(Q_CC_INTEL)
-#pragma clang diagnostic pop
-#endif
+QT_WARNING_POP
 
 //The C++ version of protected namespaces in qmldir
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);

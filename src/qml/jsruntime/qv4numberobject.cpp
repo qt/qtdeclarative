@@ -75,14 +75,10 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
 
-#ifdef __INTEL_COMPILER
-# pragma warning( push )
-# pragma warning(disable: 239)
-#endif
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_INTEL(239)
     ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
-#ifdef __INTEL_COMPILER
-# pragma warning( pop )
-#endif
+QT_WARNING_POP
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
