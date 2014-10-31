@@ -104,6 +104,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
         if (requested <= d->alloc() && newType == d->type() && hasAttrs == enforceAttributes)
             return;
+        if (alloc < d->alloc())
+            alloc = d->alloc();
 
         if (d->type() < Sparse) {
             offset = static_cast<SimpleArrayData *>(d)->d()->offset;
