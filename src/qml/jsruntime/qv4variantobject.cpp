@@ -92,8 +92,8 @@ void VariantObject::destroy(Managed *that)
 
 bool VariantObject::isEqualTo(Managed *m, Managed *other)
 {
-    QV4::VariantObject *lv = m->as<QV4::VariantObject>();
-    assert(lv);
+    Q_ASSERT(m->as<QV4::VariantObject>());
+    QV4::VariantObject *lv = static_cast<QV4::VariantObject *>(m);
 
     if (QV4::VariantObject *rv = other->as<QV4::VariantObject>())
         return lv->d()->data == rv->d()->data;

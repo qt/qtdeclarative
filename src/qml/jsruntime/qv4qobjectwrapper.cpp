@@ -650,9 +650,13 @@ void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const
 
 bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
 {
-    QV4::QObjectWrapper *qobjectWrapper = a->as<QV4::QObjectWrapper>();
-    if (QV4::QmlTypeWrapper *qmlTypeWrapper = b->asObject()->as<QV4::QmlTypeWrapper>())
-        return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
+    Q_ASSERT(a->as<QV4::QObjectWrapper>());
+    QV4::QObjectWrapper *qobjectWrapper = static_cast<QV4::QObjectWrapper *>(a);
+    QV4::Object *o = b->asObject();
+    if (o) {
+        if (QV4::QmlTypeWrapper *qmlTypeWrapper = o->as<QV4::QmlTypeWrapper>())
+            return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
+    }
 
     return false;
 }

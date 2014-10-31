@@ -313,7 +313,7 @@ QQuickCanvasItem::~QQuickCanvasItem()
 }
 
 /*!
-    \qmlproperty size QtQuick::Canvas::available
+    \qmlproperty bool QtQuick::Canvas::available
 
     Indicates when Canvas is able to provide a drawing context to operate on.
 */
@@ -790,18 +790,18 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
 }
 
 /*!
-    \qmlmethod object QtQuick::Canvas::getContext(string contextId, any... args)
+    \qmlmethod object QtQuick::Canvas::getContext(string contextId, ... args)
 
-    Returns a drawing context or null if no context available.
+    Returns a drawing context, or \c null if no context is available.
 
     The \a contextId parameter names the required context. The Canvas item
     will return a context that implements the required drawing mode. After the
-    first call to getContext any subsequent call to getContext with the same
+    first call to getContext, any subsequent call to getContext with the same
     contextId will return the same context object.
 
     If the context type is not supported or the canvas has previously been
-    requested to provide a different and incompatible context type, null will
-    be returned.
+    requested to provide a different and incompatible context type, \c null
+    will be returned.
 
     Canvas only supports a 2d context.
 */

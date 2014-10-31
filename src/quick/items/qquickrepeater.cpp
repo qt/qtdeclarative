@@ -183,9 +183,13 @@ QVariant QQuickRepeater::model() const
     return d->dataSource;
 }
 
-void QQuickRepeater::setModel(const QVariant &model)
+void QQuickRepeater::setModel(const QVariant &m)
 {
     Q_D(QQuickRepeater);
+    QVariant model = m;
+    if (model.userType() == qMetaTypeId<QJSValue>())
+        model = model.value<QJSValue>().toVariant();
+
     if (d->dataSource == model)
         return;
 

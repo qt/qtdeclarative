@@ -125,13 +125,12 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
 
 ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
+    Q_ASSERT(m->as<QmlTypeWrapper>());
+
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope,  m->as<QmlTypeWrapper>());
-    if (!w)
-        return v4->currentContext()->throwTypeError();
-
+    Scoped<QmlTypeWrapper> w(scope,  static_cast<QmlTypeWrapper *>(m));
 
     if (hasProperty)
         *hasProperty = true;
@@ -235,14 +234,11 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
 void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
-    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
+    Q_ASSERT(m->as<QmlTypeWrapper>());
+    QmlTypeWrapper *w = static_cast<QmlTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = m->engine();
     if (v4->hasException)
         return;
-    if (!w) {
-        v4->currentContext()->throwTypeError();
-        return;
-    }
 
     QV4::Scope scope(v4);
     QV8Engine *v8engine = v4->v8Engine;
@@ -290,8 +286,9 @@ void QmlTypeWrapper::destroy(Managed *that)
 
 bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
 {
-    QV4::QmlTypeWrapper *qmlTypeWrapperA = a->asObject()->as<QV4::QmlTypeWrapper>();
-    if (QV4::QmlTypeWrapper *qmlTypeWrapperB = b->asObject()->as<QV4::QmlTypeWrapper>())
+    Q_ASSERT(a->as<QV4::QmlTypeWrapper>());
+    QV4::QmlTypeWrapper *qmlTypeWrapperA = static_cast<QV4::QmlTypeWrapper *>(a);
+    if (QV4::QmlTypeWrapper *qmlTypeWrapperB = b->as<QV4::QmlTypeWrapper>())
         return qmlTypeWrapperA->toVariant() == qmlTypeWrapperB->toVariant();
     else if (QV4::QObjectWrapper *qobjectWrapper = b->as<QV4::QObjectWrapper>())
         return qmlTypeWrapperA->toVariant().value<QObject*>() == qobjectWrapper->object();

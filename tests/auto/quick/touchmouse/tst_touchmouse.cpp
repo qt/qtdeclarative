@@ -101,10 +101,13 @@ public:
         eventList.append(Event(event->type(), event->pos(), event->globalPos()));
         event->setAccepted(acceptMouse);
     }
+
+    void mouseUngrabEvent()
+    {
+        eventList.append(Event(QEvent::UngrabMouse, QPoint(0,0), QPoint(0,0)));
+    }
+
     bool event(QEvent *event) {
-        if (event->type() == QEvent::UngrabMouse) {
-            eventList.append(Event(event->type(), QPoint(0,0), QPoint(0,0)));
-        }
         return QQuickItem::event(event);
     }
 
@@ -155,6 +158,8 @@ private slots:
     void mouseOnFlickableOnPinch();
 
     void tapOnDismissiveTopMouseAreaClicksBottomOne();
+
+    void touchGrabCausesMouseUngrab();
 
 protected:
     bool eventFilter(QObject *, QEvent *event)
@@ -274,9 +279,10 @@ void tst_TouchMouse::simpleTouchEvent()
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 6);
+    QCOMPARE(eventItem1->eventList.size(), 7);
     QCOMPARE(eventItem1->eventList.at(4).type, QEvent::TouchEnd);
     QCOMPARE(eventItem1->eventList.at(5).type, QEvent::MouseButtonRelease);
+    QCOMPARE(eventItem1->eventList.at(6).type, QEvent::UngrabMouse);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
@@ -289,16 +295,17 @@ void tst_TouchMouse::simpleTouchEvent()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window, device).press(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
+    QCOMPARE(eventItem1->eventList.at(2).type, QEvent::UngrabMouse);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
@@ -529,9 +536,10 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE(eventItem1->eventList.size(), 5);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchEnd);
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseButtonRelease);
+    QCOMPARE(eventItem1->eventList.at(4).type, QEvent::UngrabMouse);
     eventItem1->eventList.clear();
 
     // touch button
@@ -739,18 +747,20 @@ void tst_TouchMouse::buttonOnTouch()
     QQuickTouchUtils::flush(window);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE(eventItem1->eventList.size(), 5);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchEnd);
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseButtonRelease);
+    QCOMPARE(eventItem1->eventList.at(4).type, QEvent::UngrabMouse);
     eventItem1->eventList.clear();
 
     // Normal mouse click
     QTest::mouseClick(window, Qt::LeftButton, 0, p1);
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
+    QCOMPARE(eventItem1->eventList.at(2).type, QEvent::UngrabMouse);
     eventItem1->eventList.clear();
 
     // Pinch starting on the PinchArea should work
@@ -1165,6 +1175,59 @@ void tst_TouchMouse::tapOnDismissiveTopMouseAreaClicksBottomOne()
 
     QCOMPARE(bottomClickedSpy.count(), 1);
     QCOMPARE(bottomDoubleClickedSpy.count(), 1);
+
+    delete window;
+}
+
+/*
+    If an item grabs a touch that is currently being used for mouse pointer emulation,
+    the current mouse grabber should lose the mouse as mouse events will no longer
+    be generated from that touch point.
+ */
+void tst_TouchMouse::touchGrabCausesMouseUngrab()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("twosiblingitems.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(window->rootObject() != 0);
+
+    EventItem *leftItem = window->rootObject()->findChild<EventItem*>("leftItem");
+    QVERIFY(leftItem);
+
+    EventItem *rightItem = window->rootObject()->findChild<EventItem*>("rightItem");
+    QVERIFY(leftItem);
+
+    // Send a touch to the leftItem. But leftItem accepts only mouse events, thus
+    // a mouse event will be synthesized out of this touch and will get accepted by
+    // leftItem.
+    leftItem->acceptMouse = true;
+    leftItem->setAcceptedMouseButtons(Qt::LeftButton);
+    QPoint p1;
+    p1 = QPoint(leftItem->width() / 2, leftItem->height() / 2);
+    QTest::touchEvent(window, device).press(0, p1, window);
+    QQuickTouchUtils::flush(window);
+    QCOMPARE(leftItem->eventList.size(), 2);
+    QCOMPARE(leftItem->eventList.at(0).type, QEvent::TouchBegin);
+    QCOMPARE(leftItem->eventList.at(1).type, QEvent::MouseButtonPress);
+    QCOMPARE(window->mouseGrabberItem(), leftItem);
+    leftItem->eventList.clear();
+
+    rightItem->acceptTouch = true;
+    {
+        QVector<int> ids;
+        ids.append(0);
+        rightItem->grabTouchPoints(ids);
+    }
+
+    // leftItem should have lost the mouse as the touch point that was being used to emulate it
+    // has been grabbed by another item.
+    QCOMPARE(leftItem->eventList.size(), 1);
+    QCOMPARE(leftItem->eventList.at(0).type, QEvent::UngrabMouse);
+    QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)0);
 
     delete window;
 }

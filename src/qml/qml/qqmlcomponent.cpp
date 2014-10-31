@@ -1500,13 +1500,13 @@ void QmlIncubatorObject::setInitialState(QObject *o)
 
 void QmlIncubatorObject::destroy(Managed *that)
 {
-    that->as<QmlIncubatorObject>()->d()->~Data();
+    static_cast<QmlIncubatorObject *>(that)->d()->~Data();
 }
 
 void QmlIncubatorObject::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
 {
-    QmlIncubatorObject *o = that->as<QmlIncubatorObject>();
-    Q_ASSERT(o);
+    QmlIncubatorObject *o = static_cast<QmlIncubatorObject *>(that);
+    Q_ASSERT(that->as<QmlIncubatorObject>());
     o->d()->valuemap.mark(e);
     o->d()->qmlGlobal.mark(e);
     o->d()->statusChanged.mark(e);

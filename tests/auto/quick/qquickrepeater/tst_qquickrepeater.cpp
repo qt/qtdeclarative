@@ -72,6 +72,7 @@ private slots:
     void dynamicModelCrash();
     void visualItemModelCrash();
     void invalidContextCrash();
+    void jsArrayChange();
 };
 
 class TestObject : public QObject
@@ -777,6 +778,33 @@ void tst_QQuickRepeater::invalidContextCrash()
     // Delete the root object, which will invalidate/delete the QML context
     // and then delete the child QObjects, which may try to access the context.
     root.reset(0);
+}
+
+void tst_QQuickRepeater::jsArrayChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.4; Repeater {}", QUrl());
+
+    QScopedPointer<QQuickRepeater> repeater(qobject_cast<QQuickRepeater *>(component.create()));
+    QVERIFY(!repeater.isNull());
+
+    QSignalSpy spy(repeater.data(), SIGNAL(modelChanged()));
+    QVERIFY(spy.isValid());
+
+    QJSValue array1 = engine.newArray(3);
+    QJSValue array2 = engine.newArray(3);
+    for (int i = 0; i < 3; ++i) {
+        array1.setProperty(i, i);
+        array2.setProperty(i, i);
+    }
+
+    repeater->setModel(QVariant::fromValue(array1));
+    QCOMPARE(spy.count(), 1);
+
+    // no change
+    repeater->setModel(QVariant::fromValue(array2));
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

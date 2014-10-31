@@ -1276,7 +1276,8 @@ ReturnedValue Runtime::regexpLiteral(ExecutionContext *ctx, int id)
 
 ReturnedValue Runtime::getQmlIdArray(NoThrowContext *ctx)
 {
-    return ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->idObjectsArray();
+    Q_ASSERT(ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    return static_cast<QmlContextWrapper *>(ctx->engine()->qmlContextObject()->getPointer())->idObjectsArray();
 }
 
 ReturnedValue Runtime::getQmlContextObject(NoThrowContext *ctx)
@@ -1290,7 +1291,7 @@ ReturnedValue Runtime::getQmlContextObject(NoThrowContext *ctx)
 ReturnedValue Runtime::getQmlScopeObject(NoThrowContext *ctx)
 {
     Scope scope(ctx);
-    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine()->qmlContextObject(), Scoped<QmlContextWrapper>::Cast);
     return QObjectWrapper::wrap(ctx->d()->engine, c->getScopeObject());
 }
 
@@ -1308,7 +1309,7 @@ ReturnedValue Runtime::getQmlQObjectProperty(ExecutionContext *ctx, const ValueR
 QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionContext *ctx, int attachedPropertiesId, int propertyIndex)
 {
     Scope scope(ctx);
-    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine()->qmlContextObject(), Scoped<QmlContextWrapper>::Cast);
     QObject *scopeObject = c->getScopeObject();
     QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
 
@@ -1349,7 +1350,7 @@ ReturnedValue Runtime::getQmlImportedScripts(NoThrowContext *ctx)
 
 QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowContext *ctx, String *name)
 {
-    return ctx->engine()->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->qmlSingletonWrapper(ctx->engine()->v8Engine, name);
+    return static_cast<QmlContextWrapper *>(ctx->engine()->qmlContextObject()->getPointer())->qmlSingletonWrapper(ctx->engine()->v8Engine, name);
 }
 
 void Runtime::convertThisToObject(ExecutionContext *ctx)

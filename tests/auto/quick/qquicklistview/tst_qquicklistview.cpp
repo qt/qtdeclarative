@@ -239,6 +239,8 @@ private slots:
     void QTBUG_39492_data();
     void QTBUG_39492();
 
+    void jsArrayChange();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -7943,6 +7945,33 @@ void tst_QQuickListView::QTBUG_39492()
     }
 
     releaseView(window);
+}
+
+void tst_QQuickListView::jsArrayChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.4; ListView {}", QUrl());
+
+    QScopedPointer<QQuickListView> view(qobject_cast<QQuickListView *>(component.create()));
+    QVERIFY(!view.isNull());
+
+    QSignalSpy spy(view.data(), SIGNAL(modelChanged()));
+    QVERIFY(spy.isValid());
+
+    QJSValue array1 = engine.newArray(3);
+    QJSValue array2 = engine.newArray(3);
+    for (int i = 0; i < 3; ++i) {
+        array1.setProperty(i, i);
+        array2.setProperty(i, i);
+    }
+
+    view->setModel(QVariant::fromValue(array1));
+    QCOMPARE(spy.count(), 1);
+
+    // no change
+    view->setModel(QVariant::fromValue(array2));
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickListView)

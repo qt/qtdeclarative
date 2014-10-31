@@ -56,9 +56,9 @@ struct IdentifierHashEntry {
         int value;
         void *pointer;
     };
-    int get(int *) const { return this ? value : -1; }
-    bool get(bool *) const { return this != 0; }
-    void *get(void **) const { return this ? pointer : 0; }
+    static int get(const IdentifierHashEntry *This, int *) { return This ? This->value : -1; }
+    static bool get(const IdentifierHashEntry *This, bool *) { return This != 0; }
+    static void *get(const IdentifierHashEntry *This, void **) { return This ? This->pointer : 0; }
 };
 
 struct IdentifierHashData
@@ -181,13 +181,13 @@ void IdentifierHash<T>::add(const QString &str, const T &value)
 template<typename T>
 inline T IdentifierHash<T>::value(const QString &str) const
 {
-    return lookup(str)->get((T*)0);
+    return IdentifierHashEntry::get(lookup(str), (T*)0);
 }
 
 template<typename T>
 inline T IdentifierHash<T>::value(String *str) const
 {
-    return lookup(str)->get((T*)0);
+    return IdentifierHashEntry::get(lookup(str), (T*)0);
 }
 
 
@@ -197,7 +197,7 @@ QString IdentifierHash<T>::findId(T value) const
     IdentifierHashEntry *e = d->entries;
     IdentifierHashEntry *end = e + d->alloc;
     while (e < end) {
-        if (e->identifier && e->get((T*)0) == value)
+        if (e->identifier && IdentifierHashEntry::get(e, (T*)0) == value)
             return e->identifier->string;
         ++e;
     }

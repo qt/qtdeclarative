@@ -288,6 +288,16 @@ struct Scoped
 #endif
     }
 
+    template<typename X>
+    Scoped(const Scope &scope, Returned<X> *x, _Cast)
+    {
+        ptr = scope.engine->jsStackTop++;
+        setPointer(managed_cast<T>(x->getPointer()));
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;

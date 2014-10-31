@@ -204,7 +204,7 @@ public:
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<NamedNodeMap>()->d()->~Data();
+        static_cast<NamedNodeMap *>(that)->d()->~Data();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
@@ -235,7 +235,7 @@ public:
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<NodeList>()->d()->~Data();
+        static_cast<NodeList *>(that)->d()->~Data();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
@@ -325,7 +325,7 @@ struct Node : public Object
 
     // JS API
     static void destroy(Managed *that) {
-        that->as<Node>()->d()->~Data();
+        static_cast<Node *>(that)->d()->~Data();
     }
 
     // C++ API
@@ -917,10 +917,9 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
 
 ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
-    NamedNodeMap *r = m->as<NamedNodeMap>();
+    Q_ASSERT(m->as<NamedNodeMap>());
+    NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = m->engine();
-    if (!r)
-        return v4->currentContext()->throwTypeError();
 
     name->makeIdentifier();
     if (name->equals(v4->id_length))
@@ -950,13 +949,9 @@ ReturnedValue NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QLis
 
 ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    Q_ASSERT(m->as<NodeList>());
     QV4::ExecutionEngine *v4 = m->engine();
-    NodeList *r = m->as<NodeList>();
-    if (!r) {
-        if (hasProperty)
-            *hasProperty = false;
-        return v4->currentContext()->throwTypeError();
-    }
+    NodeList *r = static_cast<NodeList *>(m);
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -972,10 +967,9 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 
 ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
+    Q_ASSERT(m->as<NodeList>());
     QV4::ExecutionEngine *v4 = m->engine();
-    NodeList *r = m->as<NodeList>();
-    if (!r)
-        return v4->currentContext()->throwTypeError();
+    NodeList *r = static_cast<NodeList *>(m);
 
     name->makeIdentifier();
 
@@ -1616,7 +1610,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
     V4_OBJECT(Object)
 
     static void destroy(Managed *that) {
-        that->as<QQmlXMLHttpRequestWrapper>()->d()->~Data();
+        static_cast<QQmlXMLHttpRequestWrapper *>(that)->d()->~Data();
     }
 };
 
@@ -1646,7 +1640,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     };
     V4_OBJECT(FunctionObject)
     static void markObjects(Managed *that, ExecutionEngine *e) {
-        QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
+        QQmlXMLHttpRequestCtor *c = static_cast<QQmlXMLHttpRequestCtor *>(that);
         if (c->d()->proto)
             c->d()->proto->mark(e);
         FunctionObject::markObjects(that, e);

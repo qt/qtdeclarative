@@ -502,7 +502,7 @@ namespace QtQml {
 }
 #endif
 
-#ifdef Q_CC_CLANG
+#if defined(Q_CC_CLANG) && !defined(Q_CC_INTEL)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif
@@ -510,7 +510,7 @@ namespace QtQml {
 // This is necessary to allow for QtQuick1 and QtQuick2 scenes in a single application.
 using namespace QtQml;
 
-#ifdef Q_CC_CLANG
+#if defined(Q_CC_CLANG) && !defined(Q_CC_INTEL)
 #pragma clang diagnostic pop
 #endif
 

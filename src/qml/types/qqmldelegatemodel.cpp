@@ -3277,11 +3277,10 @@ public:
 
     static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
     {
+        Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
         QV4::ExecutionEngine *v4 = m->engine();
         QV4::Scope scope(v4);
-        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, m->as<QQmlDelegateModelGroupChangeArray>());
-        if (!array)
-            return v4->currentContext()->throwTypeError();
+        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<QQmlDelegateModelGroupChangeArray *>(m));
 
         if (index >= array->count()) {
             if (hasProperty)
@@ -3303,9 +3302,8 @@ public:
 
     static QV4::ReturnedValue get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
     {
-        QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
-        if (!array)
-            return m->engine()->currentContext()->throwTypeError();
+        Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
+        QQmlDelegateModelGroupChangeArray *array = static_cast<QQmlDelegateModelGroupChangeArray *>(m);
 
         if (name->equals(m->engine()->id_length)) {
             if (hasProperty)
@@ -3316,8 +3314,7 @@ public:
         return Object::get(m, name, hasProperty);
     }
     static void destroy(Managed *that) {
-        QQmlDelegateModelGroupChangeArray *array = that->as<QQmlDelegateModelGroupChangeArray>();
-        array->d()->~Data();
+        static_cast<QQmlDelegateModelGroupChangeArray *>(that)->d()->~Data();
     }
 
 };

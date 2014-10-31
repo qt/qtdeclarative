@@ -113,14 +113,14 @@ struct Q_QML_EXPORT ArrayData : public Managed
     Value *arrayData() { return &d()->arrayData[0]; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
-    bool isSparse() const { return this && type() == Sparse; }
+    bool isSparse() const { return type() == Sparse; }
 
     uint length() const {
         return vtable()->length(this);
     }
 
     bool hasAttributes() const {
-        return this && attrs();
+        return attrs();
     }
     PropertyAttributes attributes(int i) const {
         Q_ASSERT(this);

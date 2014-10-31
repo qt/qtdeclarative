@@ -98,10 +98,9 @@ QVariant QmlListWrapper::toVariant() const
 
 ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
+    Q_ASSERT(m->as<QmlListWrapper>());
     QV4::ExecutionEngine *v4 = m->engine();
-    QmlListWrapper *w = m->as<QmlListWrapper>();
-    if (!w)
-        return v4->currentContext()->throwTypeError();
+    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
 
     if (name->equals(v4->id_length) && !w->d()->object.isNull()) {
         quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
@@ -119,19 +118,15 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
 {
     Q_UNUSED(hasProperty);
 
-    QV4::ExecutionEngine *e = m->engine();
-    QmlListWrapper *w = m->as<QmlListWrapper>();
-    if (!w) {
-        if (hasProperty)
-            *hasProperty = false;
-        return e->currentContext()->throwTypeError();
-    }
+    Q_ASSERT(m->as<QmlListWrapper>());
+    QV4::ExecutionEngine *v4 = m->engine();
+    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
 
     quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
     if (index < count && w->d()->property.at) {
         if (hasProperty)
             *hasProperty = true;
-        return QV4::QObjectWrapper::wrap(e, w->d()->property.at(&w->d()->property, index));
+        return QV4::QObjectWrapper::wrap(v4, w->d()->property.at(&w->d()->property, index));
     }
 
     if (hasProperty)
@@ -149,15 +144,16 @@ void QmlListWrapper::put(Managed *m, String *name, const ValueRef value)
 
 void QmlListWrapper::destroy(Managed *that)
 {
-    QmlListWrapper *w = that->as<QmlListWrapper>();
-    w->d()->~Data();
+    Q_ASSERT(that->as<QmlListWrapper>());
+    static_cast<QmlListWrapper *>(that)->d()->~Data();
 }
 
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name = (String *)0;
     *index = UINT_MAX;
-    QmlListWrapper *w = m->as<QmlListWrapper>();
+    Q_ASSERT(m->as<QmlListWrapper>());
+    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
     quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
     if (it->arrayIndex < count) {
         *index = it->arrayIndex;

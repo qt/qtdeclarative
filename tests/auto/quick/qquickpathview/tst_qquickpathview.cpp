@@ -139,6 +139,7 @@ private slots:
     void changePathDuringRefill();
     void nestedinFlickable();
     void flickableDelegate();
+    void jsArrayChange();
 };
 
 class TestObject : public QObject
@@ -2288,6 +2289,33 @@ void tst_QQuickPathView::flickableDelegate()
     QTRY_COMPARE(movingSpy.count(), 0);
     QTRY_COMPARE(moveEndedSpy.count(), 0);
     QCOMPARE(moveStartedSpy.count(), 0);
+}
+
+void tst_QQuickPathView::jsArrayChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.4; PathView {}", QUrl());
+
+    QScopedPointer<QQuickPathView> view(qobject_cast<QQuickPathView *>(component.create()));
+    QVERIFY(!view.isNull());
+
+    QSignalSpy spy(view.data(), SIGNAL(modelChanged()));
+    QVERIFY(spy.isValid());
+
+    QJSValue array1 = engine.newArray(3);
+    QJSValue array2 = engine.newArray(3);
+    for (int i = 0; i < 3; ++i) {
+        array1.setProperty(i, i);
+        array2.setProperty(i, i);
+    }
+
+    view->setModel(QVariant::fromValue(array1));
+    QCOMPARE(spy.count(), 1);
+
+    // no change
+    view->setModel(QVariant::fromValue(array2));
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickPathView)
