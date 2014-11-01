@@ -65,10 +65,10 @@ ArgumentsObject::Data::Data(CallContext *context)
     } else {
         args->setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
-        args->memberData()[CalleePropertyIndex] = context->d()->function->asReturnedValue();
+        args->memberData()->data()[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length));
-    args->memberData()[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
+    args->memberData()->data()[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
 }
 
 void ArgumentsObject::fullyCreate()
@@ -80,9 +80,13 @@ void ArgumentsObject::fullyCreate()
     uint argCount = qMin(context()->d()->realArgumentCount, context()->d()->callData->argc);
     ArrayData::realloc(this, ArrayData::Sparse, argCount, true);
     context()->d()->engine->requireArgumentsAccessors(numAccessors);
-    mappedArguments().ensureIndex(engine(), numAccessors);
+
+    Scope scope(engine());
+    Scoped<MemberData> md(scope, d()->mappedArguments);
+    if (md)
+        d()->mappedArguments = md->reallocate(engine(), d()->mappedArguments, numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
-        mappedArguments()[i] = context()->d()->callData->args[i];
+        mappedArguments()->data[i] = context()->d()->callData->args[i];
         arraySet(i, context()->d()->engine->argumentsAccessors[i], Attr_Accessor);
     }
     arrayPut(numAccessors, context()->d()->callData->args + numAccessors, argCount - numAccessors);
@@ -111,7 +115,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         map.copy(*pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData()->getProperty(index);
-        pd->value = mappedArguments()[index];
+        pd->value = mappedArguments()->data[index];
     }
 
     bool strict = ctx->d()->strictMode;
@@ -227,7 +231,8 @@ void ArgumentsObject::markObjects(HeapObject *that, ExecutionEngine *e)
     ArgumentsObject::Data *o = static_cast<ArgumentsObject::Data *>(that);
     if (o->context)
         o->context->mark(e);
-    o->mappedArguments.mark(e);
+    if (o->mappedArguments)
+        o->mappedArguments->mark(e);
 
     Object::markObjects(that, e);
 }

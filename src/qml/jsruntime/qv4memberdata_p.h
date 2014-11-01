@@ -53,24 +53,13 @@ struct MemberData : Managed
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }
+    const Value *data() const { return d()->data; }
+    Value *data() { return d()->data; }
+    inline uint size() const { return d()->size; }
+
+    static MemberData::Data *reallocate(QV4::ExecutionEngine *e, MemberData::Data *old, uint idx);
 
     static void markObjects(HeapObject *that, ExecutionEngine *e);
-};
-
-struct Members : Value
-{
-    void reset() { m = 0; }
-    void ensureIndex(QV4::ExecutionEngine *e, uint idx);
-    Value &operator[] (uint idx) const { return static_cast<MemberData *>(managed())->d()->data[idx]; }
-    inline uint size() const { return d() ? d()->d()->size : 0; }
-    inline MemberData *d() const { return static_cast<MemberData *>(managed()); }
-    Value *data() const { return static_cast<MemberData *>(managed())->d()->data; }
-
-    void mark(ExecutionEngine *e) const {
-        MemberData *m = d();
-        if (m)
-            m->mark(e);
-    }
 };
 
 }

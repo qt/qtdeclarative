@@ -1172,7 +1172,7 @@ ReturnedValue Runtime::objectLiteral(QV4::ExecutionContext *ctx, const QV4::Valu
     }
 
     for (uint i = 0; i < klass->size; ++i)
-        o->memberData()[i] = *args++;
+        o->memberData()->data()[i] = *args++;
 
     if (arrayValueCount > 0) {
         ScopedValue entry(scope);

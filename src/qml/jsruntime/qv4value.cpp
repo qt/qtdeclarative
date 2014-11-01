@@ -91,6 +91,8 @@ double Value::toNumberImpl() const
             ExecutionContext *ctx = objectValue()->internalClass()->engine->currentContext();
             Scope scope(ctx);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), NUMBER_HINT));
+            if (scope.engine->hasException)
+                return 0;
             return prim->toNumber();
         }
 #endif

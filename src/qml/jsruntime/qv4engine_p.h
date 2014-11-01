@@ -77,7 +77,6 @@ struct SyntaxErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
-struct Members;
 class MemoryManager;
 class ExecutableAllocator;
 

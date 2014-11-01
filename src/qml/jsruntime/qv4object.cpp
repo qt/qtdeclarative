@@ -55,7 +55,7 @@ Object::Data::Data(InternalClass *internalClass)
     if (internalClass->size) {
         Scope scope(internalClass->engine);
         ScopedObject o(scope, this);
-        o->memberData().ensureIndex(internalClass->engine, internalClass->size);
+        o->ensureMemberIndex(internalClass->engine, internalClass->size);
     }
 }
 
@@ -182,14 +182,15 @@ void Object::markObjects(HeapObject *that, ExecutionEngine *e)
 {
     Object::Data *o = static_cast<Object::Data *>(that);
 
-    o->memberData.mark(e);
+    if (o->memberData)
+        o->memberData->mark(e);
     if (o->arrayData)
         o->arrayData->mark(e);
 }
 
 void Object::ensureMemberIndex(uint idx)
 {
-    memberData().ensureIndex(engine(), idx);
+    d()->memberData = MemberData::reallocate(engine(), d()->memberData, idx);
 }
 
 void Object::insertMember(String *s, const Property &p, PropertyAttributes attributes)
@@ -206,7 +207,7 @@ void Object::insertMember(String *s, const Property &p, PropertyAttributes attri
         pp->value = p.value;
         pp->set = p.set;
     } else {
-        memberData()[idx] = p.value;
+        d()->memberData->data[idx] = p.value;
     }
 }
 
@@ -262,7 +263,7 @@ Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *at
         if (idx < UINT_MAX) {
             if (attrs)
                 *attrs = o->internalClass()->propertyData[idx];
-            return o->propertyAt(idx);
+            return const_cast<Property *>(o->propertyAt(idx));
         }
 
         o = o->prototype();
@@ -465,7 +466,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
             l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
-            o->memberData()[idx] = *value;
+            o->memberData()->data()[idx] = *value;
             return;
         }
 
@@ -1153,7 +1154,7 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);
-        return a->memberData()[ArrayObject::LengthPropertyIndex].asReturnedValue();
+        return a->memberData()->data()[ArrayObject::LengthPropertyIndex].asReturnedValue();
     }
     return Object::getLookup(m, l);
 }
@@ -1161,9 +1162,9 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 uint ArrayObject::getLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
-    if (a->memberData()[ArrayObject::LengthPropertyIndex].isInteger())
-        return a->memberData()[ArrayObject::LengthPropertyIndex].integerValue();
-    return Primitive::toUInt32(a->memberData()[ArrayObject::LengthPropertyIndex].doubleValue());
+    if (a->memberData()->data()[ArrayObject::LengthPropertyIndex].isInteger())
+        return a->memberData()->data()[ArrayObject::LengthPropertyIndex].integerValue();
+    return Primitive::toUInt32(a->memberData()->data()[ArrayObject::LengthPropertyIndex].doubleValue());
 }
 
 QStringList ArrayObject::toQStringList() const

@@ -82,14 +82,14 @@ struct ArgumentsObject: Object {
         Data(CallContext *context);
         CallContext *context;
         bool fullyCreated;
-        Members mappedArguments;
+        MemberData::Data *mappedArguments;
     };
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(ArgumentsObject)
 
     CallContext *context() const { return d()->context; }
     bool fullyCreated() const { return d()->fullyCreated; }
-    Members &mappedArguments() { return d()->mappedArguments; }
+    MemberData::Data *mappedArguments() { return d()->mappedArguments; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&

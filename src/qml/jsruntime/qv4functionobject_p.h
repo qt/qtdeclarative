@@ -96,7 +96,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static Returned<FunctionObject> *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
-    ReturnedValue protoProperty() { return memberData()[Index_Prototype].asReturnedValue(); }
+    ReturnedValue protoProperty() { return memberData()->data()[Index_Prototype].asReturnedValue(); }
 
     bool needsActivation() const { return d()->needsActivation; }
     bool strictMode() const { return d()->strictMode; }
@@ -202,21 +202,22 @@ struct ScriptFunction: SimpleScriptFunction {
 
 struct BoundFunction: FunctionObject {
     struct Data : FunctionObject::Data {
-        Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs);
+        Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, MemberData *boundArgs);
         FunctionObject *target;
         Value boundThis;
-        Members boundArgs;
+        MemberData::Data *boundArgs;
     };
     V4_OBJECT(FunctionObject)
 
-    static Returned<BoundFunction> *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const QV4::Members &boundArgs)
+    static Returned<BoundFunction> *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, QV4::MemberData *boundArgs)
     {
         return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     FunctionObject *target() { return d()->target; }
     Value boundThis() const { return d()->boundThis; }
-    Members boundArgs() const { return d()->boundArgs; }
+    // ### GC
+    MemberData::Data *boundArgs() const { return d()->boundArgs; }
 
     static ReturnedValue construct(Managed *, CallData *d);
     static ReturnedValue call(Managed *that, CallData *dd);

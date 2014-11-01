@@ -96,8 +96,10 @@ FunctionObject::Data::Data(InternalClass *ic)
     : Object::Data(ic)
     , scope(ic->engine->rootContext)
 {
-    memberData.ensureIndex(ic->engine, Index_Prototype);
-    memberData[Index_Prototype] = Encode::undefined();
+    Scope scope(ic->engine);
+    ScopedObject o(scope, this);
+    o->ensureMemberIndex(ic->engine, Index_Prototype);
+    memberData->data[Index_Prototype] = Encode::undefined();
 }
 
 
@@ -115,13 +117,14 @@ void FunctionObject::init(String *n, bool createProto)
     d()->needsActivation = true;
     d()->strictMode = false;
 
-    memberData().ensureIndex(s.engine, Index_Prototype);
+    ensureMemberIndex(s.engine, Index_Prototype);
     if (createProto) {
         Scoped<Object> proto(s, scope()->d()->engine->newObject(scope()->d()->engine->protoClass));
-        proto->memberData()[Index_ProtoConstructor] = this->asReturnedValue();
-        memberData()[Index_Prototype] = proto.asReturnedValue();
+        proto->ensureMemberIndex(s.engine, Index_ProtoConstructor);
+        proto->memberData()->data()[Index_ProtoConstructor] = this->asReturnedValue();
+        memberData()->data()[Index_Prototype] = proto.asReturnedValue();
     } else {
-        memberData()[Index_Prototype] = Encode::undefined();
+        memberData()->data()[Index_Prototype] = Encode::undefined();
     }
 
     ScopedValue v(s, n);
@@ -333,14 +336,12 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
-    Members boundArgs;
-    boundArgs.reset();
+    Scoped<MemberData> boundArgs(scope);
     if (ctx->d()->callData->argc > 1) {
-        boundArgs.ensureIndex(scope.engine, ctx->d()->callData->argc - 1);
-        boundArgs.d()->d()->size = ctx->d()->callData->argc - 1;
-        memcpy(boundArgs.data(), ctx->d()->callData->args + 1, (ctx->d()->callData->argc - 1)*sizeof(Value));
+        boundArgs = MemberData::reallocate(scope.engine, 0, ctx->d()->callData->argc - 1);
+        boundArgs->d()->size = ctx->d()->callData->argc - 1;
+        memcpy(boundArgs->data(), ctx->d()->callData->args + 1, (ctx->d()->callData->argc - 1)*sizeof(Value));
     }
-    ScopedValue protectBoundArgs(scope, boundArgs.d());
 
     return BoundFunction::create(ctx->d()->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
@@ -584,10 +585,10 @@ DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
-BoundFunction::Data::Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, const Members &boundArgs)
+BoundFunction::Data::Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, MemberData *boundArgs)
     : FunctionObject::Data(scope, QStringLiteral("__bound function__"))
     , target(target)
-    , boundArgs(boundArgs)
+    , boundArgs(boundArgs ? boundArgs->d() : 0)
 {
     this->boundThis = boundThis;
     setVTable(staticVTable());
@@ -598,7 +599,8 @@ BoundFunction::Data::Data(ExecutionContext *scope, FunctionObject *target, const
 
     ScopedValue l(s, target->get(s.engine->id_length));
     int len = l->toUInt32();
-    len -= boundArgs.size();
+    if (boundArgs)
+        len -= boundArgs->size();
     if (len < 0)
         len = 0;
     f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(len));
@@ -617,10 +619,15 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
     if (scope.hasException())
         return Encode::undefined();
 
-    ScopedCallData callData(scope, f->boundArgs().size() + dd->argc);
+    Scoped<MemberData> boundArgs(scope, f->boundArgs());
+    ScopedCallData callData(scope, (boundArgs ? boundArgs->size() : 0) + dd->argc);
     callData->thisObject = f->boundThis();
-    memcpy(callData->args, f->boundArgs().data(), f->boundArgs().size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs().size(), dd->args, dd->argc*sizeof(Value));
+    Value *argp = callData->args;
+    if (boundArgs) {
+        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
+        argp += boundArgs->size();
+    }
+    memcpy(argp, dd->args, dd->argc*sizeof(Value));
     return f->target()->call(callData);
 }
 
@@ -631,9 +638,14 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     if (scope.hasException())
         return Encode::undefined();
 
-    ScopedCallData callData(scope, f->boundArgs().size() + dd->argc);
-    memcpy(callData->args, f->boundArgs().data(), f->boundArgs().size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs().size(), dd->args, dd->argc*sizeof(Value));
+    Scoped<MemberData> boundArgs(scope, f->boundArgs());
+    ScopedCallData callData(scope, (boundArgs ? boundArgs->size() : 0) + dd->argc);
+    Value *argp = callData->args;
+    if (boundArgs) {
+        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
+        argp += boundArgs->size();
+    }
+    memcpy(argp, dd->args, dd->argc*sizeof(Value));
     return f->target()->construct(callData);
 }
 
@@ -642,6 +654,7 @@ void BoundFunction::markObjects(HeapObject *that, ExecutionEngine *e)
     BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
     o->target->mark(e);
     o->boundThis.mark(e);
-    o->boundArgs.mark(e);
+    if (o->boundArgs)
+        o->boundArgs->mark(e);
     FunctionObject::markObjects(that, e);
 }

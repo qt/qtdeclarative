@@ -45,18 +45,19 @@ void MemberData::markObjects(HeapObject *that, ExecutionEngine *e)
         m->data[i].mark(e);
 }
 
-void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)
+MemberData::Data *MemberData::reallocate(ExecutionEngine *e, Data *old, uint idx)
 {
-    uint s = size();
-    if (idx >= s) {
-        int newAlloc = qMax((uint)4, 2*idx);
-        uint alloc = sizeof(MemberData::Data) + (newAlloc)*sizeof(Value);
-        MemberData *newMemberData = static_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
-        if (d())
-            memcpy(newMemberData, d(), sizeof(MemberData::Data) + s*sizeof(Value));
-        else
-            new (newMemberData) MemberData(e->memberDataClass);
-        newMemberData->d()->size = newAlloc;
-        m = &newMemberData->data;
-    }
+    uint s = old ? old->size : 0;
+    if (idx < s)
+        return old;
+
+    int newAlloc = qMax((uint)4, 2*idx);
+    uint alloc = sizeof(Data) + (newAlloc)*sizeof(Value);
+    MemberData *newMemberData = static_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
+    if (old)
+        memcpy(newMemberData, old, sizeof(MemberData::Data) + s*sizeof(Value));
+    else
+        new (newMemberData) MemberData(e->memberDataClass);
+    newMemberData->d()->size = newAlloc;
+    return newMemberData->d();
 }

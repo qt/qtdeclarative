@@ -49,8 +49,8 @@ struct Q_QML_EXPORT Object: Managed {
         }
         Data(InternalClass *internal = 0);
 
-        Members memberData;
-        ArrayData *arrayData;
+        MemberData::Data *memberData;
+        ArrayData::Data *arrayData;
     };
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(Object)
@@ -59,12 +59,14 @@ struct Q_QML_EXPORT Object: Managed {
         IsObject = true
     };
 
-    Members &memberData() { return d()->memberData; }
-    const Members &memberData() const { return d()->memberData; }
-    ArrayData *arrayData() const { return d()->arrayData; }
-    void setArrayData(ArrayData *a) { d()->arrayData = a; }
+    // ### GC
+    MemberData *memberData() { return reinterpret_cast<MemberData *>(d()->memberData); }
+    const MemberData *memberData() const { return reinterpret_cast<const MemberData *>(d()->memberData); }
+    ArrayData *arrayData() const { return reinterpret_cast<ArrayData *>(d()->arrayData); }
+    void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
 
-    Property *propertyAt(uint index) const { return reinterpret_cast<Property *>(memberData().data() + index); }
+    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData()->data() + index); }
+    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData()->data() + index); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass()->vtable); }
     Object *prototype() const { return internalClass()->prototype; }
@@ -114,6 +116,10 @@ struct Q_QML_EXPORT Object: Managed {
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, ValueRef value);
     void defineReadonlyProperty(String *name, ValueRef value);
+
+    void ensureMemberIndex(QV4::ExecutionEngine *e, uint idx) {
+        d()->memberData = MemberData::reallocate(e, d()->memberData, idx);
+    }
 
     void insertMember(String *s, const ValueRef v, PropertyAttributes attributes = Attr_Data) {
         Property p(*v);
@@ -300,7 +306,7 @@ struct ArrayObject: Object {
         Data(ExecutionEngine *engine, const QStringList &list);
         Data(InternalClass *ic) : Object::Data(ic) { init(); }
         void init()
-        { memberData[LengthPropertyIndex] = Primitive::fromInt32(0); }
+        { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
     };
 
     V4_OBJECT(Object)
@@ -321,7 +327,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        memberData()[ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
+        memberData()->data()[ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const ValueRef v)
