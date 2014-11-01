@@ -78,7 +78,7 @@ public:
                 continue;
             entry->d()->markBit = 1;
             Q_ASSERT(entry->internalClass()->vtable->markObjects);
-            entry->internalClass()->vtable->markObjects(entry, e);
+            entry->internalClass()->vtable->markObjects(entry->d(), e);
         }
     }
 };

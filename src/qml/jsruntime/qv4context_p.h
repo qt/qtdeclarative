@@ -137,7 +137,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
 
-    static void markObjects(Managed *m, ExecutionEngine *e);
+    static void markObjects(HeapObject *m, ExecutionEngine *e);
 };
 
 struct CallContext : public ExecutionContext

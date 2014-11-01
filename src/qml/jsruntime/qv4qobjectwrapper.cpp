@@ -985,11 +985,11 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *
     }
 }
 
-void QObjectWrapper::markObjects(Managed *that, QV4::ExecutionEngine *e)
+void QObjectWrapper::markObjects(HeapObject *that, QV4::ExecutionEngine *e)
 {
-    QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
+    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
 
-    if (QObject *o = This->d()->object.data()) {
+    if (QObject *o = This->object.data()) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
         if (vme)
             vme->mark(e);

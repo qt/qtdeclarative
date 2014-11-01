@@ -339,9 +339,10 @@ TypedArray::Data::Data(ExecutionEngine *e, Type t)
 {
 }
 
-void TypedArray::markObjects(Managed *that, ExecutionEngine *e)
+void TypedArray::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    static_cast<TypedArray *>(that)->d()->buffer->mark(e);
+    static_cast<TypedArray::Data *>(that)->buffer->mark(e);
+    Object::markObjects(that, e);
 }
 
 ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)

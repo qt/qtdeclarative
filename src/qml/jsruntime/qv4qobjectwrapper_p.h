@@ -108,7 +108,7 @@ private:
     static void put(Managed *m, String *name, const ValueRef value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
+    static void markObjects(HeapObject *that, QV4::ExecutionEngine *e);
     static void destroy(Managed *that);
 
     static ReturnedValue method_connect(CallContext *ctx);

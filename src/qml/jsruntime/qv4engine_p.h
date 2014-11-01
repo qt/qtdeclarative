@@ -152,13 +152,13 @@ public:
         jsStackTop -= nValues;
     }
 
-    void pushForGC(Managed *m) {
-        *jsStackTop = Value::fromManaged(m);
+    void pushForGC(HeapObject *m) {
+        *jsStackTop = Value::fromHeapObject(m);
         ++jsStackTop;
     }
-    Managed *popForGC() {
+    HeapObject *popForGC() {
         --jsStackTop;
-        return jsStackTop->managed();
+        return jsStackTop->heapObject();
     }
 
     IdentifierTable *identifierTable;
@@ -386,6 +386,7 @@ private:
     QmlExtensions *m_qmlExtensions;
 };
 
+// ### Remove me
 inline
 void Managed::mark(QV4::ExecutionEngine *engine)
 {
@@ -393,6 +394,17 @@ void Managed::mark(QV4::ExecutionEngine *engine)
     if (markBit())
         return;
     d()->markBit = 1;
+    engine->pushForGC(d());
+}
+
+
+inline
+void HeapObject::mark(QV4::ExecutionEngine *engine)
+{
+    Q_ASSERT(inUse);
+    if (markBit)
+        return;
+    markBit = 1;
     engine->pushForGC(this);
 }
 

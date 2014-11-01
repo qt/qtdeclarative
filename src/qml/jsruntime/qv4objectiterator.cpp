@@ -210,10 +210,10 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
 DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
 
-void ForEachIteratorObject::markObjects(Managed *that, ExecutionEngine *e)
+void ForEachIteratorObject::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
-    o->d()->workArea[0].mark(e);
-    o->d()->workArea[1].mark(e);
+    ForEachIteratorObject::Data *o = static_cast<ForEachIteratorObject::Data *>(that);
+    o->workArea[0].mark(e);
+    o->workArea[1].mark(e);
     Object::markObjects(that, e);
 }

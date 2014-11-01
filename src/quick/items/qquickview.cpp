@@ -56,9 +56,9 @@ QV4::Returned<QQuickRootItemMarker> *QQuickRootItemMarker::create(QQmlEngine *en
     return e->memoryManager->alloc<QQuickRootItemMarker>(e, window);
 }
 
-void QQuickRootItemMarker::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
+void QQuickRootItemMarker::markObjects(QV4::HeapObject *that, QV4::ExecutionEngine *e)
 {
-    QQuickItem *root = static_cast<QQuickRootItemMarker*>(that)->d()->window->contentItem();
+    QQuickItem *root = static_cast<QQuickRootItemMarker::Data *>(that)->window->contentItem();
     if (root) {
         QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
         rootPrivate->markObjects(e);

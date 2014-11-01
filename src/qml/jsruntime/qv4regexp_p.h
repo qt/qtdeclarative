@@ -94,7 +94,7 @@ struct RegExp : public Managed
     int captureCount() const { return subPatternCount() + 1; }
 
     static void destroy(Managed *that);
-    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
+    static void markObjects(HeapObject *that, QV4::ExecutionEngine *e);
 
     friend class RegExpCache;
 };

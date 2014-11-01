@@ -83,7 +83,7 @@ struct ForEachIteratorObject: Object {
     ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }
 
 protected:
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
 };
 
 

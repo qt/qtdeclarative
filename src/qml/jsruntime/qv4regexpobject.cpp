@@ -170,11 +170,11 @@ void RegExpObject::init(ExecutionEngine *engine)
 }
 
 
-void RegExpObject::markObjects(Managed *that, ExecutionEngine *e)
+void RegExpObject::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    RegExpObject *re = static_cast<RegExpObject*>(that);
-    if (re->value())
-        re->value()->mark(e);
+    RegExpObject::Data *re = static_cast<RegExpObject::Data *>(that);
+    if (re->value)
+        re->value->mark(e);
     Object::markObjects(that, e);
 }
 
@@ -303,11 +303,11 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void RegExpCtor::markObjects(Managed *that, ExecutionEngine *e)
+void RegExpCtor::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    RegExpCtor *This = static_cast<RegExpCtor*>(that);
-    This->lastMatch().mark(e);
-    This->lastInput().mark(e);
+    RegExpCtor::Data *This = static_cast<RegExpCtor::Data *>(that);
+    This->lastMatch.mark(e);
+    This->lastInput.mark(e);
     FunctionObject::markObjects(that, e);
 }
 

@@ -885,7 +885,7 @@ void ExecutionEngine::markObjects()
         Q_ASSERT(c->inUse());
         if (!c->markBit()) {
             c->d()->markBit = 1;
-            c->markObjects(c, this);
+            c->markObjects(c->d(), this);
         }
         c = c->d()->parent;
     }

@@ -152,11 +152,11 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
     return Encode::undefined();
 }
 
-void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
+void FunctionObject::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    FunctionObject *o = static_cast<FunctionObject *>(that);
-    if (o->scope())
-        o->scope()->mark(e);
+    FunctionObject::Data *o = static_cast<FunctionObject::Data *>(that);
+    if (o->scope)
+        o->scope->mark(e);
 
     Object::markObjects(that, e);
 }
@@ -637,11 +637,11 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     return f->target()->construct(callData);
 }
 
-void BoundFunction::markObjects(Managed *that, ExecutionEngine *e)
+void BoundFunction::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    BoundFunction *o = static_cast<BoundFunction *>(that);
-    o->target()->mark(e);
-    o->boundThis().mark(e);
-    o->boundArgs().mark(e);
+    BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
+    o->target->mark(e);
+    o->boundThis.mark(e);
+    o->boundArgs.mark(e);
     FunctionObject::markObjects(that, e);
 }

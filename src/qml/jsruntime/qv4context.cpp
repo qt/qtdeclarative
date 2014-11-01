@@ -246,35 +246,35 @@ bool CallContext::needsOwnArguments() const
     return d()->function->needsActivation() || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
 }
 
-void ExecutionContext::markObjects(Managed *m, ExecutionEngine *engine)
+void ExecutionContext::markObjects(HeapObject *m, ExecutionEngine *engine)
 {
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(m);
+    ExecutionContext::Data *ctx = static_cast<ExecutionContext::Data *>(m);
 
-    if (ctx->d()->outer)
-        ctx->d()->outer->mark(engine);
+    if (ctx->outer)
+        ctx->outer->mark(engine);
 
     // ### shouldn't need these 3 lines
-    ctx->d()->callData->thisObject.mark(engine);
-    for (int arg = 0; arg < ctx->d()->callData->argc; ++arg)
-        ctx->d()->callData->args[arg].mark(engine);
+    ctx->callData->thisObject.mark(engine);
+    for (int arg = 0; arg < ctx->callData->argc; ++arg)
+        ctx->callData->args[arg].mark(engine);
 
-    if (ctx->d()->type >= Type_CallContext) {
-        QV4::CallContext *c = static_cast<CallContext *>(ctx);
-        for (unsigned local = 0, lastLocal = c->d()->function->varCount(); local < lastLocal; ++local)
-            c->d()->locals[local].mark(engine);
-        if (c->d()->activation)
-            c->d()->activation->mark(engine);
-        c->d()->function->mark(engine);
-    } else if (ctx->d()->type == Type_WithContext) {
-        WithContext *w = static_cast<WithContext *>(ctx);
-        w->d()->withObject->mark(engine);
-    } else if (ctx->d()->type == Type_CatchContext) {
-        CatchContext *c = static_cast<CatchContext *>(ctx);
-        c->d()->exceptionVarName->mark(engine);
-        c->d()->exceptionValue.mark(engine);
-    } else if (ctx->d()->type == Type_GlobalContext) {
-        GlobalContext *g = static_cast<GlobalContext *>(ctx);
-        g->d()->global->mark(engine);
+    if (ctx->type >= Type_CallContext) {
+        QV4::CallContext::Data *c = static_cast<CallContext::Data *>(ctx);
+        for (unsigned local = 0, lastLocal = c->function->varCount(); local < lastLocal; ++local)
+            c->locals[local].mark(engine);
+        if (c->activation)
+            c->activation->mark(engine);
+        c->function->mark(engine);
+    } else if (ctx->type == Type_WithContext) {
+        WithContext::Data *w = static_cast<WithContext::Data *>(ctx);
+        w->withObject->mark(engine);
+    } else if (ctx->type == Type_CatchContext) {
+        CatchContext::Data *c = static_cast<CatchContext::Data *>(ctx);
+        c->exceptionVarName->mark(engine);
+        c->exceptionValue.mark(engine);
+    } else if (ctx->type == Type_GlobalContext) {
+        GlobalContext::Data *g = static_cast<GlobalContext::Data *>(ctx);
+        g->global->mark(engine);
     }
 }
 

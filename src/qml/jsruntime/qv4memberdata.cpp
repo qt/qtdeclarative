@@ -38,11 +38,11 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(MemberData);
 
-void MemberData::markObjects(Managed *that, ExecutionEngine *e)
+void MemberData::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    MemberData *m = static_cast<MemberData *>(that);
-    for (uint i = 0; i < m->d()->size; ++i)
-        m->d()->data[i].mark(e);
+    MemberData::Data *m = static_cast<MemberData::Data *>(that);
+    for (uint i = 0; i < m->size; ++i)
+        m->data[i].mark(e);
 }
 
 void Members::ensureIndex(QV4::ExecutionEngine *e, uint idx)

@@ -70,7 +70,7 @@ struct ErrorObject: Object {
     SyntaxErrorObject *asSyntaxError();
 
     static ReturnedValue method_get_stack(CallContext *ctx);
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
     static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
 

@@ -110,7 +110,7 @@ struct ManagedVTable
     uint type : 8;
     const char *className;
     void (*destroy)(Managed *);
-    void (*markObjects)(Managed *, ExecutionEngine *e);
+    void (*markObjects)(HeapObject *, ExecutionEngine *e);
     bool (*isEqualTo)(Managed *m, Managed *other);
 };
 
@@ -177,39 +177,10 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 struct Q_QML_PRIVATE_EXPORT Managed
 {
     struct Q_QML_PRIVATE_EXPORT Data : HeapObject {
-        Data() {}
+        Data() : HeapObject(0) {}
         Data(InternalClass *internal)
-            : internalClass(internal)
-            , markBit(0)
-            , inUse(1)
-            , extensible(1)
-        {
-            // ####
-//            Q_ASSERT(internal && internal->vtable);
-        }
-        InternalClass *internalClass;
-        struct {
-            uchar markBit :  1;
-            uchar inUse   :  1;
-            uchar extensible : 1; // used by Object
-            uchar _unused : 1;
-            uchar needsActivation : 1; // used by FunctionObject
-            uchar strictMode : 1; // used by FunctionObject
-            uchar bindingKeyFlag : 1;
-            uchar hasAccessorProperty : 1;
-            uchar _type;
-            mutable uchar subtype;
-            uchar _flags;
-        };
-
-        void setVTable(const ManagedVTable *vt);
-        ReturnedValue asReturnedValue() const {
-            return Value::fromHeapObject(const_cast<Data *>(this)).asReturnedValue();
-        }
-
-        void *operator new(size_t, Managed *m) { return m; }
-        void *operator new(size_t, Managed::Data *m) { return m; }
-        void operator delete(void *, Managed::Data *) {}
+            : HeapObject(internal)
+        {}
     };
     Data data;
     V4_MANAGED(Managed)

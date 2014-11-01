@@ -222,12 +222,12 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     return Encode::undefined();
 }
 
-void ArgumentsObject::markObjects(Managed *that, ExecutionEngine *e)
+void ArgumentsObject::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
-    if (o->context())
-        o->context()->mark(e);
-    o->mappedArguments().mark(e);
+    ArgumentsObject::Data *o = static_cast<ArgumentsObject::Data *>(that);
+    if (o->context)
+        o->context->mark(e);
+    o->mappedArguments.mark(e);
 
     Object::markObjects(that, e);
 }

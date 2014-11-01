@@ -85,10 +85,10 @@ DataView::Data::Data(ExecutionEngine *e)
 }
 
 
-void DataView::markObjects(Managed *that, ExecutionEngine *e)
+void DataView::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    DataView *v = static_cast<DataView *>(that);
-    v->d()->buffer->mark(e);
+    DataView::Data *v = static_cast<DataView::Data *>(that);
+    v->buffer->mark(e);
 }
 
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)

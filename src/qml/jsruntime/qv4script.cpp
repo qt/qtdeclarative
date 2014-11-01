@@ -111,14 +111,14 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     return result.asReturnedValue();
 }
 
-void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
+void QmlBindingWrapper::markObjects(HeapObject *m, ExecutionEngine *e)
 {
-    QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
-    if (wrapper->d()->qml)
-        wrapper->d()->qml->mark(e);
+    QmlBindingWrapper::Data *wrapper = static_cast<QmlBindingWrapper::Data *>(m);
+    if (wrapper->qml)
+        wrapper->qml->mark(e);
     FunctionObject::markObjects(m, e);
-    if (wrapper->d()->qmlContext)
-        wrapper->d()->qmlContext->mark(e);
+    if (wrapper->qmlContext)
+        wrapper->qmlContext->mark(e);
 }
 
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)

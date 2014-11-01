@@ -170,11 +170,11 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
     return This->d()->stack->asReturnedValue();
 }
 
-void ErrorObject::markObjects(Managed *that, ExecutionEngine *e)
+void ErrorObject::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    ErrorObject *This = that->asErrorObject();
-    if (This->d()->stack)
-        This->d()->stack->mark(e);
+    ErrorObject::Data *This = static_cast<ErrorObject::Data *>(that);
+    if (This->stack)
+        This->stack->mark(e);
     Object::markObjects(that, e);
 }
 

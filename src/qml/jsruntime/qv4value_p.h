@@ -44,7 +44,40 @@ namespace QV4 {
 
 typedef uint Bool;
 
-struct HeapObject {};
+struct Q_QML_EXPORT HeapObject {
+    HeapObject(InternalClass *internal)
+        : internalClass(internal)
+        , markBit(0)
+        , inUse(1)
+        , extensible(1)
+    {
+        // ####
+    //            Q_ASSERT(internal && internal->vtable);
+    }
+    InternalClass *internalClass;
+    struct {
+        uchar markBit :  1;
+        uchar inUse   :  1;
+        uchar extensible : 1; // used by Object
+        uchar _unused : 1;
+        uchar needsActivation : 1; // used by FunctionObject
+        uchar strictMode : 1; // used by FunctionObject
+        uchar bindingKeyFlag : 1;
+        uchar hasAccessorProperty : 1;
+        uchar _type;
+        mutable uchar subtype;
+        uchar _flags;
+
+    };
+
+    void setVTable(const ManagedVTable *vt);
+    inline ReturnedValue asReturnedValue() const;
+    inline void mark(QV4::ExecutionEngine *engine);
+
+    void *operator new(size_t, Managed *m) { return m; }
+    void *operator new(size_t, HeapObject *m) { return m; }
+    void operator delete(void *, HeapObject *) {}
+};
 
 template <typename T>
 struct Returned : private HeapObject
@@ -546,6 +579,12 @@ struct ValueRef {
 private:
     Value *ptr;
 };
+
+inline
+ReturnedValue HeapObject::asReturnedValue() const
+{
+    return Value::fromHeapObject(const_cast<HeapObject *>(this)).asReturnedValue();
+}
 
 
 template<typename T>

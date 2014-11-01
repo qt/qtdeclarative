@@ -1187,10 +1187,10 @@ ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
     return This->d()->originalFunction->call(callData);
 }
 
-void QQmlBindingFunction::markObjects(Managed *that, ExecutionEngine *e)
+void QQmlBindingFunction::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
-    This->d()->originalFunction->mark(e);
+    QQmlBindingFunction::Data *This = static_cast<QQmlBindingFunction::Data *>(that);
+    This->originalFunction->mark(e);
     QV4::FunctionObject::markObjects(that, e);
 }
 

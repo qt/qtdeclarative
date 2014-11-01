@@ -91,7 +91,7 @@ struct RegExpObject: Object {
     uint flags() const;
 
 protected:
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
 };
 
 struct RegExpCtor: FunctionObject
@@ -113,7 +113,7 @@ struct RegExpCtor: FunctionObject
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
 };
 
 struct RegExpPrototype: RegExpObject

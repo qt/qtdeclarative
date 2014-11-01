@@ -172,7 +172,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
-    static void markObjects(Managed *d, ExecutionEngine *e);
+    static void markObjects(HeapObject *d, ExecutionEngine *e);
 
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
@@ -218,7 +218,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     }
 
     static void destroy(Managed *d);
-    static void markObjects(Managed *d, ExecutionEngine *e);
+    static void markObjects(HeapObject *d, ExecutionEngine *e);
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const ArrayData *d, uint index);

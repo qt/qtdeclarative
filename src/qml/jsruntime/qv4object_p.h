@@ -224,7 +224,7 @@ public:
     inline ReturnedValue call(CallData *d)
     { return vtable()->call(this, d); }
 protected:
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
     static ReturnedValue construct(Managed *m, CallData *);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

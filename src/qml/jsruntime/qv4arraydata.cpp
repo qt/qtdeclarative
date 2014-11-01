@@ -213,12 +213,12 @@ void ArrayData::ensureAttributes(Object *o)
 }
 
 
-void SimpleArrayData::markObjects(Managed *d, ExecutionEngine *e)
+void SimpleArrayData::markObjects(HeapObject *d, ExecutionEngine *e)
 {
-    SimpleArrayData *dd = static_cast<SimpleArrayData *>(d);
-    uint l = dd->len();
+    SimpleArrayData::Data *dd = static_cast<SimpleArrayData::Data *>(d);
+    uint l = dd->len;
     for (uint i = 0; i < l; ++i)
-        dd->data(i).mark(e);
+        dd->arrayData[i].mark(e);
 }
 
 ReturnedValue SimpleArrayData::get(const ArrayData *d, uint index)
@@ -363,12 +363,12 @@ void SparseArrayData::destroy(Managed *d)
     delete dd->sparse();
 }
 
-void SparseArrayData::markObjects(Managed *d, ExecutionEngine *e)
+void SparseArrayData::markObjects(HeapObject *d, ExecutionEngine *e)
 {
-    SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    uint l = dd->alloc();
+    SparseArrayData::Data *dd = static_cast<SparseArrayData::Data *>(d);
+    uint l = dd->alloc;
     for (uint i = 0; i < l; ++i)
-        dd->arrayData()[i].mark(e);
+        dd->arrayData[i].mark(e);
 }
 
 ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)

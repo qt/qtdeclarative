@@ -178,13 +178,13 @@ void Object::defineReadonlyProperty(String *name, ValueRef value)
     insertMember(name, value, Attr_ReadOnly);
 }
 
-void Object::markObjects(Managed *that, ExecutionEngine *e)
+void Object::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    Object *o = static_cast<Object *>(that);
+    Object::Data *o = static_cast<Object::Data *>(that);
 
-    o->memberData().mark(e);
-    if (o->arrayData())
-        o->arrayData()->mark(e);
+    o->memberData.mark(e);
+    if (o->arrayData)
+        o->arrayData->mark(e);
 }
 
 void Object::ensureMemberIndex(uint idx)

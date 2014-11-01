@@ -106,7 +106,7 @@ struct ArgumentsObject: Object {
     static void putIndexed(Managed *m, uint index, const ValueRef value);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
 
     void fullyCreate();
 };

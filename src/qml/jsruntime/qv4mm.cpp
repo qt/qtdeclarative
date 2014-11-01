@@ -264,9 +264,9 @@ Managed *MemoryManager::allocData(std::size_t size)
 static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
-        Managed *m = engine->popForGC();
-        Q_ASSERT (m->internalClass()->vtable->markObjects);
-        m->internalClass()->vtable->markObjects(m, engine);
+        HeapObject *h = engine->popForGC();
+        Q_ASSERT (h->internalClass->vtable->markObjects);
+        h->internalClass->vtable->markObjects(h, engine);
     }
 }
 

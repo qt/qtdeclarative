@@ -54,7 +54,7 @@ struct MemberData : Managed
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }
 
-    static void markObjects(Managed *that, ExecutionEngine *e);
+    static void markObjects(HeapObject *that, ExecutionEngine *e);
 };
 
 struct Members : Value

@@ -129,6 +129,7 @@ struct Value;
 struct Lookup;
 struct HeapObject;
 struct ArrayData;
+struct ManagedVTable;
 
 struct BooleanObject;
 struct NumberObject;

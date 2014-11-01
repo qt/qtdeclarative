@@ -122,12 +122,12 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->d()->~Data();
 }
 
-void String::markObjects(Managed *that, ExecutionEngine *e)
+void String::markObjects(HeapObject *that, ExecutionEngine *e)
 {
-    String *s = static_cast<String *>(that);
-    if (s->d()->largestSubLength) {
-        s->d()->left->mark(e);
-        s->d()->right->mark(e);
+    String::Data *s = static_cast<String::Data *>(that);
+    if (s->largestSubLength) {
+        s->left->mark(e);
+        s->right->mark(e);
     }
 }
 
