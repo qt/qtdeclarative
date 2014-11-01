@@ -64,7 +64,7 @@
 using namespace QV4;
 
 ErrorObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     Scope scope(ic->engine);
     Scoped<ErrorObject> e(scope, this);
@@ -74,7 +74,7 @@ ErrorObject::Data::Data(InternalClass *ic)
 }
 
 ErrorObject::Data::Data(InternalClass *ic, const ValueRef message, ErrorType t)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     subtype = t;
 
@@ -96,7 +96,7 @@ ErrorObject::Data::Data(InternalClass *ic, const ValueRef message, ErrorType t)
 }
 
 ErrorObject::Data::Data(InternalClass *ic, const QString &message, ErrorObject::ErrorType t)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     subtype = t;
 
@@ -118,7 +118,7 @@ ErrorObject::Data::Data(InternalClass *ic, const QString &message, ErrorObject::
 }
 
 ErrorObject::Data::Data(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     subtype = t;
 

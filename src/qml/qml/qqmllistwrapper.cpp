@@ -46,7 +46,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
 QmlListWrapper::Data::Data(QV8Engine *engine)
-    : Object::Data(QV8Engine::getV4(engine))
+    : Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
 {
     setVTable(staticVTable());

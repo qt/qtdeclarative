@@ -70,7 +70,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(StringObject);
 
 StringObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     Q_ASSERT(internalClass->vtable == staticVTable());
     value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
@@ -82,7 +82,7 @@ StringObject::Data::Data(InternalClass *ic)
 }
 
 StringObject::Data::Data(ExecutionEngine *engine, const ValueRef val)
-    : Object::Data(engine->stringObjectClass)
+    : Heap::Object(engine->stringObjectClass)
 {
     value = val;
     Q_ASSERT(value.isString());

@@ -79,7 +79,7 @@ struct StaticQtMetaObject : public QObject
 };
 
 QV4::QtObject::Data::Data(ExecutionEngine *v4, QQmlEngine *qmlEngine)
-    : Object::Data(v4)
+    : Heap::Object(v4)
 {
     setVTable(staticVTable());
 
@@ -1297,7 +1297,7 @@ ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
 
 
 QV4::ConsoleObject::Data::Data(ExecutionEngine *v4)
-    : Object::Data(v4)
+    : Heap::Object(v4)
 {
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, this);

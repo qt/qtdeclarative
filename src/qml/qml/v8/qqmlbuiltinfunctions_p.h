@@ -57,7 +57,7 @@ namespace QV4 {
 
 struct QtObject : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *v4, QQmlEngine *qmlEngine);
         QObject *platform;
         QObject *application;
@@ -105,7 +105,7 @@ struct QtObject : Object
 
 struct ConsoleObject : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine);
     };
 

@@ -129,7 +129,7 @@ struct CatchContext : ExecutionContext {
 };
 
 struct WithContext : ExecutionContext {
-    WithContext(ExecutionEngine *engine, Object *with);
+    WithContext(ExecutionEngine *engine, QV4::Object *with);
     Object *withObject;
 };
 

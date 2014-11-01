@@ -44,15 +44,15 @@ class QDateTime;
 namespace QV4 {
 
 struct DateObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, const ValueRef date)
-            : Object::Data(engine->dateClass)
+            : Heap::Object(engine->dateClass)
         {
             value = date;
         }
         Data(ExecutionEngine *engine, const QDateTime &date);
         Data(InternalClass *ic)
-            : Object::Data(ic)
+            : Heap::Object(ic)
         {
             Q_ASSERT(internalClass->vtable == staticVTable());
             value = Primitive::fromDouble(qSNaN());

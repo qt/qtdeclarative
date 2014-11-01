@@ -68,9 +68,9 @@ private:
 };
 
 struct ForEachIteratorObject: Object {
-    struct Data : Object::Data {
-        Data(ExecutionEngine *engine, Object *o)
-            : Object::Data(engine)
+    struct Data : Heap::Object {
+        Data(ExecutionEngine *engine, QV4::Object *o)
+            : Heap::Object(engine)
             , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
             setVTable(staticVTable());
         }

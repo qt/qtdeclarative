@@ -63,7 +63,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 FunctionObject::Data::Data(ExecutionContext *scope, String *name, bool createProto)
-    : Object::Data(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass)
     , scope(scope)
 {
     Scope s(scope);
@@ -73,7 +73,7 @@ FunctionObject::Data::Data(ExecutionContext *scope, String *name, bool createPro
 
 
 FunctionObject::Data::Data(ExecutionContext *scope, const QString &name, bool createProto)
-    : Object::Data(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass)
     , scope(scope)
 {
     Scope s(scope);
@@ -83,7 +83,7 @@ FunctionObject::Data::Data(ExecutionContext *scope, const QString &name, bool cr
 }
 
 FunctionObject::Data::Data(ExecutionContext *scope, const ReturnedValue name)
-    : Object::Data(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass)
     , scope(scope)
 {
     Scope s(scope);
@@ -93,7 +93,7 @@ FunctionObject::Data::Data(ExecutionContext *scope, const ReturnedValue name)
 }
 
 FunctionObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
     , scope(ic->engine->rootContext)
 {
     Scope scope(ic->engine);

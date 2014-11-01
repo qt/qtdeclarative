@@ -65,7 +65,7 @@ struct QQmlIdObjectsArray;
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
         ~Data();
         bool readOnly;
@@ -104,7 +104,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
 struct QQmlIdObjectsArray : public Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
         QmlContextWrapper *contextWrapper;
     };

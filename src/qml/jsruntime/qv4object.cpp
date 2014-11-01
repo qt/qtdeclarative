@@ -49,7 +49,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Object);
 
-Object::Data::Data(InternalClass *internalClass)
+Heap::Object::Object(InternalClass *internalClass)
     : Heap::Base(internalClass)
 {
     if (internalClass->size) {
@@ -180,7 +180,7 @@ void Object::defineReadonlyProperty(String *name, ValueRef value)
 
 void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
-    Object::Data *o = static_cast<Object::Data *>(that);
+    Heap::Object *o = static_cast<Heap::Object *>(that);
 
     if (o->memberData)
         o->memberData->mark(e);
@@ -1130,7 +1130,7 @@ void Object::initSparseArray()
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
 ArrayObject::Data::Data(ExecutionEngine *engine, const QStringList &list)
-    : Object::Data(engine->arrayClass)
+    : Heap::Object(engine->arrayClass)
 {
     init();
     Scope scope(engine);

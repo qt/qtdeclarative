@@ -77,7 +77,7 @@ struct QmlValueTypeCopy : public QmlValueTypeWrapper
 DEFINE_OBJECT_VTABLE(QmlValueTypeCopy);
 
 QmlValueTypeWrapper::Data::Data(QV8Engine *engine, ObjectType objectType)
-    : Object::Data(QV8Engine::getV4(engine))
+    : Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
     , objectType(objectType)
 {

@@ -153,9 +153,9 @@ protected:
 
 struct QQmlDelegateModelItemObject : QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
             , item(item)
         {
             setVTable(staticVTable());

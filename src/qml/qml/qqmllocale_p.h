@@ -123,9 +123,9 @@ private:
 
 struct QQmlLocaleData : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
         {
             setVTable(staticVTable());
         }

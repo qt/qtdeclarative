@@ -1072,7 +1072,7 @@ class QQmlComponentIncubator;
 
 struct QmlIncubatorObject : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
         QScopedPointer<QQmlComponentIncubator> incubator;
         QV8Engine *v8;
@@ -1470,7 +1470,7 @@ QQmlComponentExtension::~QQmlComponentExtension()
 }
 
 QmlIncubatorObject::Data::Data(QV8Engine *engine, QQmlIncubator::IncubationMode m)
-    : Object::Data(QV8Engine::getV4(engine))
+    : QV4::Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
     , valuemap(QV4::Primitive::undefinedValue())
     , qmlGlobal(QV4::Primitive::undefinedValue())

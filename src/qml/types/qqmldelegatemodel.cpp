@@ -3211,9 +3211,9 @@ void QQmlPartsModel::emitModelUpdated(const QQmlChangeSet &changeSet, bool reset
 
 struct QQmlDelegateModelGroupChange : QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
         {
             setVTable(staticVTable());
         }
@@ -3254,9 +3254,9 @@ DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
 
 struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
             , changes(changes)
         {
             setVTable(staticVTable());

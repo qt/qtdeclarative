@@ -53,7 +53,7 @@
 
 using namespace QV4;
 
-QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
+QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, QV4::Object *qml)
     : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
@@ -74,7 +74,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, Object *qml)
     s.engine->popContext();
 }
 
-QmlBindingWrapper::Data::Data(ExecutionContext *scope, Object *qml)
+QmlBindingWrapper::Data::Data(ExecutionContext *scope, QV4::Object *qml)
     : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
@@ -158,9 +158,9 @@ DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 
 struct CompilationUnitHolder : public Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
-            : Object::Data(engine)
+            : Heap::Object(engine)
             , unit(unit)
         {
             setVTable(staticVTable());

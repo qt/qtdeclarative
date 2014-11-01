@@ -48,7 +48,7 @@ DEFINE_OBJECT_VTABLE(MathObject);
 static const double qt_PI = 2.0 * ::asin(1.0);
 
 MathObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     Scope scope(ic->engine);
     ScopedObject m(scope, this);

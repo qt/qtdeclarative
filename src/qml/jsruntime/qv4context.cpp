@@ -134,7 +134,7 @@ Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
     global = eng->globalObject;
 }
 
-Heap::WithContext::WithContext(ExecutionEngine *engine, Object *with)
+Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_WithContext)
 {
     callData = parent->d()->callData;
@@ -158,7 +158,7 @@ Heap::CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarNa
     this->exceptionValue = exceptionValue;
 }
 
-Heap::CallContext::CallContext(ExecutionEngine *engine, Object *qml, FunctionObject *function)
+Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, FunctionObject *function)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_QmlContext)
 {
     this->function = function;

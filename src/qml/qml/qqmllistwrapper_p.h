@@ -61,7 +61,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(QV8Engine *engine);
         ~Data();
         QV8Engine *v8;

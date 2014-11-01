@@ -96,9 +96,9 @@ public:
 
 struct QQuickRootItemMarker : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine, QQuickWindow *window)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
             , window(window)
         {
             setVTable(staticVTable());

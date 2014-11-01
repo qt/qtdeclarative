@@ -334,7 +334,7 @@ ReturnedValue TypedArrayCtor::call(Managed *that, CallData *callData)
 }
 
 TypedArray::Data::Data(ExecutionEngine *e, Type t)
-    : Object::Data(e->typedArrayClasses[t]),
+    : Heap::Object(e->typedArrayClasses[t]),
       type(operations + t)
 {
 }

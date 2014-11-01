@@ -54,7 +54,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
 QmlContextWrapper::Data::Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : Object::Data(QV8Engine::getV4(engine))
+    : Heap::Object(QV8Engine::getV4(engine))
     , readOnly(true)
     , ownsContext(ownsContext)
     , isNullWrapper(false)
@@ -433,7 +433,7 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, String *name
 DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
 QQmlIdObjectsArray::Data::Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
-    : Object::Data(engine)
+    : Heap::Object(engine)
     , contextWrapper(contextWrapper)
 {
     setVTable(staticVTable());

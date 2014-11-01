@@ -61,7 +61,7 @@ namespace QV4 {
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
     enum ObjectType { Reference, Copy };
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(QV8Engine *engine, ObjectType type);
         QV8Engine *v8;
         ObjectType objectType;

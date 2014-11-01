@@ -58,7 +58,7 @@ namespace QV4 {
 
 struct VariantObject : Object
 {
-    struct Data : Object::Data, public ExecutionEngine::ScarceResourceData
+    struct Data : Heap::Object, public ExecutionEngine::ScarceResourceData
     {
         Data(InternalClass *ic);
         Data(ExecutionEngine *engine, const QVariant &value);

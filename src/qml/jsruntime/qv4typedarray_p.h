@@ -67,7 +67,7 @@ struct TypedArray : Object
         NTypes
     };
 
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *e, Type t);
 
         const TypedArrayOperations *type;
@@ -104,9 +104,9 @@ struct TypedArrayCtor: FunctionObject
 
 struct TypedArrayPrototype : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *e, TypedArray::Type t)
-            : Object::Data(e)
+            : Heap::Object(e)
             , type(t)
         {
             setVTable(staticVTable());

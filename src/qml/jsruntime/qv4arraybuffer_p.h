@@ -57,7 +57,7 @@ struct ArrayBufferCtor: FunctionObject
 
 struct ArrayBuffer : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *e, int length);
         QTypedArrayData<char> *data;
     };

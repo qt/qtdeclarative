@@ -878,7 +878,7 @@ QString Stringify::JA(ArrayObject *a)
 
 
 JsonObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);

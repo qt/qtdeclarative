@@ -73,10 +73,10 @@ struct ContextStateSaver {
 
 struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     struct Data : FunctionObject::Data {
-        Data(ExecutionContext *scope, Function *f, Object *qml);
+        Data(ExecutionContext *scope, Function *f, QV4::Object *qml);
         // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-        Data(ExecutionContext *scope, Object *qml);
-        Object *qml;
+        Data(ExecutionContext *scope, QV4::Object *qml);
+        QV4::Object *qml;
         CallContext *qmlContext;
     };
     V4_OBJECT(FunctionObject)

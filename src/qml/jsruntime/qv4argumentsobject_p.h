@@ -78,7 +78,7 @@ struct ArgumentsSetterFunction: FunctionObject
 
 
 struct ArgumentsObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(CallContext *context);
         CallContext *context;
         bool fullyCreated;

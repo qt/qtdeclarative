@@ -56,7 +56,7 @@ struct ErrorObject: Object {
         TypeError,
         URIError
     };
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(InternalClass *ic);
         Data(InternalClass *ic, const ValueRef message, ErrorType t = Error);
         Data(InternalClass *ic, const QString &message, ErrorType t = Error);

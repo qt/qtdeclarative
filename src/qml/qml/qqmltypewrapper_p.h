@@ -62,7 +62,7 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
 
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(QV8Engine *engine);
         ~Data();
         QV8Engine *v8;

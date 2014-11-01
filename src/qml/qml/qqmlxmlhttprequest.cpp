@@ -179,9 +179,9 @@ public:
 class NamedNodeMap : public Object
 {
 public:
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
-            : Object::Data(engine)
+            : Heap::Object(engine)
             , list(list)
             , d(data)
         {
@@ -215,9 +215,9 @@ DEFINE_OBJECT_VTABLE(NamedNodeMap);
 class NodeList : public Object
 {
 public:
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, NodeImpl *data)
-            : Object::Data(engine)
+            : Heap::Object(engine)
             , d(data)
         {
             setVTable(staticVTable());
@@ -250,9 +250,9 @@ DEFINE_OBJECT_VTABLE(NodeList);
 class NodePrototype : public Object
 {
 public:
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine)
-            : Object::Data(engine)
+            : Heap::Object(engine)
         {
             setVTable(staticVTable());
 
@@ -304,9 +304,9 @@ DEFINE_OBJECT_VTABLE(NodePrototype);
 
 struct Node : public Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, NodeImpl *data)
-            : Object::Data(engine)
+            : Heap::Object(engine)
             , d(data)
         {
             setVTable(staticVTable());
@@ -1595,9 +1595,9 @@ void QQmlXMLHttpRequest::destroyNetwork()
 
 struct QQmlXMLHttpRequestWrapper : public Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
-            : Object::Data(engine)
+            : Heap::Object(engine)
             , request(request)
         {
             setVTable(staticVTable());
@@ -1636,7 +1636,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
             ScopedString s(scope, engine->id_prototype);
             ctor->defineDefaultProperty(s.getPointer(), ScopedObject(scope, ctor->d()->proto));
         }
-        Object *proto;
+        QV4::Object *proto;
     };
     V4_OBJECT(FunctionObject)
     static void markObjects(Heap::Base *that, ExecutionEngine *e) {

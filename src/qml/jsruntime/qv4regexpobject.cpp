@@ -65,7 +65,7 @@ DEFINE_OBJECT_VTABLE(RegExpObject);
 DEFINE_OBJECT_VTABLE(RegExpPrototype);
 
 RegExpObject::Data::Data(InternalClass *ic)
-    : Object::Data(ic)
+    : Heap::Object(ic)
 {
     setVTable(staticVTable());
 
@@ -77,7 +77,7 @@ RegExpObject::Data::Data(InternalClass *ic)
 }
 
 RegExpObject::Data::Data(ExecutionEngine *engine, RegExp *value, bool global)
-    : Object::Data(engine->regExpClass)
+    : Heap::Object(engine->regExpClass)
     , value(value)
     , global(global)
 {
@@ -92,7 +92,7 @@ RegExpObject::Data::Data(ExecutionEngine *engine, RegExp *value, bool global)
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
 RegExpObject::Data::Data(ExecutionEngine *engine, const QRegExp &re)
-    : Object::Data(engine->regExpClass)
+    : Heap::Object(engine->regExpClass)
 {
     setVTable(staticVTable());
 

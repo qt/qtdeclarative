@@ -267,7 +267,7 @@ struct QV4ParticleData : public QV4::Object
 {
     struct Data : QV4::Object::Data {
         Data(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
             , datum(datum)
         {
             setVTable(QV4ParticleData::staticVTable());

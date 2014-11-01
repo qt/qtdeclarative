@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct RegExpObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, RegExp *value, bool global);
         Data(ExecutionEngine *engine, const QRegExp &re);
         Data(InternalClass *ic);

@@ -158,9 +158,9 @@ template <> bool convertValueToElement(const ValueRef value)
 template <typename Container>
 struct QQmlSequence : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(QV4::ExecutionEngine *engine, const Container &container)
-            : Object::Data(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
+            : Heap::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
             , container(container)
             , propertyIndex(-1)
             , isReference(false)
@@ -172,7 +172,7 @@ struct QQmlSequence : public QV4::Object
         }
 
         Data(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-            : Object::Data(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
+            : Heap::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
             , object(object)
             , propertyIndex(propertyIndex)
             , isReference(true)

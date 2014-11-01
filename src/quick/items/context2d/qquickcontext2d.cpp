@@ -476,9 +476,9 @@ V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 struct QQuickJSContext2D : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : QV4::Heap::Object {
          Data(QV4::ExecutionEngine *engine)
-             : Object::Data(engine)
+             : QV4::Heap::Object(engine)
          {
              setVTable(staticVTable());
          }
@@ -639,9 +639,9 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
 
 struct QQuickContext2DStyle : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *e)
-          : Object::Data(e)
+          : QV4::Heap::Object(e)
         {
             patternRepeatX = false;
             patternRepeatY = false;
@@ -860,9 +860,9 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 
 struct QQuickJSContext2DPixelData : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
         {
             setVTable(staticVTable());
             QV4::Scope scope(engine);
@@ -886,9 +886,9 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DPixelData);
 
 struct QQuickJSContext2DImageData : public QV4::Object
 {
-    struct Data : Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(QV4::ExecutionEngine *engine)
-            : Object::Data(engine)
+            : QV4::Heap::Object(engine)
         {
             setVTable(staticVTable());
             pixelData = QV4::Primitive::undefinedValue();

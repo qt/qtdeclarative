@@ -234,7 +234,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
 }
 
 QObjectWrapper::Data::Data(ExecutionEngine *engine, QObject *object)
-    : Object::Data(engine)
+    : Heap::Object(engine)
     , object(object)
 {
     setVTable(staticVTable());
@@ -1890,7 +1890,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 QmlSignalHandler::Data::Data(ExecutionEngine *engine, QObject *object, int signalIndex)
-    : Object::Data(engine)
+    : Heap::Object(engine)
     , object(object)
     , signalIndex(signalIndex)
 {

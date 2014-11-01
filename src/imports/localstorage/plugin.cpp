@@ -98,7 +98,7 @@ public:
     enum Type { Database, Query, Rows };
     struct Data : Object::Data {
         Data(ExecutionEngine *e)
-            : Object::Data(e)
+            : QV4::Heap::Object(e)
         {
             setVTable(staticVTable());
             type = Database;

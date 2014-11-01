@@ -41,18 +41,23 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_EXPORT Object: Managed {
-    struct Data : Heap::Base {
-        Data(ExecutionEngine *engine)
-            : Heap::Base(engine->objectClass)
-        {
-        }
-        Data(InternalClass *internal = 0);
+namespace Heap {
 
-        Heap::MemberData *memberData;
-        Heap::ArrayData *arrayData;
-    };
-    V4_OBJECT(Object)
+struct Object : Base {
+    Object(ExecutionEngine *engine)
+        : Base(engine->objectClass)
+    {
+    }
+    Object(InternalClass *internal = 0);
+
+    MemberData *memberData;
+    ArrayData *arrayData;
+};
+
+}
+
+struct Q_QML_EXPORT Object: Managed {
+    V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
 
     enum {
@@ -259,14 +264,14 @@ private:
 };
 
 struct BooleanObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, const ValueRef val)
-            : Object::Data(engine->booleanClass)
+            : Heap::Object(engine->booleanClass)
         {
             value = val;
         }
         Data(InternalClass *ic)
-            : Object::Data(ic)
+            : Heap::Object(ic)
         {
             Q_ASSERT(internalClass->vtable == staticVTable());
             value = Encode(false);
@@ -281,13 +286,13 @@ struct BooleanObject: Object {
 };
 
 struct NumberObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, const ValueRef val)
-            : Object::Data(engine->numberClass) {
+            : Heap::Object(engine->numberClass) {
             value = val;
         }
         Data(InternalClass *ic)
-            : Object::Data(ic) {
+            : Heap::Object(ic) {
             Q_ASSERT(internalClass->vtable == staticVTable());
             value = Encode((int)0);
         }
@@ -301,10 +306,10 @@ struct NumberObject: Object {
 };
 
 struct ArrayObject: Object {
-    struct Data : Object::Data {
-        Data(ExecutionEngine *engine) : Object::Data(engine->arrayClass) { init(); }
+    struct Data : Heap::Object {
+        Data(ExecutionEngine *engine) : Heap::Object(engine->arrayClass) { init(); }
         Data(ExecutionEngine *engine, const QStringList &list);
-        Data(InternalClass *ic) : Object::Data(ic) { init(); }
+        Data(InternalClass *ic) : Heap::Object(ic) { init(); }
         void init()
         { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
     };

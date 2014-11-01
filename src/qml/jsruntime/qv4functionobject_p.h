@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Q_QML_EXPORT FunctionObject: Object {
-    struct Q_QML_PRIVATE_EXPORT Data : Object::Data {
+    struct Q_QML_PRIVATE_EXPORT Data : Heap::Object {
         Data(ExecutionContext *scope, String *name, bool createProto = false);
         Data(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
         Data(ExecutionContext *scope, const ReturnedValue name);

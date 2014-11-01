@@ -69,7 +69,7 @@ struct QObjectSlotDispatcher;
 
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(ExecutionEngine *engine, QObject *object);
         QPointer<QObject> object;
     };
@@ -147,7 +147,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
 struct QmlSignalHandler : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
+    struct Data : QV4::Heap::Object {
         Data(ExecutionEngine *engine, QObject *object, int signalIndex);
         QPointer<QObject> object;
         int signalIndex;

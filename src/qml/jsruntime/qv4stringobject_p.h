@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct StringObject: Object {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *engine, const ValueRef value);
         Data(InternalClass *ic);
         Value value;

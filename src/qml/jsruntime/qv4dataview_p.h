@@ -56,7 +56,7 @@ struct DataViewCtor: FunctionObject
 
 struct DataView : Object
 {
-    struct Data : Object::Data {
+    struct Data : Heap::Object {
         Data(ExecutionEngine *e);
         ArrayBuffer *buffer;
         uint byteLength;
