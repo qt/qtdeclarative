@@ -504,7 +504,7 @@ void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 {
     //Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeAfter", "QSGNode is already a child!");
     Q_ASSERT_X(!node->m_parent, "QSGNode::insertChildNodeAfter", "QSGNode already has a parent");
-    Q_ASSERT_X(after && after->m_parent == this, "QSGNode::insertChildNodeBefore", "The parent of \'before\' is wrong");
+    Q_ASSERT_X(after && after->m_parent == this, "QSGNode::insertChildNodeAfter", "The parent of \'after\' is wrong");
 
 #ifndef QT_NO_DEBUG
     if (node->type() == QSGNode::GeometryNodeType) {
