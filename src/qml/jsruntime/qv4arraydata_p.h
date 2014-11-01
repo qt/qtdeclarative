@@ -115,7 +115,7 @@ struct SparseArrayData : public ArrayData {
 struct Q_QML_EXPORT ArrayData : public Managed
 {
     typedef Heap::ArrayData::Type Type;
-    V4_MANAGED2(ArrayData, Managed)
+    V4_MANAGED(ArrayData, Managed)
 
     uint alloc() const { return d()->alloc; }
     uint &alloc() { return d()->alloc; }

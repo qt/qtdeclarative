@@ -85,13 +85,13 @@ Returned<RegExp> *RegExp::create(ExecutionEngine* engine, const QString& pattern
     return result.asReturned();
 }
 
-RegExp::Data::Data(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : Heap::Base(engine->regExpValueClass)
+Heap::RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
+    : Base(engine->regExpValueClass)
     , pattern(pattern)
     , ignoreCase(ignoreCase)
     , multiLine(multiline)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RegExp::staticVTable());
     const char* error = 0;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiline, &error);
     if (error)
@@ -106,7 +106,7 @@ RegExp::Data::Data(ExecutionEngine* engine, const QString &pattern, bool ignoreC
 #endif
 }
 
-RegExp::Data::~Data()
+Heap::RegExp::~RegExp()
 {
     if (cache) {
         RegExpCacheKey key(this);

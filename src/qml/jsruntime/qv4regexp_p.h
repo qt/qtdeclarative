@@ -56,24 +56,28 @@ namespace QV4 {
 struct ExecutionEngine;
 struct RegExpCacheKey;
 
+namespace Heap {
+
+struct RegExp : Base {
+    RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
+    ~RegExp();
+    QString pattern;
+    OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
+#if ENABLE(YARR_JIT)
+    JSC::Yarr::YarrCodeBlock jitCode;
+#endif
+    RegExpCache *cache;
+    int subPatternCount;
+    bool ignoreCase;
+    bool multiLine;
+};
+
+}
+
 struct RegExp : public Managed
 {
-    struct Data : Heap::Base {
-        Data(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
-        ~Data();
-        QString pattern;
-        OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
-#if ENABLE(YARR_JIT)
-        JSC::Yarr::YarrCodeBlock jitCode;
-#endif
-        RegExpCache *cache;
-        int subPatternCount;
-        bool ignoreCase;
-        bool multiLine;
-    };
-    V4_MANAGED(Managed)
+    V4_MANAGED(RegExp, Managed)
     Q_MANAGED_TYPE(RegExp)
-
 
     QString pattern() const { return d()->pattern; }
     OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return d()->byteCode; }

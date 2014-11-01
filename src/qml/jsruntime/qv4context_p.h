@@ -142,7 +142,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         IsExecutionContext = true
     };
 
-    V4_MANAGED2(ExecutionContext, Managed)
+    V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
     ExecutionContext(ExecutionEngine *engine, Heap::ExecutionContext::ContextType t)
@@ -183,7 +183,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
 struct CallContext : public ExecutionContext
 {
-    V4_MANAGED2(CallContext, ExecutionContext)
+    V4_MANAGED(CallContext, ExecutionContext)
 
     // formals are in reverse order
     String * const *formals() const;
@@ -201,18 +201,18 @@ inline ReturnedValue CallContext::argument(int i) {
 
 struct GlobalContext : public ExecutionContext
 {
-    V4_MANAGED2(GlobalContext, ExecutionContext)
+    V4_MANAGED(GlobalContext, ExecutionContext)
 
 };
 
 struct CatchContext : public ExecutionContext
 {
-    V4_MANAGED2(CatchContext, ExecutionContext)
+    V4_MANAGED(CatchContext, ExecutionContext)
 };
 
 struct WithContext : public ExecutionContext
 {
-    V4_MANAGED2(WithContext, ExecutionContext)
+    V4_MANAGED(WithContext, ExecutionContext)
 };
 
 inline CallContext *ExecutionContext::asCallContext()

@@ -54,7 +54,7 @@ struct MemberData : Base {
 
 struct MemberData : Managed
 {
-    V4_MANAGED2(MemberData, Managed)
+    V4_MANAGED(MemberData, Managed)
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }

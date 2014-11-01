@@ -57,19 +57,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define V4_MANAGED_SIZE_TEST
 #endif
 
-#define V4_MANAGED(superClass) \
-    public: \
-        Q_MANAGED_CHECK \
-        typedef superClass SuperClass; \
-        static const QV4::ManagedVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
-        template <typename _T> \
-        QV4::Returned<_T> *asReturned() { return QV4::Returned<_T>::create(this); } \
-        V4_MANAGED_SIZE_TEST \
-        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
-        Data *d() { return &static_cast<Data &>(Managed::data); }
-
-#define V4_MANAGED2(DataClass, superClass) \
+#define V4_MANAGED(DataClass, superClass) \
     public: \
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \
@@ -190,7 +178,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 struct Q_QML_PRIVATE_EXPORT Managed
 {
     Heap::Base data;
-    V4_MANAGED2(Base, Managed)
+    V4_MANAGED(Base, Managed)
     enum {
         IsExecutionContext = false,
         IsString = false,
