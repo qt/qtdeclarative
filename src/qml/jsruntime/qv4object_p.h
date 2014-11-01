@@ -54,6 +54,38 @@ struct Object : Base {
     ArrayData *arrayData;
 };
 
+struct BooleanObject : Object {
+    BooleanObject(ExecutionEngine *engine, const ValueRef val)
+        : Object(engine->booleanClass)
+    {
+        value = val;
+    }
+    inline BooleanObject(InternalClass *ic);
+    Value value;
+};
+
+struct NumberObject : Object {
+    NumberObject(ExecutionEngine *engine, const ValueRef val)
+        : Object(engine->numberClass) {
+        value = val;
+    }
+    inline NumberObject(InternalClass *ic);
+    Value value;
+};
+
+struct ArrayObject : Object {
+    enum {
+        LengthPropertyIndex = 0
+    };
+
+    ArrayObject(ExecutionEngine *engine) : Heap::Object(engine->arrayClass) { init(); }
+    ArrayObject(ExecutionEngine *engine, const QStringList &list);
+    ArrayObject(InternalClass *ic) : Heap::Object(ic) { init(); }
+    void init()
+    { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
+};
+
+
 }
 
 struct Q_QML_EXPORT Object: Managed {
@@ -264,61 +296,36 @@ private:
 };
 
 struct BooleanObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, const ValueRef val)
-            : Heap::Object(engine->booleanClass)
-        {
-            value = val;
-        }
-        Data(InternalClass *ic)
-            : Heap::Object(ic)
-        {
-            Q_ASSERT(internalClass->vtable == staticVTable());
-            value = Encode(false);
-        }
-        Value value;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(BooleanObject, Object)
     Q_MANAGED_TYPE(BooleanObject)
 
     Value value() const { return d()->value; }
 
 };
 
+Heap::BooleanObject::BooleanObject(InternalClass *ic)
+    : Heap::Object(ic)
+{
+    Q_ASSERT(internalClass->vtable == QV4::BooleanObject::staticVTable());
+    value = Encode(false);
+}
+
 struct NumberObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, const ValueRef val)
-            : Heap::Object(engine->numberClass) {
-            value = val;
-        }
-        Data(InternalClass *ic)
-            : Heap::Object(ic) {
-            Q_ASSERT(internalClass->vtable == staticVTable());
-            value = Encode((int)0);
-        }
-        Value value;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(NumberObject, Object)
     Q_MANAGED_TYPE(NumberObject)
 
     Value value() const { return d()->value; }
-
 };
 
-struct ArrayObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine) : Heap::Object(engine->arrayClass) { init(); }
-        Data(ExecutionEngine *engine, const QStringList &list);
-        Data(InternalClass *ic) : Heap::Object(ic) { init(); }
-        void init()
-        { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
-    };
+Heap::NumberObject::NumberObject(InternalClass *ic)
+    : Heap::Object(ic) {
+    Q_ASSERT(internalClass->vtable == QV4::NumberObject::staticVTable());
+    value = Encode((int)0);
+}
 
-    V4_OBJECT(Object)
+struct ArrayObject: Object {
+    V4_OBJECT2(ArrayObject, Object)
     Q_MANAGED_TYPE(ArrayObject)
-    enum {
-        LengthPropertyIndex = 0
-    };
 
     void init(ExecutionEngine *engine);
 
@@ -332,7 +339,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        memberData()->data()[ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
+        memberData()->data()[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const ValueRef v)

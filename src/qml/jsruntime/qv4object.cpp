@@ -461,7 +461,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
 
     InternalClass *c = o->internalClass();
     uint idx = c->find(l->name);
-    if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
+    if (!o->isArrayObject() || idx != Heap::ArrayObject::LengthPropertyIndex) {
         if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass();
             l->index = idx;
@@ -841,9 +841,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     uint memberIndex;
 
     if (isArrayObject() && name->equals(ctx->d()->engine->id_length)) {
-        assert(ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->d()->engine->id_length));
-        Property *lp = propertyAt(ArrayObject::LengthPropertyIndex);
-        cattrs = internalClass()->propertyData.constData() + ArrayObject::LengthPropertyIndex;
+        assert(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->d()->engine->id_length));
+        Property *lp = propertyAt(Heap::ArrayObject::LengthPropertyIndex);
+        cattrs = internalClass()->propertyData.constData() + Heap::ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
         if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
@@ -895,7 +895,7 @@ reject:
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
 {
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (ArgumentsObject::isNonStrictArgumentsObject(this))
@@ -1097,7 +1097,7 @@ uint Object::getLength(const Managed *m)
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());
-    if (!internalClass()->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (!internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
         return false;
     uint oldLen = getLength();
     bool ok = true;
@@ -1129,7 +1129,7 @@ void Object::initSparseArray()
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
-ArrayObject::Data::Data(ExecutionEngine *engine, const QStringList &list)
+Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Heap::Object(engine->arrayClass)
 {
     init();
@@ -1154,7 +1154,7 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);
-        return a->memberData()->data()[ArrayObject::LengthPropertyIndex].asReturnedValue();
+        return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
     }
     return Object::getLookup(m, l);
 }
@@ -1162,9 +1162,9 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 uint ArrayObject::getLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
-    if (a->memberData()->data()[ArrayObject::LengthPropertyIndex].isInteger())
-        return a->memberData()->data()[ArrayObject::LengthPropertyIndex].integerValue();
-    return Primitive::toUInt32(a->memberData()->data()[ArrayObject::LengthPropertyIndex].doubleValue());
+    if (a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].isInteger())
+        return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].integerValue();
+    return Primitive::toUInt32(a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].doubleValue());
 }
 
 QStringList ArrayObject::toQStringList() const

@@ -565,7 +565,7 @@ ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
 ReturnedValue Lookup::arrayLengthGetter(Lookup *l, const ValueRef object)
 {
     if (ArrayObject *a = object->asArrayObject())
-        return a->memberData()->data()[ArrayObject::LengthPropertyIndex].asReturnedValue();
+        return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
 
     l->getter = getterGeneric;
     return getterGeneric(l, object);

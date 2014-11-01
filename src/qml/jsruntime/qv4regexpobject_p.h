@@ -75,7 +75,7 @@ struct RegExpObject: Object {
     };
 
     enum {
-        Index_ArrayIndex = ArrayObject::LengthPropertyIndex + 1,
+        Index_ArrayIndex = Heap::ArrayObject::LengthPropertyIndex + 1,
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
