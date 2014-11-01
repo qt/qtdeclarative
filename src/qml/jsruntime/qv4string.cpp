@@ -122,7 +122,7 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->d()->~Data();
 }
 
-void String::markObjects(HeapObject *that, ExecutionEngine *e)
+void String::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     String::Data *s = static_cast<String::Data *>(that);
     if (s->largestSubLength) {
@@ -244,7 +244,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
 
 
 String::Data::Data(ExecutionEngine *engine, const QString &t)
-    : Managed::Data(engine->stringClass)
+    : Heap::Base(engine->stringClass)
 {
     subtype = StringType_Unknown;
 
@@ -257,7 +257,7 @@ String::Data::Data(ExecutionEngine *engine, const QString &t)
 }
 
 String::Data::Data(ExecutionEngine *engine, String *l, String *r)
-    : Managed::Data(engine->stringClass)
+    : Heap::Base(engine->stringClass)
 {
     subtype = StringType_Unknown;
 

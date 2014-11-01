@@ -110,7 +110,7 @@ struct ScopedValue
 #endif
     }
 
-    ScopedValue(const Scope &scope, HeapObject *o)
+    ScopedValue(const Scope &scope, Heap::Base *o)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->m = o;
@@ -155,7 +155,7 @@ struct ScopedValue
         return *this;
     }
 
-    ScopedValue &operator=(HeapObject *o) {
+    ScopedValue &operator=(Heap::Base *o) {
         ptr->m = o;
 #if QT_POINTER_SIZE == 4
         ptr->tag = QV4::Value::Managed_Type;
@@ -228,7 +228,7 @@ struct Scoped
         ++scope.size;
 #endif
     }
-    Scoped(const Scope &scope, HeapObject *o)
+    Scoped(const Scope &scope, Heap::Base *o)
     {
         Value v;
         v.m = o;
@@ -316,7 +316,7 @@ struct Scoped
 #endif
     }
 
-    Scoped<T> &operator=(HeapObject *o) {
+    Scoped<T> &operator=(Heap::Base *o) {
         Value v;
         v.m = o;
 #if QT_POINTER_SIZE == 4

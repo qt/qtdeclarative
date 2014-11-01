@@ -151,11 +151,11 @@ public:
         jsStackTop -= nValues;
     }
 
-    void pushForGC(HeapObject *m) {
+    void pushForGC(Heap::Base *m) {
         *jsStackTop = Value::fromHeapObject(m);
         ++jsStackTop;
     }
-    HeapObject *popForGC() {
+    Heap::Base *popForGC() {
         --jsStackTop;
         return jsStackTop->heapObject();
     }
@@ -398,7 +398,7 @@ void Managed::mark(QV4::ExecutionEngine *engine)
 
 
 inline
-void HeapObject::mark(QV4::ExecutionEngine *engine)
+void Heap::Base::mark(QV4::ExecutionEngine *engine)
 {
     Q_ASSERT(inUse);
     if (markBit)

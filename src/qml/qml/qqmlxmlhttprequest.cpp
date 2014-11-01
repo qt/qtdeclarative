@@ -1639,7 +1639,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Object *proto;
     };
     V4_OBJECT(FunctionObject)
-    static void markObjects(HeapObject *that, ExecutionEngine *e) {
+    static void markObjects(Heap::Base *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor::Data *c = static_cast<QQmlXMLHttpRequestCtor::Data *>(that);
         if (c->proto)
             c->proto->mark(e);

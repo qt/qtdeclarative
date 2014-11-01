@@ -155,7 +155,7 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
     return Encode::undefined();
 }
 
-void FunctionObject::markObjects(HeapObject *that, ExecutionEngine *e)
+void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     FunctionObject::Data *o = static_cast<FunctionObject::Data *>(that);
     if (o->scope)
@@ -293,7 +293,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() != ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty()) {
+        if (arr->arrayType() != Heap::ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty()) {
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
@@ -649,7 +649,7 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     return f->target()->construct(callData);
 }
 
-void BoundFunction::markObjects(HeapObject *that, ExecutionEngine *e)
+void BoundFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
     o->target->mark(e);

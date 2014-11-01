@@ -111,7 +111,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     return result.asReturnedValue();
 }
 
-void QmlBindingWrapper::markObjects(HeapObject *m, ExecutionEngine *e)
+void QmlBindingWrapper::markObjects(Heap::Base *m, ExecutionEngine *e)
 {
     QmlBindingWrapper::Data *wrapper = static_cast<QmlBindingWrapper::Data *>(m);
     if (wrapper->qml)

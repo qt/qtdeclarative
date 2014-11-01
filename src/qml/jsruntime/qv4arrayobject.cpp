@@ -293,7 +293,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 
     if (!ctx->d()->callData->argc) {
         ;
-    } else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayType() == ArrayData::Simple) {
+    } else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayType() == Heap::ArrayData::Simple) {
         instance->arrayData()->vtable()->putArray(instance.getPointer(), len, ctx->d()->callData->args, ctx->d()->callData->argc);
         len = instance->arrayData()->length();
     } else {
@@ -361,7 +361,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     ScopedValue result(scope);
 
-    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len && instance->arrayData()->type() != ArrayData::Custom) {
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len && instance->arrayData()->type() != Heap::ArrayData::Custom) {
         result = instance->arrayData()->vtable()->pop_front(instance.getPointer());
     } else {
         result = instance->getIndexed(0);
@@ -541,7 +541,8 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len && instance->arrayData()->type() != ArrayData::Custom) {
+    if (!instance->protoHasArray() && !instance->arrayData()->hasAttributes() && instance->arrayData()->length() <= len &&
+        instance->arrayData()->type() != Heap::ArrayData::Custom) {
         instance->arrayData()->vtable()->push_front(instance.getPointer(), ctx->d()->callData->args, ctx->d()->callData->argc);
     } else {
         ScopedValue v(scope);
@@ -604,7 +605,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 
     ScopedValue value(scope);
 
-    if (instance->hasAccessorProperty() || (instance->arrayType() >= ArrayData::Sparse) || instance->protoHasArray()) {
+    if (instance->hasAccessorProperty() || (instance->arrayType() >= Heap::ArrayData::Sparse) || instance->protoHasArray()) {
         // lets be safe and slow
         for (uint i = fromIndex; i < len; ++i) {
             bool exists;
@@ -617,7 +618,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
     } else if (!instance->arrayData()) {
         return Encode(-1);
     } else {
-        Q_ASSERT(instance->arrayType() == ArrayData::Simple || instance->arrayType() == ArrayData::Complex);
+        Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple || instance->arrayType() == Heap::ArrayData::Complex);
         SimpleArrayData *sa = static_cast<SimpleArrayData *>(instance->arrayData());
         if (len > sa->len())
             len = sa->len();

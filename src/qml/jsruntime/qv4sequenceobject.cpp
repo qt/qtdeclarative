@@ -167,7 +167,7 @@ struct QQmlSequence : public QV4::Object
         {
             QV4::Scope scope(engine);
             QV4::Scoped<QQmlSequence<Container> > o(scope, this);
-            o->setArrayType(ArrayData::Custom);
+            o->setArrayType(Heap::ArrayData::Custom);
             o->init();
         }
 
@@ -179,7 +179,7 @@ struct QQmlSequence : public QV4::Object
         {
             QV4::Scope scope(engine);
             QV4::Scoped<QQmlSequence<Container> > o(scope, this);
-            o->setArrayType(ArrayData::Custom);
+            o->setArrayType(Heap::ArrayData::Custom);
             o->loadReference();
             o->init();
         }

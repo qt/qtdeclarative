@@ -69,6 +69,18 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
         Data *d() { return &static_cast<Data &>(Managed::data); }
 
+#define V4_MANAGED2(Data, superClass) \
+    public: \
+        Q_MANAGED_CHECK \
+        typedef superClass SuperClass; \
+        static const QV4::ManagedVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
+        template <typename _T> \
+        QV4::Returned<_T> *asReturned() { return QV4::Returned<_T>::create(this); } \
+        V4_MANAGED_SIZE_TEST \
+        const QV4::Heap::Data *d() const { return &static_cast<const QV4::Heap::Data &>(Managed::data); } \
+        QV4::Heap::Data *d() { return &static_cast<QV4::Heap::Data &>(Managed::data); }
+
 #define V4_OBJECT(superClass) \
     public: \
         Q_MANAGED_CHECK \
@@ -110,7 +122,7 @@ struct ManagedVTable
     uint type : 8;
     const char *className;
     void (*destroy)(Managed *);
-    void (*markObjects)(HeapObject *, ExecutionEngine *e);
+    void (*markObjects)(Heap::Base *, ExecutionEngine *e);
     bool (*isEqualTo)(Managed *m, Managed *other);
 };
 
@@ -176,14 +188,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 
 struct Q_QML_PRIVATE_EXPORT Managed
 {
-    struct Q_QML_PRIVATE_EXPORT Data : HeapObject {
-        Data() : HeapObject(0) {}
-        Data(InternalClass *internal)
-            : HeapObject(internal)
-        {}
-    };
-    Data data;
-    V4_MANAGED(Managed)
+    Heap::Base data;
+    V4_MANAGED2(Base, Managed)
     enum {
         IsExecutionContext = false,
         IsString = false,

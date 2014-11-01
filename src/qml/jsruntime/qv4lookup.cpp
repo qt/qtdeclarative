@@ -163,7 +163,7 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const ValueRef object, c
         return indexedGetterGeneric(l, object, index);
 
     Object *o = object->objectValue();
-    if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
+    if (o->arrayData() && o->arrayData()->type() == Heap::ArrayData::Simple) {
         SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
         if (idx < s->len())
             if (!s->data(idx).isEmpty())
@@ -177,7 +177,7 @@ void Lookup::indexedSetterGeneric(Lookup *l, const ValueRef object, const ValueR
 {
     if (object->isObject()) {
         Object *o = object->objectValue();
-        if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple && index->asArrayIndex() < UINT_MAX) {
+        if (o->arrayData() && o->arrayData()->type() == Heap::ArrayData::Simple && index->asArrayIndex() < UINT_MAX) {
             l->indexedSetter = indexedSetterObjectInt;
             indexedSetterObjectInt(l, object, index, v);
             return;
@@ -196,7 +196,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
-        if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
+        if (o->arrayData() && o->arrayData()->type() == Heap::ArrayData::Simple) {
             SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
             if (idx < s->len() && !s->data(idx).isEmpty()) {
                 s->data(idx) = value;
@@ -220,7 +220,7 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const Valu
     }
 
     Object *o = object->objectValue();
-    if (o->arrayData() && o->arrayData()->type() == ArrayData::Simple) {
+    if (o->arrayData() && o->arrayData()->type() == Heap::ArrayData::Simple) {
         SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
         if (idx < s->len() && !s->data(idx).isEmpty()) {
             s->data(idx) = v;

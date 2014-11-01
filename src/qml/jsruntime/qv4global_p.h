@@ -114,6 +114,10 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+    struct Base;
+}
+
 class MemoryManager;
 struct String;
 struct Object;
@@ -127,7 +131,6 @@ struct InternalClass;
 struct Property;
 struct Value;
 struct Lookup;
-struct HeapObject;
 struct ArrayData;
 struct ManagedVTable;
 

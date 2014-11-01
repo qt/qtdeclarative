@@ -129,7 +129,7 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
             Object *proto = current->objectValue()->prototype();
             current->m = proto ? &proto->data : 0;
         } else
-            current->m = (HeapObject *)0;
+            current->m = (Heap::Base *)0;
 
         arrayIndex = 0;
         memberIndex = 0;
@@ -210,7 +210,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
 DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
 
-void ForEachIteratorObject::markObjects(HeapObject *that, ExecutionEngine *e)
+void ForEachIteratorObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     ForEachIteratorObject::Data *o = static_cast<ForEachIteratorObject::Data *>(that);
     o->workArea[0].mark(e);

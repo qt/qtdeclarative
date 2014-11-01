@@ -86,7 +86,7 @@ Returned<RegExp> *RegExp::create(ExecutionEngine* engine, const QString& pattern
 }
 
 RegExp::Data::Data(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : Managed::Data(engine->regExpValueClass)
+    : Heap::Base(engine->regExpValueClass)
     , pattern(pattern)
     , ignoreCase(ignoreCase)
     , multiLine(multiline)
@@ -119,7 +119,7 @@ void RegExp::destroy(Managed *that)
     static_cast<RegExp*>(that)->d()->~Data();
 }
 
-void RegExp::markObjects(HeapObject *that, ExecutionEngine *e)
+void RegExp::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Q_UNUSED(that);
     Q_UNUSED(e);

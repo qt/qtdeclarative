@@ -45,7 +45,7 @@ struct Identifier;
 
 struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
-    struct Q_QML_PRIVATE_EXPORT Data : Managed::Data {
+    struct Q_QML_PRIVATE_EXPORT Data : Heap::Base {
         Data(ExecutionEngine *engine, const QString &text);
         Data(ExecutionEngine *engine, String *l, String *n);
         ~Data() {
@@ -154,7 +154,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
 protected:
     static void destroy(Managed *);
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);

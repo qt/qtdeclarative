@@ -49,7 +49,7 @@ ArgumentsObject::Data::Data(CallContext *context)
     Scope scope(v4);
     Scoped<ArgumentsObject> args(scope, this);
 
-    args->setArrayType(ArrayData::Complex);
+    args->setArrayType(Heap::ArrayData::Complex);
 
     if (context->d()->strictMode) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
@@ -78,7 +78,7 @@ void ArgumentsObject::fullyCreate()
 
     uint numAccessors = qMin((int)context()->d()->function->formalParameterCount(), context()->d()->realArgumentCount);
     uint argCount = qMin(context()->d()->realArgumentCount, context()->d()->callData->argc);
-    ArrayData::realloc(this, ArrayData::Sparse, argCount, true);
+    ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     context()->d()->engine->requireArgumentsAccessors(numAccessors);
 
     Scope scope(engine());
@@ -226,7 +226,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     return Encode::undefined();
 }
 
-void ArgumentsObject::markObjects(HeapObject *that, ExecutionEngine *e)
+void ArgumentsObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     ArgumentsObject::Data *o = static_cast<ArgumentsObject::Data *>(that);
     if (o->context)

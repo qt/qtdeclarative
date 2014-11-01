@@ -85,7 +85,7 @@ DataView::Data::Data(ExecutionEngine *e)
 }
 
 
-void DataView::markObjects(HeapObject *that, ExecutionEngine *e)
+void DataView::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     DataView::Data *v = static_cast<DataView::Data *>(that);
     v->buffer->mark(e);

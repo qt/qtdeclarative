@@ -53,7 +53,7 @@ QmlListWrapper::Data::Data(QV8Engine *engine)
 
     QV4::Scope scope(QV8Engine::getV4(engine));
     QV4::ScopedObject o(scope, this);
-    o->setArrayType(ArrayData::Custom);
+    o->setArrayType(Heap::ArrayData::Custom);
 }
 
 QmlListWrapper::Data::~Data()

@@ -44,8 +44,10 @@ namespace QV4 {
 
 typedef uint Bool;
 
-struct Q_QML_EXPORT HeapObject {
-    HeapObject(InternalClass *internal)
+namespace Heap {
+
+struct Q_QML_EXPORT Base {
+    Base(InternalClass *internal)
         : internalClass(internal)
         , markBit(0)
         , inUse(1)
@@ -75,15 +77,17 @@ struct Q_QML_EXPORT HeapObject {
     inline void mark(QV4::ExecutionEngine *engine);
 
     void *operator new(size_t, Managed *m) { return m; }
-    void *operator new(size_t, HeapObject *m) { return m; }
-    void operator delete(void *, HeapObject *) {}
+    void *operator new(size_t, Heap::Base *m) { return m; }
+    void operator delete(void *, Heap::Base *) {}
 };
 
+}
+
 template <typename T>
-struct Returned : private HeapObject
+struct Returned : private Heap::Base
 {
-    static Returned<T> *create(T *t) { Q_ASSERT((void *)&t->data == (void *)t); return static_cast<Returned<T> *>(static_cast<HeapObject*>(t ? &t->data : 0)); }
-    static Returned<T> *create(typename T::Data *t) { return static_cast<Returned<T> *>(static_cast<HeapObject*>(t)); }
+    static Returned<T> *create(T *t) { Q_ASSERT((void *)&t->data == (void *)t); return static_cast<Returned<T> *>(static_cast<Heap::Base*>(t ? &t->data : 0)); }
+    static Returned<T> *create(typename T::Data *t) { return static_cast<Returned<T> *>(static_cast<Heap::Base*>(t)); }
     T *getPointer() { return reinterpret_cast<T *>(this); }
     template<typename X>
     static T *getPointer(Returned<X> *x) { return x->getPointer(); }
@@ -121,7 +125,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     union {
         quint64 val;
 #if QT_POINTER_SIZE == 8
-        HeapObject *m;
+        Heap::Base *m;
 #else
         double dbl;
 #endif
@@ -133,7 +137,7 @@ struct Q_QML_PRIVATE_EXPORT Value
                 uint uint_32;
                 int int_32;
 #if QT_POINTER_SIZE == 4
-                HeapObject *m;
+                Heap::Base *m;
 #endif
             };
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
@@ -309,7 +313,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     Managed *managed() const {
         return m ? reinterpret_cast<Managed*>(m) : 0;
     }
-    HeapObject *heapObject() const {
+    Heap::Base *heapObject() const {
         return m;
     }
 
@@ -317,7 +321,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         return val;
     }
 
-    static inline Value fromHeapObject(HeapObject *m)
+    static inline Value fromHeapObject(Heap::Base *m)
     {
         Value v;
         v.m = m;
@@ -391,7 +395,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         val = Value::fromManaged(t).val;
         return *this;
     }
-    Value &operator=(HeapObject *o) {
+    Value &operator=(Heap::Base *o) {
         m = o;
         return *this;
     }
@@ -581,9 +585,9 @@ private:
 };
 
 inline
-ReturnedValue HeapObject::asReturnedValue() const
+ReturnedValue Heap::Base::asReturnedValue() const
 {
-    return Value::fromHeapObject(const_cast<HeapObject *>(this)).asReturnedValue();
+    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
 }
 
 

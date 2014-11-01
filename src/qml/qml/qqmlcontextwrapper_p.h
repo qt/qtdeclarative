@@ -93,7 +93,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);
     static void destroy(Managed *that);
-    static void markObjects(HeapObject *m, ExecutionEngine *engine);
+    static void markObjects(Heap::Base *m, ExecutionEngine *engine);
 
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
@@ -111,7 +111,7 @@ struct QQmlIdObjectsArray : public Object
     V4_OBJECT(Object)
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void markObjects(HeapObject *that, ExecutionEngine *engine);
+    static void markObjects(Heap::Base *that, ExecutionEngine *engine);
 
 };
 

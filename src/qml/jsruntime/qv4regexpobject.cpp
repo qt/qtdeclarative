@@ -170,7 +170,7 @@ void RegExpObject::init(ExecutionEngine *engine)
 }
 
 
-void RegExpObject::markObjects(HeapObject *that, ExecutionEngine *e)
+void RegExpObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     RegExpObject::Data *re = static_cast<RegExpObject::Data *>(that);
     if (re->value)
@@ -303,7 +303,7 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void RegExpCtor::markObjects(HeapObject *that, ExecutionEngine *e)
+void RegExpCtor::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     RegExpCtor::Data *This = static_cast<RegExpCtor::Data *>(that);
     This->lastMatch.mark(e);

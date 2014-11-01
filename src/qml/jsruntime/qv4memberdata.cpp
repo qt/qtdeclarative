@@ -38,24 +38,24 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(MemberData);
 
-void MemberData::markObjects(HeapObject *that, ExecutionEngine *e)
+void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
-    MemberData::Data *m = static_cast<MemberData::Data *>(that);
+    Heap::MemberData *m = static_cast<Heap::MemberData *>(that);
     for (uint i = 0; i < m->size; ++i)
         m->data[i].mark(e);
 }
 
-MemberData::Data *MemberData::reallocate(ExecutionEngine *e, Data *old, uint idx)
+Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *old, uint idx)
 {
     uint s = old ? old->size : 0;
     if (idx < s)
         return old;
 
     int newAlloc = qMax((uint)4, 2*idx);
-    uint alloc = sizeof(Data) + (newAlloc)*sizeof(Value);
+    uint alloc = sizeof(Heap::MemberData) + (newAlloc)*sizeof(Value);
     MemberData *newMemberData = static_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
     if (old)
-        memcpy(newMemberData, old, sizeof(MemberData::Data) + s*sizeof(Value));
+        memcpy(newMemberData, old, sizeof(Heap::MemberData) + s*sizeof(Value));
     else
         new (newMemberData) MemberData(e->memberDataClass);
     newMemberData->d()->size = newAlloc;

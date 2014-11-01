@@ -3262,7 +3262,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
             setVTable(staticVTable());
             QV4::Scope scope(engine);
             QV4::ScopedObject o(scope, this);
-            o->setArrayType(QV4::ArrayData::Custom);
+            o->setArrayType(QV4::Heap::ArrayData::Custom);
         }
         QVector<QQmlChangeSet::Change> changes;
     };

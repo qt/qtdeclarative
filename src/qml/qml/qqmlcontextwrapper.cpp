@@ -347,7 +347,7 @@ void QmlContextWrapper::destroy(Managed *that)
     static_cast<QmlContextWrapper *>(that)->d()->~Data();
 }
 
-void QmlContextWrapper::markObjects(HeapObject *m, ExecutionEngine *engine)
+void QmlContextWrapper::markObjects(Heap::Base *m, ExecutionEngine *engine)
 {
     QmlContextWrapper::Data *This = static_cast<QmlContextWrapper::Data *>(m);
     if (This->idObjectsWrapper)
@@ -465,7 +465,7 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
     return QObjectWrapper::wrap(This->engine(), context->idValues[index].data());
 }
 
-void QQmlIdObjectsArray::markObjects(HeapObject *that, ExecutionEngine *engine)
+void QQmlIdObjectsArray::markObjects(Heap::Base *that, ExecutionEngine *engine)
 {
     QQmlIdObjectsArray::Data *This = static_cast<QQmlIdObjectsArray::Data *>(that);
     This->contextWrapper->mark(engine);

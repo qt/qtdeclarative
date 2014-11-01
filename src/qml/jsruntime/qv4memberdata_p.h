@@ -40,16 +40,21 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct MemberData : Base {
+    union {
+        uint size;
+        double _dummy;
+    };
+    Value data[1];
+};
+
+}
+
 struct MemberData : Managed
 {
-    struct Data : Managed::Data {
-        union {
-            uint size;
-            double _dummy;
-        };
-        Value data[1];
-    };
-    V4_MANAGED(Managed)
+    V4_MANAGED2(MemberData, Managed)
 
     MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }
@@ -57,9 +62,9 @@ struct MemberData : Managed
     Value *data() { return d()->data; }
     inline uint size() const { return d()->size; }
 
-    static MemberData::Data *reallocate(QV4::ExecutionEngine *e, MemberData::Data *old, uint idx);
+    static Heap::MemberData *reallocate(QV4::ExecutionEngine *e, Heap::MemberData *old, uint idx);
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }

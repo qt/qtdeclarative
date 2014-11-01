@@ -339,7 +339,7 @@ TypedArray::Data::Data(ExecutionEngine *e, Type t)
 {
 }
 
-void TypedArray::markObjects(HeapObject *that, ExecutionEngine *e)
+void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     static_cast<TypedArray::Data *>(that)->buffer->mark(e);
     Object::markObjects(that, e);

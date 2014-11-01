@@ -867,7 +867,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
             setVTable(staticVTable());
             QV4::Scope scope(engine);
             QV4::ScopedObject o(scope, this);
-            o->setArrayType(QV4::ArrayData::Custom);
+            o->setArrayType(QV4::Heap::ArrayData::Custom);
         }
         QImage image;
     };
@@ -908,7 +908,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
     static QV4::ReturnedValue method_get_height(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_data(QV4::CallContext *ctx);
 
-    static void markObjects(QV4::HeapObject *that, QV4::ExecutionEngine *engine) {
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *engine) {
         static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(engine);
         QV4::Object::markObjects(that, engine);
     }

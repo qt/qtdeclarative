@@ -59,7 +59,7 @@ struct StringObject: Object {
 
 protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs);
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 struct StringCtor: FunctionObject

@@ -102,7 +102,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool strictMode() const { return d()->strictMode; }
     bool bindingKeyFlag() const { return d()->bindingKeyFlag; }
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 template<>
@@ -205,7 +205,7 @@ struct BoundFunction: FunctionObject {
         Data(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, MemberData *boundArgs);
         FunctionObject *target;
         Value boundThis;
-        MemberData::Data *boundArgs;
+        Heap::MemberData *boundArgs;
     };
     V4_OBJECT(FunctionObject)
 
@@ -222,7 +222,7 @@ struct BoundFunction: FunctionObject {
     static ReturnedValue construct(Managed *, CallData *d);
     static ReturnedValue call(Managed *that, CallData *dd);
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }

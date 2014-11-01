@@ -71,9 +71,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         EvalCode *next;
     };
 
-    struct Data : Managed::Data {
+    struct Data : Heap::Base {
         Data(ExecutionEngine *engine, ContextType t)
-            : Managed::Data(engine->executionContextClass)
+            : Heap::Base(engine->executionContextClass)
             , type(t)
             , strictMode(false)
             , engine(engine)
@@ -137,7 +137,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
 
-    static void markObjects(HeapObject *m, ExecutionEngine *e);
+    static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
 
 struct CallContext : public ExecutionContext

@@ -58,7 +58,7 @@ struct RegExpCacheKey;
 
 struct RegExp : public Managed
 {
-    struct Data : Managed::Data {
+    struct Data : Heap::Base {
         Data(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
         ~Data();
         QString pattern;
@@ -94,7 +94,7 @@ struct RegExp : public Managed
     int captureCount() const { return subPatternCount() + 1; }
 
     static void destroy(Managed *that);
-    static void markObjects(HeapObject *that, QV4::ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     friend class RegExpCache;
 };

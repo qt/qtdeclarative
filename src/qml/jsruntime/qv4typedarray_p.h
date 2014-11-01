@@ -82,7 +82,7 @@ struct TypedArray : Object
     }
 
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void putIndexed(Managed *m, uint index, const ValueRef value);
 };

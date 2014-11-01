@@ -985,7 +985,7 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *
     }
 }
 
-void QObjectWrapper::markObjects(HeapObject *that, QV4::ExecutionEngine *e)
+void QObjectWrapper::markObjects(Heap::Base *that, QV4::ExecutionEngine *e)
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
 

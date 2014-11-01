@@ -50,7 +50,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(Object);
 
 Object::Data::Data(InternalClass *internalClass)
-    : Managed::Data(internalClass)
+    : Heap::Base(internalClass)
 {
     if (internalClass->size) {
         Scope scope(internalClass->engine);
@@ -178,7 +178,7 @@ void Object::defineReadonlyProperty(String *name, ValueRef value)
     insertMember(name, value, Attr_ReadOnly);
 }
 
-void Object::markObjects(HeapObject *that, ExecutionEngine *e)
+void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Object::Data *o = static_cast<Object::Data *>(that);
 
@@ -1072,7 +1072,7 @@ void Object::copyArrayData(Object *other)
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
         ArrayData::realloc(this, other->arrayData()->type(), other->arrayData()->alloc(), false);
-        if (other->arrayType() == ArrayData::Sparse) {
+        if (other->arrayType() == Heap::ArrayData::Sparse) {
             SparseArrayData *od = static_cast<SparseArrayData *>(other->arrayData());
             SparseArrayData *dd = static_cast<SparseArrayData *>(arrayData());
             dd->setSparse(new SparseArray(*od->sparse()));
@@ -1120,10 +1120,10 @@ bool Object::setArrayLength(uint newLen)
 
 void Object::initSparseArray()
 {
-    if (arrayType() == ArrayData::Sparse)
+    if (arrayType() == Heap::ArrayData::Sparse)
         return;
 
-    ArrayData::realloc(this, ArrayData::Sparse, 0, false);
+    ArrayData::realloc(this, Heap::ArrayData::Sparse, 0, false);
 }
 
 

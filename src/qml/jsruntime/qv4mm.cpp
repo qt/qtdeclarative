@@ -264,7 +264,7 @@ Managed *MemoryManager::allocData(std::size_t size)
 static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
-        HeapObject *h = engine->popForGC();
+        Heap::Base *h = engine->popForGC();
         Q_ASSERT (h->internalClass->vtable->markObjects);
         h->internalClass->vtable->markObjects(h, engine);
     }
@@ -492,7 +492,7 @@ size_t MemoryManager::getUsedMem() const
         char *chunkStart = reinterpret_cast<char *>(i->memory.base());
         char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
         for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
-            Managed::Data *m = reinterpret_cast<Managed::Data *>(chunk);
+            Heap::Base *m = reinterpret_cast<Heap::Base *>(chunk);
             Q_ASSERT((qintptr) chunk % 16 == 0);
             if (m->inUse)
                 usedMem += i->chunkSize;

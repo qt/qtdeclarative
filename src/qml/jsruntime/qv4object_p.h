@@ -42,15 +42,15 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Q_QML_EXPORT Object: Managed {
-    struct Data : Managed::Data {
+    struct Data : Heap::Base {
         Data(ExecutionEngine *engine)
-            : Managed::Data(engine->objectClass)
+            : Heap::Base(engine->objectClass)
         {
         }
         Data(InternalClass *internal = 0);
 
-        MemberData::Data *memberData;
-        ArrayData::Data *arrayData;
+        Heap::MemberData *memberData;
+        Heap::ArrayData *arrayData;
     };
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(Object)
@@ -164,30 +164,30 @@ public:
     void push_back(const ValueRef v);
 
     ArrayData::Type arrayType() const {
-        return arrayData() ? arrayData()->type() : ArrayData::Simple;
+        return arrayData() ? arrayData()->type() : Heap::ArrayData::Simple;
     }
     // ### remove me
     void setArrayType(ArrayData::Type t) {
-        Q_ASSERT(t != ArrayData::Simple && t != ArrayData::Sparse);
+        Q_ASSERT(t != Heap::ArrayData::Simple && t != Heap::ArrayData::Sparse);
         arrayCreate();
         arrayData()->setType(t);
     }
 
     inline void arrayReserve(uint n) {
-        ArrayData::realloc(this, ArrayData::Simple, n, false);
+        ArrayData::realloc(this, Heap::ArrayData::Simple, n, false);
     }
 
     void arrayCreate() {
         if (!arrayData())
-            ArrayData::realloc(this, ArrayData::Simple, 0, false);
+            ArrayData::realloc(this, Heap::ArrayData::Simple, 0, false);
 #ifdef CHECK_SPARSE_ARRAYS
         initSparseArray();
 #endif
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->begin() : 0; }
-    SparseArrayNode *sparseEnd() { return arrayType() == ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->end() : 0; }
+    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->begin() : 0; }
+    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? static_cast<SparseArrayData *>(arrayData())->sparse()->end() : 0; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -230,7 +230,7 @@ public:
     inline ReturnedValue call(CallData *d)
     { return vtable()->call(this, d); }
 protected:
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue construct(Managed *m, CallData *);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

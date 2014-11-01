@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-#define V4_ARRAYDATA \
+#define V4_ARRAYDATA(Data) \
     public: \
         Q_MANAGED_CHECK \
         static const QV4::ArrayVTable static_vtbl; \
@@ -50,8 +50,8 @@ namespace QV4 {
         template <typename T> \
         QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
         V4_MANAGED_SIZE_TEST \
-        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
-        Data *d() { return &static_cast<Data &>(Managed::data); }
+        const QV4::Heap::Data *d() const { return &static_cast<const QV4::Heap::Data &>(Managed::data); } \
+        QV4::Heap::Data *d() { return &static_cast<QV4::Heap::Data &>(Managed::data); }
 
 
 struct ArrayData;
@@ -73,9 +73,12 @@ struct ArrayVTable
     uint (*length)(const ArrayData *d);
 };
 
+namespace Heap {
 
-struct Q_QML_EXPORT ArrayData : public Managed
-{
+struct ArrayData : public Base {
+    ArrayData(InternalClass *ic)
+        : Base(ic)
+    {}
     enum Type {
         Simple = 0,
         Complex = 1,
@@ -83,24 +86,36 @@ struct Q_QML_EXPORT ArrayData : public Managed
         Custom = 3
     };
 
-    struct Data : public Managed::Data {
-        Data(InternalClass *ic)
-            : Managed::Data(ic)
-        {}
-        uint alloc;
-        Type type;
-        PropertyAttributes *attrs;
-        union {
-            uint len;
-            uint freeList;
-        };
-        union {
-            uint offset;
-            SparseArray *sparse;
-        };
-        Value arrayData[1];
+    uint alloc;
+    Type type;
+    PropertyAttributes *attrs;
+    union {
+        uint len;
+        uint freeList;
     };
-    V4_MANAGED(Managed)
+    union {
+        uint offset;
+        SparseArray *sparse;
+    };
+    Value arrayData[1];
+};
+
+struct SimpleArrayData : public ArrayData {
+    SimpleArrayData(ExecutionEngine *engine)
+        : ArrayData(engine->simpleArrayDataClass)
+    {}
+};
+
+struct SparseArrayData : public ArrayData {
+    inline SparseArrayData(ExecutionEngine *engine);
+};
+
+}
+
+struct Q_QML_EXPORT ArrayData : public Managed
+{
+    typedef Heap::ArrayData::Type Type;
+    V4_MANAGED2(ArrayData, Managed)
 
     uint alloc() const { return d()->alloc; }
     uint &alloc() { return d()->alloc; }
@@ -113,7 +128,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     Value *arrayData() { return &d()->arrayData[0]; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
-    bool isSparse() const { return type() == Sparse; }
+    bool isSparse() const { return type() == Heap::ArrayData::Sparse; }
 
     uint length() const {
         return vtable()->length(this);
@@ -146,13 +161,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 {
-
-    struct Data : public ArrayData::Data {
-        Data(ExecutionEngine *engine)
-            : ArrayData::Data(engine->simpleArrayDataClass)
-        {}
-    };
-    V4_ARRAYDATA
+    V4_ARRAYDATA(SimpleArrayData)
 
     uint mappedIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
     Value data(uint index) const { return d()->arrayData[mappedIndex(index)]; }
@@ -172,7 +181,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
-    static void markObjects(HeapObject *d, ExecutionEngine *e);
+    static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static ReturnedValue get(const ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
@@ -188,12 +197,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
 {
-    struct Data : public ArrayData::Data {
-        Data(ExecutionEngine *engine)
-            : ArrayData::Data(engine->emptyClass)
-        { setVTable(staticVTable()); }
-    };
-    V4_ARRAYDATA
+    V4_ARRAYDATA(SparseArrayData)
 
     uint &freeList() { return d()->freeList; }
     uint freeList() const { return d()->freeList; }
@@ -218,7 +222,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     }
 
     static void destroy(Managed *d);
-    static void markObjects(HeapObject *d, ExecutionEngine *e);
+    static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const ArrayData *d, uint index);
@@ -233,10 +237,17 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint length(const ArrayData *d);
 };
 
+namespace Heap {
+inline SparseArrayData::SparseArrayData(ExecutionEngine *engine)
+    : ArrayData(engine->emptyClass)
+{
+    setVTable(QV4::SparseArrayData::staticVTable());
+}
+}
 
 inline Property *ArrayData::getProperty(uint index)
 {
-    if (type() != Sparse) {
+    if (type() != Heap::ArrayData::Sparse) {
         SimpleArrayData *that = static_cast<SimpleArrayData *>(this);
         return that->getProperty(index);
     } else {

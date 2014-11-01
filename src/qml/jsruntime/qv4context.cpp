@@ -246,7 +246,7 @@ bool CallContext::needsOwnArguments() const
     return d()->function->needsActivation() || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
 }
 
-void ExecutionContext::markObjects(HeapObject *m, ExecutionEngine *engine)
+void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
 {
     ExecutionContext::Data *ctx = static_cast<ExecutionContext::Data *>(m);
 

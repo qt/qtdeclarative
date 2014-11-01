@@ -604,7 +604,7 @@ void Runtime::setElement(ExecutionContext *ctx, const ValueRef object, const Val
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
-        if (o->arrayType() == ArrayData::Simple) {
+        if (o->arrayType() == Heap::ArrayData::Simple) {
             SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
             if (s && idx < s->len() && !s->data(idx).isEmpty()) {
                 s->data(idx) = value;

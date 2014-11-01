@@ -82,14 +82,14 @@ struct ArgumentsObject: Object {
         Data(CallContext *context);
         CallContext *context;
         bool fullyCreated;
-        MemberData::Data *mappedArguments;
+        Heap::MemberData *mappedArguments;
     };
     V4_OBJECT(Object)
     Q_MANAGED_TYPE(ArgumentsObject)
 
     CallContext *context() const { return d()->context; }
     bool fullyCreated() const { return d()->fullyCreated; }
-    MemberData::Data *mappedArguments() { return d()->mappedArguments; }
+    Heap::MemberData *mappedArguments() { return d()->mappedArguments; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&
@@ -106,7 +106,7 @@ struct ArgumentsObject: Object {
     static void putIndexed(Managed *m, uint index, const ValueRef value);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 
     void fullyCreate();
 };

@@ -149,7 +149,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, String *&name
     return Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
-void StringObject::markObjects(HeapObject *that, ExecutionEngine *e)
+void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     StringObject::Data *o = static_cast<StringObject::Data *>(that);
     o->value.stringValue()->mark(e);

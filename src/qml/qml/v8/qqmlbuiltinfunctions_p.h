@@ -155,7 +155,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 
     static ReturnedValue call(Managed *that, CallData *callData);
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static void destroy(Managed *that) {
         static_cast<QQmlBindingFunction *>(that)->d()->~Data();
     }

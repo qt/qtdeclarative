@@ -64,7 +64,7 @@ struct DataView : Object
     };
     V4_OBJECT(Object)
 
-    static void markObjects(HeapObject *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 struct DataViewPrototype: Object

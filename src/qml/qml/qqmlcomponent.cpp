@@ -1090,7 +1090,7 @@ struct QmlIncubatorObject : public QV4::Object
     static QV4::ReturnedValue method_forceCompletion(QV4::CallContext *ctx);
 
     static void destroy(Managed *that);
-    static void markObjects(QV4::HeapObject *that, QV4::ExecutionEngine *e);
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
 
     void statusChanged(QQmlIncubator::Status);
     void setInitialState(QObject *);
@@ -1503,7 +1503,7 @@ void QmlIncubatorObject::destroy(Managed *that)
     static_cast<QmlIncubatorObject *>(that)->d()->~Data();
 }
 
-void QmlIncubatorObject::markObjects(QV4::HeapObject *that, QV4::ExecutionEngine *e)
+void QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
 {
     QmlIncubatorObject::Data *o = static_cast<QmlIncubatorObject::Data *>(that);
     o->valuemap.mark(e);

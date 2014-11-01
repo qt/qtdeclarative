@@ -157,7 +157,7 @@ void Managed::setVTable(const ManagedVTable *vt)
     d()->internalClass = internalClass()->changeVTable(vt);
 }
 
-void HeapObject::setVTable(const ManagedVTable *vt)
+void Heap::Base::setVTable(const ManagedVTable *vt)
 {
     Q_ASSERT(internalClass);
     internalClass = internalClass->changeVTable(vt);
