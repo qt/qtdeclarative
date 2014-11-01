@@ -2650,12 +2650,12 @@ void QQuickWindowPrivate::updateDirtyNodes()
 
 static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
 {
-    if (!d->extra.isAllocated())
-        return 0;
     const QList<QQuickItem *> childItems = d->paintOrderChildItems();
     QQuickItem *before = 0;
     for (int i=0; i<childItems.size(); ++i) {
-        if (Q_UNLIKELY(QQuickItemPrivate::get(childItems.at(i))->z() < 0))
+        QQuickItemPrivate *dd = QQuickItemPrivate::get(childItems.at(i));
+        // Perform the same check as the in buildOrderNodeList below.
+        if (dd->z() < 0 && (dd->explicitVisible || (dd->extra.isAllocated() && dd->extra->effectRefCount)))
             before = childItems.at(i);
         else
             break;
