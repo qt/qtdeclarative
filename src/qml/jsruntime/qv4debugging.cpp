@@ -465,15 +465,15 @@ void Debugger::collectReturnedValue(Collector *collector) const
     collector->collect(o);
 }
 
-QVector<ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
+QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
 {
-    QVector<ExecutionContext::ContextType> types;
+    QVector<Heap::ExecutionContext::ContextType> types;
 
     if (state() != Paused)
         return types;
 
     CallContext *sctxt = findContext(m_engine->currentContext(), frame);
-    if (!sctxt || sctxt->d()->type < ExecutionContext::Type_SimpleCallContext)
+    if (!sctxt || sctxt->d()->type < Heap::ExecutionContext::Type_SimpleCallContext)
         return types;
     CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
@@ -575,7 +575,7 @@ Function *Debugger::getFunction() const
     if (CallContext *callCtx = context->asCallContext())
         return callCtx->d()->function->function();
     else {
-        Q_ASSERT(context->d()->type == QV4::ExecutionContext::Type_GlobalContext);
+        Q_ASSERT(context->d()->type == QV4::Heap::ExecutionContext::Type_GlobalContext);
         return context->d()->engine->globalCode;
     }
 }

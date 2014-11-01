@@ -422,7 +422,7 @@ public:
 
         QJsonArray scopes;
         // Only type and index are used by Qt Creator, so we keep it easy:
-        QVector<QV4::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
         for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
             int type = encodeScopeType(scopeTypes[i]);
             if (type == -1)
@@ -438,23 +438,23 @@ public:
         return frame;
     }
 
-    int encodeScopeType(QV4::ExecutionContext::ContextType scopeType)
+    int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType)
     {
         switch (scopeType) {
-        case QV4::ExecutionContext::Type_GlobalContext:
+        case QV4::Heap::ExecutionContext::Type_GlobalContext:
             return 0;
             break;
-        case QV4::ExecutionContext::Type_CatchContext:
+        case QV4::Heap::ExecutionContext::Type_CatchContext:
             return 4;
             break;
-        case QV4::ExecutionContext::Type_WithContext:
+        case QV4::Heap::ExecutionContext::Type_WithContext:
             return 2;
             break;
-        case QV4::ExecutionContext::Type_SimpleCallContext:
-        case QV4::ExecutionContext::Type_CallContext:
+        case QV4::Heap::ExecutionContext::Type_SimpleCallContext:
+        case QV4::Heap::ExecutionContext::Type_CallContext:
             return 1;
             break;
-        case QV4::ExecutionContext::Type_QmlContext:
+        case QV4::Heap::ExecutionContext::Type_QmlContext:
         default:
             return -1;
         }
@@ -470,7 +470,7 @@ public:
         QJsonObject anonymous;
         anonymous[QLatin1String("properties")] = properties;
 
-        QVector<QV4::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
         scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
         scope[QLatin1String("index")] = scopeNr;
         scope[QLatin1String("frameIndex")] = frameNr;

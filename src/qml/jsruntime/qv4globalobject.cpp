@@ -395,7 +395,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 
     ContextStateSaver stateSaver(ctx);
 
-    ExecutionContext::EvalCode evalCode;
+    Heap::ExecutionContext::EvalCode evalCode;
     evalCode.function = function;
     evalCode.next = ctx->d()->currentEvalCode;
     ctx->d()->currentEvalCode = &evalCode;

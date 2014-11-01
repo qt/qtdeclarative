@@ -711,17 +711,17 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
     ExecutionContext *ctx = currentContext();
 
-    if (ctx->d()->type == QV4::ExecutionContext::Type_SimpleCallContext && !ctx->d()->outer)
+    if (ctx->d()->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->d()->outer)
         ctx = ctx->d()->parent;
 
     if (!ctx->d()->outer)
         return 0;
 
-    while (ctx->d()->outer && ctx->d()->outer->d()->type != ExecutionContext::Type_GlobalContext)
+    while (ctx->d()->outer && ctx->d()->outer->d()->type != Heap::ExecutionContext::Type_GlobalContext)
         ctx = ctx->d()->outer;
 
     Q_ASSERT(ctx);
-    if (ctx->d()->type != ExecutionContext::Type_QmlContext)
+    if (ctx->d()->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
     return static_cast<CallContext *>(ctx)->d()->activation->asReturned<Object>();

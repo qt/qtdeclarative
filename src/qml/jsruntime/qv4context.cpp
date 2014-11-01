@@ -52,8 +52,8 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
 {
     Q_ASSERT(function->function());
 
-    CallContext::Data *c = reinterpret_cast<CallContext::Data *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
-    new (c) CallContext::Data(d()->engine, Type_CallContext);
+    Heap::CallContext *c = reinterpret_cast<Heap::CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
+    new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
     c->function = function;
     c->realArgumentCount = callData->argc;
@@ -95,7 +95,7 @@ Returned<CallContext> *ExecutionContext::newQmlContext(FunctionObject *f, Object
 {
     Scope scope(this);
     Scoped<CallContext> c(scope, static_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
-    new (c->d()) CallContext::Data(d()->engine, qml, f);
+    new (c->d()) Heap::CallContext(d()->engine, qml, f);
     return c.asReturned();
 }
 
@@ -109,7 +109,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     ScopedObject activation(scope, d()->engine->globalObject);
     ExecutionContext *ctx = this;
     while (ctx) {
-        if (ctx->d()->type >= Type_CallContext) {
+        if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             if (!c->d()->activation)
                 c->d()->activation = d()->engine->newObject()->getPointer();
@@ -128,14 +128,14 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 }
 
 
-GlobalContext::Data::Data(ExecutionEngine *eng)
-    : ExecutionContext::Data(eng, Type_GlobalContext)
+Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
+    : Heap::ExecutionContext(eng, Heap::ExecutionContext::Type_GlobalContext)
 {
     global = eng->globalObject;
 }
 
-WithContext::Data::Data(ExecutionEngine *engine, Object *with)
-    : ExecutionContext::Data(engine, Type_WithContext)
+Heap::WithContext::WithContext(ExecutionEngine *engine, Object *with)
+    : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_WithContext)
 {
     callData = parent->d()->callData;
     outer = parent;
@@ -145,8 +145,8 @@ WithContext::Data::Data(ExecutionEngine *engine, Object *with)
     withObject = with;
 }
 
-CatchContext::Data::Data(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue)
-    : ExecutionContext::Data(engine, Type_CatchContext)
+Heap::CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue)
+    : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_CatchContext)
 {
     strictMode = parent->d()->strictMode;
     callData = parent->d()->callData;
@@ -158,8 +158,8 @@ CatchContext::Data::Data(ExecutionEngine *engine, String *exceptionVarName, cons
     this->exceptionValue = exceptionValue;
 }
 
-CallContext::Data::Data(ExecutionEngine *engine, Object *qml, FunctionObject *function)
-    : ExecutionContext::Data(engine, Type_QmlContext)
+Heap::CallContext::CallContext(ExecutionEngine *engine, Object *qml, FunctionObject *function)
+    : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_QmlContext)
 {
     this->function = function;
     callData = reinterpret_cast<CallData *>(this + 1);
@@ -209,16 +209,16 @@ bool ExecutionContext::deleteProperty(String *name)
     Scope scope(this);
     bool hasWith = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
-        if (ctx->d()->type == Type_WithContext) {
+        if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
             if (w->d()->withObject->hasProperty(name))
                 return w->d()->withObject->deleteProperty(name);
-        } else if (ctx->d()->type == Type_CatchContext) {
+        } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->d()->exceptionVarName->isEqualTo(name))
                 return false;
-        } else if (ctx->d()->type >= Type_CallContext) {
+        } else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->d()->function;
             if (f->needsActivation() || hasWith) {
@@ -229,7 +229,7 @@ bool ExecutionContext::deleteProperty(String *name)
             }
             if (c->d()->activation && c->d()->activation->hasProperty(name))
                 return c->d()->activation->deleteProperty(name);
-        } else if (ctx->d()->type == Type_GlobalContext) {
+        } else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             if (g->d()->global->hasProperty(name))
                 return g->d()->global->deleteProperty(name);
@@ -258,21 +258,21 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
     for (int arg = 0; arg < ctx->callData->argc; ++arg)
         ctx->callData->args[arg].mark(engine);
 
-    if (ctx->type >= Type_CallContext) {
-        QV4::CallContext::Data *c = static_cast<CallContext::Data *>(ctx);
+    if (ctx->type >= Heap::ExecutionContext::Type_CallContext) {
+        QV4::Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
         for (unsigned local = 0, lastLocal = c->function->varCount(); local < lastLocal; ++local)
             c->locals[local].mark(engine);
         if (c->activation)
             c->activation->mark(engine);
         c->function->mark(engine);
-    } else if (ctx->type == Type_WithContext) {
+    } else if (ctx->type == Heap::ExecutionContext::Type_WithContext) {
         WithContext::Data *w = static_cast<WithContext::Data *>(ctx);
         w->withObject->mark(engine);
-    } else if (ctx->type == Type_CatchContext) {
+    } else if (ctx->type == Heap::ExecutionContext::Type_CatchContext) {
         CatchContext::Data *c = static_cast<CatchContext::Data *>(ctx);
         c->exceptionVarName->mark(engine);
         c->exceptionValue.mark(engine);
-    } else if (ctx->type == Type_GlobalContext) {
+    } else if (ctx->type == Heap::ExecutionContext::Type_GlobalContext) {
         GlobalContext::Data *g = static_cast<GlobalContext::Data *>(ctx);
         g->global->mark(engine);
     }
@@ -282,18 +282,18 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
 {
     Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
-        if (ctx->d()->type == Type_WithContext) {
+        if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             ScopedObject w(scope, static_cast<WithContext *>(ctx)->d()->withObject);
             if (w->hasProperty(name)) {
                 w->put(name, value);
                 return;
             }
-        } else if (ctx->d()->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->d()->exceptionVarName->isEqualTo(name)) {
+        } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext && static_cast<CatchContext *>(ctx)->d()->exceptionVarName->isEqualTo(name)) {
             static_cast<CatchContext *>(ctx)->d()->exceptionValue = *value;
             return;
         } else {
             ScopedObject activation(scope, (Object *)0);
-            if (ctx->d()->type >= Type_CallContext) {
+            if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
                 if (c->d()->function->function()) {
                     uint index = c->d()->function->function()->internalClass->find(name);
@@ -308,12 +308,12 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
                     }
                 }
                 activation = c->d()->activation;
-            } else if (ctx->d()->type == Type_GlobalContext) {
+            } else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
                 activation = static_cast<GlobalContext *>(ctx)->d()->global;
             }
 
             if (activation) {
-                if (ctx->d()->type == Type_QmlContext) {
+                if (ctx->d()->type == Heap::ExecutionContext::Type_QmlContext) {
                     activation->put(name, value);
                     return;
                 } else {
@@ -346,7 +346,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
-        if (ctx->d()->type == Type_WithContext) {
+        if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             ScopedObject w(scope, static_cast<WithContext *>(ctx)->d()->withObject);
             hasWith = true;
             bool hasProperty = false;
@@ -357,14 +357,14 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             continue;
         }
 
-        else if (ctx->d()->type == Type_CatchContext) {
+        else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->d()->exceptionVarName->isEqualTo(name))
                 return c->d()->exceptionValue.asReturnedValue();
         }
 
-        else if (ctx->d()->type >= Type_CallContext) {
+        else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             ScopedFunctionObject f(scope, c->d()->function);
             if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
@@ -386,7 +386,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return f.asReturnedValue();
         }
 
-        else if (ctx->d()->type == Type_GlobalContext) {
+        else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
             v = g->d()->global->get(name, &hasProperty);
@@ -411,7 +411,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
-        if (ctx->d()->type == Type_WithContext) {
+        if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->d()->withObject;
             hasWith = true;
             bool hasProperty = false;
@@ -423,14 +423,14 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
             continue;
         }
 
-        else if (ctx->d()->type == Type_CatchContext) {
+        else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->d()->exceptionVarName->isEqualTo(name))
                 return c->d()->exceptionValue.asReturnedValue();
         }
 
-        else if (ctx->d()->type >= Type_CallContext) {
+        else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->d()->function;
             if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
@@ -445,7 +445,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
                 bool hasProperty = false;
                 v = c->d()->activation->get(name, &hasProperty);
                 if (hasProperty) {
-                    if (ctx->d()->type == Type_QmlContext)
+                    if (ctx->d()->type == Heap::ExecutionContext::Type_QmlContext)
                         base = c->d()->activation;
                     return v.asReturnedValue();
                 }
@@ -455,7 +455,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
                 return c->d()->function->asReturnedValue();
         }
 
-        else if (ctx->d()->type == Type_GlobalContext) {
+        else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
             v = g->d()->global->get(name, &hasProperty);

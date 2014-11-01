@@ -116,6 +116,9 @@ namespace QV4 {
 
 namespace Heap {
     struct Base;
+    struct MemberData;
+    struct ArrayData;
+    struct ExecutionContext;
 }
 
 class MemoryManager;

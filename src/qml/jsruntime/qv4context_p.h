@@ -51,12 +51,9 @@ struct CallContext;
 struct CatchContext;
 struct WithContext;
 
-struct Q_QML_EXPORT ExecutionContext : public Managed
-{
-    enum {
-        IsExecutionContext = true
-    };
+namespace Heap {
 
+struct ExecutionContext : Base {
     enum ContextType {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -71,40 +68,84 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         EvalCode *next;
     };
 
-    struct Data : Heap::Base {
-        Data(ExecutionEngine *engine, ContextType t)
-            : Heap::Base(engine->executionContextClass)
-            , type(t)
-            , strictMode(false)
-            , engine(engine)
-            , parent(engine->currentContext())
-            , outer(0)
-            , lookups(0)
-            , compilationUnit(0)
-            , currentEvalCode(0)
-            , lineNumber(-1)
-        {
-            engine->current = reinterpret_cast<ExecutionContext *>(this);
-        }
-        ContextType type;
-        bool strictMode;
+    ExecutionContext(ExecutionEngine *engine, ContextType t)
+        : Base(engine->executionContextClass)
+        , type(t)
+        , strictMode(false)
+        , engine(engine)
+        , parent(engine->currentContext())
+        , outer(0)
+        , lookups(0)
+        , compilationUnit(0)
+        , currentEvalCode(0)
+        , lineNumber(-1)
+    {
+        // ### GC
+        engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
+    }
 
-        CallData *callData;
+    ContextType type;
+    bool strictMode;
 
-        ExecutionEngine *engine;
-        ExecutionContext *parent;
-        ExecutionContext *outer;
-        Lookup *lookups;
-        CompiledData::CompilationUnit *compilationUnit;
-        EvalCode *currentEvalCode;
+    CallData *callData;
 
-        int lineNumber;
+    ExecutionEngine *engine;
+    // ### GC
+    QV4::ExecutionContext *parent;
+    QV4::ExecutionContext *outer;
+    Lookup *lookups;
+    CompiledData::CompilationUnit *compilationUnit;
+    EvalCode *currentEvalCode;
 
+    int lineNumber;
+
+};
+
+struct CallContext : ExecutionContext {
+    CallContext(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
+        : ExecutionContext(engine, t)
+    {
+        function = 0;
+        locals = 0;
+        activation = 0;
+    }
+    CallContext(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
+
+    FunctionObject *function;
+    int realArgumentCount;
+    Value *locals;
+    Object *activation;
+};
+
+struct GlobalContext : ExecutionContext {
+    GlobalContext(ExecutionEngine *engine);
+    Object *global;
+};
+
+struct CatchContext : ExecutionContext {
+    CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
+    StringValue exceptionVarName;
+    Value exceptionValue;
+};
+
+struct WithContext : ExecutionContext {
+    WithContext(ExecutionEngine *engine, Object *with);
+    Object *withObject;
+};
+
+
+}
+
+struct Q_QML_EXPORT ExecutionContext : public Managed
+{
+    enum {
+        IsExecutionContext = true
     };
-    V4_MANAGED(Managed)
+
+    V4_MANAGED2(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
-    ExecutionContext(ExecutionEngine *engine, ContextType t)
+    ExecutionContext(ExecutionEngine *engine, Heap::ExecutionContext::ContextType t)
         : Managed(engine->executionContextClass)
     {
         d()->type = t;
@@ -142,22 +183,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
 struct CallContext : public ExecutionContext
 {
-    struct Data : ExecutionContext::Data {
-        Data(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
-            : ExecutionContext::Data(engine, t)
-        {
-            function = 0;
-            locals = 0;
-            activation = 0;
-        }
-        Data(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
-
-        FunctionObject *function;
-        int realArgumentCount;
-        Value *locals;
-        Object *activation;
-    };
-    V4_MANAGED(ExecutionContext)
+    V4_MANAGED2(CallContext, ExecutionContext)
 
     // formals are in reverse order
     String * const *formals() const;
@@ -175,41 +201,28 @@ inline ReturnedValue CallContext::argument(int i) {
 
 struct GlobalContext : public ExecutionContext
 {
-    struct Data : ExecutionContext::Data {
-        Data(ExecutionEngine *engine);
-        Object *global;
-    };
-    V4_MANAGED(ExecutionContext)
+    V4_MANAGED2(GlobalContext, ExecutionContext)
 
 };
 
 struct CatchContext : public ExecutionContext
 {
-    struct Data : ExecutionContext::Data {
-        Data(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
-        StringValue exceptionVarName;
-        Value exceptionValue;
-    };
-    V4_MANAGED(ExecutionContext)
+    V4_MANAGED2(CatchContext, ExecutionContext)
 };
 
 struct WithContext : public ExecutionContext
 {
-    struct Data : ExecutionContext::Data {
-        Data(ExecutionEngine *engine, Object *with);
-        Object *withObject;
-    };
-    V4_MANAGED(ExecutionContext)
+    V4_MANAGED2(WithContext, ExecutionContext)
 };
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return d()->type >= Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return d()->type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 

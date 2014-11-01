@@ -119,6 +119,7 @@ struct Q_QML_EXPORT ExecutionEngine
 private:
     friend struct ExecutionContextSaver;
     friend struct ExecutionContext;
+    friend struct Heap::ExecutionContext;
     ExecutionContext *current;
 public:
     ExecutionContext *currentContext() const { return current; }

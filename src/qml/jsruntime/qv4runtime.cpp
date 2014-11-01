@@ -1203,7 +1203,7 @@ ReturnedValue Runtime::objectLiteral(QV4::ExecutionContext *ctx, const QV4::Valu
 
 QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionContext *ctx)
 {
-    Q_ASSERT(ctx->d()->type >= ExecutionContext::Type_CallContext);
+    Q_ASSERT(ctx->d()->type >= Heap::ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
     return (c->engine()->memoryManager->alloc<ArgumentsObject>(c))->asReturnedValue();
 }

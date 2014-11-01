@@ -797,7 +797,7 @@ public:
                                  const RegisterInformation &fpRegistersToSave);
 
     void checkException() {
-        loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, engine)), ScratchRegister);
+        loadPtr(Address(ContextRegister, qOffsetOf(QV4::Heap::ExecutionContext, engine)), ScratchRegister);
         load32(Address(ScratchRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
         Jump exceptionThrown = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
         if (catchBlock)
@@ -1226,7 +1226,7 @@ template <typename T> inline bool prepareCall(T &, Assembler *)
 
 template <> inline bool prepareCall(RelativeCall &relativeCall, Assembler *as)
 {
-    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lookups)),
+    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
                 relativeCall.addr.base);
     return true;
 }
@@ -1236,7 +1236,7 @@ template <> inline bool prepareCall(LookupCall &lookupCall, Assembler *as)
     // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
     // same as prepareCall(RelativeCall ....) : load the table from the context
-    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext::Data, lookups)),
+    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
                 lookupCall.addr.base);
     // pre-calculate the indirect address for the lookupCall table:
     if (lookupCall.addr.offset)
