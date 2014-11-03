@@ -305,21 +305,6 @@ QVariant QV8Engine::objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects)
     return result;
 }
 
-static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringList &list)
-{
-    QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::Scope scope(e);
-    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
-    int len = list.count();
-    a->arrayReserve(len);
-    QV4::ScopedValue v(scope);
-    for (int ii = 0; ii < len; ++ii)
-        a->arrayPut(ii, (v = QV4::Encode(e->newString(list.at(ii)))));
-
-    a->setArrayLengthUnchecked(len);
-    return a.asReturnedValue();
-}
-
 static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariantList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
@@ -409,7 +394,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
                 QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded));
                 if (succeeded)
                     return retn.asReturnedValue();
-                return arrayFromStringList(this, *reinterpret_cast<const QStringList *>(ptr));
+                return QV4::Encode(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
                 }
             case QMetaType::QVariantList:
                 return arrayFromVariantList(this, *reinterpret_cast<const QVariantList *>(ptr));
