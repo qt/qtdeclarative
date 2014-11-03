@@ -1754,13 +1754,13 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
     return (scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope, object, index, qmlGlobal))->asReturnedValue();
 }
 
-QObjectMethod::Data::Data(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
+Heap::QObjectMethod::QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
     : Heap::FunctionObject(scope)
     , object(object)
     , index(index)
     , qmlGlobal(qmlGlobal)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QObjectMethod::staticVTable());
     subtype = WrappedQtMethod;
 }
 
@@ -1889,12 +1889,12 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
-QmlSignalHandler::Data::Data(ExecutionEngine *engine, QObject *object, int signalIndex)
+Heap::QmlSignalHandler::QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *object, int signalIndex)
     : Heap::Object(engine)
     , object(object)
     , signalIndex(signalIndex)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QmlSignalHandler::staticVTable());
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);

@@ -74,6 +74,19 @@ struct QObjectWrapper : Object {
     QPointer<QObject> object;
 };
 
+struct QObjectMethod : FunctionObject {
+    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
+    QPointer<QObject> object;
+    int index;
+    QV4::PersistentValue qmlGlobal;
+};
+
+struct QmlSignalHandler : Object {
+    QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *object, int signalIndex);
+    QPointer<QObject> object;
+    int signalIndex;
+};
+
 }
 
 struct Q_QML_EXPORT QObjectWrapper : public Object
@@ -122,13 +135,7 @@ private:
 
 struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 {
-    struct Data : QV4::Heap::FunctionObject {
-        Data(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
-        QPointer<QObject> object;
-        int index;
-        QV4::PersistentValue qmlGlobal;
-    };
-    V4_OBJECT(QV4::FunctionObject)
+    V4_OBJECT2(QObjectMethod, QV4::FunctionObject)
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
@@ -152,12 +159,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
 struct QmlSignalHandler : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(ExecutionEngine *engine, QObject *object, int signalIndex);
-        QPointer<QObject> object;
-        int signalIndex;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QmlSignalHandler, QV4::Object)
 
 
     int signalIndex() const { return d()->signalIndex; }
