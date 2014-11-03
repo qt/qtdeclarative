@@ -65,6 +65,11 @@ QQuickItem *QQuickWindowAttached::activeFocusItem() const
     return (m_window ? m_window->activeFocusItem() : Q_NULLPTR);
 }
 
+QQuickItem *QQuickWindowAttached::contentItem() const
+{
+    return (m_window ? m_window->contentItem() : Q_NULLPTR);
+}
+
 void QQuickWindowAttached::windowChanged(QQuickWindow *window)
 {
     if (window != m_window) {
@@ -83,6 +88,7 @@ void QQuickWindowAttached::windowChanged(QQuickWindow *window)
             emit activeChanged();
         if (!oldWindow || window->activeFocusItem() != oldWindow->activeFocusItem())
             emit activeFocusItemChanged();
+        emit contentItemChanged();
 
         // QQuickWindowQmlImpl::visibilityChanged also exists, and window might even
         // be QQuickWindowQmlImpl, but that's not what we are connecting to.

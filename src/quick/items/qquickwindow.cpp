@@ -1250,6 +1250,14 @@ bool QQuickWindow::isPersistentSceneGraph() const
 
 
 
+/*!
+    \qmlattachedproperty Item Window::contentItem
+    \since 5.4
+
+    This attached property holds the invisible root item of the scene or
+    \c null if the item is not in a window. The Window attached property
+    can be attached to any Item.
+*/
 
 /*!
     \property QQuickWindow::contentItem

@@ -6,6 +6,7 @@ Rectangle {
     width: 100
     height: 100
     property bool windowActive: root.Window.active
+    property Item contentItem: root.Window.contentItem
     Text {
         objectName: "rectangleWindowText"
         anchors.centerIn: parent
@@ -20,6 +21,7 @@ Rectangle {
             objectName: "extraWindowText"
             anchors.centerIn: parent
             text: (extraWindow.active ? "active" : "inactive") + "\nvisibility: " + Window.visibility
+            property Item contentItem: Window.contentItem
         }
     }
 }
