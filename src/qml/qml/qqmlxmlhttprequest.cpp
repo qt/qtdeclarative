@@ -1618,9 +1618,9 @@ DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionEngine *engine)
-            : FunctionObject::Data(engine->rootContext, QStringLiteral("XMLHttpRequest"))
+            : Heap::FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
         {
             setVTable(staticVTable());
             Scope scope(engine);

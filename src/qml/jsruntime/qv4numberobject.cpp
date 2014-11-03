@@ -46,7 +46,7 @@ DEFINE_OBJECT_VTABLE(NumberCtor);
 DEFINE_OBJECT_VTABLE(NumberObject);
 
 NumberCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("Number"))
+    : Heap::FunctionObject(scope, QStringLiteral("Number"))
 {
     setVTable(staticVTable());
 }

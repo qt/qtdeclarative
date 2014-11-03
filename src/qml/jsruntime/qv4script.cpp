@@ -54,7 +54,7 @@
 using namespace QV4;
 
 QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, QV4::Object *qml)
-    : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
     Q_ASSERT(scope->inUse());
@@ -75,7 +75,7 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, QV4::Object 
 }
 
 QmlBindingWrapper::Data::Data(ExecutionContext *scope, QV4::Object *qml)
-    : FunctionObject::Data(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
     Q_ASSERT(scope->inUse());

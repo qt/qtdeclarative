@@ -89,7 +89,7 @@ struct TypedArray : Object
 
 struct TypedArrayCtor: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope, TypedArray::Type t);
 
         TypedArray::Type type;

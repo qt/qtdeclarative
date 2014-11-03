@@ -158,7 +158,7 @@ Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exception
     this->exceptionValue = exceptionValue;
 }
 
-Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, FunctionObject *function)
+Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::FunctionObject *function)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_QmlContext)
 {
     this->function = function;

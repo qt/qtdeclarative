@@ -1755,7 +1755,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
 }
 
 QObjectMethod::Data::Data(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
-    : FunctionObject::Data(scope)
+    : Heap::FunctionObject(scope)
     , object(object)
     , index(index)
     , qmlGlobal(qmlGlobal)

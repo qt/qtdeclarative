@@ -123,7 +123,7 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope);
         Data(ExecutionContext *scope, const QString &name);
     };

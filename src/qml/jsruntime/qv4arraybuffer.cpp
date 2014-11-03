@@ -40,7 +40,7 @@ DEFINE_OBJECT_VTABLE(ArrayBufferCtor);
 DEFINE_OBJECT_VTABLE(ArrayBuffer);
 
 ArrayBufferCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("ArrayBuffer"))
+    : Heap::FunctionObject(scope, QStringLiteral("ArrayBuffer"))
 {
     setVTable(staticVTable());
 }

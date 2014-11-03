@@ -246,13 +246,13 @@ DEFINE_OBJECT_VTABLE(TypeErrorCtor);
 DEFINE_OBJECT_VTABLE(URIErrorCtor);
 
 ErrorCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("Error"))
+    : Heap::FunctionObject(scope, QStringLiteral("Error"))
 {
     setVTable(staticVTable());
 }
 
 ErrorCtor::Data::Data(ExecutionContext *scope, const QString &name)
-    : FunctionObject::Data(scope, name)
+    : Heap::FunctionObject(scope, name)
 {
     setVTable(staticVTable());
 }

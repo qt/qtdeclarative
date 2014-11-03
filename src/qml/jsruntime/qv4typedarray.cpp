@@ -194,7 +194,7 @@ const TypedArrayOperations operations[TypedArray::NTypes] = {
 
 
 TypedArrayCtor::Data::Data(ExecutionContext *scope, TypedArray::Type t)
-    : FunctionObject::Data(scope, QLatin1String(operations[t].name))
+    : Heap::FunctionObject(scope, QLatin1String(operations[t].name))
     , type(t)
 {
     setVTable(staticVTable());

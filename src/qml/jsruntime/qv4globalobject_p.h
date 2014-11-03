@@ -42,7 +42,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope);
     };
 

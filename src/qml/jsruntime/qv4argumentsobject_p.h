@@ -42,9 +42,9 @@ namespace QV4 {
 
 struct ArgumentsGetterFunction: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope, uint index)
-            : FunctionObject::Data(scope)
+            : Heap::FunctionObject(scope)
             , index(index)
         {
             setVTable(staticVTable());
@@ -60,9 +60,9 @@ struct ArgumentsGetterFunction: FunctionObject
 
 struct ArgumentsSetterFunction: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope, uint index)
-            : FunctionObject::Data(scope)
+            : Heap::FunctionObject(scope)
             , index(index)
         {
             setVTable(staticVTable());

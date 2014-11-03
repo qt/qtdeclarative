@@ -299,13 +299,13 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     InternalClass *functionProtoClass = InternalClass::create(this, FunctionObject::staticVTable(), objectPrototype);
     uint index;
     functionProtoClass = functionProtoClass->addMember(id_prototype, Attr_NotEnumerable, &index);
-    Q_ASSERT(index == FunctionObject::Index_Prototype);
+    Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     ScopedObject functionPrototype(scope, memoryManager->alloc<FunctionPrototype>(functionProtoClass));
     functionClass = InternalClass::create(this, FunctionObject::staticVTable(), functionPrototype);
     functionClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
-    Q_ASSERT(index == FunctionObject::Index_Prototype);
+    Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
-    Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
+    Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
     Scoped<RegExpPrototype> regExpPrototype(scope, memoryManager->alloc<RegExpPrototype>(InternalClass::create(this, RegExpPrototype::staticVTable(), objectPrototype)));
     regExpClass = InternalClass::create(this, RegExpObject::staticVTable(), regExpPrototype.getPointer());

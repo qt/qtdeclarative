@@ -43,7 +43,7 @@ namespace QV4 {
 
 struct BooleanCtor: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope);
     };
 

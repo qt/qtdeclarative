@@ -117,7 +117,7 @@ private:
 
 struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 {
-    struct Data : QV4::FunctionObject::Data {
+    struct Data : QV4::Heap::FunctionObject {
         Data(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
         QPointer<QObject> object;
         int index;

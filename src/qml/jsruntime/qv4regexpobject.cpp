@@ -230,7 +230,7 @@ uint RegExpObject::flags() const
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
 RegExpCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("RegExp"))
+    : Heap::FunctionObject(scope, QStringLiteral("RegExp"))
 {
     setVTable(staticVTable());
     clearLastMatch();

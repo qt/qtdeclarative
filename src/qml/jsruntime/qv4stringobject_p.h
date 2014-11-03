@@ -64,7 +64,7 @@ protected:
 
 struct StringCtor: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope);
     };
     V4_OBJECT(FunctionObject)

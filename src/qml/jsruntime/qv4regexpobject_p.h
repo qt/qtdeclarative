@@ -96,7 +96,7 @@ protected:
 
 struct RegExpCtor: FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope);
         Value lastMatch;
         StringValue lastInput;

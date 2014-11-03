@@ -339,7 +339,7 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 DEFINE_OBJECT_VTABLE(EvalFunction);
 
 EvalFunction::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, scope->d()->engine->id_eval)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval)
 {
     setVTable(staticVTable());
     Scope s(scope);

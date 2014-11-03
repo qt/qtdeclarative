@@ -1166,8 +1166,8 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
     return QQmlLocale::locale(v8engine, code);
 }
 
-QQmlBindingFunction::Data::Data(FunctionObject *originalFunction)
-    : QV4::FunctionObject::Data(originalFunction->scope(), originalFunction->name())
+QQmlBindingFunction::Data::Data(QV4::FunctionObject *originalFunction)
+    : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
     , originalFunction(originalFunction)
 {
     setVTable(staticVTable());

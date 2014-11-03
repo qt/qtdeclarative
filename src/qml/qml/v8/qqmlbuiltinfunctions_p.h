@@ -143,8 +143,8 @@ struct GlobalExtensions {
 
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
-    struct Data : FunctionObject::Data {
-        Data(FunctionObject *originalFunction);
+    struct Data : Heap::FunctionObject {
+        Data(QV4::FunctionObject *originalFunction);
         QV4::FunctionObject *originalFunction;
         // Set when the binding is created later
         QQmlSourceLocation bindingLocation;

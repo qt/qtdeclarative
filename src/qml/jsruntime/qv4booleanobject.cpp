@@ -39,7 +39,7 @@ DEFINE_OBJECT_VTABLE(BooleanCtor);
 DEFINE_OBJECT_VTABLE(BooleanObject);
 
 BooleanCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("Boolean"))
+    : Heap::FunctionObject(scope, QStringLiteral("Boolean"))
 {
     setVTable(staticVTable());
 }

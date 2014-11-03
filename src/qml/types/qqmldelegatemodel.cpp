@@ -54,9 +54,9 @@ class QQmlDelegateModelItem;
 
 struct DelegateModelGroupFunction: QV4::FunctionObject
 {
-    struct Data : FunctionObject::Data {
+    struct Data : QV4::Heap::FunctionObject {
         Data(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
-            : FunctionObject::Data(scope, QStringLiteral("DelegateModelGroupFunction"))
+            : QV4::Heap::FunctionObject(scope, QStringLiteral("DelegateModelGroupFunction"))
             , flag(flag)
             , code(code)
         {

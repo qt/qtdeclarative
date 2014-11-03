@@ -42,7 +42,7 @@ DEFINE_OBJECT_VTABLE(DataViewCtor);
 DEFINE_OBJECT_VTABLE(DataView);
 
 DataViewCtor::Data::Data(ExecutionContext *scope)
-    : FunctionObject::Data(scope, QStringLiteral("DataView"))
+    : Heap::FunctionObject(scope, QStringLiteral("DataView"))
 {
     setVTable(staticVTable());
 }
