@@ -41,12 +41,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct ObjectCtor : FunctionObject {
+    ObjectCtor(QV4::ExecutionContext *scope);
+};
+
+}
+
 struct ObjectCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(ObjectCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

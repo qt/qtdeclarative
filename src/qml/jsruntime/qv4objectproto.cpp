@@ -49,10 +49,10 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ObjectCtor);
 
-ObjectCtor::Data::Data(ExecutionContext *scope)
+Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Object"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::ObjectCtor::staticVTable());
 }
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)

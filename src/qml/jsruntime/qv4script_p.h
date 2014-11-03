@@ -71,15 +71,19 @@ struct ContextStateSaver {
     }
 };
 
+namespace Heap {
+struct QmlBindingWrapper : Heap::FunctionObject {
+    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml);
+    // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
+    QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml);
+    QV4::Object *qml;
+    QV4::CallContext *qmlContext;
+};
+
+}
+
 struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope, Function *f, QV4::Object *qml);
-        // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-        Data(ExecutionContext *scope, QV4::Object *qml);
-        QV4::Object *qml;
-        CallContext *qmlContext;
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(QmlBindingWrapper, FunctionObject)
 
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Heap::Base *m, ExecutionEngine *e);

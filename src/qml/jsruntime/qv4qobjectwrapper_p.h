@@ -67,13 +67,18 @@ class QQmlPropertyData;
 namespace QV4 {
 struct QObjectSlotDispatcher;
 
-struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
+namespace Heap {
+
+struct QObjectWrapper : Object {
+    QObjectWrapper(QV4::ExecutionEngine *engine, QObject *object);
+    QPointer<QObject> object;
+};
+
+}
+
+struct Q_QML_EXPORT QObjectWrapper : public Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(ExecutionEngine *engine, QObject *object);
-        QPointer<QObject> object;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QObjectWrapper, Object)
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 

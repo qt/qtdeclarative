@@ -64,37 +64,37 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(RegExpObject);
 DEFINE_OBJECT_VTABLE(RegExpPrototype);
 
-RegExpObject::Data::Data(InternalClass *ic)
+Heap::RegExpObject::RegExpObject(InternalClass *ic)
     : Heap::Object(ic)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RegExpObject::staticVTable());
 
     Scope scope(ic->engine);
-    Scoped<RegExpObject> o(scope, this);
-    o->d()->value = RegExp::create(ic->engine, QString(), false, false)->getPointer();
+    Scoped<QV4::RegExpObject> o(scope, this);
+    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false)->getPointer();
     o->d()->global = false;
     o->init(ic->engine);
 }
 
-RegExpObject::Data::Data(ExecutionEngine *engine, RegExp *value, bool global)
+Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
     : Heap::Object(engine->regExpClass)
     , value(value)
     , global(global)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RegExpObject::staticVTable());
 
     Scope scope(engine);
-    Scoped<RegExpObject> o(scope, this);
+    Scoped<QV4::RegExpObject> o(scope, this);
     o->init(engine);
 }
 
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
-RegExpObject::Data::Data(ExecutionEngine *engine, const QRegExp &re)
+Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
     : Heap::Object(engine->regExpClass)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RegExpObject::staticVTable());
 
     value = 0;
     global = false;
@@ -137,9 +137,9 @@ RegExpObject::Data::Data(ExecutionEngine *engine, const QRegExp &re)
     }
 
     Scope scope(engine);
-    Scoped<RegExpObject> o(scope, this);
+    Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer();
+    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer();
 
     o->init(engine);
 }
@@ -229,14 +229,14 @@ uint RegExpObject::flags() const
 
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
-RegExpCtor::Data::Data(ExecutionContext *scope)
+Heap::RegExpCtor::RegExpCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("RegExp"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RegExpCtor::staticVTable());
     clearLastMatch();
 }
 
-void RegExpCtor::Data::clearLastMatch()
+void Heap::RegExpCtor::clearLastMatch()
 {
     lastMatch = Primitive::nullValue();
     lastInput = internalClass->engine->id_empty;

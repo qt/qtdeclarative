@@ -55,16 +55,35 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct RegExpObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, RegExp *value, bool global);
-        Data(ExecutionEngine *engine, const QRegExp &re);
-        Data(InternalClass *ic);
+namespace Heap {
 
-        RegExp *value;
-        bool global;
-    };
-    V4_OBJECT(Object)
+struct RegExpObject : Object {
+    RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global);
+    RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re);
+    RegExpObject(InternalClass *ic);
+
+    QV4::RegExp *value;
+    bool global;
+};
+
+struct RegExpCtor : FunctionObject {
+    RegExpCtor(QV4::ExecutionContext *scope);
+    Value lastMatch;
+    StringValue lastInput;
+    int lastMatchStart;
+    int lastMatchEnd;
+    void clearLastMatch();
+};
+
+struct RegExpPrototype : RegExpObject
+{
+    inline RegExpPrototype(InternalClass *ic);
+};
+
+}
+
+struct RegExpObject: Object {
+    V4_OBJECT2(RegExpObject, Object)
     Q_MANAGED_TYPE(RegExpObject)
 
     // needs to be compatible with the flags in qv4jsir_p.h
@@ -96,15 +115,7 @@ protected:
 
 struct RegExpCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-        Value lastMatch;
-        StringValue lastInput;
-        int lastMatchStart;
-        int lastMatchEnd;
-        void clearLastMatch();
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(RegExpCtor, FunctionObject)
 
     Value lastMatch() { return d()->lastMatch; }
     StringValue lastInput() { return d()->lastInput; }
@@ -118,14 +129,7 @@ struct RegExpCtor: FunctionObject
 
 struct RegExpPrototype: RegExpObject
 {
-    struct Data : RegExpObject::Data
-    {
-        Data(InternalClass *ic): RegExpObject::Data(ic)
-        {
-            setVTable(staticVTable());
-        }
-    };
-    V4_OBJECT(RegExpObject)
+    V4_OBJECT2(RegExpPrototype, RegExpObject)
 
     void init(ExecutionEngine *engine, Object *ctor);
 
@@ -141,6 +145,12 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_get_leftContext(CallContext *ctx);
     static ReturnedValue method_get_rightContext(CallContext *ctx);
 };
+
+inline Heap::RegExpPrototype::RegExpPrototype(InternalClass *ic)
+    : RegExpObject(ic)
+{
+    setVTable(QV4::RegExpPrototype::staticVTable());
+}
 
 }
 

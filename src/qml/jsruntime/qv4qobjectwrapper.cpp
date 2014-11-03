@@ -233,11 +233,11 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
     }
 }
 
-QObjectWrapper::Data::Data(ExecutionEngine *engine, QObject *object)
+Heap::QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Heap::Object(engine)
     , object(object)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QObjectWrapper::staticVTable());
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)

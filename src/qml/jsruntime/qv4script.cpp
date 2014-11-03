@@ -53,20 +53,20 @@
 
 using namespace QV4;
 
-QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, QV4::Object *qml)
+Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
     Q_ASSERT(scope->inUse());
 
-    setVTable(staticVTable());
+    setVTable(QV4::QmlBindingWrapper::staticVTable());
     function = f;
     if (function)
         function->compilationUnit->addref();
     needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
-    Scoped<QmlBindingWrapper> o(s, this);
+    Scoped<QV4::QmlBindingWrapper> o(s, this);
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
@@ -74,17 +74,17 @@ QmlBindingWrapper::Data::Data(ExecutionContext *scope, Function *f, QV4::Object 
     s.engine->popContext();
 }
 
-QmlBindingWrapper::Data::Data(ExecutionContext *scope, QV4::Object *qml)
+Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
     , qml(qml)
 {
     Q_ASSERT(scope->inUse());
 
-    setVTable(staticVTable());
+    setVTable(QV4::QmlBindingWrapper::staticVTable());
     needsActivation = false;
 
     Scope s(scope);
-    Scoped<QmlBindingWrapper> o(s, this);
+    Scoped<QV4::QmlBindingWrapper> o(s, this);
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 

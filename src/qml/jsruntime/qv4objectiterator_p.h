@@ -67,17 +67,17 @@ private:
     ObjectIterator(Value *scratch1, Value *scratch2, uint flags); // Constructor that requires calling init()
 };
 
+namespace Heap {
+struct ForEachIteratorObject : Object {
+    ForEachIteratorObject(QV4::ExecutionEngine *engine, QV4::Object *o);
+    ObjectIterator it;
+    Value workArea[2];
+};
+
+}
+
 struct ForEachIteratorObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, QV4::Object *o)
-            : Heap::Object(engine)
-            , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
-            setVTable(staticVTable());
-        }
-        ObjectIterator it;
-        Value workArea[2];
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(ForEachIteratorObject, Object)
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }
@@ -85,6 +85,14 @@ struct ForEachIteratorObject: Object {
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
+
+inline
+Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::ExecutionEngine *engine, QV4::Object *o)
+    : Heap::Object(engine)
+    , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
+{
+    setVTable(QV4::ForEachIteratorObject::staticVTable());
+}
 
 
 }
