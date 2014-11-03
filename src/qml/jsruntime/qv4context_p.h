@@ -123,7 +123,7 @@ struct GlobalContext : ExecutionContext {
 };
 
 struct CatchContext : ExecutionContext {
-    CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue);
+    CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue);
     StringValue exceptionVarName;
     Value exceptionValue;
 };

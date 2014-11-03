@@ -69,7 +69,7 @@ void IdentifierTable::addEntry(String *str)
 {
     uint hash = str->hashValue();
 
-    if (str->subtype() == String::StringType_ArrayIndex)
+    if (str->subtype() == Heap::String::StringType_ArrayIndex)
         return;
 
     str->d()->identifier = new Identifier;
@@ -133,7 +133,7 @@ Identifier *IdentifierTable::identifierImpl(const String *str)
     if (str->d()->identifier)
         return str->d()->identifier;
     uint hash = str->hashValue();
-    if (str->subtype() == String::StringType_ArrayIndex)
+    if (str->subtype() == Heap::String::StringType_ArrayIndex)
         return 0;
 
     uint idx = hash % alloc;

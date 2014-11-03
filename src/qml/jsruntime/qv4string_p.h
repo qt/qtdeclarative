@@ -43,48 +43,55 @@ namespace QV4 {
 struct ExecutionEngine;
 struct Identifier;
 
-struct Q_QML_PRIVATE_EXPORT String : public Managed {
-#ifndef V4_BOOTSTRAP
-    struct Q_QML_PRIVATE_EXPORT Data : Heap::Base {
-        Data(ExecutionEngine *engine, const QString &text);
-        Data(ExecutionEngine *engine, String *l, String *n);
-        ~Data() {
-            if (!largestSubLength && !text->ref.deref())
-                QStringData::deallocate(text);
-        }
-        void simplifyString() const;
-        int length() const {
-            Q_ASSERT((largestSubLength &&
-                      (len == left->d()->len + right->d()->len)) ||
-                     len == (uint)text->size);
-            return len;
-        }
-        union {
-            mutable QStringData *text;
-            mutable String *left;
-        };
-        union {
-            mutable Identifier *identifier;
-            mutable String *right;
-        };
-        mutable uint stringHash;
-        mutable uint largestSubLength;
-        uint len;
-    private:
-        static void append(const Data *data, QChar *ch);
-    };
-    // ### FIXME: Should this be a V4_OBJECT
-    V4_OBJECT(QV4::Managed)
-    Q_MANAGED_TYPE(String)
-    enum {
-        IsString = true
-    };
+namespace Heap {
 
+#ifndef V4_BOOTSTRAP
+struct Q_QML_PRIVATE_EXPORT String : Base {
     enum StringType {
         StringType_Unknown,
         StringType_Regular,
         StringType_UInt,
         StringType_ArrayIndex
+    };
+
+    String(ExecutionEngine *engine, const QString &text);
+    String(ExecutionEngine *engine, String *l, String *n);
+    ~String() {
+        if (!largestSubLength && !text->ref.deref())
+            QStringData::deallocate(text);
+    }
+    void simplifyString() const;
+    int length() const {
+        Q_ASSERT((largestSubLength &&
+                  (len == left->len + right->len)) ||
+                 len == (uint)text->size);
+        return len;
+    }
+    union {
+        mutable QStringData *text;
+        mutable String *left;
+    };
+    union {
+        mutable Identifier *identifier;
+        mutable String *right;
+    };
+    mutable uint stringHash;
+    mutable uint largestSubLength;
+    uint len;
+private:
+    static void append(const String *data, QChar *ch);
+};
+#endif
+
+}
+
+struct Q_QML_PRIVATE_EXPORT String : public Managed {
+#ifndef V4_BOOTSTRAP
+    // ### FIXME: Should this be a V4_OBJECT
+    V4_OBJECT2(String, Managed)
+    Q_MANAGED_TYPE(String)
+    enum {
+        IsString = true
     };
 
     bool equals(String *other) const;
@@ -96,7 +103,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         Q_ASSERT(!d()->largestSubLength);
         if (d()->identifier && d()->identifier == other->d()->identifier)
             return true;
-        if (subtype() >= StringType_UInt && subtype() == other->subtype())
+        if (subtype() >= Heap::String::StringType_UInt && subtype() == other->subtype())
             return true;
 
         return toQString() == other->toQString();
@@ -115,17 +122,17 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
 
     inline unsigned hashValue() const {
-        if (subtype() == StringType_Unknown)
+        if (subtype() == Heap::String::StringType_Unknown)
             createHashValue();
         Q_ASSERT(!d()->largestSubLength);
 
         return d()->stringHash;
     }
     uint asArrayIndex() const {
-        if (subtype() == StringType_Unknown)
+        if (subtype() == Heap::String::StringType_Unknown)
             createHashValue();
         Q_ASSERT(!d()->largestSubLength);
-        if (subtype() == StringType_ArrayIndex)
+        if (subtype() == Heap::String::StringType_ArrayIndex)
             return d()->stringHash;
         return UINT_MAX;
     }
@@ -144,10 +151,10 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     static uint createHashValue(const char *ch, int length);
 
     bool startsWithUpper() const {
-        const String *l = this;
-        while (l->d()->largestSubLength)
-            l = l->d()->left;
-        return l->d()->text->size && QChar::isUpper(l->d()->text->data()[0]);
+        const String::Data *l = d();
+        while (l->largestSubLength)
+            l = l->left;
+        return l->text->size && QChar::isUpper(l->text->data()[0]);
     }
 
     Identifier *identifier() const { return d()->identifier; }

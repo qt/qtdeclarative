@@ -145,7 +145,7 @@ Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
     withObject = with;
 }
 
-Heap::CatchContext::CatchContext(ExecutionEngine *engine, String *exceptionVarName, const ValueRef exceptionValue)
+Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_CatchContext)
 {
     strictMode = parent->d()->strictMode;

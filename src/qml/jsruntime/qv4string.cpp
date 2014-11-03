@@ -236,17 +236,17 @@ bool String::isEqualTo(Managed *t, Managed *o)
         return false;
     if (that->identifier() && that->identifier() == other->identifier())
         return true;
-    if (that->subtype() >= StringType_UInt && that->subtype() == other->subtype())
+    if (that->subtype() >= Heap::String::StringType_UInt && that->subtype() == other->subtype())
         return true;
 
     return that->toQString() == other->toQString();
 }
 
 
-String::Data::Data(ExecutionEngine *engine, const QString &t)
+Heap::String::String(ExecutionEngine *engine, const QString &t)
     : Heap::Base(engine->stringClass)
 {
-    subtype = StringType_Unknown;
+    subtype = String::StringType_Unknown;
 
     text = const_cast<QString &>(t).data_ptr();
     text->ref.ref();
@@ -256,21 +256,21 @@ String::Data::Data(ExecutionEngine *engine, const QString &t)
     len = text->size;
 }
 
-String::Data::Data(ExecutionEngine *engine, String *l, String *r)
+Heap::String::String(ExecutionEngine *engine, String *l, String *r)
     : Heap::Base(engine->stringClass)
 {
-    subtype = StringType_Unknown;
+    subtype = String::StringType_Unknown;
 
     left = l;
     right = r;
     stringHash = UINT_MAX;
-    largestSubLength = qMax(l->d()->largestSubLength, r->d()->largestSubLength);
-    len = l->d()->len + r->d()->len;
+    largestSubLength = qMax(l->largestSubLength, r->largestSubLength);
+    len = l->len + r->len;
 
-    if (!l->d()->largestSubLength && l->d()->len > largestSubLength)
-        largestSubLength = l->d()->len;
-    if (!r->d()->largestSubLength && r->d()->len > largestSubLength)
-        largestSubLength = r->d()->len;
+    if (!l->largestSubLength && l->len > largestSubLength)
+        largestSubLength = l->len;
+    if (!r->largestSubLength && r->len > largestSubLength)
+        largestSubLength = r->len;
 
     // make sure we don't get excessive depth in our strings
     if (len > 256 && len >= 2*largestSubLength)
@@ -281,9 +281,9 @@ uint String::toUInt(bool *ok) const
 {
     *ok = true;
 
-    if (subtype() == StringType_Unknown)
+    if (subtype() == Heap::String::StringType_Unknown)
         createHashValue();
-    if (subtype() >= StringType_UInt)
+    if (subtype() >= Heap::String::StringType_UInt)
         return d()->stringHash;
 
     // ### this conversion shouldn't be required
@@ -303,7 +303,7 @@ bool String::equals(String *other) const
         return false;
     if (identifier() && identifier() == other->identifier())
         return true;
-    if (subtype() >= StringType_UInt && subtype() == other->subtype())
+    if (subtype() >= Heap::String::StringType_UInt && subtype() == other->subtype())
         return true;
 
     return toQString() == other->toQString();
@@ -317,7 +317,7 @@ void String::makeIdentifierImpl() const
     engine()->identifierTable->identifier(this);
 }
 
-void String::Data::simplifyString() const
+void Heap::String::simplifyString() const
 {
     Q_ASSERT(largestSubLength);
 
@@ -331,19 +331,19 @@ void String::Data::simplifyString() const
     largestSubLength = 0;
 }
 
-void String::Data::append(const String::Data *data, QChar *ch)
+void Heap::String::append(const String *data, QChar *ch)
 {
-    std::vector<const String::Data *> worklist;
+    std::vector<const String *> worklist;
     worklist.reserve(32);
     worklist.push_back(data);
 
     while (!worklist.empty()) {
-        const String::Data *item = worklist.back();
+        const String *item = worklist.back();
         worklist.pop_back();
 
         if (item->largestSubLength) {
-            worklist.push_back(item->right->d());
-            worklist.push_back(item->left->d());
+            worklist.push_back(item->right);
+            worklist.push_back(item->left);
         } else {
             memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
             ch += item->text->size;
@@ -364,7 +364,7 @@ void String::createHashValue() const
     bool ok;
     d()->stringHash = ::toArrayIndex(ch, end, &ok);
     if (ok) {
-        setSubtype((d()->stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex);
+        setSubtype((d()->stringHash == UINT_MAX) ? Heap::String::StringType_UInt : Heap::String::StringType_ArrayIndex);
         return;
     }
 
@@ -375,7 +375,7 @@ void String::createHashValue() const
     }
 
     d()->stringHash = h;
-    setSubtype(StringType_Regular);
+    setSubtype(Heap::String::StringType_Regular);
 }
 
 uint String::createHashValue(const QChar *ch, int length)
