@@ -40,51 +40,67 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct ArgumentsGetterFunction : FunctionObject {
+    inline ArgumentsGetterFunction(QV4::ExecutionContext *scope, uint index);
+    uint index;
+};
+
+struct ArgumentsSetterFunction : FunctionObject {
+    inline ArgumentsSetterFunction(QV4::ExecutionContext *scope, uint index);
+    uint index;
+};
+
+struct ArgumentsObject : Object {
+    enum {
+        LengthPropertyIndex = 0,
+        CalleePropertyIndex = 1,
+        CallerPropertyIndex = 3
+    };
+    ArgumentsObject(QV4::CallContext *context);
+    QV4::CallContext *context;
+    bool fullyCreated;
+    MemberData *mappedArguments;
+};
+
+}
+
 struct ArgumentsGetterFunction: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope, uint index)
-            : Heap::FunctionObject(scope)
-            , index(index)
-        {
-            setVTable(staticVTable());
-        }
-        uint index;
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-
     static ReturnedValue call(Managed *that, CallData *d);
 };
 
+inline
+Heap::ArgumentsGetterFunction::ArgumentsGetterFunction(QV4::ExecutionContext *scope, uint index)
+    : Heap::FunctionObject(scope)
+    , index(index)
+{
+    setVTable(QV4::ArgumentsGetterFunction::staticVTable());
+}
+
 struct ArgumentsSetterFunction: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope, uint index)
-            : Heap::FunctionObject(scope)
-            , index(index)
-        {
-            setVTable(staticVTable());
-        }
-        uint index;
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-
     static ReturnedValue call(Managed *that, CallData *callData);
 };
 
+inline
+Heap::ArgumentsSetterFunction::ArgumentsSetterFunction(QV4::ExecutionContext *scope, uint index)
+    : Heap::FunctionObject(scope)
+    , index(index)
+{
+    setVTable(QV4::ArgumentsSetterFunction::staticVTable());
+}
+
 
 struct ArgumentsObject: Object {
-    struct Data : Heap::Object {
-        Data(CallContext *context);
-        CallContext *context;
-        bool fullyCreated;
-        Heap::MemberData *mappedArguments;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(ArgumentsObject, Object)
     Q_MANAGED_TYPE(ArgumentsObject)
 
     CallContext *context() const { return d()->context; }
@@ -96,11 +112,6 @@ struct ArgumentsObject: Object {
                 !static_cast<ArgumentsObject *>(m)->context()->d()->strictMode;
     }
 
-    enum {
-        LengthPropertyIndex = 0,
-        CalleePropertyIndex = 1,
-        CallerPropertyIndex = 3
-    };
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void putIndexed(Managed *m, uint index, const ValueRef value);

@@ -43,23 +43,27 @@ class QDateTime;
 
 namespace QV4 {
 
+namespace Heap {
+
+struct DateObject : Object {
+    DateObject(QV4::ExecutionEngine *engine, const ValueRef date)
+        : Object(engine->dateClass)
+    {
+        value = date;
+    }
+    DateObject(QV4::ExecutionEngine *engine, const QDateTime &date);
+    inline DateObject(InternalClass *ic);
+    Value value;
+};
+
+struct DateCtor : FunctionObject {
+    DateCtor(QV4::ExecutionContext *scope);
+};
+
+}
+
 struct DateObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, const ValueRef date)
-            : Heap::Object(engine->dateClass)
-        {
-            value = date;
-        }
-        Data(ExecutionEngine *engine, const QDateTime &date);
-        Data(InternalClass *ic)
-            : Heap::Object(ic)
-        {
-            Q_ASSERT(internalClass->vtable == staticVTable());
-            value = Primitive::fromDouble(qSNaN());
-        }
-        Value value;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(DateObject, Object)
     Q_MANAGED_TYPE(DateObject)
 
 
@@ -70,12 +74,16 @@ struct DateObject: Object {
     QDateTime toQDateTime() const;
 };
 
+Heap::DateObject::DateObject(InternalClass *ic)
+    : Heap::Object(ic)
+{
+    Q_ASSERT(internalClass->vtable == QV4::DateObject::staticVTable());
+    value = Primitive::fromDouble(qSNaN());
+}
+
 struct DateCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(DateCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *);

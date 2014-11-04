@@ -38,10 +38,10 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(BooleanCtor);
 DEFINE_OBJECT_VTABLE(BooleanObject);
 
-BooleanCtor::Data::Data(ExecutionContext *scope)
+Heap::BooleanCtor::BooleanCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Boolean"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::BooleanCtor::staticVTable());
 }
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)

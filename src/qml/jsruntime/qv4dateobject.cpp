@@ -634,10 +634,10 @@ static double getLocalTZA()
 
 DEFINE_OBJECT_VTABLE(DateObject);
 
-DateObject::Data::Data(ExecutionEngine *engine, const QDateTime &date)
+Heap::DateObject::DateObject(QV4::ExecutionEngine *engine, const QDateTime &date)
     : Heap::Object(engine->dateClass)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::DateObject::staticVTable());
     value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
 
@@ -648,10 +648,10 @@ QDateTime DateObject::toQDateTime() const
 
 DEFINE_OBJECT_VTABLE(DateCtor);
 
-DateCtor::Data::Data(ExecutionContext *scope)
+Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Date"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::DateCtor::staticVTable());
 }
 
 ReturnedValue DateCtor::construct(Managed *m, CallData *callData)

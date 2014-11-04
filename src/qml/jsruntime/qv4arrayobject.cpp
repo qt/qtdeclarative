@@ -41,10 +41,10 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArrayCtor);
 
-ArrayCtor::Data::Data(ExecutionContext *scope)
+Heap::ArrayCtor::ArrayCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Array"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::ArrayCtor::staticVTable());
 }
 
 ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)

@@ -43,12 +43,12 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(VariantObject);
 
-VariantObject::Data::Data(InternalClass *ic)
+Heap::VariantObject::VariantObject(InternalClass *ic)
     : Heap::Object(ic)
 {
 }
 
-VariantObject::Data::Data(ExecutionEngine *engine, const QVariant &value)
+Heap::VariantObject::VariantObject(QV4::ExecutionEngine *engine, const QVariant &value)
     : Heap::Object(engine->variantClass)
 {
     data = value;

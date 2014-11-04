@@ -56,20 +56,25 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
+{
+    VariantObject(InternalClass *ic);
+    VariantObject(QV4::ExecutionEngine *engine, const QVariant &value);
+    ~VariantObject() {
+        if (isScarce())
+            node.remove();
+    }
+    bool isScarce() const;
+    int vmePropertyReferenceCount;
+};
+
+}
+
 struct VariantObject : Object
 {
-    struct Data : Heap::Object, public ExecutionEngine::ScarceResourceData
-    {
-        Data(InternalClass *ic);
-        Data(ExecutionEngine *engine, const QVariant &value);
-        ~Data() {
-            if (isScarce())
-                node.remove();
-        }
-        bool isScarce() const;
-        int vmePropertyReferenceCount;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(VariantObject, Object)
 
     static QVariant toVariant(const ValueRef v);
 

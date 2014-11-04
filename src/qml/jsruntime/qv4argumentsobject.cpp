@@ -38,16 +38,16 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
-ArgumentsObject::Data::Data(CallContext *context)
+Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass)
     , context(context)
     , fullyCreated(false)
 {
-    Q_ASSERT(internalClass->vtable == staticVTable());
+    Q_ASSERT(internalClass->vtable == QV4::ArgumentsObject::staticVTable());
 
     ExecutionEngine *v4 = context->d()->engine;
     Scope scope(v4);
-    Scoped<ArgumentsObject> args(scope, this);
+    Scoped<QV4::ArgumentsObject> args(scope, this);
 
     args->setArrayType(Heap::ArrayData::Complex);
 
