@@ -40,13 +40,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct EvalFunction : FunctionObject {
+    EvalFunction(QV4::ExecutionContext *scope);
+};
+
+}
+
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(EvalFunction, FunctionObject)
 
     ReturnedValue evalCall(CallData *callData, bool directCall);
 

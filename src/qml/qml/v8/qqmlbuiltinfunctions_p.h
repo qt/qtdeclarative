@@ -55,15 +55,30 @@ class QV8Engine;
 
 namespace QV4 {
 
+namespace Heap {
+
+struct QtObject : Object {
+    QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
+    QObject *platform;
+    QObject *application;
+};
+
+struct ConsoleObject : Object {
+    ConsoleObject(ExecutionEngine *engine);
+};
+
+struct QQmlBindingFunction : FunctionObject {
+    QQmlBindingFunction(QV4::FunctionObject *originalFunction);
+    QV4::FunctionObject *originalFunction;
+    // Set when the binding is created later
+    QQmlSourceLocation bindingLocation;
+};
+
+}
+
 struct QtObject : Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *v4, QQmlEngine *qmlEngine);
-        QObject *platform;
-        QObject *application;
-    };
-    V4_OBJECT(Object)
-
+    V4_OBJECT2(QtObject, Object)
 
     static ReturnedValue method_isQtObject(CallContext *ctx);
     static ReturnedValue method_rgba(CallContext *ctx);
@@ -105,9 +120,7 @@ struct QtObject : Object
 
 struct ConsoleObject : Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine);
-    };
+    typedef Heap::ConsoleObject Data;
 
     static ReturnedValue method_error(CallContext *ctx);
     static ReturnedValue method_log(CallContext *ctx);
@@ -143,13 +156,7 @@ struct GlobalExtensions {
 
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(QV4::FunctionObject *originalFunction);
-        QV4::FunctionObject *originalFunction;
-        // Set when the binding is created later
-        QQmlSourceLocation bindingLocation;
-    };
-    V4_OBJECT(QV4::FunctionObject)
+    V4_OBJECT2(QQmlBindingFunction, FunctionObject)
 
     void initBindingLocation(); // from caller stack trace
 
