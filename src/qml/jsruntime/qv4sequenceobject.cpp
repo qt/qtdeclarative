@@ -507,7 +507,7 @@ private:
 
     static void destroy(Managed *that)
     {
-        static_cast<QQmlSequence<Container> *>(that)->~QQmlSequence<Container>();
+        static_cast<QQmlSequence<Container> *>(that)->d()->~Data();
     }
 };
 
