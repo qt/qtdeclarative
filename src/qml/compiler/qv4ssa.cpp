@@ -2991,15 +2991,7 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
             toBB->in[inIdx] = newBB;
             newBB->out.append(toBB);
 
-            BasicBlock *container = 0;
-            for (container = fromBB->containingGroup(); container; container = container->containingGroup()) {
-                if (container == toBB || container == toBB->containingGroup())
-                    break;
-            }
-            if (container == 0)
-                container = fromBB->containingGroup();
-
-            newBB->setContainingGroup(container);
+            newBB->setContainingGroup(toBB->containingGroup());
 
             // patch the terminator
             Stmt *terminator = fromBB->terminator();
