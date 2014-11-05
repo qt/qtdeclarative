@@ -350,7 +350,9 @@ void QQuickRepeater::clear()
     bool complete = isComponentComplete();
 
     if (d->model) {
-        for (int i = 0; i < d->deletables.count(); ++i) {
+        // We remove in reverse order deliberately; so that signals are emitted
+        // with sensible indices.
+        for (int i = d->deletables.count() - 1; i >= 0; --i) {
             if (QQuickItem *item = d->deletables.at(i)) {
                 if (complete)
                     emit itemRemoved(i, item);

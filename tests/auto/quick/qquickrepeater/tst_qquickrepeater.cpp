@@ -40,6 +40,7 @@
 #include <QtQml/qqmlincubator.h>
 #include <private/qquickrepeater_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -73,6 +74,7 @@ private slots:
     void visualItemModelCrash();
     void invalidContextCrash();
     void jsArrayChange();
+    void clearRemovalOrder();
 };
 
 class TestObject : public QObject
@@ -805,6 +807,42 @@ void tst_QQuickRepeater::jsArrayChange()
     // no change
     repeater->setModel(QVariant::fromValue(array2));
     QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuickRepeater::clearRemovalOrder()
+{
+    // Here, we're going to test that when the model is cleared, item removal
+    // signals are sent in a sensible order that gives us correct indices.
+    // (QTBUG-42243)
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("clearremovalorder.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
+    QVERIFY(repeater);
+    QCOMPARE(repeater->count(), 3);
+
+    QQmlListModel *model = rootObject->findChild<QQmlListModel*>("secondModel");
+    QVERIFY(model);
+    QCOMPARE(model->count(), 0);
+
+    // Now change the model
+    QSignalSpy removedSpy(repeater, &QQuickRepeater::itemRemoved);
+    repeater->setModel(QVariant::fromValue(model));
+
+    // we should have 0 items, and 3 removal signals.
+    QCOMPARE(repeater->count(), 0);
+    QCOMPARE(removedSpy.count(), 3);
+
+    // column 1 is for the items, we won't bother verifying these. just look at
+    // the indices and make sure they're sane.
+    QCOMPARE(removedSpy.at(0).at(0).toInt(), 2);
+    QCOMPARE(removedSpy.at(1).at(0).toInt(), 1);
+    QCOMPARE(removedSpy.at(2).at(0).toInt(), 0);
+
+    delete rootObject;
 }
 
 QTEST_MAIN(tst_QQuickRepeater)
