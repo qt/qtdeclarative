@@ -419,6 +419,7 @@ QQmlDebugServer::QQmlDebugServer()
         }
     }
 #else
+    Q_UNUSED(&cleanup)
     if (!appD->qmljsDebugArgumentsString().isEmpty()) {
         qWarning() << QString(QLatin1String(
                      "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
