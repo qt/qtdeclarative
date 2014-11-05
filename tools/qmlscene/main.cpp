@@ -31,13 +31,13 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qdebug.h>
 #include <QtCore/qabstractanimation.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qtextstream.h>
 
 #include <QtGui/QGuiApplication>
 
@@ -96,7 +96,7 @@ void RenderStatistics::updateStats()
             }
             var /= timesPerFrames.size();
 
-            qDebug("Average time per frame: %f ms (%i fps), std.dev: %f ms", avgtime, qRound(1000. / avgtime), qSqrt(var));
+            printf("Average time per frame: %f ms (%i fps), std.dev: %f ms\n", avgtime, qRound(1000. / avgtime), qSqrt(var));
 
             timePerFrame.append(avgtime);
             timesPerFrames.clear();
@@ -124,13 +124,13 @@ void RenderStatistics::printTotalStats()
     }
     avg /= count;
 
-    qDebug(" ");
-    qDebug("----- Statistics -----");
-    qDebug("Average time per frame: %f ms (%i fps)", avg, qRound(1000. / avg));
-    qDebug("Best time per frame: %f ms (%i fps)", minTime, int(1000 / minTime));
-    qDebug("Worst time per frame: %f ms (%i fps)", maxTime, int(1000 / maxTime));
-    qDebug("----------------------");
-    qDebug(" ");
+    puts(" ");
+    puts("----- Statistics -----");
+    printf("Average time per frame: %f ms (%i fps)\n", avg, qRound(1000. / avg));
+    printf("Best time per frame: %f ms (%i fps)\n", minTime, int(1000 / minTime));
+    printf("Worst time per frame: %f ms (%i fps)\n", maxTime, int(1000 / maxTime));
+    puts("----------------------");
+    puts(" ");
 }
 #endif
 
@@ -246,17 +246,17 @@ static int displayOptionsDialog(Options *options)
 static bool checkVersion(const QUrl &url)
 {
     if (!qgetenv("QMLSCENE_IMPORT_NAME").isEmpty())
-        qWarning("QMLSCENE_IMPORT_NAME is no longer supported.");
+        fprintf(stderr, "QMLSCENE_IMPORT_NAME is no longer supported.\n");
 
     QString fileName = url.toLocalFile();
     if (fileName.isEmpty()) {
-        qWarning("qmlscene: filename required.");
+        fprintf(stderr, "qmlscene: filename required.\n");
         return false;
     }
 
     QFile f(fileName);
     if (!f.open(QFile::ReadOnly | QFile::Text)) {
-        qWarning("qmlscene: failed to check version of file '%s', could not open...",
+        fprintf(stderr, "qmlscene: failed to check version of file '%s', could not open...\n",
                  qPrintable(fileName));
         return false;
     }
@@ -278,8 +278,8 @@ static bool checkVersion(const QUrl &url)
                 import = qt47.cap(0).trimmed();
 
             if (!import.isNull()) {
-                qWarning("qmlscene: '%s' is no longer supported.\n"
-                         "Use qmlviewer to load file '%s'.",
+                fprintf(stderr, "qmlscene: '%s' is no longer supported.\n"
+                         "Use qmlviewer to load file '%s'.\n",
                          qPrintable(import),
                          qPrintable(fileName));
                 return false;
@@ -300,7 +300,7 @@ static void displayFileDialog(Options *options)
     }
 #else
     Q_UNUSED(options);
-    qWarning("No filename specified...");
+    puts("No filename specified...");
 #endif
 }
 
@@ -324,11 +324,11 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         if(comp.isError()) {
             QList<QQmlError> errors = comp.errors();
             foreach (const QQmlError &error, errors)
-                qWarning() << error;
+                fprintf(stderr, "%s\n", qPrintable(error.toString()));
         }
 
         if (dummyData) {
-            qWarning() << "Loaded dummy data:" << dir.filePath(qml);
+            fprintf(stderr, "Loaded dummy data: %s\n", qPrintable(dir.filePath(qml)));
             qml.truncate(qml.length()-4);
             engine.rootContext()->setContextProperty(qml, dummyData);
             dummyData->setParent(&engine);
@@ -338,23 +338,23 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 
 static void usage()
 {
-    qWarning("Usage: qmlscene [options] <filename>");
-    qWarning(" ");
-    qWarning(" Options:");
-    qWarning("  --maximized ............................... Run maximized");
-    qWarning("  --fullscreen .............................. Run fullscreen");
-    qWarning("  --transparent ............................. Make the window transparent");
-    qWarning("  --multisample ............................. Enable multisampling (OpenGL anti-aliasing)");
-    qWarning("  --no-version-detection .................... Do not try to detect the version of the .qml file");
-    qWarning("  --slow-animations ......................... Run all animations in slow motion");
-    qWarning("  --resize-to-root .......................... Resize the window to the size of the root item");
-    qWarning("  --quit .................................... Quit immediately after starting");
-    qWarning("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
-    qWarning("  -I <path> ................................. Add <path> to the list of import paths");
-    qWarning("  -B <name> <file> .......................... Add a named bundle");
-    qWarning("  -translation <translationfile> ............ Set the language to run in");
+    puts("Usage: qmlscene [options] <filename>");
+    puts(" ");
+    puts(" Options:");
+    puts("  --maximized ............................... Run maximized");
+    puts("  --fullscreen .............................. Run fullscreen");
+    puts("  --transparent ............................. Make the window transparent");
+    puts("  --multisample ............................. Enable multisampling (OpenGL anti-aliasing)");
+    puts("  --no-version-detection .................... Do not try to detect the version of the .qml file");
+    puts("  --slow-animations ......................... Run all animations in slow motion");
+    puts("  --resize-to-root .......................... Resize the window to the size of the root item");
+    puts("  --quit .................................... Quit immediately after starting");
+    puts("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
+    puts("  -I <path> ................................. Add <path> to the list of import paths");
+    puts("  -B <name> <file> .......................... Add a named bundle");
+    puts("  -translation <translationfile> ............ Set the language to run in");
 
-    qWarning(" ");
+    puts(" ");
     exit(1);
 }
 
@@ -428,7 +428,8 @@ int main(int argc, char ** argv)
         if (qmlTranslator.load(options.translationFile)) {
             app.installTranslator(&qmlTranslator);
         } else {
-            qWarning() << "Could not load the translation file" << options.translationFile;
+            fprintf(stderr, "Could not load the translation file \"%s\"\n",
+                    qPrintable(options.translationFile));
         }
     }
 #endif
@@ -477,13 +478,13 @@ int main(int argc, char ** argv)
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
             component->loadUrl(options.file);
             if ( !component->isReady() ) {
-                qWarning("%s", qPrintable(component->errorString()));
+                fprintf(stderr, "%s\n", qPrintable(component->errorString()));
                 return -1;
             }
 
             QObject *topLevel = component->create();
             if (!topLevel && component->isError()) {
-                qWarning("%s", qPrintable(component->errorString()));
+                fprintf(stderr, "%s\n", qPrintable(component->errorString()));
                 return -1;
             }
             QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(topLevel));

@@ -42,6 +42,12 @@ The ability to define re-usable QML object types in documents is an important
 enabler to allow clients to write modular, highly readable and maintainable
 code.
 
+Since Qt 5.4, a document can also have the file extension \c ".ui.qml". The QML
+engine handles these files like standard .qml files and ignores the \c .ui part
+of the extension. Qt Creator handles those files as
+\l{Qt Creator: Qt Quick UI Forms}{UI forms} for the Qt Quick Designer. The files
+can contain only a subset of the QML language that is defined by Qt Creator.
+
 \section1 Structure of a QML Document
 
 A QML document consists of two sections: the imports section, and the object

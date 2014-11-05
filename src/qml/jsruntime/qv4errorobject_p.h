@@ -71,7 +71,7 @@ struct ErrorObject: Object {
 
     static ReturnedValue method_get_stack(CallContext *ctx);
     static void markObjects(HeapObject *that, ExecutionEngine *e);
-    static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
+    static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->d()->~Data(); }
 };
 
 template<>

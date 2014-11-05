@@ -174,7 +174,7 @@ struct QQmlLocaleData : public QV4::Object
 private:
     static void destroy(Managed *that)
     {
-        static_cast<QQmlLocaleData *>(that)->~QQmlLocaleData();
+        static_cast<QQmlLocaleData *>(that)->d()->~Data();
     }
 };
 
