@@ -174,6 +174,11 @@ void QSGDistanceFieldGlyphCache::update()
 
     storeGlyphs(distanceFields);
 
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+    foreach (Texture texture, m_textures)
+        saveTexture(texture.textureId, texture.size.width(), texture.size.height());
+#endif
+
     if (QSG_LOG_TIME_GLYPH().isDebugEnabled()) {
         quint64 now = qsg_render_timer.elapsed();
         qCDebug(QSG_LOG_TIME_GLYPH,
@@ -283,6 +288,171 @@ void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, con
         }
     }
 }
+
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+#include <QtGui/qopenglfunctions.h>
+
+void QSGDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, int height) const
+{
+    GLuint fboId;
+    glGenFramebuffers(1, &fboId);
+
+    GLuint tmpTexture = 0;
+    glGenTextures(1, &tmpTexture);
+    glBindTexture(GL_TEXTURE_2D, tmpTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fboId);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D,
+                           tmpTexture, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_BLEND);
+
+    GLfloat textureCoordinateArray[8];
+    textureCoordinateArray[0] = 0.0f;
+    textureCoordinateArray[1] = 0.0f;
+    textureCoordinateArray[2] = 1.0f;
+    textureCoordinateArray[3] = 0.0f;
+    textureCoordinateArray[4] = 1.0f;
+    textureCoordinateArray[5] = 1.0f;
+    textureCoordinateArray[6] = 0.0f;
+    textureCoordinateArray[7] = 1.0f;
+
+    GLfloat vertexCoordinateArray[8];
+    vertexCoordinateArray[0] = -1.0f;
+    vertexCoordinateArray[1] = -1.0f;
+    vertexCoordinateArray[2] =  1.0f;
+    vertexCoordinateArray[3] = -1.0f;
+    vertexCoordinateArray[4] =  1.0f;
+    vertexCoordinateArray[5] =  1.0f;
+    vertexCoordinateArray[6] = -1.0f;
+    vertexCoordinateArray[7] =  1.0f;
+
+    glViewport(0, 0, width, height);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, vertexCoordinateArray);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, textureCoordinateArray);
+
+    {
+        static const char *vertexShaderSource =
+                "attribute vec4      vertexCoordsArray; \n"
+                "attribute vec2      textureCoordArray; \n"
+                "varying   vec2      textureCoords;     \n"
+                "void main(void) \n"
+                "{ \n"
+                "    gl_Position = vertexCoordsArray;   \n"
+                "    textureCoords = textureCoordArray; \n"
+                "} \n";
+
+        static const char *fragmentShaderSource =
+                "varying   vec2      textureCoords; \n"
+                "uniform   sampler2D         texture;       \n"
+                "void main() \n"
+                "{ \n"
+                "    gl_FragColor = texture2D(texture, textureCoords); \n"
+                "} \n";
+
+        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+        if (vertexShader == 0 || fragmentShader == 0) {
+            GLenum error = glGetError();
+            qWarning("SharedGraphicsCacheServer::setupShaderPrograms: Failed to create shaders. (GL error: %x)",
+                     error);
+            return;
+        }
+
+        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+        glCompileShader(vertexShader);
+
+        GLint len = 1;
+        glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &len);
+
+        char infoLog[2048];
+        glGetShaderInfoLog(vertexShader, 2048, NULL, infoLog);
+        if (qstrlen(infoLog) > 0) {
+            qWarning("SharedGraphicsCacheServer::setupShaderPrograms, problems compiling vertex shader:\n %s",
+                     infoLog);
+        }
+
+        glCompileShader(fragmentShader);
+        glGetShaderInfoLog(fragmentShader, 2048, NULL, infoLog);
+        if (qstrlen(infoLog) > 0) {
+            qWarning("SharedGraphicsCacheServer::setupShaderPrograms, problems compiling fragent shader:\n %s",
+                     infoLog);
+        }
+
+        GLuint shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+
+        glBindAttribLocation(shaderProgram, 0, "vertexCoordsArray");
+        glBindAttribLocation(shaderProgram, 1, "textureCoordArray");
+
+        glLinkProgram(shaderProgram);
+        glGetProgramInfoLog(shaderProgram, 2048, NULL, infoLog);
+        if (qstrlen(infoLog) > 0) {
+            qWarning("SharedGraphicsCacheServer::setupShaderPrograms, problems linking shaders:\n %s",
+                     infoLog);
+        }
+
+        glUseProgram(shaderProgram);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+
+        int textureUniformLocation = glGetUniformLocation(shaderProgram, "texture");
+        glUniform1i(textureUniformLocation, 0);
+    }
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    {
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            qWarning("SharedGraphicsCacheServer::readBackBuffer: glDrawArrays reported error 0x%x",
+                     error);
+        }
+    }
+
+    uchar *data = new uchar[width * height * 4];
+
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    QImage image(data, width, height, QImage::Format_ARGB32);
+
+    QByteArray fileName = m_referenceFont.familyName().toLatin1() + '_' + QByteArray::number(textureId);
+    fileName = fileName.replace('/', '_').replace(' ', '_') + ".png";
+
+    image.save(QString::fromLocal8Bit(fileName));
+
+    {
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            qWarning("SharedGraphicsCacheServer::readBackBuffer: glReadPixels reported error 0x%x",
+                     error);
+        }
+    }
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
+    glDeleteFramebuffers(1, &fboId);
+    glDeleteTextures(1, &tmpTexture);
+
+    delete[] data;
+}
+#endif
 
 void QSGNodeVisitorEx::visitChildren(QSGNode *node)
 {
