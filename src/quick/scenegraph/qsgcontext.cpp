@@ -161,6 +161,7 @@ public:
         , m_time(0)
         , m_vsync(0)
         , m_mode(VSyncMode)
+        , m_lag(0)
         , m_bad(0)
         , m_good(0)
     {
