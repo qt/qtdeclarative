@@ -96,8 +96,16 @@ QDataStream &operator>>(QDataStream &ds,
 QDataStream &operator<<(QDataStream &ds,
                         const QQmlEngineDebugService::QQmlObjectProperty &data)
 {
-    ds << (int)data.type << data.name << data.value << data.valueTypeName
-       << data.binding << data.hasNotifySignal;
+    ds << (int)data.type << data.name;
+    // check first whether the data can be saved
+    // (otherwise we assert in QVariant::operator<<)
+    QByteArray buffer;
+    QDataStream fakeStream(&buffer, QIODevice::WriteOnly);
+    if (QMetaType::save(fakeStream, data.value.type(), data.value.constData()))
+        ds << data.value;
+    else
+        ds << QVariant();
+    ds << data.valueTypeName << data.binding << data.hasNotifySignal;
     return ds;
 }
 
