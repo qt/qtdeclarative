@@ -42,11 +42,9 @@ namespace QV4 {
 
 struct SyntaxErrorObject;
 
-struct ErrorObject: Object {
-    enum {
-        IsErrorObject = true
-    };
+namespace Heap {
 
+struct ErrorObject : Object {
     enum ErrorType {
         Error,
         EvalError,
@@ -56,15 +54,81 @@ struct ErrorObject: Object {
         TypeError,
         URIError
     };
-    struct Data : Heap::Object {
-        Data(InternalClass *ic);
-        Data(InternalClass *ic, const ValueRef message, ErrorType t = Error);
-        Data(InternalClass *ic, const QString &message, ErrorType t = Error);
-        Data(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
-        StackTrace stackTrace;
-        String *stack;
+
+    ErrorObject(InternalClass *ic);
+    ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const QString &message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    StackTrace stackTrace;
+    QV4::String *stack;
+};
+
+struct EvalErrorObject : ErrorObject {
+    EvalErrorObject(ExecutionEngine *engine, const ValueRef message);
+};
+
+struct RangeErrorObject : ErrorObject {
+    RangeErrorObject(ExecutionEngine *engine, const ValueRef message);
+    RangeErrorObject(ExecutionEngine *engine, const QString &msg);
+};
+
+struct ReferenceErrorObject : ErrorObject {
+    ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message);
+    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
+    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
+};
+
+struct SyntaxErrorObject : ErrorObject {
+    SyntaxErrorObject(ExecutionEngine *engine, const ValueRef message);
+    SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
+};
+
+struct TypeErrorObject : ErrorObject {
+    TypeErrorObject(ExecutionEngine *engine, const ValueRef message);
+    TypeErrorObject(ExecutionEngine *engine, const QString &msg);
+};
+
+struct URIErrorObject : ErrorObject {
+    URIErrorObject(ExecutionEngine *engine, const ValueRef message);
+};
+
+struct ErrorCtor : Heap::FunctionObject {
+    ErrorCtor(QV4::ExecutionContext *scope);
+    ErrorCtor(QV4::ExecutionContext *scope, const QString &name);
+};
+
+struct EvalErrorCtor : ErrorCtor {
+    EvalErrorCtor(QV4::ExecutionContext *scope);
+};
+
+struct RangeErrorCtor : ErrorCtor {
+    RangeErrorCtor(QV4::ExecutionContext *scope);
+};
+
+struct ReferenceErrorCtor : ErrorCtor {
+    ReferenceErrorCtor(QV4::ExecutionContext *scope);
+};
+
+struct SyntaxErrorCtor : ErrorCtor {
+    SyntaxErrorCtor(QV4::ExecutionContext *scope);
+};
+
+struct TypeErrorCtor : ErrorCtor {
+    TypeErrorCtor(QV4::ExecutionContext *scope);
+};
+
+struct URIErrorCtor : ErrorCtor {
+    URIErrorCtor(QV4::ExecutionContext *scope);
+};
+
+}
+
+struct ErrorObject: Object {
+    enum {
+        IsErrorObject = true
     };
-    V4_OBJECT(Object)
+
+    V4_OBJECT2(ErrorObject, Object)
     Q_MANAGED_TYPE(ErrorObject)
 
     SyntaxErrorObject *asSyntaxError();
@@ -80,55 +144,32 @@ inline ErrorObject *value_cast(const Value &v) {
 }
 
 struct EvalErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-    };
+    typedef Heap::EvalErrorObject Data;
 };
 
 struct RangeErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-        Data(ExecutionEngine *engine, const QString &msg);
-    };
+    typedef Heap::RangeErrorObject Data;
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-        Data(ExecutionEngine *engine, const QString &msg);
-        Data(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
-    };
+    typedef Heap::ReferenceErrorObject Data;
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-        Data(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
-    };
-    V4_OBJECT(ErrorObject)
+    V4_OBJECT2(SyntaxErrorObject, ErrorObject)
 };
 
 struct TypeErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-        Data(ExecutionEngine *engine, const QString &msg);
-    };
+    typedef Heap::TypeErrorObject Data;
 };
 
 struct URIErrorObject: ErrorObject {
-    struct Data : ErrorObject::Data {
-        Data(ExecutionEngine *engine, const ValueRef message);
-    };
+    typedef Heap::URIErrorObject Data;
 };
 
 struct ErrorCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-        Data(ExecutionContext *scope, const QString &name);
-    };
-
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(ErrorCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -136,60 +177,42 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(EvalErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(RangeErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(TypeErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
-    struct Data : ErrorCtor::Data {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(ErrorCtor)
+    V4_OBJECT2(URIErrorCtor, ErrorCtor)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
 };
@@ -236,7 +259,7 @@ struct URIErrorPrototype : ErrorObject
 
 inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 {
-    return subtype() == SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+    return subtype() == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
 }
 
 }

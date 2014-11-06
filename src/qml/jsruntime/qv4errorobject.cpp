@@ -63,25 +63,25 @@
 
 using namespace QV4;
 
-ErrorObject::Data::Data(InternalClass *ic)
+Heap::ErrorObject::ErrorObject(InternalClass *ic)
     : Heap::Object(ic)
 {
     Scope scope(ic->engine);
-    Scoped<ErrorObject> e(scope, this);
+    Scoped<QV4::ErrorObject> e(scope, this);
 
     ScopedString s(scope, scope.engine->newString(QStringLiteral("Error")));
     e->defineDefaultProperty(QStringLiteral("name"), s);
 }
 
-ErrorObject::Data::Data(InternalClass *ic, const ValueRef message, ErrorType t)
+Heap::ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     : Heap::Object(ic)
 {
     subtype = t;
 
     Scope scope(ic->engine);
-    Scoped<ErrorObject> e(scope, this);
+    Scoped<QV4::ErrorObject> e(scope, this);
 
-    e->defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    e->defineAccessorProperty(QStringLiteral("stack"), QV4::ErrorObject::method_get_stack, 0);
 
     if (!message->isUndefined())
         e->defineDefaultProperty(QStringLiteral("message"), message);
@@ -95,16 +95,16 @@ ErrorObject::Data::Data(InternalClass *ic, const ValueRef message, ErrorType t)
     }
 }
 
-ErrorObject::Data::Data(InternalClass *ic, const QString &message, ErrorObject::ErrorType t)
+Heap::ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject::ErrorType t)
     : Heap::Object(ic)
 {
     subtype = t;
 
     Scope scope(ic->engine);
-    Scoped<ErrorObject> e(scope, this);
+    Scoped<QV4::ErrorObject> e(scope, this);
     ScopedString s(scope);
 
-    e->defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    e->defineAccessorProperty(QStringLiteral("stack"), QV4::ErrorObject::method_get_stack, 0);
 
     ScopedValue v(scope, scope.engine->newString(message));
     e->defineDefaultProperty(QStringLiteral("message"), v);
@@ -117,16 +117,16 @@ ErrorObject::Data::Data(InternalClass *ic, const QString &message, ErrorObject::
     }
 }
 
-ErrorObject::Data::Data(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
+Heap::ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
     : Heap::Object(ic)
 {
     subtype = t;
 
     Scope scope(ic->engine);
-    Scoped<ErrorObject> e(scope, this);
+    Scoped<QV4::ErrorObject> e(scope, this);
     ScopedString s(scope);
 
-    e->defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    e->defineAccessorProperty(QStringLiteral("stack"), QV4::ErrorObject::method_get_stack, 0);
     e->defineDefaultProperty(QStringLiteral("name"), (s = scope.engine->newString(e->className())));
 
     e->d()->stackTrace = scope.engine->stackTrace();
@@ -182,58 +182,58 @@ DEFINE_OBJECT_VTABLE(ErrorObject);
 
 DEFINE_OBJECT_VTABLE(SyntaxErrorObject);
 
-SyntaxErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef msg)
-    : ErrorObject::Data(engine->syntaxErrorClass, msg, SyntaxError)
+Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg)
+    : Heap::ErrorObject(engine->syntaxErrorClass, msg, SyntaxError)
 {
 }
 
-SyntaxErrorObject::Data::Data(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : ErrorObject::Data(engine->syntaxErrorClass, msg, fileName, lineNumber, columnNumber, SyntaxError)
+Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
+    : Heap::ErrorObject(engine->syntaxErrorClass, msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
 }
 
-EvalErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef message)
-    : ErrorObject::Data(engine->evalErrorClass, message, EvalError)
+Heap::EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const ValueRef message)
+    : Heap::ErrorObject(engine->evalErrorClass, message, EvalError)
 {
 }
 
-RangeErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef message)
-    : ErrorObject::Data(engine->rangeErrorClass, message, RangeError)
+Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const ValueRef message)
+    : Heap::ErrorObject(engine->rangeErrorClass, message, RangeError)
 {
 }
 
-RangeErrorObject::Data::Data(ExecutionEngine *engine, const QString &message)
-    : ErrorObject::Data(engine->rangeErrorClass, message, RangeError)
+Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString &message)
+    : Heap::ErrorObject(engine->rangeErrorClass, message, RangeError)
 {
 }
 
-ReferenceErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef message)
-    : ErrorObject::Data(engine->referenceErrorClass, message, ReferenceError)
+Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message)
+    : Heap::ErrorObject(engine->referenceErrorClass, message, ReferenceError)
 {
 }
 
-ReferenceErrorObject::Data::Data(ExecutionEngine *engine, const QString &message)
-    : ErrorObject::Data(engine->referenceErrorClass, message, ReferenceError)
+Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &message)
+    : Heap::ErrorObject(engine->referenceErrorClass, message, ReferenceError)
 {
 }
 
-ReferenceErrorObject::Data::Data(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : ErrorObject::Data(engine->referenceErrorClass, msg, fileName, lineNumber, columnNumber, ReferenceError)
+Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
+    : Heap::ErrorObject(engine->referenceErrorClass, msg, fileName, lineNumber, columnNumber, ReferenceError)
 {
 }
 
-TypeErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef message)
-    : ErrorObject::Data(engine->typeErrorClass, message, TypeError)
+Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const ValueRef message)
+    : Heap::ErrorObject(engine->typeErrorClass, message, TypeError)
 {
 }
 
-TypeErrorObject::Data::Data(ExecutionEngine *engine, const QString &message)
-    : ErrorObject::Data(engine->typeErrorClass, message, TypeError)
+Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &message)
+    : Heap::ErrorObject(engine->typeErrorClass, message, TypeError)
 {
 }
 
-URIErrorObject::Data::Data(ExecutionEngine *engine, const ValueRef message)
-    : ErrorObject::Data(engine->uriErrorClass, message, URIError)
+Heap::URIErrorObject::URIErrorObject(ExecutionEngine *engine, const ValueRef message)
+    : Heap::ErrorObject(engine->uriErrorClass, message, URIError)
 {
 }
 
@@ -245,16 +245,16 @@ DEFINE_OBJECT_VTABLE(SyntaxErrorCtor);
 DEFINE_OBJECT_VTABLE(TypeErrorCtor);
 DEFINE_OBJECT_VTABLE(URIErrorCtor);
 
-ErrorCtor::Data::Data(ExecutionContext *scope)
+Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Error"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::ErrorCtor::staticVTable());
 }
 
-ErrorCtor::Data::Data(ExecutionContext *scope, const QString &name)
+Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope, const QString &name)
     : Heap::FunctionObject(scope, name)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::ErrorCtor::staticVTable());
 }
 
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
@@ -269,10 +269,10 @@ ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
     return static_cast<Object *>(that)->construct(callData);
 }
 
-EvalErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("EvalError"))
+Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("EvalError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::EvalErrorCtor::staticVTable());
 }
 
 ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
@@ -282,10 +282,10 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
     return (m->engine()->memoryManager->alloc<EvalErrorObject>(m->engine(), v))->asReturnedValue();
 }
 
-RangeErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("RangeError"))
+Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("RangeError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::RangeErrorCtor::staticVTable());
 }
 
 ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
@@ -295,10 +295,10 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
     return (m->engine()->memoryManager->alloc<RangeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
-ReferenceErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("ReferenceError"))
+Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("ReferenceError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::ReferenceErrorCtor::staticVTable());
 }
 
 ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
@@ -308,10 +308,10 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
     return (m->engine()->memoryManager->alloc<ReferenceErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
-SyntaxErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("SyntaxError"))
+Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("SyntaxError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::SyntaxErrorCtor::staticVTable());
 }
 
 ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
@@ -321,10 +321,10 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
     return (m->engine()->memoryManager->alloc<SyntaxErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
-TypeErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("TypeError"))
+Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("TypeError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::TypeErrorCtor::staticVTable());
 }
 
 ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
@@ -334,10 +334,10 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
     return (m->engine()->memoryManager->alloc<TypeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
-URIErrorCtor::Data::Data(ExecutionContext *scope)
-    : ErrorCtor::Data(scope, QStringLiteral("URIError"))
+Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
+    : Heap::ErrorCtor(scope, QStringLiteral("URIError"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::URIErrorCtor::staticVTable());
 }
 
 ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)

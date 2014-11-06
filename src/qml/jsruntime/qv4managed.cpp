@@ -100,26 +100,26 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        switch (ErrorObject::ErrorType(subtype())) {
-        case ErrorObject::Error:
+        switch (Heap::ErrorObject::ErrorType(subtype())) {
+        case Heap::ErrorObject::Error:
             s = "Error";
             break;
-        case ErrorObject::EvalError:
+        case Heap::ErrorObject::EvalError:
             s = "EvalError";
             break;
-        case ErrorObject::RangeError:
+        case Heap::ErrorObject::RangeError:
             s = "RangeError";
             break;
-        case ErrorObject::ReferenceError:
+        case Heap::ErrorObject::ReferenceError:
             s = "ReferenceError";
             break;
-        case ErrorObject::SyntaxError:
+        case Heap::ErrorObject::SyntaxError:
             s = "SyntaxError";
             break;
-        case ErrorObject::TypeError:
+        case Heap::ErrorObject::TypeError:
             s = "TypeError";
             break;
-        case ErrorObject::URIError:
+        case Heap::ErrorObject::URIError:
             s = "URIError";
             break;
         }
