@@ -383,8 +383,6 @@ void tst_QQuickAccessible::checkableTest()
     QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("checkbuttons.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickItem *contentItem = window->contentItem();
     QVERIFY(contentItem);
@@ -462,8 +460,6 @@ void tst_QQuickAccessible::ignoredTest()
     QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("ignored.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickItem *contentItem = window->contentItem();
     QVERIFY(contentItem);
