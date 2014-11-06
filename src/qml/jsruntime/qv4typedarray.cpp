@@ -39,7 +39,7 @@ DEFINE_OBJECT_VTABLE(TypedArrayCtor);
 DEFINE_OBJECT_VTABLE(TypedArrayPrototype);
 DEFINE_OBJECT_VTABLE(TypedArray);
 
-Q_STATIC_ASSERT((int)ExecutionEngine::NTypedArrayTypes == (int)TypedArray::NTypes);
+Q_STATIC_ASSERT((int)ExecutionEngine::NTypedArrayTypes == (int)Heap::TypedArray::NTypes);
 
 ReturnedValue Int8ArrayRead(const char *data, int index)
 {
@@ -180,7 +180,7 @@ void Float64ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value
     *(double *)(data + index) = v;
 }
 
-const TypedArrayOperations operations[TypedArray::NTypes] = {
+const TypedArrayOperations operations[Heap::TypedArray::NTypes] = {
     { 1, "Int8Array", Int8ArrayRead, Int8ArrayWrite },
     { 1, "Uint8Array", UInt8ArrayRead, UInt8ArrayWrite },
     { 1, "Uint8ClampedArray", UInt8ArrayRead, UInt8ClampedArrayWrite },
@@ -193,11 +193,11 @@ const TypedArrayOperations operations[TypedArray::NTypes] = {
 };
 
 
-TypedArrayCtor::Data::Data(ExecutionContext *scope, TypedArray::Type t)
+Heap::TypedArrayCtor::TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::Type t)
     : Heap::FunctionObject(scope, QLatin1String(operations[t].name))
     , type(t)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::TypedArrayCtor::staticVTable());
 }
 
 ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
@@ -333,7 +333,7 @@ ReturnedValue TypedArrayCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-TypedArray::Data::Data(ExecutionEngine *e, Type t)
+Heap::TypedArray::TypedArray(ExecutionEngine *e, Type t)
     : Heap::Object(e->typedArrayClasses[t]),
       type(operations + t)
 {

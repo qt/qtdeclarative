@@ -42,13 +42,24 @@ namespace QV4 {
 
 struct ArrayBuffer;
 
+namespace Heap {
+
+struct DataViewCtor : FunctionObject {
+    DataViewCtor(QV4::ExecutionContext *scope);
+};
+
+struct DataView : Object {
+    DataView(ExecutionEngine *e);
+    QV4::ArrayBuffer *buffer;
+    uint byteLength;
+    uint byteOffset;
+};
+
+}
+
 struct DataViewCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(DataViewCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -56,13 +67,7 @@ struct DataViewCtor: FunctionObject
 
 struct DataView : Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *e);
-        ArrayBuffer *buffer;
-        uint byteLength;
-        uint byteOffset;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(DataView, Object)
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

@@ -41,10 +41,10 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(DataViewCtor);
 DEFINE_OBJECT_VTABLE(DataView);
 
-DataViewCtor::Data::Data(ExecutionContext *scope)
+Heap::DataViewCtor::DataViewCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("DataView"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::DataViewCtor::staticVTable());
 }
 
 ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
@@ -76,7 +76,7 @@ ReturnedValue DataViewCtor::call(Managed *that, CallData *callData)
 }
 
 
-DataView::Data::Data(ExecutionEngine *e)
+Heap::DataView::DataView(ExecutionEngine *e)
     : Heap::Object(e->dataViewClass),
       buffer(0),
       byteLength(0),

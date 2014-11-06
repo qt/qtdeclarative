@@ -40,13 +40,22 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct ArrayBufferCtor : FunctionObject {
+    ArrayBufferCtor(QV4::ExecutionContext *scope);
+};
+
+struct ArrayBuffer : Object {
+    ArrayBuffer(ExecutionEngine *e, int length);
+    QTypedArrayData<char> *data;
+};
+
+}
+
 struct ArrayBufferCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(ArrayBufferCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -57,11 +66,7 @@ struct ArrayBufferCtor: FunctionObject
 
 struct ArrayBuffer : Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *e, int length);
-        QTypedArrayData<char> *data;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(ArrayBuffer, Object)
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->data->size; }

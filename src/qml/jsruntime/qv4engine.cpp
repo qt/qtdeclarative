@@ -384,9 +384,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     dataViewPrototype->init(this, dataViewCtor.asObject());
     dataViewClass = InternalClass::create(this, DataView::staticVTable(), dataViewPrototype);
 
-    for (int i = 0; i < TypedArray::NTypes; ++i) {
-        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(rootContext, TypedArray::Type(i));
-        Scoped<TypedArrayPrototype> typedArrayPrototype(scope, memoryManager->alloc<TypedArrayPrototype>(this, TypedArray::Type(i)));
+    for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
+        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(rootContext, Heap::TypedArray::Type(i));
+        Scoped<TypedArrayPrototype> typedArrayPrototype(scope, memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i)));
         typedArrayPrototype->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
         typedArrayClasses[i] = InternalClass::create(this, TypedArray::staticVTable(), typedArrayPrototype);
     }
@@ -418,7 +418,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
     ScopedString str(scope);
-    for (int i = 0; i < TypedArray::NTypes; ++i)
+    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].asFunctionObject()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(QV4::InternalClass::create(this, MathObject::staticVTable(), objectPrototype))));
@@ -943,7 +943,7 @@ void ExecutionEngine::markObjects()
     uRIErrorCtor.mark(this);
     arrayBufferCtor.mark(this);
     dataViewCtor.mark(this);
-    for (int i = 0; i < TypedArray::NTypes; ++i)
+    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         typedArrayCtors[i].mark(this);
     sequencePrototype.mark(this);
 

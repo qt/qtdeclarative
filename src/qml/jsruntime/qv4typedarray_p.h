@@ -52,8 +52,9 @@ struct TypedArrayOperations {
     TypedArrayWrite write;
 };
 
-struct TypedArray : Object
-{
+namespace Heap {
+
+struct TypedArray : Object {
     enum Type {
         Int8Array,
         UInt8Array,
@@ -67,15 +68,31 @@ struct TypedArray : Object
         NTypes
     };
 
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *e, Type t);
+    TypedArray(ExecutionEngine *e, Type t);
 
-        const TypedArrayOperations *type;
-        ArrayBuffer *buffer;
-        uint byteLength;
-        uint byteOffset;
-    };
-    V4_OBJECT(Object)
+    const TypedArrayOperations *type;
+    ArrayBuffer *buffer;
+    uint byteLength;
+    uint byteOffset;
+};
+
+struct TypedArrayCtor : FunctionObject {
+    TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::Type t);
+
+    TypedArray::Type type;
+};
+
+struct TypedArrayPrototype : Object {
+    inline TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t);
+    TypedArray::Type type;
+};
+
+
+}
+
+struct TypedArray : Object
+{
+    V4_OBJECT2(TypedArray, Object)
 
     uint length() const {
         return d()->byteLength/d()->type->bytesPerElement;
@@ -89,13 +106,7 @@ struct TypedArray : Object
 
 struct TypedArrayCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope, TypedArray::Type t);
-
-        TypedArray::Type type;
-    };
-
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(TypedArrayCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -104,16 +115,7 @@ struct TypedArrayCtor: FunctionObject
 
 struct TypedArrayPrototype : Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *e, TypedArray::Type t)
-            : Heap::Object(e)
-            , type(t)
-        {
-            setVTable(staticVTable());
-        }
-        TypedArray::Type type;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(TypedArrayPrototype, Object)
 
     void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
 
@@ -125,6 +127,14 @@ struct TypedArrayPrototype : Object
     static ReturnedValue method_set(CallContext *ctx);
     static ReturnedValue method_subarray(CallContext *ctx);
 };
+
+inline
+Heap::TypedArrayPrototype::TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t)
+    : Heap::Object(e)
+    , type(t)
+{
+    setVTable(QV4::TypedArrayPrototype::staticVTable());
+}
 
 } // namespace QV4
 
