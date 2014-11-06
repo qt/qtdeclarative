@@ -877,14 +877,14 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-JsonObject::Data::Data(InternalClass *ic)
+Heap::JsonObject::JsonObject(InternalClass *ic)
     : Heap::Object(ic)
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);
 
-    o->defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);
-    o->defineDefaultProperty(QStringLiteral("stringify"), method_stringify, 3);
+    o->defineDefaultProperty(QStringLiteral("parse"), QV4::JsonObject::method_parse, 2);
+    o->defineDefaultProperty(QStringLiteral("stringify"), QV4::JsonObject::method_stringify, 3);
 }
 
 

@@ -69,10 +69,10 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-StringObject::Data::Data(InternalClass *ic)
+Heap::StringObject::StringObject(InternalClass *ic)
     : Heap::Object(ic)
 {
-    Q_ASSERT(internalClass->vtable == staticVTable());
+    Q_ASSERT(internalClass->vtable == QV4::StringObject::staticVTable());
     value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
     tmpProperty.value = Primitive::undefinedValue();
 
@@ -81,13 +81,13 @@ StringObject::Data::Data(InternalClass *ic)
     s->defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
 
-StringObject::Data::Data(ExecutionEngine *engine, const ValueRef val)
+Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     : Heap::Object(engine->stringObjectClass)
 {
     value = val;
     Q_ASSERT(value.isString());
     tmpProperty.value = Primitive::undefinedValue();
-    setVTable(staticVTable());
+    setVTable(QV4::StringObject::staticVTable());
 
     Scope scope(engine);
     ScopedObject s(scope, this);
@@ -159,10 +159,10 @@ void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 DEFINE_OBJECT_VTABLE(StringCtor);
 
-StringCtor::Data::Data(ExecutionContext *scope)
+Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("String"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::StringCtor::staticVTable());
 }
 
 ReturnedValue StringCtor::construct(Managed *m, CallData *callData)

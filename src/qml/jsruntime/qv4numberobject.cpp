@@ -45,10 +45,10 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(NumberCtor);
 DEFINE_OBJECT_VTABLE(NumberObject);
 
-NumberCtor::Data::Data(ExecutionContext *scope)
+Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Number"))
 {
-    setVTable(staticVTable());
+    setVTable(QV4::NumberCtor::staticVTable());
 }
 
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)

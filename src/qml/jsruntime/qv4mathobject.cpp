@@ -47,7 +47,7 @@ DEFINE_OBJECT_VTABLE(MathObject);
 
 static const double qt_PI = 2.0 * ::asin(1.0);
 
-MathObject::Data::Data(InternalClass *ic)
+Heap::MathObject::MathObject(InternalClass *ic)
     : Heap::Object(ic)
 {
     Scope scope(ic->engine);
@@ -62,24 +62,24 @@ MathObject::Data::Data(InternalClass *ic)
     m->defineReadonlyProperty(QStringLiteral("SQRT1_2"), Primitive::fromDouble(::sqrt(0.5)));
     m->defineReadonlyProperty(QStringLiteral("SQRT2"), Primitive::fromDouble(::sqrt(2.0)));
 
-    m->defineDefaultProperty(QStringLiteral("abs"), method_abs, 1);
-    m->defineDefaultProperty(QStringLiteral("acos"), method_acos, 1);
-    m->defineDefaultProperty(QStringLiteral("asin"), method_asin, 0);
-    m->defineDefaultProperty(QStringLiteral("atan"), method_atan, 1);
-    m->defineDefaultProperty(QStringLiteral("atan2"), method_atan2, 2);
-    m->defineDefaultProperty(QStringLiteral("ceil"), method_ceil, 1);
-    m->defineDefaultProperty(QStringLiteral("cos"), method_cos, 1);
-    m->defineDefaultProperty(QStringLiteral("exp"), method_exp, 1);
-    m->defineDefaultProperty(QStringLiteral("floor"), method_floor, 1);
-    m->defineDefaultProperty(QStringLiteral("log"), method_log, 1);
-    m->defineDefaultProperty(QStringLiteral("max"), method_max, 2);
-    m->defineDefaultProperty(QStringLiteral("min"), method_min, 2);
-    m->defineDefaultProperty(QStringLiteral("pow"), method_pow, 2);
-    m->defineDefaultProperty(QStringLiteral("random"), method_random, 0);
-    m->defineDefaultProperty(QStringLiteral("round"), method_round, 1);
-    m->defineDefaultProperty(QStringLiteral("sin"), method_sin, 1);
-    m->defineDefaultProperty(QStringLiteral("sqrt"), method_sqrt, 1);
-    m->defineDefaultProperty(QStringLiteral("tan"), method_tan, 1);
+    m->defineDefaultProperty(QStringLiteral("abs"), QV4::MathObject::method_abs, 1);
+    m->defineDefaultProperty(QStringLiteral("acos"), QV4::MathObject::method_acos, 1);
+    m->defineDefaultProperty(QStringLiteral("asin"), QV4::MathObject::method_asin, 0);
+    m->defineDefaultProperty(QStringLiteral("atan"), QV4::MathObject::method_atan, 1);
+    m->defineDefaultProperty(QStringLiteral("atan2"), QV4::MathObject::method_atan2, 2);
+    m->defineDefaultProperty(QStringLiteral("ceil"), QV4::MathObject::method_ceil, 1);
+    m->defineDefaultProperty(QStringLiteral("cos"), QV4::MathObject::method_cos, 1);
+    m->defineDefaultProperty(QStringLiteral("exp"), QV4::MathObject::method_exp, 1);
+    m->defineDefaultProperty(QStringLiteral("floor"), QV4::MathObject::method_floor, 1);
+    m->defineDefaultProperty(QStringLiteral("log"), QV4::MathObject::method_log, 1);
+    m->defineDefaultProperty(QStringLiteral("max"), QV4::MathObject::method_max, 2);
+    m->defineDefaultProperty(QStringLiteral("min"), QV4::MathObject::method_min, 2);
+    m->defineDefaultProperty(QStringLiteral("pow"), QV4::MathObject::method_pow, 2);
+    m->defineDefaultProperty(QStringLiteral("random"), QV4::MathObject::method_random, 0);
+    m->defineDefaultProperty(QStringLiteral("round"), QV4::MathObject::method_round, 1);
+    m->defineDefaultProperty(QStringLiteral("sin"), QV4::MathObject::method_sin, 1);
+    m->defineDefaultProperty(QStringLiteral("sqrt"), QV4::MathObject::method_sqrt, 1);
+    m->defineDefaultProperty(QStringLiteral("tan"), QV4::MathObject::method_tan, 1);
 }
 
 /* copies the sign from y to x and returns the result */

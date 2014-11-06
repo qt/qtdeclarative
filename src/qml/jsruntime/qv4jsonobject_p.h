@@ -42,12 +42,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
 struct JsonObject : Object {
-    struct Data : Heap::Object {
-        Data(InternalClass *ic);
-    };
+    JsonObject(InternalClass *ic);
+};
+
+}
+
+struct JsonObject : Object {
     Q_MANAGED_TYPE(JsonObject)
-    V4_OBJECT(Object)
+    V4_OBJECT2(JsonObject, Object)
 private:
     typedef QSet<QV4::Object *> V4ObjectSet;
 public:

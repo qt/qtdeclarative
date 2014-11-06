@@ -41,17 +41,25 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct StringObject: Object {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, const ValueRef value);
-        Data(InternalClass *ic);
-        Value value;
-        // ### get rid of tmpProperty
-        mutable Property tmpProperty;
-    };
-    V4_OBJECT(Object)
-    Q_MANAGED_TYPE(StringObject)
+namespace Heap {
 
+struct StringObject : Object {
+    StringObject(ExecutionEngine *engine, const ValueRef value);
+    StringObject(InternalClass *ic);
+    Value value;
+    // ### get rid of tmpProperty
+    mutable Property tmpProperty;
+};
+
+struct StringCtor : FunctionObject {
+    StringCtor(QV4::ExecutionContext *scope);
+};
+
+}
+
+struct StringObject: Object {
+    V4_OBJECT2(StringObject, Object)
+    Q_MANAGED_TYPE(StringObject)
 
     Property *getIndex(uint index) const;
 
@@ -64,10 +72,7 @@ protected:
 
 struct StringCtor: FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope);
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(StringCtor, FunctionObject)
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

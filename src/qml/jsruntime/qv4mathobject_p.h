@@ -39,13 +39,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+
+struct MathObject : Object {
+    MathObject(InternalClass *ic);
+};
+
+}
+
 struct MathObject: Object
 {
-    struct Data : Heap::Object {
-        Data(InternalClass *ic);
-    };
-
-    V4_OBJECT(Object)
+    V4_OBJECT2(MathObject, Object)
     Q_MANAGED_TYPE(MathObject)
 
     static ReturnedValue method_abs(CallContext *context);
