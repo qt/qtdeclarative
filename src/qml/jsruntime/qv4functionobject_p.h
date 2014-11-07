@@ -63,6 +63,9 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(InternalClass *ic);
     ~FunctionObject();
 
+    unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
+    unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
+
     QV4::ExecutionContext *scope;
     Function *function;
 };
@@ -114,8 +117,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Function *function() { return d()->function; }
 
     ReturnedValue name();
-    unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
-    unsigned int varCount() { return function() ? function()->compiledFunction->nLocals : 0; }
+    unsigned int formalParameterCount() { return d()->formalParameterCount(); }
+    unsigned int varCount() { return d()->varCount(); }
 
     void init(String *name, bool createProto);
 

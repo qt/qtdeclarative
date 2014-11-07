@@ -573,7 +573,7 @@ Function *Debugger::getFunction() const
 {
     ExecutionContext *context = m_engine->currentContext();
     if (CallContext *callCtx = context->asCallContext())
-        return callCtx->d()->function->function();
+        return callCtx->d()->function->function;
     else {
         Q_ASSERT(context->d()->type == QV4::Heap::ExecutionContext::Type_GlobalContext);
         return context->d()->engine->globalCode;

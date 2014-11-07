@@ -55,7 +55,7 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
     Heap::CallContext *c = reinterpret_cast<Heap::CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
     new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
-    c->function = function;
+    c->function = function->d();
     c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode();
@@ -161,7 +161,7 @@ Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exception
 Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::FunctionObject *function)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_QmlContext)
 {
-    this->function = function;
+    this->function = function->d();
     callData = reinterpret_cast<CallData *>(this + 1);
     callData->tag = QV4::Value::_Integer_Type;
     callData->argc = 0;
@@ -184,7 +184,7 @@ Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::F
 
 String * const *CallContext::formals() const
 {
-    return (d()->function && d()->function->function()) ? d()->function->function()->internalClass->nameMap.constData() : 0;
+    return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() : 0;
 }
 
 unsigned int CallContext::formalCount() const
@@ -194,7 +194,7 @@ unsigned int CallContext::formalCount() const
 
 String * const *CallContext::variables() const
 {
-    return (d()->function && d()->function->function()) ? d()->function->function()->internalClass->nameMap.constData() + d()->function->function()->compiledFunction->nFormals : 0;
+    return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() + d()->function->formalParameterCount() : 0;
 }
 
 unsigned int CallContext::variableCount() const
@@ -220,7 +220,7 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
         } else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->d()->function;
+            ScopedFunctionObject f(scope, c->d()->function);
             if (f->needsActivation() || hasWith) {
                 uint index = f->function()->internalClass->find(name);
                 if (index < UINT_MAX)
@@ -244,7 +244,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return d()->function->needsActivation() || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
+    return d()->function->needsActivation || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
 }
 
 void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
@@ -296,8 +296,8 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
             ScopedObject activation(scope, (Object *)0);
             if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
-                if (c->d()->function->function()) {
-                    uint index = c->d()->function->function()->internalClass->find(name);
+                if (c->d()->function->function) {
+                    uint index = c->d()->function->function->internalClass->find(name);
                     if (index < UINT_MAX) {
                         if (index < c->d()->function->formalParameterCount()) {
                             c->d()->callData->args[c->d()->function->formalParameterCount() - index - 1] = *value;
@@ -434,13 +434,13 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
 
         else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->d()->function;
+            ScopedFunctionObject f(scope, c->d()->function);
             if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
                 uint index = f->function()->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->d()->function->formalParameterCount())
-                        return c->d()->callData->args[c->d()->function->formalParameterCount() - index - 1].asReturnedValue();
-                    return c->d()->locals[index - c->d()->function->formalParameterCount()].asReturnedValue();
+                    if (index < f->formalParameterCount())
+                        return c->d()->callData->args[f->formalParameterCount() - index - 1].asReturnedValue();
+                    return c->d()->locals[index - f->formalParameterCount()].asReturnedValue();
                 }
             }
             ScopedObject activation(scope, c->d()->activation);

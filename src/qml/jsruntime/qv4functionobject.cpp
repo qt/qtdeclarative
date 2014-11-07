@@ -457,7 +457,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
-    ctx.function = f.getPointer();
+    ctx.function = f.getPointer()->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
@@ -494,7 +494,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
-    ctx.function = f;
+    ctx.function = f->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
