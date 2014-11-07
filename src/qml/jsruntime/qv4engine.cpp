@@ -891,8 +891,7 @@ void ExecutionEngine::markObjects()
         Q_ASSERT(c->inUse);
         if (!c->markBit) {
             c->markBit = 1;
-            // ### GC
-            reinterpret_cast<ExecutionContext *>(c)->markObjects(c, this);
+            c->internalClass->vtable->markObjects(c, this);
         }
         c = c->parent;
     }

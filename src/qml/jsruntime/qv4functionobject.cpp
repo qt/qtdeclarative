@@ -81,6 +81,16 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
     f->init(n.getPointer(), createProto);
 }
 
+Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
+    : Heap::Object(scope->engine->functionClass)
+    , scope(scope)
+{
+    Scope s(scope->engine);
+    ScopedFunctionObject f(s, this);
+    ScopedString n(s, s.engine->newString(name));
+    f->init(n.getPointer(), createProto);
+}
+
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->d()->engine->functionClass)
     , scope(scope->d())

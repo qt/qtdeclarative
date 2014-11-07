@@ -1139,7 +1139,10 @@ ExecutionContext *Runtime::pushCatchScope(ExecutionContext *ctx, String *excepti
 
 ExecutionContext *Runtime::popScope(ExecutionContext *ctx)
 {
-    return ctx->engine()->popContext();
+    Scope scope(ctx->engine());
+    ScopedContext c(scope, ctx->engine()->popContext());
+    // ### GC?
+    return c.getPointer();
 }
 
 void Runtime::declareVar(ExecutionContext *ctx, bool deletable, String *name)
