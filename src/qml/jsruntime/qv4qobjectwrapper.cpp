@@ -297,9 +297,11 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
                     } else if (r.type) {
-                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object, r.type, QmlTypeWrapper::ExcludeEnums);
+                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object,
+                                                      r.type, Heap::QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
-                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object,
+                                                      qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);
                     }
                     Q_ASSERT(!"Unreachable");
                 }

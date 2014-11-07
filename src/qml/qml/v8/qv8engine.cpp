@@ -233,7 +233,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint, bool crea
         return value->asDouble();
     if (value->isString())
         return value->stringValue()->toQString();
-    if (QQmlLocaleData *ld = value->as<QQmlLocaleData>())
+    if (QV4::QQmlLocaleData *ld = value->as<QV4::QQmlLocaleData>())
         return ld->d()->locale;
     if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();

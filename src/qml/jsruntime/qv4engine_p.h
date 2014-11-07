@@ -58,9 +58,6 @@ class Profiler;
 namespace CompiledData {
 struct CompilationUnit;
 }
-}
-
-namespace QV4 {
 
 struct Function;
 struct Object;

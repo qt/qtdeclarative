@@ -58,22 +58,30 @@ class QQmlTypeNameCache;
 
 namespace QV4 {
 
+namespace Heap {
+
+struct QmlTypeWrapper : Object {
+    enum TypeNameMode {
+        IncludeEnums,
+        ExcludeEnums
+    };
+
+    QmlTypeWrapper(QV8Engine *engine);
+    ~QmlTypeWrapper();
+    QV8Engine *v8;
+    TypeNameMode mode;
+    QPointer<QObject> object;
+
+    QQmlType *type;
+    QQmlTypeNameCache *typeNamespace;
+    const void *importNamespace;
+};
+
+}
+
 struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
-    enum TypeNameMode { IncludeEnums, ExcludeEnums };
-
-    struct Data : Heap::Object {
-        Data(QV8Engine *engine);
-        ~Data();
-        QV8Engine *v8;
-        TypeNameMode mode;
-        QPointer<QObject> object;
-
-        QQmlType *type;
-        QQmlTypeNameCache *typeNamespace;
-        const void *importNamespace;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QmlTypeWrapper, Object)
 private:
 
 public:
@@ -83,8 +91,10 @@ public:
 
     QVariant toVariant() const;
 
-    static ReturnedValue create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
-    static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlType *,
+                                Heap::QmlTypeWrapper::TypeNameMode = Heap::QmlTypeWrapper::IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *,
+                                Heap::QmlTypeWrapper::TypeNameMode = Heap::QmlTypeWrapper::IncludeEnums);
 
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

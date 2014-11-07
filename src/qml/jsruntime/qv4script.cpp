@@ -51,7 +51,46 @@
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+namespace Heap {
+
+struct CompilationUnitHolder : Object {
+    inline CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit);
+
+    QQmlRefPointer<CompiledData::CompilationUnit> unit;
+};
+
+}
+
+struct CompilationUnitHolder : public Object
+{
+    V4_OBJECT2(CompilationUnitHolder, Object)
+
+    static void destroy(Managed *that)
+    {
+        static_cast<CompilationUnitHolder*>(that)->d()->~Data();
+    }
+
+};
+
+inline
+Heap::CompilationUnitHolder::CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
+    : Heap::Object(engine)
+    , unit(unit)
+{
+    setVTable(QV4::CompilationUnitHolder::staticVTable());
+}
+
+}
+
+QT_END_NAMESPACE
+
 using namespace QV4;
+
+DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
+DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
@@ -153,31 +192,6 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapper->context(), runtimeFunction));
     return function->asReturned<FunctionObject>();
 }
-
-DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
-
-struct CompilationUnitHolder : public Object
-{
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
-            : Heap::Object(engine)
-            , unit(unit)
-        {
-            setVTable(staticVTable());
-        }
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
-    };
-    V4_OBJECT(Object)
-
-
-    static void destroy(Managed *that)
-    {
-        static_cast<CompilationUnitHolder*>(that)->d()->~Data();
-    }
-
-};
-
-DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext), strictMode(false), inheritContext(true), parsed(false)

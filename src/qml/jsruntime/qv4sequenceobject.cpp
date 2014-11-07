@@ -155,40 +155,29 @@ template <> bool convertValueToElement(const ValueRef value)
     return value->toBoolean();
 }
 
+namespace QV4 {
+
+template <typename Container> struct QQmlSequence;
+
+namespace Heap {
+
+template <typename Container>
+struct QQmlSequence : Object {
+    QQmlSequence(QV4::ExecutionEngine *engine, const Container &container);
+    QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex);
+
+    mutable Container container;
+    QPointer<QObject> object;
+    int propertyIndex;
+    bool isReference;
+};
+
+}
+
 template <typename Container>
 struct QQmlSequence : public QV4::Object
 {
-    struct Data : Heap::Object {
-        Data(QV4::ExecutionEngine *engine, const Container &container)
-            : Heap::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
-            , container(container)
-            , propertyIndex(-1)
-            , isReference(false)
-        {
-            QV4::Scope scope(engine);
-            QV4::Scoped<QQmlSequence<Container> > o(scope, this);
-            o->setArrayType(Heap::ArrayData::Custom);
-            o->init();
-        }
-
-        Data(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-            : Heap::Object(InternalClass::create(engine, staticVTable(), engine->sequencePrototype.asObject()))
-            , object(object)
-            , propertyIndex(propertyIndex)
-            , isReference(true)
-        {
-            QV4::Scope scope(engine);
-            QV4::Scoped<QQmlSequence<Container> > o(scope, this);
-            o->setArrayType(Heap::ArrayData::Custom);
-            o->loadReference();
-            o->init();
-        }
-        mutable Container container;
-        QPointer<QObject> object;
-        int propertyIndex;
-        bool isReference;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQmlSequence<Container>, QV4::Object)
     Q_MANAGED_TYPE(QmlSequence)
 public:
 
@@ -474,7 +463,6 @@ public:
         return QVariant::fromValue(result);
     }
 
-private:
     void loadReference() const
     {
         Q_ASSERT(d()->object);
@@ -511,6 +499,36 @@ private:
         static_cast<QQmlSequence<Container> *>(that)->d()->~Data();
     }
 };
+
+
+template <typename Container>
+Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
+    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable(), engine->sequencePrototype.asObject()))
+    , container(container)
+    , propertyIndex(-1)
+    , isReference(false)
+{
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
+    o->setArrayType(Heap::ArrayData::Custom);
+    o->init();
+}
+
+template <typename Container>
+Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
+    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable(), engine->sequencePrototype.asObject()))
+    , object(object)
+    , propertyIndex(propertyIndex)
+    , isReference(true)
+{
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
+    o->setArrayType(Heap::ArrayData::Custom);
+    o->loadReference();
+    o->init();
+}
+
+}
 
 typedef QQmlSequence<QStringList> QQmlQStringList;
 template<>

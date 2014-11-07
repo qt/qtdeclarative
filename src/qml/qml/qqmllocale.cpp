@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace QV4;
+
 DEFINE_OBJECT_VTABLE(QQmlLocaleData);
 
 #define GET_LOCALE_DATA_RESOURCE(OBJECT) \

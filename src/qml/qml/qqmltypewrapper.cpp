@@ -48,15 +48,15 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 
-QmlTypeWrapper::Data::Data(QV8Engine *engine)
+Heap::QmlTypeWrapper::QmlTypeWrapper(QV8Engine *engine)
     : Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
     , mode(IncludeEnums)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QmlTypeWrapper::staticVTable());
 }
 
-QmlTypeWrapper::Data::~Data()
+Heap::QmlTypeWrapper::~QmlTypeWrapper()
 {
     if (typeNamespace)
         typeNamespace->release();
@@ -96,7 +96,8 @@ QVariant QmlTypeWrapper::toVariant() const
 
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
-ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, TypeNameMode mode)
+ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t,
+                                     Heap::QmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
@@ -109,7 +110,8 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, Typ
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, const void *importNamespace, TypeNameMode mode)
+ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, const void *importNamespace,
+                                     Heap::QmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
@@ -153,7 +155,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
             if (qobjectSingleton) {
                 // check for enum value
                 if (name->startsWithUpper()) {
-                    if (w->d()->mode == IncludeEnums) {
+                    if (w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums) {
                         // ### Optimize
                         QByteArray enumName = name->toQString().toUtf8();
                         const QMetaObject *metaObject = qobjectSingleton->metaObject();

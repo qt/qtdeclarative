@@ -59,17 +59,22 @@ class QV8Engine;
 
 namespace QV4 {
 
+namespace Heap {
+
+struct QmlListWrapper : Object {
+    QmlListWrapper(QV8Engine *engine);
+    ~QmlListWrapper();
+    QV8Engine *v8;
+    QPointer<QObject> object;
+    QQmlListProperty<QObject> property;
+    int propertyType;
+};
+
+}
+
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
-    struct Data : Heap::Object {
-        Data(QV8Engine *engine);
-        ~Data();
-        QV8Engine *v8;
-        QPointer<QObject> object;
-        QQmlListProperty<QObject> property;
-        int propertyType;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QmlListWrapper, Object)
 
     static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
     static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);

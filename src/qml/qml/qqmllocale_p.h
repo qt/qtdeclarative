@@ -121,17 +121,20 @@ private:
     static QV4::ReturnedValue method_localeCompare(QV4::CallContext *ctx);
 };
 
+namespace QV4 {
+
+namespace Heap {
+
+struct QQmlLocaleData : Object {
+    inline QQmlLocaleData(ExecutionEngine *engine);
+    QLocale locale;
+};
+
+}
+
 struct QQmlLocaleData : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *engine)
-            : QV4::Heap::Object(engine)
-        {
-            setVTable(staticVTable());
-        }
-        QLocale locale;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QQmlLocaleData, Object)
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {
         QV4::Object *o = ctx->d()->callData->thisObject.asObject();
@@ -177,6 +180,14 @@ private:
         static_cast<QQmlLocaleData *>(that)->d()->~Data();
     }
 };
+
+Heap::QQmlLocaleData::QQmlLocaleData(ExecutionEngine *engine)
+    : Heap::Object(engine)
+{
+    setVTable(QV4::QQmlLocaleData::staticVTable());
+}
+
+}
 
 QT_END_NAMESPACE
 
