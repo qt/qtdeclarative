@@ -58,16 +58,21 @@ class QV8Engine;
 
 namespace QV4 {
 
+namespace Heap {
+
+struct QmlValueTypeWrapper : Object {
+    enum ObjectType { Reference, Copy };
+    QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
+    QV8Engine *v8;
+    ObjectType objectType;
+    mutable QQmlValueType *type;
+};
+
+}
+
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
-    enum ObjectType { Reference, Copy };
-    struct Data : Heap::Object {
-        Data(QV8Engine *engine, ObjectType type);
-        QV8Engine *v8;
-        ObjectType objectType;
-        mutable QQmlValueType *type;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QmlValueTypeWrapper, Object)
 
 public:
 

@@ -1860,7 +1860,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisI
 
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelItemObject);
 
-QQmlDelegateModelItemObject::Data::~Data()
+QV4::Heap::QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
 {
     item->Dispose();
 }

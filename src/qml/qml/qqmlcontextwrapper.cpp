@@ -53,7 +53,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-QmlContextWrapper::Data::Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+Heap::QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
     : Heap::Object(QV8Engine::getV4(engine))
     , readOnly(true)
     , ownsContext(ownsContext)
@@ -61,10 +61,10 @@ QmlContextWrapper::Data::Data(QV8Engine *engine, QQmlContextData *context, QObje
     , context(context)
     , scopeObject(scopeObject)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QmlContextWrapper::staticVTable());
 }
 
-QmlContextWrapper::Data::~Data()
+Heap::QmlContextWrapper::~QmlContextWrapper()
 {
     if (context && ownsContext)
         context->destroy();
@@ -432,16 +432,16 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, String *name
 
 DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
-QQmlIdObjectsArray::Data::Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
+Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper)
     : Heap::Object(engine)
     , contextWrapper(contextWrapper)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QQmlIdObjectsArray::staticVTable());
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    QQmlIdObjectsArray *This = static_cast<QQmlIdObjectsArray*>(m);
+    QQmlIdObjectsArray *This = static_cast<QV4::QQmlIdObjectsArray*>(m);
     QQmlContextData *context = This->d()->contextWrapper->getContext();
     if (!context) {
         if (hasProperty)

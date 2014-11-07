@@ -62,21 +62,32 @@ struct Function;
 }
 
 struct QQmlIdObjectsArray;
+struct QmlContextWrapper;
+
+namespace Heap {
+
+struct QmlContextWrapper : Object {
+    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    ~QmlContextWrapper();
+    bool readOnly;
+    bool ownsContext;
+    bool isNullWrapper;
+
+    QQmlGuardedContextData context;
+    QPointer<QObject> scopeObject;
+    QQmlIdObjectsArray *idObjectsWrapper;
+};
+
+struct QQmlIdObjectsArray : Object {
+    QQmlIdObjectsArray(QV4::ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper);
+    QV4::QmlContextWrapper *contextWrapper;
+};
+
+}
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-    struct Data : Heap::Object {
-        Data(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-        ~Data();
-        bool readOnly;
-        bool ownsContext;
-        bool isNullWrapper;
-
-        QQmlGuardedContextData context;
-        QPointer<QObject> scopeObject;
-        QQmlIdObjectsArray *idObjectsWrapper;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QmlContextWrapper, Object)
 
     static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
     static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
@@ -104,11 +115,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
 struct QQmlIdObjectsArray : public Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
-        QmlContextWrapper *contextWrapper;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QQmlIdObjectsArray, Object)
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void markObjects(Heap::Base *that, ExecutionEngine *engine);

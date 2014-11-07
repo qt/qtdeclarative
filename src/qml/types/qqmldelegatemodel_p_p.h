@@ -151,22 +151,30 @@ protected:
     void objectDestroyed(QObject *);
 };
 
+namespace QV4 {
+namespace Heap {
+struct QQmlDelegateModelItemObject : Object {
+    inline QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item);
+    ~QQmlDelegateModelItemObject();
+    QQmlDelegateModelItem *item;
+};
+
+}
+}
+
 struct QQmlDelegateModelItemObject : QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
-            : QV4::Heap::Object(engine)
-            , item(item)
-        {
-            setVTable(staticVTable());
-        }
-        ~Data();
-        QQmlDelegateModelItem *item;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQmlDelegateModelItemObject, QV4::Object)
 
     static void destroy(Managed *that);
 };
+
+QV4::Heap::QQmlDelegateModelItemObject::QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
+    : QV4::Heap::Object(engine)
+    , item(item)
+{
+    setVTable(::QQmlDelegateModelItemObject::staticVTable());
+}
 
 
 

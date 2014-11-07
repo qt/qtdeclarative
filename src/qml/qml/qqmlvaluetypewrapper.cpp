@@ -47,50 +47,59 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
 
-DEFINE_OBJECT_VTABLE(QmlValueTypeWrapper);
+DEFINE_OBJECT_VTABLE(QV4::QmlValueTypeWrapper);
+
+namespace QV4 {
+namespace Heap {
+
+struct QmlValueTypeReference : QmlValueTypeWrapper
+{
+    QmlValueTypeReference(QV8Engine *engine);
+    QPointer<QObject> object;
+    int property;
+};
+
+struct QmlValueTypeCopy : QmlValueTypeWrapper
+{
+    QmlValueTypeCopy(QV8Engine *engine);
+    QVariant value;
+};
+
+}
+}
+
+using namespace QV4;
 
 struct QmlValueTypeReference : public QmlValueTypeWrapper
 {
-    struct Data : QmlValueTypeWrapper::Data
-    {
-        Data(QV8Engine *engine);
-        QPointer<QObject> object;
-        int property;
-    };
-    V4_OBJECT(QmlValueTypeWrapper)
+    V4_OBJECT2(QmlValueTypeReference, QmlValueTypeWrapper)
 };
 
 DEFINE_OBJECT_VTABLE(QmlValueTypeReference);
 
 struct QmlValueTypeCopy : public QmlValueTypeWrapper
 {
-    struct Data : QmlValueTypeWrapper::Data
-    {
-        Data(QV8Engine *engine);
-        QVariant value;
-    };
-    V4_OBJECT(QmlValueTypeWrapper)
+    V4_OBJECT2(QmlValueTypeCopy, QmlValueTypeWrapper)
 };
 
 DEFINE_OBJECT_VTABLE(QmlValueTypeCopy);
 
-QmlValueTypeWrapper::Data::Data(QV8Engine *engine, ObjectType objectType)
+Heap::QmlValueTypeWrapper::QmlValueTypeWrapper(QV8Engine *engine, ObjectType objectType)
     : Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
     , objectType(objectType)
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QmlValueTypeWrapper::staticVTable());
 }
 
-QmlValueTypeReference::Data::Data(QV8Engine *engine)
-    : QmlValueTypeWrapper::Data(engine, Reference)
+Heap::QmlValueTypeReference::QmlValueTypeReference(QV8Engine *engine)
+    : Heap::QmlValueTypeWrapper(engine, Reference)
 {
 }
 
-QmlValueTypeCopy::Data::Data(QV8Engine *engine)
-    : QmlValueTypeWrapper::Data(engine, Copy)
+Heap::QmlValueTypeCopy::QmlValueTypeCopy(QV8Engine *engine)
+    : Heap::QmlValueTypeWrapper(engine, Copy)
 {
 }
 
@@ -164,7 +173,7 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, 
 
 QVariant QmlValueTypeWrapper::toVariant() const
 {
-    if (d()->objectType == QmlValueTypeWrapper::Reference) {
+    if (d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         const QmlValueTypeReference *reference = static_cast<const QmlValueTypeReference *>(this);
 
         if (reference->d()->object && readReferenceValue(reference)) {
@@ -173,7 +182,7 @@ QVariant QmlValueTypeWrapper::toVariant() const
             return QVariant();
         }
     } else {
-        Q_ASSERT(d()->objectType == QmlValueTypeWrapper::Copy);
+        Q_ASSERT(d()->objectType == Heap::QmlValueTypeWrapper::Copy);
         return static_cast<const QmlValueTypeCopy *>(this)->d()->value;
     }
 }
@@ -182,10 +191,10 @@ void QmlValueTypeWrapper::destroy(Managed *that)
 {
     Q_ASSERT(that->as<QmlValueTypeWrapper>());
     QmlValueTypeWrapper *w = static_cast<QmlValueTypeWrapper *>(that);
-    if (w->d()->objectType == Reference)
-        static_cast<QmlValueTypeReference *>(w)->d()->~Data();
+    if (w->d()->objectType == Heap::QmlValueTypeWrapper::Reference)
+        static_cast<QmlValueTypeReference *>(w)->d()->Heap::QmlValueTypeReference::~QmlValueTypeReference();
     else
-        static_cast<QmlValueTypeCopy *>(w)->d()->~Data();
+        static_cast<QmlValueTypeCopy *>(w)->d()->Heap::QmlValueTypeCopy::~QmlValueTypeCopy();
 }
 
 bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
@@ -221,7 +230,7 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
 
 bool QmlValueTypeWrapper::isEqual(const QVariant& value)
 {
-    if (d()->objectType == QmlValueTypeWrapper::Reference) {
+    if (d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(this);
         if (reference->d()->object && readReferenceValue(reference)) {
             return reference->d()->type->isEqual(value);
@@ -229,7 +238,7 @@ bool QmlValueTypeWrapper::isEqual(const QVariant& value)
             return false;
         }
     } else {
-        Q_ASSERT(d()->objectType == QmlValueTypeWrapper::Copy);
+        Q_ASSERT(d()->objectType == Heap::QmlValueTypeWrapper::Copy);
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(this);
         d()->type->setValue(copy->d()->value);
         if (d()->type->isEqual(value))
@@ -247,7 +256,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
     if (!w)
         return ctx->engine()->throwTypeError();
 
-    if (w->d()->objectType == QmlValueTypeWrapper::Reference) {
+    if (w->d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
         if (reference->d()->object && readReferenceValue(reference)) {
             return w->d()->v8->toString(w->d()->type->toString());
@@ -255,7 +264,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(CallContext *ctx)
             return QV4::Encode::undefined();
         }
     } else {
-        Q_ASSERT(w->d()->objectType == QmlValueTypeWrapper::Copy);
+        Q_ASSERT(w->d()->objectType == Heap::QmlValueTypeWrapper::Copy);
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(w);
         w->d()->type->setValue(copy->d()->value);
         return w->d()->v8->toString(w->d()->type->toString());
@@ -269,14 +278,14 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     QV4::ExecutionEngine *v4 = m->engine();
 
     // Note: readReferenceValue() can change the reference->type.
-    if (r->d()->objectType == QmlValueTypeWrapper::Reference) {
+    if (r->d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
 
         if (!reference->d()->object || !readReferenceValue(reference))
             return Primitive::undefinedValue().asReturnedValue();
 
     } else {
-        Q_ASSERT(r->d()->objectType == QmlValueTypeWrapper::Copy);
+        Q_ASSERT(r->d()->objectType == Heap::QmlValueTypeWrapper::Copy);
 
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(r);
 
@@ -334,7 +343,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
     Scoped<QmlValueTypeWrapper> r(scope, static_cast<QmlValueTypeWrapper *>(m));
 
     QByteArray propName = name->toQString().toUtf8();
-    if (r->d()->objectType == QmlValueTypeWrapper::Reference) {
+    if (r->d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r.getPointer());
         QMetaProperty writebackProperty = reference->d()->object->metaObject()->property(reference->d()->property);
 
@@ -399,7 +408,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         }
 
     } else {
-        Q_ASSERT(r->d()->objectType == QmlValueTypeWrapper::Copy);
+        Q_ASSERT(r->d()->objectType == Heap::QmlValueTypeWrapper::Copy);
 
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(r.getPointer());
 
