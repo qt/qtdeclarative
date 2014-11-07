@@ -1070,18 +1070,25 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 
 class QQmlComponentIncubator;
 
+namespace QV4 {
+
+namespace Heap {
+
+struct QmlIncubatorObject : Object {
+    QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
+    QScopedPointer<QQmlComponentIncubator> incubator;
+    QV8Engine *v8;
+    QPointer<QObject> parent;
+    QV4::Value valuemap;
+    QV4::Value qmlGlobal;
+    QV4::Value statusChanged;
+};
+
+}
+
 struct QmlIncubatorObject : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
-        QScopedPointer<QQmlComponentIncubator> incubator;
-        QV8Engine *v8;
-        QPointer<QObject> parent;
-        QV4::Value valuemap;
-        QV4::Value qmlGlobal;
-        QV4::Value statusChanged;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QmlIncubatorObject, Object)
 
     static QV4::ReturnedValue method_get_statusChanged(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_statusChanged(QV4::CallContext *ctx);
@@ -1096,29 +1103,31 @@ struct QmlIncubatorObject : public QV4::Object
     void setInitialState(QObject *);
 };
 
-DEFINE_OBJECT_VTABLE(QmlIncubatorObject);
+}
+
+DEFINE_OBJECT_VTABLE(QV4::QmlIncubatorObject);
 
 class QQmlComponentIncubator : public QQmlIncubator
 {
 public:
-    QQmlComponentIncubator(QmlIncubatorObject::Data *inc, IncubationMode mode)
+    QQmlComponentIncubator(QV4::Heap::QmlIncubatorObject *inc, IncubationMode mode)
         : QQmlIncubator(mode)
         , incubatorObject(inc)
     {}
 
     virtual void statusChanged(Status s) {
         QV4::Scope scope(incubatorObject->internalClass->engine);
-        QV4::Scoped<QmlIncubatorObject> i(scope, incubatorObject);
+        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->statusChanged(s);
     }
 
     virtual void setInitialState(QObject *o) {
         QV4::Scope scope(incubatorObject->internalClass->engine);
-        QV4::Scoped<QmlIncubatorObject> i(scope, incubatorObject);
+        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->setInitialState(o);
     }
 
-    QmlIncubatorObject::Data *incubatorObject;
+    QV4::Heap::QmlIncubatorObject *incubatorObject;
 };
 
 
@@ -1354,7 +1363,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QQmlComponentExtension *e = componentExtension(args->engine());
 
-    QV4::Scoped<QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QmlIncubatorObject>(args->engine(), mode));
+    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->engine(), mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
     r->setPrototype(p.getPointer());
 
@@ -1403,15 +1412,15 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),
-                                  QmlIncubatorObject::method_get_statusChanged, QmlIncubatorObject::method_set_statusChanged);
-    proto->defineAccessorProperty(QStringLiteral("status"), QmlIncubatorObject::method_get_status, 0);
-    proto->defineAccessorProperty(QStringLiteral("object"), QmlIncubatorObject::method_get_object, 0);
-    proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QmlIncubatorObject::method_forceCompletion);
+                                  QV4::QmlIncubatorObject::method_get_statusChanged, QV4::QmlIncubatorObject::method_set_statusChanged);
+    proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, 0);
+    proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, 0);
+    proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QV4::QmlIncubatorObject::method_forceCompletion);
 
     incubationProto = proto;
 }
 
-QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::CallContext *ctx)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
@@ -1421,7 +1430,7 @@ QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::CallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, o->d()->incubator->object());
 }
 
-QV4::ReturnedValue QmlIncubatorObject::method_forceCompletion(QV4::CallContext *ctx)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
@@ -1433,7 +1442,7 @@ QV4::ReturnedValue QmlIncubatorObject::method_forceCompletion(QV4::CallContext *
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QmlIncubatorObject::method_get_status(QV4::CallContext *ctx)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
@@ -1443,7 +1452,7 @@ QV4::ReturnedValue QmlIncubatorObject::method_get_status(QV4::CallContext *ctx)
     return QV4::Encode(o->d()->incubator->status());
 }
 
-QV4::ReturnedValue QmlIncubatorObject::method_get_statusChanged(QV4::CallContext *ctx)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
@@ -1453,7 +1462,7 @@ QV4::ReturnedValue QmlIncubatorObject::method_get_statusChanged(QV4::CallContext
     return o->d()->statusChanged.asReturnedValue();
 }
 
-QV4::ReturnedValue QmlIncubatorObject::method_set_statusChanged(QV4::CallContext *ctx)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
@@ -1469,19 +1478,19 @@ QQmlComponentExtension::~QQmlComponentExtension()
 {
 }
 
-QmlIncubatorObject::Data::Data(QV8Engine *engine, QQmlIncubator::IncubationMode m)
+QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode m)
     : QV4::Heap::Object(QV8Engine::getV4(engine))
     , v8(engine)
     , valuemap(QV4::Primitive::undefinedValue())
     , qmlGlobal(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
 {
-    setVTable(staticVTable());
+    setVTable(QV4::QmlIncubatorObject::staticVTable());
 
     incubator.reset(new QQmlComponentIncubator(this, m));
 }
 
-void QmlIncubatorObject::setInitialState(QObject *o)
+void QV4::QmlIncubatorObject::setInitialState(QObject *o)
 {
     QQmlComponent_setQmlParent(o, d()->parent);
 
@@ -1498,12 +1507,12 @@ void QmlIncubatorObject::setInitialState(QObject *o)
     }
 }
 
-void QmlIncubatorObject::destroy(Managed *that)
+void QV4::QmlIncubatorObject::destroy(Managed *that)
 {
     static_cast<QmlIncubatorObject *>(that)->d()->~Data();
 }
 
-void QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
 {
     QmlIncubatorObject::Data *o = static_cast<QmlIncubatorObject::Data *>(that);
     o->valuemap.mark(e);
@@ -1512,7 +1521,7 @@ void QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine
     Object::markObjects(that, e);
 }
 
-void QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
+void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 {
     QV4::Scope scope(QV8Engine::getV4(d()->v8));
     // hold the incubated object in a scoped value to prevent it's destruction before this method returns
