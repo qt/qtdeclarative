@@ -473,18 +473,45 @@ public:
 
 V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
+namespace QV4 {
+namespace Heap {
+
+struct QQuickJSContext2D : Object {
+    QQuickJSContext2D(QV4::ExecutionEngine *engine);
+    QQuickContext2D* context;
+};
+
+struct QQuickJSContext2DPrototype : Object {
+    QQuickJSContext2DPrototype(ExecutionEngine *e)
+        : Object(e) {}
+};
+
+struct QQuickContext2DStyle : Object {
+    QQuickContext2DStyle(QV4::ExecutionEngine *e);
+
+    QBrush brush;
+    bool patternRepeatX:1;
+    bool patternRepeatY:1;
+};
+
+struct QQuickJSContext2DPixelData : Object {
+    QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine);
+
+    QImage image;
+};
+
+struct QQuickJSContext2DImageData : Object {
+    QQuickJSContext2DImageData(QV4::ExecutionEngine *engine);
+
+    QV4::Value pixelData;
+};
+
+}
+}
 
 struct QQuickJSContext2D : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-         Data(QV4::ExecutionEngine *engine)
-             : QV4::Heap::Object(engine)
-         {
-             setVTable(staticVTable());
-         }
-        QQuickContext2D* context;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQuickJSContext2D, QV4::Object)
 
     static QV4::ReturnedValue method_get_globalAlpha(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_globalAlpha(QV4::CallContext *ctx);
@@ -527,12 +554,18 @@ struct QQuickJSContext2D : public QV4::Object
     static QV4::ReturnedValue method_set_textBaseline(QV4::CallContext *ctx);
 };
 
+QV4::Heap::QQuickJSContext2D::QQuickJSContext2D(QV4::ExecutionEngine *engine)
+    : QV4::Heap::Object(engine)
+{
+    setVTable(::QQuickJSContext2D::staticVTable());
+}
+
 DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
 
 
 struct QQuickJSContext2DPrototype : public QV4::Object
 {
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQuickJSContext2DPrototype, QV4::Object)
 public:
     static QQuickJSContext2DPrototype *create(QV4::ExecutionEngine *engine)
     {
@@ -639,19 +672,7 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
 
 struct QQuickContext2DStyle : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *e)
-          : QV4::Heap::Object(e)
-        {
-            patternRepeatX = false;
-            patternRepeatY = false;
-            setVTable(staticVTable());
-        }
-        QBrush brush;
-        bool patternRepeatX:1;
-        bool patternRepeatY:1;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQuickContext2DStyle, QV4::Object)
 
     static QV4::ReturnedValue gradient_proto_addColorStop(QV4::CallContext *ctx);
 protected:
@@ -660,6 +681,14 @@ protected:
         static_cast<QQuickContext2DStyle *>(that)->d()->~Data();
     }
 };
+
+QV4::Heap::QQuickContext2DStyle::QQuickContext2DStyle(QV4::ExecutionEngine *e)
+  : QV4::Heap::Object(e)
+{
+    patternRepeatX = false;
+    patternRepeatY = false;
+    setVTable(::QQuickContext2DStyle::staticVTable());
+}
 
 DEFINE_OBJECT_VTABLE(QQuickContext2DStyle);
 
@@ -860,18 +889,7 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 
 struct QQuickJSContext2DPixelData : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *engine)
-            : QV4::Heap::Object(engine)
-        {
-            setVTable(staticVTable());
-            QV4::Scope scope(engine);
-            QV4::ScopedObject o(scope, this);
-            o->setArrayType(QV4::Heap::ArrayData::Custom);
-        }
-        QImage image;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQuickJSContext2DPixelData, QV4::Object)
 
     static void destroy(QV4::Managed *that) {
         static_cast<QQuickJSContext2DPixelData *>(that)->d()->~Data();
@@ -882,27 +900,20 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static QV4::ReturnedValue proto_get_length(QV4::CallContext *ctx);
 };
 
+QV4::Heap::QQuickJSContext2DPixelData::QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
+    : QV4::Heap::Object(engine)
+{
+    setVTable(::QQuickJSContext2DPixelData::staticVTable());
+    QV4::Scope scope(engine);
+    QV4::ScopedObject o(scope, this);
+    o->setArrayType(QV4::Heap::ArrayData::Custom);
+}
+
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DPixelData);
 
 struct QQuickJSContext2DImageData : public QV4::Object
 {
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *engine)
-            : QV4::Heap::Object(engine)
-        {
-            setVTable(staticVTable());
-            pixelData = QV4::Primitive::undefinedValue();
-
-            QV4::Scope scope(engine);
-            QV4::ScopedObject o(scope, this);
-
-            o->defineAccessorProperty(QStringLiteral("width"), method_get_width, 0);
-            o->defineAccessorProperty(QStringLiteral("height"), method_get_height, 0);
-            o->defineAccessorProperty(QStringLiteral("data"), method_get_data, 0);
-        }
-        QV4::Value pixelData;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QQuickJSContext2DImageData, QV4::Object)
 
     static QV4::ReturnedValue method_get_width(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_height(QV4::CallContext *ctx);
@@ -913,6 +924,20 @@ struct QQuickJSContext2DImageData : public QV4::Object
         QV4::Object::markObjects(that, engine);
     }
 };
+
+QV4::Heap::QQuickJSContext2DImageData::QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
+    : QV4::Heap::Object(engine)
+{
+    setVTable(::QQuickJSContext2DImageData::staticVTable());
+    pixelData = QV4::Primitive::undefinedValue();
+
+    QV4::Scope scope(engine);
+    QV4::ScopedObject o(scope, this);
+
+    o->defineAccessorProperty(QStringLiteral("width"), ::QQuickJSContext2DImageData::method_get_width, 0);
+    o->defineAccessorProperty(QStringLiteral("height"), ::QQuickJSContext2DImageData::method_get_height, 0);
+    o->defineAccessorProperty(QStringLiteral("data"), ::QQuickJSContext2DImageData::method_get_data, 0);
+}
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
 

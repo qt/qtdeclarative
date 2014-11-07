@@ -94,25 +94,36 @@ public:
     QV4::PersistentValue rootItemMarker;
 };
 
-struct QQuickRootItemMarker : public QV4::Object
-{
-    struct Data : QV4::Heap::Object {
-        Data(QV4::ExecutionEngine *engine, QQuickWindow *window)
-            : QV4::Heap::Object(engine)
-            , window(window)
-        {
-            setVTable(staticVTable());
-        }
+namespace QV4 {
+namespace Heap {
 
-        QQuickWindow *window;
-    };
-    V4_OBJECT(QV4::Object)
+struct QQuickRootItemMarker : Object {
+    inline QQuickRootItemMarker(QV4::ExecutionEngine *engine, QQuickWindow *window);
+
+    QQuickWindow *window;
+};
+
+}
+
+struct QQuickRootItemMarker : public Object
+{
+    V4_OBJECT2(QQuickRootItemMarker, Object)
 
     static QV4::Returned<QQuickRootItemMarker> *create(QQmlEngine *engine, QQuickWindow *window);
 
     static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
 
 };
+
+inline
+Heap::QQuickRootItemMarker::QQuickRootItemMarker(QV4::ExecutionEngine *engine, QQuickWindow *window)
+    : Heap::Object(engine)
+    , window(window)
+{
+    setVTable(QV4::QQuickRootItemMarker::staticVTable());
+}
+
+}
 
 QT_END_NAMESPACE
 
