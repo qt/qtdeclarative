@@ -112,7 +112,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             if (!c->d()->activation)
-                c->d()->activation = d()->engine->newObject()->getPointer();
+                c->d()->activation = d()->engine->newObject()->getPointer()->d();
             activation = c->d()->activation;
             break;
         }
@@ -131,7 +131,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
     : Heap::ExecutionContext(eng, Heap::ExecutionContext::Type_GlobalContext)
 {
-    global = eng->globalObject;
+    global = eng->globalObject->d();
 }
 
 Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
@@ -142,7 +142,7 @@ Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
     lookups = parent->d()->lookups;
     compilationUnit = parent->d()->compilationUnit;
 
-    withObject = with;
+    withObject = with->d();
 }
 
 Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue)
@@ -170,7 +170,7 @@ Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::F
     strictMode = true;
     outer = function->scope();
 
-    activation = qml;
+    activation = qml->d();
 
     if (function->function()) {
         compilationUnit = function->function()->compilationUnit;
@@ -211,9 +211,9 @@ bool ExecutionContext::deleteProperty(String *name)
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             hasWith = true;
-            WithContext *w = static_cast<WithContext *>(ctx);
-            if (w->d()->withObject->hasProperty(name))
-                return w->d()->withObject->deleteProperty(name);
+            ScopedObject withObject(scope, static_cast<WithContext *>(ctx)->d()->withObject);
+            if (withObject->hasProperty(name))
+                return withObject->deleteProperty(name);
         } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->d()->exceptionVarName->isEqualTo(name))
@@ -227,12 +227,13 @@ bool ExecutionContext::deleteProperty(String *name)
                     // ### throw in strict mode?
                     return false;
             }
-            if (c->d()->activation && c->d()->activation->hasProperty(name))
-                return c->d()->activation->deleteProperty(name);
+            ScopedObject activation(scope, c->d()->activation);
+            if (activation && activation->hasProperty(name))
+                return activation->deleteProperty(name);
         } else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
-            GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            if (g->d()->global->hasProperty(name))
-                return g->d()->global->deleteProperty(name);
+            ScopedObject global(scope, static_cast<GlobalContext *>(ctx)->d()->global);
+            if (global->hasProperty(name))
+                return global->deleteProperty(name);
         }
     }
 
@@ -375,9 +376,10 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                     return c->d()->locals[index - c->d()->function->formalParameterCount()].asReturnedValue();
                 }
             }
-            if (c->d()->activation) {
+            ScopedObject activation(scope, c->d()->activation);
+            if (activation) {
                 bool hasProperty = false;
-                v = c->d()->activation->get(name, &hasProperty);
+                v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v.asReturnedValue();
             }
@@ -387,9 +389,9 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         }
 
         else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
-            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            ScopedObject global(scope, static_cast<GlobalContext *>(ctx)->d()->global);
             bool hasProperty = false;
-            v = g->d()->global->get(name, &hasProperty);
+            v = global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }
@@ -412,7 +414,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
-            Object *w = static_cast<WithContext *>(ctx)->d()->withObject;
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->d()->withObject);
             hasWith = true;
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
@@ -441,12 +443,13 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
                     return c->d()->locals[index - c->d()->function->formalParameterCount()].asReturnedValue();
                 }
             }
-            if (c->d()->activation) {
+            ScopedObject activation(scope, c->d()->activation);
+            if (activation) {
                 bool hasProperty = false;
-                v = c->d()->activation->get(name, &hasProperty);
+                v = activation->get(name, &hasProperty);
                 if (hasProperty) {
                     if (ctx->d()->type == Heap::ExecutionContext::Type_QmlContext)
-                        base = c->d()->activation;
+                        base = activation;
                     return v.asReturnedValue();
                 }
             }
@@ -456,9 +459,9 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
         }
 
         else if (ctx->d()->type == Heap::ExecutionContext::Type_GlobalContext) {
-            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            ScopedObject global(scope, static_cast<GlobalContext *>(ctx)->d()->global);
             bool hasProperty = false;
-            v = g->d()->global->get(name, &hasProperty);
+            v = global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }

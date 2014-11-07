@@ -395,7 +395,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // set up the global object
     //
     globalObject = newObject()->getPointer();
-    rootContext->d()->global = globalObject;
+    rootContext->d()->global = globalObject->d();
     rootContext->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->internalClass()->vtable);
 
@@ -724,7 +724,10 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
     if (ctx->d()->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
-    return static_cast<CallContext *>(ctx)->d()->activation->asReturned<Object>();
+    Scope scope(ctx);
+    ScopedObject activation(scope, static_cast<CallContext *>(ctx)->d()->activation);
+
+    return activation->asReturned<Object>();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const

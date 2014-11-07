@@ -109,7 +109,7 @@ struct CallContext : ExecutionContext {
         locals = 0;
         activation = 0;
     }
-    CallContext(ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
+    CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::FunctionObject *function);
 
     QV4::FunctionObject *function;
     int realArgumentCount;

@@ -118,7 +118,25 @@ namespace Heap {
     struct Base;
     struct MemberData;
     struct ArrayData;
+
+    struct String;
+    struct Object;
+    struct ObjectPrototype;
+
     struct ExecutionContext;
+    struct GlobalContext;
+    struct CallContext;
+    struct ScriptFunction;
+
+    struct BooleanObject;
+    struct NumberObject;
+    struct StringObject;
+    struct ArrayObject;
+    struct DateObject;
+    struct FunctionObject;
+    struct ErrorObject;
+    struct ArgumentsObject;
+    struct QObjectWrapper;
 }
 
 class MemoryManager;
@@ -146,7 +164,6 @@ struct FunctionObject;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Managed;
-struct Lookup;
 struct ExecutionEngine;
 struct QObjectWrapper;
 
