@@ -130,21 +130,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
-    ExecutionContext(ExecutionEngine *engine, Heap::ExecutionContext::ContextType t)
-        : Managed(engine->executionContextClass)
-    {
-        d()->type = t;
-        d()->strictMode = false;
-        d()->engine = engine;
-        d()->parent = engine->currentContext()->d();
-        d()->outer = 0;
-        d()->lookups = 0;
-        d()->compilationUnit = 0;
-        d()->currentEvalCode = 0;
-        d()->lineNumber = -1;
-        engine->current = this;
-    }
-
     Returned<CallContext> *newCallContext(FunctionObject *f, CallData *callData);
     Returned<WithContext> *newWithContext(Object *with);
     Returned<CatchContext> *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
