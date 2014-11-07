@@ -112,7 +112,7 @@ QQmlXMLHttpRequestData::~QQmlXMLHttpRequestData()
 {
 }
 
-namespace {
+namespace QV4 {
 
 class DocumentImpl;
 class NodeImpl
@@ -176,28 +176,46 @@ public:
     void release() { QQmlRefCount::release(); }
 };
 
+namespace Heap {
+
+struct NamedNodeMap : Object {
+    NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list);
+    ~NamedNodeMap() {
+        if (d)
+            d->release();
+    }
+    QList<NodeImpl *> list; // Only used in NamedNodeMap
+    NodeImpl *d;
+};
+
+struct NodeList : Object {
+    NodeList(ExecutionEngine *engine, NodeImpl *data);
+    ~NodeList() {
+        if (d)
+            d->release();
+    }
+    NodeImpl *d;
+};
+
+struct NodePrototype : Object {
+    NodePrototype(ExecutionEngine *engine);
+};
+
+struct Node : Object {
+    Node(ExecutionEngine *engine, NodeImpl *data);
+    ~Node() {
+        if (d)
+            d->release();
+    }
+    NodeImpl *d;
+};
+
+}
+
 class NamedNodeMap : public Object
 {
 public:
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
-            : Heap::Object(engine)
-            , list(list)
-            , d(data)
-        {
-            setVTable(staticVTable());
-
-            if (d)
-                d->addref();
-        }
-        ~Data() {
-            if (d)
-                d->release();
-        }
-        QList<NodeImpl *> list; // Only used in NamedNodeMap
-        NodeImpl *d;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(NamedNodeMap, Object)
 
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
@@ -210,28 +228,23 @@ public:
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 };
 
+Heap::NamedNodeMap::NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
+    : Heap::Object(engine)
+    , list(list)
+    , d(data)
+{
+    setVTable(QV4::NamedNodeMap::staticVTable());
+
+    if (d)
+        d->addref();
+}
+
 DEFINE_OBJECT_VTABLE(NamedNodeMap);
 
 class NodeList : public Object
 {
 public:
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, NodeImpl *data)
-            : Heap::Object(engine)
-            , d(data)
-        {
-            setVTable(staticVTable());
-
-            if (d)
-                d->addref();
-        }
-        ~Data() {
-            if (d)
-                d->release();
-        }
-        NodeImpl *d;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(NodeList, Object)
 
     // JS API
     static void destroy(Managed *that) {
@@ -245,34 +258,22 @@ public:
 
 };
 
+Heap::NodeList::NodeList(ExecutionEngine *engine, NodeImpl *data)
+    : Heap::Object(engine)
+    , d(data)
+{
+    setVTable(QV4::NodeList::staticVTable());
+
+    if (d)
+        d->addref();
+}
+
 DEFINE_OBJECT_VTABLE(NodeList);
 
 class NodePrototype : public Object
 {
 public:
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine)
-            : Heap::Object(engine)
-        {
-            setVTable(staticVTable());
-
-            Scope scope(engine);
-            ScopedObject o(scope, this);
-
-            o->defineAccessorProperty(QStringLiteral("nodeName"), method_get_nodeName, 0);
-            o->defineAccessorProperty(QStringLiteral("nodeValue"), method_get_nodeValue, 0);
-            o->defineAccessorProperty(QStringLiteral("nodeType"), method_get_nodeType, 0);
-
-            o->defineAccessorProperty(QStringLiteral("parentNode"), method_get_parentNode, 0);
-            o->defineAccessorProperty(QStringLiteral("childNodes"), method_get_childNodes, 0);
-            o->defineAccessorProperty(QStringLiteral("firstChild"), method_get_firstChild, 0);
-            o->defineAccessorProperty(QStringLiteral("lastChild"), method_get_lastChild, 0);
-            o->defineAccessorProperty(QStringLiteral("previousSibling"), method_get_previousSibling, 0);
-            o->defineAccessorProperty(QStringLiteral("nextSibling"), method_get_nextSibling, 0);
-            o->defineAccessorProperty(QStringLiteral("attributes"), method_get_attributes, 0);
-        }
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(NodePrototype, Object)
 
     static void initClass(ExecutionEngine *engine);
 
@@ -300,27 +301,33 @@ public:
 
 };
 
+Heap::NodePrototype::NodePrototype(ExecutionEngine *engine)
+    : Heap::Object(engine)
+{
+    setVTable(QV4::NodePrototype::staticVTable());
+
+    Scope scope(engine);
+    ScopedObject o(scope, this);
+
+    o->defineAccessorProperty(QStringLiteral("nodeName"), QV4::NodePrototype::method_get_nodeName, 0);
+    o->defineAccessorProperty(QStringLiteral("nodeValue"), QV4::NodePrototype::method_get_nodeValue, 0);
+    o->defineAccessorProperty(QStringLiteral("nodeType"), QV4::NodePrototype::method_get_nodeType, 0);
+
+    o->defineAccessorProperty(QStringLiteral("parentNode"), QV4::NodePrototype::method_get_parentNode, 0);
+    o->defineAccessorProperty(QStringLiteral("childNodes"), QV4::NodePrototype::method_get_childNodes, 0);
+    o->defineAccessorProperty(QStringLiteral("firstChild"), QV4::NodePrototype::method_get_firstChild, 0);
+    o->defineAccessorProperty(QStringLiteral("lastChild"), QV4::NodePrototype::method_get_lastChild, 0);
+    o->defineAccessorProperty(QStringLiteral("previousSibling"), QV4::NodePrototype::method_get_previousSibling, 0);
+    o->defineAccessorProperty(QStringLiteral("nextSibling"), QV4::NodePrototype::method_get_nextSibling, 0);
+    o->defineAccessorProperty(QStringLiteral("attributes"), QV4::NodePrototype::method_get_attributes, 0);
+}
+
+
 DEFINE_OBJECT_VTABLE(NodePrototype);
 
 struct Node : public Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, NodeImpl *data)
-            : Heap::Object(engine)
-            , d(data)
-        {
-            setVTable(staticVTable());
-
-            if (d)
-                d->addref();
-        }
-        ~Data() {
-            if (d)
-                d->release();
-        }
-        NodeImpl *d;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(Node, Object)
 
 
     // JS API
@@ -337,6 +344,16 @@ private:
     Node &operator=(const Node &);
     Node(const Node &o);
 };
+
+Heap::Node::Node(ExecutionEngine *engine, NodeImpl *data)
+    : Heap::Object(engine)
+    , d(data)
+{
+    setVTable(QV4::Node::staticVTable());
+
+    if (d)
+        d->addref();
+}
 
 DEFINE_OBJECT_VTABLE(Node);
 
@@ -1592,53 +1609,44 @@ void QQmlXMLHttpRequest::destroyNetwork()
     }
 }
 
+namespace QV4 {
+namespace Heap {
+
+struct QQmlXMLHttpRequestWrapper : Object {
+    QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request);
+    ~QQmlXMLHttpRequestWrapper() {
+        delete request;
+    }
+    QQmlXMLHttpRequest *request;
+};
+
+struct QQmlXMLHttpRequestCtor : FunctionObject {
+    QQmlXMLHttpRequestCtor(ExecutionEngine *engine);
+
+    QV4::Object *proto;
+};
+
+}
 
 struct QQmlXMLHttpRequestWrapper : public Object
 {
-    struct Data : Heap::Object {
-        Data(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
-            : Heap::Object(engine)
-            , request(request)
-        {
-            setVTable(staticVTable());
-        }
-        ~Data() {
-            delete request;
-        }
-        QQmlXMLHttpRequest *request;
-    };
-    V4_OBJECT(Object)
+    V4_OBJECT2(QQmlXMLHttpRequestWrapper, Object)
 
     static void destroy(Managed *that) {
         static_cast<QQmlXMLHttpRequestWrapper *>(that)->d()->~Data();
     }
 };
 
-DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
+Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
+    : Heap::Object(engine)
+    , request(request)
+{
+    setVTable(QV4::QQmlXMLHttpRequestWrapper::staticVTable());
+}
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
-    struct Data : Heap::FunctionObject {
-        Data(ExecutionEngine *engine)
-            : Heap::FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
-        {
-            setVTable(staticVTable());
-            Scope scope(engine);
-            Scoped<QQmlXMLHttpRequestCtor> ctor(scope, this);
-
-            ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
-            ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
-            ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
-            ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
-            ctor->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
-            if (!ctor->d()->proto)
-                ctor->setupProto();
-            ScopedString s(scope, engine->id_prototype);
-            ctor->defineDefaultProperty(s.getPointer(), ScopedObject(scope, ctor->d()->proto));
-        }
-        QV4::Object *proto;
-    };
-    V4_OBJECT(FunctionObject)
+    V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
     static void markObjects(Heap::Base *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor::Data *c = static_cast<QQmlXMLHttpRequestCtor::Data *>(that);
         if (c->proto)
@@ -1678,6 +1686,28 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static ReturnedValue method_get_responseText(CallContext *ctx);
     static ReturnedValue method_get_responseXML(CallContext *ctx);
 };
+
+}
+
+DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
+
+Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
+    : Heap::FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
+{
+    setVTable(QV4::QQmlXMLHttpRequestCtor::staticVTable());
+    Scope scope(engine);
+    Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
+
+    ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
+    ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
+    ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
+    ctor->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
+    if (!ctor->d()->proto)
+        ctor->setupProto();
+    ScopedString s(scope, engine->id_prototype);
+    ctor->defineDefaultProperty(s.getPointer(), ScopedObject(scope, ctor->d()->proto));
+}
 
 DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestCtor);
 
