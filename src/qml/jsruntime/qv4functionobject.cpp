@@ -64,19 +64,18 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass)
-    , scope(scope)
+    , scope(scope->d())
 {
-    Scope s(scope);
+    Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     f->init(name, createProto);
 }
 
-
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass)
-    , scope(scope)
+    , scope(scope->d())
 {
-    Scope s(scope);
+    Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     ScopedString n(s, s.engine->newString(name));
     f->init(n.getPointer(), createProto);
@@ -84,7 +83,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->d()->engine->functionClass)
-    , scope(scope)
+    , scope(scope->d())
 {
     Scope s(scope);
     ScopedFunctionObject f(s, this);
@@ -92,9 +91,19 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
     f->init(n.getPointer(), false);
 }
 
+Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
+    : Heap::Object(scope->engine->functionClass)
+    , scope(scope)
+{
+    Scope s(scope->engine);
+    ScopedFunctionObject f(s, this);
+    ScopedString n(s, name);
+    f->init(n.getPointer(), false);
+}
+
 Heap::FunctionObject::FunctionObject(InternalClass *ic)
     : Heap::Object(ic)
-    , scope(ic->engine->rootContext)
+    , scope(ic->engine->rootContext->d())
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);
@@ -119,7 +128,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        Scoped<Object> proto(s, scope()->d()->engine->newObject(scope()->d()->engine->protoClass));
+        Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
         proto->memberData()->data()[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
         memberData()->data()[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
@@ -133,7 +142,7 @@ void FunctionObject::init(String *n, bool createProto)
 
 ReturnedValue FunctionObject::name()
 {
-    return get(scope()->d()->engine->id_name);
+    return get(scope()->engine->id_name);
 }
 
 
@@ -336,7 +345,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
-    Scoped<MemberData> boundArgs(scope);
+    Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (ctx->d()->callData->argc > 1) {
         boundArgs = MemberData::reallocate(scope.engine, 0, ctx->d()->callData->argc - 1);
         boundArgs->d()->size = ctx->d()->callData->argc - 1;
@@ -460,7 +469,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ctx.function = f.getPointer()->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope()->d();
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -497,7 +506,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ctx.function = f->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.outer = f->scope()->d();
+    ctx.outer = f->scope();
     ctx.locals = v4->stackPush(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
@@ -555,7 +564,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext::Data ctx(v4);
-    ctx.strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext()->d() == &ctx);
 
@@ -574,7 +583,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(context);
 
     CallContext::Data ctx(v4);
-    ctx.strictMode = f->scope()->d()->strictMode; // ### needed? scope or parent context?
+    ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext()->d() == &ctx);
 
@@ -588,7 +597,7 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target,
                                    const ValueRef boundThis, QV4::MemberData *boundArgs)
     : Heap::FunctionObject(scope, QStringLiteral("__bound function__"))
-    , target(target)
+    , target(target->d())
     , boundArgs(boundArgs ? boundArgs->d() : 0)
 {
     this->boundThis = boundThis;
@@ -616,7 +625,7 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
 ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope()->d()->engine);
+    Scope scope(f->engine());
     if (scope.hasException())
         return Encode::undefined();
 
@@ -629,13 +638,14 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
         argp += boundArgs->size();
     }
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
-    return f->target()->call(callData);
+    ScopedFunctionObject t(scope, f->target());
+    return t->call(callData);
 }
 
 ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Scope scope(f->scope()->d()->engine);
+    Scope scope(f->engine());
     if (scope.hasException())
         return Encode::undefined();
 
@@ -647,7 +657,8 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
         argp += boundArgs->size();
     }
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
-    return f->target()->construct(callData);
+    ScopedFunctionObject t(scope, f->target());
+    return t->construct(callData);
 }
 
 void BoundFunction::markObjects(Heap::Base *that, ExecutionEngine *e)

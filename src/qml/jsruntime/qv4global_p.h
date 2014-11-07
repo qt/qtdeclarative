@@ -181,6 +181,7 @@ typedef Scoped<String> ScopedString;
 typedef Scoped<Object> ScopedObject;
 typedef Scoped<ArrayObject> ScopedArrayObject;
 typedef Scoped<FunctionObject> ScopedFunctionObject;
+typedef Scoped<ExecutionContext> ScopedContext;
 template<typename T> struct Returned;
 typedef Returned<String> ReturnedString;
 typedef Returned<Object> ReturnedObject;

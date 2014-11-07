@@ -60,13 +60,14 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);
+    FunctionObject(ExecutionContext *scope, const ReturnedValue name);
     FunctionObject(InternalClass *ic);
     ~FunctionObject();
 
     unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
 
-    QV4::ExecutionContext *scope;
+    ExecutionContext *scope;
     Function *function;
 };
 
@@ -99,7 +100,7 @@ struct ScriptFunction : SimpleScriptFunction {
 
 struct BoundFunction : FunctionObject {
     BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const ValueRef boundThis, QV4::MemberData *boundArgs);
-    QV4::FunctionObject *target;
+    FunctionObject *target;
     Value boundThis;
     MemberData *boundArgs;
 };
@@ -113,7 +114,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
 
-    ExecutionContext *scope() { return d()->scope; }
+    Heap::ExecutionContext *scope() { return d()->scope; }
     Function *function() { return d()->function; }
 
     ReturnedValue name();
@@ -231,10 +232,9 @@ struct BoundFunction: FunctionObject {
         return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
-    FunctionObject *target() { return d()->target; }
+    Heap::FunctionObject *target() { return d()->target; }
     Value boundThis() const { return d()->boundThis; }
-    // ### GC
-    MemberData::Data *boundArgs() const { return d()->boundArgs; }
+    Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
     static ReturnedValue construct(Managed *, CallData *d);
     static ReturnedValue call(Managed *that, CallData *dd);

@@ -59,7 +59,7 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
     c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode();
-    c->outer = function->scope()->d();
+    c->outer = function->scope();
 
     c->activation = 0;
 
@@ -168,7 +168,7 @@ Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::F
     callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
-    outer = function->scope()->d();
+    outer = function->scope();
 
     activation = qml->d();
 

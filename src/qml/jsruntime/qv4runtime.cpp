@@ -298,12 +298,13 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionContext *ctx, const ValueRef lef
     // As nothing in this method can call into the memory manager, avoid using a Scope
     // for performance reasons
 
-    FunctionObject *f = right->asFunctionObject();
+    Scope scope(ctx);
+    ScopedFunctionObject f(scope, right->asFunctionObject());
     if (!f)
         return ctx->engine()->throwTypeError();
 
     if (f->subtype() == Heap::FunctionObject::BoundFunction)
-        f = static_cast<BoundFunction *>(f)->target();
+        f = static_cast<BoundFunction *>(f.getPointer())->target();
 
     Object *v = left->asObject();
     if (!v)
