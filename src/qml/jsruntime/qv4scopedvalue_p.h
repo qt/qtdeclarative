@@ -269,6 +269,14 @@ struct Scoped
         ++scope.size;
 #endif
     }
+    Scoped(const Scope &scope, typename T::Data *t)
+    {
+        ptr = scope.engine->jsStackTop++;
+        *ptr = Value::fromHeapObject(t);
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
     template<typename X>
     Scoped(const Scope &scope, X *t, _Cast)
     {
@@ -323,6 +331,10 @@ struct Scoped
         v.tag = QV4::Value::Managed_Type;
 #endif
         setPointer(value_cast<T>(v));
+        return *this;
+    }
+    Scoped<T> &operator=(typename T::Data *t) {
+        *ptr = Value::fromHeapObject(t);
         return *this;
     }
     Scoped<T> &operator=(const Value &v) {

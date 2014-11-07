@@ -68,21 +68,7 @@ struct ExecutionContext : Base {
         EvalCode *next;
     };
 
-    ExecutionContext(ExecutionEngine *engine, ContextType t)
-        : Base(engine->executionContextClass)
-        , type(t)
-        , strictMode(false)
-        , engine(engine)
-        , parent(engine->currentContext())
-        , outer(0)
-        , lookups(0)
-        , compilationUnit(0)
-        , currentEvalCode(0)
-        , lineNumber(-1)
-    {
-        // ### GC
-        engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
-    }
+    inline ExecutionContext(ExecutionEngine *engine, ContextType t);
 
     ContextType type;
     bool strictMode;
@@ -90,9 +76,8 @@ struct ExecutionContext : Base {
     CallData *callData;
 
     ExecutionEngine *engine;
-    // ### GC
-    QV4::ExecutionContext *parent;
-    QV4::ExecutionContext *outer;
+    ExecutionContext *parent;
+    ExecutionContext *outer;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
     EvalCode *currentEvalCode;
@@ -151,7 +136,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         d()->type = t;
         d()->strictMode = false;
         d()->engine = engine;
-        d()->parent = engine->currentContext();
+        d()->parent = engine->currentContext()->d();
         d()->outer = 0;
         d()->lookups = 0;
         d()->compilationUnit = 0;
@@ -180,6 +165,24 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
+
+inline
+Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
+    : Heap::Base(engine->executionContextClass)
+    , type(t)
+    , strictMode(false)
+    , engine(engine)
+    , parent(engine->currentContext()->d())
+    , outer(0)
+    , lookups(0)
+    , compilationUnit(0)
+    , currentEvalCode(0)
+    , lineNumber(-1)
+{
+    // ### GC
+    engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
+}
+
 
 struct CallContext : public ExecutionContext
 {
@@ -228,7 +231,8 @@ inline const CallContext *ExecutionContext::asCallContext() const
 
 inline void ExecutionEngine::pushContext(CallContext *context)
 {
-    context->d()->parent = current;
+    Q_ASSERT(current && current->d() && context && context->d());
+    context->d()->parent = current->d();
     current = context;
     current->d()->currentEvalCode = 0;
 }
@@ -236,7 +240,9 @@ inline void ExecutionEngine::pushContext(CallContext *context)
 inline ExecutionContext *ExecutionEngine::popContext()
 {
     Q_ASSERT(current->d()->parent);
-    current = current->d()->parent;
+    // ### GC
+    current = reinterpret_cast<ExecutionContext *>(current->d()->parent);
+    Q_ASSERT(current && current->d());
     return current;
 }
 

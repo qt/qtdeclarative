@@ -709,23 +709,24 @@ Returned<Object> *ExecutionEngine::newForEachIteratorObject(Object *o)
 
 Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
-    ExecutionContext *ctx = currentContext();
+    Heap::ExecutionContext *ctx = currentContext()->d();
 
-    if (ctx->d()->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->d()->outer)
-        ctx = ctx->d()->parent;
+    if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
+        ctx = ctx->parent;
 
-    if (!ctx->d()->outer)
+    if (!ctx->outer)
         return 0;
 
-    while (ctx->d()->outer && ctx->d()->outer->d()->type != Heap::ExecutionContext::Type_GlobalContext)
-        ctx = ctx->d()->outer;
+    while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
+        ctx = ctx->outer;
 
     Q_ASSERT(ctx);
-    if (ctx->d()->type != Heap::ExecutionContext::Type_QmlContext)
+    if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
-    Scope scope(ctx);
-    ScopedObject activation(scope, static_cast<CallContext *>(ctx)->d()->activation);
+    Scope scope(currentContext());
+    ScopedObject activation(scope, static_cast<Heap::CallContext *>(ctx)->activation);
+    Q_ASSERT(activation);
 
     return activation->asReturned<Object>();
 }
@@ -736,7 +737,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    QV4::ExecutionContext *c = currentContext();
+    Scoped<ExecutionContext> c(scope, currentContext());
     while (c && frameLimit) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {
@@ -825,7 +826,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    QV4::ExecutionContext *c = currentContext();
+    Scope scope(this);
+    Scoped<ExecutionContext> c(scope, currentContext());
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {
@@ -884,14 +886,15 @@ void ExecutionEngine::markObjects()
             setter->mark(this);
     }
 
-    ExecutionContext *c = currentContext();
+    Heap::ExecutionContext *c = currentContext()->d();
     while (c) {
-        Q_ASSERT(c->inUse());
-        if (!c->markBit()) {
-            c->d()->markBit = 1;
-            c->markObjects(c->d(), this);
+        Q_ASSERT(c->inUse);
+        if (!c->markBit) {
+            c->markBit = 1;
+            // ### GC
+            reinterpret_cast<ExecutionContext *>(c)->markObjects(c, this);
         }
-        c = c->d()->parent;
+        c = c->parent;
     }
 
     id_empty->mark(this);

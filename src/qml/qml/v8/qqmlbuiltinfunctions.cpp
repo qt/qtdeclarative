@@ -1699,6 +1699,7 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
     if ((ctx->d()->callData->argc > 2) && !ctx->d()->callData->args[2].isNumber())
         V4THROW_ERROR("qsTr(): third argument (n) must be a number");
 
+    Scope scope(ctx);
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QString context;
     if (QQmlContextData *ctxt = v8engine->callingContext()) {
@@ -1707,7 +1708,8 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
         int lastDot = path.lastIndexOf(QLatin1Char('.'));
         int length = lastDot - (lastSlash + 1);
         context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
-    } else if (QV4::ExecutionContext *parentCtx = ctx->d()->parent) {
+    } else if (ctx->d()->parent) {
+        Scoped<ExecutionContext> parentCtx(scope, ctx->d()->parent);
         // The first non-empty source URL in the call stack determines the translation context.
         while (parentCtx && context.isEmpty()) {
             if (QV4::CompiledData::CompilationUnit *unit = parentCtx->d()->compilationUnit) {

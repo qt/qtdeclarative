@@ -189,10 +189,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
     // setup lookup scopes
     int scopeDepth = 0;
     {
-        QV4::ExecutionContext *scope = context;
+        QV4::Heap::ExecutionContext *scope = context->d();
         while (scope) {
             ++scopeDepth;
-            scope = scope->d()->outer;
+            scope = scope->outer;
         }
     }
 
@@ -201,19 +201,19 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code
         scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->data->constants());
         // stack gets setup in push instruction
         scopes[1] = 0;
-        QV4::ExecutionContext *scope = context;
+        QV4::Heap::ExecutionContext *scope = context->d();
         int i = 0;
         while (scope) {
-            if (scope->d()->type >= QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
-                QV4::CallContext *cc = static_cast<QV4::CallContext *>(scope);
-                scopes[2*i + 2] = cc->d()->callData->args;
-                scopes[2*i + 3] = cc->d()->locals;
+            if (scope->type >= QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
+                QV4::Heap::CallContext *cc = static_cast<QV4::Heap::CallContext *>(scope);
+                scopes[2*i + 2] = cc->callData->args;
+                scopes[2*i + 3] = cc->locals;
             } else {
                 scopes[2*i + 2] = 0;
                 scopes[2*i + 3] = 0;
             }
             ++i;
-            scope = scope->d()->outer;
+            scope = scope->outer;
         }
     }
 

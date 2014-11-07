@@ -261,14 +261,19 @@ QVector<StackFrame> Debugger::stackTrace(int frameLimit) const
 
 static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
 {
-    while (ctxt) {
-        CallContext *cCtxt = ctxt->asCallContext();
+    if (!ctxt)
+        return 0;
+
+    Scope scope(ctxt);
+    Scoped<ExecutionContext> ctx(scope, ctxt);
+    while (ctx) {
+        CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {
             if (frame < 1)
                 return cCtxt;
             --frame;
         }
-        ctxt = ctxt->d()->parent;
+        ctx = ctx->d()->parent;
     }
 
     return 0;
@@ -276,10 +281,15 @@ static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
 
 static inline CallContext *findScope(ExecutionContext *ctxt, int scope)
 {
-    for (; scope > 0 && ctxt; --scope)
-        ctxt = ctxt->d()->outer;
+    if (!ctxt)
+        return 0;
 
-    return ctxt ? ctxt->asCallContext() : 0;
+    Scope s(ctxt);
+    Scoped<ExecutionContext> ctx(s, ctxt);
+    for (; scope > 0 && ctx; --scope)
+        ctx = ctx->d()->outer;
+
+    return ctx ? ctx->asCallContext() : 0;
 }
 
 void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int scopeNr)
@@ -403,7 +413,8 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
 
         bool myRun()
         {
-            ExecutionContext *ctxt = findContext(engine->currentContext(), frameNr);
+            Scope scope(engine);
+            Scoped<ExecutionContext> ctxt(scope, findContext(engine->currentContext(), frameNr));
             while (ctxt) {
                 if (CallContext *cCtxt = ctxt->asCallContext())
                     if (cCtxt->d()->activation)
@@ -414,7 +425,6 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
             if (!ctxt)
                 return false;
 
-            Scope scope(engine);
             ScopedObject o(scope, ctxt->asCallContext()->d()->activation);
             collector->collect(o);
             return true;
@@ -477,7 +487,9 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
         return types;
     CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
-    for (ExecutionContext *it = ctxt; it; it = it->d()->outer)
+    Scope scope(m_engine);
+    Scoped<ExecutionContext> it(scope, ctxt);
+    for (; it; it = it->d()->outer)
         types.append(it->d()->type);
 
     return types;
@@ -550,8 +562,9 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
+    Scope scope(m_engine);
     if (m_stepping != NotStepping && m_currentContext == m_engine->currentContext()) {
-        m_currentContext = m_engine->currentContext()->d()->parent;
+        m_currentContext = Scoped<ExecutionContext>(scope, m_engine->currentContext()->d()->parent).getPointer();
         m_stepping = StepOver;
         m_returnedValue = retVal;
     }
