@@ -341,6 +341,7 @@ private slots:
     void testWindowVisibilityOrder();
 
     void blockClosing();
+    void blockCloseMethod();
 
     void crashWhenHoverItemDeleted();
 
@@ -1736,6 +1737,25 @@ void tst_qquickwindow::blockClosing()
     QVERIFY(window->isVisible());
     window->setProperty("canCloseThis", true);
     QWindowSystemInterface::handleCloseEvent(window);
+    QTRY_VERIFY(!window->isVisible());
+}
+
+void tst_qquickwindow::blockCloseMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ucantclosethis.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QVERIFY(window->isVisible());
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
+    QVERIFY(window->isVisible());
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
+    QVERIFY(window->isVisible());
+    window->setProperty("canCloseThis", true);
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
     QTRY_VERIFY(!window->isVisible());
 }
 
