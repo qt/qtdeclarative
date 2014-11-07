@@ -221,20 +221,20 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue toPrimitive(const ValueRef value, int typeHint);
 
     static double stringToNumber(const QString &s);
-    static Returned<String> *stringFromNumber(ExecutionContext *ctx, double number);
+    static Returned<String> *stringFromNumber(ExecutionEngine *engine, double number);
     static double toNumber(const ValueRef value);
     static void numberToString(QString *result, double num, int radix = 10);
 
-    static ReturnedValue toString(ExecutionContext *ctx, const ValueRef value);
-    static Returned<String> *convertToString(ExecutionContext *ctx, const ValueRef value);
+    static ReturnedValue toString(ExecutionEngine *engine, const ValueRef value);
+    static Returned<String> *convertToString(ExecutionEngine *engine, const ValueRef value);
 
-    static ReturnedValue toObject(ExecutionContext *ctx, const ValueRef value);
-    static Returned<Object> *convertToObject(ExecutionContext *ctx, const ValueRef value);
+    static ReturnedValue toObject(ExecutionEngine *engine, const ValueRef value);
+    static Returned<Object> *convertToObject(ExecutionEngine *engine, const ValueRef value);
 
     static Bool equalHelper(const ValueRef x, const ValueRef y);
     static Bool strictEqual(const ValueRef x, const ValueRef y);
 
-    static ReturnedValue addHelper(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
+    static ReturnedValue addHelper(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
 };
 
 
@@ -334,7 +334,7 @@ inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, co
     if (left->isNumber() && right->isNumber())
         return Primitive::fromDouble(left->asDouble() + right->asDouble()).asReturnedValue();
 
-    return RuntimeHelpers::addHelper(ctx, left, right);
+    return RuntimeHelpers::addHelper(ctx->engine(), left, right);
 }
 #endif // V4_BOOTSTRAP
 

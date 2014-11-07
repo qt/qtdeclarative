@@ -133,7 +133,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
             return ctx->engine()->throwTypeError(message);
         }
 
-        o = RuntimeHelpers::convertToObject(ctx, object);
+        o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
             return Encode::undefined();
     }
@@ -701,7 +701,7 @@ void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef valu
     Scope scope(l->name->engine());
     ScopedObject o(scope, object);
     if (!o) {
-        o = RuntimeHelpers::convertToObject(scope.engine->currentContext(), object);
+        o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
             return;
         ScopedString s(scope, l->name);

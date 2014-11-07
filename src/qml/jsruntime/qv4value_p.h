@@ -345,6 +345,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     QString toQString() const;
     String *toString(ExecutionEngine *e) const;
     String *toString(ExecutionContext *ctx) const;
+    Object *toObject(ExecutionEngine *e) const;
     Object *toObject(ExecutionContext *ctx) const;
 
     inline bool isPrimitive() const;

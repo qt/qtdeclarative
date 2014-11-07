@@ -359,11 +359,11 @@ double RuntimeHelpers::stringToNumber(const QString &string)
     return d;
 }
 
-Returned<String> *RuntimeHelpers::stringFromNumber(ExecutionContext *ctx, double number)
+Returned<String> *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double number)
 {
     QString qstr;
     RuntimeHelpers::numberToString(&qstr, number, 10);
-    return ctx->engine()->newString(qstr);
+    return engine->newString(qstr);
 }
 
 ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
@@ -412,103 +412,103 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
 
 
 
-Returned<Object> *RuntimeHelpers::convertToObject(ExecutionContext *ctx, const ValueRef value)
+Returned<Object> *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const ValueRef value)
 {
-    assert(!value->isObject());
+    Q_ASSERT(!value->isObject());
     switch (value->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        ctx->engine()->throwTypeError();
+        engine->throwTypeError();
         return 0;
     case Value::Boolean_Type:
-        return ctx->engine()->newBooleanObject(value);
+        return engine->newBooleanObject(value);
     case Value::Managed_Type:
         Q_ASSERT(value->isString());
-        return ctx->engine()->newStringObject(value);
+        return engine->newStringObject(value);
     case Value::Integer_Type:
     default: // double
-        return ctx->engine()->newNumberObject(value);
+        return engine->newNumberObject(value);
     }
 }
 
-Returned<String> *RuntimeHelpers::convertToString(ExecutionContext *ctx, const ValueRef value)
+Returned<String> *RuntimeHelpers::convertToString(ExecutionEngine *engine, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return ctx->engine()->id_undefined.ret();
+        return engine->id_undefined.ret();
     case Value::Null_Type:
-        return ctx->engine()->id_null.ret();
+        return engine->id_null.ret();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine()->id_true.ret();
+            return engine->id_true.ret();
         else
-            return ctx->engine()->id_false.ret();
+            return engine->id_false.ret();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->asReturned<String>();
         {
-            Scope scope(ctx);
+            Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, STRING_HINT));
-            return RuntimeHelpers::convertToString(ctx, prim);
+            return RuntimeHelpers::convertToString(engine, prim);
         }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(ctx, value->int_32);
+        return RuntimeHelpers::stringFromNumber(engine, value->int_32);
     default: // double
-        return RuntimeHelpers::stringFromNumber(ctx, value->doubleValue());
+        return RuntimeHelpers::stringFromNumber(engine, value->doubleValue());
     } // switch
 }
 
 // This is slightly different from the method above, as
 // the + operator requires a slightly different conversion
-static Returned<String> *convert_to_string_add(ExecutionContext *ctx, const ValueRef value)
+static Returned<String> *convert_to_string_add(ExecutionEngine *engine, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return ctx->engine()->id_undefined.ret();
+        return engine->id_undefined.ret();
     case Value::Null_Type:
-        return ctx->engine()->id_null.ret();
+        return engine->id_null.ret();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine()->id_true.ret();
+            return engine->id_true.ret();
         else
-            return ctx->engine()->id_false.ret();
+            return engine->id_false.ret();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->asReturned<String>();
         {
-            Scope scope(ctx);
+            Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
-            return RuntimeHelpers::convertToString(ctx, prim);
+            return RuntimeHelpers::convertToString(engine, prim);
         }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(ctx, value->int_32);
+        return RuntimeHelpers::stringFromNumber(engine, value->int_32);
     default: // double
-        return RuntimeHelpers::stringFromNumber(ctx, value->doubleValue());
+        return RuntimeHelpers::stringFromNumber(engine, value->doubleValue());
     } // switch
 }
 
-QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const ValueRef left, const ValueRef right)
 {
-    Scope scope(ctx);
+    Scope scope(engine);
 
     ScopedValue pleft(scope, RuntimeHelpers::toPrimitive(left, PREFERREDTYPE_HINT));
     ScopedValue pright(scope, RuntimeHelpers::toPrimitive(right, PREFERREDTYPE_HINT));
     if (pleft->isString() || pright->isString()) {
         if (!pleft->isString())
-            pleft = convert_to_string_add(ctx, pleft);
+            pleft = convert_to_string_add(engine, pleft);
         if (!pright->isString())
-            pright = convert_to_string_add(ctx, pright);
+            pright = convert_to_string_add(engine, pright);
         if (scope.engine->hasException)
             return Encode::undefined();
         if (!pleft->stringValue()->d()->length())
             return pright->asReturnedValue();
         if (!pright->stringValue()->d()->length())
             return pleft->asReturnedValue();
-        return (ctx->engine()->memoryManager->alloc<String>(ctx->d()->engine, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
+        return (engine->memoryManager->alloc<String>(engine, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -532,9 +532,9 @@ QV4::ReturnedValue Runtime::addString(QV4::ExecutionContext *ctx, const QV4::Val
     ScopedValue pright(scope, *right);
 
     if (!pleft->isString())
-        pleft = convert_to_string_add(ctx, left);
+        pleft = convert_to_string_add(ctx->engine(), left);
     if (!pright->isString())
-        pright = convert_to_string_add(ctx, right);
+        pright = convert_to_string_add(ctx->engine(), right);
     if (scope.engine->hasException)
         return Encode::undefined();
     if (!pleft->stringValue()->d()->length())
@@ -575,7 +575,7 @@ ReturnedValue Runtime::getElement(ExecutionContext *ctx, const ValueRef object, 
             return ctx->engine()->throwTypeError(message);
         }
 
-        o = RuntimeHelpers::convertToObject(ctx, object);
+        o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
             return Encode::undefined();
     }
@@ -658,7 +658,7 @@ ReturnedValue Runtime::getProperty(ExecutionContext *ctx, const ValueRef object,
         return ctx->engine()->throwTypeError(message);
     }
 
-    o = RuntimeHelpers::convertToObject(ctx, object);
+    o = RuntimeHelpers::convertToObject(scope.engine, object);
     if (!o) // type error
         return Encode::undefined();
     return o->get(name);
@@ -936,7 +936,7 @@ ReturnedValue Runtime::callProperty(ExecutionContext *context, String *name, Cal
             return context->engine()->throwTypeError(message);
         }
 
-        baseObject = RuntimeHelpers::convertToObject(context, ValueRef(&callData->thisObject));
+        baseObject = RuntimeHelpers::convertToObject(scope.engine, ValueRef(&callData->thisObject));
         if (!baseObject) // type error
             return Encode::undefined();
         callData->thisObject = baseObject.asReturnedValue();
@@ -1237,19 +1237,19 @@ QV4::ReturnedValue Runtime::decrement(const QV4::ValueRef value)
 
 #ifndef V4_BOOTSTRAP
 
-QV4::ReturnedValue RuntimeHelpers::toString(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
+QV4::ReturnedValue RuntimeHelpers::toString(ExecutionEngine *engine, const QV4::ValueRef value)
 {
     if (value->isString())
         return value.asReturnedValue();
-    return RuntimeHelpers::convertToString(ctx, value)->asReturnedValue();
+    return RuntimeHelpers::convertToString(engine, value)->asReturnedValue();
 }
 
-QV4::ReturnedValue RuntimeHelpers::toObject(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
+QV4::ReturnedValue RuntimeHelpers::toObject(ExecutionEngine *engine, const QV4::ValueRef value)
 {
     if (value->isObject())
         return value.asReturnedValue();
 
-    Returned<Object> *o = RuntimeHelpers::convertToObject(ctx, value);
+    Returned<Object> *o = RuntimeHelpers::convertToObject(engine, value);
     if (!o) // type error
         return Encode::undefined();
 

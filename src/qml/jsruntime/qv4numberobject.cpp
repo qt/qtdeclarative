@@ -207,7 +207,7 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
     else if (v < 1.e21)
         str = QString::number(v, 'f', int (fdigits));
     else
-        return RuntimeHelpers::stringFromNumber(ctx, v)->asReturnedValue();
+        return RuntimeHelpers::stringFromNumber(ctx->engine(), v)->asReturnedValue();
     return ctx->d()->engine->newString(str)->asReturnedValue();
 }
 
@@ -244,7 +244,7 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
         return Encode::undefined();
 
     if (!ctx->d()->callData->argc || ctx->d()->callData->args[0].isUndefined())
-        return RuntimeHelpers::toString(ctx, v);
+        return RuntimeHelpers::toString(scope.engine, v);
 
     double precision = ctx->d()->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {

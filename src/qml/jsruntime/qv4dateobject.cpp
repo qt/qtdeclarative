@@ -1298,7 +1298,7 @@ ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue O(scope, RuntimeHelpers::toObject(ctx, ValueRef(&ctx->d()->callData->thisObject)));
+    ScopedValue O(scope, RuntimeHelpers::toObject(scope.engine, ValueRef(&ctx->d()->callData->thisObject)));
     ScopedValue tv(scope, RuntimeHelpers::toPrimitive(O, NUMBER_HINT));
 
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))

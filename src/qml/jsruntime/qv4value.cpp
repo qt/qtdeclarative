@@ -269,21 +269,26 @@ double Primitive::toInteger(double number)
 #ifndef V4_BOOTSTRAP
 String *Value::toString(ExecutionEngine *e) const
 {
-    return toString(e->currentContext());
+    if (isString())
+        return stringValue();
+    return RuntimeHelpers::convertToString(e, ValueRef::fromRawValue(this))->getPointer();
 }
 
 String *Value::toString(ExecutionContext *ctx) const
 {
-    if (isString())
-        return stringValue();
-    return RuntimeHelpers::convertToString(ctx, ValueRef::fromRawValue(this))->getPointer();
+    return toString(ctx->engine());
+}
+
+Object *Value::toObject(ExecutionEngine *e) const
+{
+    if (isObject())
+        return objectValue();
+    return RuntimeHelpers::convertToObject(e, ValueRef::fromRawValue(this))->getPointer();
 }
 
 Object *Value::toObject(ExecutionContext *ctx) const
 {
-    if (isObject())
-        return objectValue();
-    return RuntimeHelpers::convertToObject(ctx, ValueRef::fromRawValue(this))->getPointer();
+    return toObject(ctx->engine());
 }
 
 #endif // V4_BOOTSTRAP

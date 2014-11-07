@@ -400,7 +400,7 @@ inline ArrayObject *value_cast(const Value &v) {
 template<>
 inline ReturnedValue value_convert<Object>(ExecutionEngine *e, const Value &v)
 {
-    return v.toObject(e->currentContext())->asReturnedValue();
+    return v.toObject(e)->asReturnedValue();
 }
 #endif
 

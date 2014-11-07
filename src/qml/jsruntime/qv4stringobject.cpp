@@ -291,7 +291,7 @@ ReturnedValue StringPrototype::method_concat(CallContext *context)
 
     ScopedValue v(scope);
     for (int i = 0; i < context->d()->callData->argc; ++i) {
-        v = RuntimeHelpers::toString(context, ValueRef(&context->d()->callData->args[i]));
+        v = RuntimeHelpers::toString(scope.engine, ValueRef(&context->d()->callData->args[i]));
         if (scope.hasException())
             return Encode::undefined();
         Q_ASSERT(v->isString());
