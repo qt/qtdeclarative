@@ -60,7 +60,7 @@ struct ErrorObject : Object {
     ErrorObject(InternalClass *ic, const QString &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
     StackTrace stackTrace;
-    QV4::String *stack;
+    String *stack;
 };
 
 struct EvalErrorObject : ErrorObject {

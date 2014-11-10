@@ -165,7 +165,7 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
                 trace += QString::number(frame.line);
             }
         }
-        This->d()->stack = ctx->d()->engine->newString(trace)->getPointer();
+        This->d()->stack = ctx->d()->engine->newString(trace)->getPointer()->d();
     }
     return This->d()->stack->asReturnedValue();
 }

@@ -40,8 +40,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct ArrayBuffer;
-
 namespace Heap {
 
 struct DataViewCtor : FunctionObject {
@@ -50,7 +48,7 @@ struct DataViewCtor : FunctionObject {
 
 struct DataView : Object {
     DataView(ExecutionEngine *e);
-    QV4::ArrayBuffer *buffer;
+    ArrayBuffer *buffer;
     uint byteLength;
     uint byteOffset;
 };

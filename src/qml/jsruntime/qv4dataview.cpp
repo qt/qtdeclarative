@@ -63,7 +63,7 @@ ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
         return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->alloc<DataView>(scope.engine));
-    a->d()->buffer = buffer;
+    a->d()->buffer = buffer->d();
     a->d()->byteLength = byteLength;
     a->d()->byteOffset = byteOffset;
     return a.asReturnedValue();
@@ -164,7 +164,7 @@ ReturnedValue DataViewPrototype::method_getChar(CallContext *ctx)
         return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
-    T t = T(v->d()->buffer->d()->data->data()[idx]);
+    T t = T(v->d()->buffer->data->data()[idx]);
 
     return Encode((int)t);
 }
@@ -185,8 +185,8 @@ ReturnedValue DataViewPrototype::method_get(CallContext *ctx)
     bool littleEndian = ctx->d()->callData->argc < 2 ? false : ctx->d()->callData->args[1].toBoolean();
 
     T t = littleEndian
-            ? qFromLittleEndian<T>((uchar *)v->d()->buffer->d()->data->data() + idx)
-            : qFromBigEndian<T>((uchar *)v->d()->buffer->d()->data->data() + idx);
+            ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
+            : qFromBigEndian<T>((uchar *)v->d()->buffer->data->data() + idx);
 
     return Encode(t);
 }
@@ -213,8 +213,8 @@ ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
             float f;
         } u;
         u.i = littleEndian
-                ? qFromLittleEndian<uint>((uchar *)v->d()->buffer->d()->data->data() + idx)
-                : qFromBigEndian<uint>((uchar *)v->d()->buffer->d()->data->data() + idx);
+                ? qFromLittleEndian<uint>((uchar *)v->d()->buffer->data->data() + idx)
+                : qFromBigEndian<uint>((uchar *)v->d()->buffer->data->data() + idx);
         return Encode(u.f);
     } else {
         Q_ASSERT(sizeof(T) == 8);
@@ -223,8 +223,8 @@ ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
             double d;
         } u;
         u.i = littleEndian
-                ? qFromLittleEndian<quint64>((uchar *)v->d()->buffer->d()->data->data() + idx)
-                : qFromBigEndian<quint64>((uchar *)v->d()->buffer->d()->data->data() + idx);
+                ? qFromLittleEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx)
+                : qFromBigEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx);
         return Encode(u.d);
     }
 }
@@ -243,7 +243,7 @@ ReturnedValue DataViewPrototype::method_setChar(CallContext *ctx)
     idx += v->d()->byteOffset;
 
     int val = ctx->d()->callData->argc >= 2 ? ctx->d()->callData->args[1].toInt32() : 0;
-    v->d()->buffer->d()->data->data()[idx] = (char)val;
+    v->d()->buffer->data->data()[idx] = (char)val;
 
     return Encode::undefined();
 }
@@ -266,9 +266,9 @@ ReturnedValue DataViewPrototype::method_set(CallContext *ctx)
     bool littleEndian = ctx->d()->callData->argc < 3 ? false : ctx->d()->callData->args[2].toBoolean();
 
     if (littleEndian)
-        qToLittleEndian<T>(val, (uchar *)v->d()->buffer->d()->data->data() + idx);
+        qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
     else
-        qToBigEndian<T>(val, (uchar *)v->d()->buffer->d()->data->data() + idx);
+        qToBigEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
 
     return Encode::undefined();
 }
@@ -297,9 +297,9 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
         } u;
         u.f = val;
         if (littleEndian)
-            qToLittleEndian(u.i, (uchar *)v->d()->buffer->d()->data->data() + idx);
+            qToLittleEndian(u.i, (uchar *)v->d()->buffer->data->data() + idx);
         else
-            qToBigEndian(u.i, (uchar *)v->d()->buffer->d()->data->data() + idx);
+            qToBigEndian(u.i, (uchar *)v->d()->buffer->data->data() + idx);
     } else {
         Q_ASSERT(sizeof(T) == 8);
         union {
@@ -308,9 +308,9 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
         } u;
         u.d = val;
         if (littleEndian)
-            qToLittleEndian(u.i, (uchar *)v->d()->buffer->d()->data->data() + idx);
+            qToLittleEndian(u.i, (uchar *)v->d()->buffer->data->data() + idx);
         else
-            qToBigEndian(u.i, (uchar *)v->d()->buffer->d()->data->data() + idx);
+            qToBigEndian(u.i, (uchar *)v->d()->buffer->data->data() + idx);
     }
     return Encode::undefined();
 }

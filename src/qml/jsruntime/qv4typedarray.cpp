@@ -219,7 +219,7 @@ ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
             return Encode::undefined();
 
         Scoped<TypedArray > array(scope, scope.engine->memoryManager->alloc<TypedArray>(scope.engine, that->d()->type));
-        array->d()->buffer = buffer;
+        array->d()->buffer = buffer->d();
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = 0;
 
@@ -239,7 +239,7 @@ ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
             return Encode::undefined();
 
         Scoped<TypedArray > array(scope, scope.engine->memoryManager->alloc<TypedArray>(scope.engine, that->d()->type));
-        array->d()->buffer = newBuffer;
+        array->d()->buffer = newBuffer->d();
         array->d()->byteLength = destByteLength;
         array->d()->byteOffset = 0;
 
@@ -289,7 +289,7 @@ ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
         }
 
         Scoped<TypedArray > array(scope, scope.engine->memoryManager->alloc<TypedArray>(scope.engine, that->d()->type));
-        array->d()->buffer = buffer;
+        array->d()->buffer = buffer->d();
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = byteOffset;
         return array.asReturnedValue();
@@ -308,7 +308,7 @@ ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
         return Encode::undefined();
 
     Scoped<TypedArray > array(scope, scope.engine->memoryManager->alloc<TypedArray>(scope.engine, that->d()->type));
-    array->d()->buffer = newBuffer;
+    array->d()->buffer = newBuffer->d();
     array->d()->byteLength = l * elementSize;
     array->d()->byteOffset = 0;
 
@@ -359,7 +359,7 @@ ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return a->d()->type->read(a->d()->buffer->d()->data->data(), byteOffset);
+    return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
 void TypedArray::putIndexed(Managed *m, uint index, const ValueRef value)
@@ -375,7 +375,7 @@ void TypedArray::putIndexed(Managed *m, uint index, const ValueRef value)
     if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength())
         goto reject;
 
-    a->d()->type->write(scope.engine, a->d()->buffer->d()->data->data(), byteOffset, value);
+    a->d()->type->write(scope.engine, a->d()->buffer->data->data(), byteOffset, value);
     return;
 
 reject:

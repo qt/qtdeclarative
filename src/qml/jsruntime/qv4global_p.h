@@ -137,6 +137,10 @@ namespace Heap {
     struct ErrorObject;
     struct ArgumentsObject;
     struct QObjectWrapper;
+
+    struct ArrayBuffer;
+    struct DataView;
+    struct TypedArray;
 }
 
 class MemoryManager;
@@ -166,6 +170,10 @@ struct ArgumentsObject;
 struct Managed;
 struct ExecutionEngine;
 struct QObjectWrapper;
+
+struct ArrayBuffer;
+struct DataView;
+struct TypedArray;
 
 // ReturnedValue is used to return values from runtime methods
 // the type has to be a primitive type (no struct or union), so that the compiler

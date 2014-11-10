@@ -59,7 +59,7 @@ struct ArgumentsObject : Object {
         CallerPropertyIndex = 3
     };
     ArgumentsObject(QV4::CallContext *context);
-    QV4::CallContext *context;
+    CallContext *context;
     bool fullyCreated;
     MemberData *mappedArguments;
 };
@@ -103,13 +103,13 @@ struct ArgumentsObject: Object {
     V4_OBJECT2(ArgumentsObject, Object)
     Q_MANAGED_TYPE(ArgumentsObject)
 
-    CallContext *context() const { return d()->context; }
+    Heap::CallContext *context() const { return d()->context; }
     bool fullyCreated() const { return d()->fullyCreated; }
     Heap::MemberData *mappedArguments() { return d()->mappedArguments; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->internalClass()->vtable->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context()->d()->strictMode;
+                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
     }
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
