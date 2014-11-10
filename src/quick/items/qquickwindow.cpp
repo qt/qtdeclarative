@@ -893,8 +893,10 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickWindowPrivate::clearFocusObject()
 {
-    if (activeFocusItem)
-        activeFocusItem->setFocus(false, Qt::OtherFocusReason);
+    if (activeFocusItem == contentItem)
+        return;
+
+    clearFocusInScope(contentItem, QQuickItemPrivate::get(contentItem)->subFocusItem, Qt::OtherFocusReason);
 }
 
 void QQuickWindowPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
@@ -1250,6 +1252,14 @@ bool QQuickWindow::isPersistentSceneGraph() const
 
 
 
+/*!
+    \qmlattachedproperty Item Window::contentItem
+    \since 5.4
+
+    This attached property holds the invisible root item of the scene or
+    \c null if the item is not in a window. The Window attached property
+    can be attached to any Item.
+*/
 
 /*!
     \property QQuickWindow::contentItem

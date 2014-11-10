@@ -341,6 +341,7 @@ private slots:
     void testWindowVisibilityOrder();
 
     void blockClosing();
+    void blockCloseMethod();
 
     void crashWhenHoverItemDeleted();
 
@@ -1739,6 +1740,25 @@ void tst_qquickwindow::blockClosing()
     QTRY_VERIFY(!window->isVisible());
 }
 
+void tst_qquickwindow::blockCloseMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ucantclosethis.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QVERIFY(window->isVisible());
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
+    QVERIFY(window->isVisible());
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
+    QVERIFY(window->isVisible());
+    window->setProperty("canCloseThis", true);
+    QVERIFY(QMetaObject::invokeMethod(window, "close", Qt::DirectConnection));
+    QTRY_VERIFY(!window->isVisible());
+}
+
 void tst_qquickwindow::crashWhenHoverItemDeleted()
 {
     // QTBUG-32771
@@ -1952,6 +1972,7 @@ void tst_qquickwindow::attachedProperty()
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QVERIFY(view.rootObject()->property("windowActive").toBool());
+    QCOMPARE(view.rootObject()->property("contentItem").value<QQuickItem*>(), view.contentItem());
 
     QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
     QVERIFY(innerWindow);
@@ -1961,6 +1982,7 @@ void tst_qquickwindow::attachedProperty()
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("extraWindowText");
     QVERIFY(text);
     QCOMPARE(text->text(), QLatin1String("active\nvisibility: 2"));
+    QCOMPARE(text->property("contentItem").value<QQuickItem*>(), innerWindow->contentItem());
 }
 
 class RenderJob : public QRunnable

@@ -357,6 +357,10 @@ protected:
 
     GlyphData &glyphData(glyph_t glyph);
 
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+    void saveTexture(GLuint textureId, int width, int height) const;
+#endif
+
     inline bool isCoreProfile() const { return m_coreProfile; }
 
 private:
