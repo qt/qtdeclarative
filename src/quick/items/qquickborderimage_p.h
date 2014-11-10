@@ -87,8 +87,6 @@ private Q_SLOTS:
     void sciRequestFinished();
 
 private:
-    static QImage shallowCopy(const QImage &image, const QRect &rect);
-
     Q_DISABLE_COPY(QQuickBorderImage)
     Q_DECLARE_PRIVATE(QQuickBorderImage)
 };
