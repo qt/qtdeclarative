@@ -49,6 +49,7 @@ class Q_AUTOTEST_EXPORT QQuickWindowAttached : public QObject
     Q_PROPERTY(QWindow::Visibility visibility READ visibility NOTIFY visibilityChanged)
     Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged)
+    Q_PROPERTY(QQuickItem* contentItem READ contentItem NOTIFY contentItemChanged)
 
 public:
     QQuickWindowAttached(QObject* attachee);
@@ -56,12 +57,14 @@ public:
     QWindow::Visibility visibility() const;
     bool isActive() const;
     QQuickItem* activeFocusItem() const;
+    QQuickItem* contentItem() const;
 
 Q_SIGNALS:
 
     void visibilityChanged();
     void activeChanged();
     void activeFocusItemChanged();
+    void contentItemChanged();
 
 protected Q_SLOTS:
     void windowChanged(QQuickWindow*);

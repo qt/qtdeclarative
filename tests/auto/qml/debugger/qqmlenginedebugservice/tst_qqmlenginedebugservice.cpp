@@ -36,6 +36,7 @@
 #include <QHostAddress>
 #include <QDebug>
 #include <QThread>
+#include <QModelIndex>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -72,6 +73,16 @@ signals:
     void nonScriptPropChanged();
 };
 QML_DECLARE_TYPE(NonScriptProperty)
+
+class CustomTypes : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QModelIndex modelIndex READ modelIndex)
+public:
+    CustomTypes(QObject *parent = 0) : QObject(parent) {}
+
+    QModelIndex modelIndex() { return QModelIndex(); }
+};
 
 class tst_QQmlEngineDebugService : public QObject
 {
@@ -125,6 +136,7 @@ private slots:
     void setBindingInStates();
 
     void regression_QTCREATORBUG_7451();
+    void queryObjectWithNonStreamableTypes();
 };
 
 QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -312,6 +324,12 @@ void tst_QQmlEngineDebugService::initTestCase()
                     "}\n"
                 "]\n"
            "}\n"
+           ;
+
+    // test non-streamable properties
+    qmlRegisterType<CustomTypes>("Backend", 1, 0, "CustomTypes");
+    qml << "import Backend 1.0\n"
+           "CustomTypes {}"
            ;
 
     for (int i=0; i<qml.count(); i++) {
@@ -620,7 +638,7 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     // root context query sends only root object data - it doesn't fill in
     // the children or property info
     QCOMPARE(context.objects.count(), 0);
-    QCOMPARE(context.contexts.count(), 5);
+    QCOMPARE(context.contexts.count(), 6);
     QVERIFY(context.contexts[0].debugId >= 0);
     QCOMPARE(context.contexts[0].name, QString("tst_QQmlDebug_childContext"));
 }
@@ -817,6 +835,26 @@ void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
         QVERIFY(success);
         QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     }
+}
+
+void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
+{
+    bool success;
+
+    QmlDebugObjectReference rootObject = findRootObject(4, true);
+
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
+    unconnected->queryObject(rootObject, &success);
+    QVERIFY(!success);
+    delete unconnected;
+
+    m_dbg->queryObject(rootObject, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QmlDebugObjectReference obj = m_dbg->object();
+
+    QCOMPARE(findProperty(obj.properties, "modelIndex").value, QVariant());
 }
 
 
