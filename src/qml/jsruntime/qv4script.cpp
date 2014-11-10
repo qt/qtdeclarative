@@ -94,7 +94,7 @@ DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
-    , qml(qml)
+    , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
 
@@ -109,13 +109,13 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer()->d();
     s.engine->popContext();
 }
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
-    , qml(qml)
+    , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
 
@@ -127,7 +127,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer()->d();
     s.engine->popContext();
 }
 
@@ -141,7 +141,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     if (!This->function())
         return QV4::Encode::undefined();
 
-    CallContext *ctx = This->d()->qmlContext;
+    Scoped<CallContext> ctx(scope, This->d()->qmlContext);
     std::fill(ctx->d()->locals, ctx->d()->locals + ctx->d()->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
     ScopedValue result(scope, This->function()->code(ctx, This->function()->codeData));
@@ -174,6 +174,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     QV4::Scope valueScope(engine);
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(engine->rootContext, qmlScopeObject));
+    QV4::Scoped<CallContext> wrapperContext(valueScope, wrapper->context());
 
     if (!signalParameters.isEmpty()) {
         if (error)
@@ -182,7 +183,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
         QV4::ScopedString s(valueScope);
         int index = 0;
         foreach (const QByteArray &param, signalParameters) {
-            QV4::ScopedFunctionObject g(valueScope, engine->memoryManager->alloc<QV4::IndexedBuiltinFunction>(wrapper->context(), index++, signalParameterGetter));
+            QV4::ScopedFunctionObject g(valueScope, engine->memoryManager->alloc<QV4::IndexedBuiltinFunction>(wrapperContext, index++, signalParameterGetter));
             p->setGetter(g);
             p->setSetter(0);
             s = engine->newString(QString::fromUtf8(param));
@@ -190,7 +191,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
         }
     }
 
-    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapper->context(), runtimeFunction));
+    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction));
     return function->asReturned<FunctionObject>();
 }
 

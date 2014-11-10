@@ -76,8 +76,8 @@ struct QmlBindingWrapper : Heap::FunctionObject {
     QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
     QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml);
-    QV4::Object *qml;
-    QV4::CallContext *qmlContext;
+    Object *qml;
+    CallContext *qmlContext;
 };
 
 }
@@ -88,7 +88,7 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 
-    CallContext *context() const { return d()->qmlContext; }
+    Heap::CallContext *context() const { return d()->qmlContext; }
 
     static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
                                                                   const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);

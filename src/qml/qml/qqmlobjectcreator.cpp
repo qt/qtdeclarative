@@ -267,7 +267,8 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, v4->memoryManager->alloc<QV4::QmlBindingWrapper>(v4->rootContext, qmlScope));
-    QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
+    // ### GC
+    QV4::ExecutionContext *qmlContext = QV4::ScopedContext(valueScope, qmlBindingWrapper->context()).getPointer();
 
     qSwap(_qmlContext, qmlContext);
 
@@ -1177,7 +1178,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QV4::Scope valueScope(v4);
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, v4->memoryManager->alloc<QV4::QmlBindingWrapper>(v4->rootContext, qmlScope));
-    QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
+    // ### GC
+    QV4::ExecutionContext *qmlContext = QV4::ScopedContext(valueScope, qmlBindingWrapper->context()).getPointer();
 
     qSwap(_qmlContext, qmlContext);
 
